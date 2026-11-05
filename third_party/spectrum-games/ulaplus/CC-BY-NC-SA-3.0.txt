@@ -1,0 +1,10 @@
+The Mojon Twins games in this collection are offered under the Creative
+Commons Attribution-NonCommercial-ShareAlike 3.0 Unported license.
+
+License URI: https://creativecommons.org/licenses/by-nc-sa/3.0/
+Legal code: https://creativecommons.org/licenses/by-nc-sa/3.0/legalcode
+
+This notice provides the license URI. Copyright and the upstream collection's
+modification notices are retained in games/The Mojon Twins/legal.txt inside
+ULAplus-games.zip. This license applies to those games, not to every game in
+the collection. Other publishers' permissions remain in their legal.txt files.

@@ -1,0 +1,4145 @@
+{
+  "format": 1,
+  "checked_on": "2026-11-05",
+  "scope": "Redistributable game media with verified permissions only. A user-authorized temporary internal test copy is kept outside this catalog and all packages.",
+  "packages": [
+    {
+      "id": "ianna",
+      "title": "The Sword of Ianna",
+      "version": "1.1",
+      "archive": "ianna/Ianna-esxdos-1.1.zip",
+      "sha256": "e7e2c3579b8a9c53bf6906fb94e75cb6986bba2486360065c87d5edad915d9f2",
+      "source": "https://github.com/fjpena/sword-of-ianna-zx",
+      "source_commit": "05f5ddbf53bb76b4a5c5680dcea2e2339c32652e",
+      "source_archive_sha256": "1b0786545c1f029417f74b798ac28a1eeaf31581151a197ed7b0c809ec92fb7a",
+      "download_url": "https://spectrumcomputing.co.uk/zxdb/sinclair/entries/0030447/TheSwordOfIANNA(ESXDOS).zip",
+      "license": "Apache-2.0",
+      "license_file": "ianna/LICENSE.txt",
+      "machine": "ZX Spectrum 128K with esxDOS",
+      "audio": "AY",
+      "entry": "iannasd/loader",
+      "hardware_verified": false
+    },
+    {
+      "id": "ulaplus",
+      "title": "ULAplus 10th Anniversary Collection, games and data",
+      "archive": "ulaplus/ULAplus-games.zip",
+      "sha256": "ac9da9c821a5a4e76534cc6a648aba1b32297ad8d3581b98a16a1f69069d27ee",
+      "source": "https://sourcesolutions.itch.io/ulaplus10",
+      "upstream_archive": "ULAplus10.zip",
+      "upstream_upload_id": 1202504,
+      "upstream_sha256": "a548d538808eb1c57d4c837c96ed468be72cae61be1ec4f9bde28d7f4e2c4766",
+      "license": "Per-publisher redistribution permissions in games/*/legal.txt; see README.md. No-charge/noncommercial restrictions apply. Mojon Twins: CC-BY-NC-SA-3.0.",
+      "modifications": "Selected games, demos, palettes and docs only; game bytes unchanged. Added byte-identical VORTEX.TXT notices.",
+      "counts": {
+        "notice": 46,
+        "demo-tape": 20,
+        "game-tape": 337,
+        "palette-tape": 50
+      },
+      "hardware_verified": false
+    },
+    {
+      "id": "cosmic-payback",
+      "title": "Cosmic Payback",
+      "year": 2020,
+      "author": "John Connolly / PROSM Software",
+      "archive": "cosmic-payback/Cosmic-Payback.zip",
+      "sha256": "ff76e0ab4eccbb6859655959c270269674f7625a1d1dd69c5f5eedae5dde70cc",
+      "source": "https://yrgb.ru/2020/",
+      "download_url": "https://yrgb.ru/downloads/109/",
+      "download_sha256": "e64d1f206f771f2576c28763893b1959a79f5d3ddcb2d70ada57fa9239ba5e8a",
+      "permission_url": "https://yrgb.ru/downloads/110/",
+      "permission_source_sha256": "ceb7a16a7840101c39f18c9d784d1f63297047c28447e39be9928ddad062e05f",
+      "license": "LicenseRef-PROSM-Freeware-Redistribution",
+      "license_member": "LICENSE.TXT",
+      "machine": "ZX Spectrum 48K/128K",
+      "image_directory": "COSMIC",
+      "modifications": "Added permission/source notice and ZIP wrapper. Original TAP bytes unchanged.",
+      "hardware_verified": false
+    }
+  ],
+  "entries": [
+    {
+      "package": "ianna",
+      "member": "changelog.txt",
+      "kind": "notice",
+      "bytes": 254,
+      "sha256": "57bac6cb52ea8d1dfe80d40a6b0f2b4e35a307c712ee254b6feafc22d4040622"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/esxload.bin",
+      "kind": "game-data",
+      "bytes": 336,
+      "sha256": "b9b3e7d99c13abefdfe810eec54879a16d07e151c2d11e040dffa007aeb6909c"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/ianna.dat",
+      "kind": "game-data",
+      "bytes": 76106,
+      "sha256": "1466a9262ec03e1a973746cf5c97bcf0b3530a719a0156766d61f127bb84d58c"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/ianna.gam",
+      "kind": "game-data",
+      "bytes": 79986,
+      "sha256": "9a4b7dd3e031134250165fe5a14c23143fe82bd6956723511adfcefb9a340182"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/ianna.spr",
+      "kind": "game-data",
+      "bytes": 28762,
+      "sha256": "ea245b589142ba7d4a2f2dfd5a581c46e8034c88b7a3f68a4178b7e407bf7035"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/ianna2.dat",
+      "kind": "game-data",
+      "bytes": 36487,
+      "sha256": "d2e56d93b4fa4edcb61ed70d592579da0ccd589996d1d9ed34efb802b64e6d23"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/intro.bin",
+      "kind": "game-data",
+      "bytes": 15669,
+      "sha256": "322e692ebc51ad498685a87ade001ac6d24854e423807aaebeca41ec1ca64066"
+    },
+    {
+      "package": "ianna",
+      "member": "iannasd/loader",
+      "kind": "game-data",
+      "bytes": 213,
+      "sha256": "8fbf5d387f24d2395737ef5f2ee26c5b725fe314bb8879c52cc3fead766a8ccb"
+    },
+    {
+      "package": "ianna",
+      "member": "leeme.txt",
+      "kind": "notice",
+      "bytes": 417,
+      "sha256": "86b940f27d4bda9bc5d72b9050b0af0bd0a53488edb7e8a0504d6615b4d20f5b"
+    },
+    {
+      "package": "ianna",
+      "member": "readme.txt",
+      "kind": "notice",
+      "bytes": 331,
+      "sha256": "c459f70e1c2ced030961b033f3e0db3035d0853363d28816cfa66830195a1411"
+    },
+    {
+      "package": "ulaplus",
+      "member": "VORTEX.TXT",
+      "kind": "notice",
+      "bytes": 4858,
+      "sha256": "867603fd82b67cb84b27e2a9f83c559d0fccf35db8a219bf214f19d6f9a26a1e"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/24-bit.tap",
+      "kind": "demo-tape",
+      "bytes": 90973,
+      "sha256": "ed152a153b95290174f8f461606cc1ac69f158fd0984a2df56e511012717bd4f",
+      "title": "24-bit"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/Egghead Plus.tap",
+      "kind": "demo-tape",
+      "bytes": 17186,
+      "sha256": "9e535d3942adaa60c8a45d93ef8f86be399d4f179357c140732d894d2f1db2c4",
+      "title": "Egghead Plus"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/Palette Editor.tap",
+      "kind": "demo-tape",
+      "bytes": 18038,
+      "sha256": "f666382336a882930f8ade3db82a8516115e049aedc8de75802b2881b6e94a75",
+      "title": "Palette Editor"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/ULAplus palette (128).tap",
+      "kind": "demo-tape",
+      "bytes": 15657,
+      "sha256": "796dd4ab1fd935e2dd5af6244f9678265357502ffb0409e339604038ce34cb0b",
+      "title": "ULAplus palette (128)"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/buffy.tap",
+      "kind": "demo-tape",
+      "bytes": 63053,
+      "sha256": "385e0c29b5aaa85a4a4c61a0acb1ca40954afabc64d25be561bae38d523cd766",
+      "title": "buffy"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/c64 a.tap",
+      "kind": "demo-tape",
+      "bytes": 147336,
+      "sha256": "3a4ba95ceb5768ebddda4303e9f5b4d248a1445933662f64b94b69b09415386c",
+      "title": "c64 a"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/c64 b.tap",
+      "kind": "demo-tape",
+      "bytes": 174733,
+      "sha256": "12cad6cea80884da4eb850d6247d175b73c64f51cea24242622e90283bf0606a",
+      "title": "c64 b"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/fireplus.tap",
+      "kind": "demo-tape",
+      "bytes": 873,
+      "sha256": "c18f4122b380933e599fb79606cfa8b4fcc9c8c7cee419c8753f420125db3980",
+      "title": "fireplus"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/ham256.tap",
+      "kind": "demo-tape",
+      "bytes": 7961,
+      "sha256": "2f9792d1601a66e6f91e4dfb7c45443ef9e79346601eef06fc1d921362aec2ea",
+      "title": "ham256"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/ham8x1.tap",
+      "kind": "demo-tape",
+      "bytes": 313829,
+      "sha256": "c3f1705b8ca8b5c4637615024594a336386f9788c91c04f3893c7e0b08974ac1",
+      "title": "ham8x1"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/hungup.tap",
+      "kind": "demo-tape",
+      "bytes": 32889,
+      "sha256": "8ead26bcd1738f6f97415769a7875855afdeb8b1b7c24c14a3ab030b26fc0f22",
+      "title": "hungup"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/macos 8.5.tap",
+      "kind": "demo-tape",
+      "bytes": 223593,
+      "sha256": "a9aeac241e82b23dfdef876fe827765aa1e10a627b0b3127069875a34b9173fd",
+      "title": "macos 8.5"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/matrix.tap",
+      "kind": "demo-tape",
+      "bytes": 1392,
+      "sha256": "ce51edd086f911af334247004bea25a9d86fd7aea1026d270b5c5ebbef996152",
+      "title": "matrix"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/multicolour.tap",
+      "kind": "demo-tape",
+      "bytes": 325,
+      "sha256": "0dd389e475d2374abea03b0b42f7f5cd4b10db8c6bbdb323555daa404cdc0357",
+      "title": "multicolour"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/out of heaven.tap",
+      "kind": "demo-tape",
+      "bytes": 33692,
+      "sha256": "5b2455b469d53201a1a208bcc78339687ed019bd6bb8cf76d4d096ee36d2d419",
+      "title": "out of heaven"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/sketch.tap",
+      "kind": "demo-tape",
+      "bytes": 160773,
+      "sha256": "9783ad754fb7cc9551263283fb2a195d63d97605da5414f7b2e6b58d7213e057",
+      "title": "sketch"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/snowscr.tap",
+      "kind": "demo-tape",
+      "bytes": 7158,
+      "sha256": "8908a596886e479ebe25ed4aa08a47b81e0e9d41a487af6c70e77011290f81d1",
+      "title": "snowscr"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/testrgb.tap",
+      "kind": "demo-tape",
+      "bytes": 501,
+      "sha256": "0c0074a233f19d0e5c049c7fbf1f190d28b77b1bd226c6f4a46b35f49aaab966",
+      "title": "testrgb"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/timex 8x1 show.tap",
+      "kind": "demo-tape",
+      "bytes": 136152,
+      "sha256": "777d158a4f4d767b24d156758095def68c83cc64ada07151ebf25b544a96f58f",
+      "title": "timex 8x1 show"
+    },
+    {
+      "package": "ulaplus",
+      "member": "demos/timex 8x1.tap",
+      "kind": "demo-tape",
+      "bytes": 87568,
+      "sha256": "893a0026c70ea9f779a2e023d55f3acd26c4e54431d600336f8f195c6ed14b02",
+      "title": "timex 8x1"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/Alchemist Research.txt",
+      "kind": "notice",
+      "bytes": 36422,
+      "sha256": "05706e8077d898114acf8da7adc37ccd3437bfccd02d19bcdfbd3ee1ec6e90d4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/FAQ.txt",
+      "kind": "notice",
+      "bytes": 10310,
+      "sha256": "84672d9b508619503bfc10ba783b815584db02e0e36a8dcd9f303d205dfadc46"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/Official ULAplus Specification.txt",
+      "kind": "notice",
+      "bytes": 11546,
+      "sha256": "3769288e57bf8feeb36054d79f2f40f509be88911598e5f4522ba81034eeec2e"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/add a palette to an existing game.txt",
+      "kind": "notice",
+      "bytes": 725,
+      "sha256": "6be32b162342a7d54bafa2043a9f58a476508b7d714db48e9766062c07b28fb5"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/colour bit conversion.txt",
+      "kind": "notice",
+      "bytes": 726,
+      "sha256": "4e61bc65fc7c3a2c8bdc665688eea872814fecd284a162f7d649c0d773c4cdd7"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/comp.sys.sinclair.txt",
+      "kind": "notice",
+      "bytes": 3516,
+      "sha256": "60da8f5376cf41188015ac1f6126a1b64c95cdba423ced6f31075ece0fbe0b59"
+    },
+    {
+      "package": "ulaplus",
+      "member": "docs/using ULAplus from BASIC.txt",
+      "kind": "notice",
+      "bytes": 7598,
+      "sha256": "37c4e96af6ef9de0b2776493ae9b3ea729fedc2b9ca5aaaa95404921c8db905f"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Adeventureland.tap",
+      "kind": "game-tape",
+      "bytes": 47908,
+      "sha256": "b2823abe6ecfcc53ae34d388e47e7f21da994a54f12dc0ef5a253a2a061bca2e",
+      "title": "Adeventureland",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Buckeroo Banzai.tap",
+      "kind": "game-tape",
+      "bytes": 23427,
+      "sha256": "43b1e0169706cfdf0b557d117b8ec0ad8cc434fad611ac75503e43609b795d18",
+      "title": "Buckeroo Banzai",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Pirate Island.tap",
+      "kind": "game-tape",
+      "bytes": 20229,
+      "sha256": "0fc4f47c7df8232191ca6a498a143a170a026ac911c5c933f1e13ab0dd7c02ea",
+      "title": "Pirate Island",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Savege Island - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 40474,
+      "sha256": "0fc2d569534d64dd2949f3ca2b4ce1386ddb1c937e92ce577eb417582fffc38b",
+      "title": "Savege Island - Part 1",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Savege Island - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 40474,
+      "sha256": "575c80eaeb11150168f4bb5ad9f837d4fa658aa34e8564b7328c733e49d0ced9",
+      "title": "Savege Island - Part 2",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Secret Mission.tap",
+      "kind": "game-tape",
+      "bytes": 47959,
+      "sha256": "38f4317e9f9fa59603c6c1ddf99145d048c01d2c96a7e37a33a3551e7c5cc3a4",
+      "title": "Secret Mission",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Strange Odyssey.tap",
+      "kind": "game-tape",
+      "bytes": 23886,
+      "sha256": "26fcdd29cd0d0a3d74ae2e8db9e516a51486be124644df0b86a6b24df49f8934",
+      "title": "Strange Odyssey",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/The Sorcerer of Claymorgue Castle.tap",
+      "kind": "game-tape",
+      "bytes": 47959,
+      "sha256": "f73bf74979a06eaaef4511f8dd4bd6d695fdd7463f276da695901a9ae31bbbdb",
+      "title": "The Sorcerer of Claymorgue Castle",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/Voodo Castle.tap",
+      "kind": "game-tape",
+      "bytes": 19459,
+      "sha256": "d16cf53be5b1974b0557f55d963b6d8b4ebeda909ad6fdf7c8b5dc668255580f",
+      "title": "Voodo Castle",
+      "publisher": "Adventure International"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Adventure International/legal.txt",
+      "kind": "notice",
+      "bytes": 107,
+      "sha256": "517e4ecf87767142ab7669519e23f5b75faed6ebfdedf13723c150b449b03209"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Alligata Software/Repton 2.tap",
+      "kind": "game-tape",
+      "bytes": 56765,
+      "sha256": "33733902736da01997f06fe03b3a2083442e255444b2b0c04e9be13d82734e77",
+      "title": "Repton 2",
+      "publisher": "Alligata Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Alligata Software/Repton.tap",
+      "kind": "game-tape",
+      "bytes": 56765,
+      "sha256": "4c07cd34f6e1eea93edff5bf73f7c92ebbca92f05e69c1472b92481aa6cca725",
+      "title": "Repton",
+      "publisher": "Alligata Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Alligata Software/legal.txt",
+      "kind": "notice",
+      "bytes": 64,
+      "sha256": "233da156de5230f0ef94335e1460885311794de19d1f399dfcc484a74cd73cfd"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Artic Computing/3D Combat Zone.tap",
+      "kind": "game-tape",
+      "bytes": 17357,
+      "sha256": "df840ff9cef097a5c052b0c209ddf2a3372f9e69fd2fad83a2b4219fb6380a8a",
+      "title": "3D Combat Zone",
+      "publisher": "Artic Computing"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Artic Computing/Bear Bovver.tap",
+      "kind": "game-tape",
+      "bytes": 33540,
+      "sha256": "d8b6d293b0ad73d3eee313a126f596c840456f477c6a94a045a5d5afc41d2b68",
+      "title": "Bear Bovver",
+      "publisher": "Artic Computing"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Artic Computing/Cosmic Debris.tap",
+      "kind": "game-tape",
+      "bytes": 39968,
+      "sha256": "3ca9ef51507bb5bab21aeefeeec07ab0c38ce4436d489f887abe1215ba4bf187",
+      "title": "Cosmic Debris",
+      "publisher": "Artic Computing"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Artic Computing/Dimension Destructors.tap",
+      "kind": "game-tape",
+      "bytes": 16970,
+      "sha256": "ab7259b8c49aad0998f75972a5e5384fb250067742ad1e05eeaa60c56b3147ed",
+      "title": "Dimension Destructors",
+      "publisher": "Artic Computing"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Artic Computing/legal.txt",
+      "kind": "notice",
+      "bytes": 142,
+      "sha256": "309ab5ce674594e7e395213ded055d4f42a190a83c812f025a13c24b16a30436"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Cave Mania.tap",
+      "kind": "game-tape",
+      "bytes": 48421,
+      "sha256": "0eea8500b0f0ab484f01076e1bfa4177c6f6d9e84968948a3b0b14be5aa9d012",
+      "title": "Cave Mania",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Luna Atac.tap",
+      "kind": "game-tape",
+      "bytes": 37925,
+      "sha256": "81ea4527531cfc90c252407523ad8ce39efb63ab5135ea0d3fa9ae9a043a3c76",
+      "title": "Luna Atac",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Moron.tap",
+      "kind": "game-tape",
+      "bytes": 48274,
+      "sha256": "fa82af6b943f9cc72c036be4ed5d45daf972b9939f585218eaec2c53f5a6ab12",
+      "title": "Moron",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/ProGolf - Peeble Beach.tap",
+      "kind": "game-tape",
+      "bytes": 49264,
+      "sha256": "48d29e2f341f92b7fb54e82c1b1a900aafdcf7d3e5d80221e31621c8fc584ecb",
+      "title": "ProGolf - Peeble Beach",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/ProGolf - Royal Lytham.tap",
+      "kind": "game-tape",
+      "bytes": 49264,
+      "sha256": "ce1edaccbe59c7bb3978cfa85acda8795ac8441680e12083373e11f53d9d25e2",
+      "title": "ProGolf - Royal Lytham",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/ProGolf - Royal St George.tap",
+      "kind": "game-tape",
+      "bytes": 49264,
+      "sha256": "2028b6e76321209e64eaf1d8902640ab4fb878ca331c14ccb0e9d7b28c3e22f3",
+      "title": "ProGolf - Royal St George",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/ProGolf - Sunningdale.tap",
+      "kind": "game-tape",
+      "bytes": 49264,
+      "sha256": "cd6349218e2372c84dfa1fcd82679a39dba47d97f0c013617237e3dd07e1aae0",
+      "title": "ProGolf - Sunningdale",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Super Brat.tap",
+      "kind": "game-tape",
+      "bytes": 49986,
+      "sha256": "a8a2e0c4bc8cb6ac4b3dddba4ec85a64fc1a9a6acc28a8bc094302cc9ec7edb9",
+      "title": "Super Brat",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Super Com.tap",
+      "kind": "game-tape",
+      "bytes": 35409,
+      "sha256": "0464cf9a1b70b6d3c39dea41a565e5d6c25a6c135b9e410a7f39b30e82f9a70d",
+      "title": "Super Com",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/Survivors.tap",
+      "kind": "game-tape",
+      "bytes": 20312,
+      "sha256": "5d643d6ae6e4a51e420223b871c3fe4c7c7de7e8563a28b1b7894c02f430a46d",
+      "title": "Survivors",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/The Colditz Story.tap",
+      "kind": "game-tape",
+      "bytes": 48240,
+      "sha256": "6f5dbdf98b62ca22fdda1ac5fde6dd4e6699a778756f54c2811e60579ecc7c85",
+      "title": "The Colditz Story",
+      "publisher": "Atlantis Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Atlantis Software/legal.txt",
+      "kind": "notice",
+      "bytes": 175,
+      "sha256": "cfe888a3129d19f16ef511adbbcbb2482654fa5150c6f1d6f41c43380ad1fdea"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Bedlam (128).tap",
+      "kind": "game-tape",
+      "bytes": 107096,
+      "sha256": "3c8114eb4d40fafb65641fde7e2ac99b681e3a4cf5b2ee98e00f35dcd3fa0e6e",
+      "title": "Bedlam (128)",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Doc the Destroyer.tap",
+      "kind": "game-tape",
+      "bytes": 49420,
+      "sha256": "8483af57f3bb877f76048915ca76326f39da78c1bdac91358770a01935e32010",
+      "title": "Doc the Destroyer",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Fist II - The Legend Continues.tap",
+      "kind": "game-tape",
+      "bytes": 48055,
+      "sha256": "8d3848bf59973f8a18df5e7bc5e94bc22418c24ee6022c7d90537fc8d1b43f4e",
+      "title": "Fist II - The Legend Continues",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Fist+.tap",
+      "kind": "game-tape",
+      "bytes": 53081,
+      "sha256": "3a0e7866f14d97532c86aa4a22f922151d933698cb56a3dabbd322b4a129bde9",
+      "title": "Fist+",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Knuckle Busters.tap",
+      "kind": "game-tape",
+      "bytes": 48271,
+      "sha256": "2a248d4cb596fe828ae462e9690dc141bbac13c872b06d6e51f42b777773421e",
+      "title": "Knuckle Busters",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Mugsy's Revenge.tap",
+      "kind": "game-tape",
+      "bytes": 47879,
+      "sha256": "9a23a26e326d2f87f44fbeb0b6c8e01b357c7c401c28a4b5cd28efc478582fbd",
+      "title": "Mugsy's Revenge",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Mugsy.tap",
+      "kind": "game-tape",
+      "bytes": 48391,
+      "sha256": "2406652adb3b35017c93766142d66f860173a42ea0442b38bbc2233623097ac7",
+      "title": "Mugsy",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Penetrator.tap",
+      "kind": "game-tape",
+      "bytes": 40186,
+      "sha256": "944c4dd51a2e289cc214374258ae4263b40403222817f61b1c486dea8c3b1f69",
+      "title": "Penetrator",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Rock'n'Wrestle.tap",
+      "kind": "game-tape",
+      "bytes": 47997,
+      "sha256": "a88c32820aca8c8d52a8d906b51033628966217b59067f975535a62f6dfea082",
+      "title": "Rock'n'Wrestle",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Sherlock.tap",
+      "kind": "game-tape",
+      "bytes": 56280,
+      "sha256": "24a061afebbcf487ac328d67a94278d6b767129904520e79dbf4f31ddd6b9105",
+      "title": "Sherlock",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Sports Hero.tap",
+      "kind": "game-tape",
+      "bytes": 48177,
+      "sha256": "05f54ed9e012aa6e9cdb74b3791d30f45e94405d50e400c4ac393bcc82140847",
+      "title": "Sports Hero",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Street Hassle.tap",
+      "kind": "game-tape",
+      "bytes": 68016,
+      "sha256": "abf037827c909ee251fec009fd3965a3a940cc97afe437b9402656d098889045",
+      "title": "Street Hassle",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Terror-Daktil 4D.tap",
+      "kind": "game-tape",
+      "bytes": 48124,
+      "sha256": "547cbebb1a99a59acaf7975b42aec05afade49f4e318a41b7ce7eed7261c6d29",
+      "title": "Terror-Daktil 4D",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/The Muncher (128).tap",
+      "kind": "game-tape",
+      "bytes": 121149,
+      "sha256": "755f6c09af7c7792608d239d99b24926620c3615ea08aeea17a10a41a226ca7c",
+      "title": "The Muncher (128)",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/Way of the Exploding Fist.tap",
+      "kind": "game-tape",
+      "bytes": 46138,
+      "sha256": "211d1b80132d0905f31419d37d07fe0a0fe54afc8780a5d989f566995c6422f8",
+      "title": "Way of the Exploding Fist",
+      "publisher": "Beam Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Beam Software/legal.txt",
+      "kind": "notice",
+      "bytes": 186,
+      "sha256": "59b7fb4030737e0db735cab19ef35eb9a2dcbf7026a65a6177646f2609774c34"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bo Jangeborg/Artist III.tap",
+      "kind": "game-tape",
+      "bytes": 47873,
+      "sha256": "ad1ca8c7e45fddbdadaabcaa475ae313013e70846648c945bc5e161a69d99fcf",
+      "title": "Artist III",
+      "publisher": "Bo Jangeborg"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bo Jangeborg/ArtistIII.txt",
+      "kind": "notice",
+      "bytes": 1290,
+      "sha256": "61d9268565025dd266eada0f159840f6d39052d01bce6f4a5b2685962103c354"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bo Jangeborg/Fairlight (128).tap",
+      "kind": "game-tape",
+      "bytes": 80860,
+      "sha256": "ef2d73fe5e668a19bb07375e82e269494b15a20eff27cc5a8d00b1e2917b7c91",
+      "title": "Fairlight (128)",
+      "publisher": "Bo Jangeborg"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bo Jangeborg/Fairlight II (128).tap",
+      "kind": "game-tape",
+      "bytes": 97845,
+      "sha256": "a869640fdf0e06f3d4f162a0dd80e19ba03531b2528750ae999b96240bedcbe9",
+      "title": "Fairlight II (128)",
+      "publisher": "Bo Jangeborg"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bo Jangeborg/legal.txt",
+      "kind": "notice",
+      "bytes": 144,
+      "sha256": "6c9c1cc35cdabf89b82703068a136de5dfe1fb76b9fcd781c9b91ee27574c5a3"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bob Smith/All Present and Correct.tap",
+      "kind": "game-tape",
+      "bytes": 48160,
+      "sha256": "7f3c9289dfd25c095de1676e37be2305b69420ec01abba49e872930e21daec9e",
+      "title": "All Present and Correct",
+      "publisher": "Bob Smith"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bob Smith/Gem Chaser.tap",
+      "kind": "game-tape",
+      "bytes": 37537,
+      "sha256": "d4413b56f71006218dc06d98a7c994d98e7bc6e463c4b806c111f835f12732c8",
+      "title": "Gem Chaser",
+      "publisher": "Bob Smith"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bob Smith/legal.txt",
+      "kind": "notice",
+      "bytes": 188,
+      "sha256": "f0aefc7143347ab011a68327bb7970528d5a828238eefc97196867e339c74dfc"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bubblesoft/Legal.txt",
+      "kind": "notice",
+      "bytes": 59,
+      "sha256": "c46d66729a6c46a841dbcb9056c8b8498206e5c8294b85b3553b49c8ff49ced7"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bubblesoft/Monty Mole and the Temple of Lost Souls.tap",
+      "kind": "game-tape",
+      "bytes": 44883,
+      "sha256": "600a727fc89c042d8852bbac492a05923bda2d0725cc3ddc8963edb27b1c5054",
+      "title": "Monty Mole and the Temple of Lost Souls",
+      "publisher": "Bubblesoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bubblesoft/Monty's Honey Run.tap",
+      "kind": "game-tape",
+      "bytes": 44544,
+      "sha256": "9670acb53c5612146b9bcbe50da4dedb152759afa173946772d68abe3b02d75f",
+      "title": "Monty's Honey Run",
+      "publisher": "Bubblesoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bubblesoft/Nixy the Glade Sprite (128).tap",
+      "kind": "game-tape",
+      "bytes": 52971,
+      "sha256": "8ea21d1ea21c60481a289ca0b0df77e10e121ddb7c3d1fcd4fa43e163a141671",
+      "title": "Nixy the Glade Sprite (128)",
+      "publisher": "Bubblesoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bubblesoft/Ooze - The Escape (128).tap",
+      "kind": "game-tape",
+      "bytes": 49790,
+      "sha256": "42512d648a255ad7ecd63e7632603be6bcf0496fbc3356cad9c2b12e75bb0475",
+      "title": "Ooze - The Escape (128)",
+      "publisher": "Bubblesoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bug Byte/Fridge Frenzy.tap",
+      "kind": "game-tape",
+      "bytes": 49184,
+      "sha256": "de2085647d5105dad0afecdd0bd946a99470e952df32593f2b0323969daf8bd0",
+      "title": "Fridge Frenzy",
+      "publisher": "Bug Byte"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bug Byte/Manic Miner.tap",
+      "kind": "game-tape",
+      "bytes": 33344,
+      "sha256": "470e36f286b28717ff201142f3b5b1c9dc3de7d8e144856856e42cf847aa1002",
+      "title": "Manic Miner",
+      "publisher": "Bug Byte"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bug Byte/Styx.tap",
+      "kind": "game-tape",
+      "bytes": 10158,
+      "sha256": "5f6d48a9020e15ab23e8eda4cd370b98b1f05fc9746c1f55d1fd25a2636cca98",
+      "title": "Styx",
+      "publisher": "Bug Byte"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Bug Byte/legal.txt",
+      "kind": "notice",
+      "bytes": 107,
+      "sha256": "098df9d820e9dc83687e7249d21c8e283fbbce7be424f948c32bc1d971636bda"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/180.tap",
+      "kind": "game-tape",
+      "bytes": 39160,
+      "sha256": "1bc4f36fe9840b44cd8350f96a9f90a7976af048c4171e94245b8f80823d3864",
+      "title": "180",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/1942 Mission.tap",
+      "kind": "game-tape",
+      "bytes": 42726,
+      "sha256": "57d2ddb993d25af1e4abddf5cc2762488de76024cc2df457626aa9a7546ea448",
+      "title": "1942 Mission",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Abyss.tap",
+      "kind": "game-tape",
+      "bytes": 22741,
+      "sha256": "f32ec6515a82de493a39e9fbc59d008d85cb4f5857ab75ab4ac5d0d36d499bd6",
+      "title": "Abyss",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Ace Low.tap",
+      "kind": "game-tape",
+      "bytes": 24830,
+      "sha256": "0fda63705693fd4e282d78d2e26ea0395a8b277e78802ea49459d0e6aecce503",
+      "title": "Ace Low",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Air Defence.tap",
+      "kind": "game-tape",
+      "bytes": 45482,
+      "sha256": "289d6695221c3f97bd4688bdd0bd975ad96c149a149be5c85e980d29455d9e96",
+      "title": "Air Defence",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Air Raid.tap",
+      "kind": "game-tape",
+      "bytes": 37830,
+      "sha256": "8bca4eaf0a7dfaf2aa5eb89a29fb82a2f75f1d2672033d9b1754500d438ff6a6",
+      "title": "Air Raid",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Airline.tap",
+      "kind": "game-tape",
+      "bytes": 19619,
+      "sha256": "4491ab0cf0a7a07dd9f9272f48550c0ac46badca2a764d712a5ad56b62cb0c8f",
+      "title": "Airline",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Arnhem.tap",
+      "kind": "game-tape",
+      "bytes": 40745,
+      "sha256": "27d7e4c1385c45cdf2e12fbff218f2afcbf0d931cae5d5e7681934b4de6bf2ce",
+      "title": "Arnhem",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Austerlitz 1805 - France.tap",
+      "kind": "game-tape",
+      "bytes": 49035,
+      "sha256": "eb00ba2d601c982573a31cde590b4b0e5db6f332e380815877d77e56fa0670aa",
+      "title": "Austerlitz 1805 - France",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Austerlitz 1805 - Russia.tap",
+      "kind": "game-tape",
+      "bytes": 49035,
+      "sha256": "9cfdaa51a2542f53c6c0c7d8633adf34318dbdbce1035abc369acd615d1be808",
+      "title": "Austerlitz 1805 - Russia",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Auto Chef.tap",
+      "kind": "game-tape",
+      "bytes": 8700,
+      "sha256": "90b9dc97134d1dc6d20d0971ba093e9b2a12fffe4e2d3f74767543bec59edf42",
+      "title": "Auto Chef",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Avalanche.tap",
+      "kind": "game-tape",
+      "bytes": 34231,
+      "sha256": "2755714e7950a5f0dbb7b47b6e176c1e4dad7ce4804e26e8061dbf591e1f9f64",
+      "title": "Avalanche",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Barrow Quest.tap",
+      "kind": "game-tape",
+      "bytes": 55928,
+      "sha256": "ed080259cb13e891fb7cb9a05fa80c62502c48fe71695bb544c430b7b306588d",
+      "title": "Barrow Quest",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Battle 1917.tap",
+      "kind": "game-tape",
+      "bytes": 18097,
+      "sha256": "612cf6c2fb141b6cffb9f8de3eee157bff6f3373e00dd82bb7a3e3589a7f0fe6",
+      "title": "Battle 1917",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Blaze.tap",
+      "kind": "game-tape",
+      "bytes": 43168,
+      "sha256": "8f52c66040c6d06a48c754d4976b523aa37d2f7c3a38b1a2676f0f652200160e",
+      "title": "Blaze",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Blitzkrieg.tap",
+      "kind": "game-tape",
+      "bytes": 44473,
+      "sha256": "0933d129a0d8568c2b034d47303cc75583be92046da23dae4c61b1010a5e2909",
+      "title": "Blitzkrieg",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/BlockedIn.tap",
+      "kind": "game-tape",
+      "bytes": 9175,
+      "sha256": "5857d017d738c768dabcb71022024b2ce5af6e5ab717f70ed723d04519b116cc",
+      "title": "BlockedIn",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Blue Riband.tap",
+      "kind": "game-tape",
+      "bytes": 36416,
+      "sha256": "2a84eec891a4ea16c5bb46dfc55a523a7e7d56a6bdf54e7b8edfa0e18ead8182",
+      "title": "Blue Riband",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Brewery.tap",
+      "kind": "game-tape",
+      "bytes": 37375,
+      "sha256": "7b705a51a1390fccfb4108961535a855d5a39b00fcf78e4576d7b32b347ecd76",
+      "title": "Brewery",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/British Lowland.tap",
+      "kind": "game-tape",
+      "bytes": 38082,
+      "sha256": "492794f327c8c5bd774f9561fd18a7ba1b8ed3c49c48e0458622ff22ab696d02",
+      "title": "British Lowland",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Broodslayer.tap",
+      "kind": "game-tape",
+      "bytes": 33625,
+      "sha256": "566670f22b490de505776b45a6ae1712ed060b50828210316a4c714730c92d40",
+      "title": "Broodslayer",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Camelot.tap",
+      "kind": "game-tape",
+      "bytes": 25870,
+      "sha256": "5738457d7534cbf89e850565c06c2a285059cf39ce13f08c6477c5f7ca8eb5ec",
+      "title": "Camelot",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Card Sharp.tap",
+      "kind": "game-tape",
+      "bytes": 26003,
+      "sha256": "d792ad616917e38ca5423bba5f52f6691f5382c6406a1fc1b8607c77dcaa354d",
+      "title": "Card Sharp",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Changeling.tap",
+      "kind": "game-tape",
+      "bytes": 33700,
+      "sha256": "28a83bb331172b474b4d7eeb912a85df83d6fd3fd8a70ca0470e4a7cda8204d1",
+      "title": "Changeling",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Corn Cropper.tap",
+      "kind": "game-tape",
+      "bytes": 34734,
+      "sha256": "94c2b2c4dc2c553b0469006db779393459944f7d113e969e43e85227d406eb9e",
+      "title": "Corn Cropper",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Crete 1941.tap",
+      "kind": "game-tape",
+      "bytes": 43593,
+      "sha256": "4eef074eb019b87fadf718d885e2c3cf113deaf8f5e6ed97716f8c65e6bf40d2",
+      "title": "Crete 1941",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Cromwell at War 1642-1645.tap",
+      "kind": "game-tape",
+      "bytes": 97693,
+      "sha256": "c9d68f01f58fe121295ed480e6321bae1ecedbb57373ccea954c64970582922a",
+      "title": "Cromwell at War 1642-1645",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Cube.tap",
+      "kind": "game-tape",
+      "bytes": 14910,
+      "sha256": "3899eb28d4704949d21537e6aae999f11e2311dfab3cfd2a048947f312e5412e",
+      "title": "Cube",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Dallas.tap",
+      "kind": "game-tape",
+      "bytes": 21150,
+      "sha256": "e6cdfbe06f9b7d66bb26a7e2c1a957598bb5beea06d258ab9b806b528846f02e",
+      "title": "Dallas",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Desert Rats (128).tap",
+      "kind": "game-tape",
+      "bytes": 54053,
+      "sha256": "6aeda3b1f49827e1f1c746e7dee22781dccd680c973c8b1db37f14c73afe3ac4",
+      "title": "Desert Rats (128)",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Diamond Quest.tap",
+      "kind": "game-tape",
+      "bytes": 31719,
+      "sha256": "6c0f4665c00c11b72532d0c1b779e2b6b1a13a78a16006adef778e5eec2376ed",
+      "title": "Diamond Quest",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Dix Mille.tap",
+      "kind": "game-tape",
+      "bytes": 20793,
+      "sha256": "f1f46a59d345b87225510efbfbd5ffad2adfb7ce92b77a2455f78beb58977817",
+      "title": "Dix Mille",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Dominoes.tap",
+      "kind": "game-tape",
+      "bytes": 17110,
+      "sha256": "e93bd8d0d0106f577fcfb808eda717697b40ee80843b8a5b8f793d8a53348ea2",
+      "title": "Dominoes",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/East Front.tap",
+      "kind": "game-tape",
+      "bytes": 43092,
+      "sha256": "797485c6d925c5ce4b3a2d4bdd5b1ca2bf77072c97f87349ac331f1a451e7b66",
+      "title": "East Front",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Encyclopedia of War - Ancient Battles.tap",
+      "kind": "game-tape",
+      "bytes": 145442,
+      "sha256": "df5c616c8ca3f695a117ab9eaac511ad76cc97f633a3c99cd922ebfaf1473fb2",
+      "title": "Encyclopedia of War - Ancient Battles",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Gallipoli (128).tap",
+      "kind": "game-tape",
+      "bytes": 72718,
+      "sha256": "2c4b5f969ae798e9459d8260c71fe32d8897f724a10711dff0205a5dd2fa0ae3",
+      "title": "Gallipoli (128)",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Gangsters.tap",
+      "kind": "game-tape",
+      "bytes": 46163,
+      "sha256": "85bc86fcb80f2cb2ed35df21fa81588c9455ae093575d2024dc373caf9045590",
+      "title": "Gangsters",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Hickstead.tap",
+      "kind": "game-tape",
+      "bytes": 46440,
+      "sha256": "299b3377541c7fc683fb6ce5cb6336c82183d571f142d9ed6243974d7145db09",
+      "title": "Hickstead",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Insurgency.tap",
+      "kind": "game-tape",
+      "bytes": 51588,
+      "sha256": "7001322a96e8962b7b409df0212bf14f9a59ad48c4584e7c87fe5f201c63d833",
+      "title": "Insurgency",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Invasion Force.tap",
+      "kind": "game-tape",
+      "bytes": 56397,
+      "sha256": "26a12ed9b68938bc20d54999f2694c800b46ca86a9fcbb6bffc0b025dc4932fc",
+      "title": "Invasion Force",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Jungle Adventure.tap",
+      "kind": "game-tape",
+      "bytes": 40985,
+      "sha256": "d02424b08efd686752ecd38c0c2f947744618e92631973cae0e0afcb21a5436a",
+      "title": "Jungle Adventure",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Keycode.tap",
+      "kind": "game-tape",
+      "bytes": 29081,
+      "sha256": "dbe08e9152a0361b892ed8bbc5c3e043fd938743e9d94f36bf0933162eed238d",
+      "title": "Keycode",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Magic Joker.tap",
+      "kind": "game-tape",
+      "bytes": 8810,
+      "sha256": "bac02f8152ba8b4b10fdbe3bfda8ee30c977644595bb9c3500b9b1d9cb8d1849",
+      "title": "Magic Joker",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Manage.tap",
+      "kind": "game-tape",
+      "bytes": 39571,
+      "sha256": "7fa165e2f531fff2b318f514e0b1beab62392df97352a5d43ea7520076035170",
+      "title": "Manage",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Matching Pairs.tap",
+      "kind": "game-tape",
+      "bytes": 38971,
+      "sha256": "49cda09edb093401663a2087d5ccbdd0703c2ad618a6538d59643102a555aa41",
+      "title": "Matching Pairs",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Mathsted.tap",
+      "kind": "game-tape",
+      "bytes": 44770,
+      "sha256": "8b7eca429fb4908f3d4f33d26eb1e9e7835d36865c91bff9a32f20034a3b8bc9",
+      "title": "Mathsted",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Maverick.tap",
+      "kind": "game-tape",
+      "bytes": 41659,
+      "sha256": "f65495ebc1be60aad3c082854449af059382b54d89f1a06d4f4c5397b0139605",
+      "title": "Maverick",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Modeller X.tap",
+      "kind": "game-tape",
+      "bytes": 18325,
+      "sha256": "537feb45f78728d7838a000eac1442601a2086e6253c948d909429939d191164",
+      "title": "Modeller X",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/NATO Alert.tap",
+      "kind": "game-tape",
+      "bytes": 43271,
+      "sha256": "0994fc192f2e2e83c23e90438f83936bbc67ef3d9064b6c03725a6a78cc90458",
+      "title": "NATO Alert",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Napoleon at War.tap",
+      "kind": "game-tape",
+      "bytes": 49157,
+      "sha256": "16804ef20c752b8cb278adb1acf87419247e64f0bee255d3b4030c3d2c75f39b",
+      "title": "Napoleon at War",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Nuke Lear.tap",
+      "kind": "game-tape",
+      "bytes": 30354,
+      "sha256": "19eb1465100d372a77fec1bd41f949c78d6ff8840f2ad4c0f10b6f9465a6b328",
+      "title": "Nuke Lear",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Oligopoly.tap",
+      "kind": "game-tape",
+      "bytes": 37654,
+      "sha256": "fb146908dfbb223e1284a13b733ec0e3446c4b881561120abc0b261df9828c03",
+      "title": "Oligopoly",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Overlord.tap",
+      "kind": "game-tape",
+      "bytes": 47552,
+      "sha256": "322537b66ca5a9da0be820126d5d0004d10b77d716a3e3a2269bb6691f346ee9",
+      "title": "Overlord",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Pacific War.tap",
+      "kind": "game-tape",
+      "bytes": 37908,
+      "sha256": "9a78a493f3d46dfc6edac34c336b7e1b4906823cf366b2889881d3f7c1fce3b2",
+      "title": "Pacific War",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Plunder.tap",
+      "kind": "game-tape",
+      "bytes": 41354,
+      "sha256": "ad36674ec6d7ef433a09636df54c38091ff77352949d9a73f50c93d51ad1b7a8",
+      "title": "Plunder",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Polaris.tap",
+      "kind": "game-tape",
+      "bytes": 19437,
+      "sha256": "79efa4bb5475f4a30bd2e4c6c090343bf874897c98f49a1700a13c46e8497cee",
+      "title": "Polaris",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Print Shop.tap",
+      "kind": "game-tape",
+      "bytes": 8736,
+      "sha256": "1ce839f464d154dd25cbfa89ffa644b047fcd1bbcc1e097aaddf34a443f2b745",
+      "title": "Print Shop",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Rainy Day.tap",
+      "kind": "game-tape",
+      "bytes": 41740,
+      "sha256": "a148aed96850e08eeb73495793b83720bf63e26d89bb262127313433d3e48c0f",
+      "title": "Rainy Day",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Shift Shaft.tap",
+      "kind": "game-tape",
+      "bytes": 19471,
+      "sha256": "4491ee7ccdbdb889e5fea3f184b1d122bbdc39fe8117d14a6a2935ba1a9de49b",
+      "title": "Shift Shaft",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Smuggler.tap",
+      "kind": "game-tape",
+      "bytes": 39895,
+      "sha256": "edc35be44d9bb924cfd59e8a8cb49b8bae4a46a261af8547e3cb5577def6bbfe",
+      "title": "Smuggler",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Solitaire.tap",
+      "kind": "game-tape",
+      "bytes": 20850,
+      "sha256": "e8855c9caede7682a9eed7b348423a8ca33f87024bc8182353d6149d9f6d6159",
+      "title": "Solitaire",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Staff of Zaranol.tap",
+      "kind": "game-tape",
+      "bytes": 40105,
+      "sha256": "742d0983ccc185633651843a6ce47d45be9d007ecf8c2ed449425f5b4cc516ed",
+      "title": "Staff of Zaranol",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Stalingrad.tap",
+      "kind": "game-tape",
+      "bytes": 48178,
+      "sha256": "b743923439a5f746b4bd4087789c6c1cd2e557d4a90b4e1538a1743622d33e5f",
+      "title": "Stalingrad",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Stockmarket.tap",
+      "kind": "game-tape",
+      "bytes": 17001,
+      "sha256": "ba080a5ce0c185b4e23efc3d064f3b9c746984fdac71b28ed93d1dbd7ff10856",
+      "title": "Stockmarket",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Superpower.tap",
+      "kind": "game-tape",
+      "bytes": 54296,
+      "sha256": "e206913c59efb03ec1c523dec7ada58e2951550f76ac8f57a003547c8380afb7",
+      "title": "Superpower",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Swords of Bane (128).tap",
+      "kind": "game-tape",
+      "bytes": 62921,
+      "sha256": "a2ee0e38eda654b91b2439f33771aa363affb8a3507105031ba336bdd710810a",
+      "title": "Swords of Bane (128)",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Ashes.tap",
+      "kind": "game-tape",
+      "bytes": 45784,
+      "sha256": "e2d6be18a4ad3e7a7743814dc56c68b25230d9688c3e57249dfe3b2830a97a0e",
+      "title": "The Ashes",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Battle of the Bulge.tap",
+      "kind": "game-tape",
+      "bytes": 41445,
+      "sha256": "f6a43f6e5470e992a26593ef237daf642e1467a1354eaf08c27af19b6fff325f",
+      "title": "The Battle of the Bulge",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Byte.tap",
+      "kind": "game-tape",
+      "bytes": 36547,
+      "sha256": "98aed2e9e435e237b4a725c4c36ce716191c1923376b20c19af1a579c571cad8",
+      "title": "The Byte",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The General.tap",
+      "kind": "game-tape",
+      "bytes": 66041,
+      "sha256": "57191abe96025cf7503582b2149ab73b5293f87e636b93757bb9ab33c6785b52",
+      "title": "The General",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Golden Cobra.tap",
+      "kind": "game-tape",
+      "bytes": 46880,
+      "sha256": "9a2152632a2f0268978a3f1cbaca211a5e48ca4c35aa054302de79e7a088869d",
+      "title": "The Golden Cobra",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Open - Carnoustie.tap",
+      "kind": "game-tape",
+      "bytes": 39346,
+      "sha256": "b23a325574a2d47d10595da200fe8358f95a282e0b328888b9dec5024a33f9af",
+      "title": "The Open - Carnoustie",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Open - Turnberry.tap",
+      "kind": "game-tape",
+      "bytes": 40583,
+      "sha256": "e5b9bde2b8d8f4583f827b759a4aa6934fc1bfe548a8a64013a04b086a45e6c6",
+      "title": "The Open - Turnberry",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/The Prince.tap",
+      "kind": "game-tape",
+      "bytes": 64098,
+      "sha256": "8740384aaea068da46f009e1d053f9bb9b7beb30c95085b40a43f6673c9e6564",
+      "title": "The Prince",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Tomb of Akhenaten.tap",
+      "kind": "game-tape",
+      "bytes": 50925,
+      "sha256": "7f82fd2844db90ccca0177ddf926e132b652709db7916060dfcaaa6fe3cdf05d",
+      "title": "Tomb of Akhenaten",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Vulcan (128).tap",
+      "kind": "game-tape",
+      "bytes": 53696,
+      "sha256": "9fe1eb01295cb65f309756d9f69bddfd732e94cfd54c0cbb6118a011a0dd5475",
+      "title": "Vulcan (128)",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/War 70.tap",
+      "kind": "game-tape",
+      "bytes": 44387,
+      "sha256": "ccbd0b65dfbaaeabe7865dd2acfc2919dc386fb39f97af98f4dce946c3e3192e",
+      "title": "War 70",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/War Zone.tap",
+      "kind": "game-tape",
+      "bytes": 37781,
+      "sha256": "48a4d7c1bbab2111cfc4f35e9460cfec571bc93396702fd65df158ba835ec7b4",
+      "title": "War Zone",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/War of the Roses.tap",
+      "kind": "game-tape",
+      "bytes": 118017,
+      "sha256": "a00a670f9aff73b7b11b6026007c05eae02e2126e6d145a0e86cd433dbd38cf9",
+      "title": "War of the Roses",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Wellington at Waterloo.tap",
+      "kind": "game-tape",
+      "bytes": 49032,
+      "sha256": "6fb41124a6829c37431683a3d44115659a8ac45dfc047a9105ef2d029f90fcc2",
+      "title": "Wellington at Waterloo",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Whodunnit.tap",
+      "kind": "game-tape",
+      "bytes": 47051,
+      "sha256": "688f478fcd4036714d006af7e58fdf1cf3a0e923343a688201b32d8c82446a08",
+      "title": "Whodunnit",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Yankee - Chickamauga.tap",
+      "kind": "game-tape",
+      "bytes": 49232,
+      "sha256": "18593daa982ca7adfa14c015a0259070e0af17cd77dca40a8b7dd352fcf370fd",
+      "title": "Yankee - Chickamauga",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Yankee - Gettysburg.tap",
+      "kind": "game-tape",
+      "bytes": 49204,
+      "sha256": "d16f1701f7941408d19e7d2e14c9b482cb6b40e87d97ca2c8f7ca3b7598559ed",
+      "title": "Yankee - Gettysburg",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Zulu Wars Ulundi - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 48658,
+      "sha256": "e30038fbd33212057b07f5799cc582b9c30047a201fae7043b3564dde21b376a",
+      "title": "Zulu Wars Ulundi - Part 1",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/Zulu Wars Umlalazi - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 48658,
+      "sha256": "259844ef006ecc71f938ad2a141143a1a87742b9ab66b51db8eda2a24f42a6d7",
+      "title": "Zulu Wars Umlalazi - Part 2",
+      "publisher": "CCS"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/CCS/legal.txt",
+      "kind": "notice",
+      "bytes": 87,
+      "sha256": "ce402295a49d1f17b748c6414e6766ad5a051503272097e732de96c68c1fcdf7"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Chris Smith/Cybex.tap",
+      "kind": "game-tape",
+      "bytes": 56320,
+      "sha256": "b7dde30e344657c2fa1fb0c69c54afae71bd001fa929089d2d1dc9f064940d25",
+      "title": "Cybex",
+      "publisher": "Chris Smith"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Chris Smith/Skyway.tap",
+      "kind": "game-tape",
+      "bytes": 46998,
+      "sha256": "d35f3af76b7e73534bc6b52c238e4bfebfc78a4bcf31c05acaf6c0daa2b39154",
+      "title": "Skyway",
+      "publisher": "Chris Smith"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Chris Smith/legal.txt",
+      "kind": "notice",
+      "bytes": 51,
+      "sha256": "ec970613e8cdca08966c73cfbfa3977d43075dc66a7275a51381fcd757f803f1"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/DK'Tronics/Invaders.tap",
+      "kind": "game-tape",
+      "bytes": 6971,
+      "sha256": "761bf5ab9f37c2c3e61ca97b375a524c4bed6e7cce5818d8a9c7ca985771bb21",
+      "title": "Invaders",
+      "publisher": "DK'Tronics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/DK'Tronics/Jumbly.tap",
+      "kind": "game-tape",
+      "bytes": 40482,
+      "sha256": "9463d5eac192eec01f57355745ebd71649b833972919f183dffa8e4c6f6b0ca5",
+      "title": "Jumbly",
+      "publisher": "DK'Tronics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/DK'Tronics/Maziacs.tap",
+      "kind": "game-tape",
+      "bytes": 25983,
+      "sha256": "03dffd581222640214ad2b299459ba2d42404cbf523b2978d0618f17ef9e2f57",
+      "title": "Maziacs",
+      "publisher": "DK'Tronics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/DK'Tronics/Zig Zag.tap",
+      "kind": "game-tape",
+      "bytes": 32910,
+      "sha256": "941757e13e144bb2398e1cbbd76a1d47f065b735926eb479472a71aa45aba688",
+      "title": "Zig Zag",
+      "publisher": "DK'Tronics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/DK'Tronics/legal.txt",
+      "kind": "notice",
+      "bytes": 122,
+      "sha256": "07aaf37482c81aaf3da3fbdccb177614b26233265fd9cf074c89b221d3a95419"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Bored of the Rings - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 35249,
+      "sha256": "6d227d327d1363d961f50d9dce292f5e16df13db53790ef898f4067790a4b181",
+      "title": "Bored of the Rings - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Bored of the Rings - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 45731,
+      "sha256": "a063f2a09c4143a90bc119515a3b26ee5c38a7effb2db4780dc42309b9661457",
+      "title": "Bored of the Rings - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Bored of the Rings - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 45731,
+      "sha256": "5950ba8770237ffa3c341fa4a2f4f0b6c21960951f982ef01bf999bf0b0d2a0e",
+      "title": "Bored of the Rings - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Galaxias.tap",
+      "kind": "game-tape",
+      "bytes": 44772,
+      "sha256": "963f4a32f3280c8aff06a8bff6a9eb8088702c06b545fd18c0898e76654d6b1d",
+      "title": "Galaxias",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Murder off Miami - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 45138,
+      "sha256": "a48ddbadae6068ff544b8015f0eb8a18a6433d147585d3f9fb862141aa42e378",
+      "title": "Murder off Miami - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Murder off Miami - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 45138,
+      "sha256": "4d0c2ebee359bc40a6dfb1dd7bf7505f55f2d13051caef71bd883b7444bfeea5",
+      "title": "Murder off Miami - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Murder off Miami - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 45108,
+      "sha256": "3ef9e85f37b5e065510ead3ebb2f6a03da89c17bf47ef33d1c8d1ebc412e4e21",
+      "title": "Murder off Miami - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Quest for the Holy Joystick.tap",
+      "kind": "game-tape",
+      "bytes": 41088,
+      "sha256": "d43f830b97df18c2a47411849e1611b57ebd2a4a8bf201868459f0e3420d3cde",
+      "title": "Quest for the Holy Joystick",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Return of the Holy Joystick.tap",
+      "kind": "game-tape",
+      "bytes": 42827,
+      "sha256": "90293811eb0bb0bc1c421a75237f13146068ee76dc8294235cbdbdc625bd3c78",
+      "title": "Return of the Holy Joystick",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Robin of Sherlock - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 45894,
+      "sha256": "7fca3ae63ad407129eaf2847b7df58d88e760ae5c9bfc40db203b6575a6f6e95",
+      "title": "Robin of Sherlock - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Robin of Sherlock - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 45894,
+      "sha256": "879030e13c1dc3f5fc74e28bbbd3a1ede4a2a2e532576d5c9722f49a3ce2cd21",
+      "title": "Robin of Sherlock - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Robin of Sherlock - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 45894,
+      "sha256": "ee70deaef58470d1937e3b1d25f8d7fb65f3207ba8340c02dde32118a4e65b75",
+      "title": "Robin of Sherlock - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/Sherwood Forest.tap",
+      "kind": "game-tape",
+      "bytes": 32883,
+      "sha256": "47ad242b670aec450eb83fe73805643ae9fc9dbbcfa237b6c4275ccc54ebb9ae",
+      "title": "Sherwood Forest",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Big Sleaze - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 43641,
+      "sha256": "18d0bef766d046f0ec97c0f841c277a9c370d0707998fe912f3accf3d06d62dc",
+      "title": "The Big Sleaze - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Big Sleaze - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 43652,
+      "sha256": "5311100c647a66672484785faecba0507baa25e571fd5d5f10a27d6e4ed01098",
+      "title": "The Big Sleaze - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Big Sleaze - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 43659,
+      "sha256": "968fbc6fdbe024f617cc2cd56ca96e779e4715c4bc338857900518f940ecc257",
+      "title": "The Big Sleaze - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Boggit - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 43151,
+      "sha256": "32f34949b6c40cb93501462a83b1ab99dacee4a5f549d749bd8e3b1adff59d92",
+      "title": "The Boggit - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Boggit - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 41290,
+      "sha256": "c4f1f43136aaec21939c76d273593ac724c346a1d8da481db0a185867058112a",
+      "title": "The Boggit - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Boggit - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 41292,
+      "sha256": "3ed3e974aa835db741ee55447a5527aa8e1449a465c8c9145fc62646a82b1b08",
+      "title": "The Boggit - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Dragonstar Trilogy - Part 1.tap",
+      "kind": "game-tape",
+      "bytes": 35452,
+      "sha256": "35c948a548e667c4fee80bce1807a416f1bd60a6faeae0ff97173c5a18786812",
+      "title": "The Dragonstar Trilogy - Part 1",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Dragonstar Trilogy - Part 2.tap",
+      "kind": "game-tape",
+      "bytes": 16730,
+      "sha256": "fa3f4180617d225fc4d0e2e376a9838d60c7351dec71641de16cbfd44f45af60",
+      "title": "The Dragonstar Trilogy - Part 2",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/The Dragonstar Trilogy - Part 3.tap",
+      "kind": "game-tape",
+      "bytes": 41427,
+      "sha256": "f085e191c1077b00a89b6900f73c12399da32efbf3f475e55f434b8eedaa6477",
+      "title": "The Dragonstar Trilogy - Part 3",
+      "publisher": "Delta 4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Delta 4/legal.txt",
+      "kind": "notice",
+      "bytes": 102,
+      "sha256": "76849fc45bac0601d50032282adf434faed5084b07f5cfa19303ffdcaabdefc0"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Faster Than Light/Hydrofool.tap",
+      "kind": "game-tape",
+      "bytes": 46065,
+      "sha256": "f1fab3224074f01ddf94861611b2a9f4143ef452a39912f88aa8620a09da7fce",
+      "title": "Hydrofool",
+      "publisher": "Faster Than Light"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Faster Than Light/Light Force.tap",
+      "kind": "game-tape",
+      "bytes": 57061,
+      "sha256": "a6559f73213e4e7bb5278b170688f0925c5ae53f73b0ae26705e89f5bc301453",
+      "title": "Light Force",
+      "publisher": "Faster Than Light"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Faster Than Light/Shockway Rider.tap",
+      "kind": "game-tape",
+      "bytes": 49515,
+      "sha256": "69066637368a3837edcd60ae4c5613abe57bdb7aa884aa6ca77931cce977d550",
+      "title": "Shockway Rider",
+      "publisher": "Faster Than Light"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Faster Than Light/legal.txt",
+      "kind": "notice",
+      "bytes": 64,
+      "sha256": "5e97ac4a234047f344ea6b8f6cd43e5b33d363c64fac676ad7c323c49b4c2cf1"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Firebird/Elite DX.tap",
+      "kind": "game-tape",
+      "bytes": 54078,
+      "sha256": "48ac062fac35c07a0286be997b57ce4aa08bae45a4411bf057b7958157c7e4ff",
+      "title": "Elite DX",
+      "publisher": "Firebird"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Firebird/legal.txt",
+      "kind": "notice",
+      "bytes": 59,
+      "sha256": "caea94d6f0b6621ef5a9a0f14ed4dc37257b69c7c0e3c243acb85acfd844fdff"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Ad Astra.tap",
+      "kind": "game-tape",
+      "bytes": 45967,
+      "sha256": "3633a99bb4db38028b58750afa2e5e9dd1beb4c6dc56c82c1efd9b4068fb35c1",
+      "title": "Ad Astra",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Dun Darach.tap",
+      "kind": "game-tape",
+      "bytes": 45899,
+      "sha256": "dbe152db831b085e831b4e695d340278d5dbfd6592e22dcfca6531f638d6427d",
+      "title": "Dun Darach",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Heavy on the Magick.tap",
+      "kind": "game-tape",
+      "bytes": 50333,
+      "sha256": "cf6347ececfb1173a97e2a060c18029601980b3cd10f69f459d356ff9f0c6ee9",
+      "title": "Heavy on the Magick",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Marsport.tap",
+      "kind": "game-tape",
+      "bytes": 48689,
+      "sha256": "d0214c34b60c06f7bb6ed5c0f5fe2cb8289d13cc67d8e726e1ae2a429ed49ba3",
+      "title": "Marsport",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Super Trux (128).tap",
+      "kind": "game-tape",
+      "bytes": 73529,
+      "sha256": "7161a6a01b020351a943a10c9255f716181505d330ca45e23c7a20cf7707e101",
+      "title": "Super Trux (128)",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Sweevo's Whirled (128).tap",
+      "kind": "game-tape",
+      "bytes": 49070,
+      "sha256": "633699d44463dd328f58f822e8500366f5027fd59581ab7651a438fdb124345e",
+      "title": "Sweevo's Whirled (128)",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/Tir Na Nog.tap",
+      "kind": "game-tape",
+      "bytes": 46741,
+      "sha256": "0b1b23e794fa42b0f7cc671f29fc7028a8e51486cbdf9a52daddb915c4e640aa",
+      "title": "Tir Na Nog",
+      "publisher": "Gargoyle Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gargoyle Games/legal.txt",
+      "kind": "notice",
+      "bytes": 61,
+      "sha256": "03ba53fb149f40c16ca25e8617a30255a0dcaeb003a995da678037616b9ed38c"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Alternative World Games.tap",
+      "kind": "game-tape",
+      "bytes": 345063,
+      "sha256": "779167e23bf0cfafa76b05ebcec9868b123b4496324f80ce71c8935c0d954a35",
+      "title": "Alternative World Games",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Auf Wiedersehen Monty.tap",
+      "kind": "game-tape",
+      "bytes": 70674,
+      "sha256": "dd81cc252fcae40c440585435537658e9a0b224234b3edb1f5b1833cf2182133",
+      "title": "Auf Wiedersehen Monty",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Blood Valley.tap",
+      "kind": "game-tape",
+      "bytes": 102905,
+      "sha256": "9c9d2fb8ef6bffa8b1a6cddecbb8454881f84be478be57efd158aeae43460021",
+      "title": "Blood Valley",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Bounder.tap",
+      "kind": "game-tape",
+      "bytes": 56845,
+      "sha256": "506a391ea0e09feef5e9fd8781521b0a0f59e620b8216c12698fb06ba0f79b90",
+      "title": "Bounder",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Convoy Raider.tap",
+      "kind": "game-tape",
+      "bytes": 39521,
+      "sha256": "3aae83a4ed7d88e34b2364976f5b4b6f5b66c3fb92b5ff4073c53e885f0f21b1",
+      "title": "Convoy Raider",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Dark Fusion.tap",
+      "kind": "game-tape",
+      "bytes": 65800,
+      "sha256": "f1f31be4e7c69a00e59b717efdc5bd64a8e86c72381313c60399a8eda5c5d569",
+      "title": "Dark Fusion",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Footballer of the Year 2.tap",
+      "kind": "game-tape",
+      "bytes": 48459,
+      "sha256": "d1ba58f02e81d9359574733ed981407645cc6ac1229a7471d8420faa5e680bd8",
+      "title": "Footballer of the Year 2",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Footballer of the Year.tap",
+      "kind": "game-tape",
+      "bytes": 49529,
+      "sha256": "b71b5bda8a2584ba53eaf549da7f4ad2a02866a82dd069ef268be852904aa793",
+      "title": "Footballer of the Year",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Future Knight (128).tap",
+      "kind": "game-tape",
+      "bytes": 53418,
+      "sha256": "9ded804bf1fce96480c8a5f03e38573bc11c989c885c397d9d0d47358ea60aae",
+      "title": "Future Knight (128)",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Grumpy Gumphrey Supersleuth.tap",
+      "kind": "game-tape",
+      "bytes": 56778,
+      "sha256": "05772bd296ae4c37836cad777701b8516d4bd99bfff046db8faf4e70d5f95798",
+      "title": "Grumpy Gumphrey Supersleuth",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Impossamole.tap",
+      "kind": "game-tape",
+      "bytes": 152808,
+      "sha256": "346d2e88f21e2efaba6b05e16b3da2e9bfb6c60321c22ed718c41915d96396f6",
+      "title": "Impossamole",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Jack the Nipper in Coconut Capers.tap",
+      "kind": "game-tape",
+      "bytes": 48221,
+      "sha256": "5a515ec69e234ed9d71dc8c9bf7ca5830203ca61b6423d3bf8fd99d8f40f6573",
+      "title": "Jack the Nipper in Coconut Capers",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Jack the Nipper.tap",
+      "kind": "game-tape",
+      "bytes": 47142,
+      "sha256": "82c5eaf000279a5e0ddc66294545679b0f58a1e8987b7f12aa63867c1f91e15e",
+      "title": "Jack the Nipper",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Krakout.tap",
+      "kind": "game-tape",
+      "bytes": 49321,
+      "sha256": "6623faf0e5870d1a717df10effdbfeb16cd98816c736651935e3857ef5222ea0",
+      "title": "Krakout",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Metabolis.tap",
+      "kind": "game-tape",
+      "bytes": 56766,
+      "sha256": "228719b8ce80be09dc0148efcc634dd9ce551d9602b24aed91e1d2f899e290e5",
+      "title": "Metabolis",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Moley Christmas.tap",
+      "kind": "game-tape",
+      "bytes": 41697,
+      "sha256": "c9f614dda605c773b78d5d944f5b4c9a01e2319e15637656a5fa58097f44cca2",
+      "title": "Moley Christmas",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Monty is Innocent.tap",
+      "kind": "game-tape",
+      "bytes": 48795,
+      "sha256": "d249f5a325602a7fb544b2ead8031fb3350258939a33a24e02f898802fd27d8f",
+      "title": "Monty is Innocent",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Monty on the Run.tap",
+      "kind": "game-tape",
+      "bytes": 48223,
+      "sha256": "c928d92746450850f38d2f19c0546f83b7322c4388e1453d3157d403e7af059a",
+      "title": "Monty on the Run",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Night Raider.tap",
+      "kind": "game-tape",
+      "bytes": 48176,
+      "sha256": "c2cf7df09264f44e645d554fd2ef55b271142e7ae3d20405a060a6af6f3f9900",
+      "title": "Night Raider",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/North Star.tap",
+      "kind": "game-tape",
+      "bytes": 49545,
+      "sha256": "618aa13c6b67a094cef0f5016554927abb70bdb5d594d81a20e3caa1abec3364",
+      "title": "North Star",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Percy the Potty Pigeon.tap",
+      "kind": "game-tape",
+      "bytes": 49237,
+      "sha256": "2aebef5222bcf36ba7049a52971cd0714ca0af50b9e0f040817a0051c5e4b882",
+      "title": "Percy the Potty Pigeon",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Sam Stoat Safebreaker.tap",
+      "kind": "game-tape",
+      "bytes": 48721,
+      "sha256": "7da92a9669dad656d0e954175b89b5cae9eefdc38d473ddfc1ef3d200dcda72c",
+      "title": "Sam Stoat Safebreaker",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Samurai Trilogy.tap",
+      "kind": "game-tape",
+      "bytes": 148273,
+      "sha256": "ff42696b9bcd9272101eeff2ed50a3c0fb08a407c7c2b083cbfccb495de182ac",
+      "title": "Samurai Trilogy",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Skate Crazy.tap",
+      "kind": "game-tape",
+      "bytes": 75491,
+      "sha256": "71f39e5b59ac5567ec59beff6935b5f10d8d301fdfcbe7573c54a6f4140fa09d",
+      "title": "Skate Crazy",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Super Sports.tap",
+      "kind": "game-tape",
+      "bytes": 179340,
+      "sha256": "78de8b9ba1d06e8c328ef7cfc0c50bc8fb72f5aa86671a7e9798efe591fd5951",
+      "title": "Super Sports",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Switchblade.tap",
+      "kind": "game-tape",
+      "bytes": 53113,
+      "sha256": "f8546786d5b882930f9befd6e5e6e34f90748f2707b882fc0c56c787cbcb9b3a",
+      "title": "Switchblade",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/The Duct.tap",
+      "kind": "game-tape",
+      "bytes": 47281,
+      "sha256": "7192978aa0af06c497776e4628db879f77fb93010f28a5ecf2315e1b2824e040",
+      "title": "The Duct",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Thing Bounces Back.tap",
+      "kind": "game-tape",
+      "bytes": 40189,
+      "sha256": "44e5b7949c5da5e0e99d0e6d1989a2ccf63d3fe95f4e395f3211c07d67b42d1b",
+      "title": "Thing Bounces Back",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Tour de Force.tap",
+      "kind": "game-tape",
+      "bytes": 122952,
+      "sha256": "f21a58827d860287faea0c12d63c8192eb64db268764e3ce7a825a2990f4a919",
+      "title": "Tour de Force",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Trailblazer.tap",
+      "kind": "game-tape",
+      "bytes": 49738,
+      "sha256": "30c5afef3d6b680e651ce175e981c578de39fa52fec2e176d17b1894f6ee0632",
+      "title": "Trailblazer",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/Wanted - Monty Mole.tap",
+      "kind": "game-tape",
+      "bytes": 49587,
+      "sha256": "9c8ecda5d64990c4ef43c27e6d3e53300b978a207dce209826e81be2738f83f1",
+      "title": "Wanted - Monty Mole",
+      "publisher": "Gremlin Graphics"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Gremlin Graphics/legal.txt",
+      "kind": "notice",
+      "bytes": 100,
+      "sha256": "dba3badf03a35d4bc7c789a1829330ede7b736f35f044957b6d7ebe297cd1bfc"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Imagine/Super Soccer.tap",
+      "kind": "game-tape",
+      "bytes": 51434,
+      "sha256": "c6e2ae10ed19217bada1836cb2d771483c373e5922d46a5c31e353430b192495",
+      "title": "Super Soccer",
+      "publisher": "Imagine"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Imagine/World Series Baseball.tap",
+      "kind": "game-tape",
+      "bytes": 47178,
+      "sha256": "56c54f40977ed2a7b942d5cb7d4b8a87adc8e1cf276357e74aec58e53506679b",
+      "title": "World Series Baseball",
+      "publisher": "Imagine"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Imagine/World Series Basketball.tap",
+      "kind": "game-tape",
+      "bytes": 50303,
+      "sha256": "a867ccf0a200f38d26fbf075bcbd0ff548b2f3eccdfa5a4d46abc0c7c309ad48",
+      "title": "World Series Basketball",
+      "publisher": "Imagine"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Imagine/legal.txt",
+      "kind": "notice",
+      "bytes": 58,
+      "sha256": "79345af543b4f50ecbd003959a5d76aecddc776498b56e7aa411e2c8cc775dac"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/John Young/Bozxle.tap",
+      "kind": "game-tape",
+      "bytes": 40133,
+      "sha256": "1876c6ab3f21ec6ffeaa11c9fc0ab9ab6383aee29a3dca8ee4acba8526c0abc8",
+      "title": "Bozxle",
+      "publisher": "John Young"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/John Young/legal.txt",
+      "kind": "notice",
+      "bytes": 50,
+      "sha256": "9ace16e0aa03be48110273049db69d2fa4520ab69311cbf9a999e15ff48c99b8"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Amusement Park.tap",
+      "kind": "game-tape",
+      "bytes": 12829,
+      "sha256": "ea19815dff6ceca87d97ecdf1bb0b13e1bbca1de70a10cf7ca5d4866474db715",
+      "title": "Amusement Park",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Area 51.tap",
+      "kind": "game-tape",
+      "bytes": 8262,
+      "sha256": "db99873a81a2eb39ea427989d1ef4aa46983f53bed562bf488c251044048969f",
+      "title": "Area 51",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Battery's Not Precluded.tap",
+      "kind": "game-tape",
+      "bytes": 44363,
+      "sha256": "5cbba10d93037f7efb8bb7d5fa2590bf7b81aed6bc5bd83ca0690efe90c1bd6f",
+      "title": "Battery's Not Precluded",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Byte Me.tap",
+      "kind": "game-tape",
+      "bytes": 75740,
+      "sha256": "ca86e482bd2268e3e79d4f100aa35883624d62856136e53c3804373c1d51f3c3",
+      "title": "Byte Me",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Coracle.tap",
+      "kind": "game-tape",
+      "bytes": 45745,
+      "sha256": "5a917ee7d2b5eb30b8bb71ff871196de78e87fb14c4b6628380236ae3acf262e",
+      "title": "Coracle",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Egghead 6 - Goes to Town.tap",
+      "kind": "game-tape",
+      "bytes": 56921,
+      "sha256": "c2d6c42a55a8066f995c074d33175255fd5453c8bae2d083e0e649211f6d021e",
+      "title": "Egghead 6 - Goes to Town",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Encycolpedia Galactica.tap",
+      "kind": "game-tape",
+      "bytes": 59554,
+      "sha256": "ab1b23675cda29b8b7bd67053f32d187d2639084a157dfb905e937f302d296d5",
+      "title": "Encycolpedia Galactica",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Milk No Sugar.tap",
+      "kind": "game-tape",
+      "bytes": 18462,
+      "sha256": "7684c372873f5bf75b31b35d0386f9f0466488996d44d8ce2d1b323c71a59273",
+      "title": "Milk No Sugar",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/More Tea Vicar (128).tap",
+      "kind": "game-tape",
+      "bytes": 60372,
+      "sha256": "0d9b614594563b85a694cecf9b94453f21c953d06c16831c4d96e955aea280f4",
+      "title": "More Tea Vicar (128)",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Retro Racer.tap",
+      "kind": "game-tape",
+      "bytes": 18973,
+      "sha256": "1838896a05e0062d29602e5f415c11fe3273a6743fd8b6b64f9fe8e74e3fc192",
+      "title": "Retro Racer",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Tea and Sympathy.tap",
+      "kind": "game-tape",
+      "bytes": 12742,
+      "sha256": "30fcaacc3c5e17c52a522f9f6c64a7fcae278d7426e379607f3cab8cc030f109",
+      "title": "Tea and Sympathy",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/Utter Tripe.tap",
+      "kind": "game-tape",
+      "bytes": 48419,
+      "sha256": "592b016f69e067b25e1f6a0ab7341bdfde02a5d2c86d76af0dd514b3409155bb",
+      "title": "Utter Tripe",
+      "publisher": "Jonathan Cauldwell"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Jonathan Cauldwell/legal.txt",
+      "kind": "notice",
+      "bytes": 97,
+      "sha256": "d5ef137e675e30c0750cc3ebd1efc20c7a1e4b4491cb5ba392efcf9c081eda67"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/City Bomber.tap",
+      "kind": "game-tape",
+      "bytes": 26570,
+      "sha256": "5bcddd7cf2fb38fce63baea54e22711fe37341655ddf0116d66f50a90a2e27c6",
+      "title": "City Bomber",
+      "publisher": "Llamasoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/Headbangers Heaven.tap",
+      "kind": "game-tape",
+      "bytes": 19877,
+      "sha256": "7a1a9008c8d2fca6bcda43a7ba9770bd5a60ca9190af1aad416c7ab3cf788369",
+      "title": "Headbangers Heaven",
+      "publisher": "Llamasoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/Psychedelia.tap",
+      "kind": "game-tape",
+      "bytes": 37580,
+      "sha256": "69c290d34e166484ef74abe3e75b62e831f4ce34d9ccfb39a3009c757c5c6d35",
+      "title": "Psychedelia",
+      "publisher": "Llamasoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/Rox III.tap",
+      "kind": "game-tape",
+      "bytes": 8135,
+      "sha256": "350a1ca7ef69bf2d407cd8485a19794805e6dea463ca320e5f9429affe8a2acf",
+      "title": "Rox III",
+      "publisher": "Llamasoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/Superdeflex.tap",
+      "kind": "game-tape",
+      "bytes": 32944,
+      "sha256": "7ac4060970283bb31f1658ff3b25792bca421c572a08717b7661f96bb3e6a960",
+      "title": "Superdeflex",
+      "publisher": "Llamasoft"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Llamasoft/legal.txt",
+      "kind": "notice",
+      "bytes": 57,
+      "sha256": "211e2dd14e0bec161f6f1125ceba88477ac31e346f157eacd6dcb3942763bd22"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Marc Incley/Infection (128).tap",
+      "kind": "game-tape",
+      "bytes": 138810,
+      "sha256": "1c4b7d32b879df611cb77fa09900b5c60f27ce7027f0c33955fa0d20aa301964",
+      "title": "Infection (128)",
+      "publisher": "Marc Incley"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Marc Incley/Mayhem.tap",
+      "kind": "game-tape",
+      "bytes": 49851,
+      "sha256": "458e51703551737926a5f0a5f9d880f9a803ae0963a4e52367182a029a96fca9",
+      "title": "Mayhem",
+      "publisher": "Marc Incley"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Marc Incley/Oink.tap",
+      "kind": "game-tape",
+      "bytes": 72365,
+      "sha256": "9ec66cca5b7df2846c14e0f3e6cab1b4fbc5e26682898fbba3f0af223ea7f957",
+      "title": "Oink",
+      "publisher": "Marc Incley"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Marc Incley/legal.txt",
+      "kind": "notice",
+      "bytes": 129,
+      "sha256": "b4ea18895d6a2d4ef3f03985e76e03efd230e2e9c927ce66eeafa5e13fa3dfd4"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mikro-Gen/Everyone's a Wally.tap",
+      "kind": "game-tape",
+      "bytes": 49554,
+      "sha256": "03648f289e2dfe638bc8b37210d310192b9a74619ee4e4ad6a4cce1d8f9236af",
+      "title": "Everyone's a Wally",
+      "publisher": "Mikro-Gen"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mikro-Gen/Herbert's Dummy Run.tap",
+      "kind": "game-tape",
+      "bytes": 49578,
+      "sha256": "ef6d87f9a6e62ec678775ad77194273784f597f91186ea01c78f60a165d45583",
+      "title": "Herbert's Dummy Run",
+      "publisher": "Mikro-Gen"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mikro-Gen/Mad Martha 2.tap",
+      "kind": "game-tape",
+      "bytes": 48995,
+      "sha256": "e826078fecb67dc01a9177ce98555ad0f08803af2acda4a8c66d6d5b8cb98486",
+      "title": "Mad Martha 2",
+      "publisher": "Mikro-Gen"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mikro-Gen/Mad Martha.tap",
+      "kind": "game-tape",
+      "bytes": 41212,
+      "sha256": "9b38844cd5c424e209c28f5176062a7e80f72b9f60a3f0235fc7d7a284a7c9dd",
+      "title": "Mad Martha",
+      "publisher": "Mikro-Gen"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mikro-Gen/legal.txt",
+      "kind": "notice",
+      "bytes": 110,
+      "sha256": "4e0279d3fef1717225006b222fd578574098a0a0863ae864847385492716b701"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Chaos The Battle of the Wizards.tap",
+      "kind": "game-tape",
+      "bytes": 40737,
+      "sha256": "97d25a612d21c33c7a34a159b4b66f894daa4daab43b2f21e785971350788334",
+      "title": "Chaos The Battle of the Wizards",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Laser Squad.tap",
+      "kind": "game-tape",
+      "bytes": 99982,
+      "sha256": "77deaa43f4f785bd11795b7d747725a73c9d1fc97c4d7698651e4c2a6d8f97c5",
+      "title": "Laser Squad",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Lords of Chaos.tap",
+      "kind": "game-tape",
+      "bytes": 187654,
+      "sha256": "44df1a03d280f8a9d38c001f51b1e1324afe08af72b47cdb2901dd07f35c75cc",
+      "title": "Lords of Chaos",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Nebula.tap",
+      "kind": "game-tape",
+      "bytes": 43913,
+      "sha256": "6e5a56b51272bc9acda30d2b84c1b5d31e81a0cf3891952e7160d8ae604c92f0",
+      "title": "Nebula",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Rebelstar - 2 Player.tap",
+      "kind": "game-tape",
+      "bytes": 47803,
+      "sha256": "a912913c8f4782f4fca6ca6d6a65317b8a1d4a9b090e1008135c8b9dad869163",
+      "title": "Rebelstar - 2 Player",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Rebelstar 2 - 2 Player.tap",
+      "kind": "game-tape",
+      "bytes": 47820,
+      "sha256": "843e691c211479b78dda9c57ace33829a8804ab411b4b74caa5806f2dd6fb416",
+      "title": "Rebelstar 2 - 2 Player",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Rebelstar 2 .tap",
+      "kind": "game-tape",
+      "bytes": 47920,
+      "sha256": "85a137e28a8f0fe9d03647d5f3a2bf34db6df900596934c4751d33e5d923e48c",
+      "title": "Rebelstar 2 ",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Rebelstar Raiders.tap",
+      "kind": "game-tape",
+      "bytes": 91458,
+      "sha256": "08871005bbc88ed2643f4432489631927e1445c3d001b4c7ebc59f886193b02c",
+      "title": "Rebelstar Raiders",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/Rebelstar.tap",
+      "kind": "game-tape",
+      "bytes": 48116,
+      "sha256": "f5d36f33994773a9861685a701827b68b6b34c61702bb00ab35ceb56db789b5a",
+      "title": "Rebelstar",
+      "publisher": "Mythos Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Mythos Games/legal.txt",
+      "kind": "notice",
+      "bytes": 62,
+      "sha256": "6a5559f8488fb3cecde2a8608e07c8c7f9f2efc2721759bc482b619943b46ed3"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Ocean/Head Over Heels .tap",
+      "kind": "game-tape",
+      "bytes": 50142,
+      "sha256": "049f5881c95fdae2495c1eb1034b52a7090b70b6a6b35f25c00628a77e8b2b18",
+      "title": "Head Over Heels ",
+      "publisher": "Ocean"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Ocean/International Match Day (128).tap",
+      "kind": "game-tape",
+      "bytes": 102088,
+      "sha256": "6f2fc10fc4aee0382fd7b1fb2ab6cd558b6c97d2a6fb0fcb4181877161ff84ff",
+      "title": "International Match Day (128)",
+      "publisher": "Ocean"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Ocean/Match Day 2.tap",
+      "kind": "game-tape",
+      "bytes": 41873,
+      "sha256": "4fa3d76906e300665a9e1d5ef85d0049b7d5bf5139edd3f171d2cfe88231fd93",
+      "title": "Match Day 2",
+      "publisher": "Ocean"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Ocean/legal.txt",
+      "kind": "notice",
+      "bytes": 172,
+      "sha256": "144d1fe934511fe989c3c6595ed89e5368b37ccfe843d5a0cfd86ba3e0dc09f7"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psion/Horace Goes Skiing.tap",
+      "kind": "game-tape",
+      "bytes": 16155,
+      "sha256": "c146183d85f46c4ce80140720d593bfacede55fd2e7bc8308975f69f2f6f5e58",
+      "title": "Horace Goes Skiing",
+      "publisher": "Psion"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psion/Horace and the Spiders.tap",
+      "kind": "game-tape",
+      "bytes": 16503,
+      "sha256": "c45bef9c95fad66dc151d504817f7d707d4d6c2afa1ee4d6d0fb8145a4a35c25",
+      "title": "Horace and the Spiders",
+      "publisher": "Psion"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psion/Hungry Horace.tap",
+      "kind": "game-tape",
+      "bytes": 15611,
+      "sha256": "374e228258aefa29866428db078a24deebc5ae936959df4221fde204e943ad53",
+      "title": "Hungry Horace",
+      "publisher": "Psion"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psion/legal.txt",
+      "kind": "notice",
+      "bytes": 138,
+      "sha256": "aa70b738845a9cddeb65b4fa880fa001f385b0205d58f28f9ba954589e11124c"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psychedelic Hedgehog Software/Liberator.tap",
+      "kind": "game-tape",
+      "bytes": 46790,
+      "sha256": "08fdb161943f0b8e9f71ecd325cac716c8f139570b9cef297fd523cfda503a58",
+      "title": "Liberator",
+      "publisher": "Psychedelic Hedgehog Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psychedelic Hedgehog Software/Space Worm.tap",
+      "kind": "game-tape",
+      "bytes": 40290,
+      "sha256": "879f620b78b98a87cdd55c8bfdb558d56bf01f53fbac07a0200f5c21edf994ac",
+      "title": "Space Worm",
+      "publisher": "Psychedelic Hedgehog Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psychedelic Hedgehog Software/Specimen.tap",
+      "kind": "game-tape",
+      "bytes": 45300,
+      "sha256": "029d4e61c92f4472326f0ce2f5ae9e14c5957c9a5a21432fedf7c33360db34f4",
+      "title": "Specimen",
+      "publisher": "Psychedelic Hedgehog Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Psychedelic Hedgehog Software/legal.txt",
+      "kind": "notice",
+      "bytes": 95,
+      "sha256": "aba65d5239871276db2d4d7b67ddae0a963338ce4a80b2c7a3c11e63bdac1daf"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Aquaplane.tap",
+      "kind": "game-tape",
+      "bytes": 13729,
+      "sha256": "fe7f9322c75cc511c8a96ad4ec04fb07e083f402e2f14ce5105b2cf5cdc535d1",
+      "title": "Aquaplane",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Astro Blaster.tap",
+      "kind": "game-tape",
+      "bytes": 7801,
+      "sha256": "6ba7ab4ad6fb7ceba27f3083235f4358b10aa5c0a212cec166c05312d817ccf7",
+      "title": "Astro Blaster",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Gridrunner.tap",
+      "kind": "game-tape",
+      "bytes": 16407,
+      "sha256": "f7fa92e9fb5b4e3cc3d9b433b8f621780762c3f642cc939c6543c793f9e0498d",
+      "title": "Gridrunner",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Laser Zone.tap",
+      "kind": "game-tape",
+      "bytes": 17976,
+      "sha256": "b7c6566f2c1ca932043b3a0e07ed2fe2b0b77ead604d956137bb53d654ab0378",
+      "title": "Laser Zone",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Meteor Storm.tap",
+      "kind": "game-tape",
+      "bytes": 7479,
+      "sha256": "768a9052d8a84b740498bf404f02d06e47edea0cfa3bd23cca0a28d890c2a5c6",
+      "title": "Meteor Storm",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Space Intruders.tap",
+      "kind": "game-tape",
+      "bytes": 6701,
+      "sha256": "0238a4b122e85017d62e06db673027ea5c72ae7ad64ac8653abab5e1ab187753",
+      "title": "Space Intruders",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Time-Gate.tap",
+      "kind": "game-tape",
+      "bytes": 61046,
+      "sha256": "ca75e5a7d357f172b389559e453b40134eb5a7b8ff886734879eed8318fbdc33",
+      "title": "Time-Gate",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/Traxx.tap",
+      "kind": "game-tape",
+      "bytes": 17318,
+      "sha256": "4f742865716851b7a0875cae35adbf779089445df70058f84ac5dc08bf33a230",
+      "title": "Traxx",
+      "publisher": "Quicksilva"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Quicksilva/legal.txt",
+      "kind": "notice",
+      "bytes": 90,
+      "sha256": "5d2f128d8414558347421a638573cc925613343c8c50aafe685a028ea32bdd32"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Romik/Colour Clash.tap",
+      "kind": "game-tape",
+      "bytes": 19724,
+      "sha256": "7da47602faab0d5a22cf42f9187201f762d018bea6f818a956954770507b3c34",
+      "title": "Colour Clash",
+      "publisher": "Romik"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Romik/Shark Attack.tap",
+      "kind": "game-tape",
+      "bytes": 9744,
+      "sha256": "a59b1ede203b47750768bb01cf50003478ebfbe8d061b64172256ffccd3bfa2b",
+      "title": "Shark Attack",
+      "publisher": "Romik"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Romik/legal.txt",
+      "kind": "notice",
+      "bytes": 56,
+      "sha256": "a785dae64ba9206fb6c3de81bc40beaf983923993d344441d1de92cb0ed50847"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/All Hallows.tap",
+      "kind": "game-tape",
+      "bytes": 47021,
+      "sha256": "d11ddf6df3e34de74f9eb9a2845b3c0a4ab512f191c4a37a8cba4c7642dd7727",
+      "title": "All Hallows",
+      "publisher": "Rucksack Games",
+      "media_note": "Original TAP ends with 72 zero padding bytes. All tape bytes retained unchanged."
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/Circuitry (128).tap",
+      "kind": "game-tape",
+      "bytes": 36276,
+      "sha256": "a0e1297dc9804fa4cceed45c4ccdecf1fd27f0f38fe09af72863b2b13b2cfedb",
+      "title": "Circuitry (128)",
+      "publisher": "Rucksack Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/Foggy's Quest (128).tap",
+      "kind": "game-tape",
+      "bytes": 43528,
+      "sha256": "48d8f47740bd9558c93b028cecaecf227e6e99151c342502ba3f241fd663075c",
+      "title": "Foggy's Quest (128)",
+      "publisher": "Rucksack Games"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/Legal.txt",
+      "kind": "notice",
+      "bytes": 64,
+      "sha256": "a584a0f456cd88f5976128fb4af1614357fadea0b8948c85bdf6a752df6f8d2c"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/Rubicon.tap",
+      "kind": "game-tape",
+      "bytes": 48255,
+      "sha256": "69f719c0eaf878b058974ff902e24ab65433e69e085677a9cfebee2c027d03dd",
+      "title": "Rubicon",
+      "publisher": "Rucksack Games",
+      "media_note": "Original TAP ends with 72 zero padding bytes. All tape bytes retained unchanged."
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Rucksack Games/The Incredible Shrinking Professor (128).tap",
+      "kind": "game-tape",
+      "bytes": 44227,
+      "sha256": "825a70927f4fec17122c24ad364f611a438950926f7f6fc1b1bf77bbedaf2fbd",
+      "title": "The Incredible Shrinking Professor (128)",
+      "publisher": "Rucksack Games",
+      "media_note": "Original TAP ends with 72 zero padding bytes. All tape bytes retained unchanged."
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Salamander Software/Matrix.tap",
+      "kind": "game-tape",
+      "bytes": 21512,
+      "sha256": "16842dc16911fca8ebf1bcf8f4bcd186a2648e4028efb474747c3069c9199675",
+      "title": "Matrix",
+      "publisher": "Salamander Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Salamander Software/Meta-Galactic Llamas Battle at the Edge of Time.tap",
+      "kind": "game-tape",
+      "bytes": 17205,
+      "sha256": "08b3b332090c8c7b82e1458bf108d4c561553f94061a1b55fa27e8c131e41a41",
+      "title": "Meta-Galactic Llamas Battle at the Edge of Time",
+      "publisher": "Salamander Software"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Salamander Software/legal.txt",
+      "kind": "notice",
+      "bytes": 67,
+      "sha256": "a06ae816b2b3f209154f6916351ba452327b4a3a5aa0fbebd86055da79a07a8d"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Software Projects/Jet Set Willy.tap",
+      "kind": "game-tape",
+      "bytes": 24899,
+      "sha256": "dbbab919ae8a6dc2fba3a84dc74a0c114813309c9e4ee9bc712b4623d767f866",
+      "title": "Jet Set Willy",
+      "publisher": "Software Projects"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Software Projects/legal.txt",
+      "kind": "notice",
+      "bytes": 49,
+      "sha256": "83ff4dda541013c187e92b9d55ef67319e0e0b41cb1e2bc7deed2a01f33d9b85"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Teque Software Development/Castle Master 2 - The Crypt.tap",
+      "kind": "game-tape",
+      "bytes": 56942,
+      "sha256": "5bb2c40500cda3c99bb989f0d024c840a480bb1912baf8282ea85c81bf004bcf",
+      "title": "Castle Master 2 - The Crypt",
+      "publisher": "Teque Software Development"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Teque Software Development/Castle Master.tap",
+      "kind": "game-tape",
+      "bytes": 50992,
+      "sha256": "13e8d03b00693a2e53e78912ec3b9d37e61a49932ae7172431cb7600e2bcbbd9",
+      "title": "Castle Master",
+      "publisher": "Teque Software Development"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Teque Software Development/Chubby Gristle.tap",
+      "kind": "game-tape",
+      "bytes": 52590,
+      "sha256": "05d4af027336bf4ccb730d93f6456c239783504647fb996eea82759a22c356df",
+      "title": "Chubby Gristle",
+      "publisher": "Teque Software Development"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Teque Software Development/Terramex.tap",
+      "kind": "game-tape",
+      "bytes": 82427,
+      "sha256": "a2f400f1333009b539e3c0c95dcc6433d0a0bbdcf4343a3b3afefc9bb0df055f",
+      "title": "Terramex",
+      "publisher": "Teque Software Development"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Teque Software Development/legal.txt",
+      "kind": "notice",
+      "bytes": 117,
+      "sha256": "3bfa28f01e70fa4e0b093e61c172d8b9551148c58b6b415154022d6122b0c4a9"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Balowwwn.tap",
+      "kind": "game-tape",
+      "bytes": 37133,
+      "sha256": "09f97c3d2bf5c021adc619428d3abf6e235dcee80c15636a0b3929323480c3be",
+      "title": "Balowwwn",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Bootee.tap",
+      "kind": "game-tape",
+      "bytes": 39323,
+      "sha256": "99fe23775043651344acc3c4efcd941632bc39ca195262c5864164355ef7ec32",
+      "title": "Bootee",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Cadaverion.tap",
+      "kind": "game-tape",
+      "bytes": 40749,
+      "sha256": "96da0246eb2a261072624bec69beb2790a15ac1860d91c3211118d44ef54656f",
+      "title": "Cadaverion",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Cheril Perils.tap",
+      "kind": "game-tape",
+      "bytes": 42991,
+      "sha256": "7f20752f7370de168175111b6b99ccb79f41ef2439f8f5bc98bb0bb101f61e33",
+      "title": "Cheril Perils",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Cheril of the Bosque.tap",
+      "kind": "game-tape",
+      "bytes": 37707,
+      "sha256": "78056689271c3a37a9bbb85c68b92b55b670e21e3a567484a8e94d8447531577",
+      "title": "Cheril of the Bosque",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Cheril the Goddess.tap",
+      "kind": "game-tape",
+      "bytes": 43545,
+      "sha256": "7323fc313e90b71f553d66e7066e5fb3f8efc3e7d5562cf424d8850a0d43d811",
+      "title": "Cheril the Goddess",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Columns.tap",
+      "kind": "game-tape",
+      "bytes": 52149,
+      "sha256": "87d90e595e60acc5befd1fe073e6f59db513be0273e212c712578d6e2f3199b4",
+      "title": "Columns",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Dire Job.tap",
+      "kind": "game-tape",
+      "bytes": 37103,
+      "sha256": "de35dfc756a6eaec1426615cc8e617572523ade7f478db70461ff77d825089f4",
+      "title": "Dire Job",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Dogmole Tuppowski.tap",
+      "kind": "game-tape",
+      "bytes": 39555,
+      "sha256": "c4d04a57667de2f8cd2c894cd17b3fcfbbbac92c63d3259e68a85f5dddd3badb",
+      "title": "Dogmole Tuppowski",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Goku Mal (128).tap",
+      "kind": "game-tape",
+      "bytes": 96277,
+      "sha256": "832f8108f413ca6e0e40ca71175a797796498ea6b9311a4b0fb2bfa1e544027a",
+      "title": "Goku Mal (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Horace Goes to the Tower.tap",
+      "kind": "game-tape",
+      "bytes": 38999,
+      "sha256": "e90e66f85e03fed000dfa670848f10d0a9cf0f7f5273ccbcae5f66b953e4b4ff",
+      "title": "Horace Goes to the Tower",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Jet Paco.tap",
+      "kind": "game-tape",
+      "bytes": 39831,
+      "sha256": "d070f616238bc1b7f4a97f574215925e6e3aad90e4981023361d9a4ac405a854",
+      "title": "Jet Paco",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Journey to the Centre of the Nose.tap",
+      "kind": "game-tape",
+      "bytes": 40654,
+      "sha256": "f091e7454e1334621440c1a2e5ae38d314258cce716b1a2de9e8989b39ba3207",
+      "title": "Journey to the Centre of the Nose",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Judge Morry vs Baldo Midget.tap",
+      "kind": "game-tape",
+      "bytes": 29529,
+      "sha256": "d04c4c05a6aed2ea0703b73aa520ce0fcdb23f380f6f2d89b3833933e2ffe61c",
+      "title": "Judge Morry vs Baldo Midget",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Julifrustris in the City.tap",
+      "kind": "game-tape",
+      "bytes": 38077,
+      "sha256": "7c9924f47276781db7246324bd2d4f4ba089c47ccecbae836c8f95758c05e726",
+      "title": "Julifrustris in the City",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Kurashiku Nihongo Monsuta Shiro 3.tap",
+      "kind": "game-tape",
+      "bytes": 69822,
+      "sha256": "c5616f3767c120ed7cf8fafb2245a321401e58d70dad4df01320af0c753b053b",
+      "title": "Kurashiku Nihongo Monsuta Shiro 3",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Lala Lah.tap",
+      "kind": "game-tape",
+      "bytes": 37894,
+      "sha256": "532a150dee4eeb25fe9810ec871ac4993e8472d0d53205d0f3f2cb0474e486ba",
+      "title": "Lala Lah",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Lala Prologue.tap",
+      "kind": "game-tape",
+      "bytes": 33031,
+      "sha256": "ed2d41ceb8ac5a3b803c2f6e875ed77c7bbb12d0652d134e6e84ad92d25b2cb0",
+      "title": "Lala Prologue",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Leovigildo Episode 1.tap",
+      "kind": "game-tape",
+      "bytes": 44616,
+      "sha256": "eb8eb7948983e25ea03ff163c8c53d29ba2b6fb39a2c308c5d7bbd7a213eb30d",
+      "title": "Leovigildo Episode 1",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Leovigildo Episode 2.tap",
+      "kind": "game-tape",
+      "bytes": 44108,
+      "sha256": "7fe0433b1ffe40d547880a0dd5a4d394fbfa1bd35074f7afd0e16de71a3ba169",
+      "title": "Leovigildo Episode 2",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Leovigildo Episode 3.tap",
+      "kind": "game-tape",
+      "bytes": 45002,
+      "sha256": "fe3630f7c32782f580baf7b398e6f67aa53df9bf3641ad313191520ca7e66ea6",
+      "title": "Leovigildo Episode 3",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Leovigildo Episode 4.tap",
+      "kind": "game-tape",
+      "bytes": 43359,
+      "sha256": "b6fd17ae50cb7aeb4f4289aae9a84e576364aa19037f9ff5092547bb0df73f10",
+      "title": "Leovigildo Episode 4",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Mariano the Dragon Capers in Cityland.tap",
+      "kind": "game-tape",
+      "bytes": 39414,
+      "sha256": "18c58cf2a47ab15fa73355f2259ff6931d73ae017bca15446aaecbdd1645542c",
+      "title": "Mariano the Dragon Capers in Cityland",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Maritrini Monster Slayer (128).tap",
+      "kind": "game-tape",
+      "bytes": 91726,
+      "sha256": "e07e55e6df1298ab94c6e5a8ef60cd3e04458f79e63f90259dc5dcfc102afed5",
+      "title": "Maritrini Monster Slayer (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Martrini Prequel.tap",
+      "kind": "game-tape",
+      "bytes": 41174,
+      "sha256": "18178e22402d8afef8399124505fe11e58f537a3de13dd7f8c52608e3c06d299",
+      "title": "Martrini Prequel",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Mega Meghan.tap",
+      "kind": "game-tape",
+      "bytes": 43205,
+      "sha256": "400c4190241a3111d323a6ee82dc1243e2970db66f71e7785fc1036b0888080b",
+      "title": "Mega Meghan",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Moggy Adventure.tap",
+      "kind": "game-tape",
+      "bytes": 37185,
+      "sha256": "2f83e91a7586fbf3dbea116f4551412b939dfb2871c360f24722ba7fdd80de01",
+      "title": "Moggy Adventure",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Moggy.tap",
+      "kind": "game-tape",
+      "bytes": 40318,
+      "sha256": "3fd2ea6688b4695f5fddc0c0239f60341a4b2cd6628b0cdf0848ab4f09d17347",
+      "title": "Moggy",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Monono.tap",
+      "kind": "game-tape",
+      "bytes": 38391,
+      "sha256": "ffed2cd545dec5261dee465452be28882ea121ae80e1fff3e7f63d9e37429462",
+      "title": "Monono",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Nanako Descends to Hell.tap",
+      "kind": "game-tape",
+      "bytes": 56168,
+      "sha256": "113e6b8daf56e21b3464b846ee467b06620cbaf3bcd85b0c7a5a57ff40553760",
+      "title": "Nanako Descends to Hell",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Nanako in Classic Japanese Monster Castle.tap",
+      "kind": "game-tape",
+      "bytes": 56765,
+      "sha256": "bfb43e27c00930369e873235b71bf10d613be7aded77c217da85b6042c561b20",
+      "title": "Nanako in Classic Japanese Monster Castle",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Ninjajar.tap",
+      "kind": "game-tape",
+      "bytes": 122851,
+      "sha256": "ca1ffc7e0f78be767c74d2519b19c9c1106231c89e2161edd819a2f7a7194ebf",
+      "title": "Ninjajar",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Phantomas Saga Infinity.tap",
+      "kind": "game-tape",
+      "bytes": 56765,
+      "sha256": "43196f5774582edf88060dd3b28a1004f35ec78c3d157d10639b40d64cf92af0",
+      "title": "Phantomas Saga Infinity",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Phantomas Tales 4 Severin Sewers.tap",
+      "kind": "game-tape",
+      "bytes": 60865,
+      "sha256": "dbefb0afb7262e75a24ea5fa8d74cbe3eaa5030f321005e14846b439781c3c5e",
+      "title": "Phantomas Tales 4 Severin Sewers",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Phantomas at the Museum.tap",
+      "kind": "game-tape",
+      "bytes": 40154,
+      "sha256": "30d157c3e9be8b4c2297dbfd6e001f4664a38dd94ba841558ed5c6e492a29102",
+      "title": "Phantomas at the Museum",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/PhantomasTales 1 Marsport (128).tap",
+      "kind": "game-tape",
+      "bytes": 54451,
+      "sha256": "422c42929377a00a8f65f47f8478b5b4beded8feba4d67681c189b28a3bdb58b",
+      "title": "PhantomasTales 1 Marsport (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Phantomasa in the Land of the Grunge Wizards (128).tap",
+      "kind": "game-tape",
+      "bytes": 46561,
+      "sha256": "ac4bd1cf794870993ce31c2cb839362dd91e995691b017c9ff8b965b64cb7234",
+      "title": "Phantomasa in the Land of the Grunge Wizards (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Ramiro the Vampire Episode 1.tap",
+      "kind": "game-tape",
+      "bytes": 40694,
+      "sha256": "b0e8a177b70f426093c985300edb0c967ab6b524230787222b70c52aad61aeb8",
+      "title": "Ramiro the Vampire Episode 1",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Ramiro the Vampire Episode 2.tap",
+      "kind": "game-tape",
+      "bytes": 41431,
+      "sha256": "6c5bce34a1fcf6deeca610be69a10e173a551ff71b9df2bcfe81d8049df53679",
+      "title": "Ramiro the Vampire Episode 2",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Ramiro the Vampire Episode 3.tap",
+      "kind": "game-tape",
+      "bytes": 44337,
+      "sha256": "8f0ab464ebb6526f7071f7d21a691dae70dcede745a17e8bc4e81edd5546f3f5",
+      "title": "Ramiro the Vampire Episode 3",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Sgt Helmet Zero (128).tap",
+      "kind": "game-tape",
+      "bytes": 62412,
+      "sha256": "7bc5a27ff81641044461682ed38db2167acfde6427a9413dabe6c429e5c8d372",
+      "title": "Sgt Helmet Zero (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Sgt Helmet Zero Training Day.tap",
+      "kind": "game-tape",
+      "bytes": 43405,
+      "sha256": "654ffd5c62d5f03ee16053336f9d10635b414a559dbbd8fb0c98ed64c67ead68",
+      "title": "Sgt Helmet Zero Training Day",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Shoot Redux Marifrisky Space Warrior.tap",
+      "kind": "game-tape",
+      "bytes": 26194,
+      "sha256": "0c5e3a790ffaf78ed96784e9d64ace90a01b66eaf06939e0d0543b8c864ef738",
+      "title": "Shoot Redux Marifrisky Space Warrior",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Sir Ababol.tap",
+      "kind": "game-tape",
+      "bytes": 37436,
+      "sha256": "67ec69ffc356ef36557cd95897f52d9cf335d05da3100145929ee32d2844d535",
+      "title": "Sir Ababol",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Subacuatic (128).tap",
+      "kind": "game-tape",
+      "bytes": 55160,
+      "sha256": "50edee4d830142933c4567ec721378784e3c9dc9544dae3ead956fec2b5b5925",
+      "title": "Subacuatic (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Subacuatic Reloaded (128).tap",
+      "kind": "game-tape",
+      "bytes": 55547,
+      "sha256": "70e387f263980a7e65ebc535cfd55009a305082a3c6c270b7851972da2f236ff",
+      "title": "Subacuatic Reloaded (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Tenebra Macabre.tap",
+      "kind": "game-tape",
+      "bytes": 39666,
+      "sha256": "6baacbda0f73c11cb8dc584b0036a4eb33e5594a75280e2376dd92aa70598194",
+      "title": "Tenebra Macabre",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/The Hobbit Vah-ka's Cut.tap",
+      "kind": "game-tape",
+      "bytes": 34049,
+      "sha256": "3d2a9f14966daf5bfdfc75f0933b251bdc52ba092baf5b28443be0d18ff0138f",
+      "title": "The Hobbit Vah-ka's Cut",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Uwol Quest for Money (128).tap",
+      "kind": "game-tape",
+      "bytes": 50254,
+      "sha256": "e91fa1c9974a62931eeeec9bb1d51bbf0bef2562e76ddc0e8a3faab9fa0c5a9e",
+      "title": "Uwol Quest for Money (128)",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/Zombie Calavera Prologue.tap",
+      "kind": "game-tape",
+      "bytes": 38142,
+      "sha256": "3cc9f315bfdccced471e8db0a73d0150e0ccd787a89cd04fa5625773a8ee69a4",
+      "title": "Zombie Calavera Prologue",
+      "publisher": "The Mojon Twins"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/The Mojon Twins/legal.txt",
+      "kind": "notice",
+      "bytes": 575,
+      "sha256": "2af45b48669e42f6b4c9f75f3204535a10e0e56616a57ccdecd33df90d4faec5"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Alien Highway.tap",
+      "kind": "game-tape",
+      "bytes": 48262,
+      "sha256": "a3bf0ebc5870592b0fd7f2c409385aa3a0e7512db6328554a263cb42e094d8c0",
+      "title": "Alien Highway",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Android One.tap",
+      "kind": "game-tape",
+      "bytes": 23174,
+      "sha256": "d505a492fe2720a97e245c57120b6a4237659f13275390611af068abf588d03b",
+      "title": "Android One",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Android Two.tap",
+      "kind": "game-tape",
+      "bytes": 33194,
+      "sha256": "a7fdc59088dded2b544fa7c4a34b7b2a639ccf2a1ea6030117c57ceda9b0cf6f",
+      "title": "Android Two",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Cosmos.tap",
+      "kind": "game-tape",
+      "bytes": 14671,
+      "sha256": "6c1bb2926c5d84d6da82177c613b81e3802cf2e683b7fb26c51d764a33b585ce",
+      "title": "Cosmos",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Cyclone.tap",
+      "kind": "game-tape",
+      "bytes": 48406,
+      "sha256": "034a108bce2cfbf76f82ad2b5a42d450b249f9e0c85df7372677e9ac78795360",
+      "title": "Cyclone",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Deflektor.tap",
+      "kind": "game-tape",
+      "bytes": 28224,
+      "sha256": "cc15629369c7ec8e0b21bd63c55ad6ab49dc3d870848948d898706b8106d7dff",
+      "title": "Deflektor",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Gun Law.tap",
+      "kind": "game-tape",
+      "bytes": 16414,
+      "sha256": "13624ef10f56a55f187ff14d7376490407e7b374238d4b83703b8d70db2075d2",
+      "title": "Gun Law",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/HATE.tap",
+      "kind": "game-tape",
+      "bytes": 42591,
+      "sha256": "ad7809627acbac2cae22a25b8b2a69be32a57fe0e8d036b2cfa9d401a5c90ecc",
+      "title": "HATE",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Highway Encounter.tap",
+      "kind": "game-tape",
+      "bytes": 48634,
+      "sha256": "fd241cac6202230f5827befaef70788dcbc6ccb81b55fd8d9582129552f1c9b1",
+      "title": "Highway Encounter",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Revolution.tap",
+      "kind": "game-tape",
+      "bytes": 36840,
+      "sha256": "0f805ec06bf4d15dd1f7a82ceda9310a971c7052ad4ba471fe7c538d0b953f7a",
+      "title": "Revolution",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/Tornado Low Level.tap",
+      "kind": "game-tape",
+      "bytes": 50522,
+      "sha256": "e2a093016b849daa258956d904496e23748682825ca5c345c145287ae4b5ddb1",
+      "title": "Tornado Low Level",
+      "publisher": "Vortex"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/VORTEX.TXT",
+      "kind": "notice",
+      "bytes": 4858,
+      "sha256": "867603fd82b67cb84b27e2a9f83c559d0fccf35db8a219bf214f19d6f9a26a1e"
+    },
+    {
+      "package": "ulaplus",
+      "member": "games/Vortex/legal.txt",
+      "kind": "notice",
+      "bytes": 4858,
+      "sha256": "867603fd82b67cb84b27e2a9f83c559d0fccf35db8a219bf214f19d6f9a26a1e"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/abu_simbel_profanation.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "5818128d551eeedb295f023bc7079406c33db85f6d76058f73af723810214ed6",
+      "title": "abu_simbel_profanation"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/action_force_2.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "7fec403ae619035c2bc168554973cc59aa5999c464385f3b58973c17eeaa79e0",
+      "title": "action_force_2"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/adventure_a-d.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "1234054a9c1c39b54777a43bf3ccff7a51c75a010a5fac0351723d6418862bd2",
+      "title": "adventure_a-d"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/amber_screen.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "2b60a5cae804dc47d60e8f9fd0bffb43cd23b02e2b99f9f713947235369f4262",
+      "title": "amber_screen"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/arkanoid.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "8b166176ab8b61cc0c45ddcb3fc98170a1670b20426a7da9d6dff70bb0e9e1ad",
+      "title": "arkanoid"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/army_moves.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "4a0aa1c0eb23f03f0b95c274391dc2be9913378089575e1e8d3bb092d52845cb",
+      "title": "army_moves"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/artist_3.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "1f6f71ee58c7ed540d7a175385384153ea0714097ce83204b0944928962a472f",
+      "title": "artist_3"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/astro_marine_corps.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "d31a22c8f0fadfa7ed44bb8c1384dfbe73b8d800dd2e1bed1cde462d8a1a4f6b",
+      "title": "astro_marine_corps"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/bomb_jack.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "e586976a0cfdd3120d5d05f0b01eebcbab740a5b9d4064354a72d321cc451d13",
+      "title": "bomb_jack"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/bruce_lee.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "03af52d4b8b0782e1ff80c2b7e2ef0207d0b4e53ce311ee9ede6166945068fde",
+      "title": "bruce_lee"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/c64.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "03beebf654a2190cfae48bda41b05c9b5cc181f34949d881c935a229562f0850",
+      "title": "c64"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/c64alt.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "4a535591d8bdea47dd65377f5cf7c4f71d6a67c79da4fe19638247daf9742695",
+      "title": "c64alt"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/carrier_command.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "a5f765fd497af95eb8a496e74f741181734df9562d8c8e36169fd7d9bfa73103",
+      "title": "carrier_command"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/chuckie_egg.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "4458252a564f29cf7f2d332ca3dd8fde1c9d9913440147d458a56aff77580205",
+      "title": "chuckie_egg"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/commando.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "c542d16bab8236f0718f40b59c078642ec2b253c136f82856fdc79f04e5cb672",
+      "title": "commando"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/cybernoid.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "981a0a6167ffe5aab4be0393fa7a7a656b3a0df14f962b015bc8433e657d999b",
+      "title": "cybernoid"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/cybernoid_2.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "b0ecd6d9cf5d938a99d077c56c7247f06d9e793a628a93fcdad8f18a5cb18bef",
+      "title": "cybernoid_2"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/daley_thompsons_decathlon.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "ed439810a3c31081e0314507d77f8db3510cb037f8a3c1436004fcf1d4859db5",
+      "title": "daley_thompsons_decathlon"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/dan_dare.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "540acb785bcd0ad9f4ac7dbdf372c0df46d25503dcc1f6a3ccaddab0b6e75570",
+      "title": "dan_dare"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/dan_dare_2.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "831993258b1dcde7a18d370196cc773f271ea34be9479b8519bc22c46889f652",
+      "title": "dan_dare_2"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/dan_dare_2_alt.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "a54026f37da56fee3398d53e91b8c9c4bf65d21b29390081945e9f021bab4de8",
+      "title": "dan_dare_2_alt"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/dan_dare_3.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "c67a205ddfd1b93e656a5fd0d8f1cce3426019073bc25f8f79eeffd830f0fb71",
+      "title": "dan_dare_3"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/deathchase.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "786d43fcb20db4d2c68d3b3389220a4e150a4b2b34e5b90f86a48dc585a4812e",
+      "title": "deathchase"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/demo.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "a27abd6d57cc6b1200474a868fc8408de37e4dcb189bd4aab21b54f886df91b8",
+      "title": "demo"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/derby++.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "dca31e6fc39c6456f0786f4c31ab2cd2b437077df1ce52c2d11935727c9ec934",
+      "title": "derby++"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/exolon.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "9ceba182e2300e7de48fc057ce26af58e708050d995428b9d2c7d15e1ab9c881",
+      "title": "exolon"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/extreme.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "3ecc9e4a8a0f91ed762fe91703cdaf14f9e9f3821cd7fdb4300c8430047cce7c",
+      "title": "extreme"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/flying_shark.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "178c0bdf0d3c9eee5b43bdf878699bcf3a270504c21ac2964e0980a427d794c5",
+      "title": "flying_shark"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/gauntlet.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "dce9c40b93391b7087db7c086626bb3307388d52d7395c090b317396660de44e",
+      "title": "gauntlet"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/generic.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "0d1af68d26a10a85aade3b37f57d0f39a43381d7cc2f4a3c7ab01c4156317a8b",
+      "title": "generic"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/gradients.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "053f6541fc1208cd6c60505058dafef38ab574e55ef014a0cb62e2b0323a3f24",
+      "title": "gradients"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/kings_valley.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "97c5eebed10612b8de6fadbda37a93e160db23a94a01a0b2c00f140d08ff4061",
+      "title": "kings_valley"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/knight_lore.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "ce80cacecb60e174e1bf0146025e1b3b94a067a63390609caf5706c29d9b4768",
+      "title": "knight_lore"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/phantis.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "4f6a96d407611fa98da8e3fa73c04d04dc274c1becf1d8ed77960157e1f19473",
+      "title": "phantis"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/primaries.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "09f3875e5a205a9b8045ced08b35ce9a4bbcf30b8fd276914727a4d1dfdfa23f",
+      "title": "primaries"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/r_type.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "8d123c6bb8042ae5eb371c275c9c2a73752d9c928c2c9a71b25c7bc304c3639f",
+      "title": "r_type"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/rescue.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "da9704e3e07f1c80bf7d07047687b15de41243be39f90ea0b9e02c6e3a84e7a8",
+      "title": "rescue"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/rgb.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "e6020d76c8a8b0934f3b048eadeca25a41ad379168f201af02eddff78c8584db",
+      "title": "rgb"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/rgb_alt.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "e2aef46b53f64b1ef08f5403f7f8bbf097966cf8e11d6ca3902bc1b7b56b765d",
+      "title": "rgb_alt"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/rick_dangerous.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "b41b53e28161fc9cd47984a4eab33736c7114303315765cd0daacce829bb7da7",
+      "title": "rick_dangerous"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/savage_part_1.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "3fa108defa270223673602ce5f1d416760dcc315bcca06293c4045a12252fb36",
+      "title": "savage_part_1"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/savage_part_2.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "ec7de14ba633ad4022de573f2789be3ce910ae19aaa791a488bcd16fec1ecaec",
+      "title": "savage_part_2"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/savage_part_3.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "82a051ad0cbea64b71f3805a65e575fbaec6e26aeccee0627f043f7977e8c564",
+      "title": "savage_part_3"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/solomons_key.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "a32545fe821e6b8edd3cec6326075e1b8a672bd6726398e8547766bda056dea1",
+      "title": "solomons_key"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/standard.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "77cca0377f03a96cb5125b3d51a9cca5ca35a99d03cfa34fd58e788d8ac65910",
+      "title": "standard"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/stormbringer.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "0007ac311bd28e83dfe022181e96c2f5113bbb15323173c6a19bc0ba92350e88",
+      "title": "stormbringer"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/terra_cresta.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "e597879042f6c0a6dc239e963b259f8ae404461eac95a70cf329d24be1d0d5b0",
+      "title": "terra_cresta"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/tetris.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "52e0f797c74d9721a01363f684dcab21f7c4b1d82a9a689d4dfc7f821ff07ea6",
+      "title": "tetris"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/xenon.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "bf154c51f842751430c7e53a193b7eb9a9f7cac596bbd05cb4b326dc965bab30",
+      "title": "xenon"
+    },
+    {
+      "package": "ulaplus",
+      "member": "palettes/zynaps.tap",
+      "kind": "palette-tape",
+      "bytes": 176,
+      "sha256": "d37788f90741cf4bee7de17552d46e57b83498ab2a51c11282a37832689d3c46",
+      "title": "zynaps"
+    },
+    {
+      "package": "ulaplus",
+      "member": "readme.txt",
+      "kind": "notice",
+      "bytes": 2313,
+      "sha256": "603c64ca5fc37cf400ba8b4616d07b134f1b0b2f85512846fe0fc6888e341c11"
+    },
+    {
+      "package": "cosmic-payback",
+      "member": "COSMIC.TAP",
+      "kind": "game-tape",
+      "title": "Cosmic Payback",
+      "publisher": "PROSM Software",
+      "bytes": 58570,
+      "sha256": "e64d1f206f771f2576c28763893b1959a79f5d3ddcb2d70ada57fa9239ba5e8a"
+    },
+    {
+      "package": "cosmic-payback",
+      "member": "LICENSE.TXT",
+      "kind": "notice",
+      "title": "Redistribution permission",
+      "publisher": "PROSM Software",
+      "bytes": 976,
+      "sha256": "75015b0a903774e36e43e1c892b6935e4f743772fbd53c73926f6995d0ce2e89"
+    }
+  ],
+  "support_files": {
+    "README.md": "3cb5c746b7d058191123f2c4e56a84b52acc0a6f1a3d4883316a92f5a97a1bb1",
+    "ianna/LICENSE.txt": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "ianna/CREDITS.txt": "0400ce23f7900232eb78fa9c389f43a873a17db7e553c0c59b2a41649922629b",
+    "ianna/upstream-README.txt": "c9f179538ded3aea292e184841da0327cf81c95e00f6acc70ebb0e49d45ef28a",
+    "ulaplus/upstream-readme.txt": "603c64ca5fc37cf400ba8b4616d07b134f1b0b2f85512846fe0fc6888e341c11",
+    "ulaplus/CC-BY-NC-SA-3.0.txt": "b92477d6e746b3891bc57fb5f6af6191ea194cc76cae714f9b386e22999e2740",
+    "LICENSE-AUDIT.md": "c03fe9b5fd6636377e8e31a7b68b3921e9e08cd56ffe7ea35b84947a701cf609",
+    "cosmic-payback/README.md": "bc9e5a4dc0630f35d53b8aeaa6e1688907cf140bfe27c38010e229995bbd5c90",
+    "esxdos/README.TXT": "05e5b2bba8cbafdc58e3afb39aa91e99b88b6a22c993b7f1bb87b303ef26e177",
+    "esxdos/ESX089.NFO": "3a41384642cd53b9baf7e8bf88691044acede60b74a6c16fb2aa6fe034aa9077"
+  },
+  "license_audit": "LICENSE-AUDIT.md",
+  "runtime_layout": "programs/spectrum/GAMES.img contains game media and esxDOS runtime only; notices are outside the device tree in redistribution archives.",
+  "esxdos": {
+    "version": "0.8.9",
+    "source": "https://zxgit.org/dj-apendix/Div_MMC/raw/commit/587cec36f4da2a51a2fd6fd8d7358c3851f660c9/File_Soft/esxdos089.zip",
+    "sha256": "d455888361cd13d455e362a4c841452b6f4568d30f9069443044affdd40de9a4",
+    "files": {
+      "BIN/128": "f3413cfad15dc3f3ae7c14377d016a35495165db1b266bfcfac2696be14adb33",
+      "BIN/CAL": "38f79ef10c11ba236f253f21c106a6549104f524ce5ce052e4f309e4cdf98a78",
+      "BIN/CD": "9d3283c31c0a2a516982e00c87397a49a8c820cadfcecd527d7a337ffd028415",
+      "BIN/CHMOD": "6c3469b876721e19378fa335366838f7d0a15830d0d64abb7146e68977e28ea6",
+      "BIN/CP": "84aef5f429ba85607379479143183246333eb04f34cd35db4f812c8ae9f05cf5",
+      "BIN/DATE": "fa5f3486bea02ed17c198916ababcad9b67a057d93a4f579a01ec23c9c68d342",
+      "BIN/DFWLOAD": "becf6e8524a351e419545bdf9dea18316105d3e4726709fcd773a9bb2c4c5b14",
+      "BIN/DIVIDEO": "86cc7518883e18523475d61ed8d3aaa5438b26d6b0d66086fe1b955d4c4f627c",
+      "BIN/DRIVES": "f18f5600539bf59b82f0d3d0aacf00b04509a922de9d36af103f3c8058242bf9",
+      "BIN/DSKPROBE": "a44124030b10d1ca35adc8f9aa57e51f03c8103b85acf46c47a80139edec05e7",
+      "BIN/DUMPMEM": "6d9cd41d1749bcdd426d3753b18989420e2d0eb5c3ca45ee122c15bdfa47e1f3",
+      "BIN/FILE": "ac0232cfa45db1fdc4cc69ebb1e9a923f038e5b7e35a7d74347dee64495551cb",
+      "BIN/GRAMON": "22e21561421843f228c73294c48dc49253ba375dd825b36bc2c2212fd3c723e4",
+      "BIN/GSC": "ae88da55e851b9266534777dd84ddb46c8f5d204437e764adcf07d474e54d107",
+      "BIN/HEXDUMP": "aa80733e2efa692b1b12f0494e9f722bdc64397fa7a6a5dd735170d660e16877",
+      "BIN/HEXVIEW": "9e45ebe7aa72b5463d662a641a48650556d5f93341df5a724fcefa022363d42f",
+      "BIN/LAUNCHER": "2127667d1831de74885857c29e552fa1760f0f5e6ab259cb8b27eb52a0b21e05",
+      "BIN/LS": "fa0db5b61730fd829836f8c96563880fb79aaa38a7afd3f07e7276dcad8e7835",
+      "BIN/LSTAP": "c5d2ec65930675445bd2a3764731f236d56a1cf7fd913913e4f764304bd73eda",
+      "BIN/MKDIR": "a0acc59d0aa5d23f6463ec86e0958ab65a60bd4e150785e57b0714aadfe55667",
+      "BIN/MKTRD": "432e82294e4176ea6a228277f1941971cd037d9c5b1306d3656ded44a4ccb0b4",
+      "BIN/MORE": "684699f5e75700c96ce7d4097ff1e52b6cea7f34e3041fef6f7a78cd25bfd8d9",
+      "BIN/MV": "c95a25ba3245e3117beb7d1fd99341c256915bc443f2a735d63fa6bfa84a1e35",
+      "BIN/PARTINFO": "93001648ddae2095360a42d0a39e2f5a6667d9fac700d8ec791809195d2226c2",
+      "BIN/PLAYPT3": "72839c2cd8549b085e4d353c294a9c18b7017d4af8e801ee168d7d1a6d06c24e",
+      "BIN/PLAYSQT": "b79bf4e27787008d17407c934feaf2d5a8b832f41a954d00e859650e19599bc6",
+      "BIN/PLAYSTC": "2e522b1f59df3a6e95a4480e0d01fb955d3bf4be9da6a8b0fc12137bf5ba47db",
+      "BIN/PLAYTFM": "92d25257d998166b240c23b3dc79f409f41b8fea950948a19475f55c42ff9ea1",
+      "BIN/PLAYWAV": "6ac3dcbf378e495394ba601d4f6b3c0822214b972e42c2f06811b4e6190d58c5",
+      "BIN/RM": "17964cf8bbed9f1b39b21d0be714322be99a36f035f6bcab75b3e1ed03afd92e",
+      "BIN/SCL2TRD": "6bc32e243054ae10fedc7868571fda8b06bd1e677eb166a32e5bda2e6175bfed",
+      "BIN/SERCP": "3565c2f1fe873855e2ed79581574e1c3009ded72b8c24e8062bbc8df393c3081",
+      "BIN/SNAPLOAD": "3c73ecead4570e2a33a85ad52c3a8940c3cce0284e5d97918d4d63484880597c",
+      "BIN/SPEAKCZ": "71f99101d8523b1f87cea78fc4b635f9fcb3913eabd3fa9f8b3816a7cc642053",
+      "BIN/STRINGS": "e38c6896570d63db0ef5e3ae80505c5978d7e53aaf40dcfc207b4c8363871a28",
+      "BIN/TAPEIN": "2873801aa6291f0087fc3e87b51920acd330f26fccb346f7ad9ab131c0e06d80",
+      "BIN/TAPEOUT": "b1cf5828aef724c975ed084d464011e891995baf461e5b463f652ae6f86daf9f",
+      "BIN/TAR": "e3e306ac6b7ed9f4820144351c75e24c7dd8bbeb8796b886896cec5f923b9a1c",
+      "BIN/TE": "5e9f8a6dddc0a248f1be38341231aeb3564b9f14b84e08d2d54632f732e6ab19",
+      "BIN/TSPLAY": "5d0536d98c8a82899190c15d186cfbf38f9b0ca6a68ddcbd64a78f6ea51ec3d4",
+      "BIN/VDISK": "962dc934dc590f2f004c6e79722261832f2f9cec17335d6230cf2fbe55399a72",
+      "SYS/BDIR.KO": "958e9cec57e3bc7aae7ffadec6e5b9c115f9bb52bdf6a16071ae5fcf49ac67d8",
+      "SYS/BETADISK.SYS": "89435cb508a05a3dfd18401b88777143c854143c7b979850dbc074f5dbf047b9",
+      "SYS/BFILE.KO": "b5aca1bc615d86cc8755580096fdbad3a11f196287297a524f4aa8252e3a6a0e",
+      "SYS/CONFIG/ESXDOS.CFG": "4a37fa4bf661bca57f60e5fdbcabfaf216279b9898d3dbb584645f43b3d2fc86",
+      "SYS/CONFIG/TRDOS.CFG": "a9ca262393ce80e501ffc8de43793c6b7958cb6ccffe353b10db62198b264f3c",
+      "SYS/ERRMSG.KO": "db9ce32b9a6048e86e5a7f612e77c11839c3e58bfd8ea3ad74e4c6e1ef67ef52",
+      "SYS/ESXDOS.SYS": "b4def007b51524844f528e756195de19ef5842da22398822787f12e0d4dcaa00",
+      "SYS/NMI.SYS": "65ec59061e69a9692bf4da217d0d2006a8e889a4890eeed791b10abeb0c31733",
+      "SYS/NMI_HELP.SCR": "20d6cf516ae8ea95f14cb01bab3e710d99d15e456f06ea97ca837f996c351b4a",
+      "SYS/TAPE.KO": "9ca788d33328a83f2e77bc4a47f34b64486cdc64fc06f044bbc4a158f5f374cf",
+      "SYS/TRDBOOT.BIN": "4a13dc471e5cbaa26e2032eceecd64813dbc6ad5987a08dbd47dd55b497c30a2",
+      "SYS/TRDOS54T.KO": "a085da179717ec11259eba6625da3594808365bca7532778b13c1ef86fa6f5fa",
+      "SYS/VDISK.KO": "221e921a060255e654d153ffc931c8f3a8703838f2db69433199eac14fba47c9"
+    }
+  }
+}
