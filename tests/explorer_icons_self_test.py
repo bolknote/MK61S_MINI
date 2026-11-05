@@ -60,5 +60,16 @@ class IconTests(unittest.TestCase):
             self.assertEqual(icons.install_bundle_icons(root),[root/'Apps/autoexec.wbmp'])
             self.assertEqual((root/'Apps/autoexec.wbmp').read_bytes(),icons.draw('applications'))
 
+    def test_stm32_capitalized_games_and_urq_keep_actual_spelling(self):
+        with tempfile.TemporaryDirectory(prefix='mk61-folder-icons-') as temporary:
+            root=Path(temporary)
+            game=root/'Games/URQ/house_that_jack_built'
+            game.mkdir(parents=True)
+            expected=[root/'Games/autoexec.wbmp',root/'Games/URQ/autoexec.wbmp',game/'autoexec.wbmp']
+            self.assertEqual(icons.install_bundle_icons(root),expected)
+            for path in expected:self.assertEqual(path.read_bytes(),icons.draw('games'))
+            # A canonical role name must not create another physical directory.
+            self.assertEqual({p.name for p in root.iterdir()},{'Games'})
+
 
 if __name__=='__main__':unittest.main()
