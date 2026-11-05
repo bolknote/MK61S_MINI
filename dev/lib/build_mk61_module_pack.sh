@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
-tool_root="$root/tools/.mk61-app"
+tool_root="$root/tools/apps/packer"
 output=${MK61_MODULE_PACK_BIN:-"$root/.build/tools/mk61_module_pack"}
 host_cxx=${MK61_HOST_CXX:-c++}
 sources=(

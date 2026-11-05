@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Build per-operation SRAM DWT diagnostics from a frozen math source root."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -36,7 +40,7 @@ def cases(op):
 
 def build(source_root,out,operations):
     sys.path.insert(0,str(ROOT/'tools'))
-    from build_picocalc import compiler_bin
+    from tools.firmware.picocalc.build_picocalc import compiler_bin
     tc=compiler_bin(None);out.mkdir(parents=True,exist_ok=True);commands=[]
     def run(cmd):
         cmd=list(map(str,cmd));commands.append(cmd);subprocess.run(cmd,check=True)
@@ -61,7 +65,7 @@ def build(source_root,out,operations):
             '#define M4_BENCH_OPERATION '+str(NAMES.index(op))+'\n#define M4_BENCH_CASES '+inputs+'\n'+
             '#include '+json.dumps(str(source_root/'code/compact_math.cpp'))+'\n'+
             '#include '+json.dumps(str(ROOT/'tests/fixtures/m4_math_cycles.cpp'))+'\n')
-        run([sys.executable,ROOT/'tools/build_portable_app.py','--name','M4MATH',
+        run([sys.executable,ROOT/'tools/apps/portable/build_portable_app.py','--name','M4MATH',
              '--source',source,'--library',archive,'--output-dir',target,'--arm-toolchain-bin',tc])
         # A -lgcc argument in the generic APP builder must not extract code.
         link_map=(target/'M4MATH.map').read_text()

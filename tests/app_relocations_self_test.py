@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Keep ELF debug metadata out of APPs without overlooking allocated sections."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 from pathlib import Path
 import struct
 import sys
 import tempfile
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools/.mk61-app'))
-from app_relocations import extract
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools/apps/packer'))
+from tools.apps.packer.app_relocations import extract
 
 BASE = 0x20000000
 

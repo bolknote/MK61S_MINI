@@ -7,7 +7,7 @@ import unittest
 from PIL import Image
 
 
-spec = importlib.util.spec_from_file_location("study", Path(__file__).resolve().parents[1] / "tools/font_preview_study.py")
+spec = importlib.util.spec_from_file_location("study", Path(__file__).resolve().parents[1] / "tools/fonts/font_preview_study.py")
 study = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(study)
 

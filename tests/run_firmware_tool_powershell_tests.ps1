@@ -4,9 +4,9 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$tool = Join-Path $root 'tools/.mk61-firmware/mk61-firmware.ps1'
+$tool = Join-Path $root 'tools/firmware/cli/mk61-firmware.ps1'
 $gccBuilder = Join-Path $root `
-    'tools/.mk61-gcc/build.ps1'
+    'tools/firmware/stm32/build.ps1'
 $systemAppsBuilder = Join-Path $root `
     'system_apps/.tool/build.ps1'
 $launcher = Join-Path $root 'tools/mk61-firmware.cmd'
@@ -26,16 +26,16 @@ function Invoke-Tool {
 Assert-True (Test-Path -LiteralPath $tool -PathType Leaf) 'PowerShell firmware tool is missing'
 Assert-True (Test-Path -LiteralPath $gccBuilder -PathType Leaf) 'direct GCC F401 builder is missing'
 Assert-True (-not (Test-Path -LiteralPath (
-    Join-Path $root 'tools/.mk61-firmware/build-f401-native.ps1'))) `
+    Join-Path $root 'tools/firmware/cli/build-f401-native.ps1'))) `
     'obsolete Arduino-CLI F401 worker is still present'
 Assert-True (Test-Path -LiteralPath $systemAppsBuilder -PathType Leaf) 'standalone System APP builder is missing'
 Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) 'Windows command launcher is missing'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'tools/mk61-firmware'))) 'legacy shell entry point is still exposed'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'tools/mk61-firmware.ps1'))) 'legacy PowerShell entry point is still exposed'
 $launcherText = [IO.File]::ReadAllText($launcher)
-Assert-True ($launcherText -match '\A:; exec "\$\(dirname "\$0"\)/\.mk61-firmware/mk61-firmware\.sh" "\$@"') 'launcher is not a shell/batch polyglot'
+Assert-True ($launcherText -match '\A:; exec "\$\(dirname "\$0"\)/firmware/cli/mk61-firmware\.sh" "\$@"') 'launcher is not a shell/batch polyglot'
 Assert-True ($launcherText -match '(?i)pwsh\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') 'launcher options differ'
-Assert-True ($launcherText -match '%~dp0\.mk61-firmware\\mk61-firmware\.ps1') 'launcher does not use its own directory'
+Assert-True ($launcherText -match '%~dp0firmware\\cli\\mk61-firmware\.ps1') 'launcher does not use its own directory'
 foreach ($powerShellFile in @($tool, $gccBuilder, $systemAppsBuilder)) {
     $tokens = $null
     $parseErrors = $null
@@ -485,7 +485,7 @@ try {
     Assert-True (-not (Test-DfuHardwareId 'USB\VID_0483&PID_5740\3688388E3233')) 'CDC device was mistaken for DFU'
     $upload = Get-UploadInvocation 'C:\firmware\mk61.bin'
     Assert-True ($upload.Executable -eq (Get-CurrentPowerShellExecutable)) 'Windows upload does not use PowerShell'
-    Assert-True (($upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/.mk61-dfu/upload.ps1')|-InputFile|C:\firmware\mk61.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F411 upload arguments differ'
+    Assert-True (($upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/firmware/dfu/upload.ps1')|-InputFile|C:\firmware\mk61.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F411 upload arguments differ'
     $script:State.Mcu = 'f401'
     $f401MenuItems = @(Get-MainMenuItems)
     Assert-True ('install_apps' -in @($f401MenuItems.Tag)) 'F401 main menu is missing the System APP action'
@@ -542,7 +542,7 @@ try {
         $env:MK61_APP_MANIFESTS = $oldManifests
     }
     $f401Upload = Get-UploadInvocation 'C:\firmware\mk61-f401.bin'
-    Assert-True (($f401Upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/.mk61-dfu/upload.ps1')|-InputFile|C:\firmware\mk61-f401.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F401 upload arguments differ'
+    Assert-True (($f401Upload.Arguments -join '|') -eq "-NoLogo|-NoProfile|-ExecutionPolicy|Bypass|-File|$(Join-Path $script:ProjectRoot 'tools/firmware/dfu/upload.ps1')|-InputFile|C:\firmware\mk61-f401.bin|-Programmer|$($script:CubeProgrammerExecutable)") 'Windows F401 upload arguments differ'
 
     # Windows packages APP with the repository's PowerShell/.NET ZX0
     # implementation. Missing Python and desktop C++ must neither block F411

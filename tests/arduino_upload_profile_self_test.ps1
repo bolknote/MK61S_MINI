@@ -47,10 +47,10 @@ try {
     [void][IO.Directory]::CreateDirectory($work)
     $tools = Join-Path $work 'installed/tools'
     [void][IO.Directory]::CreateDirectory($tools)
-    Copy-Item (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/*.ps1') $tools
-    Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $tools 'mk61-dfu.ps1')
+    Copy-Item (Join-Path $root 'tools/arduino/hardware/mk61/stm32/tools/*.ps1') $tools
+    Copy-Item (Join-Path $root 'tools/firmware/dfu/dfu.ps1') (Join-Path $tools 'mk61-dfu.ps1')
     $uploader = Join-Path $tools 'mk61-app-upload.ps1'
-    $env:MK61_TEST_MKC_TOOL = Join-Path $root 'tools/.mkc/mkc.ps1'
+    $env:MK61_TEST_MKC_TOOL = Join-Path $root 'tools/mkc/mkc.ps1'
     $profiles = @(
         @('mini-v2-lcd1602-a00', 'mini-v2-a00'),
         @('mini-v2-lcd1602-a02', 'mini-v2-a02'),

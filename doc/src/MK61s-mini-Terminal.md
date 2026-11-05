@@ -504,7 +504,7 @@ load 0224 "data block.bin"
 Упаковщик из репозитория:
 
 ```sh
-python3 tools/program_pack.py raw-image.bin program.bin
+python3 tools/programs/program_pack.py raw-image.bin program.bin
 ```
 
 Нужны Python 3 и C++17. Оптимальный ZX0-упаковщик собирается автоматически;

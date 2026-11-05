@@ -8,7 +8,7 @@ test_port=$1 test_uid=$2 test_output=$3 test_firmware=${4:-"$root/.build/firmwar
 [[ "$test_uid" =~ ^[0-9A-F]{16}$ ]] || exit 2
 mkdir -p "$test_output"
 test_output=$(cd "$test_output" && pwd)
-MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE=/dev/null source "$root/tools/.mkc/mkc.sh"
+MKC_SOURCE_ONLY=1 MKC_CONFIG_FILE=/dev/null source "$root/tools/mkc/mkc.sh"
 SESSION_DIR=$(mktemp -d "$test_output/session.XXXXXX")
 PORT=$test_port;PORT_EXPLICIT=1;DEVICE_SELECTOR=$test_uid;DEVICE_SELECTOR_EXPLICIT=1
 remote="/MK61S-MKC-$(date +%Y%m%d-%H%M%S)";created=0

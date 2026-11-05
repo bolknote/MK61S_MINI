@@ -10,14 +10,14 @@ MPU и вытесняемый кэш. Единственная особенно�
 Сборка отдельного модуля:
 
 ```sh
-python3 tools/build_portable_app.py --system focal \
+python3 tools/apps/portable/build_portable_app.py --system focal \
   --arm-toolchain-bin /path/to/arm-gcc/bin --output-dir .build/FOCAL
 ```
 
 На Windows тот же модуль без Python собирает PowerShell-вариант:
 
 ```powershell
-tools\build-portable-app.ps1 -System focal `
+tools\apps\portable\build-portable-app.ps1 -System focal `
   -ArmToolchainBin C:\path\to\arm-gcc\bin `
   -OutputDirectory .build\FOCAL
 ```
@@ -30,7 +30,7 @@ tools\build-portable-app.ps1 -System focal `
 Полный согласованный каталог создаёт общий сборщик:
 
 ```sh
-python3 tools/build_system_app_bundle.py \
+python3 tools/apps/system/build_system_app_bundle.py \
   --resident-elf .build/resident.elf \
   --compile-commands .build/compile_commands.json \
   --output-dir .build/firmware/profile/System \
@@ -40,7 +40,7 @@ python3 tools/build_system_app_bundle.py \
 
 Windows-вариант полного каталога вызывается через `system_apps\build.cmd`;
 оболочка получает toolchain из `compile_commands.json` и использует
-`tools\build-system-app-bundle.ps1`.
+`tools\apps\system\build-system-app-bundle.ps1`.
 
 `.build/firmware/apps/abi6` — общий контентно-адресуемый каталог переносимых APP.
 Одинаковый payload хранится в нём один раз по SHA-256, а `catalog.json`

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Build deterministic bank files; --check detects stale committed output."""
 
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[3]))
+
 import argparse
 import json
 import sys
@@ -10,7 +14,7 @@ from assembler import BANK_SIZE
 
 ROOT=Path(__file__).resolve().parents[3]
 sys.path.insert(0,str(ROOT/'tools'))
-from program_pack import program_binary
+from tools.programs.program_pack import program_binary
 OUT=ROOT/'programs/games/ELITE'
 
 def outputs():

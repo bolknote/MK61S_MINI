@@ -100,9 +100,8 @@ STM32 в DFU; меню загрузит прошивку и установит S
 APP — host-компилятор C++17 и Rust с целью `thumbv6m-none-eabi`:
 
 ```sh
-python3 tools/build_picocalc.py --fetch-sdk
-python3 tools/build_picocalc_apps.py
-python3 tools/package_picocalc.py
+./tools/mk61-firmware.cmd --target picocalc-pico-h --build --fetch-sdk
+./tools/mk61-firmware.cmd --target picocalc-pico-h --package
 ```
 
 Результат — `.build/firmware/picocalc-pico-h/`. Подключите Micro-USB самого

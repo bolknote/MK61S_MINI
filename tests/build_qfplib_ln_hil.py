@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Build a private Qfplib-fork comparison without relinking resident firmware."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -13,7 +17,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tests'),str(ROOT/'tools')]
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from check_stm32_vectors import ElfImage
 from check_m0_math_layout import verify,symbol_types
 from m0_mpfr_oracle import Oracle,bits
@@ -96,7 +100,7 @@ def main():
     directory='MK61S-M0-TIMING-QFP-LN-20261021'
     wrapper=out/'TIMING.c'
     wrapper.write_text('#define MK61_M0_TIMING_CACHE 1\n#define MK61_MATH_COMPARE_ROOT "/'+directory+'"\n#include "'+str(fixture)+'"\n')
-    command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name','TIMING','--source',str(wrapper),
+    command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--name','TIMING','--source',str(wrapper),
              '--shared-runtime','--arm-toolchain-bin',str(tc),'--output-dir',str(out/'app')]
     with (out/'app-build.log').open('w') as log:subprocess.run(command,check=True,stdout=log,stderr=subprocess.STDOUT)
     manifest=json.loads((out/'firmware/manifest.json').read_text())

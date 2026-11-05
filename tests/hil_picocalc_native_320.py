@@ -4,6 +4,10 @@
 Uses a new temporary SD directory, removes its probes, and restores calculator
 data. Firmware installation and the permanent APP collection are separate.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -22,7 +26,7 @@ from hil_portable_system_apps import png
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 
 def main():
@@ -35,7 +39,7 @@ def main():
     build=json.loads((args.firmware_directory/'manifest.json').read_text())
     work=ROOT/'.build/picocalc-native-320-probes';apps={}
     for name,legacy in [('NATIVE320',False),('LEGACY192',True)]:
-        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h',
+        command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h',
             '--name',name,'--source',str(ROOT/'tests/picocalc_native_320_probe.cpp'),
             '--arm-toolchain-bin',str(compiler_bin(None)),'--output-dir',str(work/name),'--shared-runtime']
         if legacy:command+=['--pico-legacy-display']

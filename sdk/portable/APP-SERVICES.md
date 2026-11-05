@@ -230,7 +230,7 @@ WORKSPACE имеет предел 8192 байта, SCRATCH - 1600; реальн�
 ## Общие подпрограммы компилятора
 
 ```sh
-python3 tools/build_portable_app.py --name SERVICES \
+python3 tools/apps/portable/build_portable_app.py --name SERVICES \
   --source examples/portable-apps/SERVICES/main.c --shared-runtime \
   --output-dir .build/portable-apps/services
 ```
@@ -262,10 +262,10 @@ APP отдельно проверяется настоящим диспетче�
 Аппаратный тест использует ту же C-пробу с графической обёрткой:
 
 ```sh
-python3 tools/build_portable_app.py --name SHARED \
+python3 tools/apps/portable/build_portable_app.py --name SHARED \
   --source tests/portable_app_services_hil.c --shared-runtime \
   --output-dir .build/services-hil/shared
-python3 tools/build_portable_app.py --name LOCAL \
+python3 tools/apps/portable/build_portable_app.py --name LOCAL \
   --source tests/portable_app_services_hil.c \
   --output-dir .build/services-hil/local
 ```

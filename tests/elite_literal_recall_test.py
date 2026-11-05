@@ -1,5 +1,9 @@
 """Compare automatic literal lift with explicit ENTER on the actual ROM."""
 
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 import json
 from pathlib import Path
 import subprocess
@@ -9,7 +13,7 @@ from tempfile import TemporaryDirectory
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'dev/tools/elite'),str(ROOT/'tools')]
 from assembler import Assembler
-from program_pack import program_binary
+from tools.programs.program_pack import program_binary
 
 
 def run_case(directory,runner,register,stored,literal,probe,lift):

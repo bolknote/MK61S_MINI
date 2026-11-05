@@ -18,13 +18,13 @@ import subprocess
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
-sys.path[:0]=[str(ROOT/'tests'),str(ROOT/'tools'),str(ROOT/'tools/.mk61-app')]
+sys.path[:0]=[str(ROOT/'tests'),str(ROOT/'tools'),str(ROOT/'tools/apps/packer')]
 from check_stm32_vectors import ElfImage
 from string_compare_arm_self_test import pin,command,EXPERIMENT
 
 def build(tc,out):
     out.mkdir(parents=True,exist_ok=False);logs=[];apps=[];native=[]
-    spec=importlib.util.spec_from_file_location('comparison_app_builder',ROOT/'tools/build_portable_app.py')
+    spec=importlib.util.spec_from_file_location('comparison_app_builder',ROOT/'tools/apps/portable/build_portable_app.py')
     builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
     normal_run=builder.run
     for arch,target,limit in [('m4','stm32',6),('m0','picocalc-pico-h',4)]:
@@ -43,7 +43,7 @@ def build(tc,out):
         # The current standalone SDK has no strncmp body and ordinary APPs
         # do not link libc implicitly. Explicit newlib is the v0 baseline.
         libraries=[Path('-lc')] if route=='standalone' and variant==0 else []
-        args=argparse.Namespace(target=target,name=name,source=[ROOT/'research/strcmp-strncmp-2026-10-26/APP-CHECK.c'],system=None,shared_runtime=route!='standalone',text_only=False,no_ui_fonts=False,local_float_math=False,local_float_math_mask=None,language_vm_compiler=False,split_language_vm=False,include=[],library=libraries,output_dir=folder,arm_toolchain_bin=tc,packer=ROOT/'tools/.mk61-app/mk61_module_pack.py',rustc=None,handled_magic=None)
+        args=argparse.Namespace(target=target,name=name,source=[ROOT/'research/strcmp-strncmp-2026-10-26/APP-CHECK.c'],system=None,shared_runtime=route!='standalone',text_only=False,no_ui_fonts=False,local_float_math=False,local_float_math_mask=None,language_vm_compiler=False,split_language_vm=False,include=[],library=libraries,output_dir=folder,arm_toolchain_bin=tc,packer=ROOT/'tools/apps/packer/mk61_module_pack.py',rustc=None,handled_magic=None)
         text=io.StringIO()
         with contextlib.redirect_stdout(text):report=builder.build(args)
         (folder/'build.log').write_text(text.getvalue())

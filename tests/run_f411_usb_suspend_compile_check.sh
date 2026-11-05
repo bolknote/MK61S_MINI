@@ -45,7 +45,7 @@ compile_profile() {
   mkdir -p "$compile_path"
   printf '\nNative F411 USB suspend production profile: %s\n' "$name"
   # No STOP override: production defaults select deep idle and USB preservation.
-  python3 "$root/tools/.mk61-gcc/build-standalone.py" \
+  python3 "$root/tools/firmware/stm32/build-standalone.py" \
     --release-case "$case_id" --build-path "$compile_path" \
     --jobs "${MK61_BUILD_JOBS:-4}" 2>&1 | tee "$compile_log"
   cp "$compile_path/resident.elf" "$compile_path/mk61s-M.ino.elf"

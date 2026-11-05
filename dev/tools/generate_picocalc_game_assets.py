@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[2]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json
@@ -133,7 +133,7 @@ def pbm_to_wbmp(data):
 def recipe():
     inputs={Path(__file__).resolve().relative_to(ROOT),Path('dev/tools/generate_highnoon_font.py'),
         Path('dev/tools/generate_ui_fonts.py'),Path('dev/lib/m8_codec.py'),
-        *(p.relative_to(ROOT) for p in (ROOT/'tools/.fmk-font/ui-atlases').glob('*.json')),
+        *(p.relative_to(ROOT) for p in (ROOT/'tools/fonts/ui-atlases').glob('*.json')),
         *(Path('doc/game-artwork')/source for source in SOURCES.values() if source)}
     outputs=[Path('programs/games')/(name+'-320.wbmp') for name in SOURCES]
     outputs += [Path('programs/games/Bumblebee/Bumblebee320.FMK'),Path('doc/game-artwork/native/manifest.json'),

@@ -1,16 +1,16 @@
-:; exec "$(dirname "$0")/.mkc/mkc.sh" "$@"
+:; exec "$(dirname "$0")/mkc/mkc.sh" "$@"
 @echo off
 setlocal
 
 where pwsh.exe >nul 2>nul
 if errorlevel 1 goto windows_powershell
-pwsh.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0.mkc\mkc.ps1" %*
+pwsh.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0mkc\mkc.ps1" %*
 exit /b %errorlevel%
 
 :windows_powershell
 where powershell.exe >nul 2>nul
 if errorlevel 1 goto missing_powershell
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0.mkc\mkc.ps1" %*
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0mkc\mkc.ps1" %*
 exit /b %errorlevel%
 
 :missing_powershell

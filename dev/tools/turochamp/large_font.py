@@ -9,7 +9,7 @@ unused by the game's text; the original left-half codes stay unchanged.
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[3]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 from generate_highnoon_font import BitWriter, crc16, put_le16
 from generate_ui_fonts import load_atlases
 from m8_codec import decode, encode

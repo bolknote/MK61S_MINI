@@ -11,7 +11,7 @@ from __future__ import annotations
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[2]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 
 import argparse
 import ast
@@ -83,7 +83,7 @@ def main() -> None:
         report = out / directory / f"{basename}.json"
         if not args.reuse_builds or not report.is_file():
             print(f"building {directory}", flush=True)
-            run([sys.executable, ROOT / "tools/build_portable_app.py", "--system", system,
+            run([sys.executable, ROOT / "tools/apps/portable/build_portable_app.py", "--system", system,
                  "--output-dir", report.parent, "--arm-toolchain-bin", args.arm_toolchain_bin,
                  *flags])
         native[directory] = json.loads(report.read_text())

@@ -10,7 +10,7 @@ LCD CRC checks the DMA source; it is not optical panel readback.
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 from datetime import datetime,timezone
 import hashlib,json,os,re,subprocess,sys,time
@@ -23,7 +23,7 @@ from hil_turochamp_performance import Font
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from generate_ui_fonts import load_atlases
 
 
@@ -81,7 +81,7 @@ def main():
     probes={}
     for name,source in (('TEXTCHK',ROOT/'tests/picocalc_native_text_probe.cpp'),('LEGACY',ROOT/'tests/picocalc_native_text_probe.cpp'),('WBMPCHK',work/'wbmp.cpp')):
         if name=='WBMPCHK':source.write_text(f'#define PICO_APPS_DIRECTORY "{directory}"\n#include "{ROOT}/tests/picocalc_wbmp_handler_probe.cpp"\n')
-        subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
+        subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
             '--source',str(source),'--shared-runtime','--arm-toolchain-bin',str(toolchain),'--output-dir',str(work/name),
             *(['--pico-legacy-display'] if name=='LEGACY' else [])],
             check=True,stdout=subprocess.DEVNULL)

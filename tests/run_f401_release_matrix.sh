@@ -46,7 +46,7 @@ build_group() {
       case_output="$output_dir"
     fi
     printf '\nF401 contract case: %s\n' "$case_id"
-    MK61_COLOR=never "$root/tools/build-gcc.cmd" \
+    MK61_COLOR=never "$root/tools/firmware/stm32/build-gcc.cmd" \
       -ReleaseCase "$case_id" \
       -Profile "$profile" \
       -Jobs "${MK61_BUILD_JOBS:-4}" \
@@ -220,7 +220,7 @@ if [[ "${MK61_PACKAGE_RELEASE:-0}" == 1 ]]; then
       _case_id _profile _optimization _defines artifact _rest; do
     # Programs is generated alongside firmware, never on a user filesystem.
     rm -rf "$output_dir/$artifact/Programs"
-    python3 "$root/tools/program_bundle.py" --bundle "$output_dir/$artifact" \
+    python3 "$root/tools/programs/program_bundle.py" --bundle "$output_dir/$artifact" \
       --export "$output_dir/$artifact/Programs"
     (cd "$output_dir" && zip -qr "$artifact.zip" "$artifact")
   done < <(python3 "$contract" cases --group f401-product --format tsv)

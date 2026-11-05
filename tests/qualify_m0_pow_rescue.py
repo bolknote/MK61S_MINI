@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Exercise the owned pow rescue from an actual forced ARM caller."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -11,7 +15,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tools'),str(ROOT/'tests')]
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 import native_eabi_m0_arm_self_test as arm
 from m0_mpfr_oracle import Oracle
 

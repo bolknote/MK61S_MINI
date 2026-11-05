@@ -40,7 +40,7 @@ def main():
         '--show-properties=expanded','--build-path',str(out/'properties'),str(sketch)],env=env,text=True)
     properties=dict(line.split('=',1) for line in properties.splitlines() if '=' in line)
     linker=out/'portable.ld'
-    subprocess.run([sys.executable,ROOT/'tools/.mk61-gcc/portable-layout.py',
+    subprocess.run([sys.executable,ROOT/'tools/arduino/compat/portable-layout.py',
         Path(properties['build.variant.path'])/properties['build.ldscript'],linker],env=env,check=True)
     link='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
     command=['arduino-cli','compile','--fqbn',fqbn,'--jobs','8',

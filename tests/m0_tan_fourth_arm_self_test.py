@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Check tangent's two-MUL fourth-power kernel against exact integers."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from fractions import Fraction
 import hashlib
@@ -25,7 +29,7 @@ def main():
     cpp=a.output/'fourth.cpp';cpp.write_text('#include <stdint.h>\n'+text+
         '\nextern "C" uint32_t fourth(uint32_t q) {return checked_trig_tan_fourth(q);}\n')
     sys.path.insert(0,str(ROOT/'tools'))
-    from build_picocalc import compiler_bin
+    from tools.firmware.picocalc.build_picocalc import compiler_bin
     elf=a.output/'fourth.elf'
     subprocess.run([str(compiler_bin(a.toolchain)/'arm-none-eabi-g++'),
         '-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-fno-lto',

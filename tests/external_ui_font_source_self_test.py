@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[1]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
-from build_fmk_from_ui_atlas import encode  # noqa: E402
+from tools.fonts.build_fmk_from_ui_atlas import encode  # noqa: E402
 from m8_codec import SPECIAL_TO_BYTE  # noqa: E402
 
 
@@ -25,7 +25,7 @@ def main() -> None:
         14: ["011110", "101101", "101101", "111111", "101101", "101101", "101101", "011110"],
     }
     for size, gap in ((12, 1), (14, 2)):
-        source = ROOT / f"tools/.fmk-font/external-fonts/dejavu-{size}.json"
+        source = ROOT / f"tools/fonts/external-fonts/dejavu-{size}.json"
         target = ROOT / f"programs/Fonts/DejaVu-{size}.FMK"
         atlas = json.loads(source.read_text(encoding="utf-8"))
         glyphs = {glyph["codepoint"]: glyph for glyph in atlas["glyphs"]}

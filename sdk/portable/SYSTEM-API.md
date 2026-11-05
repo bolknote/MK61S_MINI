@@ -89,14 +89,14 @@ SRAM. Фактический свободный диапазон виден в E
 Один APP:
 
 ```sh
-python3 tools/build_portable_app.py --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --name HELLO \
   --source examples/portable-apps/HELLO/main.c \
   --arm-toolchain-bin /path/to/arm-gcc/bin \
   --output-dir .build/HELLO
 ```
 
 Одна System-роль использует тот же builder с `--system focal` (или другой
-ролью). Полный `/System` создаёт `tools/build_system_app_bundle.py`; все
+ролью). Полный `/System` создаёт `tools/apps/system/build_system_app_bundle.py`; все
 фронтенды F401/F411 и Arduino делегируют ему.
 
 ABI 2/3/4 и прямые resident imports удалены из product path. Их размеры и

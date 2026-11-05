@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Exercise Pico's heap initialization with the actual ARM newlib allocator."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse,json,subprocess,sys,tempfile
 from pathlib import Path
 from unicorn_runtime import Uc
@@ -9,7 +13,7 @@ from check_stm32_vectors import ElfImage
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

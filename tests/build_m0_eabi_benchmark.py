@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Build separate SRAM ALU probes; Qfplib is an optional external reference."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -9,7 +13,7 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -53,7 +57,7 @@ def main():
         mode='#define M0_BENCH_MIXED_STREAMS 1\n' if args.mixed_streams else ''
         if args.full_streams:mode='#define M0_BENCH_FULL_STREAMS 1\n'
         wrapper.write_text(mode+define+f'#define M0_BENCH_OUTPUT "{name}"\n#define M0_BENCH_MARKER "/{args.directory}/marker.bin"\n#include "{fixture}"\n')
-        cmd=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
+        cmd=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
             '--source',str(wrapper),'--arm-toolchain-bin',str(tc),'--output-dir',str(out/name)]
         if name!='GCC':
             library=args.baseline_library.resolve() if name=='BASE' else out/('owned.a' if name=='OWN' else 'qfplib.a')
@@ -74,7 +78,7 @@ def main():
         names=('sin','cos','tan','asin','acos','atan','ln','log10','exp','sqrt','pow')
         dispatch.write_text('#include "compact_math.hpp"\nextern "C" double m0_probe_math(unsigned op,double a,double b) {switch(op) {\n'+''.join(
             f'case {i}:return compact_math::{name}(a'+(',b' if name=='pow' else '')+');\n' for i,name in enumerate(names))+'default:return 0;}}\n')
-        cmd=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name','MATHLOCAL',
+        cmd=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--name','MATHLOCAL',
             '--source',str(wrapper),'--source',str(dispatch),'--include',str(ROOT/'code'),
             '--arm-toolchain-bin',str(tc),'--output-dir',str(out/'MATHLOCAL'),'--library',str(out/'owned.a')]
         with (out/'MATHLOCAL.log').open('w') as log:subprocess.run(cmd,check=True,stdout=log,stderr=subprocess.STDOUT)

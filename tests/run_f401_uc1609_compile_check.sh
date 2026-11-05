@@ -63,7 +63,7 @@ ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
 [[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
   fail 'cannot resolve the STM32F401 linker script'
 portable_linker="$build_root/mk61-portable.ld"
-python3 "$root/tools/.mk61-gcc/portable-layout.py" \
+python3 "$root/tools/arduino/compat/portable-layout.py" \
   "$variant_path/$ld_name" "$portable_linker"
 resident_link_flags="$size_flags -Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
 
@@ -75,7 +75,7 @@ set +e
   --build-property "compiler.cpp.extra_flags=$strict_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags $size_flags" \
   --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
-  --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
+  --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/arduino/compat/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
   "$sketch" 2>&1 | tee "$compile_log"
 pipeline_status=("${PIPESTATUS[@]}")
 compile_status=${pipeline_status[0]}
@@ -161,7 +161,7 @@ print(discover_binutils(Path(sys.argv[1]))[1].parent)
 PYTOOLS
 )"
 for module in terminal terminal-clock; do
-  python3 "$root/tools/build_portable_app.py" --system "$module" \
+  python3 "$root/tools/apps/portable/build_portable_app.py" --system "$module" \
     --arm-toolchain-bin "$tool_bin" --output-dir "$build_root/$module"
 done
 "${MK61_ARM_TEST_PYTHON:-python3}" "$root/tests/run_terminal_app_arm_tests.py" \

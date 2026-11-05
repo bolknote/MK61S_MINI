@@ -50,7 +50,7 @@
 
 Готовые файлы находятся в [`programs/Fonts`](../programs/Fonts). Документация,
 контрольные суммы и лицензия лежат отдельно, в
-[`tools/.fmk-font/external-fonts`](../tools/.fmk-font/external-fonts/README.md),
+[`tools/fonts/external-fonts`](../tools/fonts/external-fonts/README.md),
 и на диск прибора не копируются.
 
 1. Включите USB-диск MK61S.
@@ -93,14 +93,14 @@
 Частные знаки находятся непосредственно в FMK и имеют собственные
 пропорциональные растры соответствующего размера.
 Исходник, контрольные суммы и лицензия зафиксированы в host-only каталоге
-`tools/.fmk-font/external-fonts`.
+`tools/fonts/external-fonts`.
 
 ## Создание своего FMK
 
 Обычный конвертер TTF/OTF/BDF/PCF/FON:
 
 ```bash
-tools/build_fmk_font.sh font.ttf MyFont-14.FMK \
+tools/fonts/build_fmk_font.sh font.ttf MyFont-14.FMK \
   --cell 12x14 --size 14 --line-gap 2 --proportional \
   --chars 'ascii,cyrillic,°×÷≤≥←→↑…π√' \
   --compression auto --max-file-size 8192
@@ -115,9 +115,9 @@ BDF/PCF/FON следует выбирать существующий bitmap-stri
 затем упаковщик переносит его в FMK бит-в-бит:
 
 ```bash
-python3 tools/build_fmk_from_ui_atlas.py approved-14.json \
+python3 tools/fonts/build_fmk_from_ui_atlas.py approved-14.json \
   programs/Fonts/MyFont-14.FMK
-python3 tools/build_fmk_from_ui_atlas.py approved-14.json \
+python3 tools/fonts/build_fmk_from_ui_atlas.py approved-14.json \
   programs/Fonts/MyFont-14.FMK --check
 ```
 

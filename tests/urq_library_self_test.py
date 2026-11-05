@@ -4,6 +4,10 @@
 URQ_UPSTREAM=/path/to/pinned/UrqW enables the original-game oracle. All normal
 tests use the shipped packages and run without downloads or JavaScript.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import json
 import os
 from pathlib import Path
@@ -14,9 +18,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from qst2urq import make_package
-from urq.adaptations import adapt
-from urq.library import SOURCES, copy_device_library, copy_licenses
+from tools.apps.urq.qst2urq import make_package
+from tools.apps.urq.adaptations import adapt
+from tools.apps.urq.library import SOURCES, copy_device_library, copy_licenses
 
 HOST = Path(sys.argv.pop(1)).resolve() if __name__ == "__main__" else ROOT / ".build/urq-tests/urq-host"
 UPSTREAM = Path(os.environ["URQ_UPSTREAM"]).resolve() if os.environ.get("URQ_UPSTREAM") else None
@@ -48,7 +52,7 @@ class Player:
             source = Path(self.temp.name) / "original.qst"
             source.write_text("\n".join(p.read_text(encoding="utf-8-sig") for p in paths))
             environment["URQ_ORACLE_ADAPTATION"] = key
-            command = ["node", str(ROOT / "tools/urq/oracle.js"), str(UPSTREAM), str(source), "urqw", "-"]
+            command = ["node", str(ROOT / "tools/apps/urq/oracle.js"), str(UPSTREAM), str(source), "urqw", "-"]
         else:
             command = [str(HOST), str(LIBRARY / key), "-"]
         self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -138,7 +142,7 @@ class LibraryTests(unittest.TestCase):
             self.assertEqual(actual.state["vars"].get(key), reference.state["vars"].get(key), key)
 
     def test_packages_are_reproducible_and_javascript_free(self):
-        report = json.loads((ROOT / "tools/urq/catalog-report.json").read_text())
+        report = json.loads((ROOT / "tools/apps/urq/catalog-report.json").read_text())
         self.assertEqual(set(report["published"]), {"house_that_jack_built", "trapped_in_time_ru"})
         for key in report["published"]:
             with self.subTest(game=key):

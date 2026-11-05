@@ -16,12 +16,12 @@ proportional="$work/proportional.fmk"
 thin="$work/thin.fmk"
 thin_warnings="$work/thin-warnings.txt"
 help="$work/help.txt"
-"$root/tools/build_fmk_font.sh" >"$help" 2>&1
+"$root/tools/fonts/build_fmk_font.sh" >"$help" 2>&1
 grep -q '^usage: fmk_font INPUT OUTPUT' "$help"
 grep -q -- '--max-file-size N' "$help"
-"$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$mono" --cell 5x8 --size 8 --chars AB --compression auto
-"$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$proportional" --cell 8x12 --size 8 --chars AB --proportional --compression auto
-"$root/tools/build_fmk_font.sh" "$root/tests/data/fmk_thin_test.bdf" "$thin" --cell 5x8 --size 32 --chars '1+' --compression auto 2>"$thin_warnings"
+"$root/tools/fonts/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$mono" --cell 5x8 --size 8 --chars AB --compression auto
+"$root/tools/fonts/build_fmk_font.sh" "$root/tests/data/fmk_test.bdf" "$proportional" --cell 8x12 --size 8 --chars AB --proportional --compression auto
+"$root/tools/fonts/build_fmk_font.sh" "$root/tests/data/fmk_thin_test.bdf" "$thin" --cell 5x8 --size 32 --chars '1+' --compression auto 2>"$thin_warnings"
 test -x "$root/.build/tools/fmk_font"
 test ! -e "$root/tools/fmk_font"
 grep -q 'font is missing.*U+002B' "$thin_warnings"
@@ -37,7 +37,7 @@ preview_json="$work/font-preview.json"
 read -r -a freetype_cflags <<<"$(pkg-config --cflags freetype2)"
 read -r -a freetype_libs <<<"$(pkg-config --libs freetype2)"
 clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
-  "${freetype_cflags[@]}" "$root/tools/.fmk-font/font_preview.cpp" \
+  "${freetype_cflags[@]}" "$root/tools/fonts/font_preview.cpp" \
   "${freetype_libs[@]}" -o "$preview"
 "$preview" "$root/tests/data/fmk_test.bdf" "$preview_json" \
   --height 8 --encoding cp1251 >/dev/null
@@ -47,9 +47,9 @@ python3 "$root/tests/font_preview_bitmap_self_test.py" "$preview_json"
 # ordinary, fully validated FMK2 file. Its --check mode is the reproducibility
 # gate used by maintainers of ready-made UI fonts.
 atlas_fmk="$work/atlas.fmk"
-python3 "$root/tools/build_fmk_from_ui_atlas.py" \
+python3 "$root/tools/fonts/build_fmk_from_ui_atlas.py" \
   "$root/tests/data/fmk_ui_atlas.json" "$atlas_fmk" >/dev/null
-python3 "$root/tools/build_fmk_from_ui_atlas.py" \
+python3 "$root/tools/fonts/build_fmk_from_ui_atlas.py" \
   "$root/tests/data/fmk_ui_atlas.json" "$atlas_fmk" --check >/dev/null
 "$root/tests/run_display_font_tests.sh" "$atlas_fmk" >/dev/null
 
@@ -77,14 +77,14 @@ large_fmk="$work/large.fmk"
   done
   printf '%s\n' 'ENDFONT'
 } >"$large_bdf"
-if "$root/tools/build_fmk_font.sh" "$large_bdf" "$large_fmk" \
+if "$root/tools/fonts/build_fmk_font.sh" "$large_bdf" "$large_fmk" \
     --cell 16x16 --size 16 --chars ascii --compression none \
     >"$large_rejected" 2>&1; then
   echo 'Default FMK converter unexpectedly accepted an F411-sized file' >&2
   exit 1
 fi
 grep -q 'selected firmware limit' "$large_rejected"
-"$root/tools/build_fmk_font.sh" "$large_bdf" "$large_fmk" \
+"$root/tools/fonts/build_fmk_font.sh" "$large_bdf" "$large_fmk" \
   --cell 16x16 --size 16 --chars ascii --compression none \
   --max-file-size 8192 >/dev/null
 test "$(wc -c <"$large_fmk")" -gt 1536

@@ -98,13 +98,13 @@ class-specific строки и штатный пустой 255-байтный б
 использующие порт; оставьте подключённым только нужный калькулятор.
 Для повтора без перепрошивки служит «Установить System APP»
 или `--install-apps`. Низкоуровневая команда
-`tools/build-gcc.cmd -Profile mini-v3-a00` либо
-`tools/build-gcc.cmd -Profile mini-v3-ws0010` создаёт тот же комплект без
+`tools/firmware/stm32/build-gcc.cmd -Profile mini-v3-a00` либо
+`tools/firmware/stm32/build-gcc.cmd -Profile mini-v3-ws0010` создаёт тот же комплект без
 прошивки и копирования в C6 на Windows и macOS/Linux.
 
 Для ручной работы без `arduino-cli` в репозитории есть устанавливаемые платы
 `MK61s F401 + APP` и `MK61s F411 + APP`. Команда
-`tools/mk61-arduino-board.cmd` добавляет обе в sketchbook Arduino IDE. Они
+`tools/arduino/mk61-arduino-board.cmd` добавляет обе в sketchbook Arduino IDE. Они
 сохраняют отдельный выбор аппаратной платформы, экрана и ключей, а после
 обычного Verify/Upload создают resident и выбранные штатные System APP в
 одном каталоге `.build/firmware/`. F411 по умолчанию оставляет крупные системные

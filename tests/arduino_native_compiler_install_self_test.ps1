@@ -3,7 +3,7 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-. (Join-Path $root 'tools/.mk61-arduino-board/payload.ps1')
+. (Join-Path $root 'tools/arduino/payload.ps1')
 # Reproduce the Arduino-launched 5.1 process without its optional hash function.
 function Get-FileHash { throw 'Get-FileHash is deliberately unavailable' }
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 native install ' + [Guid]::NewGuid().ToString('N'))
@@ -18,10 +18,10 @@ try {
     $emptyData = Join-Path $work 'empty Arduino15'
     $env:ARDUINO_DIRECTORIES_DATA = $emptyData
     $project = Join-Path $work 'source'
-    $native = Join-Path $project 'tools/.mk61-gcc'
+    $native = Join-Path $project 'tools/firmware/stm32'
     [void][IO.Directory]::CreateDirectory($native)
     foreach ($file in @('sdk.ps1', 'toolchain-lock.json')) {
-        Copy-Item (Join-Path $root "tools/.mk61-gcc/$file") $native
+        Copy-Item (Join-Path $root "tools/firmware/stm32/$file") $native
     }
     # Only the compiler download is replaced. It runs in a real child process
     # and emits Write-Host just like install_gcc_dependencies.ps1, on both PSs.
@@ -50,7 +50,7 @@ foreach ($name in @('g++', 'ar', 'ranlib', 'objcopy', 'size', 'nm', 'objdump', '
 Write-Host "GNU Arm installed: $bin"
 Write-Host "Native SDK: $PSScriptRoot"
 '@
-    [IO.File]::WriteAllText((Join-Path $project 'tools/install_gcc_dependencies.ps1'),
+    [IO.File]::WriteAllText((Join-Path $project 'tools/firmware/stm32/install_gcc_dependencies.ps1'),
         $installer, (New-Object Text.UTF8Encoding($false)))
     $target = Join-Path $work 'Arduino sketchbook/hardware/mk61/stm32'
     $result = @(Get-Mk61NativeCompiler $project $target '' -Install)
@@ -78,7 +78,7 @@ Write-Host "Native SDK: $PSScriptRoot"
         throw 'A missing installed header passed the native package check'
     }
     [IO.File]::WriteAllBytes($header, $original)
-    . (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
+    . (Join-Path $root 'tools/firmware/stm32/sdk.ps1')
     # A pre-existing Arduino compiler must win over another download. Check
     # actual executables/version, not a matching version directory name.
     $data = Join-Path $work 'custom Arduino15'
@@ -117,7 +117,7 @@ public static class BrokenCxxFixture {
         [IO.File]::WriteAllText($brokenCxx, "#!/bin/sh`nexit 93`n")
         & chmod +x $brokenCxx
     }
-    $counter = Join-Path $project 'tools/compiler-installs.txt'
+    $counter = Join-Path $project 'tools/firmware/stm32/compiler-installs.txt'
     $reuseTarget = Join-Path $work 'reuse/hardware/mk61/stm32'
     $reused = @(Get-Mk61NativeCompiler $project $reuseTarget '' -Install)
     if ($reused.Count -ne 1 -or $reused[0] -cne $good -or

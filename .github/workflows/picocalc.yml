@@ -2,10 +2,10 @@ name: PicoCalc Pico H
 
 on:
   pull_request:
-    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/**', 'doc/explorer-icons/**', 'dev/tools/explorer_icons.py', 'tests/explorer_icons_self_test.py', 'tests/explorer_view_self_test.cpp', 'tests/run_explorer_view_tests.sh', 'doc/game-artwork/**', 'tools/build_picocalc*.py', 'dev/tools/generate_picocalc_game_assets.py', 'dev/tools/generate_highnoon_font.py', 'dev/tools/generate_ui_fonts.py', 'dev/lib/m8_codec.py', 'dev/lib/seal_picocalc.py', 'tools/package_picocalc.py', 'tools/sync_picocalc_clock.py', 'dev/tools/picocalc_cold_evidence.py', 'tools/build_portable_app.py', 'tools/.mkc/**', 'tools/.mk61-app/**', 'tools/.mk61-gcc/**', 'tools/.fmk-font/**', 'tests/picocalc*', 'tests/system_memcpy_arm_self_test.py', 'tests/system_memmove_arm_self_test.py', 'tests/system_memcmp_arm_self_test.py', 'tests/portable_runtime_trampoline_arm_self_test.py', 'tests/shared_memory_buffer*', 'tests/run_shared_memory_buffer_tests.sh', 'tests/wbmp_reader*', 'tests/run_wbmp_tests.sh', 'tests/fixtures/picocalc_heap_probe.cpp', 'tests/fixtures/picocalc_power_sdk.hpp', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc*', 'tests/run_basic_graphics_tests.sh', 'tests/run_m61_text_tests.sh', 'tests/basic_graphics*', 'tests/game_manual_bind_self_test.py', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/**', 'doc/explorer-icons/**', 'dev/tools/explorer_icons.py', 'tests/explorer_icons_self_test.py', 'tests/explorer_view_self_test.cpp', 'tests/run_explorer_view_tests.sh', 'doc/game-artwork/**', 'tools/**', 'dev/tools/generate_picocalc_game_assets.py', 'dev/tools/generate_highnoon_font.py', 'dev/tools/generate_ui_fonts.py', 'dev/lib/m8_codec.py', 'dev/lib/seal_picocalc.py', 'dev/tools/picocalc_cold_evidence.py', 'tests/picocalc*', 'tests/system_memcpy_arm_self_test.py', 'tests/system_memmove_arm_self_test.py', 'tests/system_memcmp_arm_self_test.py', 'tests/portable_runtime_trampoline_arm_self_test.py', 'tests/shared_memory_buffer*', 'tests/run_shared_memory_buffer_tests.sh', 'tests/wbmp_reader*', 'tests/run_wbmp_tests.sh', 'tests/fixtures/picocalc_heap_probe.cpp', 'tests/fixtures/picocalc_power_sdk.hpp', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc*', 'tests/run_basic_graphics_tests.sh', 'tests/run_m61_text_tests.sh', 'tests/basic_graphics*', 'tests/game_manual_bind_self_test.py', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
   push:
     branches: [main]
-    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/**', 'doc/explorer-icons/**', 'dev/tools/explorer_icons.py', 'tests/explorer_icons_self_test.py', 'tests/explorer_view_self_test.cpp', 'tests/run_explorer_view_tests.sh', 'doc/game-artwork/**', 'tools/build_picocalc*.py', 'dev/tools/generate_picocalc_game_assets.py', 'dev/tools/generate_highnoon_font.py', 'dev/tools/generate_ui_fonts.py', 'dev/lib/m8_codec.py', 'dev/lib/seal_picocalc.py', 'tools/package_picocalc.py', 'tools/sync_picocalc_clock.py', 'dev/tools/picocalc_cold_evidence.py', 'tools/build_portable_app.py', 'tools/.mkc/**', 'tools/.mk61-app/**', 'tools/.mk61-gcc/**', 'tools/.fmk-font/**', 'tests/picocalc*', 'tests/system_memcpy_arm_self_test.py', 'tests/system_memmove_arm_self_test.py', 'tests/system_memcmp_arm_self_test.py', 'tests/portable_runtime_trampoline_arm_self_test.py', 'tests/shared_memory_buffer*', 'tests/run_shared_memory_buffer_tests.sh', 'tests/wbmp_reader*', 'tests/run_wbmp_tests.sh', 'tests/fixtures/picocalc_heap_probe.cpp', 'tests/fixtures/picocalc_power_sdk.hpp', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc*', 'tests/run_basic_graphics_tests.sh', 'tests/run_m61_text_tests.sh', 'tests/basic_graphics*', 'tests/game_manual_bind_self_test.py', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/**', 'doc/explorer-icons/**', 'dev/tools/explorer_icons.py', 'tests/explorer_icons_self_test.py', 'tests/explorer_view_self_test.cpp', 'tests/run_explorer_view_tests.sh', 'doc/game-artwork/**', 'tools/**', 'dev/tools/generate_picocalc_game_assets.py', 'dev/tools/generate_highnoon_font.py', 'dev/tools/generate_ui_fonts.py', 'dev/lib/m8_codec.py', 'dev/lib/seal_picocalc.py', 'dev/tools/picocalc_cold_evidence.py', 'tests/picocalc*', 'tests/system_memcpy_arm_self_test.py', 'tests/system_memmove_arm_self_test.py', 'tests/system_memcmp_arm_self_test.py', 'tests/portable_runtime_trampoline_arm_self_test.py', 'tests/shared_memory_buffer*', 'tests/run_shared_memory_buffer_tests.sh', 'tests/wbmp_reader*', 'tests/run_wbmp_tests.sh', 'tests/fixtures/picocalc_heap_probe.cpp', 'tests/fixtures/picocalc_power_sdk.hpp', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc*', 'tests/run_basic_graphics_tests.sh', 'tests/run_m61_text_tests.sh', 'tests/basic_graphics*', 'tests/game_manual_bind_self_test.py', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
   workflow_dispatch:
 
 permissions:
@@ -24,6 +24,7 @@ jobs:
           MK61_TEST_SANITIZERS=1 bash tests/run_usb_screen_surface_tests.sh
           MK61_TEST_SANITIZERS=1 bash tests/run_resident_firmware_format_tests.sh
           bash tests/run_mkc_tests.sh
+          python3 tests/firmware_entry_self_test.py
           bash tests/mkc_system_install_self_test.sh
           MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_recovery_tests.sh
           MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_hardware_tests.sh
@@ -48,9 +49,9 @@ jobs:
           rustup toolchain install 1.94.1 --profile minimal
           rustup target add --toolchain 1.94.1 thumbv6m-none-eabi thumbv7em-none-eabihf
       - name: Build RP2040 firmware and check CPU, ABI and UF2 payload
-        run: python3 tools/build_picocalc.py --fetch-sdk
+        run: python3 tools/firmware/picocalc/build_picocalc.py --fetch-sdk
       - name: Build all seven ARMv6-M native APP examples
-        run: python3 tools/build_picocalc_apps.py
+        run: python3 tools/apps/system/build_picocalc_apps.py
       - name: Execute packed Rust and C++ APPs on Cortex-M0 and Cortex-M4
         run: |
           python3 -m venv .build/arm-tests
@@ -67,7 +68,7 @@ jobs:
           .build/arm-tests/bin/python tests/picocalc_memory_arm_self_test.py .build/picocalc-pico-h/mk61s-picocalc-pico-h.elf --output .build/arm-tests/memory-link.json
       - name: Package clean Pico H release and verify its contents
         run: |
-          python3 tools/package_picocalc.py
+          python3 tools/firmware/picocalc/package_picocalc.py
           python3 tests/picocalc_package_self_test.py
       - uses: actions/upload-artifact@v7
         with:
@@ -86,10 +87,10 @@ jobs:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-native-gcc
       - name: Build STM32 resident with its production budgets
-        run: python3 tools/.mk61-gcc/build-standalone.py --release-case '${{ matrix.case }}' --build-path '.build/picocalc-stm32/${{ matrix.case }}'
+        run: python3 tools/firmware/stm32/build-standalone.py --release-case '${{ matrix.case }}' --build-path '.build/picocalc-stm32/${{ matrix.case }}'
       - name: Build matching STM32 System APPs
         run: |
-          python3 tools/build_system_app_bundle.py \
+          python3 tools/apps/system/build_system_app_bundle.py \
             --resident-elf '.build/picocalc-stm32/${{ matrix.case }}/resident.elf' \
             --compile-commands '.build/picocalc-stm32/${{ matrix.case }}/compile_commands.json' \
             --output-dir '.build/picocalc-stm32/${{ matrix.case }}/System'

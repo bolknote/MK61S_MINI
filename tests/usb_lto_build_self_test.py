@@ -28,7 +28,7 @@ def fake_compiler(arguments):
 
 
 class CoreLtoBuildTest(unittest.TestCase):
-    def exercise(self, powershell=False, flags=None, fail=False, missing=False):
+    def exercise(self, flags=None, fail=False, missing=False):
         with tempfile.TemporaryDirectory(prefix='mk61 core lto ') as temporary:
             base = Path(temporary)
             build = base / 'build with spaces'
@@ -51,11 +51,9 @@ class CoreLtoBuildTest(unittest.TestCase):
                 '-IC:/Program Files/STM32/core', r'-IE:\Arduino core\inc']
             if fail:
                 options = options + ['--fail']
-            suffix = 'ps1' if powershell else 'py'
-            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
-                        if powershell else [sys.executable])
+            launcher = [sys.executable]
             result = subprocess.run([*launcher,
-                str(ROOT / 'tools/.mk61-gcc' / ('protect-core-lto.' + suffix)),
+                str(ROOT / 'tools/arduino/compat/protect-core-lto.py'),
                 str(build), str(sketch), str(fake), '--fake-compiler', *options],
                 capture_output=True, text=True)
             self.assertEqual(cold.read_text(), 'cold LTO object')
@@ -68,8 +66,6 @@ class CoreLtoBuildTest(unittest.TestCase):
                 return
             expected = options + ['-fno-lto', '-I' + str(sketch),
                 str(sketch / 'mk61emu_core.cpp'), '-o', str(obj)]
-            if powershell:
-                expected = [v.replace('\\', '/') for v in expected]
             self.assertEqual(json.loads(obj.read_text()), expected)
             self.assertIn('Core LTO barrier:', result.stdout)
 
@@ -85,36 +81,26 @@ class CoreLtoBuildTest(unittest.TestCase):
         self.exercise(fail=True)
         self.exercise(missing=True)
 
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell_f411(self):
-        self.exercise(powershell=True)
-
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell_skips_and_failure(self):
-        self.exercise(powershell=True, flags=['-flto', '-DSTM32F401xC'])
-        self.exercise(powershell=True, flags=['-flto', '-fno-lto', '-DSTM32F411xE'])
-        self.exercise(powershell=True, fail=True)
-        self.exercise(powershell=True, missing=True)
 
     def test_native_arduino_installs_shared_policy_hook(self):
-        text = (ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt').read_text()
+        text = (ROOT / 'tools/arduino/hardware/mk61/stm32/platform.txt').read_text()
         self.assertIn('recipe.hooks.linking.prelink.20.pattern=', text)
         self.assertIn('mk61-native-prelink.py', text)
         self.assertIn('mk61-native-prelink.ps1', text)
 
     def test_native_frontends_use_shared_cmake_barriers(self):
-        cmake = (ROOT / 'tools/.mk61-gcc/CMakeLists.txt').read_text()
+        cmake = (ROOT / 'tools/firmware/stm32/CMakeLists.txt').read_text()
         self.assertIn('native_compile_policy.json', cmake)
         self.assertIn('COMPILE_OPTIONS ${_mk61_values}', cmake)
         self.assertIn('NOT _mk61_mcu STREQUAL MK61_TARGET_MCU', cmake)
-        policy = json.loads((ROOT / 'tools/.mk61-gcc/native_compile_policy.json').read_text())
+        policy = json.loads((ROOT / 'tools/firmware/stm32/native_compile_policy.json').read_text())
         units = {v['source']: v for v in policy['units']}
         self.assertEqual(units['mk61emu_core.cpp']['mcu'], 'f411')
         for source in ('mk61emu_core.cpp', 'stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c'):
             self.assertIn('-fno-lto', units[source]['flags'])
         for name, destination in (
-                ('tools/.mk61-firmware/mk61-firmware.sh', 'tools/build-gcc.cmd'),
-                ('tools/.mk61-firmware/mk61-firmware.ps1', 'Invoke-F401GccBundleBuild'),
+                ('tools/firmware/cli/mk61-firmware.sh', 'tools/firmware/stm32/build-gcc.cmd'),
+                ('tools/firmware/cli/mk61-firmware.ps1', 'Invoke-F401GccBundleBuild'),
                 ('tests/run_f411_release_matrix.sh', 'build-standalone.py')):
             self.assertTrue(destination in (ROOT / name).read_text(), name)
 
@@ -125,10 +111,10 @@ class NativeArduinoPolicyTest(unittest.TestCase):
             base = Path(temporary)
             tools = base / 'installed board/tools'
             tools.mkdir(parents=True)
-            original = ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools'
+            original = ROOT / 'tools/arduino/hardware/mk61/stm32/tools'
             for name in ('mk61-native-prelink.py', 'mk61-native-prelink.ps1', 'mk61-safe-tool.ps1'):
                 shutil.copy2(original / name, tools / name)
-            shutil.copy2(ROOT / 'tools/.mk61-gcc/native_compile_policy.json', tools)
+            shutil.copy2(ROOT / 'tools/firmware/stm32/native_compile_policy.json', tools)
             policy = json.loads((tools / 'native_compile_policy.json').read_text())
             build, sketch = base / 'build with spaces', base / 'original sketch'
             snapshot = build / 'sketch'
@@ -208,7 +194,7 @@ class NativeArduinoPolicyTest(unittest.TestCase):
 
 
 class UsbLtoBuildTest(unittest.TestCase):
-    def exercise(self, powershell=False, fail=False, owned=None, missing_owned=False):
+    def exercise(self, fail=False, owned=None, missing_owned=False):
         with tempfile.TemporaryDirectory(prefix='mk61 usb lto ') as temporary:
             base = Path(temporary)
             build = base / 'build with spaces'
@@ -222,7 +208,6 @@ class UsbLtoBuildTest(unittest.TestCase):
                 obj.parent.mkdir(parents=True, exist_ok=True)
                 obj.write_text('original LTO object')
                 objects.append(obj)
-            suffix = 'ps1' if powershell else 'py'
             # HAL supplies weak empty hooks; its strong USB bridge must remain
             # visible to LTO. Rewriting that bridge instead of the core target
             # unit previously let MSP initialization disappear on real F411.
@@ -240,12 +225,11 @@ class UsbLtoBuildTest(unittest.TestCase):
                 (snapshot / name).write_text('// snapshot fixture')
             if missing_owned:
                 (snapshot / 'stm32f4_usb_device.cpp').unlink()
-            helper = ROOT / 'tools' / '.mk61-gcc' / ('protect-usb-lto.' + suffix)
+            helper = ROOT / 'tools/arduino/compat/protect-usb-lto.py'
             fake = base / 'fake compiler'
             shutil.copyfile(HERE, fake)
             fake.chmod(0o755)
-            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
-                        if powershell else [sys.executable])
+            launcher = [sys.executable]
             options = ['-c', '-flto', '-Os', '-DNAME="space value"', '-I' + str(library),
                        '-IC:/Program Files/STM32/USBDevice/inc',
                        '-Id:/Arduino/core/inc', r'-IE:\Arduino core\USBDevice\inc',
@@ -262,7 +246,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                 if fail:self.assertEqual(objects[0].read_text(), 'original LTO object')
                 return
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            expected = [arg.replace('\\', '/') for arg in options] if powershell else options
+            expected = options
             for source, obj in zip(SOURCES, objects):
                 extra = ['-fno-lto']
                 actual = library/source
@@ -278,7 +262,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertIn('-std=gnu++17',json.loads(serial.read_text()))
                 bridge_args=json.loads(bridge.read_text())
                 request_args=json.loads(request.read_text())
-                normalize=lambda s:s.replace('\\','/') if powershell else s
+                normalize=str
                 self.assertIn(normalize(str(snapshot/'stm32f4_usb_device.cpp')),bridge_args)
                 self.assertIn(normalize(str(snapshot/'stm32f4_usbd_ctlreq.c')),request_args)
                 self.assertIn('-DMK61_USB_BUILD_BRIDGE=1',bridge_args)
@@ -291,7 +275,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
                 self.assertEqual(request.read_text(), 'generic control requests')
 
-    def exercise_private(self, powershell=False, missing=False, fail=False):
+    def exercise_private(self, missing=False, fail=False):
         with tempfile.TemporaryDirectory(prefix='mk61 private usb ') as temporary:
             build = Path(temporary) / 'build with spaces'
             sketch = build / 'sketch'
@@ -304,14 +288,12 @@ class UsbLtoBuildTest(unittest.TestCase):
                 (sketch/(sources[1]+'.o')).unlink()
             fake = Path(temporary) / 'fake compiler'
             shutil.copyfile(HERE, fake); fake.chmod(0o755)
-            suffix = 'ps1' if powershell else 'py'
-            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
-                        if powershell else [sys.executable])
+            launcher = [sys.executable]
             options = ['--fake-compiler', '-c', '-flto', '-DSTM32F401xC',
                        '-DMK61_ARDUINO_OWNED_USB=1', '-DNAME="space value"']
             if fail: options += ['--fail']
             result = subprocess.run([*launcher,
-                str(ROOT/'tools/.mk61-gcc'/('protect-usb-lto.'+suffix)),
+                str(ROOT/'tools/arduino/compat/protect-usb-lto.py'),
                 str(build), str(Path(temporary)/'unused Core library'),
                 str(fake), *options], capture_output=True, text=True)
             if missing or fail:
@@ -328,10 +310,6 @@ class UsbLtoBuildTest(unittest.TestCase):
         for missing, fail in ((False,False),(True,False),(False,True)):
             self.exercise_private(missing=missing, fail=fail)
 
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell_private_board_owned_engine(self):
-        for missing, fail in ((False,False),(True,False),(False,True)):
-            self.exercise_private(powershell=True, missing=missing, fail=fail)
 
     def test_native(self):
         self.exercise()
@@ -341,22 +319,10 @@ class UsbLtoBuildTest(unittest.TestCase):
             self.exercise(owned=mcu)
         self.exercise(owned='STM32F411xE',missing_owned=True)
 
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell_owned_f4_snapshot(self):
-        for mcu in ('STM32F401xC','STM32F411xE'):
-            self.exercise(powershell=True,owned=mcu)
-        self.exercise(powershell=True,owned='STM32F411xE',missing_owned=True)
 
     def test_native_failure(self):
         self.exercise(fail=True)
 
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell(self):
-        self.exercise(powershell=True)
-
-    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
-    def test_powershell_failure(self):
-        self.exercise(powershell=True, fail=True)
 
     @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
     def test_powershell_linker_paths(self):
@@ -372,7 +338,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                      '-Wl,-Map,C:/Build with spaces/code.ino.map',
                      '-Wl,--wrap=USBD_CDC_ClearBuffer', r'C:\Build\code.ino.cpp.o',
                      '-o', str(output)]
-            helper = ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-safe-tool.ps1'
+            helper = ROOT / 'tools/arduino/hardware/mk61/stm32/tools/mk61-safe-tool.ps1'
             result = subprocess.run([
                 shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File', str(helper),
                 str(base), str(fake), '--fake-compiler', *flags,
@@ -381,43 +347,6 @@ class UsbLtoBuildTest(unittest.TestCase):
             self.assertEqual(json.loads(output.read_text()),
                              [arg.replace('\\', '/') for arg in flags])
 
-    @unittest.skipUnless(shutil.which('pwsh') and shutil.which('cc'),
-                         'PowerShell or C compiler unavailable')
-    def test_powershell_compiles_with_windows_include_path(self):
-        with tempfile.TemporaryDirectory(prefix='mk61 usb headers ') as temporary:
-            base = Path(temporary)
-            # On POSIX this is a relative directory named C:. The same native
-            # -File argument parsing that breaks Windows drives happens here,
-            # without needing a Windows runner to reproduce the missing header.
-            include = (base / 'STM32 core/USBDevice/inc' if sys.platform == 'win32'
-                       else Path('C:/STM32 core/USBDevice/inc'))
-            (base / include).mkdir(parents=True)
-            (base / include / 'usbd_cdc.h').write_text('#define USB_HEADER_OK 42\n')
-            build = base / 'build'
-            library = base / 'USBDevice'
-            objects = []
-            for source in SOURCES:
-                path = library / source
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text('#include "usbd_cdc.h"\n'
-                                '_Static_assert(USB_HEADER_OK == 42, "header");\n'
-                                '_Static_assert(sizeof(NAME) == 12, "macro quotes");\n'
-                                'int usb_test(void) { return USB_HEADER_OK; }\n')
-                obj = build / 'libraries' / 'USBDevice' / (path.name + '.o')
-                obj.parent.mkdir(parents=True, exist_ok=True)
-                obj.write_bytes(b'original LTO object')
-                objects.append(obj)
-            result = subprocess.run([
-                shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File',
-                str(ROOT / 'tools/.mk61-gcc/protect-usb-lto.ps1'),
-                str(build), str(library), shutil.which('cc'),
-                '-c', '-flto', '-std=c11', '-DNAME="space value"', '-I' + str(include),
-            ], cwd=base, capture_output=True, text=True)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            for obj in objects:
-                self.assertNotEqual(obj.read_bytes(), b'original LTO object')
-                self.assertGreater(obj.stat().st_size, 100)
-            self.assertEqual(result.stdout.count('USB LTO barrier:'), 2)
 
     def test_elf_call_gate(self):
         spec = importlib.util.spec_from_file_location('gate', ROOT / 'tests/check_usb_cdc_rx_elf.py')

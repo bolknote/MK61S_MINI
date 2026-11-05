@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-tool="$root/tools/build_f401_bundle.sh"
+tool="$root/tools/firmware/stm32/build_f401_bundle.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-f401-bundle-test.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
@@ -132,8 +132,8 @@ grep -Fq 'MK61_ENABLE_SETUP' "$tool"
 grep -Fq 'MK61_SETUP_AS_APP' "$tool"
 grep -Fq 'MK61_EXPLORER_AS_APP' "$tool"
 grep -Fq 'EXPLORER.APP' "$tool"
-grep -Fq 'tools/build_system_app_bundle.py' "$tool"
-grep -Fq 'tools/build_portable_app.py' "$tool"
+grep -Fq 'tools/apps/system/build_system_app_bundle.py' "$tool"
+grep -Fq 'tools/apps/portable/build_portable_app.py' "$tool"
 grep -Fq 'MK61_APP_LOCAL_FLOAT_MATH' "$tool"
 grep -Fq "printf 'abi 6" "$tool"
 if grep -Fq 'MK61_ENABLE_USER_APPS' "$tool" ||

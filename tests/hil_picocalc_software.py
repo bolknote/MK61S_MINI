@@ -5,6 +5,10 @@ Installs only absent/matching bundled UI fonts. --fault-tests explicitly runs
 private UDF and watchdog APP probes; no fault command is added to the firmware.
 No formatting or firmware flashing. Calculator data and settings are restored.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from datetime import datetime,timezone
 import hashlib
@@ -22,7 +26,7 @@ from hil_portable_system_apps import png
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 
 def raw(p,keys):
@@ -121,7 +125,7 @@ def main():
     def build_app(name,source,defines=(),extra=()):
         wrapper=work/(name+Path(source).suffix)
         wrapper.write_text('\n'.join(defines)+f'\n#include "{ROOT/source}"\n')
-        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display',
+        command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display',
             '--name',name,'--arm-toolchain-bin',str(toolchain),'--shared-runtime','--source',str(wrapper),
             '--output-dir',str(work/name)]
         for path in extra:command+=['--source',str(ROOT/path)]

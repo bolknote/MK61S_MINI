@@ -14,7 +14,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61-arduino-e2e-' + [Guid]::NewGuid().ToString('N'))
-$sourceTools = Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools'
+$sourceTools = Join-Path $root 'tools/arduino/hardware/mk61/stm32/tools'
 $powerShell = (Get-Process -Id $PID).Path
 $windowsHost = $env:OS -eq 'Windows_NT'
 $savedEnvironment = @{}
@@ -85,7 +85,7 @@ try {
         $stage = Join-Path (Join-Path $BuildPath 'mk61-system-apps') $bundle
         $system = Join-Path $stage 'System'
         [void][IO.Directory]::CreateDirectory((Join-Path $system 'VMCache'))
-        Copy-Item -LiteralPath (Join-Path $root 'tools/.mkc/mkc.ps1') (Join-Path $stage 'mk61-system-installer.ps1')
+        Copy-Item -LiteralPath (Join-Path $root 'tools/mkc/mkc.ps1') (Join-Path $stage 'mk61-system-installer.ps1')
         foreach ($name in @('VMCache/VMSTORE.APP', 'LANGVM.APP', 'LANGIN.APP')) {
             [IO.File]::WriteAllBytes((Join-Path $system $name), [byte[]]::new(64))
         }
@@ -96,7 +96,7 @@ try {
             $PlatformToolsDirectory = Join-Path $work 'installed board/tools'
             [void][IO.Directory]::CreateDirectory($PlatformToolsDirectory)
             Copy-Item -Path (Join-Path $sourceTools '*.ps1') $PlatformToolsDirectory
-            Copy-Item (Join-Path $root 'tools/.mk61-dfu/dfu.ps1') (Join-Path $PlatformToolsDirectory 'mk61-dfu.ps1')
+            Copy-Item (Join-Path $root 'tools/firmware/dfu/dfu.ps1') (Join-Path $PlatformToolsDirectory 'mk61-dfu.ps1')
         }
     }
     if ((-not $Fixture -or -not [string]::IsNullOrEmpty($Fqbn)) -and
@@ -116,7 +116,7 @@ try {
     $uploader = Join-Path $PlatformToolsDirectory 'mk61-app-upload.ps1'
     $resident = Join-Path $BuildPath 'code.ino.bin'
     $null = Get-VerifiedMk61SystemManifest $stage $bundle $mcu $resident
-    foreach ($pair in @(@($installer, (Join-Path $root 'tools/.mkc/mkc.ps1')),
+    foreach ($pair in @(@($installer, (Join-Path $root 'tools/mkc/mkc.ps1')),
             @($uploader, (Join-Path $sourceTools 'mk61-app-upload.ps1')))) {
         if ((Get-Mk61FileSha256 $pair[0]) -cne (Get-Mk61FileSha256 $pair[1])) {
             throw "Actual build is using a stale script: $($pair[0])"

@@ -59,7 +59,7 @@ def main():
             toolchain = sorted(candidates)[-1].parent
         else:
             parser.error('specify --arm-toolchain-bin or put ARM GCC on PATH')
-    command = [sys.executable,str(ROOT/'tools/build_portable_app.py'),'--name','SHEET',
+    command = [sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--name','SHEET',
                '--source',str(ROOT/'examples/portable-apps/SHEET/main.cpp'),
                '--source',str(ROOT/'examples/portable-apps/SHEET/sheet_engine.cpp'),
                '--shared-runtime','--handled-magic','S1','--arm-toolchain-bin',str(toolchain),

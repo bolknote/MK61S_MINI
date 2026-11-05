@@ -2,8 +2,8 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-launcher="$root/tools/mk61-arduino-board.cmd"
-package="$root/tools/.mk61-arduino-board"
+launcher="$root/tools/arduino/mk61-arduino-board.cmd"
+package="$root/tools/arduino"
 platform="$package/hardware/mk61/stm32"
 font_settings_compat="$package/font-settings-compat.boards.local.txt"
 hook="$platform/tools/mk61-app-postbuild.sh"
@@ -135,7 +135,7 @@ grep -Fxq 'mk61_f411.name=MK61s F411 + APP (2.0.0)' "$target/boards.txt"
 grep -Fxq 'version=2.0.0' "$target/platform.txt"
 # Mixed compatibility headers, SDK files and policy must fail freshness checks.
 for pair in 'Arduino.h:cores/mk61/Arduino.h' 'utils.h:cores/mk61/utils.h'; do
-  cmp "$root/tools/.mk61-gcc/standalone/${pair%%:*}" "$target/${pair#*:}"
+  cmp "$root/tools/firmware/stm32/standalone/${pair%%:*}" "$target/${pair#*:}"
 done
 cmp "$root/third_party/stm32f4/manifest.json" "$target/system/stm32f4/manifest.json"
 for relative in cores/mk61/Arduino.h system/stm32f4/cmsis/include/core_cm4.h tools/native_compile_policy.json; do
@@ -532,7 +532,7 @@ EOF
   mock_device="$work/mock-device"
   mkdir -p "$mock_system" "$mock_device"
   printf 'mock APP' > "$mock_system/USBDISK.APP"
-  cp "$root/tools/.mkc/mkc.ps1" "$mock_stage/mk61-system-installer.ps1"
+  cp "$root/tools/mkc/mkc.ps1" "$mock_stage/mk61-system-installer.ps1"
   MK61_TEST_BUILD="$mock_build" MK61_TEST_ROOT="$root" \
     run_windows_powershell -NoLogo -NoProfile -Command '
       . (Join-Path $env:MK61_TEST_ROOT "tests/fixtures/arduino_bundle.ps1")
@@ -621,7 +621,7 @@ EOF
   mock_f411_system="$mock_f411_stage/System"
   mkdir -p "$mock_f411_system"
   printf 'resident help\n' > "$mock_f411_system/HELP0.TXT"
-  cp "$root/tools/.mkc/mkc.ps1" \
+  cp "$root/tools/mkc/mkc.ps1" \
     "$mock_f411_stage/mk61-system-installer.ps1"
   MK61_TEST_BUILD="$mock_build" MK61_TEST_ROOT="$root" \
     run_windows_powershell -NoLogo -NoProfile -Command '
@@ -665,7 +665,7 @@ EOF
   # invoking the blocked launchers, just like installation and Upload above.
   launcher_build="$work/python-launcher-build"
   mkdir -p "$launcher_build"
-  cp "$root/tools/.mk61-gcc/standalone/resident.ld" "$work/variant.ld"
+  cp "$root/tools/firmware/stm32/standalone/resident.ld" "$work/variant.ld"
   OS=Windows_NT PUBLIC="$ps_public" \
     MK61_ARDUINO_CONFIG_FILE="$ps_config" \
     run_windows_powershell -NoLogo -NoProfile -File \

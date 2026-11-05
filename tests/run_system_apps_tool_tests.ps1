@@ -7,16 +7,16 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $appsRoot = Join-Path $root 'system_apps'
 $launcher = Join-Path $appsRoot 'build.cmd'
 $wrapper = Join-Path $appsRoot '.tool/build.ps1'
-$commonBuilder = Join-Path $root 'tools/build_system_app_bundle.py'
-$appBuilder = Join-Path $root 'tools/build_portable_app.py'
-$powerShellCommonBuilder = Join-Path $root 'tools/build-system-app-bundle.ps1'
-$powerShellAppBuilder = Join-Path $root 'tools/build-portable-app.ps1'
-$powerShellPacker = Join-Path $root 'tools/.mk61-app/Mk61AppPacker.cs'
-$gccBuilder = Join-Path $root 'tools/.mk61-gcc/build.ps1'
+$commonBuilder = Join-Path $root 'tools/apps/system/build_system_app_bundle.py'
+$appBuilder = Join-Path $root 'tools/apps/portable/build_portable_app.py'
+$powerShellCommonBuilder = Join-Path $root 'tools/apps/system/build-system-app-bundle.ps1'
+$powerShellAppBuilder = Join-Path $root 'tools/apps/portable/build-portable-app.ps1'
+$powerShellPacker = Join-Path $root 'tools/apps/packer/Mk61AppPacker.cs'
+$gccBuilder = Join-Path $root 'tools/firmware/stm32/build.ps1'
 $arduinoShell = Join-Path $root `
-    'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.sh'
+    'tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.sh'
 $arduinoPowerShell = Join-Path $root `
-    'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
+    'tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
 
 function Assert-True {
     param([bool]$Condition, [string]$Message)
@@ -59,10 +59,9 @@ $parseErrors = $null
 foreach ($powerShellFile in @(
         $wrapper, $powerShellCommonBuilder, $powerShellAppBuilder,
         $arduinoPowerShell,
-        (Join-Path $root 'tools/.mk61-app/build-terminal-help.ps1'),
-        (Join-Path $root 'tools/.mk61-gcc/portable-layout.ps1'),
+        (Join-Path $root 'tools/apps/system/build-terminal-help.ps1'),
         (Join-Path $root `
-            'tools/.fmk-font/package-ui-font-licenses.ps1'))) {
+            'tools/fonts/package-ui-font-licenses.ps1'))) {
     $tokens = $null
     $parseErrors = $null
     [void][Management.Automation.Language.Parser]::ParseFile(
@@ -159,13 +158,13 @@ $gccText = [IO.File]::ReadAllText($gccBuilder)
 $arduinoShellText = [IO.File]::ReadAllText($arduinoShell)
 $arduinoPowerShellText = [IO.File]::ReadAllText($arduinoPowerShell)
 
-Assert-True ($wrapperText -match 'tools/build_system_app_bundle\.py') `
+Assert-True ($wrapperText -match 'tools/apps/system/build_system_app_bundle\.py') `
     'non-Windows wrapper does not delegate to the Python builder'
-Assert-True ($wrapperText -match 'tools/build-system-app-bundle\.ps1') `
+Assert-True ($wrapperText -match 'tools/apps/system/build-system-app-bundle\.ps1') `
     'Windows wrapper does not delegate to the PowerShell builder'
 Assert-True ($wrapperText -notmatch '(?m)-fPIC|-fstack-usage') `
     'PowerShell wrapper still contains a second APP compiler pipeline'
-Assert-True ($commonText -match 'tools/build_portable_app\.py') `
+Assert-True ($commonText -match 'tools/apps/portable/build_portable_app\.py') `
     'System bundle does not use the ordinary APP builder'
 Assert-True ($commonText -match '"setup", "SETUP\.APP"') `
     'selectable SETUP.APP is missing from the common bundle'
@@ -221,7 +220,7 @@ foreach ($obsolete in @(
     'system_apps/focal/main.cpp', 'system_apps/basic/main.cpp',
     'system_apps/wbmp/main.cpp', 'system_apps/markdown/main.cpp',
     'system_apps/chip8/main.cpp', 'code/loadable_module_imports.cpp',
-    'tools/.mk61-gcc/system-app-exports.list'
+    'tools/firmware/stm32/system-app-exports.list'
 )) {
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $root $obsolete))) `
         "obsolete private System APP path remains: $obsolete"

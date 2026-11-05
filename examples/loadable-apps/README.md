@@ -4,7 +4,7 @@
 `app.mk61`. Пример `HELLO` собирается вместе с точной F401 resident-прошивкой:
 
 ```bash
-./tools/build_f401_bundle.sh \
+./tools/firmware/stm32/build_f401_bundle.sh \
   --profile mini-v3-a00 \
   --app-manifest examples/loadable-apps/HELLO/app.mk61
 ```
@@ -21,7 +21,7 @@
 Manifest можно проверить без компиляции:
 
 ```bash
-./tools/build_f401_bundle.sh --check-app-manifests \
+./tools/firmware/stm32/build_f401_bundle.sh --check-app-manifests \
   --app-manifest examples/loadable-apps/HELLO/app.mk61
 ```
 

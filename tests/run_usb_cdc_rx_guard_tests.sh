@@ -24,12 +24,12 @@ python3 "$root/tests/foreground_stack_elf_self_test.py"
 
 linker_flag='--wrap=USBD_CDC_ClearBuffer'
 for builder in \
-  "$root/tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt" \
+  "$root/tools/arduino/hardware/mk61/stm32/platform.txt" \
   "$root/tests/run_f401_uc1609_compile_check.sh"; do
   grep -Fq -- "$linker_flag" "$builder"
 done
 
-cmake="$root/tools/.mk61-gcc/CMakeLists.txt"
+cmake="$root/tools/firmware/stm32/CMakeLists.txt"
 grep -Fq -- 'LINKER:--wrap=USBD_CDC_ClearBuffer' "$cmake"
 # usb_lto_build_self_test above checks and executes the shared per-unit policy.
 grep -Fq -- 'native_compile_policy.json' "$cmake"

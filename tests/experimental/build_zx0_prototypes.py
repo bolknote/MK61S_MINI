@@ -5,7 +5,7 @@
 import sys as _tool_sys
 from pathlib import Path as _ToolPath
 _tool_root = _ToolPath(__file__).resolve().parents[2]
-_tool_sys.path[:0] = [str(_tool_root / "tools"), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
+_tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_root / "dev/tools")]
 import argparse
 import hashlib
 import json
@@ -67,7 +67,7 @@ def main():
                 *[out/'variants'/(v+'.cpp') for v in ('scalar','word','dsp')],'-o',folder/'corpus-self-test']
             subprocess.run(list(map(str,host)),check=True)
             subprocess.run([str(folder/'corpus-self-test')],check=True)
-        command=[sys.executable,ROOT/'tools/build_portable_app.py','--name',name,'--shared-runtime',
+        command=[sys.executable,ROOT/'tools/apps/portable/build_portable_app.py','--name',name,'--shared-runtime',
             '--source',ROOT/'tests/experimental'/source_name,'--include',ROOT/'tests/experimental','--include',folder,
             '--arm-toolchain-bin',args.arm_toolchain_bin,'--output-dir',folder/'build']
         if kind:

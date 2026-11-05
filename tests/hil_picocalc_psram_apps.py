@@ -4,6 +4,10 @@
 Uses fresh temporary files and restores calculator data and the working folder.
 WBMP pixels and ELIZA text are checked against independent reference layouts.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -22,7 +26,7 @@ from hil_portable_system_apps import png
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 def wbmp_image():
     # Terminal fsput has a 65535-byte limit. This 32-KiB source already
@@ -46,7 +50,7 @@ def main():
     directory='/MK61S-PSRAMAPPS-'+datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     wrapper=args.output/'WBMPCHK.cpp'
     wrapper.write_text('#define PICO_APPS_DIRECTORY "'+directory+'"\n#include "'+str(ROOT/'tests/picocalc_wbmp_handler_probe.cpp')+'"\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h',
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h',
         '--name','WBMPCHK','--source',str(wrapper),'--arm-toolchain-bin',str(compiler_bin(None)),
         '--output-dir',str(args.output/'probe'),'--shared-runtime'],check=True)
     payloads={name+'.APP':(args.apps/(name+'.APP')).read_bytes() for name in ('WBMP','SHEET','ELIZA')}

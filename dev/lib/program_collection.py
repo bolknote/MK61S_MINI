@@ -335,8 +335,8 @@ class MkcSession:
     """One CDC session; the existing MKC clients own all serial/M8 framing."""
     def __init__(self, cap, *, port=None, mock=None, command=None):
         if command is None:
-            command = (['powershell', '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(ROOT/'tools/.mkc/mkc.ps1')]
-                       if os.name == 'nt' else ['bash', str(ROOT/'tools/.mkc/mkc.sh')])
+            command = (['powershell', '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(ROOT/'tools/mkc/mkc.ps1')]
+                       if os.name == 'nt' else ['bash', str(ROOT/'tools/mkc/mkc.sh')])
         args = [*command, '--bundle-session', '--expect-profile', cap['device_profile'], '--expect-build', cap['build_id'], '--wait-ready', '45']
         if port:
             args += ['--port', port]

@@ -146,7 +146,7 @@ def main():
         env=env, text=True)
     properties = dict(line.split('=', 1) for line in layout.splitlines() if '=' in line)
     linker = out / 'portable.ld'
-    run(['python3', ROOT/'tools/.mk61-gcc/portable-layout.py',
+    run(['python3', ROOT/'tools/arduino/compat/portable-layout.py',
          Path(properties['build.variant.path'])/properties['build.ldscript'], linker], env)
     link_flags = '-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
     link_flags += ' -Wl,--default-script=' + str(linker)
@@ -156,7 +156,7 @@ def main():
         '--build-property', 'compiler.c.elf.extra_flags='+link_flags, sketch]
     if args.mcu=='f401':
         command[-1:-1] = ['--build-property',
-            'recipe.hooks.linking.prelink.20.pattern=python3 "'+str(ROOT/'tools/.mk61-gcc/protect-usb-lto.py')+'" "{build.path}" "{build.core.path}/../../libraries/USBDevice" "{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"']
+            'recipe.hooks.linking.prelink.20.pattern=python3 "'+str(ROOT/'tools/arduino/compat/protect-usb-lto.py')+'" "{build.path}" "{build.core.path}/../../libraries/USBDevice" "{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"']
     (out/'build-command.json').write_text(json.dumps([str(x) for x in command],indent=2)+'\n')
     run(command, env)
     firmware = out/'build/mk61s-M.ino.bin'

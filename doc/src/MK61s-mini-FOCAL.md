@@ -424,7 +424,7 @@ CALL(адрес,аргументы...) ARG(позиция)
 Новый FOCAL собирается как compiler APP и требует согласованную общую VM.
 По умолчанию при включённом FOCAL выбираются `FOCAL.APP`, `BASIC.APP`,
 `SRCEDIT.APP`, `LANGVM.APP`, `LANGIN.APP`; альтернативно VM может быть встроена в resident.
-В `tools/build_portable_app.py --system focal` режим compiler APP включается
+В `tools/apps/portable/build_portable_app.py --system focal` режим compiler APP включается
 автоматически. Математический бэкенд выбирается у общего исполнителя. На F401 с FOCAL
 по умолчанию используется CORE. F411 использует BINARY64 по умолчанию; профиль
 можно переопределить явно. BINARY64 (`MK61_MATH_BACKEND=0`, прежнее название

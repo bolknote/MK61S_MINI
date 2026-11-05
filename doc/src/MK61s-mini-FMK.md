@@ -11,7 +11,7 @@ M8**, а не кодовыми точками Unicode. Формат поддер
 
 Этот документ описывает именно бинарный формат. Эталонные реализации находятся
 в `code/fmk_font.cpp`, `code/fmk_font.hpp` и
-`tools/.fmk-font/fmk_font.cpp`.
+`tools/fonts/fmk_font.cpp`.
 
 ## Краткие ограничения
 
@@ -273,10 +273,10 @@ RAM и подходит для небольшого лимита файла.
 Сборка и запуск:
 
 ```bash
-tools/build_fmk_font.sh INPUT OUTPUT [options]
+tools/fonts/build_fmk_font.sh INPUT OUTPUT [options]
 ```
 
-Скрипт собирает внутренний `tools/.fmk-font/fmk_font.cpp` через C++17 и
+Скрипт собирает внутренний `tools/fonts/fmk_font.cpp` через C++17 и
 `pkg-config freetype2`, если бинарник отсутствует или устарел. Готовая
 host-утилита кэшируется в `.build/tools/fmk_font`, а не в каталоге исходников.
 
@@ -311,13 +311,13 @@ host-конвертера, а не кодировка FMK2:
 Примеры:
 
 ```bash
-tools/build_fmk_font.sh font.otf font.fmk \
+tools/fonts/build_fmk_font.sh font.otf font.fmk \
   --cell 5x8 --chars ascii,cyrillic
 
-tools/build_fmk_font.sh font.bdf font-3x5.fmk \
+tools/fonts/build_fmk_font.sh font.bdf font-3x5.fmk \
   --cell 3x5 --size 20 --chars U+0020-U+007E
 
-tools/build_fmk_font.sh font.ttf DejaVu-12.FMK \
+tools/fonts/build_fmk_font.sh font.ttf DejaVu-12.FMK \
   --cell 10x12 --size 12 --line-gap 1 --proportional \
   --chars 'ascii,cyrillic,°×÷≤≥←→↑…π√' \
   --compression auto --max-file-size 8192

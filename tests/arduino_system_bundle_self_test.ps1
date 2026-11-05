@@ -3,7 +3,7 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'fixtures/arduino_bundle.ps1')
-. (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-system-bundle.ps1')
+. (Join-Path $root 'tools/arduino/hardware/mk61/stm32/tools/mk61-system-bundle.ps1')
 # The Arduino-launched 5.1 process can lack this optional module function.
 function Get-FileHash { throw 'Get-FileHash is deliberately unavailable' }
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 bundle check ' + [guid]::NewGuid().ToString('N'))
@@ -18,7 +18,7 @@ function Assert-Rejected {
 }
 try {
     [void][IO.Directory]::CreateDirectory((Join-Path $system 'VMCache'))
-    Copy-Item (Join-Path $root 'tools/.mkc/mkc.ps1') (Join-Path $stage 'mk61-system-installer.ps1')
+    Copy-Item (Join-Path $root 'tools/mkc/mkc.ps1') (Join-Path $stage 'mk61-system-installer.ps1')
     [IO.File]::WriteAllBytes((Join-Path $system 'VMCache/VMSTORE.APP'), [byte[]]::new(64))
     Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/system.wbmp') -Destination (Join-Path $system 'autoexec.wbmp')
     Copy-Item -LiteralPath (Join-Path $root 'doc/explorer-icons/cache.wbmp') -Destination (Join-Path $system 'VMCache/autoexec.wbmp')

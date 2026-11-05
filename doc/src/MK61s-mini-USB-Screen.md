@@ -301,7 +301,7 @@ arduino-cli compile \
 
 Последнее свойство обязательно для F401/F411 с USB CDC: оно включает NAK
 backpressure при заполнении входной очереди. `tools/mk61-firmware.cmd` и
-`tools/build_f401_bundle.sh` добавляют его автоматически.
+`tools/firmware/stm32/build_f401_bundle.sh` добавляют его автоматически.
 
 Для A02 замените аппаратный ключ на `-DMK61_LCD1602_A02`, для OLED1602 — на
 `-DMK61_OLED1602_WS0010`; для остальных плат

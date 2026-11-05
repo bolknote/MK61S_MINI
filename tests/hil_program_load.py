@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Test addressed binary load on a pinned device; replaces RAM and temporary files."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from pathlib import Path
 import re
@@ -7,7 +11,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-from program_pack import program_binary
+from tools.programs.program_pack import program_binary
 from hil_c6_system_bootstrap import read_file, write_file
 from hil_elite_performance import TimedScreenPort
 from hil_multi_device_identity import parse_identity

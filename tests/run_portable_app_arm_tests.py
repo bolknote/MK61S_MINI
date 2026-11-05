@@ -213,7 +213,7 @@ def main():
             sources = [ROOT / "tests/portable_app_relocation_probe.c"] if name == "RELOC" else [ROOT / "examples/portable-apps" / name / "main.c"]
             if name == "WBMP":
                 sources += [ROOT / "examples/portable-apps/WBMP/viewer.cpp", ROOT / "code/wbmp.cpp"]
-            command = ["python3", ROOT / "tools/build_portable_app.py", "--name", name,
+            command = ["python3", ROOT / "tools/apps/portable/build_portable_app.py", "--name", name,
                        "--output-dir", work / name, "--arm-toolchain-bin", args.arm_toolchain_bin]
             for source in sources:
                 command += ["--source", source]

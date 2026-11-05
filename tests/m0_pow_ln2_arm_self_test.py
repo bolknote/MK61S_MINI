@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Exhaustively check pow's narrow exponent*ln2 product on ARM."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -11,7 +15,7 @@ import sys
 root=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(root/'tools'))
 
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 from check_stm32_vectors import ElfImage
 from native_eabi_m0_arm_self_test import Machine
 

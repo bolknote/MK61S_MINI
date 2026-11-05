@@ -8,7 +8,7 @@
 
 Эталон — [UrqW](https://github.com/urqw/UrqW), коммит
 37e03b65efc58af70e8811a119f25b1ab5fda5a5; фиксация находится в
-tools/urq/upstream.json. Режимы dosurq, ripurq, akurq, urqw соответствуют
+tools/apps/urq/upstream.json. Режимы dosurq, ripurq, akurq, urqw соответствуют
 URQ_DOS 1.35, RipURQ 1.4, AkURQ 1.28 и текстовому UrqW. Метаданные urqw1
 выбирают urqw. Совместимость проверяется относительно этой версии эталона.
 
@@ -67,10 +67,10 @@ PSRAM хранит только историю. Ошибка выделения 
 Нужна прошивка с новыми необязательными сервисами; ABI контейнеров остаётся 6.
 Capability проверяются до игры. Старые APP продолжают работать.
 
-    python3 tools/build_urq_app.py --target stm32 \
+    python3 tools/apps/urq/build_urq_app.py --target stm32 \
       --toolchain /path/to/arm-toolchain/bin --output-dir /tmp/urq-m4 \
       --library-output /tmp/urq-m4/library
-    python3 tools/build_urq_app.py --target picocalc-pico-h \
+    python3 tools/apps/urq/build_urq_app.py --target picocalc-pico-h \
       --toolchain /path/to/arm-toolchain/bin --output-dir /tmp/urq-pico
 
 На STM32 положить URQ.APP и URQUI.APP в одну папку. Файлы game.urq и
@@ -115,9 +115,9 @@ handoff и не переходит в следующий экран. Отмен�
 
 ## Конвертер и контейнеры
 
-    python3 tools/qst2urq.py quest.qst --manifest manifest.json \
+    python3 tools/apps/urq/qst2urq.py quest.qst --manifest manifest.json \
       --encoding CP1251 --output /tmp/quest
-    python3 tools/qst2urq.py quest.qst --mode dosurq \
+    python3 tools/apps/urq/qst2urq.py quest.qst --mode dosurq \
       --encoding CP866 --text-resource note.txt=note-utf8.txt --output /tmp/quest
 
 Кодировки: CP1251, CP866, UTF-8. Автоматически распознаются ASCII и UTF-8
@@ -157,7 +157,7 @@ game.urq, части pNNNN.uqd и autoexec.wbmp. Корневой README.markdow
 полное прохождение проверяется во всех четырёх режимах.
 
 build_urq_library.py фиксирует ревизии русских игр каталога UrqW и проверяет
-лицензии, конвертацию и старт. Отчёт по 52 играм: tools/urq/catalog-report.json.
+лицензии, конвертацию и старт. Отчёт по 52 играм: tools/apps/urq/catalog-report.json.
 У большинства нет явного разрешения на распространение. Опубликованы две
 адаптации CC0-1.0 с исходниками, авторством, лицензиями и готовыми пакетами:
 
@@ -172,11 +172,11 @@ build_urq_library.py фиксирует ревизии русских игр к�
   последующие перемешивания шести пунктов и запрет немедленного повтора.
   В исторической справке Nær передано как Naer для M8.
 
-Адаптации воспроизводятся tools/urq/adaptations.py; SHA-256 исходников,
-скриптов и лицензий зафиксированы в tools/urq/adaptations.json. Неизвестная
+Адаптации воспроизводятся tools/apps/urq/adaptations.py; SHA-256 исходников,
+скриптов и лицензий зафиксированы в tools/apps/urq/adaptations.json. Неизвестная
 версия не адаптируется автоматически. Запуск build_urq_library.py обновляет
 пакеты и отчёт. Исходники, manifest.json, adaptation.json, package.json,
-AUTHORS.txt и LICENSE.txt находятся в tools/urq/sources/<game>.
+AUTHORS.txt и LICENSE.txt находятся в tools/apps/urq/sources/<game>.
 Штатное пакетирование обеих платформ включает только игровые файлы в
 установочную папку; авторство и лицензии копируются отдельно в licenses/urq.
 

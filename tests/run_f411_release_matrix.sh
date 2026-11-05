@@ -12,7 +12,7 @@ fail() {
 command -v python3 >/dev/null 2>&1 || fail "python3 is required"
 command -v c++ >/dev/null 2>&1 || fail "a host C++17 compiler is required"
 python3 "$contract" validate >/dev/null || fail 'release contract is invalid'
-python3 "$root/tools/.mk61-gcc/build-standalone.py" --profile classic-v3 \
+python3 "$root/tools/firmware/stm32/build-standalone.py" --profile classic-v3 \
   --build-path "$root/.build/native-preflight" --check
 if [[ "${1:-}" == "--check-dependencies" ]]; then
   printf 'F411 release dependencies: OK\n'
@@ -49,7 +49,7 @@ if [[ -n "$output_dir" ]]; then
   mkdir -p "$output_dir"
   command -v zip >/dev/null 2>&1 || fail 'zip is required for release bundles'
   # Published F411 bundles need the same complete notices as F401 bundles.
-  python3 "$root/tools/.fmk-font/package_ui_font_licenses.py" \
+  python3 "$root/tools/fonts/package_ui_font_licenses.py" \
     --archive "$output_dir/UI_FONT_LICENSES.zip"
 fi
 
@@ -103,7 +103,7 @@ package_system_apps() {
   bundle="$output_dir/$bundle_name"
   rm -rf "$bundle"
   mkdir -p "$bundle/System"
-  python3 "$root/tools/build_system_app_bundle.py" \
+  python3 "$root/tools/apps/system/build_system_app_bundle.py" \
     --resident-elf "$build_path/mk61s-M.ino.elf" \
     --compile-commands "$build_path/compile_commands.json" \
     --output-dir "$bundle/System" \
@@ -140,7 +140,7 @@ package_system_apps() {
 from pathlib import Path
 import sys
 sys.path.insert(0, sys.argv[2])
-from build_system_app_bundle import run, compiler_from_database
+from tools.apps.system.build_system_app_bundle import run, compiler_from_database
 elf=Path(sys.argv[1]);toolchain=compiler_from_database(elf.parent/'compile_commands.json').parent
 symbols=run([toolchain/'arm-none-eabi-nm','--defined-only',elf],capture=True)
 import re
@@ -183,11 +183,11 @@ assert len(data) == 64 + stored and memory <= 20 * 1024, "container size"
 assert 0 < code_size <= stored and relocations <= stored - code_size, "relocation tail"
 PY
   done
-  python3 "$root/tools/program_bundle.py" --bundle "$bundle" --write-capabilities \
+  python3 "$root/tools/programs/program_bundle.py" --bundle "$bundle" --write-capabilities \
     --profile "$profile" --mcu f411 --firmware "$bundle/$bundle_name.bin" \
     --compile-commands "$build_path/compile_commands.json"
   rm -rf "$bundle/Programs"
-  python3 "$root/tools/program_bundle.py" --bundle "$bundle" --export "$bundle/Programs"
+  python3 "$root/tools/programs/program_bundle.py" --bundle "$bundle" --export "$bundle/Programs"
   (cd "$output_dir" && zip -qr "$bundle_name.zip" "$bundle_name")
 }
 
@@ -210,7 +210,7 @@ compile_variant() {
   variant_index=$((variant_index + 1))
   printf '\n[%d/%d] Native F411 %s\n' "$variant_index" "$variant_count" "$name"
   mkdir -p "$build_path"
-  python3 "$root/tools/.mk61-gcc/build-standalone.py" \
+  python3 "$root/tools/firmware/stm32/build-standalone.py" \
     --release-case "$case_id" --build-path "$build_path" \
     --jobs "${MK61_BUILD_JOBS:-4}" 2>&1 | tee "$compile_log"
   # ELF gates use the same independent binutils as the actual native build.

@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Check exp's compiled high products against exact integer arithmetic."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from fractions import Fraction
 import hashlib
@@ -45,7 +49,7 @@ def main():
         '\nextern "C" U square(U x) {return exp_high_square(x);}\n'+
         'extern "C" U product(U x,U y) {return exp_high_product(x,y)+1;}\n')
     sys.path.insert(0,str(ROOT/'tools'))
-    from build_picocalc import compiler_bin
+    from tools.firmware.picocalc.build_picocalc import compiler_bin
     elf=a.output_dir/'products.elf'
     subprocess.run([str(compiler_bin(a.toolchain)/'arm-none-eabi-g++'),
         '-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-fno-lto',

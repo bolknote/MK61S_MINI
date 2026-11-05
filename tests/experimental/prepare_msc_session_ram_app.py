@@ -34,7 +34,7 @@ def main():
     (out/'msc_session_resident.hpp').write_text('// Exact sealed qualification image; never ship this APP.\n'+
         ''.join(f'#define MSC_PROBE_{k} 0x{v:08X}U\n' for k,v in values.items()))
     fixture['probe']=values;fixture['report_words']=9;(out/'resident.json').write_text(json.dumps(fixture,indent=2)+'\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),
         '--name','MSCRAM','--shared-runtime','--source',str(ROOT/'tests/experimental/msc_session_ram_hil.cpp'),
         '--include',str(out),'--arm-toolchain-bin',str(a.arm_toolchain_bin),'--output-dir',str(out)],check=True)
 if __name__=='__main__':main()

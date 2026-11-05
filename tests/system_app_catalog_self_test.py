@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 import argparse
 import concurrent.futures
 import multiprocessing
@@ -17,7 +21,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-import build_system_app_bundle as bundle
+from tools.apps.system import build_system_app_bundle as bundle
 
 
 def arguments(catalog: Path) -> argparse.Namespace:

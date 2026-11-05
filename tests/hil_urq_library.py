@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """Play the shipped CC0 adaptations on Classic using USB matrix key events."""
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -64,7 +68,7 @@ def main():
                 report["games"][key][file.name] = hashlib.sha256(data).hexdigest()
         install("house_that_jack_built", args.installed)
         # Calibrate the paging footer using a known long text with the same font.
-        from qst2urq import make_package
+        from tools.apps.urq.qst2urq import make_package
         p.command("mkdir /URQTEST/pages")
         files, _ = make_package((":s\npln " + "Строка " * 60 + "\nend").encode(), "urqw", "UTF-8")
         for name, data in files.items():

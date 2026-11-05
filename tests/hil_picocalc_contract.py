@@ -4,6 +4,10 @@
 Creates and removes a new microSD directory. Never formats or flashes. Uses
 binary press/release events and the reviewed font atlas as an independent oracle.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from datetime import datetime,timezone
 import hashlib,json,os,re,subprocess,sys,time
@@ -13,7 +17,7 @@ from hil_c5_stack import read_file,write_file,posix_cksum
 from hil_portable_system_apps import png
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 
 def main():
@@ -27,10 +31,10 @@ def main():
     args.output.mkdir(parents=True,exist_ok=True)
     directory='/MK61S-CONTRACT-'+time.strftime('%Y%m%d-%H%M%S');work=ROOT/'.build/picocalc-contract-hil';work.mkdir(exist_ok=True)
     wrapper=work/'CONTRACT.cpp';wrapper.write_text(f'#define PICO_CONTRACT_ROOT "{directory}"\n#include "{ROOT}/tests/picocalc_contract_probe.cpp"\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display','--name','CONTRACT',
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display','--name','CONTRACT',
         '--source',str(wrapper),'--shared-runtime','--arm-toolchain-bin',str(compiler_bin(None)),'--output-dir',str(work/'APP')],check=True)
     failure=work/'FAIL.cpp';failure.write_text('int main() { return 42; }\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display','--name','FAIL',
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display','--name','FAIL',
         '--source',str(failure),'--shared-runtime','--arm-toolchain-bin',str(compiler_bin(None)),'--output-dir',str(work/'FAIL')],check=True)
     cases=[];screens={};created=False;before=None;original=None;initial=None
     p=connect(args.port,args.uid)
@@ -65,7 +69,7 @@ def main():
         assert f'@MKC:DONE 65534 {crc}' in p.command('fsput end',timeout=30)
         p.command('uscreen');p.attach_waiting()
         start=len(p.text);p.open(directory+'/CONTRACT.APP');wait('CONTRACT UI16 READY',start)
-        atlas=json.loads((ROOT/'tools/.fmk-font/ui-atlases/pixel-16.json').read_text())
+        atlas=json.loads((ROOT/'tools/fonts/ui-atlases/pixel-16.json').read_text())
         glyph=next(g for g in atlas['glyphs'] if g['codepoint']==ord('A'))
         expected=bytearray(1536)
         for y,row in enumerate(glyph['rows']):

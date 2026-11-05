@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-tool="$root/tools/.mk61-firmware/mk61-firmware.sh"
+tool="$root/tools/firmware/cli/mk61-firmware.sh"
 launcher="$root/tools/mk61-firmware.cmd"
 
 test -x "$tool"
@@ -308,7 +308,7 @@ grep -q '^MK61_ENABLE_SETUP=1$' <<< "$hybrid"
 grep -q '^MK61_SETUP_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_EXPLORER_AS_APP=1$' <<< "$hybrid"
 grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=0 ' <<< "$hybrid"
-grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/.mk61-firmware/mk61-firmware.ps1"
+grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/firmware/cli/mk61-firmware.ps1"
 grep -q -- '-LocalFloatMath "$APP_LOCAL_FLOAT"' "$tool"
 grep -qFx '/.mk61-firmware.conf' "$root/.gitignore"
 

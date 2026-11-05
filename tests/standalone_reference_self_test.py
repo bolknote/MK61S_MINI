@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-resolve = runpy.run_path(str(ROOT / 'tools/.mk61-gcc/build-standalone.py'))['reference_features']
+resolve = runpy.run_path(str(ROOT / 'tools/firmware/stm32/build-standalone.py'))['reference_features']
 
 class ReferenceDefaults(unittest.TestCase):
     def test_implicit_board_defaults_and_command_forms(self):

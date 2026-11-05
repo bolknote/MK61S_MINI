@@ -1,6 +1,10 @@
 {
   "schema": 1,
   "inputs_sha256": {
+    "dev/lib/m8_codec.py": "5c47b30bf6d436714cfc82d2e1a03a1b215cbfba440ce06cc014ab1268dd9518",
+    "dev/tools/generate_highnoon_font.py": "a6268042fd970c460d56ca8895afdb43cb2e352dfee9229c5cae12c2b917077d",
+    "dev/tools/generate_picocalc_game_assets.py": "db2b288c59b4493649db8e831117afb3f976a700da7c25b2b69a6136aa89b969",
+    "dev/tools/generate_ui_fonts.py": "ae5ce38f529cf899399c45fde562b560792d8d4771bee23550d0e2b8d08d74e6",
     "doc/game-artwork/bumblebee-fly-tm1988-03.png": "0f754b1d5fb6ca28fe811f37522d655ea649db3826fef0369e6b7cb7c3f199a7",
     "doc/game-artwork/bumblebee-plan-tm1988-03.png": "17570107de14e21a71f48197ad46ed80e1e32a59300ddd761b1d2ad3888b3a66",
     "doc/game-artwork/bumblebee.svg": "fa50a47df5663a74b74f0a46f4d686cd40d6c3d197a8183063f587760ae82e46",
@@ -14,14 +18,10 @@
     "doc/game-artwork/samurai.svg": "461928b84481130432c7ee59a8b528de419731cf577f8b9ddd282010efdefdd7",
     "doc/game-artwork/wumpus-1976.jpg": "97e259b852c5400cf1b9ed32655e0bd470d8fbb157a84bcd07f0afd47b05c564",
     "doc/game-artwork/wumpus-exits.svg": "73914b6b0f24174f3613d391ab6679fa7c411e9dd3cec2e9f3130bb420615995",
-    "tools/.fmk-font/ui-atlases/m8-supplement.json": "b9a7765b998fc8d486252ce01b3fb6e880df934612599beb66bed888133a6b11",
-    "tools/.fmk-font/ui-atlases/pixel-12.json": "3fee5d1cf9d5af61aee234beccaf3e6e0229388717efa1e27c62c0097641912f",
-    "tools/.fmk-font/ui-atlases/pixel-14.json": "dd2388475c04d1bba6a03b2b6a7684bae39a36d6cbb41b4d4f7f560a8cbf2f78",
-    "tools/.fmk-font/ui-atlases/pixel-16.json": "2f4720dd48f2ce5f6c4c790f5562efc9a1f084e5b52412fab74024f4712b4bda",
-    "dev/tools/generate_highnoon_font.py": "c295acf51ae433b36f771dd5a795d504e7efbe5b79d7f54fc992220072892127",
-    "dev/tools/generate_picocalc_game_assets.py": "a9e27beecfffcf703e3ae9de654339ab0c19447db70bd98333dfdc9c1816dd08",
-    "dev/tools/generate_ui_fonts.py": "d971ee881abb62e02d5cc4982d397ca75e98928d8cf151413fece2c4e1c7d109",
-    "dev/lib/m8_codec.py": "4db88bdfdf23deedcca946dbe387ccedc972c7e03294998b2f8e7397af513a6d"
+    "tools/fonts/ui-atlases/m8-supplement.json": "b9a7765b998fc8d486252ce01b3fb6e880df934612599beb66bed888133a6b11",
+    "tools/fonts/ui-atlases/pixel-12.json": "3fee5d1cf9d5af61aee234beccaf3e6e0229388717efa1e27c62c0097641912f",
+    "tools/fonts/ui-atlases/pixel-14.json": "dd2388475c04d1bba6a03b2b6a7684bae39a36d6cbb41b4d4f7f560a8cbf2f78",
+    "tools/fonts/ui-atlases/pixel-16.json": "2f4720dd48f2ce5f6c4c790f5562efc9a1f084e5b52412fab74024f4712b4bda"
   },
   "outputs_sha256": {
     "doc/game-artwork/native/manifest.json": "d6b3702573a0b1fee8d4794d5f69819e193cb73879465abe57a997f6a896067c",

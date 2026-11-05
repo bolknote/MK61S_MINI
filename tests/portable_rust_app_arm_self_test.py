@@ -4,6 +4,10 @@
 Requires unicorn, ARM GCC and the Rust thumbv6m/thumbv7em target libraries.
 Checks the actual packed/relocated code, not just object-file compilation.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import json
 from pathlib import Path
@@ -18,7 +22,7 @@ from unicorn.arm_const import (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2,
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
+from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 
 class ExampleMachine(Machine):
@@ -60,7 +64,7 @@ def main():
                 ('HELLO_RS','examples/portable-apps/HELLO-RUST/main.rs',['HELLO, MK61S!']),
                 ('HELLO_CPP','examples/loadable-apps/HELLO/hello_app.cpp',['HELLO APP','KEY TO EXIT'])):
                 out=work/target/name
-                command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target',target,
+                command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target',target,
                     '--name',name,'--source',str(ROOT/source),'--arm-toolchain-bin',str(toolchain),
                     '--output-dir',str(out)]
                 if args.rustc:command+=['--rustc',str(args.rustc)]

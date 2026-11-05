@@ -239,7 +239,7 @@ GNU Arm GCC 14.2.1 и Pico SDK 2.2.0. Компилятор можно переи
 Из корня репозитория:
 
 ```sh
-python3 tools/build_picocalc.py --profile picocalc-pico-h --fetch-sdk
+python3 tools/firmware/picocalc/build_picocalc.py --profile picocalc-pico-h --fetch-sdk
 ```
 
 SDK и TinyUSB скачиваются в игнорируемый `.build/picocalc-deps`, только если
@@ -247,7 +247,7 @@ SDK и TinyUSB скачиваются в игнорируемый `.build/picoca
 `a1438dff1d38bd9c65dbd693f0e5db4b9ae91779`. Для уже установленного SDK и GCC:
 
 ```sh
-python3 tools/build_picocalc.py --sdk /path/to/pico-sdk --toolchain /path/to/gcc/bin
+python3 tools/firmware/picocalc/build_picocalc.py --sdk /path/to/pico-sdk --toolchain /path/to/gcc/bin
 ```
 
 Пути также можно задать через `PICO_SDK_PATH` и `MK61_GCC_TOOLCHAIN`.
@@ -392,9 +392,9 @@ alarm a off
 Без захвата экрана то же делает утилита для macOS/Linux:
 
 ```sh
-python3 tools/sync_picocalc_clock.py --port /dev/cu.usbmodem1401
-python3 tools/sync_picocalc_clock.py --port /dev/cu.usbmodem1401 --read
-python3 tools/sync_picocalc_clock.py --port /dev/cu.usbmodem1401 --force --timezone Europe/Moscow
+python3 tools/device/sync_picocalc_clock.py --port /dev/cu.usbmodem1401
+python3 tools/device/sync_picocalc_clock.py --port /dev/cu.usbmodem1401 --read
+python3 tools/device/sync_picocalc_clock.py --port /dev/cu.usbmodem1401 --force --timezone Europe/Moscow
 ```
 
 Перед запуском утилиты закрыть USB Screen, чтобы освободить CDC-порт.
@@ -437,8 +437,8 @@ I²C, отдельной линии IRQ клавиатуры к Pico нет. Д�
 
 ```sh
 rustup target add thumbv6m-none-eabi
-python3 tools/build_picocalc_apps.py
-python3 tools/package_picocalc.py
+python3 tools/apps/system/build_picocalc_apps.py
+python3 tools/firmware/picocalc/package_picocalc.py
 ```
 
 Результат — `.build/firmware/picocalc-pico-h/apps/`: `HELLO.APP` (C), `HELLO_CPP.APP`
@@ -462,7 +462,7 @@ Rust требует установленного `rustc` и библиотеки
 Сборка отдельного приложения:
 
 ```sh
-python3 tools/build_portable_app.py --target picocalc-pico-h --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --target picocalc-pico-h --name HELLO \
   --source examples/portable-apps/HELLO/main.c \
   --arm-toolchain-bin /path/to/arm-gcc/bin --output-dir .build/hello-pico
 ```
@@ -767,7 +767,7 @@ Pico SDK по-прежнему настроен на `compiler`: это откл
 `libgcc.a`. Локальные nothrow new/delete исключают также ненужное подтягивание
 GCC unwinder через библиотеку исключений C++.
 
-`python3 tools/build_picocalc.py --compiler-runtime` собирает контрольный GCC
+`python3 tools/firmware/picocalc/build_picocalc.py --compiler-runtime` собирает контрольный GCC
 вариант; обычная команда использует свой runtime. Прямой ROM-вариант ранее
 дал 9 ошибок на субнормальных аргументах `ln`/`log10`/`pow`, поэтому возвращать
 его для граничных случаев нельзя. Ограничения быстрых реализаций описаны в

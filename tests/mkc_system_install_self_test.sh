@@ -4,7 +4,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 work=$(mktemp -d "${TMPDIR:-/tmp}/mkc-system-test.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/source" "$work/device" "$work/session"
-MKC_SOURCE_ONLY=1 source "$root/tools/.mkc/mkc.sh"
+MKC_SOURCE_ONLY=1 source "$root/tools/mkc/mkc.sh"
 SESSION_DIR="$work/session"
 LOCAL_PATH="$work/source"
 MOCK_ROOT="$work/device"

@@ -2,7 +2,7 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$hook = Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
+$hook = Join-Path $root 'tools/arduino/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1'
 $powerShell = (Get-Process -Id $PID).Path
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 core check ' + [Guid]::NewGuid().ToString('N'))
 $core = Join-Path $work 'cores/arduino'

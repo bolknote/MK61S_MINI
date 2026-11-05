@@ -4,6 +4,10 @@
 Only keyboard, menus and files are modeled. ARM EABI, numbers and VM execute
 the shipping APPs and resident ELF. Requires Unicorn.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import struct
 import tempfile
@@ -14,7 +18,7 @@ from run_app_services_arm_tests import UserMachine, package
 from run_portable_system_arm_tests import Elf, ROOT, run
 import sys
 sys.path.insert(0,str(ROOT/'tools'))
-from qst2urq import make_package
+from tools.apps.urq.qst2urq import make_package
 
 class UrqMachine(UserMachine):
     stream=None

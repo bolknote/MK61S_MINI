@@ -4,8 +4,8 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$tool = Join-Path $root 'tools/.mkc/mkc.ps1'
-$shellTool = Join-Path $root 'tools/.mkc/mkc.sh'
+$tool = Join-Path $root 'tools/mkc/mkc.ps1'
+$shellTool = Join-Path $root 'tools/mkc/mkc.sh'
 $launcher = Join-Path $root 'tools/mkc.cmd'
 $pwsh = (Get-Process -Id $PID).Path
 
@@ -26,9 +26,9 @@ Assert-True (Test-Path -LiteralPath $launcher -PathType Leaf) 'common MKC launch
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'tools/mkc.sh'))) 'legacy shell entry point is exposed'
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $root 'tools/mkc.ps1'))) 'legacy PowerShell entry point is exposed'
 $launcherText = [IO.File]::ReadAllText($launcher)
-Assert-True ($launcherText -match '\A:; exec "\$\(dirname "\$0"\)/\.mkc/mkc\.sh" "\$@"') 'launcher is not a shell/batch polyglot'
+Assert-True ($launcherText -match '\A:; exec "\$\(dirname "\$0"\)/mkc/mkc\.sh" "\$@"') 'launcher is not a shell/batch polyglot'
 Assert-True ($launcherText -match '(?i)pwsh\.exe -NoLogo -NoProfile -ExecutionPolicy Bypass') 'launcher does not use pwsh safely'
-Assert-True ($launcherText -match '%~dp0\.mkc\\mkc\.ps1') 'launcher does not locate the hidden PowerShell port'
+Assert-True ($launcherText -match '%~dp0mkc\\mkc\.ps1') 'launcher does not locate the PowerShell port'
 
 $tokens = $null
 $parseErrors = $null

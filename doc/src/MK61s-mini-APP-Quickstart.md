@@ -58,7 +58,7 @@ MK61S_MINI/my-app/main.c
 ARM="$HOME/Library/Arduino15/packages/STMicroelectronics"
 ARM_BIN="$(printf '%s\n' \
   "$ARM/tools/xpack-arm-none-eabi-gcc"/*/bin | head -n 1)"
-python3 tools/build_portable_app.py --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --name HELLO \
   --source my-app/main.c --arm-toolchain-bin "$ARM_BIN" \
   --output-dir .build/hello
 ```
@@ -69,7 +69,7 @@ python3 tools/build_portable_app.py --name HELLO \
 ARM="$HOME/.arduino15/packages/STMicroelectronics"
 ARM_BIN="$(printf '%s\n' \
   "$ARM/tools/xpack-arm-none-eabi-gcc"/*/bin | head -n 1)"
-python3 tools/build_portable_app.py --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --name HELLO \
   --source my-app/main.c --arm-toolchain-bin "$ARM_BIN" \
   --output-dir .build/hello
 ```
@@ -80,7 +80,7 @@ python3 tools/build_portable_app.py --name HELLO \
 $Arm = "$env:LOCALAPPDATA\Arduino15\packages\STMicroelectronics"
 $ArmBin = (Get-Item "$Arm\tools\xpack-arm-none-eabi-gcc\*\bin" |
   Select-Object -First 1).FullName
-py -3 tools\build_portable_app.py --name HELLO `
+py -3 tools\apps\portable\build_portable_app.py --name HELLO `
   --source my-app\main.c --arm-toolchain-bin "$ArmBin" `
   --output-dir .build\hello
 ```
@@ -123,7 +123,7 @@ static const char text[] = "HELLO, MK61S!";
 
 ## Если не собирается
 
-- `tools/build_portable_app.py` не найден: терминал открыт не в корне проекта.
+- `tools/apps/portable/build_portable_app.py` не найден: терминал открыт не в корне проекта.
 - `ARM GCC not found`: в Arduino IDE не установлен пакет плат STM32.
 - APP не запускается: обновите прошивку и весь комплект `/System` до ABI 6.
 
@@ -185,7 +185,7 @@ fn panic(_: &PanicInfo) -> ! {
 macOS и Linux:
 
 ```sh
-python3 tools/build_portable_app.py --name HELLO_RS \
+python3 tools/apps/portable/build_portable_app.py --name HELLO_RS \
   --source my-app-rust/main.rs --arm-toolchain-bin "$ARM_BIN" \
   --output-dir .build/hello-rust
 ```
@@ -193,7 +193,7 @@ python3 tools/build_portable_app.py --name HELLO_RS \
 Windows PowerShell:
 
 ```powershell
-py -3 tools\build_portable_app.py --name HELLO_RS `
+py -3 tools\apps\portable\build_portable_app.py --name HELLO_RS `
   --source my-app-rust\main.rs --arm-toolchain-bin "$ArmBin" `
   --output-dir .build\hello-rust
 ```

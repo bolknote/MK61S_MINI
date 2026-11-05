@@ -1,5 +1,9 @@
 """Run literal and branch self-modification through the unchanged ROM/core."""
 
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
+
 import json
 from pathlib import Path
 import subprocess
@@ -10,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 RUNNER = sys.argv[1]
 sys.path[:0] = [str(ROOT/'dev/tools/elite'), str(ROOT/'tools')]
 from assembler import Assembler, pack_number
-from program_pack import program_binary
+from tools.programs.program_pack import program_binary
 
 def probe(out, name, first, second, expected, targets=()):
     a = Assembler()

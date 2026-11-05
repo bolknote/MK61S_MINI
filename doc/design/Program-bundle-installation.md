@@ -1,6 +1,6 @@
 # Комплект программ для фактической сборки
 
-`tools/program_bundle.py` подбирает штатные программы из `programs/` по
+`tools/programs/program_bundle.py` подбирает штатные программы из `programs/` по
 `program-capabilities.json` согласованного комплекта прошивки. Этот файл создают
 сборщики STM32 и PicoCalc. Он содержит конечные возможности, платформу, ABI,
 предел памяти APP, идентификатор сборки и SHA-256 файла прошивки. Для старого
@@ -30,9 +30,9 @@
 Отдельная команда работает также с готовым комплектом PicoCalc:
 
 ```sh
-python3 tools/program_bundle.py --bundle .build/firmware/picocalc-pico-h
-python3 tools/program_bundle.py --bundle .build/firmware/picocalc-pico-h --install --port /dev/cu.usbmodemPORT
-python3 tools/program_bundle.py --bundle .build/firmware/picocalc-pico-h --export /tmp/pico-programs
+python3 tools/programs/program_bundle.py --bundle .build/firmware/picocalc-pico-h
+python3 tools/programs/program_bundle.py --bundle .build/firmware/picocalc-pico-h --install --port /dev/cu.usbmodemPORT
+python3 tools/programs/program_bundle.py --bundle .build/firmware/picocalc-pico-h --export /tmp/pico-programs
 ```
 
 Без `--install` выполняется только локальный просмотр; `--json` выводит полный

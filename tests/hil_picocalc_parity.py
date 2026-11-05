@@ -4,6 +4,10 @@
 Builds two M0+ APPs, uses one newly created SD directory, and removes it in
 finally. Never formats or flashes; checks the Pico UID before any mutation.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 import hashlib
 import json
@@ -40,7 +44,7 @@ def main():
     assert re.fullmatch(r'MK61S-PARITY-[A-Za-z0-9-]+',args.directory)
     directory='/'+args.directory
     sys.path.insert(0,str(ROOT/'tools'))
-    from build_picocalc import compiler_bin
+    from tools.firmware.picocalc.build_picocalc import compiler_bin
     work=ROOT/'.build/picocalc-parity-hil'/args.directory;work.mkdir(parents=True,exist_ok=True)
     apps={}
     for name,source,define,ext in (
@@ -48,7 +52,7 @@ def main():
         ('MATHCHK','tests/fixtures/compact_math_probe_app.c','MK61_MATH_VECTOR_ROOT','.c')):
         wrapper=work/(name+ext)
         wrapper.write_text(f'#define {define} "{directory}"\n#include "{ROOT/source}"\n')
-        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display',
+        command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display',
             '--name',name,'--source',str(wrapper),'--arm-toolchain-bin',str(compiler_bin(None)),
             '--output-dir',str(work/name),'--shared-runtime']
         if name=='PARITY':command+=['--handled-magic','S1']

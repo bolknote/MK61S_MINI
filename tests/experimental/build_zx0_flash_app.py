@@ -53,7 +53,7 @@ def main():
     source+='\nstatic u32 resident_crc() {return selected_profile?selected_profile->crc:0;}\n'
     (out/'zx0_flash_hil.cpp').write_text(source)
     prepare(out/'variants')
-    command=[sys.executable,ROOT/'tools/build_portable_app.py','--name','ZX0FLASH','--shared-runtime',
+    command=[sys.executable,ROOT/'tools/apps/portable/build_portable_app.py','--name','ZX0FLASH','--shared-runtime',
         '--source',out/'zx0_flash_hil.cpp','--source',out/'variants/scalar.cpp',
         '--include',ROOT/'tests/experimental','--include',out,'--arm-toolchain-bin',a.arm_toolchain_bin,
         '--output-dir',out/'build']

@@ -13,7 +13,7 @@ if ($env:OS -ne 'Windows_NT' -or $PSVersionTable.PSEdition -ne 'Desktop') {
     throw 'This regression runs on stock Windows PowerShell 5.1'
 }
 $root = Split-Path -Parent $PSScriptRoot
-. (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
+. (Join-Path $root 'tools/firmware/stm32/sdk.ps1')
 $fixturePath = Join-Path $PSScriptRoot 'fixtures/arduino_classic_windows.json'
 $case = ConvertFrom-Json ([IO.File]::ReadAllText($fixturePath))
 if ($case.schema -ne 1) { throw 'Unsupported Classic Windows case schema' }
@@ -92,7 +92,7 @@ if ($Phase -eq 'Prepare') {
         "  path: '$((Split-Path -Parent $build).Replace('\', '/'))'"
     ), (New-Object Text.UTF8Encoding($false)))
     Invoke-Checked $cli @('--config-file', $config, 'core', 'update-index')
-    $lock = ConvertFrom-Json ([IO.File]::ReadAllText((Join-Path $root 'tools/.mk61-gcc/toolchain-lock.json')))
+    $lock = ConvertFrom-Json ([IO.File]::ReadAllText((Join-Path $root 'tools/firmware/stm32/toolchain-lock.json')))
     $compiler = Get-NativeGnuArmBin $root $lock.version $providedToolchain
     Assert-NativeGnuArmVersion $compiler $lock.version
     # Model the reporter's existing Arduino15 compiler, without installing a
@@ -104,7 +104,7 @@ if ($Phase -eq 'Prepare') {
     $env:ARDUINO_DIRECTORIES_DATA = '' # Discovery must read directories.data from the IDE YAML.
     $powerShell = (Get-Process -Id $PID).Path
     Invoke-Checked $powerShell @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-        (Join-Path $root 'tools/.mk61-arduino-board/install.ps1'))
+        (Join-Path $root 'tools/arduino/install.ps1'))
     $registration = [IO.File]::ReadAllText((Join-Path $book 'hardware/mk61/stm32/platform.local.txt'))
     if (-not $registration.Contains('compiler.path=' + $arduinoCompiler.Replace('\', '/') + '/bin/')) {
         throw 'Board installation did not discover the existing Arduino15 compiler'
@@ -113,7 +113,7 @@ if ($Phase -eq 'Prepare') {
         throw 'Board installation downloaded a duplicate compiler despite the compatible Arduino15 compiler'
     }
     Invoke-Checked $powerShell @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-        (Join-Path $root 'tools/.mk61-arduino-board/install.ps1'), '-Check')
+        (Join-Path $root 'tools/arduino/install.ps1'), '-Check')
     Copy-Item -LiteralPath $fixturePath -Destination (Join-Path $WorkRoot 'case.json')
     Write-Host "Reporter case ready: IDE $($case.ide_version), $version, $($case.fqbn)"
     return

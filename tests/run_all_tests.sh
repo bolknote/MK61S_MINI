@@ -5,6 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 
 "$root/tests/run_firmware_tool_tests.sh"
 "$root/tests/run_tools_layout_tests.sh"
+python3 "$root/tests/firmware_entry_self_test.py"
 python3 "$root/tests/native_sdk_self_test.py"
 python3 "$root/tests/arduino_native_dependency_self_test.py"
 python3 "$root/tests/ui_font_license_packaging_self_test.py"

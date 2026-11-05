@@ -27,11 +27,11 @@ STM32 Core. Положите его `bin` в `PATH` или
 выполняются из корня репозитория.
 
 ```sh
-python3 tools/build_portable_app.py --name HELLO \
+python3 tools/apps/portable/build_portable_app.py --name HELLO \
   --source examples/portable-apps/HELLO/main.c \
   --output-dir .build/portable-apps/hello
 
-python3 tools/build_portable_app.py --name WBMP \
+python3 tools/apps/portable/build_portable_app.py --name WBMP \
   --source examples/portable-apps/WBMP/main.c \
   --source examples/portable-apps/WBMP/viewer.cpp \
   --source code/wbmp.cpp --handled-magic I1 \
@@ -43,7 +43,7 @@ python3 tools/build_portable_app.py --name WBMP \
 
 ```sh
 rustup target add thumbv7em-none-eabihf
-python3 tools/build_portable_app.py --name HELLO_RS \
+python3 tools/apps/portable/build_portable_app.py --name HELLO_RS \
   --source examples/portable-apps/HELLO-RUST/main.rs \
   --output-dir .build/portable-apps/hello-rust
 ```
@@ -55,7 +55,7 @@ Rust APP имеет тот же доступ к расширенным серв�
 
 Для Pico H используется `--target picocalc-pico-h` и Rust-библиотека
 `thumbv6m-none-eabi`. Полный набор C/C++/Rust-примеров собирает
-`tools/build_picocalc_apps.py`; файлы STM32 остаются отдельными.
+`tools/apps/system/build_picocalc_apps.py`; файлы STM32 остаются отдельными.
 Явный `--rustc` может указывать на стандартный rustup proxy: сборщик
 сохраняет имя `rustc` и оставляет startup мостом без GCC LTO, чтобы native
 Rust `main()` не заменялся слабой заглушкой. Исполнение обеих CPU-сборок,
@@ -342,7 +342,7 @@ python3 tests/run_portable_app_arm_tests.py \
 код ARM и периферию; пиксели сравнивает через USB-экран:
 
 ```sh
-python3 tools/build_portable_app.py --name CHECK \
+python3 tools/apps/portable/build_portable_app.py --name CHECK \
   --source tests/portable_app_hil_check.c \
   --output-dir .build/portable-apps/check
 python3 tests/hil_portable_apps.py \

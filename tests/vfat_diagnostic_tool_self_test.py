@@ -8,7 +8,7 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOL = ROOT / "tools/vfat_diagnostic.py"
+TOOL = ROOT / "tools/device/vfat_diagnostic.py"
 SPEC = importlib.util.spec_from_file_location("vfat_diagnostic", TOOL)
 assert SPEC and SPEC.loader
 DIAGNOSTIC = importlib.util.module_from_spec(SPEC)

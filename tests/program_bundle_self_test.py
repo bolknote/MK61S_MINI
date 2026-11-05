@@ -250,7 +250,7 @@ class ProgramBundleTests(unittest.TestCase):
         device=self.base/'complete-device';device.mkdir()
         environment={**os.environ, 'MK61_CONFIG_FILE':str(config), 'MK61_OUTPUT_DIR':str(output),
                      'MK61_TEST_MKC_DEVICE':str(device), 'MK61_COLOR':'never'}
-        command=['bash', str(ROOT/'tools/.mk61-firmware/mk61-firmware.sh'), '--mcu','f401','--profile','classic-v2']
+        command=['bash', str(ROOT/'tools/firmware/cli/mk61-firmware.sh'), '--mcu','f401','--profile','classic-v2']
         report=subprocess.run([*command,'--show-config'],env=environment,text=True,capture_output=True,check=True).stdout
         flags=next(line.split('=',1)[1] for line in report.splitlines() if line.startswith('COMPILE_FLAGS='))
         (bundle/'build.flags').write_text(flags+'\n')
@@ -271,7 +271,7 @@ class ProgramBundleTests(unittest.TestCase):
         self.assertTrue((device/'System/BASIC.APP').exists())
         self.assertFalse((device/'Fonts/DejaVu-14.FMK').exists())
         if shutil.which('pwsh'):
-            pscommand=['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/.mk61-firmware/mk61-firmware.ps1'), '--mcu','f401','--profile','classic-v2']
+            pscommand=['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/firmware/cli/mk61-firmware.ps1'), '--mcu','f401','--profile','classic-v2']
             report=subprocess.run([*pscommand,'--show-config'],env=environment,text=True,capture_output=True,check=True).stdout
             flags=next(line.split('=',1)[1] for line in report.splitlines() if line.startswith('COMPILE_FLAGS='))
             (bundle/'build.flags').write_text(flags+'\n')
@@ -282,9 +282,9 @@ class ProgramBundleTests(unittest.TestCase):
 
 
     def test_real_bash_and_powershell_mkc_mock_update(self):
-        commands = [['bash', str(ROOT/'tools/.mkc/mkc.sh')]]
+        commands = [['bash', str(ROOT/'tools/mkc/mkc.sh')]]
         if shutil.which('pwsh'):
-            commands.append(['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/.mkc/mkc.ps1')])
+            commands.append(['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/mkc/mkc.ps1')])
         for number, command in enumerate(commands):
             with self.subTest(command=command[0]):
                 device = self.base/f'device{number}'; device.mkdir()

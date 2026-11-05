@@ -4,6 +4,10 @@
 Requires explicit --install. Uses a new directory; --resume only reuses files
 whose contents already match this collection. No formatting or flashing.
 """
+
+import sys as _repo_sys
+from pathlib import Path as _RepoPath
+_repo_sys.path.insert(0, str(_RepoPath(__file__).resolve().parents[1]))
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -20,9 +24,9 @@ from hil_portable_system_apps import png
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from build_picocalc import compiler_bin
-from build_picocalc_apps import APPS, ASSETS
-from package_picocalc import verify_app
+from tools.firmware.picocalc.build_picocalc import compiler_bin
+from tools.apps.system.build_picocalc_apps import APPS, ASSETS
+from tools.firmware.picocalc.package_picocalc import verify_app
 
 
 class AppsPort(PicoShell):
@@ -94,7 +98,7 @@ def main():
     work=ROOT/'.build/picocalc-apps-hil';work.mkdir(parents=True,exist_ok=True)
     wrapper=work/'WBMPCHK.cpp'
     wrapper.write_text(f'#define PICO_APPS_DIRECTORY "{args.directory}"\n#include "{ROOT}/tests/picocalc_wbmp_handler_probe.cpp"\n')
-    subprocess.run([sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h',
+    subprocess.run([sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h',
         '--name','WBMPCHK','--source',str(wrapper),'--arm-toolchain-bin',str(compiler_bin(None)),
         '--output-dir',str(work/'WBMPCHK'),'--shared-runtime'],check=True)
     probe=(work/'WBMPCHK/WBMPCHK.APP').read_bytes()

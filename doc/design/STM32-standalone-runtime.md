@@ -37,14 +37,14 @@ millis/micros/delay, NVIC/PVD и STOP. Arduino Core, variant и реализац
 Самостоятельная сборка F411 без Arduino CLI:
 
 ```sh
-python3 tools/.mk61-gcc/build-standalone.py \
+python3 tools/firmware/stm32/build-standalone.py \
   --profile classic-v3 --mcu f411 --build-path .build/native-classic
 ```
 
 `--define NAME=VALUE` меняет поддерживаемые функции. `--sdk` и `--toolchain`
 задают пути manifest SDK и независимого GNU Arm. Перед установкой resident.bin нужно
 подписать dev/lib/seal-firmware.sh; ELF и System APP готовятся существующими
-инструментами. Обычные frontend обоих MCU используют tools/build-gcc.cmd;
+инструментами. Обычные frontend обоих MCU используют tools/firmware/stm32/build-gcc.cmd;
 Arduino IDE сохранена как отдельный совместимый путь.
 
 Для сравнения `--reference compile_commands.json` разрешает фактические
