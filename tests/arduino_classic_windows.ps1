@@ -37,6 +37,9 @@ $env:TMPDIR = $env:TEMP
 $env:MK61_ARDUINO_CONFIG_FILE = $config
 $env:ARDUINO_DIRECTORIES_DATA = $data
 $env:ARDUINO_DIRECTORIES_USER = $book
+$providedToolchain = $env:MK61_GCC_TOOLCHAIN
+$env:MK61_GCC_TOOLCHAIN = ''
+$env:MK61_ARDUINO_TOOLCHAIN = ''
 
 function Invoke-Checked {
     param([string]$Executable, [string[]]$Arguments)
@@ -90,11 +93,25 @@ if ($Phase -eq 'Prepare') {
     ), (New-Object Text.UTF8Encoding($false)))
     Invoke-Checked $cli @('--config-file', $config, 'core', 'update-index')
     $lock = ConvertFrom-Json ([IO.File]::ReadAllText((Join-Path $root 'tools/.mk61-gcc/toolchain-lock.json')))
-    $compiler = Get-NativeGnuArmBin $root $lock.version ''
+    $compiler = Get-NativeGnuArmBin $root $lock.version $providedToolchain
     Assert-NativeGnuArmVersion $compiler $lock.version
+    # Model the reporter's existing Arduino15 compiler, without installing a
+    # vendor Core. The board must discover this path without an override and
+    # must not download/create its own duplicate toolchain.
+    $arduinoCompiler = Join-Path $data "packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/$($lock.version)"
+    & robocopy.exe (Split-Path -Parent $compiler) $arduinoCompiler /E /NFL /NDL /NJH /NJS /NP
+    if ($LASTEXITCODE -ge 8) { throw "Cannot stage existing Arduino compiler ($LASTEXITCODE)" }
+    $env:ARDUINO_DIRECTORIES_DATA = '' # Discovery must read directories.data from the IDE YAML.
     $powerShell = (Get-Process -Id $PID).Path
     Invoke-Checked $powerShell @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-        (Join-Path $root 'tools/.mk61-arduino-board/install.ps1'), '-ToolchainDirectory', $compiler)
+        (Join-Path $root 'tools/.mk61-arduino-board/install.ps1'))
+    $registration = [IO.File]::ReadAllText((Join-Path $book 'hardware/mk61/stm32/platform.local.txt'))
+    if (-not $registration.Contains('compiler.path=' + $arduinoCompiler.Replace('\', '/') + '/bin/')) {
+        throw 'Board installation did not discover the existing Arduino15 compiler'
+    }
+    if ([IO.Directory]::Exists((Join-Path $tools 'toolchains'))) {
+        throw 'Board installation downloaded a duplicate compiler despite the compatible Arduino15 compiler'
+    }
     Invoke-Checked $powerShell @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
         (Join-Path $root 'tools/.mk61-arduino-board/install.ps1'), '-Check')
     Copy-Item -LiteralPath $fixturePath -Destination (Join-Path $WorkRoot 'case.json')
@@ -102,7 +119,7 @@ if ($Phase -eq 'Prepare') {
     return
 }
 if (-not [IO.File]::Exists($cli)) { throw 'Run the Prepare phase first' }
-if ([IO.Directory]::Exists((Join-Path $data 'packages/STMicroelectronics'))) {
+if ([IO.Directory]::Exists((Join-Path $data 'packages/STMicroelectronics/hardware'))) {
     throw 'The native IDE regression unexpectedly installed STM32 Core'
 }
 if ($Phase -in @('Build', 'Verify') -and -not [IO.File]::Exists($TestPython)) {

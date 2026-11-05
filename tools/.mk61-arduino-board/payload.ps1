@@ -24,8 +24,38 @@ function Get-Mk61NativePayloadPairs {
     }
 }
 
+function Find-Mk61ArduinoCompiler {
+    param([string]$ProjectRoot, [string]$Version, [string]$DataDirectory)
+    if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
+        $DataDirectory = $env:ARDUINO_DIRECTORIES_DATA
+    }
+    if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
+        $DataDirectory = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'Arduino15'
+    }
+    $packages = Join-Path $DataDirectory 'packages'
+    if (-not [IO.Directory]::Exists($packages)) { return }
+    # Inspect only package/tool/version directories, never recurse through a Core.
+    foreach ($vendor in Get-ChildItem -LiteralPath $packages -Directory -ErrorAction SilentlyContinue | Sort-Object Name) {
+        $tools = Join-Path $vendor.FullName 'tools'
+        if (-not [IO.Directory]::Exists($tools)) { continue }
+        foreach ($tool in Get-ChildItem -LiteralPath $tools -Directory -ErrorAction SilentlyContinue | Sort-Object Name) {
+            foreach ($candidate in Get-ChildItem -LiteralPath $tool.FullName -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending) {
+                try {
+                    $bin = Get-NativeGnuArmBin $ProjectRoot $Version $candidate.FullName
+                    Assert-NativeGnuArmVersion $bin $Version 2>$null
+                    return $bin
+                } catch {
+                    # Wrong version, incomplete tools, unsafe Windows path or
+                    # a compiler for another host: try the next installation.
+                }
+            }
+        }
+    }
+}
+
 function Get-Mk61NativeCompiler {
-    param([string]$ProjectRoot, [string]$Target, [string]$Explicit, [switch]$Install)
+    param([string]$ProjectRoot, [string]$Target, [string]$Explicit,
+        [switch]$Install, [string]$ArduinoDataDirectory)
     . (Join-Path $ProjectRoot 'tools/.mk61-gcc/sdk.ps1')
     $version = (ConvertFrom-Json ([IO.File]::ReadAllText(
         (Join-Path $ProjectRoot 'tools/.mk61-gcc/toolchain-lock.json')))).version
@@ -37,9 +67,21 @@ function Get-Mk61NativeCompiler {
         foreach ($line in [IO.File]::ReadAllLines($local)) {
             if ($line -match '^compiler\.path=(.+)$') {
                 $registered = $Matches[1]
-                $unsafe = $env:OS -eq 'Windows_NT' -and $registered -match '[^\x20-\x7e]'
-                if (-not $Install -or ([IO.Directory]::Exists($registered) -and -not $unsafe)) { $selected = $registered }
+                if (-not $Install) { $selected = $registered }
+                else {
+                    try {
+                        $registeredBin = Get-NativeGnuArmBin $ProjectRoot $version $registered
+                        Assert-NativeGnuArmVersion $registeredBin $version 2>$null
+                        $selected = $registeredBin
+                    } catch { }
+                }
             }
+        }
+    }
+    if ($Install -and [string]::IsNullOrWhiteSpace($selected)) {
+        $selected = Find-Mk61ArduinoCompiler $ProjectRoot $version $ArduinoDataDirectory
+        if (-not [string]::IsNullOrWhiteSpace($selected)) {
+            Write-Host "Reusing GNU Arm GCC from Arduino: $selected"
         }
     }
     if ([string]::IsNullOrWhiteSpace($selected)) {
@@ -59,12 +101,14 @@ function Get-Mk61NativeCompiler {
 }
 
 function Install-Mk61NativePayload {
-    param([string]$ProjectRoot, [string]$Target, [string]$ToolchainDirectory)
+    param([string]$ProjectRoot, [string]$Target, [string]$ToolchainDirectory,
+        [string]$ArduinoDataDirectory)
     foreach ($pair in Get-Mk61NativePayloadPairs $ProjectRoot $Target) {
         [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($pair.Target)) | Out-Null
         Copy-Item -LiteralPath $pair.Source -Destination $pair.Target -Force
     }
-    $binary = Get-Mk61NativeCompiler $ProjectRoot $Target $ToolchainDirectory -Install
+    $binary = Get-Mk61NativeCompiler $ProjectRoot $Target $ToolchainDirectory -Install `
+        -ArduinoDataDirectory $ArduinoDataDirectory
     $local = Join-Path $Target 'platform.local.txt'
     $lines = @()
     if ([IO.File]::Exists($local)) {

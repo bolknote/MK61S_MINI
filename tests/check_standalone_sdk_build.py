@@ -3,6 +3,7 @@
 import argparse
 import json
 from pathlib import Path
+import posixpath
 import re
 import shlex
 from analyze_stack_usage import entry_arguments
@@ -11,8 +12,34 @@ import subprocess
 FORBIDDEN = re.compile(r"(?:^|/)(?:arduino15|\.arduino15|cores/arduino|libraries/srcwrapper)(?:/|$)", re.I)
 
 
-def check_paths(paths):
-    bad = [str(p) for p in paths if FORBIDDEN.search(str(p).replace("\\", "/"))]
+def arduino_compiler_root(arguments):
+    # Only the compiler actually selected by the build may supply compiler
+    # headers. No other Arduino tools, hardware Core or libraries are allowed.
+    executable = arguments[0].replace('\\', '/')
+    match = re.fullmatch(r'(.+/(?:arduino15|\.arduino15)/packages/[^/]+/tools/[^/]+/[^/]+)/bin/arm-none-eabi-(?:gcc|g\+\+)(?:\.exe)?', executable, re.I)
+    return match[1] if match else None
+
+
+def check_paths(paths, compilers=()):
+    executables = set()
+    directories = []
+    for compiler in compilers:
+        root = posixpath.normpath(compiler.replace('\\', '/')).casefold()
+        executables.update(root + '/bin/arm-none-eabi-' + name + suffix
+                           for name in ('gcc', 'g++') for suffix in ('', '.exe'))
+        directories.extend((root + '/lib/gcc/arm-none-eabi', root + '/arm-none-eabi/include'))
+    bad = []
+    for path in paths:
+        text = str(path).replace('\\', '/')
+        if not FORBIDDEN.search(text):
+            continue
+        if text.startswith('-I'):
+            text = text[2:]
+        normalized = posixpath.normpath(text).casefold()
+        if normalized not in executables and not any(
+                normalized == directory or normalized.startswith(directory + '/')
+                for directory in directories):
+            bad.append(str(path))
     if bad:
         raise ValueError("Installed Arduino package entered native build: " + ", ".join(bad[:5]))
 
@@ -43,9 +70,13 @@ def check(database, dependencies=True, arduino=False):
     entries = json.loads(Path(database).read_text(encoding='utf-8-sig'))
     assert entries, "compile database is empty"
     sdk = None
+    compilers = set()
     for entry in entries:
         args = entry_arguments(entry)
-        check_paths([entry["file"], *args])
+        compiler = arduino_compiler_root(args)
+        if compiler:
+            compilers.add(compiler)
+        check_paths([entry["file"], *args], [compiler] if compiler else [])
         includes = include_paths(args)
         candidates = [p.parent.parent for p in includes if p.as_posix().endswith("/cmsis/include")]
         assert len(candidates) == 1, "native CMSIS include root is missing or ambiguous"
@@ -70,12 +101,12 @@ def check(database, dependencies=True, arduino=False):
                 continue
             headers += make_dependencies(dependency.read_text(encoding='utf-8'))
         assert headers, 'Arduino header dependencies are missing'
-        check_paths(headers)
+        check_paths(headers, compilers)
     elif dependencies:
         text = subprocess.check_output(["ninja", "-C", str(Path(database).resolve().parent), "-t", "deps"], text=True)
         headers = [v.strip() for v in text.splitlines() if v.startswith(" ")]
         assert headers, "Ninja header dependencies are missing"
-        check_paths(headers)
+        check_paths(headers, compilers)
     return sdk
 
 

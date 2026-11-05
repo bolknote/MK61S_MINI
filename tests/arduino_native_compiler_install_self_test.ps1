@@ -11,9 +11,12 @@ $oldBoard = $env:MK61_ARDUINO_TOOLCHAIN
 $oldNative = $env:MK61_GCC_TOOLCHAIN
 $oldPublic = $env:PUBLIC
 $oldOs = $env:OS
+$oldData = $env:ARDUINO_DIRECTORIES_DATA
 try {
     $env:MK61_ARDUINO_TOOLCHAIN = ''
     $env:MK61_GCC_TOOLCHAIN = ''
+    $emptyData = Join-Path $work 'empty Arduino15'
+    $env:ARDUINO_DIRECTORIES_DATA = $emptyData
     $project = Join-Path $work 'source'
     $native = Join-Path $project 'tools/.mk61-gcc'
     [void][IO.Directory]::CreateDirectory($native)
@@ -25,6 +28,7 @@ try {
     $installer = @'
 param([string]$InstallRoot)
 $ErrorActionPreference = 'Stop'
+[IO.File]::AppendAllText((Join-Path $PSScriptRoot 'compiler-installs.txt'), "install`n")
 $bin = Join-Path $InstallRoot 'xpack-arm-none-eabi-gcc-14.2.1-1.1/bin'
 [void][IO.Directory]::CreateDirectory($bin)
 Write-Host 'Downloading pinned compiler fixture'
@@ -75,6 +79,68 @@ Write-Host "Native SDK: $PSScriptRoot"
     }
     [IO.File]::WriteAllBytes($header, $original)
     . (Join-Path $root 'tools/.mk61-gcc/sdk.ps1')
+    # A pre-existing Arduino compiler must win over another download. Check
+    # actual executables/version, not a matching version directory name.
+    $data = Join-Path $work 'custom Arduino15'
+    $env:ARDUINO_DIRECTORIES_DATA = $data
+    $good = Join-Path $data 'packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/0.0.0/bin'
+    $wrong = Join-Path $data 'packages/Arduino/tools/arm-none-eabi-gcc/14.2.1-1.1/bin'
+    $incomplete = Join-Path $data 'packages/Arduino/tools/arm-none-eabi-gcc/99-incomplete/bin'
+    foreach ($bin in @($good, $wrong, $incomplete)) {
+        [void][IO.Directory]::CreateDirectory((Split-Path -Parent $bin))
+        Copy-Item -LiteralPath $expected -Destination $bin -Recurse
+    }
+    $suffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
+    $wrongGcc = Join-Path $wrong "arm-none-eabi-gcc$suffix"
+    Remove-Item -LiteralPath $wrongGcc
+    if ($suffix) {
+        Add-Type -Language CSharp -OutputType ConsoleApplication -OutputAssembly $wrongGcc -TypeDefinition @'
+public static class OldGnuFixture {
+    public static void Main() { System.Console.WriteLine("13.3.1"); }
+}
+'@
+    } else {
+        [IO.File]::WriteAllText($wrongGcc, "#!/bin/sh`necho 13.3.1`n")
+        & chmod +x $wrongGcc
+    }
+    Remove-Item -LiteralPath (Join-Path $incomplete "arm-none-eabi-gcc-ar$suffix")
+    $counter = Join-Path $project 'tools/compiler-installs.txt'
+    $reuseTarget = Join-Path $work 'reuse/hardware/mk61/stm32'
+    $reused = @(Get-Mk61NativeCompiler $project $reuseTarget '' -Install)
+    if ($reused.Count -ne 1 -or $reused[0] -cne $good -or
+        [IO.File]::ReadAllLines($counter).Count -ne 1) {
+        throw 'Compatible Arduino compiler was not reused without a download'
+    }
+    $env:ARDUINO_DIRECTORIES_DATA = $emptyData
+    Install-Mk61NativePayload $root $reuseTarget '' $data
+    $env:ARDUINO_DIRECTORIES_DATA = $data
+    $registration = [IO.File]::ReadAllText((Join-Path $reuseTarget 'platform.local.txt'))
+    if (-not $registration.Contains('compiler.path=' + $good.Replace('\', '/') + '/') -or
+        -not (Test-Mk61NativePayload $root $reuseTarget)) {
+        throw 'Discovered Arduino compiler was not registered or failed the package check'
+    }
+    [IO.File]::WriteAllText((Join-Path $reuseTarget 'platform.local.txt'), 'compiler.path=' + $incomplete)
+    if (Test-Mk61NativePayload $root $reuseTarget) {
+        throw 'Read-only package check replaced an invalid registered compiler'
+    }
+    $repaired = @(Get-Mk61NativeCompiler $project $reuseTarget '' -Install)
+    if ($repaired.Count -ne 1 -or $repaired[0] -cne $good) {
+        throw 'Reinstall did not replace the incomplete registered compiler'
+    }
+    $explicit = Get-Mk61NativeCompiler $project $reuseTarget $expected -Install
+    if ($explicit -cne $expected) { throw 'Discovery overrode an explicit compiler' }
+    $invalidExplicitRejected = $false
+    try { $null = Get-Mk61NativeCompiler $project $reuseTarget $wrong -Install }
+    catch { $invalidExplicitRejected = $true }
+    if (-not $invalidExplicitRejected) { throw 'Invalid explicit compiler silently fell back to discovery' }
+    Remove-Item -LiteralPath (Join-Path $good "arm-none-eabi-gcc-ar$suffix")
+    $fallbackTarget = Join-Path $work 'fallback/hardware/mk61/stm32'
+    $fallback = @(Get-Mk61NativeCompiler $project $fallbackTarget '' -Install)
+    if ($fallback.Count -ne 1 -or -not $fallback[0].StartsWith($fallbackTarget) -or
+        [IO.File]::ReadAllLines($counter).Count -ne 2) {
+        throw 'Missing compatible Arduino compiler did not trigger exactly one standalone install'
+    }
+    $env:ARDUINO_DIRECTORIES_DATA = $emptyData
     $sdkCopy = Join-Path $work 'SDK checksum fixture'
     Copy-Item (Join-Path $root 'third_party/stm32f4') $sdkCopy -Recurse
     [IO.File]::AppendAllText((Join-Path $sdkCopy 'device/include/stm32f411xe.h'), '// changed SDK')
@@ -110,11 +176,12 @@ Write-Host "Native SDK: $PSScriptRoot"
             throw 'Reinstall did not migrate the registered Unicode compiler'
         }
     }
-    Write-Host 'Native Arduino first install: status/path isolation, module-independent SHA256 checks and Windows ASCII migration PASS'
+    Write-Host 'Native Arduino compiler: discovery/reuse, actual version/tool validation, explicit override, stale registration repair, fallback install, SHA256 and Windows ASCII migration PASS'
 } finally {
     $env:MK61_ARDUINO_TOOLCHAIN = $oldBoard
     $env:MK61_GCC_TOOLCHAIN = $oldNative
     $env:PUBLIC = $oldPublic
     $env:OS = $oldOs
+    $env:ARDUINO_DIRECTORIES_DATA = $oldData
     if ([IO.Directory]::Exists($work)) { Remove-Item -LiteralPath $work -Recurse -Force }
 }

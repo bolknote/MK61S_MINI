@@ -4,6 +4,7 @@ import errno
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import shutil
 import subprocess
 import sys
@@ -28,7 +29,53 @@ def pairs(project, target):
         yield project / source, target / destination
 
 
-def compiler_path(project, target, selected, install):
+def arduino_data_directory():
+    override = os.environ.get('ARDUINO_DIRECTORIES_DATA')
+    if override:
+        return Path(override).expanduser().resolve()
+    config = Path(os.environ.get('MK61_ARDUINO_CONFIG_FILE') or
+                  Path.home() / '.arduinoIDE/arduino-cli.yaml')
+    if config.is_file():
+        inside = False
+        for line in config.read_text(encoding='utf-8-sig').splitlines():
+            if line.strip() == 'directories:':
+                inside = True
+            elif inside and line and not line[0].isspace() and not line.startswith('#'):
+                inside = False
+            elif inside:
+                match = re.match(r'\s+data:\s*(.*?)\s*$', line)
+                if match and match[1]:
+                    value = match[1]
+                    if value.startswith('"'):
+                        value = json.loads(value)
+                    elif value.startswith("'") and value.endswith("'"):
+                        value = value[1:-1].replace("''", "'")
+                    return Path(value).expanduser().resolve()
+    if sys.platform == 'darwin':
+        return Path.home() / 'Library/Arduino15'
+    return Path.home() / '.arduino15'
+
+
+def compatible_compiler(candidate, version):
+    from native_sdk import toolchain_bin, verify_toolchain_version
+    binary = toolchain_bin(candidate)
+    verify_toolchain_version(binary, version)
+    return binary
+
+
+def find_arduino_compiler(data_directory, version):
+    packages = Path(data_directory) / 'packages'
+    # Arduino stores compilers at packages/vendor/tools/tool/version/bin.
+    for candidate in sorted(packages.glob('*/tools/*/*'), reverse=True):
+        if not candidate.is_dir():
+            continue
+        try:
+            return compatible_compiler(candidate, version)
+        except (ValueError, OSError, subprocess.CalledProcessError):
+            continue
+
+
+def compiler_path(project, target, selected, install, data_directory=None):
     sys.path.insert(0, str(project / 'tools/.mk61-gcc'))
     from native_sdk import toolchain_bin, verify_toolchain_version
     version = json.loads((project / 'tools/.mk61-gcc/toolchain-lock.json').read_text())['version']
@@ -37,8 +84,17 @@ def compiler_path(project, target, selected, install):
         for line in local.read_text().splitlines():
             if line.startswith('compiler.path='):
                 candidate = Path(line.split('=', 1)[1])
-                if not install or candidate.is_dir():
+                if not install:
                     selected = candidate
+                else:
+                    try:
+                        selected = compatible_compiler(candidate, version)
+                    except (ValueError, OSError, subprocess.CalledProcessError):
+                        pass
+    if not selected and install:
+        selected = find_arduino_compiler(data_directory or arduino_data_directory(), version)
+        if selected:
+            print('Reusing GNU Arm GCC from Arduino: ' + str(selected))
     if not selected:
         owned = target / 'tools/toolchains' / ('xpack-arm-none-eabi-gcc-' + version)
         if owned.is_dir():

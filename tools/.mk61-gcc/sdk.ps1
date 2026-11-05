@@ -82,7 +82,7 @@ function Get-NativeGnuArmBin {
     if (-not [IO.File]::Exists((Join-Path $selected "arm-none-eabi-gcc$suffix"))) {
         $selected = Join-Path $selected 'bin'
     }
-    foreach ($name in @('gcc','g++','ar','ranlib','objcopy','size','nm','objdump','c++filt')) {
+    foreach ($name in @('gcc','g++','ar','ranlib','objcopy','size','nm','objdump','c++filt','gcc-ar')) {
         $path = Join-Path $selected "arm-none-eabi-$name$suffix"
         if (-not [IO.File]::Exists($path)) { throw "GNU Arm tool not found: $path" }
     }

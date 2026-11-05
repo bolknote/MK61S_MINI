@@ -12,8 +12,8 @@ Usage: tools/mk61-arduino-board.cmd [--sketchbook DIR] [--toolchain DIR] [--chec
 The board uses the project's runtime and SDK, without STM32 Core or Arduino libraries.
 The installer does not install Arduino CLI. The MK61s board is not in Boards Manager;
 it appears in Board Selector / Tools > Board.
-GNU Arm GCC is downloaded with its pinned SHA256 unless --toolchain or
-MK61_ARDUINO_TOOLCHAIN / MK61_GCC_TOOLCHAIN selects an existing compiler.
+Compatible GNU Arm GCC in Arduino15 is reused before downloading the pinned
+compiler. --toolchain or MK61_ARDUINO_TOOLCHAIN / MK61_GCC_TOOLCHAIN overrides it.
 HELP
 }
 while [ "$#" -gt 0 ]; do
