@@ -66,7 +66,9 @@ private:
   uint32_t source_map_at_=0;
   bool source_bytes(uint32_t at,const uint8_t* data,uint16_t n) {
     if(Paged)return pass_!=1 || flash_->source_bytes(at,data,n);
-    if(!pass_)return true;
+    // Folded instructions can temporarily overlap the final map location.
+    // The raw map-only pass follows all code writes.
+    if(pass_!=2)return true;
     const uint32_t limit=owned()?language_vm::MAX_MODULE:language_vm::MAX_IMAGE;
     if(source_map_at_>capacity_ || at>capacity_-source_map_at_ || n>capacity_-source_map_at_-at ||
        source_map_at_>limit || at>limit-source_map_at_ || n>limit-source_map_at_-at)return false;
@@ -1064,7 +1066,7 @@ public:
     if (!Expression)
       index_lines();
     const uint32_t code = language_vm::HEADER_SIZE + uint32_t(count_) * 8U;
-    for (pass_ = 0; pass_ < (Paged?3:2) && error_ == E::NONE; ++pass_) {
+    for (pass_ = 0; pass_ < (Expression?2:3) && error_ == E::NONE; ++pass_) {
       emitting_=pass_==1;
       if constexpr(Paged) {
         emitting_=pass_==2 || (pass_==1 && flash_->reserve_positions(positions_.bytes));

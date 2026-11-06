@@ -27,7 +27,10 @@ uint32_t execute(OverlayRequest* p) {
   flash::Reader reader(r.paged);View v;assert(validated_view(*p,v,r.paged.read?&reader:nullptr));
   if(p->action==OverlayAction::ABORT){r.result.error=s.cancelled?Error::STOPPED:Error::IO;return 1;}
   const Bindings b={r.variables,r.array,s.array_count,s.stack,MAX_STACK};
-  if(p->action==OverlayAction::EXPRESSION){r.result=evaluate_input(v,s,b,services);return 1;}
+  if(p->action==OverlayAction::EXPRESSION){
+    const Bindings expression={r.variables,r.array,s.array_count,input_workspace(r.image).stack,INPUT_STACK_CAPACITY};
+    r.result=evaluate_input(v,s,expression,services);return 1;
+  }
   const bool resume=p->action==OverlayAction::RESUME;
   if(!resume) {
     if(r.image && r.storage && !r.storage->read)++prepared_calls;else ++normal_calls;

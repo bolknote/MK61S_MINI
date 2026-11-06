@@ -4,6 +4,7 @@
 #include "language_vm_resident.hpp"
 #include "language_compiler_flow.hpp"
 #include "language_flash_cache.hpp"
+#include "language_linked_cache.hpp"
 #include "program_store.hpp"
 #include "storage_path.hpp"
 #include "tools.hpp"
@@ -89,7 +90,7 @@ struct Context {
   static bool borrow(void* raw,const Member& m,const uint8_t*& image) {
     auto& c=*(Context*)raw;c.loading=&m;
     flash::IO io{};io.context=&c;io.read=image_read;io.service=poll;
-    const bool ok=c.cache.borrow(c.storage.revision,uint16_t(0xF000U|m.source_id),m.validated.size,io,image);
+    const bool ok=borrow_image(c.cache,c.storage.revision,c.storage.files[0],m,io,image);
     c.loading=nullptr;
     // Reader is an APP-private type. This first PoC deliberately accepts only
     // raw cache loans; no mismatched resident Reader crosses the APP boundary.

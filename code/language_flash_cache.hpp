@@ -100,8 +100,10 @@ public:
   // Optional whole-image fast lane, backed by the very same page frames.
   // True with a null result means ineligible/busy: use the paged VM. False
   // is a backing I/O/service failure, not a reason to silently retry it.
+  // chunk_base reserves a distinct key range for immutable subimages; backing
+  // I/O remains relative to the beginning of the requested image.
   bool borrow(uint32_t revision,uint16_t directory,uint32_t size,const IO& io,const uint8_t*& image,
-              bool cached_only=false) {
+              bool cached_only=false,uint32_t chunk_base=0) {
     image=nullptr;synchronize(revision);
     const unsigned n=(size+WRITE_BYTES-1)/WRITE_BYTES;
     if(!size || size>8192 || n>count_ || directory==UINT16_MAX || pinned_count_)return true;
@@ -110,7 +112,7 @@ public:
       bool ready=true;uint32_t newest=0;
       for(unsigned j=0;j<n;++j) {
         const auto& slot=slots_[i+j];
-        if(slot.directory!=directory || slot.chunk!=j)ready=false;
+        if(slot.directory!=directory || slot.chunk!=chunk_base+j)ready=false;
         if(slot.directory!=UINT16_MAX && slot.age>newest)newest=slot.age;
       }
       if(ready) {
@@ -142,10 +144,10 @@ public:
     if(revision_!=revision){pinned_count_=0;return false;}
     synchronize(revision);const uint32_t age=++clock_;
     for(unsigned i=0;i<count_;++i)
-      if((i<selected || i>=selected+n) && slots_[i].directory==directory && slots_[i].chunk<n)
+      if((i<selected || i>=selected+n) && slots_[i].directory==directory && slots_[i].chunk-chunk_base<n)
         slots_[i].directory=UINT16_MAX;
     for(unsigned j=0;j<n;++j) {
-      slots_[selected+j]={j,age,directory};++statistics_.publications;
+      slots_[selected+j]={chunk_base+j,age,directory};++statistics_.publications;
     }
     image=destination;return true;
   }

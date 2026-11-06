@@ -13,7 +13,7 @@ inline bool prepare_cached_execution(CompilerContext& context,
                                      loadable_module::Command command) {
   static_assert(sizeof(ExecutionState)<COMPILER_WORKSPACE_SIZE,
                 "cached execution must fit inside the protected prefix");
-  context.vm={};context.vm.magic=FLOW_CONTEXT_MAGIC;
+  reset_flow_context(context.vm);context.vm.magic=FLOW_CONTEXT_MAGIC;
   context.vm.original_command=(uint32_t)command;
   context.vm.program_validated=certificate;
   context.vm.program={sizeof(OverlayRequest),REQUEST_VERSION,&context.execution,

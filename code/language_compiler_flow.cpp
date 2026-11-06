@@ -148,7 +148,7 @@ bool prepare_compiled_flow(mk61_app_flow* flow) {
   state->language = c.language;
   // Start the VM member's lifetime only after consuming every compiler field.
   // The persistent execution request and final metadata are outside the union.
-  c.vm = {}; c.vm.magic = FLOW_CONTEXT_MAGIC; c.vm.original_command = original;
+  reset_flow_context(c.vm); c.vm.magic = FLOW_CONTEXT_MAGIC; c.vm.original_command = original;
   c.vm.program = {sizeof(OverlayRequest), REQUEST_VERSION, &c.execution,
       state, &c.vm.program_validated, OverlayAction::START, {0,0,0}};
   c.vm.publication.next=c.cache_driver==0xFFFF ?

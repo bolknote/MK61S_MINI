@@ -333,6 +333,7 @@ __attribute__((noinline)) uint8_t integer_span
   Value* top=bottom+s.sp;
   bool pending=false;
   const bool trusted=trusted_execution(v),hold_ok=trusted && !v.reader;
+  const bool focal=v.language==Language::FOCAL;
   int32_t accumulator=0;
   uint32_t remaining=budget;
 #if !defined(LANGUAGE_VM_TRACE)
@@ -450,7 +451,12 @@ __attribute__((noinline)) uint8_t integer_span
         if(unsigned(top-bottom)!=base)goto done;
         SPAN_TRACE();break;
       }
-      case Op::JUMP: case Op::GOTO_DIRECT: case Op::JUMP_FALSE: case Op::COMPARE_FALSE: {
+      case Op::JUMP:
+        // FOCAL GOTO may return from a line DO or unwind group/value-call
+        // frames. The scalar handler owns that procedure transition.
+        if(focal)goto done;
+        [[fallthrough]];
+      case Op::GOTO_DIRECT: case Op::JUMP_FALSE: case Op::COMPARE_FALSE: {
         const bool compare=op==Op::COMPARE_FALSE,conditional=op==Op::JUMP_FALSE || compare;
         width=1U+v.address_bytes()+unsigned(compare);
         if(width>end-pc)goto done;

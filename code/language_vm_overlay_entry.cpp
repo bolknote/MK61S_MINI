@@ -213,16 +213,17 @@ const Services services = {nullptr, background, math, random,
                            dynamic_value, reference, io, true, true};
 #if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
 RunResult exported_kernel(const View& v,Continuation& c,const Bindings& b,
-                          const Services& h,uint32_t,bool resume) {
+                          const Services&,uint32_t,bool resume) {
   // The first resident experiment runs whole members. Keep the shipping
-  // unlimited kernel specialization instead of exporting a second copy.
-  return run(v,c,b,h,0,resume);
+  // unlimited kernel specialization and its advertised service table instead
+  // of exporting a second copy with an opaque, caller-supplied table.
+  return run(v,c,b,services,0,resume);
 }
 #endif
 
 __attribute__((noinline)) void evaluate_expression(const View& view) {
   const Bindings bindings = {request().variables, request().array, state().array_count,
-                             state().stack, MAX_STACK};
+                             input_workspace(request().image).stack, INPUT_STACK_CAPACITY};
   request().result = evaluate_input(view, state(), bindings, services);
 }
 uint32_t execute(OverlayRequest* payload) {
