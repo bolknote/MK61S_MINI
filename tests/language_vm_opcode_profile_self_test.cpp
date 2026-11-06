@@ -110,7 +110,8 @@ int main() {
     const auto r=run(view,state,Services{});
     assert(r.error==Error::NONE && variables[0]==3 && !applied);
     total=0;for(const auto& row:rows)total+=row.count;
-    assert(total==r.steps && rows[8].count==(MK61_VM_INTEGER_SPAN?(input.integer()?7U:4U):(input.integer()?3U:0U)));
+    // The selected literal assignment is one MOVE_LOCAL in LBV2.
+    assert(r.steps==7 && total==r.steps && rows[8].count==(MK61_VM_INTEGER_SPAN?(input.integer()?6U:3U):(input.integer()?3U:0U)));
     if(MK61_VM_INTEGER_SPAN) {
       assert(rows[7].count==1); // HALT only; integer tail also fuses after a float comparison
       assert(rows[6].count==(input.integer()?0U:1U) && !rows[6].integers);
@@ -125,8 +126,9 @@ int main() {
   state.stack_capacity=MAX_STACK;state.array=array;state.array_count=2;
   const auto r=run(view,state,Services{});
   assert(r.error==Error::NONE && variables[0]==.25 && variables[1]==.25);
-  assert(rows[8].count==(MK61_VM_INTEGER_SPAN?9U:0U));
-  assert(rows[8].integers==(MK61_VM_INTEGER_SPAN && MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?3U:0U));
+  // I=1 also lowers to one MOVE_LOCAL instead of CONST/STORE.
+  assert(r.steps==13 && rows[8].count==(MK61_VM_INTEGER_SPAN?8U:0U));
+  assert(rows[8].integers==(MK61_VM_INTEGER_SPAN && MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?2U:0U));
   total=0;for(const auto& row:rows)total+=row.count;assert(total==r.steps);
   std::puts("VM opcode profile: active block, logical counts, single elapsed attribution and limit fallback PASS");
 }

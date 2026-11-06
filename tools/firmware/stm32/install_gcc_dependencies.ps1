@@ -68,7 +68,7 @@ try {
             $archive = Join-Path $stage $asset.archive
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
             Write-Host "Downloading $($asset.archive)"
-            Invoke-WebRequest -UseBasicParsing -Uri $asset.url -OutFile $archive
+            Invoke-NativeCompilerDownload -Uri $asset.url -OutFile $archive
         } else { $archive = [IO.Path]::GetFullPath($ArchivePath) }
         Write-Host 'Checking compiler archive SHA256'
         $hash = Get-NativeFileSha256 $archive
