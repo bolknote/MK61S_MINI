@@ -1,18 +1,47 @@
 {
-  "status": "GROUPED_VALIDATION_NOT_RUN",
+  "status": "COMPLETE_HOST_HARDWARE_AND_NEW_IMAGE_INTEGRATION_PASS",
   "request": "Implement all four replacements first; validate them in one grouped pass later.",
-  "functions": ["strnlen", "strcpy", "strncpy", "strncat"],
+  "functions": [
+    "strnlen",
+    "strcpy",
+    "strncpy",
+    "strncat"
+  ],
   "target": "Classic F411 / Cortex-M4; exact future image and UID must be bound freshly",
-  "physical_IO": 0,
+  "physical_IO": "Classic F411 AEB505B6E0067623 only",
   "automatic_timer": false,
   "HOST": {
     "runner": "tests/m4_string_batch_self_test.py",
     "build_only": "Use --build-only to compile/export the complete package without importing or constructing Unicorn.",
     "grouped_execution": "One command without --build-only compiles all variants, compares F401/M0 fallback bodies, and executes the full deterministic HOST semantic pass once. First failure stops the pass and is retained without retry.",
     "ARM_engine": "tests/unicorn_runtime.py::Uc with the normal host guard; HOST times are not hardware measurements.",
-    "variants": ["M4 byte2", "M4 byte4", "M4 original C control", "F401 fallback versus disabled control", "M0 fallback versus disabled control"],
+    "variants": [
+      "M4 byte2",
+      "M4 byte4",
+      "M4 original C control",
+      "F401 fallback versus disabled control",
+      "M0 fallback versus disabled control"
+    ],
     "SDK_runtime": "Only strncat has an existing slot: unchanged runtime26 slot21 and the real SDK runtime.S tail. No new slots or ABI changes.",
-    "lengths": [0, 1, 2, 3, 4, 7, 8, 15, 16, 31, 32, 63, 64, 127, 128, 255, 512],
+    "lengths": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      15,
+      16,
+      31,
+      32,
+      63,
+      64,
+      127,
+      128,
+      255,
+      512
+    ],
     "copy_append_alignments": "All16 source/destination byte-alignment pairs; strnlen has all4 source alignments.",
     "memory": "Source SRAM and Flash; writable destination SRAM; source and destination envelopes have head/tail canaries. No overlapping copy buffers, which would be outside the ISO C contracts.",
     "counts": "Zero, one, just before/at/after NUL, longer than source, bounded unterminated source. SIZE_MAX only with terminated strnlen/strncat inputs; no invalid enormous strncpy destination.",
@@ -27,7 +56,7 @@
     ]
   },
   "future_single_Classic_window": {
-    "status": "NOT_PREPARED_FOR_DEVICE_EXECUTION_NO_GO",
+    "status": "COMPLETE_TIMING_AND_NEW_IMAGE_INTEGRATION_PASS_ROOT_CLOSED",
     "requirements": [
       "Coordinator grants a fresh finite Classic-only window after reviewing the exact image, carrier/APPs, compiler flags, argv, lease and current foreground state.",
       "Bind actual native bodies and the real runtime26/slot21 table to current ELF/BIN/device CRC. Do not assume the previously installed99BEFCD2 remains current.",
@@ -36,14 +65,25 @@
       "Qualify the actual timer; bind clock/power/cache/IRQ context before/after every group. Retain min/median/max, all raw intervals, repeats, n, source/destination alignment, short cases and independent strncat prefix/source lengths.",
       "Preserve the first error and all prior raw groups without retrying executed cases or silently discarding samples.",
       "Fresh accepted user-state policy applies; no assumed reset, old-state loss, backup, restoration or RTC setters. Only reviewed own files may be created or removed after byte ownership proofs.",
-      "End with ordinary tested working firmware, removal of own fixtures/files, actual PID/session/EXIT/reap/FD/lock evidence and independently accepted CLOSED.",
+      "Latest direct user policy supersedes the earlier restoration/cleanup proposal: do not inventory, back up or restore old firmware/state/RTC; no cleanup merely for the previous contents. Install and check new measured kernels under exact final GO; record actual PID/session/EXIT/reap/FD/lock/holders and independent CLOSED.",
       "Select production winners only from the complete hardware regression map, then check actual native/SDK/runtime bodies, full firmware and System APP budgets. Do not weaken the F401 reserve."
     ]
   },
   "claims": {
-    "semantic_PASS": false,
-    "hardware_winner": false,
-    "hardware_speedup": false,
-    "hardware_GO": false
+    "semantic_PASS": true,
+    "hardware_winner": true,
+    "hardware_speedup": true,
+    "hardware_GO": true
+  },
+  "results": {
+    "HOST_ARM_calls": 81130,
+    "hardware_cases": 34848,
+    "raw_intervals": 1383648,
+    "timed_APP_runs": 1092,
+    "selected": "byte4 for all4 native functions",
+    "evidence": "HARDWARE.json",
+    "functional_integration_calls": 7168,
+    "installed_build": "13A2194A",
+    "independent_hardware_CLOSED": true
   }
 }

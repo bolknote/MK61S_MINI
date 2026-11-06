@@ -1,6 +1,7 @@
-/* Unmeasured Classic F411 strncat batch candidate. Byte-only guarded
+/* Measured Classic F411 strncat, byte4 selected. Byte-only guarded
  * reads/writes; original destination returned; n0 touches neither buffer.
- * No stack/helper calls. Retain C fallbacks on other targets. */
+ * No stack/helper calls. Retain C fallbacks on other targets.
+ * See research/m4-string-batch-2026-11-06 for the complete regression map. */
 #ifndef MK61_MEMORY_STRNCAT_ARM_H
 #define MK61_MEMORY_STRNCAT_ARM_H
 #include <stddef.h>

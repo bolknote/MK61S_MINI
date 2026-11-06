@@ -1,7 +1,8 @@
-/* Byte-only M4 strnlen candidate for the grouped Classic measurements.
+/* Byte-only M4 strnlen selected by the grouped Classic measurements.
  * A remaining-count check guards every load, and a NUL ends the scan before
  * another byte is read. F401 and unsupported targets keep their C fallback.
- * Both unroll widths are candidates; neither has a hardware speed claim yet. */
+ * Byte4 is the measured default; byte2 remains available for comparison.
+ * See research/m4-string-batch-2026-11-06 for the complete regression map. */
 #ifndef MK61_MEMORY_STRNLEN_ARM_H
 #define MK61_MEMORY_STRNLEN_ARM_H
 #include <stddef.h>

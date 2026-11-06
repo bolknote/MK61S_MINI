@@ -1,7 +1,8 @@
-/* M4 strcpy/strncpy candidates for the grouped Classic measurement.
+/* M4 strcpy/strncpy selected by the grouped Classic measurements.
  * Source loads are bytes and stop at NUL / n. strcpy writes its NUL;
  * strncpy writes exactly n bytes, including bounded zero padding.
- * Unmeasured: F401 and other targets retain the caller's C fallback. */
+ * Byte4 is the measured default; F401 and other targets retain C fallback.
+ * See research/m4-string-batch-2026-11-06 for the complete regression map. */
 #ifndef MK61_MEMORY_STRING_COPY_ARM_H
 #define MK61_MEMORY_STRING_COPY_ARM_H
 #include <stddef.h>
