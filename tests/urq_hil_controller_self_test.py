@@ -1,9 +1,11 @@
 """Grant and USB release failures must stop before the next hardware owner."""
+import argparse
 import copy
 import json
 from pathlib import Path
 import tempfile
 import subprocess
+import sys
 import time
 from types import SimpleNamespace
 import unittest
@@ -12,6 +14,7 @@ from unittest import mock
 import hil_urq_semion as hil
 import hil_classic_cdc_guard as guard
 
+FOOTER_TOOL = hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer'
 
 class ControllerTests(unittest.TestCase):
     def setUp(self):
@@ -283,8 +286,7 @@ class FrameTests(unittest.TestCase):
             self.assertNotEqual(hil.canonical(off), hil.canonical(changed), index)
 
     def test_inventory_header_cannot_be_mistaken_for_main_menu(self):
-        tool = hil.ROOT / '.build/urq-tests/urq-classic-footer'
-        hints = subprocess.check_output([str(tool)])
+        hints = subprocess.check_output([str(FOOTER_TOOL)])
         self.assertEqual(len(hints), 7 * 192)
         menu = hints[5 * 192:6 * 192] + bytes(7 * 192)
         inventory = hints[6 * 192:7 * 192] + bytes(7 * 192)
@@ -314,4 +316,8 @@ class FrameTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--footer', type=Path, default=FOOTER_TOOL)
+    options, remaining = parser.parse_known_args()
+    FOOTER_TOOL = options.footer.resolve()
+    unittest.main(argv=[sys.argv[0], *remaining])

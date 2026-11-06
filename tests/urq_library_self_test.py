@@ -27,7 +27,7 @@ from tools.apps.urq.library import SOURCES, copy_device_library, copy_licenses
 from tools.apps.urq.extra_games import locked_sources, prepare
 from tools.apps.urq import extra_games
 
-HOST = Path(sys.argv.pop(1)).resolve() if __name__ == "__main__" else ROOT / ".build/urq-tests/urq-host"
+HOST = Path(sys.argv.pop(1)).resolve() if __name__ == "__main__" else ROOT / ".build/urq-tests/ryu/urq-host"
 UPSTREAM = Path(os.environ["URQ_UPSTREAM"]).resolve() if os.environ.get("URQ_UPSTREAM") else None
 LIBRARY = ROOT / "programs/urq"
 
