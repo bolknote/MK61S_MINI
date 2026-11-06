@@ -50,8 +50,8 @@ def main():
                 port.pump(.05)
             raise TimeoutError('Expected a new URQ screen')
         def canonical(frame):
-            # The resident disk-activity badge is a transient 16x8 overlay.
-            return frame[:176]+bytes(16)+frame[192:]
+            # disk_activity::Overlay covers 16x16 pixels over two pages.
+            return frame[:176]+bytes(16)+frame[192:368]+bytes(16)+frame[384:]
         def changed(key):
             port.pump(.1)
             before=len(port.frames);old=port.frames[-1];port.key(key)

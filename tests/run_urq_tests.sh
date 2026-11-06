@@ -9,6 +9,13 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
   "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-host"
 python3 "$root/tests/urq_self_test.py" "$work/urq-host"
 python3 "$root/tests/urq_library_self_test.py" "$work/urq-host"
+clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer \
+  -DARDUINO=100 -DMK61_DISPLAY_UC1609 -DMK61_PROPORTIONAL_UI_FONTS=1 \
+  -I"$root/sdk/portable/include" -I"$root/code" -I"$root/tests/mk_math_shim" \
+  "$root/tests/urq_classic_footer.cpp" "$root/code/builtin_font.cpp" \
+  "$root/code/ERM19264_graphics_font.cpp" -o "$work/urq-classic-footer"
+python3 "$root/tests/urq_hil_controller_self_test.py"
 python3 - "$work/ui.qst" <<'PY'
 import sys
 from pathlib import Path

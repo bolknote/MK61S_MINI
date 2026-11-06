@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "date": "2026-11-06",
+  "result": "PASS",
+  "platform": "Classic V3 F411, 192x64",
+  "firmware_build_crc": "6186AE4B",
+  "public_id": "AEB505B6E0067623",
+  "input_source": "USB Screen virtual matrix events on real Classic",
+  "physical_key_test": false,
+  "lcd_readability_test": false,
+  "apps_sha256": {
+    "URQ.APP": "11309bac9e96a08b7e8794c287b553cd2705688a47567ebc755f533b2deca92d",
+    "URQUI.APP": "c93b2bf1e4153799fb31ff8aaca28450aef87c7ae523734ce625fec9c1751c43"
+  },
+  "steps": 175,
+  "games": {
+    "semion_escape": {
+      "result": "PASS",
+      "steps": 23,
+      "package_sha256": {
+        "autoexec.wbmp": "8e9d781137f23ee567d55841f2f92dc478f7cfd66e9a9dedba322f025bea53e3",
+        "game.urq": "39b6671119fbaa17fc0d8f1ff8fa1e690c492af7946f0f0f71ccc6b9453a5046",
+        "p0000.uqd": "5b84c52d4c908e5e1caeaeef50fbf52484683dc4b53a60f0912512d51260124b"
+      },
+      "middle_save_slot": 2,
+      "final_save_slot": 1,
+      "middle_save": {
+        "bytes": 3482,
+        "sha256": "70bb2e0d1f6cbcd5cc600191e69b9a274877f623b66d6b1df19cd6a53668f326",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "final_save": {
+        "bytes": 3793,
+        "sha256": "20804c8b123c6e549e2ffc35415ca5cf44501f1a1ef2e62e170984ffb1279151",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "load_in_fresh_app_and_continue": true,
+      "inventory_screen": true,
+      "calculator_return": true,
+      "menu_navigation_pair_cycles": 4
+    },
+    "semion_road": {
+      "result": "PASS",
+      "steps": 81,
+      "package_sha256": {
+        "autoexec.wbmp": "8e9d781137f23ee567d55841f2f92dc478f7cfd66e9a9dedba322f025bea53e3",
+        "game.urq": "080ce7402175bb688d9efc190ba65c4a86bf9c24da351961ae438854642823db",
+        "p0000.uqd": "38dc10b9aac1d6a43d0ffbb2b0f14f8ee530be49da3f793246f71ac19474433a"
+      },
+      "middle_save_slot": 2,
+      "final_save_slot": 1,
+      "middle_save": {
+        "bytes": 4023,
+        "sha256": "efa90c2b4c441b5d2bab2138cac171f573d29aa2ee0d704285db56affddfddd4",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "final_save": {
+        "bytes": 4361,
+        "sha256": "4235ccb911b96764856b22d1c96fc31bd08d403b1e2b0ad3b6dc91610e5a9159",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "load_in_fresh_app_and_continue": true,
+      "inventory_screen": true,
+      "calculator_return": true,
+      "menu_navigation_pair_cycles": 4
+    },
+    "semion_snow": {
+      "result": "PASS",
+      "steps": 71,
+      "package_sha256": {
+        "autoexec.wbmp": "8e9d781137f23ee567d55841f2f92dc478f7cfd66e9a9dedba322f025bea53e3",
+        "game.urq": "666e02ae98f1e4de64a2a9ad58d238804bb76ac9d5dbd1817334600e1f1f31ea",
+        "p0000.uqd": "ff784e960c2638c3c816df8fa43c1c268e97bb43f01a05ff0300b0e3a880b09f"
+      },
+      "middle_save_slot": 2,
+      "final_save_slot": 1,
+      "middle_save": {
+        "bytes": 3811,
+        "sha256": "5f107df5a01c8d1a9032a73dc8e5f361b672bcbdd5b8e55b8ca29facb469ad88",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "final_save": {
+        "bytes": 4329,
+        "sha256": "b67d86e960c5520acf0aefa795d97ba1a67b44c69868d35238c10f91b792639b",
+        "state_matches_host": true,
+        "rng_pause_depth_context_match": true
+      },
+      "load_in_fresh_app_and_continue": true,
+      "inventory_screen": true,
+      "calculator_return": true,
+      "menu_navigation_pair_cycles": 4
+    }
+  },
+  "anykey_stops": 2,
+  "calculator_precondition": "PASS",
+  "calculator_after_app_checks": [
+    {
+      "game": "semion_escape",
+      "point": "middle",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    },
+    {
+      "game": "semion_escape",
+      "point": "final",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    },
+    {
+      "game": "semion_road",
+      "point": "middle",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    },
+    {
+      "game": "semion_road",
+      "point": "final",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    },
+    {
+      "game": "semion_snow",
+      "point": "middle",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    },
+    {
+      "game": "semion_snow",
+      "point": "final",
+      "result": "PASS",
+      "fresh_exact_x123": true
+    }
+  ],
+  "system_menu_escapes": [
+    "before-first-game"
+  ],
+  "firmware_flashed": false,
+  "apps_changed": false,
+  "reset": false,
+  "format": false,
+  "files_deleted": false,
+  "clock_written": false,
+  "old_flash_or_calculator_state_backed_up": false,
+  "health": {
+    "firmware_crc_valid": true,
+    "crash_none": true
+  },
+  "closure": {
+    "status": "PASS",
+    "child_reaped": true,
+    "exit_code": 0,
+    "postclose_named_holders": "none",
+    "lease": "released"
+  },
+  "duration_seconds": 246.071,
+  "test": "tests/hil_urq_semion.py",
+  "raw_evidence": "tmp/urq/semion-classic-hil-r6",
+  "evidence_sha256": {
+    "result.json": "99fa6c85faaf8fd971c2129e99ea452487cb5f12c33458517d46c94e8aa43afe",
+    "closure.json": "c06cd2cdc846a63e5a3130f221ad343aabf9e0bf8229f62d18cc5bdf8303d5bb",
+    "phase.json": "085197df96e3ffaadbd3bc3c65206ebdb980d39ff1d43e6cb0220a30860af9de"
+  }
+}
