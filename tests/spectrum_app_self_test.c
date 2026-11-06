@@ -28,6 +28,7 @@ static char ui[600];
 static uint32_t micros_now,frames_shown,session_frames,calls,audio_opens,audio_closes;
 static unsigned palette_calls;
 static uint8_t canvas[12800],*psram;
+static uint8_t* direct_sram[3];
 static unsigned psram_bytes,action;
 static bool released=true;
 static unsigned held_key,held_scans;
@@ -83,12 +84,25 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(op==MK61_SERVICE_MICROS) { micros_now+=100;return micros_now; }
     if(op==MK61_SERVICE_MEMORY_ACQUIRE) {
         mk61_service_lease* r=payload;r->data=calloc(1,c);assert(r->data);r->size=c;r->fresh=1;
-        assert((a==0 && c==SPECTRUM_FIXED_BYTES) || (a==1 && c==16384));return 1;
+        assert((expect_mapped && a<=1 && c==8192) || (!expect_mapped && a==1 && c==16384));return 1;
     }
     if(op==MK61_SERVICE_MEMORY_RELEASE) { mk61_service_lease* r=payload;free(r->data);r->data=NULL;return 1; }
     if(op==MK61_SERVICE_BUFFER) {
         mk61_service_buffer* r=payload;
-        if(a==MK61_BUFFER_ACQUIRE) { assert(!psram);psram_bytes=r->size;psram=calloc(1,r->size);assert(psram);r->handle=1;return 1; }
+        if(a==MK61_BUFFER_ACQUIRE) {
+            if(r->access==MK61_BUFFER_DIRECT) {
+                assert(r->size==15360); // No 32K allocation may be required for guest SRAM.
+                for(unsigned i=0;i<3;++i)if(!direct_sram[i]) {
+                    r->data=direct_sram[i]=malloc(r->size);assert(r->data);r->handle=2+i;r->storage=MK61_BUFFER_SRAM;return 1;
+                }
+                assert(false);
+            }
+            assert(!psram);psram_bytes=r->size;psram=calloc(1,r->size);assert(psram);r->handle=1;return 1;
+        }
+        if(r->handle>=2 && r->handle<=4) {
+            assert(a==MK61_BUFFER_RELEASE && !generator.sample);
+            free(direct_sram[r->handle-2]);direct_sram[r->handle-2]=NULL;return 1;
+        }
         assert(r->handle==1 && psram);
         if(a==MK61_BUFFER_RELEASE) { free(psram);psram=NULL;return 1; }
         assert(r->offset<=psram_bytes && r->size<=psram_bytes-r->offset);
@@ -128,9 +142,9 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
         assert(mapped_roms==expect_mapped);
-        assert((machine.memory->window!=NULL)==expect_mapped);
+        assert(!machine.memory->window && machine.memory->page_count==(expect_mapped?16:2));
         if(expect_mapped) {
-            assert(machine.memory->window==bank_window);
+            assert(machine.memory->pages==bank_window && machine.memory->pages_tail==bank_tails[2]);
             assert(machine.rom>=cache_image && machine.rom<cache_image+cache_bytes);
         }
         assert((machine.keys[6]&1) && (machine.keys[2]&8)); // Menu Enter/R never leak into the guest.
@@ -171,6 +185,7 @@ int main(int argc,char** argv) {
     }
     assert(!spectrum_app_main());
     assert(action==sizeof(script)/sizeof(*script) && !psram && !generator.sample);
+    for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
     assert(audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
     if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
     printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",

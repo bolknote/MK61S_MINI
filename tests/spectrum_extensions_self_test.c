@@ -235,4 +235,45 @@ static void video_pages(void) {
     free(flat_ram);spectrum_init(&s,ram,rom);
     puts("All 192 banked screen rows match flat ULA: seven page reads instead of 25; dirty cached screen needs zero I/O: PASS");
 }
-int main(void) { devices();mapping();pentagon_1024();full_window();retained_pages();video_pages();scl();concurrent_audio();return 0; }
+static void split_storage(void) {
+    struct Chunk { uint8_t left[16],bytes[SPECTRUM_BANK_HEAP_BYTES],right[16]; } chunks[2];
+    struct Tail { uint8_t left[16],bytes[1024],right[16]; } tails[2];
+    struct Half { uint8_t left[16],bytes[8192],right[16]; } cache[2];
+    uint8_t* tail_ptrs[]={tails[0].bytes,tails[1].bytes,cache[1].bytes};
+    memset(chunks,0xA5,sizeof(chunks));memset(tails,0x5A,sizeof(tails));memset(cache,0x3C,sizeof(cache));
+    spectrum_memory m;const spectrum_memory_io io={backing,rd,wr,clear};
+    spectrum_init(&s,ram,rom);
+    assert(spectrum_memory_init_split(&m,chunks[0].bytes,chunks[1].bytes,tail_ptrs,cache[0].bytes,
+        backing+SPECTRUM_ROM_BASE,backing+SPECTRUM_ROM_BASE+16384,io));
+    spectrum_attach_memory(&s,&m);assert(!m.window && m.page_count==16);
+    assert(!s.cpu.read_map[1] && !s.cpu.read_map[2]);
+    assert(s.cpu.read_pages[31]==tails[0].bytes && s.cpu.write_pages[47]==tails[1].bytes);
+    tails[0].bytes[1023]=0x34;chunks[1].bytes[0]=0x12;
+    const uint8_t code[]={0xF3,0x2A,0xFF,0x7F,0x22,0xFF,0xBF,0x76};
+    memcpy(backing+SPECTRUM_ROM_BASE,code,sizeof(code));spectrum_run(&s,100);
+    assert(s.cpu.hl==0x1234 && tails[1].bytes[1023]==0x34 && s.cpu.read_byte(&s,0xC000)==0x12);
+    assert(spectrum_memory_flush_pages(&m));out(0x7FFD,3);
+    for(unsigned p=0;p<16;++p) (void)s.cpu.read_byte(&s,(uint16_t)(0xC000+p*1024));
+    assert(m.recent==15 && s.cpu.read_pages[63]==cache[1].bytes+7168);
+    s.cpu.write_byte(&s,0xFFFF,0xE7);assert(cache[1].bytes[8191]==0xE7);
+    assert(spectrum_memory_flush_pages(&m) && backing[3*16384+16383]==0xE7);
+    for(unsigned bank=2;bank<=5;bank+=3) {
+        out(0x7FFD,bank);
+        assert(s.cpu.read_pages[48]==s.cpu.read_pages[bank==5?16:32]);
+        assert(s.cpu.write_pages[63]==s.cpu.write_pages[bank==5?31:47]);
+    }
+    uint8_t crossing[64],actual[64];for(unsigned i=0;i<64;++i)crossing[i]=(uint8_t)(i*17);
+    for(unsigned bank=2;bank<=5;bank+=3) {
+        assert(spectrum_bank_write(&m,bank,15350,crossing,sizeof(crossing)));
+        assert(spectrum_bank_read(&m,bank,15350,actual,sizeof(actual)) && !memcmp(crossing,actual,sizeof(actual)));
+    }
+    assert(spectrum_memory_reset(&m));
+    for(unsigned c=0;c<2;++c) {
+        for(unsigned i=0;i<16;++i)assert(chunks[c].left[i]==0xA5 && chunks[c].right[i]==0xA5 && tails[c].left[i]==0x5A && tails[c].right[i]==0x5A && cache[c].left[i]==0x3C && cache[c].right[i]==0x3C);
+        for(unsigned i=0;i<sizeof(chunks[c].bytes);++i)assert(!chunks[c].bytes[i]);
+        for(unsigned i=0;i<1024;++i)assert(!tails[c].bytes[i]);
+        for(unsigned i=0;i<8192;++i)assert(!cache[c].bytes[i]);
+    }
+    s.memory=NULL;puts("Split SRAM: guarded 15K chunks/1K tails, CPU word boundaries, 5/2 aliases, cache slot15/writeback and full reset: PASS");
+}
+int main(void) { devices();mapping();pentagon_1024();full_window();retained_pages();video_pages();split_storage();scl();concurrent_audio();return 0; }

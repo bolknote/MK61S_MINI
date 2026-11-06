@@ -8,16 +8,24 @@ void spectrum_refresh_map(spectrum* s) {
     z->read_map[0]=mapped?(s->disk.mode==SPECTRUM_DISK_BETA?s->disk.xip_rom[SPECTRUM_DISK_BETA]:NULL):
         (s->memory && s->memory->extended && (s->memory->control&8) && !s->memory->overlay)?NULL:s->rom;
     z->write_map[0]=NULL;
-    for(unsigned i=1;i<3;++i) { z->read_map[i]=s->ram+(i-1)*16384;z->write_map[i]=s->ram+(i-1)*16384; }
+    for(unsigned i=1;i<3;++i) {
+        uint8_t* bytes=s->memory?spectrum_memory_fixed(s->memory,i==1?5:2):s->ram+(i-1)*16384;
+        z->read_map[i]=z->write_map[i]=bytes;
+    }
     z->read_map[3]=s->memory?spectrum_memory_mapped(s->memory,false):s->ram+32768;
     z->write_map[3]=s->memory?spectrum_memory_mapped(s->memory,true):s->ram+32768;
     spectrum_memory_map_pages(s->memory,z->read_pages,z->write_pages);
+    for(unsigned window=0;window<4;++window) for(unsigned page=0;page<16;++page) {
+        const unsigned i=window*16+page;
+        if(z->read_map[window]) z->read_pages[i]=z->read_map[window]+page*1024;
+        if(z->write_map[window]) z->write_pages[i]=z->write_map[window]+page*1024;
+    }
 }
 
 static uint8_t read_byte(void* raw,uint16_t address) {
     spectrum* s=raw;
     if(address<0x4000 && s->disk.mapped && (s->disk.cache || s->disk.xip_rom[s->disk.mode] || (s->memory && s->memory->rom_banks[0]))) return spectrum_disk_read_memory(s,address);
-    if(address>=0x4000 && address<0xC000) return s->ram[address-0x4000];
+    if(address>=0x4000 && address<0xC000) return s->memory?*spectrum_memory_byte(s->memory,address,false):s->ram[address-0x4000];
     if(address<0x4000 && (!s->memory || !(s->memory->extended && (s->memory->control&8) && !s->memory->overlay))) return s->rom[address];
     if(s->memory) {
         uint8_t* value=spectrum_memory_byte(s->memory,address,false);if(s->memory->fault) s->cpu.ldir_until=0;spectrum_refresh_map(s);return *value;
@@ -29,7 +37,10 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
     if(address<0x4000 && !(s->memory && s->memory->extended && (s->memory->control&8) && !s->memory->overlay)) {
         spectrum_disk_write_memory(s,address,value);return;
     }
-    if(address>=0x4000 && address<0xC000) { s->ram[address-0x4000]=value;return; }
+    if(address>=0x4000 && address<0xC000) {
+        if(s->memory) *spectrum_memory_byte(s->memory,address,true)=value;else s->ram[address-0x4000]=value;
+        return;
+    }
     if(s->memory) {
         *spectrum_memory_byte(s->memory,address,true)=value;
         if(s->memory->fault) s->cpu.ldir_until=0;

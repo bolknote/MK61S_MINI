@@ -71,13 +71,17 @@ int main(void) {
         if(test%3==0) {
             a.cpu.read_map[3]=b.cpu.read_map[3]=NULL;
             for(unsigned p=0;p<16;++p) {
-                a.cpu.read_pages[16+p]=left+32768+p*1024;b.cpu.read_pages[16+p]=right+32768+p*1024;
-                a.cpu.write_pages[16+p]=left+32768+p*1024;b.cpu.write_pages[16+p]=right+32768+p*1024;
+                a.cpu.read_pages[48+p]=left+32768+p*1024;b.cpu.read_pages[48+p]=right+32768+p*1024;
+                a.cpu.write_pages[48+p]=left+32768+p*1024;b.cpu.write_pages[48+p]=right+32768+p*1024;
             }
             a.cpu.write_map[3]=b.cpu.write_map[3]=NULL;
         } else if(test%3==1) {
             a.cpu.read_map[3]=a.cpu.write_map[3]=left+16384;
             b.cpu.read_map[3]=b.cpu.write_map[3]=right+16384;
+            for(unsigned p=0;p<16;++p) {
+                a.cpu.read_pages[48+p]=a.cpu.write_pages[48+p]=left+16384+p*1024;
+                b.cpu.read_pages[48+p]=b.cpu.write_pages[48+p]=right+16384+p*1024;
+            }
         }
         const unsigned slice=slices[(test/7)%10];
         for(unsigned part=0;part<3;++part) {

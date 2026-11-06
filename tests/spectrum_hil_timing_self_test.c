@@ -8,6 +8,7 @@ static uint32_t test_clock;
 #include <stdarg.h>
 #include <stdio.h>
 static uint8_t test_ram[49152],test_rom[16384];
+static spectrum test_machine;
 static char output[4096];
 static unsigned used;
 static uint32_t log_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
@@ -19,6 +20,7 @@ static int format_output(char* out,uint32_t n,const char* f,va_list args) { retu
 static const mk61_app_services fake={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(mk61_app_services),NULL,log_call,NULL,format_output,NULL};
 const mk61_app_api* mk61_api;
 static void exercise(uint32_t clock_start,unsigned long cycle_start) {
+    active_machine=&test_machine;
     spectrum_init(&machine,test_ram,test_rom);machine.cpu.cyc=cycle_start;
     services=&fake;used=0;test_clock=clock_start;observed_begin(&machine,NULL,NULL);
     test_clock+=300000; // Audio/UI start barrier is outside the steady interval.

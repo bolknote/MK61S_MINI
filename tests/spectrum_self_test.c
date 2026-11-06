@@ -63,7 +63,8 @@ static void page_window_boundaries(void) {
     memcpy(rom,program,sizeof(program));ram[0]=0xA5;ram[32768]=0x3C;ram[32769]=0x69;
     // A callback-based middle window must not alias the upper page table.
     machine.cpu.read_map[1]=machine.cpu.write_map[1]=NULL;
-    machine.cpu.read_pages[16]=machine.cpu.write_pages[16]=ram+32768;
+    for(unsigned i=16;i<32;++i)machine.cpu.read_pages[i]=machine.cpu.write_pages[i]=NULL;
+    machine.cpu.read_pages[48]=machine.cpu.write_pages[48]=ram+32768;
     spectrum_run(&machine,50);
     assert(machine.cpu.a==0xA5 && ram[1]==0xA5 && ram[32769]==0x69);
 }
