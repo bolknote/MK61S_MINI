@@ -11,7 +11,10 @@ _tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_ro
 
 import copy
 import json
+import os
 from pathlib import Path
+import re
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -30,6 +33,47 @@ class ReleaseContractTest(unittest.TestCase):
         self.contract = release_contract.load_contract()
         self.profiles = release_contract.profile_index(self.contract)
         self.cases = release_contract.case_index(self.contract)
+
+    def test_release_shell_helpers_run_outside_repository(self):
+        # Execute the actual embedded Python launchers. Importing this test's
+        # already-bootstrapped release_contract would hide obsolete tool paths.
+        scripts = ("run_f401_uc1609_compile_check.sh",
+                   "run_f401_release_matrix.sh", "run_f411_release_matrix.sh",
+                   "run_f411_usb_suspend_compile_check.sh")
+        pattern = re.compile(
+            r"^[ \t]*(tool_bin|helper_policy)=\"\$\((python3 -[^\n]* <<'(PYTOOLS|PY)'\n.*?^\3\n\)\")",
+            re.MULTILINE | re.DOTALL)
+        with tempfile.TemporaryDirectory(prefix="mk61-release-launchers-") as temporary:
+            work = Path(temporary)
+            toolchain = work / "compiler with spaces" / "bin"
+            toolchain.mkdir(parents=True)
+            compiler = toolchain / "arm-none-eabi-g++"
+            compiler.touch()
+            (toolchain / "arm-none-eabi-size").touch()
+            nm = toolchain / "arm-none-eabi-nm"
+            nm.write_text("#!/bin/sh\nprintf '%s\\n' '00000001 A mk61_vm_file_cache_enabled'\n")
+            nm.chmod(0o755)
+            (work / "compile_commands.json").write_text(json.dumps([
+                {"directory": str(work), "arguments": [str(compiler), "-c", "test.cpp"]}
+            ]))
+            (work / "mk61s-M.ino.elf").write_bytes(b"ELF")
+            environment = dict(os.environ)
+            environment.pop("PYTHONPATH", None)
+            checked = 0
+            for name in scripts:
+                matches = list(pattern.finditer((ROOT / "tests" / name).read_text()))
+                self.assertTrue(matches, name)
+                for match in matches:
+                    with self.subTest(script=name, helper=match[1]):
+                        shell = ('set -eu\nroot="$1"\nbuild_path="$2"\ncompile_path="$2"\n'
+                                 + match[0] + '\nprintf "%s\\n" "$' + match[1] + '"\n')
+                        result = subprocess.run(
+                            ["/bin/bash", "-c", shell, "release-helper-test", str(ROOT), str(work)],
+                            cwd=work, env=environment, capture_output=True, text=True)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(result.stdout.strip(), str(toolchain) if match[1] == "tool_bin" else "1")
+                    checked += 1
+            self.assertEqual(checked, 5)
 
     def test_owned_hardware_drivers_require_no_external_libraries(self):
         self.assertEqual(self.contract["toolchain"]["libraries"], {})
