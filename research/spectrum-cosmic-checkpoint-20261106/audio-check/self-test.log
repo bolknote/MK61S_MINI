@@ -1,0 +1,1 @@
+Audio check actual APP: correct signed stereo/PWM, master-zero remains muted, left/right/both phases, CSR disable/stalled callbacks detected, wrapping clock, one close/quiescent context, no settings writes PASS; no physical audibility claim

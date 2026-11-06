@@ -1,0 +1,1008 @@
+diff --git a/examples/portable-apps/SPECTRUM/main.c b/examples/portable-apps/SPECTRUM/main.c
+--- a/examples/portable-apps/SPECTRUM/main.c
++++ b/examples/portable-apps/SPECTRUM/main.c
+@@ -210,7 +210,7 @@
+         spectrum_attach_memory(&machine,NULL);spectrum_reset(&machine);started=false;return true;
+     }
+     if(!external.handle && !mk61_app_buffer_acquire(services,SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES,MK61_BUFFER_EXTERNAL,&external)) {
+-        message("Pentagon 512K requires PSRAM\n\nPress any key");return false;
++        message("PSRAM required\n\nPress any key");return false;
+     }
+     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
+     if(mapped_roms) {
+@@ -329,7 +329,7 @@
+         // that state or the previous CPU over the partially replaced RAM.
+         spectrum_reset(&machine);started=false;
+         message(error==SPECTRUM_UNSUPPORTED?"Unsupported snapshot/model\nUse Pentagon for 128K files\n\nPress any key":
+-            error==SPECTRUM_IO?"SD read error\n\nPress any key":"Invalid or truncated snapshot\n\nPress any key");
++            error==SPECTRUM_IO?"SD read error\n\nPress any key":"Invalid snapshot\n\nPress any key");
+         return false;
+     }
+     started=true;return true;
+@@ -354,17 +354,37 @@
+         resynced=true;
+ #endif
+     }
++#ifdef SPECTRUM_HIL_FRAME_READY
++    SPECTRUM_HIL_FRAME_READY(&machine);
++#endif
++    const uint32_t pending_frame=machine.frames,pending_phase=machine.frame_tstates;
+     while((int32_t)(now-target)<0) {
++        // The pending image is frozen in the borrowed canvas. The native
++        // PRESENT copies it into its own retained buffer before DMA.
++        // Prefetch only near this deadline. The next complete 512T slice
++        // stays within 4 ms of wall time (including a normal last step).
++        // Keep 96 event slots free for a complete 512T producer slice.
++        if(target-now>1024 && target-now+(machine.frame_tstates-pending_phase)*2/7<=3840 &&
++           (int32_t)(now-*keyboard_deadline)<0 &&
++           machine.frames==pending_frame && machine.frame_tstates<=14000-512 &&
++           atomic_load_explicit(&machine.sound.write,memory_order_relaxed)-
++           atomic_load_explicit(&machine.sound.read,memory_order_acquire)<=SPECTRUM_SOUND_QUEUE_EVENTS-96) {
++            // Keep exactly the same complete 512T calls as the outer loop:
++            // changing their partition would change frame overshoot/images.
++            spectrum_run(&machine,512);
++            if(machine.memory && machine.memory->fault)return false;
++            now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);continue;
++        }
+         // A full keyboard bitmap is relatively costly. The outer CPU loop
+-        // will scan it just after this boundary if fewer than 512 us remain.
+-        const int key=target-now>512?poll_guest(blocked,keyboard_deadline,now):-1;
++        // will scan it just after this boundary if fewer than 1024 us remain.
++        const int key=target-now>1024?poll_guest(blocked,keyboard_deadline,now):-1;
+         if(escape(key) || key==0x90) {
+             if(key==0x90) started=false;
+             return false;
+         }
+         // The resident millisecond delay already busy-pumps services.
+         // Pump directly so it cannot carry us to the next millisecond.
+-        if(target-now>512) mk61_api->service();
++        if(target-now>1024) mk61_api->service();
+         now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+     }
+ #ifdef SPECTRUM_HIL_PACED
+@@ -379,7 +399,7 @@
+     mk61_service_framebuffer scratch={0};
+     if(!services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(scratch),0,&scratch) ||
+        !scratch.pixels || scratch.bytes<10240+SPECTRUM_DISK_CACHE_BYTES) {
+-        message("Native framebuffer unavailable\n\nPress any key");return;
++        message("No framebuffer\n\nPress any key");return;
+     }
+     if(!spectrum_disk_cache_begin(&machine,scratch.pixels+7680)) {
+         message("PSRAM I/O error\n\nPress any key");return;
+@@ -409,25 +429,27 @@
+             if(c==0x90) started=false;
+             break;
+         }
+-        spectrum_run(&machine,2048);
++        spectrum_run(&machine,512);
+         if(machine.memory && machine.memory->fault) goto memory_error;
+         if(machine.frames==last_frame) continue;
+         last_frame=machine.frames;
+-        // Submit the completed frame before its pacing wait, leaving the
+-        // next frame's first CPU/audio slice free of display conversion.
+-        {
+-            uint16_t palette[64];for(unsigned i=0;i<64;++i) palette[i]=spectrum_palette(&machine,i);
+-            const uint32_t ready=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PALETTE64,0,sizeof(palette),palette);
+-            if(ready==2) goto paced;
+-            if(!ready) { error="Update color display service\n\nPress any key";break; }
+-            spectrum_video8(&machine,scratch.pixels,scratch.pixels+SPECTRUM_BITMAP_BYTES);
+-            if(machine.memory && machine.memory->fault) goto memory_error;
+-            frame.background=spectrum_border(&machine);
+-            const uint32_t result=color(MK61_COLOR_PRESENT,&frame);
+-            if(!result) { error="Color output failed\n\nPress any key";break; }
+-        }
+-paced:
+-        if(!pace_frame(blocked,&keyboard_deadline,&deadline)) goto done;
++        // Freeze this completed frame before producing any later guest
++        // state. Palette and border belong to this same image.
++        uint16_t palette[64];for(unsigned i=0;i<64;++i)palette[i]=spectrum_palette(&machine,i);
++        spectrum_video8(&machine,scratch.pixels,scratch.pixels+SPECTRUM_BITMAP_BYTES);
++        if(machine.memory && machine.memory->fault)goto memory_error;
++        frame.background=spectrum_border(&machine);
++        if(!pace_frame(blocked,&keyboard_deadline,&deadline)) {
++            if(machine.memory && machine.memory->fault)goto memory_error;
++            goto done;
++        }
++        const uint32_t ready=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PALETTE64,0,sizeof(palette),palette);
++        if(!ready) {error="Color service required\n\nPress any key";break;}
++        uint32_t result=ready==2?2:color(MK61_COLOR_PRESENT,&frame);
++#ifdef SPECTRUM_HIL_PRESENT_RESULT
++        SPECTRUM_HIL_PRESENT_RESULT(result);
++#endif
++        if(!result) {error="Color output failed\n\nPress any key";break;}
+     }
+     goto done;
+ memory_error:
+@@ -465,7 +487,7 @@
+         if(!mk61_api->graphics_begin() ||
+            !services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(canvas),0,&canvas) ||
+            !canvas.pixels || canvas.bytes<10240+2*SPECTRUM_CACHE_PAGE_BYTES) {
+-            message("Native framebuffer unavailable\n\nPress any key");return 0;
++            message("No framebuffer\n\nPress any key");return 0;
+         }
+         /* UI: 0..9215; running video: 0..7679; disk cache: 7680..9727.
+          * RAM pages at 10240 remain valid across both display modes. */
+diff --git a/examples/portable-apps/SPECTRUM/peripherals.c b/examples/portable-apps/SPECTRUM/peripherals.c
+--- a/examples/portable-apps/SPECTRUM/peripherals.c
++++ b/examples/portable-apps/SPECTRUM/peripherals.c
+@@ -10,6 +10,7 @@
+     memset(&s->sound,0,sizeof(s->sound));
+     atomic_init(&s->sound.read,0);atomic_init(&s->sound.write,0);
+     atomic_init(&s->sound.produced,0);atomic_init(&s->sound.starved,0);
++    atomic_init(&s->sound.late_events,0);atomic_init(&s->sound.max_late_tstates,0);atomic_init(&s->sound.max_deficit_tstates,0);
+     atomic_init(&s->sound.clock_running,true);
+     s->sound.covox=s->sound.specdrum=128;
+ }
+@@ -35,6 +36,9 @@
+     spectrum_sound* q=&s->sound;
+     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
+     atomic_store_explicit(&q->starved,0,memory_order_relaxed);
++    atomic_store_explicit(&q->late_events,0,memory_order_relaxed);
++    atomic_store_explicit(&q->max_late_tstates,0,memory_order_relaxed);
++    atomic_store_explicit(&q->max_deficit_tstates,0,memory_order_relaxed);
+     q->time=(uint32_t)s->cpu.cyc;atomic_store_explicit(&q->produced,q->time,memory_order_release);
+     for(unsigned chip=0;chip<2;++chip) memcpy(q->regs[chip],chip?s->ay2.reg:s->ay.reg,16);
+     q->yield=yield;q->yield_context=context;q->asynchronous=true;
+@@ -66,6 +70,9 @@
+     if(underrun) {
+         const uint32_t n=atomic_load_explicit(&q->starved,memory_order_relaxed);
+         atomic_store_explicit(&q->starved,n+1,memory_order_relaxed);
++        const uint32_t deficit=next-available;
++        if(deficit>atomic_load_explicit(&q->max_deficit_tstates,memory_order_relaxed))
++            atomic_store_explicit(&q->max_deficit_tstates,deficit,memory_order_relaxed);
+     }
+     uint32_t r=atomic_load_explicit(&q->read,memory_order_relaxed);
+     const uint32_t w=atomic_load_explicit(&q->write,memory_order_acquire);
+@@ -73,7 +80,14 @@
+      * only published events, including past events behind that clock, so a
+      * full queue can never wait for the producer to catch up to itself. */
+     while(r!=w && (int32_t)(q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)].time-until)<=0) {
+-        const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];apply(s,e.device,e.reg,e.value);++r;
++        const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];
++        if((int32_t)(q->time-e.time)>=0) {
++            const uint32_t n=atomic_load_explicit(&q->late_events,memory_order_relaxed),late=next-e.time;
++            atomic_store_explicit(&q->late_events,n+1,memory_order_relaxed);
++            if(late>atomic_load_explicit(&q->max_late_tstates,memory_order_relaxed))
++                atomic_store_explicit(&q->max_late_tstates,late,memory_order_relaxed);
++        }
++        apply(s,e.device,e.reg,e.value);++r;
+     }
+     atomic_store_explicit(&q->read,r,memory_order_release);q->time=next;
+     int32_t sample=PSG_calc(&s->ay);
+diff --git a/examples/portable-apps/SPECTRUM/peripherals.h b/examples/portable-apps/SPECTRUM/peripherals.h
+--- a/examples/portable-apps/SPECTRUM/peripherals.h
++++ b/examples/portable-apps/SPECTRUM/peripherals.h
+@@ -11,6 +11,7 @@
+ typedef struct {
+     spectrum_sound_event events[SPECTRUM_SOUND_QUEUE_EVENTS];
+     _Atomic uint32_t read,write,produced,starved;
++    _Atomic uint32_t late_events,max_late_tstates,max_deficit_tstates;
+     _Atomic bool clock_running;
+     uint32_t startup_samples;
+     uint32_t time;
+diff --git a/third_party/emu2149/emu2149.c b/third_party/emu2149/emu2149.c
+--- a/third_party/emu2149/emu2149.c
++++ b/third_party/emu2149/emu2149.c
+@@ -13,6 +13,7 @@
+  */
+ #include <stdlib.h>
+ #include <string.h>
++#include <stdbool.h>
+ #include "emu2149.h"
+ 
+ static uint32_t voltbl[2][32] = {
+@@ -367,25 +368,12 @@
+   *count+=ticks;
+   if(*count>=period) {
+     if(*count<period*2) { *count-=period;++events; }
+-    else { events+=*count/period;*count%=period; }
++    else { const unsigned quotient=*count/period;events+=quotient;*count-=quotient*period; }
+   }
+   return events;
+ }
+-static int16_t calc_silent(PSG* psg)
+-{
+-  unsigned ticks=0;
+-  while(psg->realstep>psg->psgtime) { psg->psgtime+=psg->psgstep;++ticks; }
+-  psg->psgtime-=psg->realstep;
+-  if(!ticks) return psg->out;
+-  for(unsigned i=0;i<3;++i) {
+-    uint32_t count=psg->count[i];const unsigned edges=advance_counter(&count,psg->freq[i],ticks);
+-    psg->count[i]=(uint16_t)count;if(edges&1) psg->edge[i]=!psg->edge[i];psg->ch_out[i]=0;
+-  }
+-  uint32_t count=psg->noise_count;
+-  const unsigned edges=advance_counter(&count,psg->noise_freq,ticks);
+-  unsigned shifts=(edges+(psg->noise_scaler?0:1))/2;
+-  psg->noise_count=(uint8_t)count;psg->noise_scaler^=edges&1;
+-  while(shifts--) { if(psg->noise_seed&1) psg->noise_seed^=0x24000;psg->noise_seed>>=1; }
++static void advance_envelope(PSG* psg,unsigned ticks)
++{
+   unsigned steps=advance_counter(&psg->env_count,psg->env_freq,ticks);
+   while(steps-- && !psg->env_pause) {
+     psg->env_ptr=(psg->env_ptr+(psg->env_face?1:0x3F))&0x3F;
+@@ -397,12 +385,98 @@
+       } else { psg->env_pause=1;psg->env_ptr=0; }
+     }
+   }
++}
++static void advance_state(PSG* psg,unsigned ticks)
++{
++  for(unsigned i=0;i<3;++i) {
++    uint32_t count=psg->count[i];const unsigned edges=advance_counter(&count,psg->freq[i],ticks);
++    psg->count[i]=(uint16_t)count;if(edges&1) psg->edge[i]=!psg->edge[i];
++  }
++  uint32_t count=psg->noise_count;
++  const unsigned edges=advance_counter(&count,psg->noise_freq,ticks);
++  unsigned shifts=(edges+(psg->noise_scaler?0:1))/2;
++  psg->noise_count=(uint8_t)count;psg->noise_scaler^=edges&1;
++  while(shifts--) { if(psg->noise_seed&1) psg->noise_seed^=0x24000;psg->noise_seed>>=1; }
++  advance_envelope(psg,ticks);
++}
++static unsigned output_ticks(PSG* psg)
++{
++  unsigned ticks=0;
++  while(psg->realstep>psg->psgtime) { psg->psgtime+=psg->psgstep;++ticks; }
++  psg->psgtime-=psg->realstep;return ticks;
++}
++static int16_t calc_silent(PSG* psg,unsigned ticks)
++{
++  advance_state(psg,ticks);
++  for(unsigned i=0;i<3;++i)psg->ch_out[i]=0;
+   psg->out>>=ticks<31?ticks:31;return psg->out;
+ }
++/* For N ticks, repeated floor((out+mix)/2) is exactly
++ * floor((out0 + sum(mix[i]*2^i))/2^N). With fixed channel amplitudes,
++ * three hardware32-bit multiplies replace all intermediate mixer steps.
++ * Oscillator/noise masks preserve every internal tick and final state. */
++static bool weighted_eligible(const PSG* psg,unsigned ticks)
++{
++  if(!ticks || ticks>16 || psg->out < -32768 || psg->out>32767 ||
++     (psg->voltbl!=voltbl[0] && psg->voltbl!=voltbl[1]))return false;
++  if(((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
++     (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks))return false;
++  return psg->env_ptr<32;
++}
++static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
++{
++  uint16_t count=psg->count[channel];const uint16_t period=psg->freq[channel];
++  unsigned edge=psg->edge[channel];uint32_t bits=0;
++  if(count<period && (unsigned)(period-count)>ticks) {
++    count=(uint16_t)(count+ticks);bits=edge?all:0;
++  } else for(unsigned i=0;i<ticks;++i) {
++    ++count;if(count>=period) {edge=!edge;count=period?(uint16_t)(count-period):0;}
++    if(edge)bits|=1U<<i;
++  }
++  psg->count[channel]=count;psg->edge[channel]=(uint8_t)edge;return bits;
++}
++static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
++{
++  uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
++  unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
++  if(count<period && period-count>ticks) {count=(uint8_t)(count+ticks);bits=(seed&1)?all:0;}
++  else for(unsigned i=0;i<ticks;++i) {
++    ++count;if(count>=period) {
++      scaler^=1;if(scaler) {if(seed&1)seed^=0x24000;seed>>=1;}
++      count=period?(uint8_t)(count-period):0;
++    }
++    bits|=(seed&1)<<i;
++  }
++  psg->noise_count=count;psg->noise_scaler=(uint8_t)scaler;psg->noise_seed=seed;return bits;
++}
++static int16_t calc_weighted(PSG* psg,unsigned ticks)
++{
++  const uint32_t all=(1U<<ticks)-1,noise=noise_mask(psg,ticks,all);
++  int32_t sum=psg->out;
++  for(unsigned i=0;i<3;++i) {
++    uint32_t bits=tone_mask(psg,i,ticks,all);
++    bits=(psg->tmask[i]?all:bits)&(psg->nmask[i]?all:noise);
++    if((psg->mask&PSG_MASK_CH(i)) ||
++       (psg->freq_limit && psg->freq[i]<=psg->freq_limit && psg->nmask[i] && !psg->tmask[i]))bits=0;
++    const unsigned amplitude=psg->voltbl[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
++    sum+=(int32_t)(amplitude*bits);psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
++  }
++  advance_envelope(psg,ticks);
++  psg->out=sum>>ticks;return (int16_t)psg->out;
++}
++static int16_t calc_quality(PSG* psg,unsigned ticks)
++{
++  if(weighted_eligible(psg,ticks))return calc_weighted(psg,ticks);
++  while(ticks--) { update_output(psg);psg->out=(psg->out+mix_output(psg))>>1; }
++  return psg->out;
++}
+ int16_t PSG_calc(PSG* psg)
+ {
+-  if(psg->quality && psg->base_incr==(1U<<GETA_BITS) &&
+-     !(psg->volume[0]|psg->volume[1]|psg->volume[2])) return calc_silent(psg);
++  if(psg->quality && psg->base_incr==(1U<<GETA_BITS)) {
++    const unsigned ticks=output_ticks(psg);if(!ticks)return (int16_t)psg->out;
++    if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);
++    return calc_quality(psg,ticks);
++  }
+   return calc_reference(psg);
+ }
+ /* Host equivalence checks; linker discards this unused entry from APPs. */
+diff --git a/tests/emu2149_quality_self_test.c b/tests/emu2149_quality_self_test.c
+new file mode 100644
+--- /dev/null
++++ b/tests/emu2149_quality_self_test.c
+@@ -0,0 +1,51 @@
++#include "../third_party/emu2149/emu2149.c"
++#include <assert.h>
++#include <stdio.h>
++static uint32_t random_state=0x5114a0b3;
++static unsigned random_word(void){random_state^=random_state<<13;random_state^=random_state>>17;random_state^=random_state<<5;return random_state;}
++static void init(PSG* p,unsigned rate,unsigned mode){memset(p,0,sizeof(*p));PSG_setVolumeMode(p,mode);p->quality=1;p->rate=rate;PSG_setClock(p,1750000);PSG_reset(p);}
++static unsigned comparisons,weighted;
++static void equal_sample(PSG* a,PSG* b,unsigned scenario,unsigned sample) {
++    if(a->quality && a->base_incr==(1U<<GETA_BITS) && (a->volume[0]|a->volume[1]|a->volume[2])) {
++        PSG phase=*a;const unsigned n=output_ticks(&phase);
++        if(weighted_eligible(a,n))++weighted;
++    }
++    const int16_t actual=PSG_calc(a),expected=PSG_calc_reference(b);
++    if(actual!=expected || memcmp(a,b,sizeof(*a))) {
++        fprintf(stderr,"AY exact quality mismatch scenario=%u sample=%u out=%d/%d freq=%u/%u/%u noise=%u env=%u\n",scenario,sample,actual,expected,a->freq[0],a->freq[1],a->freq[2],a->noise_freq,a->env_freq);abort();
++    }
++    ++comparisons;
++}
++int main(void) {
++    const unsigned rates[]={1000,8000,12500,25000,44100,48000};PSG a,b;
++    for(unsigned scenario=0;scenario<96;++scenario) {
++        init(&a,rates[scenario%6],scenario&1?1:2);b=a;
++        for(unsigned sample=0;sample<4096;++sample) {
++            if(sample%(scenario%3?31:7)==0)for(unsigned reg=0;reg<14;++reg) {
++                unsigned value=random_word()&255;
++                if(reg==7 && scenario%4==0)value=63;
++                if(reg==6 && scenario%4==1)value=scenario%32;
++                if(reg>=8 && reg<=10)value=sample%127<96?(reg==8?16:15):(random_word()&31);
++                PSG_writeReg(&a,reg,value);PSG_writeReg(&b,reg,value);
++            }
++            if(sample%128==0) {unsigned mask=random_word()&7;PSG_setMask(&a,mask);PSG_setMask(&b,mask);}
++            if(sample%193==0) {unsigned div=(sample/193)&1;PSG_setClockDivider(&a,div);PSG_setClockDivider(&b,div);}
++            if(scenario%3==2 && sample%257==0) {unsigned quality=(sample/257)&1;PSG_setQuality(&a,quality);PSG_setQuality(&b,quality);}
++            equal_sample(&a,&b,scenario,sample);
++        }
++    }
++    for(unsigned shape=0;shape<16;++shape) {
++        init(&a,25000,2);PSG_writeReg(&a,7,0x29);PSG_writeReg(&a,0,0xb8);PSG_writeReg(&a,1,8);
++        PSG_writeReg(&a,2,0xc2);PSG_writeReg(&a,3,4);PSG_writeReg(&a,6,11);PSG_writeReg(&a,8,16);
++        PSG_writeReg(&a,9,5);PSG_writeReg(&a,11,70);PSG_writeReg(&a,13,shape);b=a;
++        for(unsigned sample=0;sample<25000;++sample)equal_sample(&a,&b,96+shape,sample);
++    }
++    // Signed filter rounding and long stable DAC spans, including >31 ticks.
++    for(unsigned rate=0;rate<6;++rate) {
++        init(&a,rates[rate],2);PSG_writeReg(&a,7,63);PSG_writeReg(&a,8,15);PSG_writeReg(&a,9,7);a.out=-32768;b=a;
++        for(unsigned sample=0;sample<4096;++sample)equal_sample(&a,&b,112+rate,sample);
++    }
++    assert(weighted>100000);
++    printf("Weighted path eligible: %u samples\n",weighted);
++    printf("AY exact quality: %u samples, %u eligible/%u fallback; full oscillator/LFSR/envelope/mixer/filter state, six rates, all16 envelopes and signed rounding PASS\n",comparisons,weighted,comparisons-weighted);
++}
+diff --git a/tests/pipeline_scheduler_self_test.c b/tests/pipeline_scheduler_self_test.c
+new file mode 100644
+--- /dev/null
++++ b/tests/pipeline_scheduler_self_test.c
+@@ -0,0 +1,122 @@
++#include "../examples/portable-apps/SPECTRUM/spectrum.h"
++static uint32_t timed_cpu(spectrum*,uint32_t);
++static void frozen_video(const spectrum*,uint8_t*,uint8_t*);
++static void prefetch_begin(spectrum*);
++#define SPECTRUM_HIL_FRAME_READY prefetch_begin
++#define spectrum_run timed_cpu
++#define spectrum_video8 frozen_video
++#define main unused_portable_main
++#ifndef SCHED_SOURCE
++#define SCHED_SOURCE "../examples/portable-apps/SPECTRUM/main.c"
++#endif
++#include SCHED_SOURCE
++#undef main
++#undef spectrum_run
++#undef spectrum_video8
++#include <assert.h>
++#include <stdio.h>
++static uint32_t clock_us,origin,start_frame,resume_phase;
++static uint32_t captured_cycles,captured_phase,captured_frame,captured_hash,captured_border;
++static uint16_t captured_palette[64],service_palette[64];
++static unsigned accepted,busy_count,video_count,prefetch_count,closes;
++static unsigned guard_writes,guard_calls,max_prefetch_lead;
++static bool opened,origin_set,force_busy,prefetching;
++static uint8_t canvas[12800],display_copy[7680],ram[49152],rom[16384];
++static spectrum state;
++static uint32_t digest(const uint8_t* bytes,unsigned n) {uint32_t h=2166136261U;for(unsigned i=0;i<n;++i)h=(h^bytes[i])*16777619U;return h;}
++static uint32_t timed_cpu(spectrum* s,uint32_t cycles) {
++    const uint32_t before_clock=clock_us;
++    if(prefetching && video_count && s->frames==captured_frame) {
++        const uint32_t target=origin+(captured_frame-start_frame)*20480+captured_phase*2/7;
++        const int32_t lead=(int32_t)(target-before_clock)+(s->frame_tstates-captured_phase+cycles)*2/7;
++        assert(lead<=4000);if(lead>0 && (unsigned)lead>max_prefetch_lead)max_prefetch_lead=(unsigned)lead;
++    }
++    if(guard_writes) {
++        assert(atomic_load(&s->sound.write)-atomic_load(&s->sound.read)<=160);
++        for(unsigned i=0;i<94;++i)spectrum_sound_write(s,0,8,i);
++        ++guard_calls;
++    }
++    assert(cycles>0 && cycles<=512);s->cpu.cyc+=cycles;s->frame_tstates+=cycles;
++    if(s->frame_tstates>=spectrum_frame_cycles(s)) {s->frame_tstates-=spectrum_frame_cycles(s);++s->frames;}
++    clock_us+=cycles/5+1;
++    // Every producer slice changes the live image, palette and border.
++    // A later pending PRESENT must still contain the earlier snapshot.
++    ++ram[0];s->ulaplus_palette[0]++;s->border=(s->border+1)&7;
++    spectrum_sound_publish(s);if(video_count && s->frames==captured_frame)++prefetch_count;
++    return cycles;
++}
++static void prefetch_begin(spectrum* s) {(void)s;prefetching=true;}
++static void frozen_video(const spectrum* s,uint8_t* pixels,uint8_t* tiles) {
++    spectrum_video8(s,pixels,tiles);captured_cycles=(uint32_t)s->cpu.cyc;captured_phase=s->frame_tstates;captured_frame=s->frames;
++    captured_hash=digest(canvas,7680);captured_border=spectrum_border(s);
++    for(unsigned i=0;i<64;++i)captured_palette[i]=spectrum_palette(s,i);++video_count;
++}
++static void service(void) {clock_us+=7;}
++static uint32_t graphics_begin(void) {return 1;}
++static void forbidden_delay(uint32_t ms) {(void)ms;assert(!"Pacing may not sleep in milliseconds");}
++static const mk61_app_api api={.service=service,.graphics_begin=graphics_begin,.delay_ms=forbidden_delay};
++const mk61_app_api* mk61_api=&api;
++static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* data) {
++    if(op==MK61_SERVICE_MICROS) {
++        if(opened && !origin_set) {origin=clock_us-resume_phase*2/7;origin_set=true;}
++        return clock_us++;
++    }
++    if(op==MK61_SERVICE_DISPLAY) {assert(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER);mk61_service_framebuffer* f=data;f->pixels=canvas;f->bytes=sizeof(canvas);return 1;}
++    if(op==MK61_SERVICE_KEYBOARD) {
++        assert(a==MK61_SERVICE_KEY_BITMAP && b==32 && !c);memset(data,0,32);clock_us+=37;
++        if(origin_set && (int32_t)(clock_us-(origin+3*20480+500))>=0)((uint8_t*)data)[27/8]|=1U<<(27&7);
++        return 1;
++    }
++    if(op==MK61_SERVICE_AUDIO_STREAM) {
++        if(a==MK61_AUDIO_SYNTH_OPEN) {mk61_service_audio_synth* r=data;assert(r->rate==25000 && !r->sample(r->context));opened=true;return 1;}
++        assert(a==MK61_AUDIO_CLOSE);opened=false;++closes;return 1;
++    }
++    assert(op==MK61_SERVICE_COLOR_DISPLAY);
++    if(a==MK61_COLOR_END)return 1;
++    if(a==MK61_COLOR_PALETTE64) {
++        prefetching=false;
++        assert(c==128 && data);if(force_busy && video_count==2) {++busy_count;return 2;}
++        memcpy(service_palette,data,128);return 1;
++    }
++    assert(a==MK61_COLOR_PRESENT);const mk61_service_color_frame* f=data;
++    const uint32_t target=origin+(captured_frame-start_frame)*20480+captured_phase*2/7;
++    // Negative control with the old scheduler fails here: it submits before
++    // its pacing deadline. This assertion does not depend on a new hook.
++    assert((int32_t)(clock_us-target)>=0 && clock_us-target<16);
++    assert(digest(canvas,7680)==captured_hash && f->background==captured_border);
++    assert(!memcmp(service_palette,captured_palette,128));
++    assert((uint32_t)state.cpu.cyc-captured_cycles>0 && state.frame_tstates<=14000);
++    // Model the native driver's proven deep copy before asynchronous DMA.
++    memcpy(display_copy,f->pixels,6144);memcpy(display_copy+6144,f->tiles,1536);
++    assert(digest(display_copy,sizeof(display_copy))==captured_hash);++accepted;clock_us+=1500;return 1;
++}
++static const mk61_app_services fake={.magic=MK61_APP_SERVICES_MAGIC,.version=MK61_APP_SERVICES_VERSION,.struct_size=sizeof(mk61_app_services),.call=call};
++static void scenario(uint32_t clock_start,unsigned phase,bool busy) {
++    memset(&state,0,sizeof(state));spectrum_init(&state,ram,rom);active_machine=&state;services=&fake;
++    state.pentagon=true;state.frames=997;state.frame_tstates=phase;state.cpu.cyc=997UL*71680+phase;
++    state.ulaplus_mode=1;resume_phase=phase;start_frame=state.frames;clock_us=clock_start;
++    accepted=busy_count=video_count=prefetch_count=closes=max_prefetch_lead=0;opened=origin_set=prefetching=false;force_busy=busy;started=true;
++    memset(keys,0,32);memset(previous_keys,0,32);emulate();
++    assert(accepted>=2 && prefetch_count>30 && closes==1 && !opened);
++    assert(busy_count==(busy?1U:0U));
++}
++static void forbidden_yield(void* context) {(void)context;assert(!"Prefetch entered a full queue");}
++static void queue_guard(unsigned queued,bool wrapping) {
++    spectrum_init(&state,ram,rom);active_machine=&state;services=&fake;state.pentagon=true;
++    state.frames=100;state.frame_tstates=23;state.cpu.cyc=100UL*71680+23;
++    spectrum_sound_begin(&state,forbidden_yield,NULL);
++    const uint32_t read=wrapping?UINT32_MAX-50:0;
++    atomic_store(&state.sound.read,read);atomic_store(&state.sound.write,read+queued);
++    clock_us=UINT32_MAX-10000;uint32_t deadline=clock_us,kbd=clock_us+100000;
++    uint8_t blocked[32]={0};guard_writes=1;guard_calls=video_count=0;
++    assert(pace_frame(blocked,&kbd,&deadline));guard_writes=0;
++    assert(guard_calls==(queued<=160?1U:0U));
++    assert(atomic_load(&state.sound.write)-atomic_load(&state.sound.read)==queued+94*guard_calls);
++    assert(state.frame_tstates==23+512*guard_calls);
++    state.sound.asynchronous=false;
++}
++int main(void) {
++    scenario(1000000,0,false);scenario(UINT32_MAX-10000,779,false);scenario(1000000,0,true);
++    for(unsigned queued=160;queued<=256;++queued) {queue_guard(queued,false);queue_guard(queued,true);}
++    puts("Frame pipeline HOST: actual emulate/pace, added wall-clock lookahead<=4ms, timed PRESENT, frozen pixels+palette+border, busy skip, resume/wrap/audio close, queue160..256 normal+wrapping/94events/no yield PASS; simulated CPU cost, hardware latency unverified");
++}
+diff --git a/tests/presentation_stats_self_test.c b/tests/presentation_stats_self_test.c
+new file mode 100644
+--- /dev/null
++++ b/tests/presentation_stats_self_test.c
+@@ -0,0 +1,38 @@
++#define SPECTRUM_PACING_TEST_ENTRY old_pacing_tests
++#include "spectrum_pacing_self_test.c"
++static void physical_acceptances(bool one_busy,bool one_early) {
++    paced_trace state;begin(&state,0,0);
++    for(unsigned n=0;n<=3000;++n) {
++        machine.frames=100+n;machine.frame_tstates=23;machine.cpu.cyc=machine.frames*71680UL+23;
++        paced_ready(&machine);machine.cpu.cyc+=13977;machine.frame_tstates=14000;
++        const uint32_t target=n*20480;test_clock=target; 
++        paced_boundary(&machine,target,target,target-1000,false);
++        test_clock=one_early && n==1500?target-1:target+100+(n%7)*17;
++        paced_present(one_busy && n==301?2:1);
++    }
++    assert(state.done && state.records==3001 && state.presents==(one_busy?3000U:3001U));
++    assert(done_records==3001 && done_timestamp==state.last_accepted);
++    assert(state.busy==(one_busy?1U:0U) && state.early==(one_early?1U:0U));
++    assert(!state.skipped && !state.repeated && !state.faults);
++    unsigned accepted=0,busy=0;for(unsigned i=0;i<10;++i) {accepted+=state.accepted[i].accepted;busy+=state.accepted[i].busy;}
++    assert(accepted==state.presents && busy==state.busy && state.max_ahead==13977);
++    assert(steady.cycles==3000U*71680 && state.exec_last-state.exec_first==3000U*71680);
++    if(!one_busy && !one_early)for(unsigned i=0;i<10;++i) {
++        assert(state.accepted[i].min_interval==20378 && state.accepted[i].max_interval==20497);
++        assert(state.accepted[i].max_late==202);
++    }
++    observed_end(&machine);
++    assert(strstr(output,"SPEXEC 3000 215040000 14000/14000 13977"));
++}
++int main(int argc,char** argv) {
++    char* args[]={"pacing",NULL};old_pacing_tests(1,args);
++    physical_acceptances(false,false);
++    if(argc==2) {FILE* f=fopen(argv[1],"wb");assert(f && fwrite(output,1,used,f)==used);assert(!fclose(f));}
++    physical_acceptances(true,false);physical_acceptances(false,true);
++    paced_trace state;begin(&state,0,0);state.started=true;state.present_target=0;
++    state.present_frame=100;test_clock=100;paced_present(1);
++    state.present_frame=102;test_clock=200;paced_present(1);
++    state.present_frame=102;test_clock=300;paced_present(1);
++    assert(state.records==3 && state.presents==3 && state.skipped==1 && state.repeated==1);
++    puts("Presentation metrology: all3001 API endpoints/3000 intervals, separate frozen/computed guest clocks, per-window accepted timestamps/minmax/busy, explicit early/busy failures PASS; physical scanout not measured");
++}
+diff --git a/tests/profile_audio_main.c b/tests/profile_audio_main.c
+new file mode 100644
+--- /dev/null
++++ b/tests/profile_audio_main.c
+@@ -0,0 +1,69 @@
++/* Minimal common A/B observer: exact pacing windows and core-1 audio time. */
++#include "mk61_app.h"
++#include "../examples/portable-apps/SPECTRUM/spectrum.h"
++#include <string.h>
++typedef struct {
++    const mk61_app_services* real;
++    mk61_app_services services;
++    _Atomic bool monitor;
++    struct { uint32_t count,busy,max,starved;int32_t min_lead,max_lead; } audio;
++} audio_profile;
++static audio_profile* profile;
++static const mk61_app_services* profile_services(const mk61_app_api*,uint32_t);
++static uint32_t monitored_run(spectrum*,uint32_t);
++static uint32_t monitored_sample(void*);
++static void profile_report(void);
++#define mk61_app_get_services profile_services
++#define spectrum_sound_render monitored_sample
++#define SPECTRUM_HIL_MEASURE_RUN monitored_run
++#define SPECTRUM_HIL_PROFILE_END profile_report
++#define SPECTRUM_HIL_PACED_SELF_TEST
++#define main profiled_app_main
++#include "spectrum_hil_paced.c"
++#undef main
++#undef mk61_app_get_services
++#undef spectrum_sound_render
++_Static_assert(sizeof(audio_profile)<=128,"Audio observer exceeds its stack budget");
++_Static_assert(sizeof(paced_trace)<=896,"Pacing observer exceeds its stack budget");
++static bool active(void) { return trace->started && !trace->done; }
++static uint32_t profile_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* data) {
++    if(!active())atomic_store_explicit(&profile->monitor,false,memory_order_release);
++    if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_SYNTH_OPEN) {
++        mk61_service_audio_synth request=*(mk61_service_audio_synth*)data;request.sample=monitored_sample;
++        return profile->real->call(op,a,b,c,&request);
++    }
++    if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_CLOSE)atomic_store_explicit(&profile->monitor,false,memory_order_release);
++    return profile->real->call(op,a,b,c,data);
++}
++static const mk61_app_services* profile_services(const mk61_app_api* api,uint32_t required) {
++    profile->real=mk61_app_get_services(api,required);if(!profile->real)return NULL;
++    profile->services=*profile->real;profile->services.call=profile_call;return &profile->services;
++}
++static uint32_t monitored_run(spectrum* s,uint32_t cycles) {
++    atomic_store_explicit(&profile->monitor,active(),memory_order_release);
++    return spectrum_run(s,cycles);
++}
++static uint32_t monitored_sample(void* raw) {
++    spectrum* s=raw;
++    if(!atomic_load_explicit(&profile->monitor,memory_order_acquire))return spectrum_sound_render(raw);
++    const uint32_t before=timer();const int32_t lead=(int32_t)(atomic_load_explicit(&s->sound.produced,memory_order_acquire)-(s->sound.time+140));
++    const uint32_t value=spectrum_sound_render(raw),duration=timer()-before;
++    ++profile->audio.count;profile->audio.busy+=duration;if(duration>profile->audio.max)profile->audio.max=duration;
++    if(lead<0)++profile->audio.starved;
++    if(lead<profile->audio.min_lead)profile->audio.min_lead=lead;
++    if(lead>profile->audio.max_lead)profile->audio.max_lead=lead;
++    return value;
++}
++static void profile_report(void) {
++    char line[160];
++    mk61_app_snprintf(services,line,sizeof(line),"SPAUDIO count=%lu busy=%lu max=%lu starved=%lu minlead=%ld maxlead=%ld\n",
++        (unsigned long)profile->audio.count,(unsigned long)profile->audio.busy,(unsigned long)profile->audio.max,
++        (unsigned long)profile->audio.starved,(long)profile->audio.min_lead,(long)profile->audio.max_lead);report(line);
++}
++#ifndef SPECTRUM_AUDIO_PROFILE_SELF_TEST
++int main(void) {
++    paced_trace t={0};trace=&t;audio_profile q={0};profile=&q;
++    atomic_init(&q.monitor,false);q.audio.min_lead=INT32_MAX;q.audio.max_lead=INT32_MIN;
++    return profiled_app_main();
++}
++#endif
+diff --git a/tests/profile_audio_self_test.c b/tests/profile_audio_self_test.c
+new file mode 100644
+--- /dev/null
++++ b/tests/profile_audio_self_test.c
+@@ -0,0 +1,49 @@
++#include <stdint.h>
++static uint32_t fake_clock;
++static uint32_t next_clock(void){return fake_clock++;}
++#define SPECTRUM_HIL_CLOCK() next_clock()
++#define SPECTRUM_AUDIO_PROFILE_SELF_TEST
++#include "profile_audio_main.c"
++#include <assert.h>
++#include <stdarg.h>
++#include <stdio.h>
++static char output[4096];static unsigned used;static bool memory_busy,allocation_failed;
++static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* data) {
++    (void)b;(void)c;
++    if(op==MK61_SERVICE_CAPABILITIES)return UINT32_MAX;
++    if(op==MK61_SERVICE_MEMORY_DATA)return memory_busy;
++    if(op==MK61_SERVICE_MEMORY_ACQUIRE)return !memory_busy && !allocation_failed;
++    if(op==MK61_SERVICE_AUDIO_STREAM) {
++        assert(a==MK61_AUDIO_SYNTH_OPEN);mk61_service_audio_synth* r=data;
++        assert(r->sample==monitored_sample && !r->sample(r->context));return 1;
++    }
++    assert(op==MK61_SERVICE_DEBUG_WRITE && used+a<sizeof(output));memcpy(output+used,data,a);used+=a;output[used]=0;return a;
++}
++static int format(char* out,uint32_t n,const char* f,va_list args){return vsnprintf(out,n,f,args);}
++static const mk61_app_services common={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(mk61_app_services),NULL,call,NULL,format,NULL};
++static const void* query(uint32_t id,uint32_t version){(void)id;(void)version;return &common;}
++static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_VERSION,.struct_size=sizeof(mk61_app_api),.query_service=query};
++const mk61_app_api* mk61_api=&api;
++int main(int argc,char** argv) {
++    spectrum test_machine;uint8_t ram[49152],rom[16384]={0};audio_profile q={0};paced_trace t={0};
++    profile=&q;trace=&t;active_machine=&test_machine;spectrum_init(&machine,ram,rom);
++    atomic_init(&q.monitor,false);q.audio.min_lead=INT32_MAX;q.audio.max_lead=INT32_MIN;
++    services=profile_services(&api,0);assert(services);
++    mk61_service_lease lease={0};
++    assert(profile_call(MK61_SERVICE_MEMORY_ACQUIRE,0,MK61_SERVICE_OWNER_APP,8192,&lease));
++    memory_busy=true;assert(!profile_call(MK61_SERVICE_MEMORY_ACQUIRE,1,MK61_SERVICE_OWNER_APP,8192,&lease));
++    memory_busy=false;allocation_failed=true;assert(!profile_call(MK61_SERVICE_MEMORY_ACQUIRE,0,MK61_SERVICE_OWNER_APP,8192,&lease));
++    assert(!used);
++    spectrum_sound_begin(&machine,NULL,NULL);spectrum_sound_clock(&machine,false);
++    mk61_service_audio_synth request={spectrum_sound_render,&machine,25000,100};
++    assert(profile_call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_SYNTH_OPEN,0,sizeof(request),&request));assert(!q.audio.count && !machine.sound.time);
++    spectrum_sound_clock(&machine,true);for(unsigned i=0;i<50;++i)(void)monitored_sample(&machine);
++    assert(!q.audio.count && !machine.sound.time);
++    t.started=true;assert(monitored_run(&machine,4)==4 && atomic_load(&q.monitor));
++    (void)monitored_sample(&machine);assert(q.audio.count==1 && q.audio.busy==1 && q.audio.max==1 && q.audio.min_lead==-136);
++    t.done=true;profile_call(MK61_SERVICE_DEBUG_WRITE,0,0,0,output);(void)monitored_sample(&machine);assert(q.audio.count==1 && !atomic_load(&q.monitor));
++    profile_report();assert(strstr(output,"SPAUDIO count=1 busy=1 max=1 starved=1 minlead=-136 maxlead=-136"));
++    if(argc==2){FILE* f=fopen(argv[1],"wb");assert(f && fwrite(output,1,used,f)==used);assert(!fclose(f));}
++    spectrum_sound_end(&machine);
++    puts("Minimal audio observer:128B+896B static stack bounds, actual delegated samples, warmup/done/startup gating, exact timing/lead and report-only-after-window PASS");
++}
+diff --git a/tests/spectrum_app_self_test.c b/tests/spectrum_app_self_test.c
+--- a/tests/spectrum_app_self_test.c
++++ b/tests/spectrum_app_self_test.c
+@@ -5,12 +5,18 @@
+ #include "../examples/portable-apps/SPECTRUM/rom_cache.h"
+ static const uint8_t* app_rom_cache_find(unsigned,uint32_t*);
+ #define spectrum_rom_cache_find app_rom_cache_find
++#include "../examples/portable-apps/SPECTRUM/spectrum.h"
++static unsigned chunk_calls;
++static uint32_t checked_chunk(spectrum*,uint32_t);
++#define spectrum_run checked_chunk
+ #define main spectrum_app_main
+ #ifndef SPECTRUM_APP_MAIN_SOURCE
+ #define SPECTRUM_APP_MAIN_SOURCE "../examples/portable-apps/SPECTRUM/main.c"
+ #endif
+ #include SPECTRUM_APP_MAIN_SOURCE
+ #undef main
++#undef spectrum_run
++static uint32_t checked_chunk(spectrum* s,uint32_t cycles) { assert(cycles==512);++chunk_calls;return spectrum_run(s,cycles); }
+ #undef spectrum_rom_cache_find
+ 
+ /* Execute the actual APP UI and core against a bounded resident ABI fixture.
+@@ -191,7 +197,7 @@
+         assert(fread(cache_image,1,cache_bytes,f)==cache_bytes);fclose(f);
+         assert(spectrum_rom_cache_valid(cache_image,cache_bytes));
+     }
+-    assert(!spectrum_app_main());
++    assert(!spectrum_app_main());assert(chunk_calls>40000);
+     assert(action==sizeof(script)/sizeof(*script) && !psram && !generator.sample);
+     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
+     assert(audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
+diff --git a/tests/spectrum_audio_timeline_self_test.c b/tests/spectrum_audio_timeline_self_test.c
+--- a/tests/spectrum_audio_timeline_self_test.c
++++ b/tests/spectrum_audio_timeline_self_test.c
+@@ -21,6 +21,7 @@
+     }
+     assert(varied && lagging.sound.time==56000 && reference.sound.time==56000);
+     assert(atomic_load(&lagging.sound.starved)==400 && !atomic_load(&reference.sound.starved));
++    assert(atomic_load(&lagging.sound.max_deficit_tstates)==56000 && !atomic_load(&reference.sound.max_deficit_tstates));
+     spectrum_sound_end(&lagging);spectrum_sound_end(&reference);
+ }
+ static void render_late(void* unused) {
+@@ -42,12 +43,15 @@
+     assert(!atomic_load(&lagging.sound.read) && lagging.ay.reg[8]==15);
+     spectrum_sound_publish(&lagging);(void)spectrum_sound_render(&lagging);
+     assert(atomic_load(&lagging.sound.read)==1 && lagging.ay.reg[8]==7 && lagging.sound.time==280);
++    assert(atomic_load(&lagging.sound.late_events)==1 && atomic_load(&lagging.sound.max_late_tstates)==268);
++    assert(atomic_load(&lagging.sound.max_deficit_tstates)==268);
+     spectrum_sound_end(&lagging);
+     lagging.cpu.cyc=UINT32_MAX-80;spectrum_sound_begin(&lagging,NULL,NULL);
+     (void)spectrum_sound_render(&lagging);(void)spectrum_sound_render(&lagging);
+     assert(lagging.sound.time==(uint32_t)(UINT32_MAX-80U+280U));
+     lagging.cpu.cyc+=12;spectrum_sound_write(&lagging,1,8,9);spectrum_sound_publish(&lagging);
+     (void)spectrum_sound_render(&lagging);assert(lagging.ay2.reg[8]==9);
++    assert(atomic_load(&lagging.sound.late_events)==1 && atomic_load(&lagging.sound.max_late_tstates)==408);
+     spectrum_sound_end(&lagging);
+ }
+ static void startup_gate(void) {
+@@ -65,10 +69,26 @@
+     for(unsigned i=0;i<SPECTRUM_SOUND_START_SAMPLES;++i)assert(!spectrum_sound_render(&lagging));
+     assert(!lagging.sound.time && !atomic_load(&lagging.sound.read));
+     for(unsigned i=0;i<100;++i)assert(spectrum_sound_render(&lagging)==spectrum_sound_render(&reference));
+-    assert(lagging.sound.time==14000);spectrum_sound_end(&lagging);spectrum_sound_end(&reference);
++    assert(lagging.sound.time==14000 && !atomic_load(&lagging.sound.late_events) && !atomic_load(&lagging.sound.max_late_tstates));spectrum_sound_end(&lagging);spectrum_sound_end(&reference);
++}
++static uint32_t greatest_publication_gap;
++static uint8_t publication_fetch(void* raw,uint16_t at) {
++    (void)at;spectrum* s=raw;
++    const uint32_t gap=(uint32_t)s->cpu.cyc-atomic_load_explicit(&s->sound.produced,memory_order_acquire);
++    if(gap>greatest_publication_gap)greatest_publication_gap=gap;
++    return 0; // NOP: every callback observes the previous instruction boundary.
++}
++static void bounded_publication(void) {
++    configure(&lagging,ram[0]);lagging.cpu.pc=0x8000;
++    memset(lagging.cpu.read_pages,0,sizeof(lagging.cpu.read_pages));lagging.cpu.read_byte=publication_fetch;
++    spectrum_sound_begin(&lagging,NULL,NULL);greatest_publication_gap=0;
++    for(unsigned chunk=0;chunk<4;++chunk)assert(spectrum_run(&lagging,512)==512);
++    assert(greatest_publication_gap>=500 && greatest_publication_gap<=512);
++    assert(atomic_load(&lagging.sound.produced)==2048 && lagging.cpu.pc==0x8200 && lagging.frame_tstates==2048);
++    spectrum_sound_end(&lagging);
+ }
+ int main(int argc,char** argv) {
+     if(argc==2 && !strcmp(argv[1],"late-full"))late_full_queue_can_drain();
+-    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();}
++    else {bounded_publication();timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();}
+     puts("Audio clock: AY phase continues through underrun, late full queue drains, unpublished events stay queued, timestamps wrap: PASS");
+ }
+diff --git a/tests/spectrum_hil_games.c b/tests/spectrum_hil_games.c
+--- a/tests/spectrum_hil_games.c
++++ b/tests/spectrum_hil_games.c
+@@ -21,6 +21,7 @@
+ static struct {
+     uint32_t first_us,last_us,first_cycles,cycles,first_frames,frames;
+     uint32_t first_phase,phase,seen_frame,first_starved,starved;
++    uint32_t first_late_events,late_events,whole_max_late_tstates,whole_max_deficit_tstates;
+ } steady;
+ #ifndef SPECTRUM_HIL_CLOCK
+ #define SPECTRUM_HIL_CLOCK() (*(volatile uint32_t*)0x40054028)
+@@ -80,6 +81,9 @@
+ #endif
+         ),
+         (unsigned long)steady.first_phase,(unsigned long)steady.phase,(unsigned long)steady.starved);report(line);
++    mk61_app_snprintf(services,line,sizeof(line),"SPSOUND late=%lu wholemaxlate=%lu wholemaxdeficit=%lu\n",
++        (unsigned long)steady.late_events,(unsigned long)steady.whole_max_late_tstates,
++        (unsigned long)steady.whole_max_deficit_tstates);report(line);
+ #ifdef SPECTRUM_HIL_END
+     SPECTRUM_HIL_END();
+ #endif
+diff --git a/tests/spectrum_hil_paced.c b/tests/spectrum_hil_paced.c
+--- a/tests/spectrum_hil_paced.c
++++ b/tests/spectrum_hil_paced.c
+@@ -4,15 +4,29 @@
+ enum { PACED_WARMUP=100, PACED_WINDOW=300, PACED_WINDOWS=10 };
+ typedef struct {
+     uint32_t frames,cycles,wall,first_phase,last_phase,first_late,last_late;
++    uint32_t exec_first_phase,exec_last_phase;
+ } paced_window;
++typedef struct {
++    uint32_t first_us,last_us,min_interval,max_interval,max_late;
++    uint16_t accepted,busy,first_frame,last_frame;
++} accepted_window;
+ typedef struct {
+     paced_window windows[PACED_WINDOWS];
+     uint32_t first_late,window_us,window_cycles,window_frames,window_phase,window_late;
+     uint32_t sum_wait,min_wait,max_late,late_frames,resyncs,count;
++    uint32_t ready_cycles,ready_phase,exec_first,exec_last,exec_window_phase,max_ahead;
++    accepted_window accepted[PACED_WINDOWS];
++    uint32_t presents,busy,present_frame,present_target,last_accepted,last_accepted_frame;
++    uint32_t last_computed,records,repeated,skipped,early,faults;
++    bool have_accepted;
+     bool started,done;
+ } paced_trace;
+ static paced_trace* trace;
+ static void paced_begin(void);
++static void paced_ready(spectrum*);
++static void paced_present(uint32_t);
++#define SPECTRUM_HIL_FRAME_READY paced_ready
++#define SPECTRUM_HIL_PRESENT_RESULT paced_present
+ static void paced_end(void);
+ static void paced_boundary(spectrum*,uint32_t,uint32_t,uint32_t,bool);
+ #define SPECTRUM_HIL_EXTERNAL_PACED
+@@ -32,35 +46,75 @@
+ 
+ static void paced_begin(void) {
+     memset(trace,0,sizeof(*trace));trace->min_wait=UINT32_MAX;
++    for(unsigned i=0;i<PACED_WINDOWS;++i)trace->accepted[i].min_interval=UINT32_MAX;
++}
++static void paced_ready(spectrum* s) {
++    trace->ready_cycles=(uint32_t)s->cpu.cyc;trace->ready_phase=s->frame_tstates;
++}
++static void paced_present(uint32_t result) {
++    const uint32_t frame=trace->present_frame;
++    if(!trace->started || frame<PACED_WARMUP || frame>PACED_WARMUP+PACED_WINDOW*PACED_WINDOWS)return;
++    unsigned index=(frame-PACED_WARMUP)/PACED_WINDOW;if(index==PACED_WINDOWS)--index;
++    accepted_window* w=&trace->accepted[index];const uint32_t now=timer();
++    if(trace->records && frame>trace->last_computed+1)trace->skipped+=frame-trace->last_computed-1;
++    trace->last_computed=frame;++trace->records;
++    if(result==2) {++trace->busy;++w->busy;goto captured;}
++    if(result!=1) {++trace->faults;goto captured;}
++    if(!w->accepted) {w->first_us=now;w->first_frame=(uint16_t)frame;}
++    w->last_us=now;w->last_frame=(uint16_t)frame;++w->accepted;++trace->presents;
++    const int32_t late=(int32_t)(now-trace->present_target);
++    if(late<0)++trace->early;else if((uint32_t)late>w->max_late)w->max_late=(uint32_t)late;
++    if(trace->have_accepted) {
++        const uint32_t interval=now-trace->last_accepted;
++        if(interval<w->min_interval)w->min_interval=interval;
++        if(interval>w->max_interval)w->max_interval=interval;
++        if(frame<=trace->last_accepted_frame)++trace->repeated;
++    }
++    trace->last_accepted=now;trace->last_accepted_frame=frame;trace->have_accepted=true;
++captured:
++    // The final API return time and all of its counters precede reporting.
++    if(frame==PACED_WARMUP+PACED_WINDOW*PACED_WINDOWS)report("SPPACING_DONE\n");
+ }
+ static void paced_boundary(spectrum* s,uint32_t target,uint32_t now,uint32_t ready,bool resynced) {
++    // Display cadence uses the virtual timestamp frozen with its image.
++    // Report actually computed CPU progress separately, including lookahead.
++    const uint32_t cycles=trace->ready_cycles,phase=trace->ready_phase;
++    trace->present_frame=s->frames;trace->present_target=target;
++    const uint32_t ahead=(uint32_t)s->cpu.cyc-cycles;
+     if(trace->done || s->frames<PACED_WARMUP) return;
+     const uint32_t late=now-target;
+     const uint32_t wait=(int32_t)(target-ready)>0?now-ready:0;
+     if(!trace->started) {
+         trace->started=true;
+-        steady.first_us=now;steady.first_cycles=(uint32_t)s->cpu.cyc;steady.first_frames=s->frames;
+-        steady.first_phase=s->frame_tstates;steady.first_starved=(uint32_t)atomic_load(&s->sound.starved);
+-        trace->first_late=late;trace->window_us=now;trace->window_cycles=(uint32_t)s->cpu.cyc;
+-        trace->window_frames=s->frames;trace->window_phase=s->frame_tstates;trace->window_late=late;
+-        steady.last_us=now;steady.phase=s->frame_tstates;
++        trace->exec_first=trace->exec_last=(uint32_t)s->cpu.cyc;trace->exec_window_phase=s->frame_tstates;trace->max_ahead=ahead;
++        steady.first_us=now;steady.first_cycles=cycles;steady.first_frames=s->frames;
++        steady.first_phase=phase;steady.first_starved=(uint32_t)atomic_load(&s->sound.starved);
++        steady.first_late_events=(uint32_t)atomic_load(&s->sound.late_events);
++        trace->first_late=late;trace->window_us=now;trace->window_cycles=cycles;
++        trace->window_frames=s->frames;trace->window_phase=phase;trace->window_late=late;
++        steady.last_us=now;steady.phase=phase;
+         trace->max_late=late;trace->resyncs=resynced?1:0;
+         return;
+     }
+-    steady.last_us=now;steady.cycles=(uint32_t)s->cpu.cyc-steady.first_cycles;
+-    steady.frames=s->frames-steady.first_frames;steady.phase=s->frame_tstates;
++    trace->exec_last=(uint32_t)s->cpu.cyc;if(ahead>trace->max_ahead)trace->max_ahead=ahead;
++    steady.last_us=now;steady.cycles=cycles-steady.first_cycles;
++    steady.frames=s->frames-steady.first_frames;steady.phase=phase;
+     steady.starved=(uint32_t)atomic_load(&s->sound.starved)-steady.first_starved;
++    steady.late_events=(uint32_t)atomic_load(&s->sound.late_events)-steady.first_late_events;
++    steady.whole_max_late_tstates=(uint32_t)atomic_load(&s->sound.max_late_tstates);
++    steady.whole_max_deficit_tstates=(uint32_t)atomic_load(&s->sound.max_deficit_tstates);
+     trace->sum_wait+=wait;if(wait<trace->min_wait)trace->min_wait=wait;
+     if(late>trace->max_late)trace->max_late=late;
+     if((int32_t)(ready-target)>0)++trace->late_frames;
+     if(resynced)++trace->resyncs;
+     if(s->frames-trace->window_frames==PACED_WINDOW) {
+         paced_window* w=&trace->windows[trace->count++];
+-        *w=(paced_window){s->frames-trace->window_frames,(uint32_t)s->cpu.cyc-trace->window_cycles,
+-            now-trace->window_us,trace->window_phase,s->frame_tstates,trace->window_late,late};
+-        trace->window_us=now;trace->window_cycles=(uint32_t)s->cpu.cyc;trace->window_frames=s->frames;
+-        trace->window_phase=s->frame_tstates;trace->window_late=late;
+-        if(trace->count==PACED_WINDOWS) { trace->done=true;report("SPPACING_DONE\n"); }
++        *w=(paced_window){s->frames-trace->window_frames,cycles-trace->window_cycles,
++            now-trace->window_us,trace->window_phase,phase,trace->window_late,late,trace->exec_window_phase,s->frame_tstates};
++        trace->exec_window_phase=s->frame_tstates;
++        trace->window_us=now;trace->window_cycles=cycles;trace->window_frames=s->frames;
++        trace->window_phase=phase;trace->window_late=late;
++        if(trace->count==PACED_WINDOWS)trace->done=true;
+     }
+ }
+ static void paced_end(void) {
+@@ -71,9 +125,25 @@
+             (unsigned long)w->frames,(unsigned long)w->cycles,(unsigned long)w->wall,
+             (unsigned long)w->first_phase,(unsigned long)w->last_phase,
+             (unsigned long)w->first_late,(unsigned long)w->last_late);report(line);
++        mk61_app_snprintf(services,line,sizeof(line),"SPWORK n=%u phase=%lu/%lu\n",i,
++            (unsigned long)w->exec_first_phase,(unsigned long)w->exec_last_phase);report(line);
+     }
+     mk61_app_snprintf(services,line,sizeof(line),"SPPACING count=%lu firstlate=%lu maxlate=%lu wait=%lu minwait=%lu lateframes=%lu resets=%lu done=%u\n",
+         (unsigned long)trace->count,(unsigned long)trace->first_late,(unsigned long)trace->max_late,
+         (unsigned long)trace->sum_wait,(unsigned long)trace->min_wait,
+         (unsigned long)trace->late_frames,(unsigned long)trace->resyncs,trace->done);report(line);
++    const uint32_t first=trace->count?trace->windows[0].exec_first_phase:0;
++    const uint32_t last=trace->count?trace->windows[trace->count-1].exec_last_phase:0;
++    mk61_app_snprintf(services,line,sizeof(line),"SPEXEC %lu %lu %lu/%lu %lu\n",
++        (unsigned long)steady.frames,(unsigned long)(trace->exec_last-trace->exec_first),
++        (unsigned long)first,(unsigned long)last,(unsigned long)trace->max_ahead);report(line);
++    for(unsigned i=0;i<PACED_WINDOWS;++i) {
++        const accepted_window* w=&trace->accepted[i];
++        mk61_app_snprintf(services,line,sizeof(line),"SPPRES %u %u %u %u/%u %lu/%lu %lu/%lu %lu\n",
++            i,w->accepted,w->busy,w->first_frame,w->last_frame,(unsigned long)w->first_us,(unsigned long)w->last_us,
++            (unsigned long)(w->min_interval==UINT32_MAX?0:w->min_interval),(unsigned long)w->max_interval,(unsigned long)w->max_late);report(line);
++    }
++    mk61_app_snprintf(services,line,sizeof(line),"SPDISPLAY %lu %lu %lu %lu %lu %lu %lu\n",
++        (unsigned long)trace->records,(unsigned long)trace->presents,(unsigned long)trace->busy,
++        (unsigned long)trace->repeated,(unsigned long)trace->skipped,(unsigned long)trace->early,(unsigned long)trace->faults);report(line);
+ }
+diff --git a/tests/spectrum_pacing_self_test.c b/tests/spectrum_pacing_self_test.c
+--- a/tests/spectrum_pacing_self_test.c
++++ b/tests/spectrum_pacing_self_test.c
+@@ -3,14 +3,17 @@
+ #define SPECTRUM_HIL_CLOCK() test_clock
+ #define SPECTRUM_HIL_PACED_SELF_TEST
+ #define main probe_app_main
+-#include "spectrum_hil_paced.c"
++#ifndef SPECTRUM_PACING_OBSERVER
++#define SPECTRUM_PACING_OBSERVER "spectrum_hil_paced.c"
++#endif
++#include SPECTRUM_PACING_OBSERVER
+ #undef main
+ #include <assert.h>
+ #include <stdarg.h>
+ #include <stdio.h>
+ 
+ static char output[32768];
+-static unsigned used,escape_key;
++static unsigned used,escape_key,done_records,done_timestamp;
+ static uint8_t ram[49152],rom[16384];
+ static spectrum test_machine;
+ static void service(void) { test_clock+=7; }
+@@ -26,6 +29,7 @@
+         return 1;
+     }
+     assert(op==MK61_SERVICE_DEBUG_WRITE && !b && !c && a<=192 && used+a<sizeof(output));
++    if(a==14 && !memcmp(p,"SPPACING_DONE\n",14)) {done_records=trace->records;done_timestamp=trace->last_accepted;}
+     memcpy(output+used,p,a);used+=a;output[used]=0;return a;
+ }
+ static int format(char* out,uint32_t n,const char* f,va_list args) { return vsnprintf(out,n,f,args); }
+@@ -34,7 +38,7 @@
+ static void begin(paced_trace* state,uint32_t clock_start,unsigned long cycle_start) {
+     active_machine=&test_machine;
+     spectrum_init(&machine,ram,rom);machine.pentagon=true;machine.cpu.cyc=cycle_start;
+-    services=&fake;trace=state;test_clock=clock_start;used=escape_key=0;mapped_roms=true;
++    services=&fake;trace=state;test_clock=clock_start;used=escape_key=done_records=done_timestamp=0;mapped_roms=true;
+     memset(keys,0,32);memset(previous_keys,0,32);observed_begin(&machine,NULL,NULL);
+ }
+ static void scheduled_frames(uint32_t clock_start,uint32_t cycle_start,unsigned resume_phase,bool pentagon) {
+@@ -68,7 +72,7 @@
+     for(unsigned i=0;i<=10;++i) {
+         machine.frames=100+i*300;machine.frame_tstates=0;machine.cpu.cyc=machine.frames*71680UL;
+         const uint32_t now=start+i*300U*20480;
+-        paced_boundary(&machine,now,now,now-100,false);
++        paced_ready(&machine);paced_boundary(&machine,now,now,now-100,false);
+     }
+     assert(state.done && steady.last_us-steady.first_us==61440000U);
+     if(end_zero)assert(steady.last_us==0);else assert(steady.first_us==0);
+@@ -79,7 +83,7 @@
+     for(unsigned i=0;i<=10;++i) {
+         machine.frames=100+i*300;machine.frame_tstates=0;machine.cpu.cyc=machine.frames*71680UL;
+         const uint32_t target=i*300U*20480,now=target+(i==1?100:0);
+-        paced_boundary(&machine,target,now,now-100,false);
++        paced_ready(&machine);paced_boundary(&machine,target,now,now-100,false);
+     }
+     assert(state.count==10 && state.windows[0].wall==6144100 && state.windows[1].wall==6143900);
+     assert(steady.last_us-steady.first_us==61440000 && state.max_late==100);
+@@ -96,7 +100,10 @@
+     deadline=test_clock-20480-100002-machine.frame_tstates*2/7;
+     assert(pace_frame(blocked,&keyboard_deadline,&deadline));assert(state.resyncs==1);
+ }
+-int main(int argc,char** argv) {
++#ifndef SPECTRUM_PACING_TEST_ENTRY
++#define SPECTRUM_PACING_TEST_ENTRY main
++#endif
++int SPECTRUM_PACING_TEST_ENTRY(int argc,char** argv) {
+     scheduled_frames(1000000,0,0,true);
+     if(argc==2) { FILE* f=fopen(argv[1],"wb");assert(f);assert(fwrite(output,1,used,f)==used);assert(!fclose(f)); }
+     scheduled_frames(UINT32_MAX-100000,UINT32_MAX-12345,779,true);
+@@ -104,4 +111,5 @@
+     scheduled_frames(UINT32_MAX-100000,UINT32_MAX-12345,779,false);
+     zero_timestamps(false);zero_timestamps(true);delayed_window_is_not_discarded();escape_and_resync();
+     puts("Actual APP pacing: microsecond boundaries, resumed phase, late reset, Esc/F10, ten adjacent windows, zero/wrapping timestamps and cycle wrap PASS");
++    return 0;
+ }

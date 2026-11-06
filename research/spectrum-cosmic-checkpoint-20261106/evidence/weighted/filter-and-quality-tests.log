@@ -1,0 +1,3 @@
+Exact weighted IIR: 524280 exhaustive masks/ticks1..16/signed starts/max amplitudes agree with sequential tick filter PASS
+Weighted path eligible: 609152 samples
+AY exact quality: 817792 samples, 609152 eligible/208640 fallback; full oscillator/LFSR/envelope/mixer/filter state, six rates, all16 envelopes and signed rounding PASS

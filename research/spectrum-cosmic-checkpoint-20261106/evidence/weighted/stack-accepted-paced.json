@@ -1,0 +1,11 @@
+{
+  "compiled_units": 1,
+  "dynamic_bounded": 0,
+  "limit": 16384,
+  "max_frame": 8384,
+  "max_function": "main.c:567:5:paced_app_main",
+  "records": 28,
+  "schema": 1,
+  "status": "ok",
+  "unbounded": 0
+}

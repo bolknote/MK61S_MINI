@@ -1,0 +1,186 @@
+{
+  "BASE": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-ab/AY-AB-HIL-r4/receipt.json",
+    "sha256": "e1706f698deb3a37baef792c2c8dc467e11c7f3e8c35987368eb401dd461abc1",
+    "receipt_status": "HOLD",
+    "steady": {
+      "frames": 3000,
+      "cycles": 215039723,
+      "wall_us": 61439689,
+      "mhz": 3.50001320807467,
+      "xip": 1,
+      "starved": 335978,
+      "first_phase": 763,
+      "last_phase": 486,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.5000131511080217,
+      "timer_upper_mhz": 3.50001326504132
+    },
+    "pacing": {
+      "max_late_us": 3474,
+      "wait_us": 16005634,
+      "min_wait_us": 0,
+      "late_frames": 1858,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": true,
+    "audio": {
+      "samples": 1535992,
+      "busy_us": 45981849,
+      "max_us": 39,
+      "starved": 336072,
+      "min_lead_tstates": -9907,
+      "max_lead_tstates": 77126
+    },
+    "sound": null
+  },
+  "AY": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-single/AY-SINGLE-HIL-r1/receipt.json",
+    "sha256": "39b25ee27ceb1fab9d095a1e46c8899976530bdbfb63f9c5dd608dfecd923e89",
+    "receipt_status": "PASS",
+    "steady": {
+      "frames": 3000,
+      "cycles": 215039723,
+      "wall_us": 61439537,
+      "mhz": 3.500021867026765,
+      "xip": 1,
+      "starved": 317849,
+      "first_phase": 763,
+      "last_phase": 486,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.5000218100598346,
+      "timer_upper_mhz": 3.500021923993697
+    },
+    "pacing": {
+      "max_late_us": 4020,
+      "wait_us": 16578653,
+      "min_wait_us": 0,
+      "late_frames": 1829,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": true,
+    "audio": {
+      "samples": 1535989,
+      "busy_us": 41153525,
+      "max_us": 45,
+      "starved": 317988,
+      "min_lead_tstates": -9605,
+      "max_lead_tstates": 77151
+    },
+    "sound": null
+  },
+  "CPU": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-cpu-single/CPU-SINGLE-HIL-r1/receipt.json",
+    "sha256": "273c8bd8981706769943380d926c55c064375b9c070a9b3f21889b34eee3f3aa",
+    "receipt_status": "PASS",
+    "steady": {
+      "frames": 3000,
+      "cycles": 215039723,
+      "wall_us": 61439717,
+      "mhz": 3.50001161300922,
+      "xip": 1,
+      "starved": 466053,
+      "first_phase": 763,
+      "last_phase": 486,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.5000115560426237,
+      "timer_upper_mhz": 3.500011669975818
+    },
+    "pacing": {
+      "max_late_us": 9468,
+      "wait_us": 15545792,
+      "min_wait_us": 0,
+      "late_frames": 1915,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": true,
+    "audio": {
+      "samples": 1535993,
+      "busy_us": 41175857,
+      "max_us": 47,
+      "starved": 466098,
+      "min_lead_tstates": -31675,
+      "max_lead_tstates": 77094
+    },
+    "sound": null
+  },
+  "PUB": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-publish/PUB-SINGLE-HIL-r1/receipt.json",
+    "sha256": "30504e5353eefd70b83f090074c7730e0644b056da3b68948892f87a9b43cc78",
+    "receipt_status": "PASS",
+    "steady": {
+      "frames": 3000,
+      "cycles": 215039723,
+      "wall_us": 61439657,
+      "mhz": 3.5000150310083926,
+      "xip": 1,
+      "starved": 543628,
+      "first_phase": 763,
+      "last_phase": 486,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.500014974041685,
+      "timer_upper_mhz": 3.5000150879751017
+    },
+    "pacing": {
+      "max_late_us": 16534,
+      "wait_us": 13949312,
+      "min_wait_us": 0,
+      "late_frames": 1948,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": true,
+    "audio": {
+      "samples": 1535992,
+      "busy_us": 41184634,
+      "max_us": 46,
+      "starved": 543650,
+      "min_lead_tstates": -54311,
+      "max_lead_tstates": 76195
+    },
+    "sound": {
+      "late_events": 3866,
+      "whole_max_late_tstates": 51619,
+      "whole_max_deficit_tstates": 54311
+    }
+  },
+  "CHUNK": {
+    "receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-chunk/CHUNK-HIL-r1/receipt.json",
+    "sha256": "71934ef3bb3d0740ae1242647608fb084299559843200586af9411ed1c7cc474",
+    "receipt_status": "PASS",
+    "steady": {
+      "frames": 3000,
+      "cycles": 215040409,
+      "wall_us": 61439981,
+      "mhz": 3.500007739260206,
+      "xip": 1,
+      "starved": 422876,
+      "first_phase": 23,
+      "last_phase": 432,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.5000076822939175,
+      "timer_upper_mhz": 3.5000077962264964
+    },
+    "pacing": {
+      "max_late_us": 5606,
+      "wait_us": 14935541,
+      "min_wait_us": 0,
+      "late_frames": 1888,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": true,
+    "audio": {
+      "samples": 1536000,
+      "busy_us": 41044964,
+      "max_us": 45,
+      "starved": 423018,
+      "min_lead_tstates": -14478,
+      "max_lead_tstates": 75506
+    },
+    "sound": {
+      "late_events": 2515,
+      "whole_max_late_tstates": 10466,
+      "whole_max_deficit_tstates": 14478
+    }
+  },
+  "scope": "All full100warmup+10adjacent300frame windows; old pacing-ready measurements are not LCD accepted completion. BASE record complete, receipt HOLD refers to subsequent second APP allocation. Observer differences documented separately. No pipeline hardware result yet."
+}

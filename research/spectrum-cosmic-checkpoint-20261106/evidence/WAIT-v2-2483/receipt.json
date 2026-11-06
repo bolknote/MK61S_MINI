@@ -1,0 +1,552 @@
+{
+  "status": "PASS",
+  "action": "timing",
+  "uid": "E6657CD423721C35",
+  "pid": 57741,
+  "phase_sha256": "be6d283e47db13ca14e6b03e9d2132ca586248b148a08ff32ba4c90daf4eb952",
+  "grant_sha256": "73383e04f4db9d1ff12ebd149651dd36b87befc7484c91f3276ccedf9dd45745",
+  "started_utc_epoch": 1793959751.659039,
+  "finished_utc_epoch": 1793959863.507692,
+  "error": null,
+  "events": [
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-001.stdout",
+      "stderr": "os-001.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-002.stdout",
+      "stderr": "os-002.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-003.stdout",
+      "stderr": "os-003.stderr",
+      "child_waited": true
+    }
+  ],
+  "lease": "released",
+  "cdc_sessions": [
+    {
+      "number": 0,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295129768,
+        "location": 18022400,
+        "session": 5588430051491,
+        "cdc_entry": 4295129800,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    }
+  ],
+  "holder_checks": [
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            57741
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    }
+  ],
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295129768,
+    "location": 18022400,
+    "session": 5588430051491,
+    "cdc_entry": 4295129800,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "heap_start": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=4 HEAP_FREE=104368 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=1 HEAP_TOP=104368\r\nmk61> ",
+  "variants": [
+    {
+      "whole": {
+        "frames": 3101,
+        "cycles": 222280090,
+        "wall_us": 63514464,
+        "mhz": 3.49967670356157,
+        "xip": 1,
+        "starved": 574715
+      },
+      "steady": {
+        "frames": 3000,
+        "cycles": 215040407,
+        "wall_us": 61439895,
+        "mhz": 3.500012605815814,
+        "xip": 1,
+        "starved": 557193,
+        "first_phase": 23,
+        "last_phase": 430,
+        "kind": "complete-frame interval inside active execution",
+        "timer_lower_mhz": 3.5000125488493667,
+        "timer_upper_mhz": 3.500012662782263
+      },
+      "windows": [
+        {
+          "index": 0,
+          "frames": 300,
+          "cycles": 21504423,
+          "wall_us": 6144108,
+          "first_phase": 23,
+          "last_phase": 446,
+          "first_late_us": 1294,
+          "last_late_us": 1281,
+          "mhz": 3.500007324090006,
+          "timer_lower_mhz": 3.500006754437462,
+          "timer_upper_mhz": 3.500007893742736
+        },
+        {
+          "index": 1,
+          "frames": 300,
+          "cycles": 21503786,
+          "wall_us": 6143811,
+          "first_phase": 446,
+          "last_phase": 232,
+          "first_late_us": 1281,
+          "last_late_us": 1153,
+          "mhz": 3.5000728375270658,
+          "timer_lower_mhz": 3.5000722678363205,
+          "timer_upper_mhz": 3.5000734072179966
+        },
+        {
+          "index": 2,
+          "frames": 300,
+          "cycles": 21504037,
+          "wall_us": 6143901,
+          "first_phase": 232,
+          "last_phase": 269,
+          "first_late_us": 1153,
+          "last_late_us": 1044,
+          "mhz": 3.5000624196255767,
+          "timer_lower_mhz": 3.5000618499448723,
+          "timer_upper_mhz": 3.5000629893064668
+        },
+        {
+          "index": 3,
+          "frames": 300,
+          "cycles": 21504179,
+          "wall_us": 6144299,
+          "first_phase": 269,
+          "last_phase": 448,
+          "first_late_us": 1044,
+          "last_late_us": 1291,
+          "mhz": 3.499858812209497,
+          "timer_lower_mhz": 3.4998582425988314,
+          "timer_upper_mhz": 3.499859381820348
+        },
+        {
+          "index": 4,
+          "frames": 300,
+          "cycles": 21503828,
+          "wall_us": 6143996,
+          "first_phase": 448,
+          "last_phase": 276,
+          "first_late_us": 1291,
+          "last_late_us": 1337,
+          "mhz": 3.4999742838374246,
+          "timer_lower_mhz": 3.4999737141798732,
+          "timer_upper_mhz": 3.4999748534951607
+        },
+        {
+          "index": 5,
+          "frames": 300,
+          "cycles": 21503875,
+          "wall_us": 6143715,
+          "first_phase": 276,
+          "last_phase": 151,
+          "first_late_us": 1337,
+          "last_late_us": 1087,
+          "mhz": 3.500142015051154,
+          "timer_lower_mhz": 3.5001414453402466,
+          "timer_upper_mhz": 3.5001425847622465
+        },
+        {
+          "index": 6,
+          "frames": 300,
+          "cycles": 21504149,
+          "wall_us": 6143783,
+          "first_phase": 151,
+          "last_phase": 300,
+          "first_late_us": 1087,
+          "last_late_us": 828,
+          "mhz": 3.500147873061272,
+          "timer_lower_mhz": 3.500147303355717,
+          "timer_upper_mhz": 3.500148442767012
+        },
+        {
+          "index": 7,
+          "frames": 300,
+          "cycles": 21504010,
+          "wall_us": 6144575,
+          "first_phase": 300,
+          "last_phase": 310,
+          "first_late_us": 828,
+          "last_late_us": 1400,
+          "mhz": 3.4996741027654474,
+          "timer_lower_mhz": 3.4996735332104283,
+          "timer_upper_mhz": 3.499674672320652
+        },
+        {
+          "index": 8,
+          "frames": 300,
+          "cycles": 21504155,
+          "wall_us": 6143950,
+          "first_phase": 310,
+          "last_phase": 465,
+          "first_late_us": 1400,
+          "last_late_us": 1306,
+          "mhz": 3.5000537113746044,
+          "timer_lower_mhz": 3.5000531416998606,
+          "timer_upper_mhz": 3.5000542810495334
+        },
+        {
+          "index": 9,
+          "frames": 300,
+          "cycles": 21503965,
+          "wall_us": 6143757,
+          "first_phase": 465,
+          "last_phase": 430,
+          "first_late_us": 1306,
+          "last_late_us": 1073,
+          "mhz": 3.500132736369619,
+          "timer_lower_mhz": 3.5001321666641165,
+          "timer_upper_mhz": 3.5001333060753064
+        }
+      ],
+      "pacing": {
+        "max_late_us": 4696,
+        "wait_us": 14774681,
+        "min_wait_us": 0,
+        "late_frames": 1879,
+        "resyncs": 0
+      },
+      "strict_3_5_lower_bound_reached": true,
+      "timer_interval_uncertainty_us": 1,
+      "executed": {
+        "frames": 3000,
+        "cycles": 215040407,
+        "first_phase": 23,
+        "last_phase": 430,
+        "max_ahead_tstates": 0,
+        "windows": [
+          {
+            "index": 0,
+            "first_phase": 23,
+            "last_phase": 446,
+            "cycles": 21504423
+          },
+          {
+            "index": 1,
+            "first_phase": 446,
+            "last_phase": 232,
+            "cycles": 21503786
+          },
+          {
+            "index": 2,
+            "first_phase": 232,
+            "last_phase": 269,
+            "cycles": 21504037
+          },
+          {
+            "index": 3,
+            "first_phase": 269,
+            "last_phase": 448,
+            "cycles": 21504179
+          },
+          {
+            "index": 4,
+            "first_phase": 448,
+            "last_phase": 276,
+            "cycles": 21503828
+          },
+          {
+            "index": 5,
+            "first_phase": 276,
+            "last_phase": 151,
+            "cycles": 21503875
+          },
+          {
+            "index": 6,
+            "first_phase": 151,
+            "last_phase": 300,
+            "cycles": 21504149
+          },
+          {
+            "index": 7,
+            "first_phase": 300,
+            "last_phase": 310,
+            "cycles": 21504010
+          },
+          {
+            "index": 8,
+            "first_phase": 310,
+            "last_phase": 465,
+            "cycles": 21504155
+          },
+          {
+            "index": 9,
+            "first_phase": 465,
+            "last_phase": 430,
+            "cycles": 21503965
+          }
+        ]
+      },
+      "display": {
+        "measurement": "API accepted submissions after native call; physical LCD scanout unmeasured",
+        "records": 3001,
+        "accepted": 2857,
+        "busy": 144,
+        "repeated": 0,
+        "skipped": 0,
+        "early": 0,
+        "faults": 0,
+        "accepted_wall_us": null,
+        "windows": [
+          {
+            "index": 0,
+            "accepted": 193,
+            "busy": 107,
+            "first_frame": 100,
+            "last_frame": 399,
+            "first_us": 2171621793,
+            "last_us": 2177744046,
+            "min_interval_us": 15738,
+            "max_interval_us": 307358,
+            "max_late_us": 6125
+          },
+          {
+            "index": 1,
+            "accepted": 292,
+            "busy": 8,
+            "first_frame": 400,
+            "last_frame": 699,
+            "first_us": 2177765894,
+            "last_us": 2183887980,
+            "min_interval_us": 16280,
+            "max_interval_us": 39646,
+            "max_late_us": 5653
+          },
+          {
+            "index": 2,
+            "accepted": 296,
+            "busy": 4,
+            "first_frame": 700,
+            "last_frame": 999,
+            "first_us": 2183909712,
+            "last_us": 2190032002,
+            "min_interval_us": 16152,
+            "max_interval_us": 39642,
+            "max_late_us": 5631
+          },
+          {
+            "index": 3,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 1000,
+            "last_frame": 1299,
+            "first_us": 2190053612,
+            "last_us": 2196176053,
+            "min_interval_us": 16150,
+            "max_interval_us": 39646,
+            "max_late_us": 5689
+          },
+          {
+            "index": 4,
+            "accepted": 294,
+            "busy": 6,
+            "first_frame": 1300,
+            "last_frame": 1599,
+            "first_us": 2196197899,
+            "last_us": 2202320019,
+            "min_interval_us": 16240,
+            "max_interval_us": 39737,
+            "max_late_us": 5679
+          },
+          {
+            "index": 5,
+            "accepted": 295,
+            "busy": 5,
+            "first_frame": 1600,
+            "last_frame": 1899,
+            "first_us": 2202341901,
+            "last_us": 2208463973,
+            "min_interval_us": 16217,
+            "max_interval_us": 39654,
+            "max_late_us": 5695
+          },
+          {
+            "index": 6,
+            "accepted": 299,
+            "busy": 1,
+            "first_frame": 1900,
+            "last_frame": 2199,
+            "first_us": 2208485622,
+            "last_us": 2214608015,
+            "min_interval_us": 16261,
+            "max_interval_us": 39495,
+            "max_late_us": 5658
+          },
+          {
+            "index": 7,
+            "accepted": 296,
+            "busy": 4,
+            "first_frame": 2200,
+            "last_frame": 2499,
+            "first_us": 2214629393,
+            "last_us": 2220752035,
+            "min_interval_us": 16102,
+            "max_interval_us": 39767,
+            "max_late_us": 5727
+          },
+          {
+            "index": 8,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 2500,
+            "last_frame": 2799,
+            "first_us": 2220773978,
+            "last_us": 2226896077,
+            "min_interval_us": 16246,
+            "max_interval_us": 39553,
+            "max_late_us": 5682
+          },
+          {
+            "index": 9,
+            "accepted": 297,
+            "busy": 4,
+            "first_frame": 2800,
+            "last_frame": 3100,
+            "first_us": 2226917926,
+            "last_us": 2233061681,
+            "min_interval_us": 16215,
+            "max_interval_us": 39618,
+            "max_late_us": 5701
+          }
+        ]
+      },
+      "audio_observer": "No per-sample core1 timing observer; consumer SPSOUND counters retained",
+      "sound": {
+        "late_events": 6512,
+        "whole_max_late_tstates": 13908,
+        "whole_max_deficit_tstates": 16156
+      },
+      "title": "Cosmic Payback",
+      "fixture": "SP2C",
+      "hud_signature": "67D57373",
+      "variant": "WAIT",
+      "app_sha256": "d6dfdebf464e1ea0671bff527bc85070473a93771c04d4f36ce81ca08abe1455",
+      "frame_sha256": "9973565aba0c7135922edba3ac088257aa25a06aadc8541058beb1d22c2ccc11"
+    }
+  ],
+  "profiling_overhead_present": true,
+  "temporary_files_absent": [
+    "SP2C.ULP",
+    "SP2C.Z80",
+    "SPWAIT.APP"
+  ],
+  "heap_end": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=2 HEAP_TOP=4960\r\nmk61> ",
+  "status_after": "RESET_REASON=00010001 BOOTS=1 CRASH=NONE BUILD=2483E8A7\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=209714 MAX_GAP_MS=735 BOOT_WATCHDOG=0 PREVIOUS_VALID=0 PREVIOUS_RELOADS=0 PREVIOUS_GAP_MS=0\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537040 FOOTER=784568 EXPECTED=22F8ED32 ACTUAL=22F8ED32 CHECK_US=862267\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=331\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=32183496 WRITE_BYTES=1991876 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=120562 WRITE_BATCHES=36344 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=60003 SD_MISS=528 REJECTED=0 STORES=528 VM_BYTES=0 SD_BYTES=4194304 EVICTIONS=1\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=4194304 PSRAM_CAPACITY=8388608 LARGEST=4194304 ACTIVE=1 EXTERNAL=1 PINNED=0 RECLAIMS=1 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=189042 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=1038\r\nLCD_DMA=1 LCD_BYTES=204800 LCD_RECTS=1 LCD_US=144214 LCD_FULL_FRAMES=10 LCD_CHAIN=1 LCD_STRIPS=107 LCD_CHAIN_PAUSES=0\r\nSD_DMA=1 READS=540 WRITES=816 TRANSFERS=1358 HW_CRC=1358 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=218800 DMA_WAIT1=53214 DMA_US0=6211316 DMA_US1=1465231 DMA_TIMEOUTS=0 CRC32_HW=61566 CRC_FALLBACK=3 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=816 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=20833333 SD_SAFE_HZ=12500000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=15098 SD_READY_SLEEP_US=749796\r\nIDLE_WAITS=2126854 IDLE_MS=2016345 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=21 UI_SKIPS=46616\r\nIO_CORE=1 I2C_TRANSACTIONS=114374 UART_BYTES=3442 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=228747 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=286339092 I2C_SLEEP_HOLDS=28707\r\nUART_WAIT_US=0 UART_FLUSH_US=321609 UART_FLUSHES=74\r\nUART_DMA=1 IO_IDLE_US=2145840016 UART_EVENT_WAITS=1335 UART_SLEEP_HOLDS=0 UART_BAUD=115207\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[/MK61S-SPECTRUM-HIL-20261105/SPECTRUM/SPWAIT.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=25948 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=653490\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:37:15 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "previous_state_backup": false,
+  "previous_state_restoration": false,
+  "changed_sd_files": {
+    "SPWAIT.APP": "d6dfdebf464e1ea0671bff527bc85070473a93771c04d4f36ce81ca08abe1455",
+    "SP2C.ULP": "1d0fba6bca201bf7b3061d5f2000c31a895e980308f5bbe906c42dac52c2ab16",
+    "SP2C.Z80": "fb548f065667d28ce91eeb66007533a7661a12f8b43e3e6d318f97db369b401c"
+  },
+  "cleanup_native_verified": true,
+  "cdc_descriptor_closed": true,
+  "port_close_errors": []
+}

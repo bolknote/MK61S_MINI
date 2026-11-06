@@ -1,0 +1,4 @@
+Actual APP pacing: microsecond boundaries, resumed phase, late reset, Esc/F10, ten adjacent windows, zero/wrapping timestamps and cycle wrap PASS
+Presentation metrology: all3001 API endpoints/3000 intervals, separate frozen/computed guest clocks, per-window accepted timestamps/minmax/busy, explicit early/busy failures PASS; physical scanout not measured
+Frame pipeline HOST: actual emulate/pace, added wall-clock lookahead<=4ms, timed PRESENT, frozen pixels+palette+border, busy skip, resume/wrap/audio close, queue160..256 normal+wrapping/94events/no yield PASS; simulated CPU cost, hardware latency unverified
+Minimal audio observer:128B+896B static stack bounds, actual delegated samples, warmup/done/startup gating, exact timing/lead and report-only-after-window PASS

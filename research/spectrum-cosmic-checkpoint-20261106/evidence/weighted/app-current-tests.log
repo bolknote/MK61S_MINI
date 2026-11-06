@@ -1,0 +1,3 @@
+Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (SD ROM / small pages): PASS
+Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (Flash ROM / retained RAM pages): PASS
+Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (custom ROM fallback): PASS
