@@ -117,10 +117,11 @@
         "lines": 1490,
         "labels": 127,
         "parts": 3,
-        "stored_bytes": 171941,
+        "stored_bytes": 149348,
         "title": "Джим из Космоса",
         "ifid": "C2AF99B7-84E9-4C89-9CA1-F60FE853A7D7",
-        "text_resources": 0
+        "text_resources": 0,
+        "zx0_parser": "optimal"
       },
       "startup": {
         "status": 1,
