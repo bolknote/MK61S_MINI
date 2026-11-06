@@ -1,0 +1,103 @@
+{
+  "status": "PASS",
+  "source_base": "4110ccfaa0ad91de54d8c136020ad07aacb31440",
+  "vm_commit": "965876680be55f34761d4035a4e553ba3a174f9f",
+  "phase_sha256": "66d17c7469aea367b7591a5e47fbebde46727a4ec12068fb25f8cb5501b4e72b",
+  "report_sha256": "f5e7174e95568ad0ada9c916ec6004c5234844e2bd4d7b01e968f345e21501db",
+  "timing": "MCU KEYWAIT: accepted OK to next blocking APP wait; no profiler in timed interval",
+  "comparisons": [
+    {
+      "scenario": "warm_usb_screen_on",
+      "baseline_before_seconds": 25.186555,
+      "candidate_seconds": 23.1819495,
+      "baseline_after_seconds": 25.184323,
+      "baseline_reference_seconds": 25.185439,
+      "elapsed_reduction_percent": 7.954951668700305,
+      "control_drift_percent": -0.008861870946619277,
+      "samples_seconds": [
+        [
+          25.467502,
+          24.905608
+        ],
+        [
+          23.404895,
+          22.959004
+        ],
+        [
+          25.461154,
+          24.907492
+        ]
+      ]
+    },
+    {
+      "scenario": "warm_usb_screen_off",
+      "baseline_before_seconds": 24.1372325,
+      "candidate_seconds": 22.1454655,
+      "baseline_after_seconds": 24.1375715,
+      "baseline_reference_seconds": 24.137402,
+      "elapsed_reduction_percent": 8.252489228128201,
+      "control_drift_percent": 0.001404469215771087,
+      "samples_seconds": [
+        [
+          23.955869,
+          24.318596
+        ],
+        [
+          21.933384,
+          22.357547
+        ],
+        [
+          23.95605,
+          24.319093
+        ]
+      ]
+    },
+    {
+      "scenario": "first_search_empty_file_cache_usb_screen_on",
+      "baseline_before_seconds": 41.761935,
+      "candidate_seconds": 38.511447,
+      "baseline_after_seconds": 41.963444,
+      "baseline_reference_seconds": 41.8626895,
+      "elapsed_reduction_percent": 8.005320585052244,
+      "control_drift_percent": 0.4825183507421338
+    },
+    {
+      "scenario": "first_search_after_reboot_ready_file_cache_usb_screen_on",
+      "baseline_before_seconds": 25.452015,
+      "candidate_seconds": 23.433507,
+      "baseline_after_seconds": 25.452833,
+      "baseline_reference_seconds": 25.452424,
+      "elapsed_reduction_percent": 7.932120728461866,
+      "control_drift_percent": 0.003213890923770002
+    }
+  ],
+  "searches": 21,
+  "final_ordinary_smoke": {
+    "repeat": 0,
+    "temperature": "cold",
+    "seconds": 38.13729525002418,
+    "nodes": 420,
+    "nodes_per_second": 11.012841819183118,
+    "move": "e2e3",
+    "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+    "complete_eight_rank_board": true,
+    "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "profile": null
+  },
+  "final_build": "6186AE4B",
+  "owned_fixtures_removed": true,
+  "limits_weakened": false,
+  "internal_flash_base": 407100,
+  "internal_flash_next": 407108,
+  "global_ram_delta": 0,
+  "max_app_loaded": 20444,
+  "app_limit": 20480,
+  "lease": "released",
+  "source_raw_report": ".build/vm-execution-20261105-001/HIL-CHESS-current-r4/report.json",
+  "searches_validation": {
+    "nodes": 420,
+    "move": "e2e3",
+    "complete_eight_rank_board": true,
+    "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+  }
+}
