@@ -1,0 +1,3382 @@
+{
+  "status": "PASS",
+  "action": "step",
+  "uid": "E6657CD423721C35",
+  "pid": 85061,
+  "phase_sha256": "996d345feb6f77925a25940011f85573f45a95f8c48878c727ce0dde982b0c00",
+  "grant_sha256": "91adc2d2e5f79e782efca1adfd44a65a2d0461105f015488db6acb49886567c0",
+  "started_utc_epoch": 1793982242.356725,
+  "finished_utc_epoch": 1793982352.74051,
+  "error": null,
+  "events": [
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-001.stdout",
+      "stderr": "os-001.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-002.stdout",
+      "stderr": "os-002.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-003.stdout",
+      "stderr": "os-003.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-004.stdout",
+      "stderr": "os-004.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-005.stdout",
+      "stderr": "os-005.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-006.stdout",
+      "stderr": "os-006.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-007.stdout",
+      "stderr": "os-007.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-008.stdout",
+      "stderr": "os-008.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-009.stdout",
+      "stderr": "os-009.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-010.stdout",
+      "stderr": "os-010.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-011.stdout",
+      "stderr": "os-011.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-012.stdout",
+      "stderr": "os-012.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-013.stdout",
+      "stderr": "os-013.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-014.stdout",
+      "stderr": "os-014.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-015.stdout",
+      "stderr": "os-015.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-016.stdout",
+      "stderr": "os-016.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-017.stdout",
+      "stderr": "os-017.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-018.stdout",
+      "stderr": "os-018.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-019.stdout",
+      "stderr": "os-019.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-020.stdout",
+      "stderr": "os-020.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-021.stdout",
+      "stderr": "os-021.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-022.stdout",
+      "stderr": "os-022.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-023.stdout",
+      "stderr": "os-023.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-024.stdout",
+      "stderr": "os-024.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-025.stdout",
+      "stderr": "os-025.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-026.stdout",
+      "stderr": "os-026.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-027.stdout",
+      "stderr": "os-027.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-028.stdout",
+      "stderr": "os-028.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-029.stdout",
+      "stderr": "os-029.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-030.stdout",
+      "stderr": "os-030.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-031.stdout",
+      "stderr": "os-031.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-032.stdout",
+      "stderr": "os-032.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-033.stdout",
+      "stderr": "os-033.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-034.stdout",
+      "stderr": "os-034.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-035.stdout",
+      "stderr": "os-035.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-036.stdout",
+      "stderr": "os-036.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-037.stdout",
+      "stderr": "os-037.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-038.stdout",
+      "stderr": "os-038.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-039.stdout",
+      "stderr": "os-039.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-040.stdout",
+      "stderr": "os-040.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-041.stdout",
+      "stderr": "os-041.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-042.stdout",
+      "stderr": "os-042.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-043.stdout",
+      "stderr": "os-043.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-044.stdout",
+      "stderr": "os-044.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-045.stdout",
+      "stderr": "os-045.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-046.stdout",
+      "stderr": "os-046.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-047.stdout",
+      "stderr": "os-047.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-048.stdout",
+      "stderr": "os-048.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-049.stdout",
+      "stderr": "os-049.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-050.stdout",
+      "stderr": "os-050.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-051.stdout",
+      "stderr": "os-051.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-052.stdout",
+      "stderr": "os-052.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-053.stdout",
+      "stderr": "os-053.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-054.stdout",
+      "stderr": "os-054.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-055.stdout",
+      "stderr": "os-055.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-056.stdout",
+      "stderr": "os-056.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-057.stdout",
+      "stderr": "os-057.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-058.stdout",
+      "stderr": "os-058.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-059.stdout",
+      "stderr": "os-059.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-060.stdout",
+      "stderr": "os-060.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-061.stdout",
+      "stderr": "os-061.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-062.stdout",
+      "stderr": "os-062.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-063.stdout",
+      "stderr": "os-063.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-064.stdout",
+      "stderr": "os-064.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-065.stdout",
+      "stderr": "os-065.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-066.stdout",
+      "stderr": "os-066.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-067.stdout",
+      "stderr": "os-067.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-068.stdout",
+      "stderr": "os-068.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-069.stdout",
+      "stderr": "os-069.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-070.stdout",
+      "stderr": "os-070.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-071.stdout",
+      "stderr": "os-071.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-072.stdout",
+      "stderr": "os-072.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-073.stdout",
+      "stderr": "os-073.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-074.stdout",
+      "stderr": "os-074.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-075.stdout",
+      "stderr": "os-075.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-076.stdout",
+      "stderr": "os-076.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-077.stdout",
+      "stderr": "os-077.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-078.stdout",
+      "stderr": "os-078.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-079.stdout",
+      "stderr": "os-079.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-080.stdout",
+      "stderr": "os-080.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-081.stdout",
+      "stderr": "os-081.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-082.stdout",
+      "stderr": "os-082.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-083.stdout",
+      "stderr": "os-083.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-084.stdout",
+      "stderr": "os-084.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-085.stdout",
+      "stderr": "os-085.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-086.stdout",
+      "stderr": "os-086.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-087.stdout",
+      "stderr": "os-087.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-088.stdout",
+      "stderr": "os-088.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-089.stdout",
+      "stderr": "os-089.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-090.stdout",
+      "stderr": "os-090.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-091.stdout",
+      "stderr": "os-091.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-092.stdout",
+      "stderr": "os-092.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-093.stdout",
+      "stderr": "os-093.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-094.stdout",
+      "stderr": "os-094.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-095.stdout",
+      "stderr": "os-095.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-096.stdout",
+      "stderr": "os-096.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-097.stdout",
+      "stderr": "os-097.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-098.stdout",
+      "stderr": "os-098.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-099.stdout",
+      "stderr": "os-099.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-100.stdout",
+      "stderr": "os-100.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-101.stdout",
+      "stderr": "os-101.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-102.stdout",
+      "stderr": "os-102.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-103.stdout",
+      "stderr": "os-103.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-104.stdout",
+      "stderr": "os-104.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-105.stdout",
+      "stderr": "os-105.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-106.stdout",
+      "stderr": "os-106.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-107.stdout",
+      "stderr": "os-107.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-108.stdout",
+      "stderr": "os-108.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-109.stdout",
+      "stderr": "os-109.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-110.stdout",
+      "stderr": "os-110.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-111.stdout",
+      "stderr": "os-111.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-112.stdout",
+      "stderr": "os-112.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-113.stdout",
+      "stderr": "os-113.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-114.stdout",
+      "stderr": "os-114.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-115.stdout",
+      "stderr": "os-115.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-116.stdout",
+      "stderr": "os-116.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-117.stdout",
+      "stderr": "os-117.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-118.stdout",
+      "stderr": "os-118.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-119.stdout",
+      "stderr": "os-119.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-120.stdout",
+      "stderr": "os-120.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-121.stdout",
+      "stderr": "os-121.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-122.stdout",
+      "stderr": "os-122.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-123.stdout",
+      "stderr": "os-123.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-124.stdout",
+      "stderr": "os-124.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-125.stdout",
+      "stderr": "os-125.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-126.stdout",
+      "stderr": "os-126.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-127.stdout",
+      "stderr": "os-127.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-128.stdout",
+      "stderr": "os-128.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-129.stdout",
+      "stderr": "os-129.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-130.stdout",
+      "stderr": "os-130.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-131.stdout",
+      "stderr": "os-131.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-132.stdout",
+      "stderr": "os-132.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-133.stdout",
+      "stderr": "os-133.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-134.stdout",
+      "stderr": "os-134.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-135.stdout",
+      "stderr": "os-135.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-136.stdout",
+      "stderr": "os-136.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-137.stdout",
+      "stderr": "os-137.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-138.stdout",
+      "stderr": "os-138.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-139.stdout",
+      "stderr": "os-139.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-140.stdout",
+      "stderr": "os-140.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-141.stdout",
+      "stderr": "os-141.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-142.stdout",
+      "stderr": "os-142.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-143.stdout",
+      "stderr": "os-143.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-144.stdout",
+      "stderr": "os-144.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-145.stdout",
+      "stderr": "os-145.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-146.stdout",
+      "stderr": "os-146.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-147.stdout",
+      "stderr": "os-147.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-148.stdout",
+      "stderr": "os-148.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-149.stdout",
+      "stderr": "os-149.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-150.stdout",
+      "stderr": "os-150.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-151.stdout",
+      "stderr": "os-151.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-152.stdout",
+      "stderr": "os-152.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-153.stdout",
+      "stderr": "os-153.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-154.stdout",
+      "stderr": "os-154.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-155.stdout",
+      "stderr": "os-155.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-156.stdout",
+      "stderr": "os-156.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-157.stdout",
+      "stderr": "os-157.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-158.stdout",
+      "stderr": "os-158.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-159.stdout",
+      "stderr": "os-159.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-160.stdout",
+      "stderr": "os-160.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-161.stdout",
+      "stderr": "os-161.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-162.stdout",
+      "stderr": "os-162.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-163.stdout",
+      "stderr": "os-163.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-164.stdout",
+      "stderr": "os-164.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-165.stdout",
+      "stderr": "os-165.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-166.stdout",
+      "stderr": "os-166.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-167.stdout",
+      "stderr": "os-167.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-168.stdout",
+      "stderr": "os-168.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-169.stdout",
+      "stderr": "os-169.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-170.stdout",
+      "stderr": "os-170.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-171.stdout",
+      "stderr": "os-171.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-172.stdout",
+      "stderr": "os-172.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-173.stdout",
+      "stderr": "os-173.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-174.stdout",
+      "stderr": "os-174.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-175.stdout",
+      "stderr": "os-175.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-176.stdout",
+      "stderr": "os-176.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-177.stdout",
+      "stderr": "os-177.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-178.stdout",
+      "stderr": "os-178.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-179.stdout",
+      "stderr": "os-179.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-180.stdout",
+      "stderr": "os-180.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-181.stdout",
+      "stderr": "os-181.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-182.stdout",
+      "stderr": "os-182.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-183.stdout",
+      "stderr": "os-183.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-184.stdout",
+      "stderr": "os-184.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-185.stdout",
+      "stderr": "os-185.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-186.stdout",
+      "stderr": "os-186.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-187.stdout",
+      "stderr": "os-187.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-188.stdout",
+      "stderr": "os-188.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-189.stdout",
+      "stderr": "os-189.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-190.stdout",
+      "stderr": "os-190.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-191.stdout",
+      "stderr": "os-191.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-192.stdout",
+      "stderr": "os-192.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-193.stdout",
+      "stderr": "os-193.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-194.stdout",
+      "stderr": "os-194.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-195.stdout",
+      "stderr": "os-195.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-196.stdout",
+      "stderr": "os-196.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-197.stdout",
+      "stderr": "os-197.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-198.stdout",
+      "stderr": "os-198.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-199.stdout",
+      "stderr": "os-199.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-200.stdout",
+      "stderr": "os-200.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-201.stdout",
+      "stderr": "os-201.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-202.stdout",
+      "stderr": "os-202.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-203.stdout",
+      "stderr": "os-203.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-204.stdout",
+      "stderr": "os-204.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-205.stdout",
+      "stderr": "os-205.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-206.stdout",
+      "stderr": "os-206.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-207.stdout",
+      "stderr": "os-207.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-208.stdout",
+      "stderr": "os-208.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-209.stdout",
+      "stderr": "os-209.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-210.stdout",
+      "stderr": "os-210.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-211.stdout",
+      "stderr": "os-211.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-212.stdout",
+      "stderr": "os-212.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-213.stdout",
+      "stderr": "os-213.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-214.stdout",
+      "stderr": "os-214.stderr",
+      "child_waited": true
+    }
+  ],
+  "authorization_authority": "direct human user",
+  "root_review_claimed": false,
+  "lease": "reserved_ports_closed",
+  "classic_io": false,
+  "previous_flash_backup": false,
+  "settings_writes_requested": false,
+  "rtc_writes_requested": false,
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "cdc_sessions": [
+    {
+      "number": 0,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138390,
+        "location": 18022400,
+        "session": 6169487164195,
+        "cdc_entry": 4295138422,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 1,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138497,
+        "location": 18022400,
+        "session": 6179177631771,
+        "cdc_entry": 4295138529,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 2,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138554,
+        "location": 18022400,
+        "session": 6181719831109,
+        "cdc_entry": 4295138586,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    }
+  ],
+  "holder_checks": [
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            85061
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            85061
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            85061
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    }
+  ],
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295138554,
+    "location": 18022400,
+    "session": 6181719831109,
+    "cdc_entry": 4295138586,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "lease_armed_monotonic": 257465.153350875,
+  "owned_dfu_delivery_wait": {
+    "cap_seconds": 1,
+    "disconnected": true
+  },
+  "planned_detaches": [
+    {
+      "command": "prof cosmic switch",
+      "old_binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138390,
+        "location": 18022400,
+        "session": 6169487164195,
+        "cdc_entry": 4295138422,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "delivery_wait_seconds": 0.07153524999739602
+    }
+  ],
+  "cdc_descriptor_closed": true,
+  "port_close_errors": [],
+  "usb_probes": [
+    {
+      "sequence": 2500,
+      "challenge": "9835c31a657060180bef24dc74768daf617226534913ef910c08adf7e996b761",
+      "result": {
+        "seq": 2500,
+        "rx": 392687533,
+        "tx": 2744277368,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138497,
+        "location": 18022400,
+        "session": 6179177631771,
+        "cdc_entry": 4295138529,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 2501,
+      "challenge": "66b7834078c77867fb619b70c642cc798a8df6e08754e6f16ab7b71d9256098a",
+      "result": {
+        "seq": 2501,
+        "rx": 1341469984,
+        "tx": 1421791143,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138497,
+        "location": 18022400,
+        "session": 6179177631771,
+        "cdc_entry": 4295138529,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 2502,
+      "challenge": "501343f87099c8a6682c8fdfc8257f65e09fe0262375ec3dc9a8c981aa2860a0",
+      "result": {
+        "seq": 2502,
+        "rx": 4069708738,
+        "tx": 1397555651,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295138497,
+        "location": 18022400,
+        "session": 6179177631771,
+        "cdc_entry": 4295138529,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    }
+  ],
+  "status_at_target": "RESET_REASON=00010002 BOOTS=22 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=38583 MAX_GAP_MS=745 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=13582 PREVIOUS_GAP_MS=744\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992919\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=0 KEY_CLICKS_COMPLETED=0\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=212968 WRITE_BYTES=60620 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=861 WRITE_BATCHES=8153 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=395 SD_MISS=52 REJECTED=0 STORES=52 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 250 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=614 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=2\r\nLCD_DMA=1 LCD_BYTES=768 LCD_RECTS=1 LCD_US=2059 LCD_FULL_FRAMES=1 LCD_CHAIN=1 LCD_STRIPS=6 LCD_CHAIN_PAUSES=2\r\nSD_DMA=1 READS=54 WRITES=54 TRANSFERS=110 HW_CRC=110 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=9579 DMA_WAIT1=1 DMA_US0=119020 DMA_US1=105 DMA_TIMEOUTS=0 CRC32_HW=448 CRC_FALLBACK=1 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=54 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=978 SD_READY_SLEEP_US=49288\r\nIDLE_WAITS=379941 IDLE_MS=344118 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=4 UI_SKIPS=19746\r\nIO_CORE=1 I2C_TRANSACTIONS=35901 UART_BYTES=3493 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=71801 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=89647874 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=322534 UART_FLUSHES=47\r\nUART_DMA=1 IO_IDLE_US=389285318 UART_EVENT_WAITS=1271 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=6396 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657100\r\nPOWER_MODE=RUN SYS_HZ=250000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:06:46 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "result": {
+    "mhz": 250,
+    "clock": {
+      "mhz": 250,
+      "measured_khz": 250000,
+      "usb_hz": 48000000,
+      "usb_khz": 48000,
+      "peri_hz": 48000000,
+      "sys_div256": 256,
+      "pio_div256": 640,
+      "pwm_div16": 40,
+      "psram_hz": 16666666,
+      "xip_hz": 62500000,
+      "active": 1,
+      "lease_ms": 105000,
+      "changes": 1,
+      "i2c_clear": 1
+    },
+    "math_test": "OK",
+    "errors": {
+      "ERRORS": 0,
+      "QPI_FALLBACKS": 0,
+      "TAIL_TIMEOUTS": 0,
+      "CRC_ERRORS": 0,
+      "DMA_TIMEOUTS": 0,
+      "LCD_ERRORS": 0,
+      "SD_SPEED_FALLBACKS": 0,
+      "SD_PROBE_FAILURES": 0,
+      "I2C_TIMEOUTS": 0,
+      "I2C_ABORTS": 0,
+      "SCREEN_ERRORS": 0
+    },
+    "kind": "short USB/clock/native-M0-math check; full Cosmic latency unmeasured"
+  },
+  "temporary_files_absent": [],
+  "status_after": "RESET_REASON=00010002 BOOTS=23 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=155 MAX_GAP_MS=745 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=48392 PREVIOUS_GAP_MS=745\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992919\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=0 KEY_CLICKS_COMPLETED=0\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=156256 WRITE_BYTES=50684 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=633 WRITE_BATCHES=8027 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=290 SD_MISS=34 REJECTED=0 STORES=34 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=75 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=2\r\nLCD_DMA=1 LCD_BYTES=768 LCD_RECTS=1 LCD_US=1985 LCD_FULL_FRAMES=1 LCD_CHAIN=1 LCD_STRIPS=6 LCD_CHAIN_PAUSES=3\r\nSD_DMA=1 READS=36 WRITES=0 TRANSFERS=38 HW_CRC=38 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=9030 DMA_WAIT1=1 DMA_US0=72211 DMA_US1=100 DMA_TIMEOUTS=0 CRC32_HW=325 CRC_FALLBACK=1 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=0 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=0 SD_READY_SLEEP_US=0\r\nIDLE_WAITS=283 IDLE_MS=43 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=2 UI_SKIPS=0\r\nIO_CORE=1 I2C_TRANSACTIONS=19 UART_BYTES=3493 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=37 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=49242 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=322505 UART_FLUSHES=46\r\nUART_DMA=1 IO_IDLE_US=1987924 UART_EVENT_WAITS=1266 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=6396 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657019\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:00:04 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "automatic_125_fallback_verified": true,
+  "cleanup_native_verified": true,
+  "fallback_observed_seconds": 106.6940863749769
+}

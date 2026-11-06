@@ -1,0 +1,3 @@
+# Keep checksum-protected evidence byte-exact on every checkout.
+* -text
+*.txt binary

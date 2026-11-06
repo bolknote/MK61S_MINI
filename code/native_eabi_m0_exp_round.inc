@@ -15,7 +15,13 @@ static unsigned exp_round_decide(unsigned index,uint32_t n,U magnitude,unsigned 
   // Only the carries and bit31 are needed. SBC starts the adjustment
   // at carry-1; the other carries accumulate modulo2^32, yielding -1..2.
   // This avoids constructing three uint64_t terms or subtracting1 later.
-  __asm__(".syntax unified\n\t"
+  // Keep the old184-byte cold slot so measured shared code/tables keep
+  // their XIP indices. Subsection1 appends sixteen unused bytes after
+  // the function and its literal pool; no branch or padding is executed.
+  __asm__(".subsection 1\n\t"
+          ".fill 8,2,0xbf00\n\t"
+          ".subsection 0\n\t"
+          ".syntax unified\n\t"
           "adds %[low],%[middle]\n\t"
           "sbcs %[high],%[high]\n\t"
           "adds %[low],%[bottom]\n\t"
@@ -28,30 +34,30 @@ static unsigned exp_round_decide(unsigned index,uint32_t n,U magnitude,unsigned 
           : "cc");
   int adjustment=int(high);
   if(cell&2048U) adjustment=-adjustment;
-  unsigned guard=3; // Uniform absolute error is strictly below4 Q62.
-  if(cell&1024U) {adjustment*=2;guard=7;}
-  const int distance=int(cell&1023U)+adjustment-512;
-  // The uniform enclosure already decides these cells. Consult the
-  // Q94 table fraction only for the remaining one-unit boundary band.
-  if(distance>int(guard)) return 2;
-  if(distance<-int(guard)) return 1;
+  int distance=int(cell&1023U)+adjustment-512;
+  unsigned radius=distance<0?unsigned(-distance):unsigned(distance);
+  if(cell&1024U) {
+    distance+=adjustment;
+    radius=(distance<0?unsigned(-distance):unsigned(distance))>>1;
+  }
+  // For normalized cells floor(abs(distance)/2)>3 and>2 are exactly
+  // abs(distance)>7 and>5. Thus both forms share the same two radii.
+  // Only radius3 can benefit from the tighter enclosure; smaller cells
+  // need refinement and larger cells already have a uniform decision.
+  if(radius!=3) return radius>3?2-(unsigned(distance)>>31):0;
+  if(!n) return 0;
   // n!=0 implies e>=-11 and exact x*2^64. Existing Q94 table bits
   // and the exact split-reduction fraction can then certify error<3.
-  if(n) {
-    const uint32_t reduction=n*exp_step_low;
-    // |x|<1024 implies n<=2^20. The table fraction distance is<=2^31;
-    // this sufficient bound therefore decides without loading that row.
-    // exp_step_low is even, so reduction has no discarded half bit.
-    bool tight=reduction<0xAFF7FFFCU;
-    if(!tight) {
-      const uint32_t fraction=refine_exp_table[index][0];
-      const uint32_t distance=fraction&0x80000000U?0U-fraction:fraction;
-      const uint32_t uncertainty=(reduction>>1)+((n+3U)>>2)+2;
-      tight=uncertainty<(27U<<27)-distance;
-    }
-    if(tight) guard=cell&1024U?5:2;
+  const uint32_t reduction=n*exp_step_low;
+  // |x|<1024 implies n<=2^20. The table fraction distance is<=2^31;
+  // this sufficient bound therefore decides without loading that row.
+  // exp_step_low is even, so reduction has no discarded half bit.
+  bool tight=reduction<0xAFF7FFFCU;
+  if(!tight) {
+    const uint32_t fraction=refine_exp_table[index][0];
+    const uint32_t distance=fraction&0x80000000U?0U-fraction:fraction;
+    const uint32_t uncertainty=(reduction>>1)+((n+3U)>>2)+2;
+    tight=uncertainty<(27U<<27)-distance;
   }
-  if(distance>int(guard)) return 2;
-  if(distance<-int(guard)) return 1;
-  return 0;
+  return tight?2-(unsigned(distance)>>31):0;
 }

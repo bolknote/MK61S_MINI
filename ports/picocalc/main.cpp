@@ -12,6 +12,7 @@
 #include "input.hpp"
 #include "clock.hpp"
 #include "power.hpp"
+#include "cosmic_clock.hpp"
 #include "buffers.hpp"
 #include "usb_screen.hpp"
 #include "terminal.hpp"
@@ -337,6 +338,8 @@ bool service_pump(void*, u8& key) {
 } // namespace
 
 int main() {
+    picocalc::cosmic_clock::bootstrap();
+    picocalc::cosmic_clock::idle_check([] { return !services.active() && calculator.idle() && !core_61::is_RUN() && !picocalc::files::usb_active(); });
     picocalc::initialize_heap();
     picocalc::firmware::enforce();
     picocalc::diagnostics::initialize();

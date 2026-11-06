@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "uid": "E6657CD423721C35",
+  "lease": "released",
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295138554,
+    "location": 18022400,
+    "session": 6181719831109,
+    "cdc_entry": 4295138586,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "source_receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/TIMEOUT-PROBE-001.result/receipt.json",
+  "source_receipt_sha256": "aac9972b42e30778f1daa80643f5f5aadea9ce7cbefae274086bdd8b323f1e50",
+  "supervisor": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/TIMEOUT-PROBE-001.supervisor.json",
+  "supervisor_sha256": "ed114e3c19c24f5fd7724cf749bdc0902e152f09f6f18313fd01326702617053",
+  "results": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/RESULTS.json",
+  "results_sha256": "b9f2dfc777d3cacf6259866078623c6ca94af7c030f3f72bbb7d3410fe83d39b",
+  "bin_sha256": "241b691a90491dc52f56357009f24c6f8f36e27d5ca5145ce254bb693a92bc28",
+  "current_mode": "Native closed,125MHz; USB/peripheral48MHz; PSRAM16.667MHz; diagnostic build",
+  "all_ports_closed": true,
+  "holder_checks": {
+    "method": "macOS libproc proc_listpidspath",
+    "allow_self": false,
+    "paths": [
+      {
+        "path": "/dev/cu.usbmodem11301",
+        "pids": [],
+        "rdev": 150994949
+      },
+      {
+        "path": "/dev/tty.usbmodem11301",
+        "pids": [],
+        "rdev": 150994948
+      }
+    ]
+  },
+  "temporary_files_absent": [
+    "SPCF.ULP",
+    "SPCF.Z80",
+    "SPCLK.APP"
+  ],
+  "firmware": "Experimental d54a2a34b+Mathoverlay+clock diagnostic; no STM32 firmware change",
+  "historical_ladder_observer_hold": "Original record preserved; game interval and125MHz cleanup complete. Corrected USB-device observer separately PASS.",
+  "primary_workspace_or_index_changed": false,
+  "previous_flash_backup": false,
+  "rtc_setters": 0,
+  "clock_source_pins_verified": 196
+}

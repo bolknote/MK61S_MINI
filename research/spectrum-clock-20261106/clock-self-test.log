@@ -1,0 +1,1 @@
+Clock policy PASS: 196 integer-PLL transitions, bounded peripheral clocks, USB reset ordering, five faults, independent lease, open-drain I2C clear and nonreturning drained reset

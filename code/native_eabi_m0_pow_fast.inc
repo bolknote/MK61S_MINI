@@ -71,13 +71,20 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static int
   return 0;
 }
 #include "native_eabi_m0_rsqrt_table.inc"
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+MK61_SOFT_PCS U mk61_m0_pow_rsqrt_approx(U m,unsigned parity,const uint32_t* table);
+#endif
 // One integer Newton step encloses 1/sqrt(M) in q+-24 Q63 units.
 // Only an ambiguous binary64 rounding cell needs an exact midpoint test.
 __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) double pow_rsqrt(double x) {
   const U b=bits(x);U m=b&D::Fraction;int e=int(b>>52)-1023;
   if(b>>52) m|=D::Hidden;
   else {const unsigned shift=clz64(m)-11;m<<=shift;e=-1022-int(shift);}
-  const unsigned parity=unsigned(e)&1U,index=unsigned((m&D::Fraction)>>44);
+  const unsigned parity=unsigned(e)&1U;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  const U q=mk61_m0_pow_rsqrt_approx(m,parity,pow_rsqrt_seeds);
+#else
+  const unsigned index=unsigned((m&D::Fraction)>>44);
   const uint32_t center=513+2*index;
   const U c=U(center)<<43;const bool negative=m<c;
   const U distance=negative?c-m:m-c;
@@ -95,16 +102,35 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) d
   const uint32_t correction=uint32_t((wide32(base,magnitude)+(U(1)<<32))>>33);
   uint32_t seed=delta<0?base-correction:base+correction;
   if(delta>=0 && seed<base) seed=0xFFFFFFFFU;
-  const U argument=m<<(10+parity),square=wide32(seed,seed);
+  const U argument=m<<(10+parity);
+  const U square=wide32(seed,seed);
   const U product=exp_high_product(argument,square);
   const U factor=(U(3)<<62)-product;
   const U p0=wide32(uint32_t(factor),seed);
   const U p1=wide32(uint32_t(factor>>32),seed)+(p0>>32);
   const U q=p1;
+#endif
   const unsigned tail=unsigned(q)&1023U;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // GCC's arithmetic right shift is floor(e/2), including negative e.
+  const int scale=-(e>>1);
+#else
   const int scale=-(e-int(parity))/2;
-  if(uint32_t(tail-(512U-24U))>48U) {
+#endif
+  if(uint32_t(tail-(512U-24U))>48U
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+     // A small seed residual proves the narrower enclosure. The tag is
+     // already part of the bounded q; no midpoint decision is guessed.
+     || (!(q&1U) && uint32_t(tail-(512U-6U))>12U)
+#endif
+  ) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    // The unchanged guard excludes the midpoint: no tie-even adjustment
+    // is needed on this path. The exact midpoint still uses the comparator.
+    const U rounded=(q+512)>>10;
+#else
     const U rounded=(q+511+((q>>10)&1))>>10;
+#endif
     return real((U(1021+scale)<<52)+rounded);
   }
   U lower=(U(1021)<<52)+(q>>10);

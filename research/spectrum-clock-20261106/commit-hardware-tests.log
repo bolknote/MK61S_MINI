@@ -1,0 +1,37 @@
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.119s
+
+OK
+PicoCalc actual SleepClocks: USB retains125MHz without SDK source transients; battery stop-before12MHz, both VBUS transitions, RTC/masks/UART/drain restoration PASS
+Panel actual flush/transfer: top=40 height=240 first_failure_recovery=1 scrolls=12 both_wraps configured_region_failure_retry fixed_pixels PASS
+Panel actual flush/transfer: top=42 height=238 first_failure_recovery=1 scrolls=12 both_wraps configured_region_failure_retry fixed_pixels PASS
+Panel actual flush/transfer: top=0 height=320 first_failure_recovery=0 scrolls=12 both_wraps configured_region_failure_retry fixed_pixels PASS
+Panel changed-view retry: initial=42/238 failed=40/240 target=42/238 actual_definition origin fixed_pixels PASS
+Panel changed-view retry: initial=0/320 failed=40/240 target=0/320 actual_definition origin fixed_pixels PASS
+Panel changed-view retry: initial=40/240 failed=42/238 target=40/240 actual_definition origin fixed_pixels PASS
+Panel changed-view retry: initial=0/320 failed=42/238 target=0/320 actual_definition origin fixed_pixels PASS
+Panel color session: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+Clock policy PASS: 196 integer-PLL transitions, bounded peripheral clocks, USB reset ordering, five faults, independent lease, open-drain I2C clear and nonreturning drained reset
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at125MHz: PASS
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at200MHz: PASS
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at250MHz: PASS
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.004s
+
+OK
+Shared buffers: direct SRAM, indirect PSRAM, bounds, fragmentation, eviction, pins, transactional windows, context guards and no-device fallback PASS
+APP buffers: 6 MiB, bounds, slots, stale handles, transactional windows, pinning, return cleanup and SRAM fallback PASS
+PicoCalc PSRAM: boundaries, page crossings, partitions, collisions, CRC rejection, invalidation, warm reset and missing-chip fallback PASS
+CMD25, UART events/clocks, RGB565 bounded streaming DMA/null-stop/resume and QPI tests PASS
+IRQ I2C FIFO/STOP/NACK/timeout/recovery and read-only SD speed/CRC fallback/bounded waits PASS

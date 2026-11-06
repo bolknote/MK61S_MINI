@@ -1,0 +1,62 @@
+{
+  "ladder-001": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/run_ladder.py": {
+      "sha256": "014bbe3073d1b76f595614ddb3d4e0af5819ff3ef365f749fb43628b1b8ba17f",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/run_ladder.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_tests.py": {
+      "sha256": "a1e28e7ea381e3574e3dd0526412363c764342652adc8349f061cc7c123a63b6",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/clock_tests.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/make_step_phase.py": {
+      "sha256": "8a27fdd9405389d56ba41537ff97128172576960551b18c6ab77347fedaca28b",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/make_step_phase.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_protocol.py": {
+      "sha256": "6cbfb3a7e83c07f25a4e7338f15a4cde68169fcbbaae8f3aada45f750c37ee94",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/clock_protocol.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_hil.py": {
+      "sha256": "bbf1b04df1d1c022aa8309deb11ab1abecc465beee78e5cdf8ca999547c8c39b",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/clock_hil.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/make_clock_phase.py": {
+      "sha256": "98e3bb42f949f677667452332b30d9e8d3ed9108c10dc78f83e5c91f34439602",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/make_clock_phase.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/supervise.py": {
+      "sha256": "d854b147253599a538d4ef9d6d88c7b0250fba5a30acc215ea7e2f458d8d6775",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/ladder-001/supervise.py"
+    }
+  },
+  "timeout-001": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/run_ladder.py": {
+      "sha256": "014bbe3073d1b76f595614ddb3d4e0af5819ff3ef365f749fb43628b1b8ba17f",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/run_ladder.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_tests.py": {
+      "sha256": "a1e28e7ea381e3574e3dd0526412363c764342652adc8349f061cc7c123a63b6",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/clock_tests.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/make_step_phase.py": {
+      "sha256": "8a27fdd9405389d56ba41537ff97128172576960551b18c6ab77347fedaca28b",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/make_step_phase.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_protocol.py": {
+      "sha256": "6cbfb3a7e83c07f25a4e7338f15a4cde68169fcbbaae8f3aada45f750c37ee94",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/clock_protocol.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/clock_hil.py": {
+      "sha256": "3ee5adfa4e3734948af7bf55b63be21c8be8f3c2980cd7ac6d0e8251da50919b",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/clock_hil.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/make_clock_phase.py": {
+      "sha256": "98e3bb42f949f677667452332b30d9e8d3ed9108c10dc78f83e5c91f34439602",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/make_clock_phase.py"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/supervise.py": {
+      "sha256": "d854b147253599a538d4ef9d6d88c7b0250fba5a30acc215ea7e2f458d8d6775",
+      "archive": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/timeout-001/supervise.py"
+    }
+  }
+}

@@ -617,7 +617,15 @@ __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
 #endif
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
-MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
+// For RP2040, explicit scalar temporaries and source block order avoid
+// additional stack traffic and branch/move overhead with GCC14.2.
+MK61_M0_EXP_CORE
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+__attribute__((optimize("Os","no-tree-ter","no-reorder-blocks","no-if-conversion")))
+#else
+__attribute__((optimize("Os")))
+#endif
+MK61_SOFT_PCS double mk61_m0_exp(double x) {
   const U a=bits(x),m=a&D::Magnitude;
   if(m>=UINT64_C(0x4090000000000000)) {
     if(m>D::Infinity) return real(a|D::Quiet);
@@ -718,7 +726,9 @@ MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_ex
     const uint32_t tail=uint32_t(q)&1023U;
     if(uint32_t(tail-(512U-error))<=2*error) {
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error==9?1024U:0U)|(below?2048U:0U));
+      // Only bit10 of error<<10 is consumed: error is4 or9. The other
+      // high bits are outside the cell's tail/sign/normalization fields.
+      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error<<10)|(below?2048U:0U));
       if(!decision) return exp_refine(x,n);
       const U rounded=(q>>10)+(decision-1U);
       return real((U(k+1022)<<52)+rounded);

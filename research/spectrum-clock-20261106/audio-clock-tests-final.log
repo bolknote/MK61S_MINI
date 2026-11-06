@@ -1,0 +1,6 @@
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at125MHz: PASS
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at200MHz: PASS
+Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS
+PCM25kHz, PWM100MHz and core-1 ownership at250MHz: PASS

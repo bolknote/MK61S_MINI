@@ -542,7 +542,10 @@ done:
   return count;
 }
 #if MK61_PICO_SPECIALIZED_SPAN
-#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE && \
+    !(defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG)
+// The temporary Cosmic probe needs49KiB for its code and complete counters.
+// In that diagnostic image only, keep this VM kernel in XIP to recover6KiB.
 __attribute__((section(".time_critical.mk61_integer_span")))
 #endif
 __attribute__((noinline)) uint8_t integer_span_raw(const View& v, Continuation& s,

@@ -1,0 +1,1150 @@
+{
+  "status": "PASS",
+  "action": "clock",
+  "uid": "E6657CD423721C35",
+  "pid": 82614,
+  "phase_sha256": "025b7d88005b285aa9bbbc6b00cd78610554bfb177e22036133598e778b6b841",
+  "grant_sha256": "4a9eddadfdcacac82dafd0ec59d8883d4e4ee5359a34800f443eee67ce8e061b",
+  "started_utc_epoch": 1793981514.3615758,
+  "finished_utc_epoch": 1793981648.911926,
+  "error": null,
+  "events": [
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-001.stdout",
+      "stderr": "os-001.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-002.stdout",
+      "stderr": "os-002.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-003.stdout",
+      "stderr": "os-003.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-004.stdout",
+      "stderr": "os-004.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-005.stdout",
+      "stderr": "os-005.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-006.stdout",
+      "stderr": "os-006.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-007.stdout",
+      "stderr": "os-007.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-008.stdout",
+      "stderr": "os-008.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-009.stdout",
+      "stderr": "os-009.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-010.stdout",
+      "stderr": "os-010.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-011.stdout",
+      "stderr": "os-011.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-012.stdout",
+      "stderr": "os-012.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-013.stdout",
+      "stderr": "os-013.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-014.stdout",
+      "stderr": "os-014.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-015.stdout",
+      "stderr": "os-015.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-016.stdout",
+      "stderr": "os-016.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-017.stdout",
+      "stderr": "os-017.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-018.stdout",
+      "stderr": "os-018.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-019.stdout",
+      "stderr": "os-019.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-020.stdout",
+      "stderr": "os-020.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-021.stdout",
+      "stderr": "os-021.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-022.stdout",
+      "stderr": "os-022.stderr",
+      "child_waited": true
+    }
+  ],
+  "authorization_authority": "direct human user",
+  "root_review_claimed": false,
+  "lease": "reserved_ports_closed",
+  "classic_io": false,
+  "previous_flash_backup": false,
+  "settings_writes_requested": false,
+  "rtc_writes_requested": false,
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "cdc_sessions": [
+    {
+      "number": 0,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137897,
+        "location": 18022400,
+        "session": 6161604447275,
+        "cdc_entry": 4295137923,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 1,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 2,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137998,
+        "location": 18022400,
+        "session": 6164817739970,
+        "cdc_entry": 4295138030,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    }
+  ],
+  "holder_checks": [
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82614
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82614
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82614
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    }
+  ],
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295137998,
+    "location": 18022400,
+    "session": 6164817739970,
+    "cdc_entry": 4295138030,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "status_before": "RESET_REASON=00010001 BOOTS=16 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=237 MAX_GAP_MS=744 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=424 PREVIOUS_GAP_MS=744\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992919\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=0 KEY_CLICKS_COMPLETED=0\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=4696 WRITE_BYTES=41504 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=52 WRITE_BATCHES=7949 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=8 SD_MISS=17 REJECTED=0 STORES=17 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=31 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=2\r\nLCD_DMA=1 LCD_BYTES=768 LCD_RECTS=1 LCD_US=1579 LCD_FULL_FRAMES=1 LCD_CHAIN=1 LCD_STRIPS=6 LCD_CHAIN_PAUSES=4\r\nSD_DMA=1 READS=19 WRITES=0 TRANSFERS=21 HW_CRC=21 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=8055 DMA_WAIT1=2 DMA_US0=25171 DMA_US1=217 DMA_TIMEOUTS=0 CRC32_HW=27 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=0 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=0 SD_READY_SLEEP_US=0\r\nIDLE_WAITS=1309 IDLE_MS=901 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=2 UI_SKIPS=49\r\nIO_CORE=1 I2C_TRANSACTIONS=109 UART_BYTES=3491 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=217 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=274530 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=321819 UART_FLUSHES=46\r\nUART_DMA=1 IO_IDLE_US=2850095 UART_EVENT_WAITS=1269 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=6396 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657130\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:00:04 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "errors_before": {
+    "ERRORS": 0,
+    "QPI_FALLBACKS": 0,
+    "TAIL_TIMEOUTS": 0,
+    "CRC_ERRORS": 0,
+    "DMA_TIMEOUTS": 0,
+    "LCD_ERRORS": 0,
+    "SD_SPEED_FALLBACKS": 0,
+    "SD_PROBE_FAILURES": 0,
+    "I2C_TIMEOUTS": 0,
+    "I2C_ABORTS": 0,
+    "SCREEN_ERRORS": 0
+  },
+  "heap_start": "prof heap\r\nHEAP_BYTES=104048 HEAP_USED=0 HEAP_FREE=104048 HEAP_ARENA=104048 HEAP_FREE_BLOCKS=1 HEAP_TOP=104048\r\nmk61> ",
+  "lease_armed_monotonic": 256790.72571675,
+  "owned_dfu_delivery_wait": {
+    "cap_seconds": 1,
+    "disconnected": true
+  },
+  "planned_detaches": [
+    {
+      "command": "prof cosmic switch",
+      "old_binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137897,
+        "location": 18022400,
+        "session": 6161604447275,
+        "cdc_entry": 4295137923,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "delivery_wait_seconds": 0.1892327500099782
+    },
+    {
+      "command": "prof cosmic end",
+      "old_binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "delivery_wait_seconds": 0.11735116699128412
+    }
+  ],
+  "cdc_descriptor_closed": true,
+  "port_close_errors": [],
+  "clock_before": {
+    "mhz": 200,
+    "measured_khz": 200000,
+    "usb_hz": 48000000,
+    "usb_khz": 48000,
+    "peri_hz": 48000000,
+    "sys_div256": 256,
+    "pio_div256": 512,
+    "pwm_div16": 32,
+    "psram_hz": 16666666,
+    "xip_hz": 50000000,
+    "active": 1,
+    "lease_ms": 105000,
+    "changes": 1,
+    "i2c_clear": 1
+  },
+  "usb_probes": [
+    {
+      "sequence": 2000,
+      "challenge": "b49e60a90b8edabb17cac1ff7daabdd306fd82cf8d8b4b9d8cbf45ccea674841",
+      "result": {
+        "seq": 2000,
+        "rx": 405377294,
+        "tx": 1610682800,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 2001,
+      "challenge": "9eb95dd9648a4a1e7a5d6e1e477de9fef97b99a9fb8373d3e18bd27a999bb156",
+      "result": {
+        "seq": 2001,
+        "rx": 3764494335,
+        "tx": 3549539377,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 2002,
+      "challenge": "ca24696dd9d8dd7f668c3a7c59233bc64d35d4900b5c039099eb153bbfeb5fea",
+      "result": {
+        "seq": 2002,
+        "rx": 3133113720,
+        "tx": 3807822165,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 2003,
+      "challenge": "c2b84c4c04d82eb759ae66402a7765b24e38cd5d51ca50513df48052bc04c5b5",
+      "result": {
+        "seq": 2003,
+        "rx": 1487378792,
+        "tx": 1058749557,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137942,
+        "location": 18022400,
+        "session": 6162993233241,
+        "cdc_entry": 4295137974,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    }
+  ],
+  "load_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295137942,
+    "location": 18022400,
+    "session": 6162993233241,
+    "cdc_entry": 4295137974,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "result": {
+    "whole": {
+      "frames": 3101,
+      "cycles": 222290332,
+      "wall_us": 63510094,
+      "mhz": 3.50007877487947,
+      "xip": 1,
+      "starved": 0
+    },
+    "steady": {
+      "frames": 3000,
+      "cycles": 215040408,
+      "wall_us": 61440117,
+      "mhz": 3.499999975585984,
+      "xip": 1,
+      "starved": 0,
+      "first_phase": 23,
+      "last_phase": 431,
+      "kind": "complete-frame interval inside active execution",
+      "timer_lower_mhz": 3.499999918619948,
+      "timer_upper_mhz": 3.500000032552022
+    },
+    "windows": [
+      {
+        "index": 0,
+        "frames": 300,
+        "cycles": 21504424,
+        "wall_us": 6144121,
+        "first_phase": 23,
+        "last_phase": 447,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.5000000813786056,
+        "timer_lower_mhz": 3.4999995117284457,
+        "timer_upper_mhz": 3.500000651028951
+      },
+      {
+        "index": 1,
+        "frames": 300,
+        "cycles": 21503782,
+        "wall_us": 6143938,
+        "first_phase": 447,
+        "last_phase": 229,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.499999837237941,
+        "timer_lower_mhz": 3.4999992675708533,
+        "timer_upper_mhz": 3.500000406905214
+      },
+      {
+        "index": 2,
+        "frames": 300,
+        "cycles": 21504041,
+        "wall_us": 6144012,
+        "first_phase": 229,
+        "last_phase": 270,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.4999998372399013,
+        "timer_lower_mhz": 3.4999992675796747,
+        "timer_upper_mhz": 3.500000406900313
+      },
+      {
+        "index": 3,
+        "frames": 300,
+        "cycles": 21504175,
+        "wall_us": 6144050,
+        "first_phase": 270,
+        "last_phase": 445,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.5,
+        "timer_lower_mhz": 3.49999943034327,
+        "timer_upper_mhz": 3.500000569656915
+      },
+      {
+        "index": 4,
+        "frames": 300,
+        "cycles": 21503832,
+        "wall_us": 6143952,
+        "first_phase": 445,
+        "last_phase": 277,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.5,
+        "timer_lower_mhz": 3.4999994303341837,
+        "timer_upper_mhz": 3.5000005696660015
+      },
+      {
+        "index": 5,
+        "frames": 300,
+        "cycles": 21504155,
+        "wall_us": 6144044,
+        "first_phase": 277,
+        "last_phase": 432,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.500000162759251,
+        "timer_lower_mhz": 3.4999995931019385,
+        "timer_upper_mhz": 3.500000732416749
+      },
+      {
+        "index": 6,
+        "frames": 300,
+        "cycles": 21503865,
+        "wall_us": 6143962,
+        "first_phase": 432,
+        "last_phase": 297,
+        "first_late_us": 0,
+        "last_late_us": 1,
+        "mhz": 3.4999996744771535,
+        "timer_lower_mhz": 3.4999991048123174,
+        "timer_upper_mhz": 3.500000244142175
+      },
+      {
+        "index": 7,
+        "frames": 300,
+        "cycles": 21504014,
+        "wall_us": 6144004,
+        "first_phase": 297,
+        "last_phase": 311,
+        "first_late_us": 1,
+        "last_late_us": 1,
+        "mhz": 3.5,
+        "timer_lower_mhz": 3.499999430339005,
+        "timer_upper_mhz": 3.50000056966118
+      },
+      {
+        "index": 8,
+        "frames": 300,
+        "cycles": 21504135,
+        "wall_us": 6144038,
+        "first_phase": 311,
+        "last_phase": 446,
+        "first_late_us": 1,
+        "last_late_us": 0,
+        "mhz": 3.50000032551882,
+        "timer_lower_mhz": 3.499999755860925,
+        "timer_upper_mhz": 3.5000008951769006
+      },
+      {
+        "index": 9,
+        "frames": 300,
+        "cycles": 21503985,
+        "wall_us": 6143996,
+        "first_phase": 446,
+        "last_phase": 431,
+        "first_late_us": 0,
+        "last_late_us": 0,
+        "mhz": 3.499999837239477,
+        "timer_lower_mhz": 3.4999992675777674,
+        "timer_upper_mhz": 3.5000004069013726
+      }
+    ],
+    "pacing": {
+      "max_late_us": 30,
+      "wait_us": 36533475,
+      "min_wait_us": 6642,
+      "late_frames": 0,
+      "resyncs": 0
+    },
+    "strict_3_5_lower_bound_reached": false,
+    "timer_interval_uncertainty_us": 1,
+    "executed": {
+      "frames": 3000,
+      "cycles": 215040408,
+      "first_phase": 9812,
+      "last_phase": 10220,
+      "max_ahead_tstates": 10373,
+      "windows": [
+        {
+          "index": 0,
+          "first_phase": 9812,
+          "last_phase": 10269,
+          "cycles": 21504457
+        },
+        {
+          "index": 1,
+          "first_phase": 10269,
+          "last_phase": 10540,
+          "cycles": 21504271
+        },
+        {
+          "index": 2,
+          "first_phase": 10540,
+          "last_phase": 10584,
+          "cycles": 21504044
+        },
+        {
+          "index": 3,
+          "first_phase": 10584,
+          "last_phase": 10276,
+          "cycles": 21503692
+        },
+        {
+          "index": 4,
+          "first_phase": 10276,
+          "last_phase": 10097,
+          "cycles": 21503821
+        },
+        {
+          "index": 5,
+          "first_phase": 10097,
+          "last_phase": 10733,
+          "cycles": 21504636
+        },
+        {
+          "index": 6,
+          "first_phase": 10733,
+          "last_phase": 10109,
+          "cycles": 21503376
+        },
+        {
+          "index": 7,
+          "first_phase": 10109,
+          "last_phase": 10103,
+          "cycles": 21503994
+        },
+        {
+          "index": 8,
+          "first_phase": 10103,
+          "last_phase": 10277,
+          "cycles": 21504174
+        },
+        {
+          "index": 9,
+          "first_phase": 10277,
+          "last_phase": 10220,
+          "cycles": 21503943
+        }
+      ]
+    },
+    "display": {
+      "measurement": "API accepted submissions after native call; physical LCD scanout unmeasured",
+      "records": 3001,
+      "accepted": 2948,
+      "busy": 53,
+      "repeated": 0,
+      "skipped": 0,
+      "early": 0,
+      "faults": 0,
+      "accepted_wall_us": null,
+      "windows": [
+        {
+          "index": 0,
+          "accepted": 247,
+          "busy": 53,
+          "first_frame": 100,
+          "last_frame": 399,
+          "first_us": 70639804,
+          "last_us": 76763347,
+          "min_interval_us": 20339,
+          "max_interval_us": 82162,
+          "max_late_us": 981
+        },
+        {
+          "index": 1,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 400,
+          "last_frame": 699,
+          "first_us": 76783924,
+          "last_us": 82907280,
+          "min_interval_us": 20317,
+          "max_interval_us": 20606,
+          "max_late_us": 962
+        },
+        {
+          "index": 2,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 700,
+          "last_frame": 999,
+          "first_us": 82927850,
+          "last_us": 89051308,
+          "min_interval_us": 20321,
+          "max_interval_us": 20599,
+          "max_late_us": 963
+        },
+        {
+          "index": 3,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 1000,
+          "last_frame": 1299,
+          "first_us": 89071877,
+          "last_us": 95195354,
+          "min_interval_us": 20310,
+          "max_interval_us": 20596,
+          "max_late_us": 959
+        },
+        {
+          "index": 4,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 1300,
+          "last_frame": 1599,
+          "first_us": 95215923,
+          "last_us": 101339316,
+          "min_interval_us": 20318,
+          "max_interval_us": 20588,
+          "max_late_us": 957
+        },
+        {
+          "index": 5,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 1600,
+          "last_frame": 1899,
+          "first_us": 101359873,
+          "last_us": 107483366,
+          "min_interval_us": 20308,
+          "max_interval_us": 20594,
+          "max_late_us": 961
+        },
+        {
+          "index": 6,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 1900,
+          "last_frame": 2199,
+          "first_us": 107503911,
+          "last_us": 113627328,
+          "min_interval_us": 20308,
+          "max_interval_us": 20590,
+          "max_late_us": 962
+        },
+        {
+          "index": 7,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 2200,
+          "last_frame": 2499,
+          "first_us": 113647881,
+          "last_us": 119771332,
+          "min_interval_us": 20314,
+          "max_interval_us": 20585,
+          "max_late_us": 957
+        },
+        {
+          "index": 8,
+          "accepted": 300,
+          "busy": 0,
+          "first_frame": 2500,
+          "last_frame": 2799,
+          "first_us": 119791880,
+          "last_us": 125915382,
+          "min_interval_us": 20316,
+          "max_interval_us": 20593,
+          "max_late_us": 955
+        },
+        {
+          "index": 9,
+          "accepted": 301,
+          "busy": 0,
+          "first_frame": 2800,
+          "last_frame": 3100,
+          "first_us": 125935917,
+          "last_us": 132079913,
+          "min_interval_us": 20311,
+          "max_interval_us": 20600,
+          "max_late_us": 957
+        }
+      ]
+    },
+    "audio_observer": "No per-sample core1 timing observer; consumer SPSOUND counters retained",
+    "sound": {
+      "late_events": 0,
+      "whole_max_late_tstates": 0,
+      "whole_max_deficit_tstates": 0
+    },
+    "mhz": 200,
+    "hud_signature": "67D57373",
+    "app_sha256": "3b5d9f5acff6af235eeb55aea67b34e0cd302b7ffbe038d284f4992fb4146c84",
+    "frame_sha256": "9973565aba0c7135922edba3ac088257aa25a06aadc8541058beb1d22c2ccc11",
+    "bus_clocks_fixed": true,
+    "xip_hz": 50000000,
+    "comparison": "same image and payload; CPU plus XIP clock change; PIO/peripheral/PCM clocks fixed"
+  },
+  "clock_after": {
+    "mhz": 200,
+    "measured_khz": 200000,
+    "usb_hz": 48000000,
+    "usb_khz": 48000,
+    "peri_hz": 48000000,
+    "sys_div256": 256,
+    "pio_div256": 512,
+    "pwm_div16": 32,
+    "psram_hz": 16666666,
+    "xip_hz": 50000000,
+    "active": 1,
+    "lease_ms": 105000,
+    "changes": 1,
+    "i2c_clear": 1
+  },
+  "errors_after": {
+    "ERRORS": 0,
+    "QPI_FALLBACKS": 0,
+    "TAIL_TIMEOUTS": 0,
+    "CRC_ERRORS": 0,
+    "DMA_TIMEOUTS": 0,
+    "LCD_ERRORS": 0,
+    "SD_SPEED_FALLBACKS": 0,
+    "SD_PROBE_FAILURES": 0,
+    "I2C_TIMEOUTS": 0,
+    "I2C_ABORTS": 0,
+    "SCREEN_ERRORS": 0
+  },
+  "status_at_target": "RESET_REASON=00010001 BOOTS=16 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=9633 MAX_GAP_MS=744 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=424 PREVIOUS_GAP_MS=744\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992919\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=4 KEY_CLICKS_COMPLETED=4\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=30750040 WRITE_BYTES=1987340 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=115206 WRITE_BATCHES=36260 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=57329 SD_MISS=520 REJECTED=0 STORES=520 VM_BYTES=0 SD_BYTES=4194304 EVICTIONS=1\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=4194304 PSRAM_CAPACITY=8388608 LARGEST=4194304 ACTIVE=1 EXTERNAL=1 PINNED=0 RECLAIMS=1 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 200 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=189478 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=1047\r\nLCD_DMA=1 LCD_BYTES=133376 LCD_RECTS=32 LCD_US=103914 LCD_FULL_FRAMES=3 LCD_CHAIN=1 LCD_STRIPS=355 LCD_CHAIN_PAUSES=14\r\nSD_DMA=1 READS=522 WRITES=762 TRANSFERS=1286 HW_CRC=1286 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=210606 DMA_WAIT1=54335 DMA_US0=8418800 DMA_US1=3184872 DMA_TIMEOUTS=0 CRC32_HW=58893 CRC_FALLBACK=3 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=762 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=13622 SD_READY_SLEEP_US=684331\r\nIDLE_WAITS=36622 IDLE_MS=18505 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=15 UI_SKIPS=4691\r\nIO_CORE=1 I2C_TRANSACTIONS=8197 UART_BYTES=3491 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=16393 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=14888388 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=322003 UART_FLUSHES=62\r\nUART_DMA=1 IO_IDLE_US=102292235 UART_EVENT_WAITS=1269 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[File or directory not found (4)]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[/MK61S-SPECTRUM-HIL-20261105/SPECTRUM/SPCLK.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=25908 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657130\r\nPOWER_MODE=RUN SYS_HZ=200000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:02:13 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "temporary_files_absent": [
+    "SPCF.ULP",
+    "SPCF.Z80",
+    "SPCLK.APP"
+  ],
+  "status_after": "RESET_REASON=00010001 BOOTS=17 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=193 MAX_GAP_MS=744 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=9648 PREVIOUS_GAP_MS=744\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992798\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=0 KEY_CLICKS_COMPLETED=0\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=212968 WRITE_BYTES=60620 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=861 WRITE_BATCHES=8153 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=395 SD_MISS=52 REJECTED=0 STORES=52 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=231 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=2\r\nLCD_DMA=1 LCD_BYTES=768 LCD_RECTS=1 LCD_US=1992 LCD_FULL_FRAMES=1 LCD_CHAIN=1 LCD_STRIPS=6 LCD_CHAIN_PAUSES=2\r\nSD_DMA=1 READS=54 WRITES=54 TRANSFERS=110 HW_CRC=110 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=9579 DMA_WAIT1=2 DMA_US0=118713 DMA_US1=221 DMA_TIMEOUTS=0 CRC32_HW=449 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=54 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=981 SD_READY_SLEEP_US=49476\r\nIDLE_WAITS=1218 IDLE_MS=110 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=4 UI_SKIPS=2\r\nIO_CORE=1 I2C_TRANSACTIONS=19 UART_BYTES=3492 LCD_PENDING=0 LCD_FRAME_CRC=E2C8F6E0\r\nI2C_IRQ=1 I2C_IRQS=37 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=49216 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=322513 UART_FLUSHES=46\r\nUART_DMA=1 IO_IDLE_US=2353684 UART_EVENT_WAITS=1272 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=6396 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657099\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:00:04 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "heap_end": "prof heap\r\nHEAP_BYTES=104048 HEAP_USED=0 HEAP_FREE=104048 HEAP_ARENA=104048 HEAP_FREE_BLOCKS=1 HEAP_TOP=104048\r\nmk61> ",
+  "cleanup_native_verified": true
+}

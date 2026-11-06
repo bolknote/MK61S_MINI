@@ -5,6 +5,12 @@
 #include <mutex>
 #include <thread>
 #include "audio.hpp"
+#if defined(TEST_CLOCK_MHZ)
+#include "cosmic_clock_plan.hpp"
+namespace picocalc::cosmic_clock {
+uint32_t pwm_divider16() { return find(TEST_CLOCK_MHZ)->pwm_div16; }
+}
+#endif
 #define MK61_PICOCALC_SCRIPT_HPP
 namespace picocalc::script { void tone(unsigned,unsigned,unsigned=100);audio::Plan tone_status(); }
 #include "../ports/picocalc/audio_stream.cpp"
@@ -29,7 +35,15 @@ void gpio_set_function(unsigned,unsigned) { assert(core1); }
 unsigned pwm_gpio_to_slice_num(unsigned pin) { assert(pin==26);return 5; }
 void pwm_set_both_levels(unsigned slice,uint16_t left,uint16_t right) { assert(core1 && slice==5);left_level=left;right_level=right; }
 void pwm_set_enabled(unsigned,bool value) { assert(core1);enabled=value; }
-void pwm_set_clkdiv_int_frac4(unsigned,unsigned,unsigned) { assert(core1); }
+void pwm_set_clkdiv_int_frac4(unsigned slice,unsigned whole,unsigned fraction) {
+    assert(core1 && slice==5);
+#if defined(TEST_CLOCK_MHZ)
+    const auto* plan=picocalc::cosmic_clock::find(TEST_CLOCK_MHZ);
+    assert(whole==plan->pwm_div16/16 && fraction==plan->pwm_div16%16);
+#else
+    assert(whole==1 && fraction==0);
+#endif
+}
 void pwm_set_wrap(unsigned,unsigned n) { assert(core1 && n==255); }
 static picocalc::audio::Plan existing_tone;
 namespace picocalc::script {

@@ -87,6 +87,7 @@ def main():
                         help="Control build using GCC arithmetic instead of the owned M0 runtime")
     parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
     parser.add_argument("--psram-spi", action="store_true", help="Control build without four-bit PSRAM")
+    parser.add_argument("--cosmic-clock-diagnostic", action="store_true", help="Prepare temporary125/200/250MHz diagnostic image")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
@@ -114,6 +115,7 @@ def main():
             source_hash.update(b'picocalc-compiler-runtime=1\0')
         if args.psram_spi:
             source_hash.update(b'picocalc-psram-qpi=0\0')
+        if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
         source_digest = source_hash.hexdigest()
         build_digest = hashlib.sha256((source_digest + '\0' + (
             'gcc' if args.compiler_runtime else 'owned-m0')).encode()).hexdigest()
@@ -125,6 +127,7 @@ def main():
              f"-DMK61_PICOCALC_M0_EABI={'OFF' if args.compiler_runtime else 'ON'}",
              f"-DMK61_PICOCALC_PSRAM_QPI={'OFF' if args.psram_spi else 'ON'}",
              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
+             f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""

@@ -1,0 +1,705 @@
+{
+  "status": "PASS",
+  "action": "step",
+  "uid": "E6657CD423721C35",
+  "pid": 82579,
+  "phase_sha256": "62f0b6eabdd483316219bf1758a7fad35ebceeff6f4f3066ef581802deaaea9d",
+  "grant_sha256": "aa72daa90e218c1ffc220b022292da4f155bf608ef5bb7519462a2038811df56",
+  "started_utc_epoch": 1793981506.870635,
+  "finished_utc_epoch": 1793981514.156619,
+  "error": null,
+  "events": [
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-001.stdout",
+      "stderr": "os-001.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-002.stdout",
+      "stderr": "os-002.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-003.stdout",
+      "stderr": "os-003.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-004.stdout",
+      "stderr": "os-004.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-005.stdout",
+      "stderr": "os-005.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-006.stdout",
+      "stderr": "os-006.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-007.stdout",
+      "stderr": "os-007.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-008.stdout",
+      "stderr": "os-008.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-009.stdout",
+      "stderr": "os-009.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-010.stdout",
+      "stderr": "os-010.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-011.stdout",
+      "stderr": "os-011.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-012.stdout",
+      "stderr": "os-012.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-013.stdout",
+      "stderr": "os-013.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-014.stdout",
+      "stderr": "os-014.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-015.stdout",
+      "stderr": "os-015.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-016.stdout",
+      "stderr": "os-016.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-017.stdout",
+      "stderr": "os-017.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-018.stdout",
+      "stderr": "os-018.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-019.stdout",
+      "stderr": "os-019.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-020.stdout",
+      "stderr": "os-020.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-021.stdout",
+      "stderr": "os-021.stderr",
+      "child_waited": true
+    },
+    {
+      "argv": [
+        "/usr/sbin/ioreg",
+        "-a",
+        "-r",
+        "-c",
+        "IOUSBHostDevice",
+        "-l"
+      ],
+      "returncode": 0,
+      "stdout": "os-022.stdout",
+      "stderr": "os-022.stderr",
+      "child_waited": true
+    }
+  ],
+  "authorization_authority": "direct human user",
+  "root_review_claimed": false,
+  "lease": "reserved_ports_closed",
+  "classic_io": false,
+  "previous_flash_backup": false,
+  "settings_writes_requested": false,
+  "rtc_writes_requested": false,
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "cdc_sessions": [
+    {
+      "number": 0,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137827,
+        "location": 18022400,
+        "session": 6161420078748,
+        "cdc_entry": 4295137859,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 1,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137862,
+        "location": 18022400,
+        "session": 6161525510142,
+        "cdc_entry": 4295137894,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    },
+    {
+      "number": 2,
+      "closed": true,
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137897,
+        "location": 18022400,
+        "session": 6161604447275,
+        "cdc_entry": 4295137923,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "errors": []
+    }
+  ],
+  "holder_checks": [
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82579
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82579
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": true,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [
+            82579
+          ],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    },
+    {
+      "method": "macOS libproc proc_listpidspath",
+      "allow_self": false,
+      "paths": [
+        {
+          "path": "/dev/cu.usbmodem11301",
+          "pids": [],
+          "rdev": 150994949
+        },
+        {
+          "path": "/dev/tty.usbmodem11301",
+          "pids": [],
+          "rdev": 150994948
+        }
+      ]
+    }
+  ],
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295137897,
+    "location": 18022400,
+    "session": 6161604447275,
+    "cdc_entry": 4295137923,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "lease_armed_monotonic": 256729.654296208,
+  "owned_dfu_delivery_wait": {
+    "cap_seconds": 1,
+    "disconnected": true
+  },
+  "planned_detaches": [
+    {
+      "command": "prof cosmic switch",
+      "old_binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137827,
+        "location": 18022400,
+        "session": 6161420078748,
+        "cdc_entry": 4295137859,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "delivery_wait_seconds": 0.0799378749798052
+    },
+    {
+      "command": "prof cosmic end",
+      "old_binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137862,
+        "location": 18022400,
+        "session": 6161525510142,
+        "cdc_entry": 4295137894,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      },
+      "delivery_wait_seconds": 0.2903676250134595
+    }
+  ],
+  "cdc_descriptor_closed": true,
+  "port_close_errors": [],
+  "usb_probes": [
+    {
+      "sequence": 1900,
+      "challenge": "959ec85e9046ca6e69b0a0c05e456067e9f81f7b94bd8f734a90e09b3afde80e",
+      "result": {
+        "seq": 1900,
+        "rx": 1369611345,
+        "tx": 183108436,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137862,
+        "location": 18022400,
+        "session": 6161525510142,
+        "cdc_entry": 4295137894,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 1901,
+      "challenge": "81b19235bf1b9778fc68b90d87365d4a908c39f5f1104b8c7da4e38e8bcd5cf1",
+      "result": {
+        "seq": 1901,
+        "rx": 1817260308,
+        "tx": 2911953427,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137862,
+        "location": 18022400,
+        "session": 6161525510142,
+        "cdc_entry": 4295137894,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    },
+    {
+      "sequence": 1902,
+      "challenge": "dd0a16647cc6168585eed3e61a43ed6e053d6bdec0b23e9579dd2365abba16d0",
+      "result": {
+        "seq": 1902,
+        "rx": 3349948452,
+        "tx": 3752690473,
+        "bytes": 2048,
+        "usb": 48000000
+      },
+      "binding": {
+        "uid": "E6657CD423721C35",
+        "cu": "/dev/cu.usbmodem11301",
+        "tty": "/dev/tty.usbmodem11301",
+        "usb_entry": 4295137862,
+        "location": 18022400,
+        "session": 6161525510142,
+        "cdc_entry": 4295137894,
+        "cu_rdev": 150994949,
+        "tty_rdev": 150994948
+      }
+    }
+  ],
+  "result": {
+    "mhz": 190,
+    "clock": {
+      "mhz": 190,
+      "measured_khz": 190000,
+      "usb_hz": 48000000,
+      "usb_khz": 48000,
+      "peri_hz": 48000000,
+      "sys_div256": 256,
+      "pio_div256": 487,
+      "pwm_div16": 31,
+      "psram_hz": 16646132,
+      "xip_hz": 47500000,
+      "active": 1,
+      "lease_ms": 105000,
+      "changes": 1,
+      "i2c_clear": 1
+    },
+    "math_test": "OK",
+    "errors": {
+      "ERRORS": 0,
+      "QPI_FALLBACKS": 0,
+      "TAIL_TIMEOUTS": 0,
+      "CRC_ERRORS": 0,
+      "DMA_TIMEOUTS": 0,
+      "LCD_ERRORS": 0,
+      "SD_SPEED_FALLBACKS": 0,
+      "SD_PROBE_FAILURES": 0,
+      "I2C_TIMEOUTS": 0,
+      "I2C_ABORTS": 0,
+      "SCREEN_ERRORS": 0
+    },
+    "kind": "short USB/clock/native-M0-math check; full Cosmic latency unmeasured"
+  },
+  "status_after": "RESET_REASON=00010001 BOOTS=16 CRASH=NONE BUILD=C3F35FAE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=130 MAX_GAP_MS=744 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=424 PREVIOUS_GAP_MS=744\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537024 FOOTER=792400 EXPECTED=B5299177 ACTUAL=B5299177 CHECK_US=992919\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=14 UI_FONT_KEY=00000000\r\nKEY_SOUND=ON KEY_CLICK=IDLE KEY_CLICKS=0 KEY_CLICKS_COMPLETED=0\r\nSETTINGS_WRITES=0 SETTINGS_ERASES=0 SETTINGS_SEQUENCE=2\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=16666666 READ_BYTES=4696 WRITE_BYTES=41504 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=52 WRITE_BATCHES=7949 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=8 SD_MISS=17 REJECTED=0 STORES=17 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nAPP_BUFFERS=0 APP_BUFFER_BYTES=0 APP_EXTERNAL_BYTES=0 APP_WINDOWS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.16 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nBATTERY_PERCENT=100 BATTERY_BIOS_FLAG7=0 BATTERY_AVAILABLE=1 BATTERY_ERRORS=0\r\nCONSOLE=USB CONSOLE_SWITCHES=1 RX_USB=11 RX_UART=0\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12000000 FRAMES=0\r\nLCD_DMA=1 LCD_BYTES=0 LCD_RECTS=0 LCD_US=0 LCD_FULL_FRAMES=0 LCD_CHAIN=1 LCD_STRIPS=0 LCD_CHAIN_PAUSES=0\r\nSD_DMA=1 READS=19 WRITES=0 TRANSFERS=21 HW_CRC=21 CRC_ERRORS=0\r\nEXT_LAYOUT=PACKED VM_ENTRIES=0 VM_PAYLOAD=0 VM_USED=0 SD_SLOTS=7825 SD_STRIDE=536\r\nDMA_WAIT0=8055 DMA_WAIT1=0 DMA_US0=25171 DMA_US1=0 DMA_TIMEOUTS=0 CRC32_HW=25 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=0 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nSD_SPI_HZ=12000000 SD_SAFE_HZ=12000000 SD_ADVERTISED_HZ=25000000 SD_SPEED_FALLBACKS=0 SD_PROBE_FAILURES=0 SD_READY_WAITS=0 SD_READY_SLEEP_US=0\r\nIDLE_WAITS=111 IDLE_MS=20 RTC_IRQS=0\r\nCORE_PARKED=1\r\nUI_RENDERS=1 UI_SKIPS=0\r\nIO_CORE=1 I2C_TRANSACTIONS=9 UART_BYTES=3491 LCD_PENDING=1 LCD_FRAME_CRC=00000000\r\nI2C_IRQ=1 I2C_IRQS=17 I2C_TIMEOUTS=0 I2C_ABORTS=0 I2C_BUSY_US=23998 I2C_SLEEP_HOLDS=0\r\nUART_WAIT_US=0 UART_FLUSH_US=321819 UART_FLUSHES=46\r\nUART_DMA=1 IO_IDLE_US=1865826 UART_EVENT_WAITS=1269 UART_SLEEP_HOLDS=0 UART_BAUD=115176\r\nLCD_SCROLLS=0 LCD_SCROLL_ROWS=0 LCD_SCROLL_OFFSET=0\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/14 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSOURCE_STORAGE=shared BYTES=0 SRAM_BYTES=0 PSRAM_BYTES=0 WINDOW_BYTES=0\r\nSTACK_USED=6396 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=657130\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:00:03 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "cleanup_native_verified": true
+}
