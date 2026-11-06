@@ -50,6 +50,13 @@ bool pressed(u8 code, u32 now) {
   return ((held[0][code / 8] | held[1][code / 8]) & bit) ||
          (pulse_until[code] && (i32)(pulse_until[code] - now) > 0);
 }
+void bitmap(u8 bits[32],u32 now) {
+  for(unsigned i=0;i<32;++i) bits[i]=held[0][i]|held[1][i];
+  bits[0]&=0xFE; // Wire code zero is excluded from the APP keyboard bitmap.
+  for(unsigned c=1;c<256;++c)
+    if(pulse_until[c] && (i32)(pulse_until[c]-now)>0)
+      bits[c/8]|=(u8)(1U<<(c&7));
+}
 int scan(u8 code) {
   const auto key = map_key(code);
   for (unsigned i = 0; i < sizeof(KeyPairs) / sizeof(KeyPairs[0]); ++i)

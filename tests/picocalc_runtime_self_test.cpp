@@ -117,6 +117,19 @@ void picocalc_runtime_test() {
   controls::pulse('1', 0xFFFFFFC0U);
   require(controls::pressed('1', 20) && !controls::pressed('1', 200),
           "serial key expiry across wrap");
+  controls::clear();
+  controls::event({1,'a'});controls::event({1,'z'},controls::Source::REMOTE);
+  controls::event({1,0xFF},controls::Source::REMOTE);
+  controls::pulse('1',0xFFFFFFC0U);controls::pulse(0,0xFFFFFFC0U);
+  u8 bitmap[32];std::memset(bitmap,0xFF,sizeof(bitmap));controls::bitmap(bitmap,20);
+  const auto in_bitmap=[&](unsigned c) {return (bitmap[c/8]&(1U<<(c&7)))!=0;};
+  require(in_bitmap('a') && in_bitmap('z') && in_bitmap(0xFF) && in_bitmap('1') && !in_bitmap(0) && !in_bitmap('B'),
+          "bitmap merges physical/remote holds and wrapped pulses, clears stale bits and excludes zero");
+  controls::event({3,'a'});controls::event({3,'z'});
+  controls::bitmap(bitmap,200);
+  require(!in_bitmap('a') && in_bitmap('z') && in_bitmap(0xFF) && !in_bitmap('1'),
+          "bitmap uses one expiry timestamp and a physical release preserves a remote hold");
+  controls::clear();
   require(controls::logical(0x1B) == MK61_APP_KEY_ESC, "native Escape key");
   Link link;
   for (unsigned i = 0; i < 1536; ++i)
