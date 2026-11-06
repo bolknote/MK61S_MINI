@@ -23,9 +23,12 @@ size_t strlen(const char* s) {
   const char* p=s;while(*p)++p;return (size_t)(p-s);
 }
 #endif
+#include "memory_strnlen_arm.h"
+#ifndef MK61_ARM_STRNLEN
 size_t strnlen(const char* s,size_t n) {
   size_t i=0;while(i<n && s[i])++i;return i;
 }
+#endif
 #include "memory_strchr_arm.h"
 #ifndef MK61_ARM_STRCHR
 char* strchr(const char* s,int c) {
@@ -54,21 +57,29 @@ int strncmp(const char* a,const char* b,size_t n) {
   return 0;
 }
 #endif
+#include "memory_string_copy_arm.h"
+#ifndef MK61_ARM_STRCPY
 char* strcpy(char* destination,const char* source) {
   char* d=destination;
   do { *d=*source++; } while(*d++);
   return destination;
 }
+#endif
+#ifndef MK61_ARM_STRNCPY
 char* strncpy(char* destination,const char* source,size_t n) {
   char* d=destination;
   while(n && *source) {*d++=*source++;--n;}
   while(n--) *d++=0;
   return destination;
 }
+#endif
+#include "memory_strncat_arm.h"
+#ifndef MK61_ARM_STRNCAT
 char* strncat(char* destination,const char* source,size_t n) {
   char* d=destination;
   while(*d)++d;
   while(n-- && *source) *d++=*source++;
   *d=0;return destination;
 }
+#endif
 #endif

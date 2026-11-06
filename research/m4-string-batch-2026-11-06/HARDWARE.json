@@ -1,0 +1,267 @@
+{
+  "status": "SELECTED_FROM_COMPLETE_PHYSICAL_MAP",
+  "functions": [
+    {
+      "function": "strnlen",
+      "selected": "byte4",
+      "native_code_bank": "Flash",
+      "evidence": [
+        {
+          "route": "standalone-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 48.496341651031415,
+          "inverse_work_byte2": 40.07024211897082,
+          "inverse_work_byte4": 39.87254642522074,
+          "weighted_reduction_vs_C": 0.17782362405530572,
+          "uniform_reduction_vs_resident": 0.44619367947873867,
+          "worst_case_ratio_vs_C": 1.099585062240664
+        },
+        {
+          "route": "standalone-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 48.565985293127,
+          "inverse_work_byte2": 40.139865432871,
+          "inverse_work_byte4": 39.73390610674041,
+          "weighted_reduction_vs_C": 0.18185730471809236,
+          "uniform_reduction_vs_resident": 0.4403245724802911,
+          "worst_case_ratio_vs_C": 1.099585062240664
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 48.496341651031415,
+          "inverse_work_byte2": 40.07024211897082,
+          "inverse_work_byte4": 39.87560581862837,
+          "weighted_reduction_vs_C": 0.17776053902036337,
+          "uniform_reduction_vs_resident": 0.4461896157840257,
+          "worst_case_ratio_vs_C": 1.099585062240664
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 48.565985293127,
+          "inverse_work_byte2": 40.139885761066395,
+          "inverse_work_byte4": 39.734090331011224,
+          "weighted_reduction_vs_C": 0.1818535114403549,
+          "uniform_reduction_vs_resident": 0.440309114701116,
+          "worst_case_ratio_vs_C": 1.099585062240664
+        }
+      ]
+    },
+    {
+      "function": "strcpy",
+      "selected": "byte4",
+      "native_code_bank": "Flash",
+      "evidence": [
+        {
+          "route": "standalone-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 59.68757718533401,
+          "inverse_work_byte2": 52.531875629419126,
+          "inverse_work_byte4": 48.572967186093294,
+          "weighted_reduction_vs_C": 0.1862131204409435,
+          "uniform_reduction_vs_resident": 0.3487709859564544,
+          "worst_case_ratio_vs_C": 1.0342245989304812
+        },
+        {
+          "route": "standalone-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 65.96799235293086,
+          "inverse_work_byte2": 58.81229079701598,
+          "inverse_work_byte4": 54.85338235369015,
+          "weighted_reduction_vs_C": 0.16848489097223385,
+          "uniform_reduction_vs_resident": 0.2952816843440371,
+          "worst_case_ratio_vs_C": 1.033092037228542
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 59.68757718533401,
+          "inverse_work_byte2": 52.531875629419126,
+          "inverse_work_byte4": 48.572967186093294,
+          "weighted_reduction_vs_C": 0.1862131204409435,
+          "uniform_reduction_vs_resident": 0.3487709859564544,
+          "worst_case_ratio_vs_C": 1.0342245989304812
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 65.96799235293086,
+          "inverse_work_byte2": 58.81229079701598,
+          "inverse_work_byte4": 54.85338235369015,
+          "weighted_reduction_vs_C": 0.16848489097223385,
+          "uniform_reduction_vs_resident": 0.2952816843440371,
+          "worst_case_ratio_vs_C": 1.033092037228542
+        }
+      ]
+    },
+    {
+      "function": "strncpy",
+      "selected": "byte4",
+      "native_code_bank": "Flash",
+      "evidence": [
+        {
+          "route": "standalone-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 59.94291008315193,
+          "inverse_work_byte2": 41.75816299753087,
+          "inverse_work_byte4": 41.473958363500735,
+          "weighted_reduction_vs_C": 0.3081090273066712,
+          "uniform_reduction_vs_resident": 0.28535154389153505,
+          "worst_case_ratio_vs_C": 0.785234899328859
+        },
+        {
+          "route": "standalone-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 60.00683202413198,
+          "inverse_work_byte2": 42.88728891418355,
+          "inverse_work_byte4": 42.2467835097111,
+          "weighted_reduction_vs_C": 0.29596710766665046,
+          "uniform_reduction_vs_resident": 0.2587020647728233,
+          "worst_case_ratio_vs_C": 0.785234899328859
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 59.94310819038815,
+          "inverse_work_byte2": 41.75816299753087,
+          "inverse_work_byte4": 41.473958363500735,
+          "weighted_reduction_vs_C": 0.3081113139516669,
+          "uniform_reduction_vs_resident": 0.28535154389153505,
+          "worst_case_ratio_vs_C": 0.785234899328859
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 60.00661110134253,
+          "inverse_work_byte2": 42.88728891418355,
+          "inverse_work_byte4": 42.2467835097111,
+          "weighted_reduction_vs_C": 0.29596451567040893,
+          "uniform_reduction_vs_resident": 0.25870231629585083,
+          "worst_case_ratio_vs_C": 0.785234899328859
+        }
+      ]
+    },
+    {
+      "function": "strncat",
+      "selected": "byte4",
+      "native_code_bank": "Flash",
+      "evidence": [
+        {
+          "route": "standalone-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 94.34756190323908,
+          "inverse_work_byte2": 65.21328711077945,
+          "inverse_work_byte4": 63.5278782603233,
+          "weighted_reduction_vs_C": 0.32666115606170953,
+          "uniform_reduction_vs_resident": 0.4273077996498078,
+          "worst_case_ratio_vs_C": 0.8399555432064463
+        },
+        {
+          "route": "standalone-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 94.43728503789939,
+          "inverse_work_byte2": 67.7411457898825,
+          "inverse_work_byte4": 64.98475262574223,
+          "weighted_reduction_vs_C": 0.31187398494500684,
+          "uniform_reduction_vs_resident": 0.4013167790306744,
+          "worst_case_ratio_vs_C": 0.8577382606279522
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "SRAM",
+          "inverse_work_C": 94.34769645273447,
+          "inverse_work_byte2": 65.21263341319138,
+          "inverse_work_byte4": 63.5420627839012,
+          "weighted_reduction_vs_C": 0.3265117732287828,
+          "uniform_reduction_vs_resident": 0.42624819383141854,
+          "worst_case_ratio_vs_C": 0.8399555432064463
+        },
+        {
+          "route": "shared-flash",
+          "source_bank": "Flash",
+          "inverse_work_C": 94.43791921512138,
+          "inverse_work_byte2": 67.74090035456909,
+          "inverse_work_byte4": 64.98224359116516,
+          "weighted_reduction_vs_C": 0.3119051739890494,
+          "uniform_reduction_vs_resident": 0.4015085148799875,
+          "worst_case_ratio_vs_C": 0.8577382606279522
+        }
+      ]
+    }
+  ],
+  "metric": "Sum(median(all7DWT)/repeats/(work+1)) / Sum(1/(work+1)); work=min(length,n) for strnlen, length for strcpy, n for strncpy, prefix+min(length,n) for strncat. Synthetic ranking model, not application frequency.",
+  "scope": "GNU Cortex-M4 Classic F411 native code; SDK private libc controls are unchanged; runtime26 slot21 forwards to new native strncat",
+  "regressions": "Empty strnlen with positive n: +3 cycles (about9.96%). Empty strcpy: +1 cycle (about3.42%). All7 raw values and complete map retained. No byte4 native strncpy/strncat regressions in paired Flash-code tests.",
+  "hardware_cases": 34848,
+  "raw_intervals": 1383648,
+  "timed_APP_runs": 1092,
+  "all4_routes": "PASS",
+  "hardware_analysis": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/hardware-analysis-001/RESULT.json",
+    "bytes": 1027359,
+    "sha256": "c2e3ccf46a90b172fff7a84287346dc8cdab3c34b94bb6373c6212694ed47853"
+  },
+  "min_median_max": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/hardware-analysis-001/PER-CASE.json",
+    "bytes": 81876007,
+    "sha256": "1d32a67b98033bab4ba17b029c405a3a7f5630e663a1a110535e86dc25977103"
+  },
+  "regression_map": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/hardware-analysis-001/REGRESSIONS.json",
+    "bytes": 232643,
+    "sha256": "a011a0e2f486176614710a91e5944ae8f3d640e11b5f32d922485f92e5fe20a7"
+  },
+  "automatic_timer": false,
+  "integration_pending": false,
+  "timing_and_integration_first_fault": null,
+  "earlier_readonly_preflight_hold": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/PREFLIGHT-RUN-002/PHASE/receipt.json",
+    "bytes": 1284,
+    "sha256": "d604695694496cc8e2c0682245f1e979983c67a26b29fea6b4ec5272b109af58"
+  },
+  "earlier_preflight_resolution": "Campaign-local reference accepted by Root plus direct human state; preflight003 PASS. No shared fixture weakened.",
+  "installed_build": "13A2194A",
+  "integration": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/RUN-INTEGRATION-001/PHASE/receipt.json",
+    "bytes": 35984,
+    "sha256": "3c468fc9fc487839f6288b8e251a5513d8be7f3ef85c3425dea4ec69a6210794"
+  },
+  "integration_process": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/RUN-INTEGRATION-001/PROCESS/PROCESS.json",
+    "bytes": 1611,
+    "sha256": "20a8fa5dcb6a702639e61b29909200315ac70251a5450b5f0d63d15c40350063"
+  },
+  "full512_physical_CRC_verified": true,
+  "functional_integration_calls": 7168,
+  "independent_CLOSED": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/ROOT-CLOSED-ACKNOWLEDGEMENT.json",
+    "bytes": 979,
+    "sha256": "1b8b366e32ae308f685122bf24af63e59cc206af38c2fcf3f7d37e558772fc12"
+  },
+  "selection_evidence": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/SELECTION.json",
+    "bytes": 10039,
+    "sha256": "9411ffe630261c5692f3ea9eeed13016c30b836e9d676907df69722353edbc97"
+  },
+  "archived_candidate_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/source-archive-001/ARCHIVE.json",
+    "bytes": 4631,
+    "sha256": "ea7dc31f9caf16a7c8359421b3200fa5322fad9711bfe19bb7dd22ce3ffcd217"
+  },
+  "full_firmware_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/MATCHED-F411-BUILD-PROOF.json",
+    "bytes": 4439,
+    "sha256": "2a3ddf53a857a394ae95bf1ca71021aac6b733e080d12bdc2f722c32124f89df"
+  },
+  "F401_product_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/F401-BUILD-PROOF.json",
+    "bytes": 1889,
+    "sha256": "8fac72baf34aae8764b5a45abc6446c07260e33cf2621d028fd5c79bb1d70621"
+  },
+  "System_APP_budget_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/system-budget-proof-001/RESULT.json",
+    "bytes": 14810,
+    "sha256": "7b8e8900afcd92b79f235e420f3eaa4e22ec47a518a255af7b30ab0a8d837172"
+  }
+}
