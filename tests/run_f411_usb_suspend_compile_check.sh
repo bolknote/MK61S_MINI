@@ -51,11 +51,11 @@ compile_profile() {
   cp "$compile_path/resident.elf" "$compile_path/mk61s-M.ino.elf"
   cp "$compile_path/resident.bin" "$compile_path/mk61s-M.ino.bin"
   local tool_bin
-  tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+  tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root" <<'PYTOOLS'
 from pathlib import Path
 import sys
 sys.path.insert(0, sys.argv[2])
-from release_contract import discover_binutils
+from dev.lib.release_contract import discover_binutils
 print(discover_binutils(Path(sys.argv[1]))[1].parent)
 PYTOOLS
 )"

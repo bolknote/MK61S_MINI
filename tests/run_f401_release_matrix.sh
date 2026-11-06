@@ -75,11 +75,11 @@ build_group() {
     local build_path="$case_root/$profile"
     # ELF gates use the same independent binutils as the actual native build.
     local tool_bin
-    tool_bin="$(python3 - "$build_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+    tool_bin="$(python3 - "$build_path/compile_commands.json" "$root" <<'PYTOOLS'
 from pathlib import Path
 import sys
 sys.path.insert(0, sys.argv[2])
-from release_contract import discover_binutils
+from dev.lib.release_contract import discover_binutils
 print(discover_binutils(Path(sys.argv[1]))[1].parent)
 PYTOOLS
 )"

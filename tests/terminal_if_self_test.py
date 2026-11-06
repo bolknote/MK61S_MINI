@@ -20,6 +20,7 @@ def method(name):
     return source[start:end]+'\n'
 
 prelude=r'''
+#include "packed_text.hpp"
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
 #include "terminal_catalog.hpp"

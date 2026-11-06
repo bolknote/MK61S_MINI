@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / 'code/terminal_command_resident.inc').read_text()
 bridge = source[source.index('terminal_protocol::Result class_terminal::exec_external('):]
 fixture = r'''
+#include "packed_text.hpp"
 #include <cassert>
 #include <cstdio>
 #include <string>

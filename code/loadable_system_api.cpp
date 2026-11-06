@@ -34,7 +34,6 @@
 #include "usb_mass_storage.hpp"
 #if MK61_NUMBER_IO_SERVICE_ENABLED
 #include "number_format.hpp"
-#include "ecma_number.hpp"
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font_service.hpp"
@@ -303,7 +302,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           | MK61_SERVICE_CAP_FLOAT_CONVERT
 #endif
 #if MK61_NUMBER_IO_SERVICE_ENABLED
-          | MK61_SERVICE_CAP_NUMBER_IO | MK61_SERVICE_CAP_NUMBER_FIXED | MK61_SERVICE_CAP_ECMA_NUMBERS
+          | MK61_SERVICE_CAP_NUMBER_IO | MK61_SERVICE_CAP_NUMBER_FIXED
 #endif
 #if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
           | MK61_SERVICE_CAP_FONT
@@ -527,8 +526,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_NUMBER_FORMAT: {
       if(!payload) return 0;
       auto& request = *(mk61_system_number_format*) payload;
-      if(a == MK61_NUMBER_ECMA_GENERAL) return ecma_number::format(request.value,request.output,request.capacity);
-      if(a == MK61_NUMBER_ECMA_FRACTIONAL) return ecma_number::fractional(request.value,request.output,request.capacity);
+      if(a == MK61_NUMBER_ECMA_GENERAL || a == MK61_NUMBER_ECMA_FRACTIONAL) return 0;
       if(a == MK61_NUMBER_FIXED || a == MK61_NUMBER_FRACTIONAL) return number_format::fixed_request(request.value, request.significant_digits, request.output, request.capacity, a == MK61_NUMBER_FRACTIONAL);
       if(request.significant_digits == 0 ||
          request.significant_digits > 14) return 0;
@@ -540,7 +538,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       if(!payload) return 0;
       auto& request = *(mk61_system_number_parse*) payload;
       if(!request.input) return 0;
-      if(a==1) { const bool ok=ecma_number::parse(request.input,request.value);request.consumed=ok?strlen(request.input):0;return ok; }
+      if(a!=0) return 0;
       const char* end = nullptr;
       const double value = mk_math::strtod(request.input, &end);
       if(end == request.input) return 0;

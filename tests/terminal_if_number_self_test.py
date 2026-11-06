@@ -33,6 +33,7 @@ hexadecimal = function((ROOT / 'code/tools.hpp').read_text(),
                        'isize HexdecimalDigit(')
 
 prelude = r'''
+#include "packed_text.hpp"
 #include <array>
 #include <cstdio>
 #include <cstdlib>

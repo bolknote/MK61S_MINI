@@ -415,7 +415,7 @@ def main():
     a=p.parse_args()
     if a.elf:elf=a.elf
     else:
-        sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
+        sys.path.insert(0,str(ROOT));from tools.firmware.picocalc.build_picocalc import compiler_bin
         elf=build(compiler_bin(a.toolchain),a.output_dir,a.rp2040)
     m=Machine(elf,a.rp2040,bootrom=a.bootrom)
     nearby_calls=muldiv_calls=0

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <type_traits>
+#include "packed_text.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && \
     (defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE))
@@ -36,6 +37,20 @@ public:
     return output().write(reinterpret_cast<const uint8_t*>(text), count);
   }
   size_t print(const char* text) { return write(text); }
+#if MK61_PACKED_TEXT_ENABLED
+  size_t print(packed_text::Text text) {
+    packed_text::Reader reader(text);uint8_t bytes[32];size_t count=0,used=0;
+    for(uint8_t byte;(byte=reader.next())!=0;) {
+      bytes[used++]=byte;
+      if(used==sizeof(bytes)) {
+        const size_t written=output().write(bytes,used);count+=written;
+        if(written!=used)return count;
+        used=0;
+      }
+    }
+    return count+(used?output().write(bytes,used):0);
+  }
+#endif
   size_t print(char byte) { return output().write(static_cast<uint8_t>(byte)); }
   template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
   size_t print(T value, int base = 10) {

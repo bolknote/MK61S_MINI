@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #ifndef MK61_TERMINAL_SCRIPT_BACKEND_HPP
 #define MK61_TERMINAL_SCRIPT_BACKEND_HPP
 #include "rust_types.h"
@@ -12,6 +13,6 @@ bool press_key(u8 scan);
 u32 random_decimal7();
 bool assemble(const char *arguments, isize &next_address);
 terminal_protocol::Result command(u8 id, const char *line, bool trap);
-void error(const char *message);
+void error(packed_text::Text message);
 } // namespace terminal_script_backend
 #endif

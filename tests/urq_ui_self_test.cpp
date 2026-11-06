@@ -193,7 +193,12 @@ int main(int argc,char** argv) {
   if(argc>3) { files[100].bytes=read_file(argv[3]);assert(load_slot(0));assert(engine.state().depth==2); }
   std::ofstream output(argv[2],std::ios::binary);
   assert(save_slot(0));const auto& image=files[100].bytes;output.write((const char*)image.data(),image.size());output.close();
-  input_event(MK61_TEXT_SUBMIT);engine.run();assert(engine.state().status==urq::Status::ANYKEY);
+  input_event(MK61_TEXT_SUBMIT);
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+  assert(app.pending==Pending::SUBMIT && engine.state().status==urq::Status::INPUT);
+  apply_pending();
+#endif
+  engine.run();assert(engine.state().status==urq::Status::ANYKEY);
   game_key(MK61_APP_KEY_LEFT);game_key(MK61_APP_KEY_RIGHT);
   assert(engine.state().status==urq::Status::ANYKEY);
   game_key(MK61_APP_KEY_OK);engine.run();assert(engine.state().status==urq::Status::CHOICE);
