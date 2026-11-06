@@ -12,6 +12,9 @@ import zlib
 ROOT = Path(__file__).resolve().parents[3]
 PAGE = 512
 FILE_LIMIT = 60 * 1024
+# Fifteen C9 data blocks fit in 60 KiB without rounding a part up to a
+# sixteenth 4-KiB erase sector (each data block has a 32-byte header).
+OPTIMAL_PART_LIMIT = 15 * (4096 - 32)
 MODES = {"urqw": 0, "urqw1": 0, "dosurq": 1, "ripurq": 2, "akurq": 3}
 _codec = None
 _m8 = None
@@ -86,7 +89,7 @@ def normalize(text, mode):
     return lines
 
 
-def make_package(data, mode, encoding=None, manifest=None, resources=None):
+def make_package(data, mode, encoding=None, manifest=None, resources=None, zx0_parser=None):
     if mode not in MODES:
         raise ValueError("unknown URQ mode")
     text = decode_source(data, encoding)
@@ -134,16 +137,27 @@ def make_package(data, mode, encoding=None, manifest=None, resources=None):
             name_at=len(payload);payload+=path+b'\0';text_at=len(payload);payload+=text+b'\0'
             struct.pack_into('<II',payload,table+index*8,name_at,text_at)
     identity = hashlib.sha256(bytes([MODES[mode], flags]) + payload).digest()[:16]
+    parser = zx0_parser or metadata.get('mk61_zx0_parser', 'greedy')
+    if parser not in ('greedy', 'optimal'):
+        raise ValueError('unknown ZX0 parser')
+    pages = None
+    if parser == 'optimal':
+        spec = importlib.util.spec_from_file_location(
+            'urq_page_compression', Path(__file__).with_name('page_compression.py'))
+        optimizer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(optimizer)
+        pages = optimizer.optimal_pages(payload)
     parts = [bytearray(32)]
+    part_limit = OPTIMAL_PART_LIMIT if parser == 'optimal' else FILE_LIMIT
     directory = bytearray()
     for offset in range(0, len(payload), PAGE):
         raw = bytes(payload[offset:offset + PAGE])
-        packed = codec().zx0_encode(raw)
-        if codec().zx0_decode(packed, len(raw)) != raw:
+        packed = pages[offset // PAGE] if pages is not None else codec().zx0_encode(raw)
+        if (codec().zx0_decode(packed, len(raw)) if pages is None or len(packed) < len(raw) else packed) != raw:
             raise ValueError("ZX0 self-check failed")
         if len(packed) >= len(raw):
             packed = raw
-        if len(parts[-1]) + len(packed) > FILE_LIMIT:
+        if len(parts[-1]) + len(packed) > part_limit:
             parts.append(bytearray(32))
         at = len(parts[-1])
         directory += struct.pack("<HHHHII", len(parts) - 1, at, len(packed),
@@ -169,6 +183,8 @@ def make_package(data, mode, encoding=None, manifest=None, resources=None):
               "title": (manifest or {}).get("urqw_title", "")}
     report["ifid"] = metadata.get("urqw_game_ifid", "")
     report['text_resources']=len(resources or {})
+    if parser == 'optimal':
+        report['zx0_parser'] = parser
     return result, report
 
 
@@ -178,6 +194,8 @@ def main():
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--mode", choices=MODES)
     parser.add_argument("--encoding")
+    parser.add_argument('--zx0-parser', choices=('greedy', 'optimal'),
+                        help='optimal uses a host C compiler; the game format and memory use are unchanged')
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--text-resource",action='append',default=[],metavar='NAME=PATH',
                         help='Include a UTF-8 text resource for file_content/file_url')
@@ -191,7 +209,7 @@ def main():
         for value in args.text_resource:
             name,path=value.split('=',1);resources[name]=Path(path).read_bytes().decode('utf-8-sig')
         files, report = make_package(args.source.read_bytes(), mode,
-                                    args.encoding or manifest.get("game_encoding"), manifest,resources)
+                                    args.encoding or manifest.get("game_encoding"), manifest,resources,args.zx0_parser)
     except (ValueError, UnicodeError) as exc:
         parser.error(str(exc))
     args.output.mkdir(parents=True, exist_ok=True)

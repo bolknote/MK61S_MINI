@@ -159,6 +159,8 @@ class LibraryTests(unittest.TestCase):
                 for name, data in files.items():
                     self.assertEqual(data, (folder / name).read_bytes())
                     self.assertLessEqual(len(data), 61440)
+                    if package.get('zx0_parser') == 'optimal' and name.endswith('.uqd'):
+                        self.assertLessEqual(len(data), 15 * (4096 - 32))
                 self.assertNotRegex(source.decode(), r"(?i)javascript|<script")
                 self.assertEqual({p.name for p in folder.iterdir()}, {*files, "autoexec.wbmp"})
                 self.assertTrue((metadata / "AUTHORS.txt").is_file())

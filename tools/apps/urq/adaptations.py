@@ -189,6 +189,7 @@ def jim(texts):
         else:
             lines.append(line)
     manifest = {"manifest_version": 1, "urq_mode": "urqw", "game_encoding": "UTF-8",
+                "mk61_zx0_parser": "optimal",
                 "urqw_title": "Джим из Космоса", "urqw_game_lang": "ru",
                 "urqw_game_ifid": "C2AF99B7-84E9-4C89-9CA1-F60FE853A7D7"}
     return "\n".join(lines) + "\n", manifest

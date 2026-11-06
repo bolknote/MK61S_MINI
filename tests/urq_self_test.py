@@ -86,6 +86,34 @@ class UrqTests(unittest.TestCase):
             self.assertTrue(files["game.urq"].startswith(b"MK61URQ\0"))
             self.assertEqual(report["lines"], 3)
 
+    def test_optimal_pages_keep_format_and_portable_save_identity(self):
+        source = (":start\ninput имя\npln #имя$\nbtn story,Читать\nend\n:story\n" +
+                  "pln На станции горит свет, за окном видны звёзды.\n" * 80 + "end\n").encode()
+        greedy, before = packer.make_package(source, 'urqw', 'UTF-8')
+        optimal, after = packer.make_package(source, 'urqw', 'UTF-8', zx0_parser='optimal')
+        self.assertEqual(before['id'], after['id'])
+        self.assertEqual(before['logical_bytes'], after['logical_bytes'])
+        self.assertLessEqual(after['stored_bytes'], before['stored_bytes'])
+        self.assertEqual(after['zx0_parser'], 'optimal')
+        with tempfile.TemporaryDirectory(prefix='urq-optimal-') as directory:
+            root = Path(directory)
+            for name, files in (('greedy', greedy), ('optimal', optimal)):
+                (root / name).mkdir()
+                for file, data in files.items():
+                    self.assertLessEqual(len(data), 61440)
+                    (root / name / file).write_bytes(data)
+            save = root / 'input.urs'
+            saved = subprocess.run([str(HOST), str(root / 'greedy'), 's:' + str(save)],
+                                   capture_output=True, text=True)
+            self.assertEqual(saved.returncode, 0, saved.stderr)
+            restored = subprocess.run([str(HOST), str(root / 'optimal'), 'l:' + str(save), 'i:Ёж', 'c:0'],
+                                      capture_output=True, text=True)
+            self.assertEqual(restored.returncode, 0, restored.stdout + restored.stderr)
+            events = [json.loads(line) for line in restored.stdout.splitlines()]
+            self.assertTrue(any(e.get('text') == 'Ёж' for e in events))
+            self.assertEqual(sum(e['text'].startswith('На станции') for e in events if e['event'] == 'text'), 80)
+            self.assertFalse(any(e.get('error') for e in events))
+
     def test_bad_crc_and_foreign_parts(self):
         with tempfile.TemporaryDirectory(prefix="urq-damage-") as directory:
             files, _ = packer.make_package(b":s\npln OK\nend", "dosurq")
