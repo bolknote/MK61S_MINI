@@ -17,7 +17,7 @@ from run_language_vm_overlay_arm_tests import OverlayMachine, encode_number
 from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Elf, ROOT, run
 
-VERSION=14
+VERSION=15
 STATE_SIZE=1992
 STACK=976
 PROMPT=1860
@@ -100,7 +100,7 @@ class FlashMachine(OverlayMachine):
         self.put(address,0,stub('read'),stub('write'),stub('truncate'),stub('poll'),prepare,stub('lookup'))
         return address,stub('input')
 
-def compile_program(machine,packages,elf,language,rows=5000):
+def compile_program(machine,packages,elf,language,rows=5000,source=None):
     basic=language==1
     text='1 GOTO 30000\n' if basic else '1.0 G 9.0\n'
     for i in range(rows):
@@ -110,6 +110,7 @@ def compile_program(machine,packages,elf,language,rows=5000):
            '30010 ON 9 GOTO '+','.join(['32010']*9)+'\n31000 INPUT "value?",B;S=S+B;RETURN\n'
            '32000 S=S+1;RETURN\n32010 S=S-1;.RA=S;END\n'
            if basic else '9.0 S S=0;F I=1,2;D 10\n9.1 B (-1)9.2,99.99,99.99\n9.2 B (0)99.99,9.3,99.99\n9.3 B (1)99.99,99.99,9.4\n9.4 S .RA=S;E\n10.0 A "value?",B;S S=S+B;R\n')
+    if source is not None:text=source
     machine.files[42]=(3 if basic else 2,'VMTEST',text.encode())
     machine.partitioned=True;machine.load(packages['tinybasic' if basic else 'focal'])
     io,input_callback=machine.io(elf)
@@ -131,7 +132,7 @@ def compile_program(machine,packages,elf,language,rows=5000):
     assert 0<machine.max_source_read<=MAX_SOURCE_WINDOW
     return bytes(machine.pages[2][:size]),io,input_callback
 
-def execute(machine,packages,image,io,input_callback,language,contiguous=False):
+def execute(machine,packages,image,io,input_callback,language,contiguous=False,expected=10):
     machine.pages[2]=bytearray(image)+bytearray((-len(image))%1024)
     execution,overlay,entry,temporary,main_metadata,expr_metadata=[machine.input+x for x in (640,720,768,832,920,960)]
     variables=machine.input+128;state=machine.workspace
@@ -157,7 +158,7 @@ def execute(machine,packages,image,io,input_callback,language,contiguous=False):
         error=machine.uc.mem_read(execution+RESULT,1)[0]
         if error!=15:
             assert error==0 and inputs==2,(error,inputs,machine.trace[-8:])
-            assert machine.refs[4,10]==10,machine.refs
+            assert machine.refs[4,10]==expected,machine.refs
             return
         pc=machine.words(execution+RESULT+4,1)[0]
         assert (pc>65536)==(len(image)>65536) and image[pc]==48
@@ -165,7 +166,11 @@ def execute(machine,packages,image,io,input_callback,language,contiguous=False):
         length=struct.unpack('<H',machine.uc.mem_read(state+PROMPT_LENGTH,2))[0]
         prompt=loan+offset if contiguous else state+PROMPT
         assert offset==pc+3 and length==6 and bytes(machine.uc.mem_read(prompt,6))==b'value?'
-        expression=state+STACK+512
+        # Model the resident-owned InputWorkspace, outside the live program
+        # stack and the poisoned native APP arena (256 image + 32 Values).
+        expression=machine.input+1024
+        machine.uc.mem_write(expression,b'\xA5'*512)
+        saved_stack=bytes(machine.uc.mem_read(state+STACK,768))
         machine.load(packages['language-input']);machine.input_keys('2+3')
         machine.uc.mem_write(entry,bytes(40));machine.put(entry,40,VERSION,prompt,expression)
         machine.uc.mem_write(entry+24,struct.pack('<HHHBB',6,256,0,language,0))
@@ -178,6 +183,7 @@ def execute(machine,packages,image,io,input_callback,language,contiguous=False):
         control=bytes(machine.uc.mem_read(state,976))
         machine.load(packages['language-vm']);assert machine.call(0x700,overlay)==1
         assert machine.uc.mem_read(temporary+RESULT,1)==b'\0' and bytes(machine.uc.mem_read(state,976))==control
+        assert bytes(machine.uc.mem_read(state+STACK,768))==saved_stack
         assert bytes(machine.uc.mem_read(state+INPUT_VALUE,8))==encode_number(5)
         machine.put(overlay+8,execution);machine.put(overlay+16,main_metadata);machine.uc.mem_write(overlay+20,b'\x01')
         inputs+=1
@@ -204,5 +210,16 @@ def main():
                     small.address_index=address
                     execute(small,packages,image,io,input_callback,language,contiguous=contiguous)
             print(json.dumps(dict(language=language,small_image_bytes=len(image),contiguous_and_paged=True,addresses=3,counts=small.counts)))
+        for levels in (15,16):
+            text='10 GOSUB 100,1,2,3,4;.RA=S;END\n'
+            for level in range(1,levels):
+                text+=f'{level*100} GOSUB {(level+1)*100},1,2,3,4;S=S+ARG(1)+ARG(2)+ARG(3)+ARG(4);RETURN\n'
+            text+=f'{levels*100} INPUT "value?",@(2);INPUT "value?",@(2);S=ARG(1)+ARG(2)+ARG(3)+ARG(4);RETURN\n'
+            machine=FlashMachine(args.resident_elf)
+            image,io,input_callback=compile_program(machine,packages,elf,1,rows=0,source=text)
+            for address in range(3):
+                machine.address_index=address
+                execute(machine,packages,image,io,input_callback,1,expected=levels*10)
+            print(f'ARM INPUT: {levels} calls, {levels*4+1} live slots, arguments and full stack preserved, 3 addresses PASS',flush=True)
     print('Flash ARM: real frontends + resident index service, >64-KB paged and small contiguous LBV2, 3 APP addresses, INPUT eviction/resume PASS')
 if __name__=='__main__':main()

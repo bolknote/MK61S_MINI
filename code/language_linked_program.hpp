@@ -95,6 +95,8 @@ inline Result execute(const Program& p,Session& s,const Host& h,const Services& 
 // Experimental in-process export for unlimited whole-member calls only.
 // Only usable while LANGVM is pinned; clear its active request before
 // unpinning. No native pointer is ever persisted. Not a public APP service.
+// Invoke the kernel with exactly the advertised Services object: callbacks
+// bind the current active overlay, and custom service overrides are unsupported.
 constexpr uint32_t KERNEL_EXPORT_COMMAND=0x70F,KERNEL_EXPORT_MAGIC=0x3150564C;
 struct KernelExport {uint32_t magic;Kernel kernel;const Services* services;};
 // Cold VMSTORE handoff. All pointers/callbacks belong to the resident caller;

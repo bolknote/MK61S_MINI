@@ -189,8 +189,10 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
   if (kind == Kind::LANGUAGE_INPUT) {
     auto& input = *(InputRequest*)payload;
     assert(command == Command::LANGUAGE_INPUT && input.capacity == INPUT_IMAGE_CAPACITY);
-    assert(suspended && input.image == input_image_storage(*suspended));
-    assert(suspended->control.sp < INPUT_STACK_CAPACITY);
+    assert(suspended && input.image);
+    assert(uintptr_t(input.image)+input.capacity<=uintptr_t(suspended) ||
+           uintptr_t(input.image)>=uintptr_t(suspended)+sizeof(*suspended));
+    assert(suspended->control.sp < MAX_STACK);
     if(drop_usb_on_input) { usb_session->reset(); drop_usb_on_input=false; }
     const Continuation control = suspended->control;
     std::vector<uint8_t> prefix((uint8_t*)suspended->stack,
@@ -223,11 +225,11 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
   if (overlay.action == OverlayAction::EXPRESSION) {
     ++expressions;
     const Bindings bindings = {execution.variables, execution.array, state.array_count,
-                               state.stack, MAX_STACK};
+                               input_workspace(execution.image).stack, INPUT_STACK_CAPACITY};
     uint8_t saved_image[INPUT_IMAGE_CAPACITY];
-    memcpy(saved_image, input_image_storage(state), sizeof(saved_image));
+    memcpy(saved_image, execution.image, sizeof(saved_image));
     execution.result = evaluate_input(view, state, bindings, {});
-    assert(!memcmp(saved_image, input_image_storage(state), sizeof(saved_image)));
+    assert(!memcmp(saved_image, execution.image, sizeof(saved_image)));
     return RuntimeStatus::OK;
   }
   const bool resume = overlay.action == OverlayAction::RESUME;
@@ -247,7 +249,7 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
     const uint8_t* p = view.bytes + execution.result.pc + 1;
     state.prompt_offset = execution.result.pc + 3;
     state.prompt_length = (uint16_t)(p[0] | ((uint16_t)p[1] << 8));
-    if (corrupt_input_stack) state.control.sp = INPUT_STACK_CAPACITY;
+    if (corrupt_input_stack) state.control.sp = MAX_STACK;
   } else assert(execution.result.error==Error::NONE || edit_after_failure);
   return RuntimeStatus::OK;
 }
@@ -296,10 +298,9 @@ int main() {
   program_text = "10 IF @(2)<>16 GOTO 999\n";
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
-  // RESUME may use the former INPUT-image slots again: a normal program
-  // still has the full 96-value stack, not the input-only lower 64 slots.
+  // Normal execution retains all 96 slots after INPUT.
   std::string wide = "1";
-  for (unsigned i=0; i<INPUT_STACK_CAPACITY; ++i) wide = "1+("+wide+")";
+  for (unsigned i=0; i<64; ++i) wide = "1+("+wide+")";
   const std::string wide_source = "10 INPUT @(2)\n20 A="+wide+
       "\n30 IF A<>65 GOTO 999\n40 A=0\n";
   program_text = wide_source.c_str(); entries = {"2"}; position = 0;

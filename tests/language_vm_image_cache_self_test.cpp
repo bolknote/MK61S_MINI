@@ -152,9 +152,11 @@ uint32_t execute_image(OverlayRequest* p) {
     assert(!state.control.sp && !state.control.call_count && !state.control.loop_count);
     assert(state.input_value.representation()==0);
   }
-  if(p->action==OverlayAction::EXPRESSION)
+  if(p->action==OverlayAction::EXPRESSION) {
+    bindings.stack=input_workspace(execution.image).stack;
+    bindings.stack_capacity=INPUT_STACK_CAPACITY;
     execution.result=evaluate_input(v,state,bindings,services);
-  else if(p->action==OverlayAction::ABORT) execution.result.error=Error::STOPPED;
+  } else if(p->action==OverlayAction::ABORT) execution.result.error=Error::STOPPED;
   else {
     const bool resume=p->action==OverlayAction::RESUME;
     if(resume) state.stack[state.control.sp++]=state.input_value;

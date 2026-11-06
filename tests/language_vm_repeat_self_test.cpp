@@ -36,7 +36,10 @@ uint32_t execute(OverlayRequest* p) {
   auto& s=*p->state;auto& r=*p->execution;
   if(p->action==OverlayAction::ABORT) {r.result.error=s.cancelled?Error::STOPPED:Error::IO;return 1;}
   const Bindings b={r.variables,r.array,s.array_count,s.stack,MAX_STACK};
-  if(p->action==OverlayAction::EXPRESSION){r.result=evaluate_input(v,s,b,services);return 1;}
+  if(p->action==OverlayAction::EXPRESSION){
+    const Bindings expression={r.variables,r.array,s.array_count,input_workspace(r.image).stack,INPUT_STACK_CAPACITY};
+    r.result=evaluate_input(v,s,expression,services);return 1;
+  }
   const bool resume=p->action==OverlayAction::RESUME;
   if(resume)s.stack[s.control.sp++]=s.input_value;
   else {++starts;assert(!s.control.sp && !s.control.call_count && !s.control.loop_count && !s.output[0]);}

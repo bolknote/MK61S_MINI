@@ -6,8 +6,8 @@
 
 namespace language_vm {
 // The sole LBV2 wire and shared Program passes require a matched System set.
-static constexpr uint32_t REQUEST_VERSION = 14;
-static constexpr uint32_t COMPILER_MAGIC = 0x424D5644UL;
+static constexpr uint32_t REQUEST_VERSION = 15;
+static constexpr uint32_t COMPILER_MAGIC = 0x424D5645UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Frontend selection/printing lives below this fixed offset. Flash writers
@@ -53,15 +53,22 @@ static constexpr uint32_t VALIDATED_MAGIC = 0x4149424CUL;
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.
 // The bound is tested both with and without compact decimal recipes.
 static constexpr uint16_t INPUT_IMAGE_CAPACITY = 256;
-// While a program is suspended for INPUT, the upper 32 number slots hold
-// its temporary bytecode instead of a second buffer on the resident C stack.
-// A 64-byte expression has at most 32 leaves; even with a suspended array
-// index it fits below the 64-slot boundary. Ordinary RUN still has 96 slots.
-static constexpr uint8_t INPUT_STACK_CAPACITY =
-    MAX_STACK - INPUT_IMAGE_CAPACITY / sizeof(Value);
-static_assert(INPUT_IMAGE_CAPACITY % sizeof(Value) == 0 &&
-              INPUT_STACK_CAPACITY >= 33 && INPUT_STACK_CAPACITY < MAX_STACK,
-              "INPUT bytecode and value stack must be disjoint");
+// A <=64-byte keyboard expression has at most 32 leaves. Its synchronous
+// evaluator uses an independent stack: suspended GOSUB arguments remain live
+// throughout all 96 program slots, including the old temporary image loan.
+static constexpr uint8_t INPUT_STACK_CAPACITY = 32;
+struct InputWorkspace {
+  uint8_t image[INPUT_IMAGE_CAPACITY];
+  Value stack[INPUT_STACK_CAPACITY];
+};
+static_assert(sizeof(InputWorkspace)==512,"bounded resident INPUT scratch");
+// Private EXPRESSION requests always point to the first member of this
+// resident-owned workspace, initialized by prepare_input before any APP swap.
+inline InputWorkspace& input_workspace(const uint8_t* image) {
+  static_assert(std::is_standard_layout<InputWorkspace>::value &&
+                offsetof(InputWorkspace,image)==0,"INPUT workspace ABI");
+  return *reinterpret_cast<InputWorkspace*>(const_cast<uint8_t*>(image));
+}
 enum class OverlayAction : uint8_t { START, RESUME, EXPRESSION, ABORT };
 // Only values/bytecode offsets, never compiler or executor pointers. The
 // executor binds a fresh State and callback table on every invocation.
@@ -91,8 +98,7 @@ inline void reset_execution_state(ExecutionState& state) {
                 std::is_standard_layout<Continuation>::value,
                 "reset ranges require standard-layout continuation fields");
   // Counts hide inactive call/loop frames and the operand stack. Each slot is
-  // completely written before its count grows; INPUT bytecode is likewise
-  // bounded by its emitted image size. Do not clear those dead scratch banks.
+  // completely written before its count grows. Do not clear dead scratch banks.
   // Keep every live cursor and the whole I/O/scalar tail at their old zero
   // representation, including input_value, flags, padding and the output NUL.
   // In-place ranges also avoid a full ExecutionState stack temporary.
@@ -100,9 +106,6 @@ inline void reset_execution_state(ExecutionState& state) {
          0, sizeof(Continuation) - offsetof(Continuation, pc));
   memset(reinterpret_cast<uint8_t*>(&state) + offsetof(ExecutionState, output),
          0, sizeof(ExecutionState) - offsetof(ExecutionState, output));
-}
-inline uint8_t* input_image_storage(ExecutionState& state) {
-  return reinterpret_cast<uint8_t*>(state.stack + INPUT_STACK_CAPACITY);
 }
 // Produced by the cold verifier, held by the resident for the immutable image
 // lifetime. This is an internal, data-only certificate, not a trust boundary
@@ -166,25 +169,20 @@ inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedI
 uint32_t validate_execution(OverlayRequest*);
 // Requires a verified expression-only View. Such images cannot mutate
 // control frames or variables, so only the scalar cursor fields need
-// saving. Values borrow the lower unused stack tail, never the upper INPUT
-// image slots. Reject an overlapping cursor here; run() also checks the
-// certificate's declared stack need against this bound before mutating state.
+// saving. Bindings must name the independent InputWorkspace stack, never the
+// live program stack. run() checks the declared expression stack need as usual.
 inline RunResult evaluate_input(const View& view, ExecutionState& s,
-                                const Bindings& program, const Services& services) {
-  if (!view.expression || s.control.sp >= INPUT_STACK_CAPACITY)
+                                const Bindings& expression, const Services& services) {
+  if (!view.expression || s.control.sp >= MAX_STACK)
     return {Error::INVALID_IMAGE, 0, 0, 0};
-  const uint32_t pc = s.control.pc;
-  const uint32_t data_pc = s.control.data_pc, data_index = s.control.data_index;
-  const uint8_t sp = s.control.sp, calls = s.control.call_count, loops = s.control.loop_count;
-  const Bindings expression = {program.variables, program.array, program.array_count,
-                               s.stack + sp, (uint8_t)(INPUT_STACK_CAPACITY - sp)};
-  Services local = services; local.yield_input = false;
-  const auto result = run(view, s.control, expression, local);
+  const uint32_t pc=s.control.pc,data_pc=s.control.data_pc,data_index=s.control.data_index;
+  const uint8_t sp=s.control.sp,calls=s.control.call_count,loops=s.control.loop_count;
+  // Expression verification excludes INPUT and all other flow instructions;
+  // the caller's service table therefore needs no copy to suppress yielding.
+  const auto result = run(view, s.control, expression, services);
   if (result.error == Error::NONE) s.input_value = expression.stack[0];
-  s.control.pc = pc; s.control.sp = sp;
-  s.control.data_pc = data_pc;
-  s.control.data_index = data_index;
-  s.control.call_count = calls; s.control.loop_count = loops;
+  s.control.pc=pc;s.control.data_pc=data_pc;s.control.data_index=data_index;
+  s.control.sp=sp;s.control.call_count=calls;s.control.loop_count=loops;
   return result;
 }
 enum class InputResult : uint8_t { NONE, VALUE, EXPRESSION, CANCELLED };

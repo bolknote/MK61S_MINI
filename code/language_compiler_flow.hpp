@@ -22,7 +22,7 @@ struct CompilerStage {
   PersistentValues* values;
   uint32_t command, argument0, argument1;
   // Optional file-cache handoff lives in the previously unused union tail.
-  // Existing frontend/request/transfer offsets and the 312-byte root stay fixed.
+  // Existing frontend/request/transfer offsets stay fixed.
   file_cache::Key file_key;
   ValidatedImage file_validated;
   uint16_t file_id, file_reserved;
@@ -46,8 +46,8 @@ struct CompilerContext {
 };
 
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(CompilerContext)==312 && sizeof(CompilerStage)==152 &&
-    offsetof(CompilerContext,execution)==232 && offsetof(CompilerStage,transfer)==60,"Flash compiler flow ABI");
+static_assert(sizeof(CompilerContext)==824 && sizeof(CompilerStage)==152 &&
+    offsetof(CompilerContext,execution)==744 && offsetof(CompilerStage,transfer)==60,"Flash compiler flow ABI");
 #endif
 enum CompilerPhase : uint32_t { FLOW_COMPILE_SOURCE = 0x100, FLOW_EMIT_SOURCE, FLOW_EDIT_SOURCE };
 using CompileFrontend = uint32_t (*)(loadable_module::Command, uint32_t, uint32_t,

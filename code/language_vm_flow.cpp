@@ -48,7 +48,7 @@ bool prepare_input(FlowContext& c) {
   const auto& r = *c.program.execution;
   auto& s = *c.program.state;
   if(r.result.pc >= r.image_size || s.prompt_offset > r.image_size ||
-     s.control.sp >= INPUT_STACK_CAPACITY) return false;
+     s.control.sp >= MAX_STACK) return false;
   const bool resource = !r.paged.read && (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE &&
                         !(r.image[7] & OWNED_RESOURCE_FLAG);
   if(resource ? s.prompt_length > 95 || r.image_size - s.prompt_offset < 3
@@ -61,7 +61,8 @@ bool prepare_input(FlowContext& c) {
   c.input.prompt = r.paged.read?s.prompt:(const char*)r.image + s.prompt_offset;
   if(resource) c.input.resource_image = r.image;
   c.input.prompt_length = s.prompt_length;
-  c.input.image = input_image_storage(s);
+  auto* workspace = ::new (static_cast<void*>(c.input_storage)) InputWorkspace;
+  c.input.image = workspace->image;
   c.input.capacity = INPUT_IMAGE_CAPACITY; c.input.language = s.language;
   return true;
 }

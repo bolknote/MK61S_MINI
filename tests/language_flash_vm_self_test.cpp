@@ -206,7 +206,9 @@ static void input_resume() {
       uint8_t expression[INPUT_IMAGE_CAPACITY];
       auto compiled=compile_expression(language,"2+3",3,expression,sizeof(expression));View expression_view;
       assert(compiled.error==Error::NONE && inspect(expression,uint16_t(compiled.size),expression_view)==Error::NONE);
-      auto evaluated=evaluate_input(expression_view,f.state,f.bindings(),f.services());
+      Value input_stack[INPUT_STACK_CAPACITY];auto bindings=f.bindings();
+      bindings.stack=input_stack;bindings.stack_capacity=INPUT_STACK_CAPACITY;
+      auto evaluated=evaluate_input(expression_view,f.state,bindings,f.services());
       assert(evaluated.error==Error::NONE && f.state.input_value==5);
       f.state.stack[f.state.control.sp++]=f.state.input_value;resume=true;
     }

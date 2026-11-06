@@ -87,15 +87,17 @@ Snapshot execute(Language language, const char* source, uint8_t poison,
     ++out.inputs;
     if(language == Language::BASIC) {
       const char* expression = "2+3*4";
-      uint8_t* temporary = input_image_storage(state);
+      uint8_t temporary[INPUT_IMAGE_CAPACITY];
       const auto expr = compile_expression(language, expression,
           static_cast<uint16_t>(strlen(expression)), temporary, INPUT_IMAGE_CAPACITY);
       assert(expr.error == Error::NONE);
       View input; assert(inspect(temporary, expr.size, input) == Error::NONE);
-      const auto evaluated = evaluate_input(input, state, bindings, services);
+      Value input_stack[INPUT_STACK_CAPACITY];
+      const Bindings expression_bindings={variables,array,state.array_count,input_stack,INPUT_STACK_CAPACITY};
+      const auto evaluated = evaluate_input(input, state, expression_bindings, services);
       result(out, evaluated, input);
       if(evaluated.error != Error::NONE) {
-        // ESC may be observed while the INPUT expression borrows the stack.
+        // ESC may be observed while evaluating the INPUT expression.
         assert(evaluated.error == Error::STOPPED);
         break;
       }

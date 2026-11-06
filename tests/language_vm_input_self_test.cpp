@@ -30,13 +30,14 @@ void check_expression(const std::string& text) {
   memset(state.output, 0x3C, sizeof(state.output));
   state.stack[0] = 123; state.input_value = 7;
   const Continuation saved = state.control;
-  uint8_t* const borrowed = input_image_storage(state);
+  uint8_t borrowed[INPUT_IMAGE_CAPACITY];
   memset(borrowed, 0xA5, INPUT_IMAGE_CAPACITY);
   memcpy(borrowed, image+8, limited.size);
   uint8_t saved_image[INPUT_IMAGE_CAPACITY]; memcpy(saved_image, borrowed, sizeof(saved_image));
   assert(inspect(borrowed, limited.size, view) == Error::NONE);
   Value variables[26] = {}, array[385] = {};
-  const Bindings bindings = {variables, array, 385, state.stack, MAX_STACK};
+  Value input_stack[INPUT_STACK_CAPACITY];
+  const Bindings bindings = {variables, array, 385, input_stack, INPUT_STACK_CAPACITY};
   const auto result = evaluate_input(view, state, bindings, {});
   assert(result.error != Error::STACK && result.error != Error::INVALID_IMAGE);
   assert(!memcmp(&saved, &state.control, sizeof(saved)) && state.stack[0] == 123);
@@ -89,9 +90,9 @@ void test_capacity() {
   assert(maximum >= 243); // no assumption that any backend can use DEC recipes
 #endif
 }
-void test_borrowed_stack() {
+void test_independent_stack() {
   ExecutionState state = {}; state.language = Language::BASIC;
-  uint8_t* const image = input_image_storage(state);
+  uint8_t image[INPUT_IMAGE_CAPACITY];
   state.control.pc = 47; state.control.sp = 1;
   state.control.call_count = 2; state.control.loop_count = 3;
   memset(state.control.calls, 0xA5, sizeof(state.control.calls));
@@ -100,7 +101,8 @@ void test_borrowed_stack() {
   const Continuation saved = state.control;
   Value variables[26] = {}; variables[0] = 5;
   Value array[385] = {}; array[2] = 8;
-  const Bindings bindings = {variables, array, 385, state.stack, MAX_STACK};
+  Value input_stack[INPUT_STACK_CAPACITY];
+  const Bindings bindings = {variables, array, 385, input_stack, INPUT_STACK_CAPACITY};
   for (const char* text : {"A+@(2)", "1/0"}) {
     const auto compiled = compile_expression(Language::BASIC, text, (uint16_t)strlen(text), image, INPUT_IMAGE_CAPACITY);
     assert(compiled.error == Error::NONE);
@@ -114,30 +116,42 @@ void test_borrowed_stack() {
   const auto compiled=compile_expression(Language::BASIC,"A",1,image,INPUT_IMAGE_CAPACITY);
   View view; assert(inspect(image,compiled.size,view)==Error::NONE);
   uint8_t saved_state[sizeof(state)];
-  for (uint8_t sp : {INPUT_STACK_CAPACITY, MAX_STACK}) {
+  for (uint8_t sp : {MAX_STACK, uint8_t(255)}) {
     state.control.sp = sp; memcpy(saved_state, &state, sizeof(state));
     const auto result=evaluate_input(view,state,bindings,{});
     assert(result.error==Error::INVALID_IMAGE && !memcmp(saved_state,&state,sizeof(state)));
   }
-  state.control.sp=INPUT_STACK_CAPACITY-1;
-  View oversized=view; oversized.stack=2;
+  state.control.sp=MAX_STACK-1;
+  View oversized=view; oversized.stack=INPUT_STACK_CAPACITY+1;
   memcpy(saved_state,&state,sizeof(state));
   assert(evaluate_input(oversized,state,bindings,{}).error==Error::INVALID_IMAGE);
   assert(!memcmp(saved_state,&state,sizeof(state)));
-  // The last lower slot is usable, and neither decoding nor a runtime stack
-  // overflow may touch the adjacent immutable image.
+  // All live program slots, even the last one, survive expression evaluation.
+  Value saved_stack[MAX_STACK]; memcpy(saved_stack,state.stack,sizeof(saved_stack));
   uint8_t saved_image[INPUT_IMAGE_CAPACITY]; memcpy(saved_image,image,sizeof(saved_image));
   assert(evaluate_input(view,state,bindings,{}).error==Error::NONE);
-  assert(state.input_value==5 && state.control.sp==INPUT_STACK_CAPACITY-1);
+  assert(state.input_value==5 && state.control.sp==MAX_STACK-1);
+  assert(!memcmp(saved_stack,state.stack,sizeof(saved_stack)));
   assert(!memcmp(saved_image,image,sizeof(saved_image)));
   const auto deep=compile_expression(Language::BASIC,"A+(A+A)",7,image,INPUT_IMAGE_CAPACITY);
   assert(deep.error==Error::NONE && inspect(image,deep.size,view)==Error::NONE);
-  view.stack=1; // corrupt/understated metadata still meets run-time push bounds
+  view.stack=1; // Understated metadata must not authorize writing program slots.
   memcpy(saved_image,image,sizeof(saved_image));
-  const Continuation before_overflow=state.control;
+  const Continuation before_expression=state.control;
+  assert(evaluate_input(view,state,bindings,{}).error==Error::NONE);
+  assert(!memcmp(&before_expression,&state.control,sizeof(before_expression)));
+  assert(state.input_value==15 && !memcmp(saved_image,image,sizeof(saved_image)));
+  assert(!memcmp(saved_stack,state.stack,sizeof(saved_stack)));
+  // Even understated metadata cannot let a malformed stream exceed the
+  // independent INPUT stack or touch suspended arguments/the source image.
+  for(unsigned i=0;i<=INPUT_STACK_CAPACITY;++i)image[HEADER_SIZE+i]=uint8_t(Op::CONST_0);
+  image[HEADER_SIZE+INPUT_STACK_CAPACITY+1]=uint8_t(Op::HALT);
+  view.size=view.end=HEADER_SIZE+INPUT_STACK_CAPACITY+2;view.stack=1;
+  memcpy(saved_image,image,sizeof(saved_image));
   assert(evaluate_input(view,state,bindings,{}).error==Error::STACK);
-  assert(!memcmp(&before_overflow,&state.control,sizeof(before_overflow)));
-  assert(state.input_value==5 && !memcmp(saved_image,image,sizeof(saved_image)));
+  assert(!memcmp(&before_expression,&state.control,sizeof(before_expression)));
+  assert(state.input_value==15 && !memcmp(saved_image,image,sizeof(saved_image)));
+  assert(!memcmp(saved_stack,state.stack,sizeof(saved_stack)));
 }
 void test_expression_whitelist() {
   const Op forbidden[] = {Op::STORE, Op::STORE_REF, Op::STORE_ARRAY, Op::JUMP,
@@ -158,15 +172,15 @@ void test_expression_whitelist() {
 }
 void test_program_stack_unchanged() {
   std::string expression = "1";
-  for (unsigned i=0;i<INPUT_STACK_CAPACITY;++i) expression = "1+("+expression+")";
+  for (unsigned i=1;i<MAX_STACK;++i) expression = "1+("+expression+")";
   const std::string source = "10 A="+expression+"\n";
   uint8_t image[MAX_IMAGE];
   const auto compiled=compile_basic(source.c_str(),(uint16_t)source.size(),image,sizeof(image),true);
-  assert(compiled.error==Error::NONE && compiled.stack==INPUT_STACK_CAPACITY+1);
+  assert(compiled.error==Error::NONE && compiled.stack==MAX_STACK);
   View view; assert(inspect(image,compiled.size,view)==Error::NONE);
   Value variables[26]={}, stack[MAX_STACK]={};
   State state={}; state.variables=variables; state.stack=stack; state.stack_capacity=MAX_STACK;
-  assert(run(view,state,{}).error==Error::NONE && variables[0]==INPUT_STACK_CAPACITY+1);
+  assert(run(view,state,{}).error==Error::NONE && variables[0]==MAX_STACK);
 }
 void test_cold_certificate() {
   uint8_t image[MAX_IMAGE];
@@ -188,8 +202,8 @@ void test_cold_certificate() {
 }
 }
 int main() {
-  test_capacity(); test_borrowed_stack(); test_expression_whitelist(); test_cold_certificate();
+  test_capacity(); test_independent_stack(); test_expression_whitelist(); test_cold_certificate();
   test_program_stack_unchanged();
-  printf("language_vm_input: bound=%u maximum=%u, whitelist, borrowed stack, validation PASS\n",
+  printf("language_vm_input: bound=%u maximum=%u, whitelist, independent stack, validation PASS\n",
          INPUT_IMAGE_CAPACITY, maximum);
 }
