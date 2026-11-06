@@ -1367,6 +1367,9 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
   diagnostics::context(diagnostics::State::APP,file);
   if (NativeHost::current || running_ || files::usb_active())
     return 3;
+  struct ReadLease {
+    ~ReadLease() { files::release_read_cursor(); }
+  } read_lease;
   u8 encoded[64];
   unsigned used = 0;
   files::Entry info;

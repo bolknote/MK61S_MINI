@@ -43,14 +43,43 @@ inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigne
 inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,const uint16_t* palette64=nullptr) {
     for(unsigned x=0;x<r.width;++x) out[x]=color_pixel(f,r.x-f.x+x,r.y-f.y+row,palette64);
 }
+inline void append_color_rect(Update& u,const Rect& next) {
+    // Search all live windows: two distant sprites can each continue down
+    // the next band without joining the unchanged pixels between them.
+    for(unsigned i=0;i<u.count;++i) {
+        auto& r=u.rectangles[i];
+        if(r.x==next.x && r.width==next.width && r.y+r.height==next.y) {
+            r.height+=next.height;return;
+        }
+    }
+    if(u.count<Update::CAPACITY) { u.rectangles[u.count++]=next;return; }
+    // Retain the fixed window budget. Expanding the cheapest existing
+    // window covers this run without dropping updates or allocating a map.
+    unsigned best=0,extra=UINT32_MAX;Rect expanded{};
+    for(unsigned i=0;i<u.count;++i) {
+        const auto& r=u.rectangles[i];
+        const unsigned x=r.x<next.x?r.x:next.x,y=r.y<next.y?r.y:next.y;
+        const unsigned right=r.x+r.width>next.x+next.width?r.x+r.width:next.x+next.width;
+        const unsigned bottom=r.y+r.height>next.y+next.height?r.y+r.height:next.y+next.height;
+        const unsigned cost=(right-x)*(bottom-y)-r.width*r.height;
+        if(cost<extra) {
+            best=i;extra=cost;
+            expanded={(uint16_t)x,(uint16_t)y,(uint16_t)(right-x),(uint16_t)(bottom-y)};
+        }
+    }
+    u.rectangles[best]=expanded;
+}
 inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_service_color_frame& next,bool force) {
     u.count=u.bytes=0;
+    // Use the same conservative window charge as the monochrome planner:
+    // commands, DMA setup and row service cost about 2048 pixel-data bytes.
+    constexpr unsigned WINDOW_BYTES=2048;
     const unsigned format=next.format&~MK61_COLOR_PRESERVE_OUTSIDE;
     if(force || !same_color_view(old,next) || std::memcmp(old.palette,next.palette,sizeof(old.palette))) {
         u.rectangles[0]={next.x,next.y,next.width,next.height};u.count=1;
     } else {
-        // Compare eight-row bands. Merge adjacent equal spans, bounding both
-        // planning time and command overhead without allocating a dirty map.
+        // Compare each tile once. Keep distant dirty runs separate; bridge
+        // short gaps only when their pixel data costs less than a new window.
         for(unsigned y=0;y<next.height;y+=8) {
             unsigned first=next.width,last=0;
             const unsigned rows=next.height-y<8?next.height-y:8;
@@ -68,19 +97,26 @@ inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_
                     for(unsigned row=0;row<rows && !dirty;++row)
                         dirty=std::memcmp(old.pixels+(y+row)*stride+x/2,next.pixels+(y+row)*stride+x/2,bytes)!=0;
                 }
-                if(dirty) { if(first==next.width) first=x;last=x+8<next.width?x+8:next.width; }
+                if(dirty) {
+                    if(first!=next.width && (x-last)*rows*2>WINDOW_BYTES) {
+                        append_color_rect(u,{(uint16_t)(next.x+first),(uint16_t)(next.y+y),
+                            (uint16_t)(last-first),(uint16_t)rows});
+                        first=next.width;
+                    }
+                    if(first==next.width) first=x;
+                    last=x+8<next.width?x+8:next.width;
+                }
             }
             if(first==next.width) continue;
-            if(u.count && u.rectangles[u.count-1].x==next.x+first &&
-               u.rectangles[u.count-1].width==last-first &&
-               u.rectangles[u.count-1].y+u.rectangles[u.count-1].height==next.y+y)
-                u.rectangles[u.count-1].height+=rows;
-            else if(u.count<Update::CAPACITY)
-                u.rectangles[u.count++]={(uint16_t)(next.x+first),(uint16_t)(next.y+y),(uint16_t)(last-first),(uint16_t)rows};
-            else { u.rectangles[0]={next.x,next.y,next.width,next.height};u.count=1;break; }
+            append_color_rect(u,{(uint16_t)(next.x+first),(uint16_t)(next.y+y),
+                (uint16_t)(last-first),(uint16_t)rows});
         }
     }
     for(unsigned i=0;i<u.count;++i) u.bytes+=u.rectangles[i].width*u.rectangles[i].height*2;
+    const unsigned full_bytes=next.width*next.height*2;
+    if(u.count && u.bytes+u.count*WINDOW_BYTES>=full_bytes+WINDOW_BYTES) {
+        u.rectangles[0]={next.x,next.y,next.width,next.height};u.count=1;u.bytes=full_bytes;
+    }
 }
 inline void copy_color(mk61_service_color_frame& out,const mk61_service_color_frame& in,uint8_t* storage) {
     std::memcpy(storage,in.pixels,in.pixel_bytes);

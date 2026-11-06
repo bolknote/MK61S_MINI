@@ -22,6 +22,17 @@ SDK_COMMIT = "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 TARGET = "mk61s-picocalc-pico-h"
 
 
+def audio_memory_budget(static_ram_bytes, enabled):
+    # Full48KiB APP + two15KiB fixed banks + two8KiB cache leases.
+    # Include4KiB for native/shared allocations and8KiB growth headroom.
+    minimum = (48 + 30 + 16 + 4 + 8) * 1024
+    available = 224 * 1024 - static_ram_bytes
+    if enabled and available < minimum:
+        raise ValueError(f"real-time audio APP SRAM budget: heap {available} < required {minimum} bytes")
+    return {"minimum_heap_bytes": minimum if enabled else None,
+            "heap_capacity_bytes": available}
+
+
 def run(command, **kwargs):
     return subprocess.run([str(x) for x in command], check=True, **kwargs)
 
@@ -88,6 +99,10 @@ def main():
     parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
     parser.add_argument("--psram-spi", action="store_true", help="Control build without four-bit PSRAM")
     parser.add_argument("--cosmic-clock-diagnostic", action="store_true", help="Prepare temporary125/200/250MHz diagnostic image")
+    parser.add_argument("--audio-clock", action=argparse.BooleanOptionalAction, default=True,
+                        help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
+    parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
+                        help="Build block-DMA synthesis candidate for hardware qualification")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
@@ -116,6 +131,8 @@ def main():
         if args.psram_spi:
             source_hash.update(b'picocalc-psram-qpi=0\0')
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
+        if args.audio_clock and not args.cosmic_clock_diagnostic: source_hash.update(b"audio-clock=200\0")
+        if args.audio_dma: source_hash.update(b"audio-dma=1\0")
         source_digest = source_hash.hexdigest()
         build_digest = hashlib.sha256((source_digest + '\0' + (
             'gcc' if args.compiler_runtime else 'owned-m0')).encode()).hexdigest()
@@ -128,6 +145,8 @@ def main():
              f"-DMK61_PICOCALC_PSRAM_QPI={'OFF' if args.psram_spi else 'ON'}",
              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
+             f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
+             f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
              f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
@@ -148,6 +167,7 @@ def main():
         static_ram_bytes=int(ram_end[1],16)-0x20000000
         if not 0 < static_ram_bytes <= 224 * 1024:
             raise ValueError('static SRAM overlaps the reserved stack region')
+        foreground_budget=audio_memory_budget(static_ram_bytes,args.audio_clock and not args.cosmic_clock_diagnostic)
         match=re.search(r'^([0-9a-fA-F]+) [A-Za-z] mk61_picocalc_firmware_footer$',symbols,re.M)
         if not match:raise ValueError('required firmware footer was discarded by the linker')
         footer_offset=int(match[1],16)-BASE
@@ -174,6 +194,8 @@ def main():
             "profile": args.profile, "prototype_version": re.search(r'VERSION\[\]\s*=\s*"(\d+\.\d+\.\d+)"',
                 (ROOT / 'ports/picocalc/version.hpp').read_text())[1], "mcu": "RP2040",
             "sampling_profile": args.sampling_profile,
+            "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic else None,
+            "block_audio_dma": args.audio_dma,
             "psram_bus": "spi" if args.psram_spi else "qpi-with-spi-fallback",
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + " + (
@@ -184,6 +206,7 @@ def main():
                             capture_output=True, text=True).stdout.strip(),
             "flash_bytes": len(image), "flash_limit": 2 * 1024 * 1024,
             "static_ram_bytes": static_ram_bytes,
+            "foreground_memory_budget": foreground_budget,
             "static_ram_data_bss_bytes": int(fields[1]) + int(fields[2]),
             "main_ram_region_bytes": 224 * 1024,
             "stack_reserved_bytes": 32 * 1024,

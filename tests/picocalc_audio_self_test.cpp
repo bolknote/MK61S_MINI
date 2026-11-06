@@ -5,6 +5,26 @@
 #include <mutex>
 #include <thread>
 #include "audio.hpp"
+#include "cosmic_clock.hpp"
+static thread_local bool core1=false;
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+#include "cosmic_clock_plan.hpp"
+static unsigned clock_mhz=125,boosts=0,restores=0;
+static bool clock_failure=false;
+namespace picocalc::audio_stream { bool active(); }
+namespace picocalc::cosmic_clock {
+bool audio_begin() {
+    assert(!core1 && !audio_stream::active() && clock_mhz==125);
+    if(clock_failure)return false;
+    clock_mhz=200;++boosts;return true;
+}
+void audio_end() {
+    assert(!core1 && !audio_stream::active());
+    if(clock_mhz==200){clock_mhz=125;++restores;}
+}
+uint32_t pwm_divider16(){return find(clock_mhz)->pwm_div16;}
+}
+#endif
 #if defined(TEST_CLOCK_MHZ)
 #include "cosmic_clock_plan.hpp"
 namespace picocalc::cosmic_clock {
@@ -14,7 +34,6 @@ uint32_t pwm_divider16() { return find(TEST_CLOCK_MHZ)->pwm_div16; }
 #define MK61_PICOCALC_SCRIPT_HPP
 namespace picocalc::script { void tone(unsigned,unsigned,unsigned=100);audio::Plan tone_status(); }
 #include "../ports/picocalc/audio_stream.cpp"
-static thread_local bool core1=false;
 static std::mutex executor;
 static repeating_timer* alarm;
 static unsigned pools,cancels,left_level,right_level,disabled;
@@ -37,7 +56,10 @@ void pwm_set_both_levels(unsigned slice,uint16_t left,uint16_t right) { assert(c
 void pwm_set_enabled(unsigned,bool value) { assert(core1);enabled=value; }
 void pwm_set_clkdiv_int_frac4(unsigned slice,unsigned whole,unsigned fraction) {
     assert(core1 && slice==5);
-#if defined(TEST_CLOCK_MHZ)
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    const auto* plan=picocalc::cosmic_clock::find(clock_mhz);
+    assert(whole==plan->pwm_div16/16 && fraction==plan->pwm_div16%16);
+#elif defined(TEST_CLOCK_MHZ)
     const auto* plan=picocalc::cosmic_clock::find(TEST_CLOCK_MHZ);
     assert(whole==plan->pwm_div16/16 && fraction==plan->pwm_div16%16);
 #else
@@ -78,6 +100,9 @@ int main() {
     sample();assert(left_level==128);assert(call(MK61_AUDIO_STATUS,&r,10) && r.underruns==1);
     close();assert(!active() && !enabled && cancels==1 && disabled==2);
     Synth state;mk61_service_audio_synth request{render,&state,25000,100};assert(synth(request,10));
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(clock_mhz==200 && boosts==1 && !restores);
+#endif
     sample();assert(state.calls==1 && left_level==191 && right_level==64);
     assert(call(MK61_AUDIO_STATUS,&r,10) && !r.queued);request.rate=44100;assert(!synth(request,10));assert(active());
     // Closing on core 0 waits for an in-flight core-1 callback. Its context
@@ -111,5 +136,14 @@ int main() {
     sample();assert(left_level==128 && right_level==128);close();
     timer_failure=true;assert(!key_click() && !enabled && !key_click_statistics().active);
     timer_failure=false;assert(key_click());close();assert(!enabled && !alarm->callback && pools==1);
+    request.rate=25000;timer_failure=true;
+    assert(!synth(request,10) && !active() && !enabled);
+    timer_failure=false;
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(clock_mhz==125 && boosts==2 && restores==2);
+    clock_failure=true;assert(!synth(request,10) && !active());
+    assert(clock_mhz==125 && boosts==restores);
+#endif
     puts("Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS");
+    return 0;
 }

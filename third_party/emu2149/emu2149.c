@@ -13,6 +13,7 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "emu2149.h"
 
 static uint32_t voltbl[2][32] = {
@@ -367,25 +368,12 @@ static unsigned advance_counter(uint32_t* count,unsigned period,unsigned ticks)
   *count+=ticks;
   if(*count>=period) {
     if(*count<period*2) { *count-=period;++events; }
-    else { events+=*count/period;*count%=period; }
+    else { const unsigned quotient=*count/period;events+=quotient;*count-=quotient*period; }
   }
   return events;
 }
-static int16_t calc_silent(PSG* psg)
+static void advance_envelope(PSG* psg,unsigned ticks)
 {
-  unsigned ticks=0;
-  while(psg->realstep>psg->psgtime) { psg->psgtime+=psg->psgstep;++ticks; }
-  psg->psgtime-=psg->realstep;
-  if(!ticks) return psg->out;
-  for(unsigned i=0;i<3;++i) {
-    uint32_t count=psg->count[i];const unsigned edges=advance_counter(&count,psg->freq[i],ticks);
-    psg->count[i]=(uint16_t)count;if(edges&1) psg->edge[i]=!psg->edge[i];psg->ch_out[i]=0;
-  }
-  uint32_t count=psg->noise_count;
-  const unsigned edges=advance_counter(&count,psg->noise_freq,ticks);
-  unsigned shifts=(edges+(psg->noise_scaler?0:1))/2;
-  psg->noise_count=(uint8_t)count;psg->noise_scaler^=edges&1;
-  while(shifts--) { if(psg->noise_seed&1) psg->noise_seed^=0x24000;psg->noise_seed>>=1; }
   unsigned steps=advance_counter(&psg->env_count,psg->env_freq,ticks);
   while(steps-- && !psg->env_pause) {
     psg->env_ptr=(psg->env_ptr+(psg->env_face?1:0x3F))&0x3F;
@@ -397,12 +385,98 @@ static int16_t calc_silent(PSG* psg)
       } else { psg->env_pause=1;psg->env_ptr=0; }
     }
   }
+}
+static void advance_state(PSG* psg,unsigned ticks)
+{
+  for(unsigned i=0;i<3;++i) {
+    uint32_t count=psg->count[i];const unsigned edges=advance_counter(&count,psg->freq[i],ticks);
+    psg->count[i]=(uint16_t)count;if(edges&1) psg->edge[i]=!psg->edge[i];
+  }
+  uint32_t count=psg->noise_count;
+  const unsigned edges=advance_counter(&count,psg->noise_freq,ticks);
+  unsigned shifts=(edges+(psg->noise_scaler?0:1))/2;
+  psg->noise_count=(uint8_t)count;psg->noise_scaler^=edges&1;
+  while(shifts--) { if(psg->noise_seed&1) psg->noise_seed^=0x24000;psg->noise_seed>>=1; }
+  advance_envelope(psg,ticks);
+}
+static unsigned output_ticks(PSG* psg)
+{
+  unsigned ticks=0;
+  while(psg->realstep>psg->psgtime) { psg->psgtime+=psg->psgstep;++ticks; }
+  psg->psgtime-=psg->realstep;return ticks;
+}
+static int16_t calc_silent(PSG* psg,unsigned ticks)
+{
+  advance_state(psg,ticks);
+  for(unsigned i=0;i<3;++i)psg->ch_out[i]=0;
   psg->out>>=ticks<31?ticks:31;return psg->out;
+}
+/* For N ticks, repeated floor((out+mix)/2) is exactly
+ * floor((out0 + sum(mix[i]*2^i))/2^N). With fixed channel amplitudes,
+ * three hardware32-bit multiplies replace all intermediate mixer steps.
+ * Oscillator/noise masks preserve every internal tick and final state. */
+static bool weighted_eligible(const PSG* psg,unsigned ticks)
+{
+  if(!ticks || ticks>16 || psg->out < -32768 || psg->out>32767 ||
+     (psg->voltbl!=voltbl[0] && psg->voltbl!=voltbl[1]))return false;
+  if(((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
+     (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks))return false;
+  return psg->env_ptr<32;
+}
+static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
+{
+  uint16_t count=psg->count[channel];const uint16_t period=psg->freq[channel];
+  unsigned edge=psg->edge[channel];uint32_t bits=0;
+  if(count<period && (unsigned)(period-count)>ticks) {
+    count=(uint16_t)(count+ticks);bits=edge?all:0;
+  } else for(unsigned i=0;i<ticks;++i) {
+    ++count;if(count>=period) {edge=!edge;count=period?(uint16_t)(count-period):0;}
+    if(edge)bits|=1U<<i;
+  }
+  psg->count[channel]=count;psg->edge[channel]=(uint8_t)edge;return bits;
+}
+static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
+{
+  uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
+  unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
+  if(count<period && period-count>ticks) {count=(uint8_t)(count+ticks);bits=(seed&1)?all:0;}
+  else for(unsigned i=0;i<ticks;++i) {
+    ++count;if(count>=period) {
+      scaler^=1;if(scaler) {if(seed&1)seed^=0x24000;seed>>=1;}
+      count=period?(uint8_t)(count-period):0;
+    }
+    bits|=(seed&1)<<i;
+  }
+  psg->noise_count=count;psg->noise_scaler=(uint8_t)scaler;psg->noise_seed=seed;return bits;
+}
+static int16_t calc_weighted(PSG* psg,unsigned ticks)
+{
+  const uint32_t all=(1U<<ticks)-1,noise=noise_mask(psg,ticks,all);
+  int32_t sum=psg->out;
+  for(unsigned i=0;i<3;++i) {
+    uint32_t bits=tone_mask(psg,i,ticks,all);
+    bits=(psg->tmask[i]?all:bits)&(psg->nmask[i]?all:noise);
+    if((psg->mask&PSG_MASK_CH(i)) ||
+       (psg->freq_limit && psg->freq[i]<=psg->freq_limit && psg->nmask[i] && !psg->tmask[i]))bits=0;
+    const unsigned amplitude=psg->voltbl[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
+    sum+=(int32_t)(amplitude*bits);psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
+  }
+  advance_envelope(psg,ticks);
+  psg->out=sum>>ticks;return (int16_t)psg->out;
+}
+static int16_t calc_quality(PSG* psg,unsigned ticks)
+{
+  if(weighted_eligible(psg,ticks))return calc_weighted(psg,ticks);
+  while(ticks--) { update_output(psg);psg->out=(psg->out+mix_output(psg))>>1; }
+  return psg->out;
 }
 int16_t PSG_calc(PSG* psg)
 {
-  if(psg->quality && psg->base_incr==(1U<<GETA_BITS) &&
-     !(psg->volume[0]|psg->volume[1]|psg->volume[2])) return calc_silent(psg);
+  if(psg->quality && psg->base_incr==(1U<<GETA_BITS)) {
+    const unsigned ticks=output_ticks(psg);if(!ticks)return (int16_t)psg->out;
+    if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);
+    return calc_quality(psg,ticks);
+  }
   return calc_reference(psg);
 }
 /* Host equivalence checks; linker discards this unused entry from APPs. */

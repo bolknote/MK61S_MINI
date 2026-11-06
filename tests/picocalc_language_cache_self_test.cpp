@@ -128,6 +128,20 @@ void picocalc_language_cache_test() {
     // Payload corruption is rejected by C6 CRCs, then rebuilt using the
     // independently checked owner marker. An unrelated collision is kept.
     const auto cached_b=stored(b);
+    // Terminal binary inspection may leave a read-only FatFs cursor on a
+    // generated entry. Derived cache replacement still owns that namespace
+    // and must release the reader before raw rename/eviction, without
+    // changing the source revision or silently skipping persistence.
+    char persisted_source[512];unsigned persisted_size=0;
+    assert(files::read_text(b,persisted_source,sizeof(persisted_source),persisted_size));
+    std::vector<u8> persisted_image(language_vm::MAX_MODULE);language_vm::View persisted_view{};
+    assert(cache::load(b,language_vm::Language::BASIC,true,persisted_source,(u16)persisted_size,
+                      persisted_image.data(),persisted_view));
+    u8 cursor_bytes[96];unsigned cursor_size=0;
+    assert(files::read_range(cached_b.c_str(),0,cursor_bytes,sizeof(cursor_bytes),cursor_size) && cursor_size==sizeof(cursor_bytes));
+    const auto persisted_revision=files::revision();start=cache::statistics();
+    cache::remember(b,true,persisted_revision,persisted_source,(u16)persisted_size,persisted_view);
+    assert(cache::statistics().stores==start.stores+1 && files::revision()==persisted_revision);
     std::vector<u8> bytes(language_vm::MAX_MODULE+1024);unsigned used=0;
     assert(files::read(cached_b.c_str(),bytes.data(),bytes.size(),used) && used>100);
     bytes[used-1]^=1;

@@ -66,7 +66,7 @@ unsigned report(char* out,unsigned capacity,bool recheck) {
     (unsigned long)value.footer_offset,(unsigned long)value.expected,(unsigned long)value.actual,(unsigned long)value.elapsed_us);
   if(used<0 || (unsigned)used>=capacity) return 0;
   if(failure.magic==FAILURE_MAGIC && failure.inverse==~FAILURE_MAGIC && failure.status<=(u32)Status::CRC_MISMATCH) {
-    const int n=std::snprintf(out+used,capacity-used,"FIRMWARE_LAST_FAILURE=%s EXPECTED=%08lX ACTUAL=%08lX\r\n",
+    const int n=std::snprintf(out+used,capacity-used,"FIRMWARE_LAST_FAILURE=%s LAST_FAILURE_EXPECTED=%08lX LAST_FAILURE_ACTUAL=%08lX\r\n",
       resident_firmware_format::status_name((Status)failure.status),(unsigned long)failure.expected,(unsigned long)failure.actual);
     if(n<0 || (unsigned)n>=capacity-used) return 0;
     used+=n;

@@ -550,8 +550,7 @@ done:
 #if MK61_PICO_SPECIALIZED_SPAN
 #if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE && \
     !(defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG)
-// The temporary Cosmic probe needs49KiB for its code and complete counters.
-// In that diagnostic image only, keep this VM kernel in XIP to recover6KiB.
+// Keep the fused integer loop in SRAM, including managed audio builds.
 __attribute__((section(".time_critical.mk61_integer_span")))
 #endif
 __attribute__((noinline)) uint8_t integer_span_raw(const View& v, Continuation& s,
@@ -1020,7 +1019,12 @@ __attribute__((optimize("no-inline-functions-called-once")))
 #if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
 // Avoid XIP cache competition with the service loop. O2 saves 4 KiB of SRAM
 // against O3 here, retaining heap space for APPs and prepared text fonts.
-__attribute__((section(".time_critical.mk61_vm_run"),optimize("O2")))
+__attribute__((optimize("O2")))
+#if !(defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK)
+__attribute__((section(".time_critical.mk61_vm_run")))
+#endif
+// Managed audio needs the complete APP/bank/cache budget. Its VM dispatcher
+// executes from XIP; the fused integer loop above keeps its SRAM placement.
 #endif
 RunResult run(const View& v, Continuation& s, const Bindings& data,
               const Services& host, uint32_t limit, bool resume) {

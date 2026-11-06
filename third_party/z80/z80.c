@@ -762,6 +762,16 @@ void z80_step(z80* const z) {
   process_interrupts(z);
 }
 
+uint32_t z80_run(z80* z, uint32_t cycles, const bool* stop) {
+  if (cycles>INT32_MAX) cycles=INT32_MAX;
+  const unsigned long before=z->cyc;
+  while ((uint32_t)(z->cyc-before)<cycles && !(stop && *stop)) {
+    z80_step(z);
+    if (z->halted) break;
+  }
+  return (uint32_t)(z->cyc-before);
+}
+
 // outputs to stdout a debug trace of the emulator
 void z80_debug_output(z80* const z) {
   printf("PC: %04X, AF: %04X, BC: %04X, DE: %04X, HL: %04X, SP: %04X, "

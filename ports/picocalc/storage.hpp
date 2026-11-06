@@ -51,6 +51,9 @@ u32 revision();
 bool content_stamp(const char* path,u32& stamp);
 bool space(u64& total,u64& free);
 bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned& used);
+// Drop the bounded read-only cursor at APP ownership boundaries. Ordinary
+// writes, remounts and USB handoff also close it automatically.
+void release_read_cursor();
 // Bounded, journaled overwrite of existing physical bytes; never grows a file.
 bool write_range(const char* path,u32 offset,const u8* data,unsigned count);
 bool begin_usb();

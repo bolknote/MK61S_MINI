@@ -63,5 +63,18 @@ struct Lease {
     bool expired(uint64_t now)const {return active && now>=until;}
     void clear(){active=false;mhz=125;until=0;}
 };
+struct AudioClock {
+    bool active=false;
+    template<class Backend> bool begin(Backend& io) {
+        if(active)return true;
+        if(!io.switch_to(200))return false;
+        active=true;return true;
+    }
+    template<class Backend> void end(Backend& io) {
+        if(!active)return;
+        active=false;
+        if(!io.switch_to(125))io.reboot();
+    }
+};
 }
 #endif

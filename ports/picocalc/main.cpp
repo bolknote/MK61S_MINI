@@ -131,6 +131,9 @@ void report(unsigned math_failures) {
     std::printf("KEY_SOUND=%s KEY_CLICK=%s KEY_CLICKS=%lu KEY_CLICKS_COMPLETED=%lu\n",
         ui.settings().key_sound?"ON":"OFF",clicks.active?"ACTIVE":"IDLE",
         (unsigned long)clicks.started,(unsigned long)clicks.completed);
+    const auto synth=picocalc::audio_stream::synth_statistics();
+    std::printf("SYNTH_DMA=%u SYNTH_BLOCKS=%lu SYNTH_UNDERRUNS=%lu\n",
+        synth.dma,(unsigned long)synth.blocks,(unsigned long)synth.underruns);
     const auto settings_storage=picocalc::settings_storage_statistics();
     std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
         (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,
@@ -149,6 +152,11 @@ void report(unsigned math_failures) {
         (unsigned long)psram.write_bytes,(unsigned long)psram.errors,psram.qpi?"QPI":"SPI",(unsigned long)psram.qpi_fallbacks,
         (unsigned long)psram.read_batches,(unsigned long)psram.write_batches,
         (unsigned long)psram.tail_timeouts,(unsigned long)psram.tail_state);
+    std::printf("PSRAM_BOOT_QPI_ATTEMPTS=%lu PROBE_FAILURES=%lu FIRST_PHASE=%s FIRST_QPI=%lu PROBE_ADDRESS=%08lX PROBE_EXPECTED=%08lX PROBE_ACTUAL=%08lX LAST_FAILURE=%s\n",
+        (unsigned long)psram.boot.qpi_attempts,(unsigned long)psram.boot.failures,
+        picocalc::psram::probe_phase_name(psram.boot.first.phase),(unsigned long)psram.boot.first.qpi,
+        (unsigned long)psram.boot.first.address,(unsigned long)psram.boot.first.expected,
+        (unsigned long)psram.boot.first.actual,picocalc::psram::probe_phase_name(psram.boot.last_failure));
     std::printf("EXT_CACHE=%s VM_HIT=%lu VM_MISS=%lu SD_HIT=%lu SD_MISS=%lu REJECTED=%lu STORES=%lu VM_BYTES=%lu SD_BYTES=%lu EVICTIONS=%lu\n",
         external.ready?"PSRAM":"OFF",(unsigned long)cache.psram_hits,(unsigned long)cache.psram_misses,
         (unsigned long)external.sector_hits,(unsigned long)external.sector_misses,

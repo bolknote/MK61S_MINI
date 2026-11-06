@@ -34,11 +34,12 @@ with tempfile.TemporaryDirectory(prefix="picocalc-audio-") as temp:
                "-I" + str(build), "-I" + str(ROOT / "ports/picocalc"), "-I" + str(ROOT / "code")]
     if os.environ.get("MK61_TEST_SANITIZERS") == "1":
         command += ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"]
-    modes = (125, 200, 250) if os.environ.get("MK61_TEST_CLOCK_MODES") == "1" else (None,)
+    modes = (125, 200, 250) if os.environ.get("MK61_TEST_CLOCK_MODES") == "1" else (None,"auto")
     for mhz in modes:
-        extra = [] if mhz is None else ["-DMK61_PICOCALC_COSMIC_CLOCK_DIAG=1", f"-DTEST_CLOCK_MHZ={mhz}"]
+        extra = [] if mhz is None else (["-DMK61_PICOCALC_AUDIO_CLOCK=1"] if mhz=="auto" else ["-DMK61_PICOCALC_COSMIC_CLOCK_DIAG=1", f"-DTEST_CLOCK_MHZ={mhz}"])
         binary = build / ("test" if mhz is None else f"test-{mhz}")
         subprocess.run(command + extra + [str(ROOT / "tests/picocalc_audio_self_test.cpp"), "-o", str(binary)], check=True)
         subprocess.run([str(binary)], check=True)
         if mhz is not None:
-            print(f"PCM25kHz, PWM100MHz and core-1 ownership at{mhz}MHz: PASS", flush=True)
+            print("PCM25kHz, PWM100MHz and core-1 ownership " +
+                  ("with automatic200/125MHz" if mhz=="auto" else f"at{mhz}MHz") + ": PASS", flush=True)

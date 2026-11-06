@@ -14,6 +14,7 @@ constexpr unsigned PLL_USB_REFDIV=1,PLL_USB_VCO_FREQ_HZ=480000000,PLL_USB_POSTDI
 constexpr unsigned CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF=0,CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX=1;
 constexpr unsigned CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS=0,CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB=1;
 constexpr unsigned CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS=0,CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_XOSC_CLKSRC=3;
+constexpr unsigned CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB=2;
 constexpr uint32_t CLOCKS_SLEEP_EN0_CLK_RTC_RTC_BITS=1U<<21;
 constexpr uint32_t CLOCKS_SLEEP_EN1_CLK_SYS_TIMER_BITS=1U<<10,CLOCKS_SLEEP_EN1_CLK_SYS_WATCHDOG_BITS=1U<<11;
 constexpr uint32_t CLOCKS_SLEEP_EN1_CLK_SYS_USBCTRL_BITS=1U<<4,CLOCKS_SLEEP_EN1_CLK_USB_USBCTRL_BITS=1U<<5;
@@ -44,7 +45,13 @@ inline void observe() {
 }
 inline void reset(uint32_t run=125000000,bool usb=true) {
     power_test_clocks={};power_test_pll_sys={};power_test_pll_usb={};power_test_scb={};
-    hz={run,run,USB_CLK_HZ,USB_CLK_HZ,46875,XOSC_HZ};
+    hz={run,
+#if defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK
+        USB_CLK_HZ,
+#else
+        run,
+#endif
+        USB_CLK_HZ,USB_CLK_HZ,46875,XOSC_HZ};
     clocks_hw->sleep_en0=0x79BDAF41;clocks_hw->sleep_en1=0x5A071C32;scb_hw->scr=0x12;
     clocks_hw->clk[clk_adc]={0x801,777};clocks_hw->clk[clk_usb]={0x802,999};
     vbus=usb;connected=true;usb_irq=true;usb_event=uart_rx=input=rtc_alarm=false;
@@ -58,7 +65,10 @@ inline void clock_set_reported_hz(clock_handle_t clock,uint32_t hz) {
 }
 inline bool clock_configure(clock_handle_t clock,uint32_t src,uint32_t aux,uint32_t source_hz,uint32_t hz) {
     assert(hz && source_hz>=hz);
-    if(clock==clk_peri) ++power_test::peri_helpers;
+    if(clock==clk_peri) {
+        ++power_test::peri_helpers;
+        assert(source_hz==(aux==CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB?USB_CLK_HZ:power_test::hz[clk_sys]));
+    }
     if(clock==clk_sys) {
         if(uint64_t(hz)*10<uint64_t(USB_CLK_HZ)*11 &&
            (power_test::hz[clk_usb] || power_test::connected || power_test::usb_irq))

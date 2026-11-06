@@ -43,7 +43,20 @@ struct Reset {
     void arm_reset(){events+="arm ";armed=true;}
     void spin(){assert(armed);events+="spin";throw 42;}
 };
+struct AudioBackend {
+    std::vector<uint32_t> clocks;
+    bool fail=false,reset=false;
+    bool switch_to(uint32_t mhz){clocks.push_back(mhz);return !fail;}
+    void reboot(){reset=true;}
+};
 int main(){
+    AudioClock audio;AudioBackend a;
+    audio.end(a);assert(a.clocks.empty());
+    a.fail=true;assert(!audio.begin(a) && !audio.active);
+    a.fail=false;assert(audio.begin(a) && audio.begin(a));
+    assert((a.clocks==std::vector<uint32_t>{200,200}));
+    audio.end(a);audio.end(a);assert(!audio.active && a.clocks.back()==125 && a.clocks.size()==3);
+    assert(audio.begin(a));a.fail=true;audio.end(a);assert(a.reset && !audio.active);
     unsigned transitions=0;
     for(const auto& before:plans)for(const auto& after:plans){
         assert(valid(before) && valid(after));Backend b;assert(transition(b,before,after));++transitions;

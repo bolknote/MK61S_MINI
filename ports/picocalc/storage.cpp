@@ -24,6 +24,21 @@ u32 generation = 1;
 u32 media_epoch = 1;
 char problem[64] = "No microSD mounted";
 WriteSession* writer=nullptr;
+// One bounded read-only cursor retains FatFs's position/cluster between
+// successive sector or terminal chunks. FF_FS_TINY keeps the sector window
+// in FATFS, so this adds no second 512-byte data cache. All local mutations
+// and media ownership changes close it before touching the filesystem.
+struct ReadCursor {
+    FIL file{};
+    char path[PATH_SIZE]{};
+    u32 revision=0;
+    bool open=false;
+} reader;
+FRESULT close_reader() {
+    if(!reader.open) return FR_OK;
+    reader.open=false;
+    return f_close(&reader.file);
+}
 bool finish_transaction(bool success);
 void abort_write(WriteSession* value) {
     if(!value || !value->open) return;
@@ -55,6 +70,7 @@ bool available() {
     return true;
 }
 bool start_transaction() {
+    if(!fail(close_reader())) return false;
     if(writer) abort_write(writer);
     if(!available()) return false;
     if(storage_journal::begin()) return true;
@@ -62,6 +78,7 @@ bool start_transaction() {
     recovery_required=true;mounted=false;(void)f_mount(nullptr,"",0);return false;
 }
 bool finish_transaction(bool success) {
+    if(close_reader()!=FR_OK) success=false;
     if(success && storage_journal::commit()) return true;
     char saved[sizeof(problem)];std::snprintf(saved,sizeof(saved),"%s",problem);
     if(storage_journal::error()[0]) std::snprintf(saved,sizeof(saved),"%s",storage_journal::error());
@@ -104,6 +121,7 @@ bool contains(const char* name,const char* filter) {
 bool mount() {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(usb) return available();
+    (void)close_reader();
     abort_write(writer);
     mounted = fail(f_mount(&filesystem, "", 1));
     if(mounted) {
@@ -176,19 +194,26 @@ bool stat(const char* path, Entry& out) {
 bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned& used) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0;
+    if(!path || std::strlen(path)>=PATH_SIZE) return fail(FR_INVALID_NAME);
     if(!available() || (!out && count)) return false;
-    FIL file;
-    FRESULT result = f_open(&file, path, FA_READ);
-    if(result != FR_OK) return fail(result);
-    if(offset < f_size(&file)) {
-        result = f_lseek(&file, offset);
+    if(reader.open && (reader.revision!=generation || std::strcmp(reader.path,path)))
+        if(!fail(close_reader())) return false;
+    if(!reader.open) {
+        const auto result=f_open(&reader.file,path,FA_READ);
+        if(result!=FR_OK) return fail(result);
+        std::strcpy(reader.path,path);reader.revision=generation;reader.open=true;
+    }
+    FRESULT result=FR_OK;
+    if(offset < f_size(&reader.file)) {
+        if(f_tell(&reader.file)!=offset) result=f_lseek(&reader.file,offset);
         UINT got = 0;
-        if(result == FR_OK) result = f_read(&file, out, count, &got);
+        if(result == FR_OK) result = f_read(&reader.file, out, count, &got);
         used = got;
     }
-    const FRESULT closed = f_close(&file);
-    return fail(result == FR_OK ? closed : result);
+    if(result!=FR_OK) (void)close_reader();
+    return fail(result);
 }
+void release_read_cursor() { (void)close_reader(); }
 bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!path || !data || !count || count>4096 || storage_journal::reserved(path)) return fail(FR_INVALID_PARAMETER);
@@ -390,6 +415,7 @@ bool text_window(u16 logical) {
     text_cache.window_start=(u16)start;text_cache.window_size=(u16)length;return true;
 }
 bool replace_file(const char* path,const char* temporary) {
+    if(!fail(close_reader())) return false;
     char backup[PATH_SIZE];FILINFO info;
     const FRESULT status=f_stat(path,&info);
     if((status==FR_OK && (info.fattrib&AM_DIR)) || (status!=FR_OK && status!=FR_NO_FILE)) {
@@ -473,6 +499,7 @@ WriteSession* begin_write(const char* path,bool m8) {
 bool append_write(WriteSession* value,const u8* data,unsigned size) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!value || !value->open || value->revision!=generation || usb || (size && !data)) return false;
+    if(!fail(close_reader())) { abort_write(value);return false; }
     for(unsigned at=0;at<size;) {
         u8 chunk[768];unsigned count=0;
         const unsigned end=at+256<size?at+256:size;
@@ -492,6 +519,7 @@ void cancel_write(WriteSession*& value) { abort_write(value);delete value;value=
 bool commit_write(WriteSession*& value) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!value || !value->open || value->revision!=generation || usb) { cancel_write(value);return false; }
+    if(!fail(close_reader())) { cancel_write(value);return false; }
     FRESULT result=f_sync(&value->file);const FRESULT closed=f_close(&value->file);
     if(result==FR_OK) result=closed;
     value->open=false;writer=nullptr;
@@ -522,6 +550,7 @@ void usb_eject() { if(usb) { (void)sd::sync(); ejected = true; } }
 bool begin_usb() {
     if(usb) return true;
     if(!sd::ready() && !sd::init()) return fail(FR_NOT_READY);
+    (void)close_reader();
     abort_write(writer);
     if(recovery_required && !mount()) return false;
     if(!sd::sync()) return fail(FR_DISK_ERR);
@@ -538,6 +567,7 @@ bool end_usb() {
 }
 bool format() {
     if(usb || (!sd::ready() && !sd::init())) return fail(FR_NOT_READY);
+    (void)close_reader();
     abort_write(writer);
     storage_journal::reset();recovery_required=false;
     (void)f_mount(nullptr, "", 0); mounted = false;

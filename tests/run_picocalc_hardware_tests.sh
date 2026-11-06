@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
+python3 "$(dirname "$0")/picocalc_status_fields_self_test.py"
+python3 "$(dirname "$0")/picocalc_audio_dma_self_test.py"
+bash "$(dirname "$0")/run_picocalc_read_cursor_tests.sh"
 python3 "$(dirname "$0")/picocalc_psram_pio_self_test.py"
 python3 "$(dirname "$0")/picocalc_psram_qpi_self_test.py"
+python3 "$(dirname "$0")/picocalc_psram_probe_self_test.py"
 python3 "$(dirname "$0")/picocalc_power_self_test.py"
 python3 "$(dirname "$0")/picocalc_panel_recovery_self_test.py"
 python3 "$(dirname "$0")/picocalc_audio_self_test.py"
 python3 "$(dirname "$0")/cosmic_clock_self_test.py"
+python3 "$(dirname "$0")/picocalc_audio_budget_self_test.py"
 MK61_TEST_CLOCK_MODES=1 python3 "$(dirname "$0")/picocalc_audio_self_test.py"
 python3 "$(dirname "$0")/picocalc_render_hil_self_test.py"
 bash "$(dirname "$0")/run_shared_memory_buffer_tests.sh"

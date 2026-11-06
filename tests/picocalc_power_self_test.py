@@ -24,7 +24,9 @@ def main():
                  '-I'+str(args.source_root/'ports/picocalc'),'-I'+str(args.source_root/'code')]
         if os.environ.get('MK61_TEST_SANITIZERS')=='1':
             command+=['-fsanitize=address,undefined','-fno-omit-frame-pointer']
-        subprocess.run(command+[str(ROOT/'tests/picocalc_power_self_test.cpp'),
-                                str(args.source.resolve()),'-o',str(build/'test')],check=True)
-        subprocess.run([str(build/'test')],check=True)
+        for managed in (False,True):
+            flags=['-DMK61_PICOCALC_AUDIO_CLOCK=1'] if managed else []
+            subprocess.run(command+flags+[str(ROOT/'tests/picocalc_power_self_test.cpp'),
+                                    str(args.source.resolve()),'-o',str(build/'test')],check=True)
+            subprocess.run([str(build/'test')],check=True)
 if __name__=='__main__':main()

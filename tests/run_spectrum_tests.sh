@@ -6,7 +6,7 @@ trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 python3 "$root/tests/spectrum_rom_cache_self_test.py"
-for test in spectrum_self_test spectrum_ldir_self_test spectrum_audio_timeline_self_test; do
+for test in spectrum_self_test spectrum_ldir_self_test spectrum_batch_self_test spectrum_audio_timeline_self_test; do
 clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
     "$root/tests/$test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \
     "$root/examples/portable-apps/SPECTRUM/rom_cache.c" "$root/examples/portable-apps/SPECTRUM/memory.c" \
@@ -28,9 +28,13 @@ for test in spectrum_hil_timing_self_test spectrum_hil_games_self_test spectrum_
         "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/$test"
     "$build/$test" "$build/$test-wire.txt"
 done
-clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
-    "$root/tests/emu2149_silent_self_test.c" "$root/third_party/emu2149/emu2149.c" -o "$build/ay-silent"
-"$build/ay-silent"
+for test in emu2149_silent_self_test emu2149_quality_self_test; do
+    sources=("$root/tests/$test.c")
+    if [[ "$test" == emu2149_silent_self_test ]]; then sources+=("$root/third_party/emu2149/emu2149.c"); fi
+    clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+        "${sources[@]}" -o "$build/$test"
+    "$build/$test"
+done
 for test in spectrum_disk_self_test spectrum_extensions_self_test; do
     clang -std=c11 -O2 -Wall -Wextra -Werror -pthread "${flags[@]}" \
         "$root/tests/$test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \

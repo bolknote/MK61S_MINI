@@ -27,8 +27,9 @@ bool(*is_idle)()=nullptr;
 uint32_t transitions=0;
 bool switched=false;
 bool bus_cleared=false;
+AudioClock audio_clock;
 [[noreturn]] void reset_to125(){watchdog_reboot(0,0,0);while(true)tight_loop_contents();}
-int64_t expire(alarm_id_t,void*) {
+[[maybe_unused]] int64_t expire(alarm_id_t,void*) {
     // Core1 completes the current I2C STOP before resetting the master. If a
     // peripheral cannot finish, the existing8s watchdog remains independent.
     io_worker::drain();reset_to125();
@@ -56,7 +57,8 @@ void __no_inline_not_in_flash_func(write_clock)(void* raw) {
     set_sys_clock_pll(plan.vco_hz,plan.postdiv1,plan.postdiv2);
 }
 struct Hardware {
-    bool idle(){const auto tone=script::tone_status();return is_idle && is_idle() && !audio_stream::active() && !tone.wrap && !tone.software;}
+    bool foreground=false;
+    bool idle(){const auto tone=script::tone_status();return (foreground || (is_idle && is_idle())) && !audio_stream::active() && !tone.wrap && !tone.software;}
     void stop_click(){audio_stream::stop_key_click();}
     void drain(){io_worker::drain();}
     bool pio(uint32_t div){return psram::diagnostic_clock_divider(div);}
@@ -64,8 +66,17 @@ struct Hardware {
     bool deinit_usb(){return tud_deinit(0);}
     void hold_usb_reset(){reset_block(RESETS_RESET_USBCTRL_BITS);}
     void detach_delay(){sleep_ms(200);}
-    bool change_clock(const Plan& plan){return flash_safe_execute(write_clock,(void*)&plan,50)==PICO_OK;}
-    bool healthy(uint32_t mhz){return cosmic_clock::healthy(mhz);}
+    bool change_clock(const Plan& plan){
+        if(plan.mhz>125){vreg_set_voltage(VREG_VOLTAGE_1_20);busy_wait_us_32(1000);}
+        return flash_safe_execute(write_clock,(void*)&plan,50)==PICO_OK;
+    }
+    bool healthy(uint32_t mhz){
+        if(!cosmic_clock::healthy(mhz))return false;
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+        if(mhz==125){vreg_set_voltage(VREG_VOLTAGE_1_10);busy_wait_us_32(1000);}
+#endif
+        return true;
+    }
     void release_usb_reset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
     bool init_usb(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
     void connect(){tud_connect();}
@@ -91,10 +102,10 @@ struct I2cPins {
     bool scl_high(){return gpio_get(SCL);}
     void delay(){busy_wait_us_32(50);}
 };
-bool apply(uint32_t mhz) {
+bool apply(uint32_t mhz,bool foreground=false) {
     const Plan* plan=find(mhz),*old=find(clock_get_hz(clk_sys)/1000000);
     if(!plan || !old)return false;
-    Hardware hardware;
+    Hardware hardware;hardware.foreground=foreground;
     if(!transition(hardware,*old,*plan))return false;
     ++transitions;return true;
 }
@@ -121,16 +132,36 @@ bool usb_probe(const char* args,Writer write,void* context) {
 void bootstrap() {
     // USB is not initialized yet. Keep its PLL/output at stock48MHz.
     // boot2 CLKDIV4 keeps XIP31.25/50/62.5MHz, never above stock62.5.
-    vreg_set_voltage(VREG_VOLTAGE_1_20);busy_wait_us_32(1000);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    vreg_set_voltage(VREG_VOLTAGE_1_20);
+#else
+    vreg_set_voltage(VREG_VOLTAGE_1_10);
+#endif
+    busy_wait_us_32(1000);
     clock_configure_undivided(clk_peri,0,CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,PERI_HZ);
     I2cPins pins;bus_cleared=clear_i2c(pins);
 }
 void idle_check(bool(*predicate)()){is_idle=predicate;}
 uint32_t pwm_divider16(){const Plan* p=find(clock_get_hz(clk_sys)/1000000);return p?p->pwm_div16:20;}
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+namespace {
+struct AudioBackend {
+    bool switch_to(uint32_t mhz){return apply(mhz,true);}
+    [[noreturn]] void reboot(){reset_to125();}
+};
+}
+bool audio_begin(){if(get_core_num()!=0)return false;AudioBackend backend;return audio_clock.begin(backend);}
+void audio_end(){if(get_core_num()!=0)return;AudioBackend backend;audio_clock.end(backend);}
+#endif
 bool command(const char* args,Writer write,void* context) {
     if(!write)return false;
     args=terminal_core::skip_spaces(args);
     if(!std::strncmp(args,"echo ",5))return usb_probe(args+5,write,context);
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    // Production clock ownership belongs to the audio stream. A diagnostic
+    // lease must never reset an interactive game after105 seconds.
+    if(std::strcmp(args,"status"))return false;
+#else
     if(!std::strncmp(args,"begin ",6)) {
         args+=6;usize mhz=0;
         if(!terminal_core::parse_unsigned(args,10,250,mhz) || !terminal_core::at_end(args) ||
@@ -149,6 +180,7 @@ bool command(const char* args,Writer write,void* context) {
         if(!is_idle || !is_idle())return false;
         Reset reset{write,context};planned_reboot(reset);
     } else if(std::strcmp(args,"status"))return false;
+#endif
     const uint32_t cpu=clock_get_hz(clk_sys),khz=measure(CLOCKS_FC0_SRC_VALUE_CLK_SYS),usb=measure(CLOCKS_FC0_SRC_VALUE_CLK_USB);
     const Plan* p=find(cpu/1000000);if(!p)return false;
     const auto ram=psram::statistics();char line[240];

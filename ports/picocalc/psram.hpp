@@ -1,15 +1,18 @@
 #ifndef MK61_PICOCALC_PSRAM_HPP
 #define MK61_PICOCALC_PSRAM_HPP
 #include "rust_types.h"
+#include "cosmic_clock.hpp"
+#include "psram_probe.hpp"
 namespace picocalc::psram {
 constexpr u32 CAPACITY=8U*1024*1024;
 struct Statistics {
     bool ready,qpi;
     u32 id,hz,read_bytes,write_bytes,errors,qpi_fallbacks,read_batches,write_batches;
     u32 tail_timeouts,tail_state;
+    BootProbe boot;
 };
 bool init();
-#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+#if MK61_PICOCALC_MANAGED_CLOCK
 bool diagnostic_clock_divider(u32 divider256);
 u32 diagnostic_clock_divider256(); // Read the actual PIO register.
 #endif

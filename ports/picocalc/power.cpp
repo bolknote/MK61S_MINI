@@ -1,6 +1,7 @@
 #include "power.hpp"
 #include "io_worker.hpp"
 #include "clock.hpp"
+#include "cosmic_clock.hpp"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
 #include "hardware/pll.h"
@@ -119,7 +120,11 @@ void SleepClocks::leave() {
              PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
     set_sys_clock_hz(sys_hz_, true);
     clock_configure_undivided(clk_peri, 0,
+#if MK61_PICOCALC_MANAGED_CLOCK
+        CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB, peri_hz_);
+#else
         CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLK_SYS, peri_hz_);
+#endif
   }
   clocks_hw->clk[clk_adc].div = adc_div_;
   clocks_hw->clk[clk_adc].ctrl = adc_ctrl_;

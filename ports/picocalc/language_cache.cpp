@@ -138,6 +138,10 @@ bool room(const char* target,unsigned size,u8* scratch) {
 }
 void store(const char* path,bool rf,u32 source_crc,u16 length,const vm::View& v) {
     if(!files::ready() || !cacheable(v)) return;
+    // Generated cache entries use direct FatFs writes below. A terminal or
+    // APP may have retained a binary reader for an entry we now replace or
+    // evict; release its read lock without invalidating source revisions.
+    files::release_read_cursor();
     // Cache writes use private FatFs transactions. They change no source
     // file and therefore do not invalidate the source/media revision. All
     // ordinary editor/terminal/USB writes still advance files::revision().

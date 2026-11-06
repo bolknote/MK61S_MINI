@@ -58,6 +58,11 @@ struct z80 {
 
 void z80_init(z80* const z);
 void z80_step(z80* const z);
+/* Run whole instructions up to a caller-supplied external interrupt edge.
+ * EI/NMI/INT are still processed after every instruction. HALT returns to
+ * the machine scheduler; stop may report a memory/port callback failure.
+ * Spans are capped to INT32_MAX so elapsed time cannot wrap the deadline. */
+uint32_t z80_run(z80* z, uint32_t cycles, const bool* stop);
 void z80_debug_output(z80* const z);
 void z80_gen_nmi(z80* const z);
 void z80_gen_int(z80* const z, uint8_t data);

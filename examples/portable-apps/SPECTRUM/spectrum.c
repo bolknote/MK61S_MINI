@@ -168,6 +168,13 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
             const uint32_t left=tstates-elapsed,limit=left<boundary?left:boundary;
             const uint32_t refresh=(limit+3)/4;
             s->cpu.cyc+=refresh*4;s->cpu.r=(s->cpu.r&128)|((s->cpu.r+refresh)&127);
+        } else if(!legacy_audio && phase>=32) {
+            // No external INT edge lies inside this span. Keep per-opcode
+            // execution/interrupt handling in the CPU and update machine
+            // frame accounting only at the next edge or requested deadline.
+            uint32_t limit=frame-phase;
+            if(limit>tstates-elapsed) limit=tstates-elapsed;
+            (void)z80_run(&s->cpu,limit,memory?&memory->fault:NULL);
         } else z80_step(&s->cpu);
         const uint32_t cycles=(uint32_t)(s->cpu.cyc-before);
         elapsed+=cycles;phase+=cycles;
