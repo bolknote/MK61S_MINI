@@ -18,7 +18,7 @@ u32 get32(const u8 *p) {
 }
 } // namespace
 bool valid_settings(const Settings &s) {
-  return s.volume <= 10 && s.idle_signal <= 1 && s.classic_speed <= 1 &&
+  return s.key_sound <= 1 && s.idle_signal <= 1 && s.classic_speed <= 1 &&
          s.memory <= 2 && s.random <= 1 && s.russian <= 1 &&
          s.calculator_font <= 1 &&
          (((s.ui_font_family==0 || s.ui_font_family==1 || (s.ui_font_family==3 && s.ui_font_key!=0)) &&
@@ -40,9 +40,9 @@ void encode_settings(const Settings &s, u32 sequence,
                      u8 out[SETTINGS_PAGE_BYTES]) {
   std::memset(out, 0xFF, SETTINGS_PAGE_BYTES);
   std::memcpy(out, "M61P", 4);
-  out[4] = 5;
+  out[4] = 6;
   put32(out + 8, sequence);
-  const u8 values[] = {s.volume,          s.idle_signal,  s.classic_speed,
+  const u8 values[] = {s.key_sound,       s.idle_signal,  s.classic_speed,
                        s.memory,          s.random,       s.russian,
                        s.calculator_font, s.ui_font_size, s.lcd_backlight,
                        s.key_backlight};
@@ -58,24 +58,19 @@ void encode_settings(const Settings &s, u32 sequence,
   put32(out + 64, checksum(out, 64));
 }
 bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
-  if (std::memcmp(page, "M61P", 4) || page[4] < 1 || page[4] > 5)
+  if (std::memcmp(page, "M61P", 4) || page[4] != 6)
     return false;
-  const unsigned crc_offset = page[4] >= 3 ? 64 : 32;
-  if (get32(page + crc_offset) != checksum(page, crc_offset))
+  if (get32(page + 64) != checksum(page, 64))
     return false;
   Settings next{page[12], page[13], page[14], page[15], page[16],
                 page[17], page[18], page[19], page[20], page[21]};
-  if (page[4] >= 2) {
-    next.sleep_minutes = page[22];
-    next.rtc_ppm = (i16)((u16)page[23] | (u16)page[24] << 8);
-  }
-  if (page[4] >= 3) {
-    next.alarm_flags = page[25];
-    next.alarm_epoch[0] = get32(page + 26);
-    next.alarm_epoch[1] = get32(page + 30);
-  }
-  if(page[4]>=4) { next.text_rows=page[34];next.text_width=page[35];next.text_height=page[36];next.text_gap=page[37]; }
-  if(page[4]>=5) { next.ui_font_family=page[38];next.ui_font_key=get32(page+40); }
+  next.sleep_minutes = page[22];
+  next.rtc_ppm = (i16)((u16)page[23] | (u16)page[24] << 8);
+  next.alarm_flags = page[25];
+  next.alarm_epoch[0] = get32(page + 26);
+  next.alarm_epoch[1] = get32(page + 30);
+  next.text_rows=page[34];next.text_width=page[35];next.text_height=page[36];next.text_gap=page[37];
+  next.ui_font_family=page[38];next.ui_font_key=get32(page+40);
   if (!valid_settings(next))
     return false;
   value = next;

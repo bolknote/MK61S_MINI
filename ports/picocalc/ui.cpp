@@ -319,9 +319,8 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
   } else
     switch (selected()) {
     case 0:
-      settings_.volume =
-          cycle ? (u8)((settings_.volume + 1) % 11)
-                : (u8)menu_model::step(settings_.volume, 11, direction);
+      settings_.key_sound = cycle ? (u8)(settings_.key_sound ^ 1)
+                                  : (u8)(direction > 0);
       break;
     case 1:
       settings_.idle_signal ^= 1;
@@ -388,8 +387,8 @@ void Ui::row(unsigned index, char out[64]) const {
   } else if (page_ == Page::SETTINGS) {
     switch (index) {
     case 0:
-      std::snprintf(out, 64, "%s %u", text("Volume", M8("Громкость")),
-                    settings_.volume);
+      std::snprintf(out, 64, "%s %s", text("Key sound", M8("Звук клавиш")),
+                    settings_.key_sound ? text("ON", M8("ВКЛ")) : text("OFF", M8("ВЫКЛ")));
       break;
     case 1:
       std::snprintf(out, 64, "%s %s", text("5 min beep", M8("5 мин звук")),

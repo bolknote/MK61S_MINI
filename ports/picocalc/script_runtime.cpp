@@ -511,6 +511,7 @@ void show_lines(const char *lines, unsigned stride, unsigned count,
 audio::Plan tone_status() { return current_tone; }
 void tone(unsigned frequency, unsigned milliseconds, unsigned percent) {
 #if defined(PICO_ON_DEVICE)
+  audio_stream::stop_key_click();
   if(audio_stream::active()) return;
 #endif
   const unsigned volume=services ? services->sound_volume() : 10;

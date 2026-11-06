@@ -130,12 +130,16 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     u32 sequence = 0;
     require(decode_settings(encoded, decoded, sequence) && sequence == 0xFEDCBA98, "settings roundtrip");
     require(std::memcmp(&settings, &decoded, sizeof(settings)) == 0, "settings payload");
-    for(unsigned at = 0; at < 36; ++at) {
+    for(unsigned at = 0; at < 64; ++at) {
         encoded[at] ^= 1;
         require(!decode_settings(encoded, decoded, sequence), "torn or corrupt settings accepted");
         encoded[at] ^= 1;
     }
-    settings.volume = 11;
+    settings.key_sound = 0;
+    encode_settings(settings, 1, encoded);
+    require(decode_settings(encoded, decoded, sequence) && decoded.key_sound == 0 && decoded.volume == 10,
+            "key sound OFF persists independently of application audio");
+    settings.key_sound = 2;
     encode_settings(settings, 1, encoded);
     require(!decode_settings(encoded, decoded, sequence), "out-of-range settings accepted");
 
@@ -170,16 +174,23 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     ui.input(0xB6, calc); ui.input(0xB6, calc); ui.input('\n', calc);
     require(ui.page() == Page::SETTINGS, "Settings action");
     ui.input(0xB7, calc);
-    require(ui.settings().volume == 10, "right clamps maximum volume");
+    require(ui.settings().key_sound == 1, "right enables key sound");
+    ui.row(0, label);
+    require(std::strcmp(label, M8("Звук клавиш ВКЛ")) == 0, "Russian key sound label");
     ui.input('\n', calc);
-    require(ui.settings().volume == 0, "Enter cycles volume");
+    require(ui.settings().key_sound == 0, "Enter disables key sound");
     ui.input(0xB4, calc);
-    require(ui.settings().volume == 0, "left clamps minimum volume");
+    require(ui.settings().key_sound == 0, "left keeps key sound disabled");
+    ui.input(0xB7, calc);
+    require(ui.settings().key_sound == 1, "right re-enables key sound");
+    ui.input(0xB4, calc);
     for(unsigned i = 0; i < 5; ++i) ui.input(0xB6, calc);
     ui.input(0xB7, calc);
     require(ui.settings().russian == 0, "language changed to English");
     ui.row(5, label);
     require(std::strcmp(label, "Language EN") == 0, "live English menu text");
+    ui.row(0, label);
+    require(std::strcmp(label, "Key sound OFF") == 0, "English key sound label replaces volume");
     ui.input(0xB7, calc);
     ui.input(0xB5, calc); ui.input(0xB5, calc); // Memory.
     const u8 memory = ui.settings().memory;

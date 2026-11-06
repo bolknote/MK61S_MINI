@@ -230,12 +230,12 @@ void picocalc_software_test(const char* preview_path) {
     assert(fonts::glyph(settings,'A',after) && after.family==3 && after.width==1);
     const u32 revision=ui.settings_revision();assert(ui.apply_settings(settings,false) && ui.settings_revision()==revision);
     assert(fonts::select(Settings{}) && fonts::select(settings));
-    // Restore from old settings records: new fields were erased, not zeroed.
+    // An older settings format is discarded; the device uses fresh defaults.
     Settings legacy;encode_settings(legacy,7,record);record[4]=4;
     std::memset(record+38,0xFF,26);u32 crc=2166136261U;
     for(unsigned i=0;i<64;++i) crc=(crc^record[i])*16777619U;
     for(unsigned i=0;i<4;++i) record[64+i]=(u8)(crc>>(i*8));
-    assert(decode_settings(record,decoded,sequence) && decoded.ui_font_family==1 && !decoded.ui_font_key);
+    assert(!decode_settings(record,decoded,sequence));
     assert(files::remove("/Fonts/DejaVu-12.FMK"));
     ui.init(settings);assert(ui.settings().ui_font_family==1 && !ui.settings().ui_font_key);
     assert(fonts::step(16,1,item) && item.family==4);
