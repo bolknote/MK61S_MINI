@@ -6,6 +6,9 @@ Classic. It installs the three quests, retains their two save slots, and never
 flashes, resets, formats, deletes files, or writes the clock. Keys are injected
 USB matrix events; mechanical keys and LCD readability still need a human.
 """
+if not __debug__:
+    raise RuntimeError('URQ hardware checks require assertions; run Python without -O/-OO')
+
 import sys
 from pathlib import Path
 

@@ -15,7 +15,7 @@ import tempfile
 
 from tools.apps.urq.qst2urq import decode_source, make_package
 from tools.apps.urq.adaptations import adapt
-from tools.apps.urq.library import DEVICE_EXCLUSIONS
+from tools.apps.urq.library import DEVICE_EXCLUSIONS, preflight_device_library, prune_device_library
 
 ROOT = Path(__file__).resolve().parents[3]
 LOCK = json.loads((ROOT / "tools/apps/urq/upstream.json").read_text())
@@ -71,6 +71,12 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
     if revision(upstream) != LOCK["commit"]:
         raise ValueError("UrqW revision differs from tools/apps/urq/upstream.json")
     catalog = json.loads((upstream / "games.json").read_text())
+    extra_catalog = json.loads((ROOT / 'tools/apps/urq/extra-games.json').read_text())
+    known = ({game['folder'] for game in catalog if 'ru' in game.get('lang', '').split(';')} |
+             {game['id'] for game in extra_catalog['games']} | set(DEVICE_EXCLUSIONS))
+    # Check every namespace before even replacing the root icon. A late check
+    # would discover a redirected game directory only after overwriting it.
+    preflight_device_library(output, known)
     records = []
     published = []
     output.mkdir(parents=True, exist_ok=True)
@@ -85,14 +91,6 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
         reasons = []
         if key in DEVICE_EXCLUSIONS:
             reasons.append(DEVICE_EXCLUSIONS[key])
-            stale = output / key
-            if stale.is_dir():
-                for path in stale.iterdir():
-                    if path.is_file() and (path.name in ('game.urq', 'autoexec.wbmp') or
-                                           re.fullmatch(r'p[0-9]{4}\.uqd', path.name)):
-                        path.unlink()
-                if not any(stale.iterdir()):
-                    stale.rmdir()
         try:
             manifest, paths, text = sources(folder)
             license_id = license_for(paths)
@@ -153,6 +151,16 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
     extra_records = publish(host, output, source_output, smoke)
     records.extend(extra_records)
     published.extend(record['id'] for record in extra_records)
+    expected = {'autoexec.wbmp'}
+    for record in records:
+        if record['published']:
+            key = record['id']
+            expected.update((key + '/game.urq', key + '/autoexec.wbmp'))
+            expected.update(key + f'/p{number:04d}.uqd' for number in range(record['package']['parts']))
+    # Only prune known generated names, after conversion/smoke of the complete
+    # new selection. Unpublished quests and surplus parts cannot survive an
+    # incremental build; saves and other user files are never removed.
+    prune_device_library(output, expected, known)
     report = {"upstream": LOCK, "profile": {"workspace_bytes": 8192, "line_bytes": 1023,
               "variables": 128, "items": 64, "actions": 48, "frames": 24, "string_pool_bytes": 2560},
               "verification": "Conversion and startup; complete adaptation walkthroughs are in tests/urq_library_self_test.py. Other paths are not certified.",

@@ -615,6 +615,11 @@ bool load_slot(unsigned slot) {
   return true;
 }
 bool truth(const urq::Value& value) { return value.type == 1 ? value.text && *value.text : value.number != 0; }
+bool name_prefix(const char* text, const char* prefix) {
+  while(*prefix)
+    if(urq::lower(uint8_t(*text++)) != urq::lower(uint8_t(*prefix++))) return false;
+  return true;
+}
 unsigned inventory(unsigned selected, char* caption = nullptr, char* command = nullptr) {
   auto& state = app.engine.state(); unsigned count = 0;
   for(unsigned i = 0; i < urq::ITEMS; ++i) if(state.items[i]) {
@@ -626,11 +631,11 @@ unsigned inventory(unsigned selected, char* caption = nullptr, char* command = n
   for(unsigned i = 0; i < app.pack.labels(); ++i) {
     char name[128], key[144]; uint32_t position;
     if(!app.pack.label_at(i, name, sizeof(name), position)) break;
-    if(strncmp(name, "use_", 4)) continue;
-    bool eligible = !strncmp(name, "use_inv", 7) && (!name[7] || name[7] == '_');
+    if(!name_prefix(name, "use_")) continue;
+    bool eligible = name_prefix(name + 4, "inv") && (!name[7] || name[7] == '_');
     for(unsigned v = 0; !eligible && v < urq::ITEMS; ++v) if(state.items[v]) {
       const char* item = app.engine.text(state.items[v]); const unsigned n = strlen(item);
-      if(strncmp(name + 4, item, n) || (name[4 + n] && name[4 + n] != '_')) continue;
+      if(!name_prefix(name + 4, item) || (name[4 + n] && name[4 + n] != '_')) continue;
       mk61_app_snprintf(app.services, key, sizeof(key), "hide_use_%s", item);
       eligible = !truth(app.engine.get("hide_use")) && !truth(app.engine.get(key));
     }
@@ -722,8 +727,13 @@ void input_event(unsigned kind, uint8_t value = 0) {
   else if(kind == MK61_TEXT_END_LINE) app.cursor = app.length;
 #if defined(MK61_TARGET_PICOCALC)
   else if(kind == MK61_TEXT_UP) {
-    urq::copy_string(app.input, app.engine.text(app.engine.state().last_input));
-    app.length = app.cursor = uint16_t(strlen(app.input));
+    const char* previous = app.engine.text(app.engine.state().last_input);
+    const size_t length = strlen(previous);
+    if(length >= sizeof(app.draft)) notice(full_line.data());
+    else {
+      memcpy(app.input, previous, length + 1);
+      app.length = app.cursor = uint16_t(length);
+    }
   }
   else if(kind == MK61_TEXT_DOWN) { app.length = app.cursor = 0; app.input[0] = 0; }
 #endif
@@ -961,6 +971,9 @@ void finish_session();
         app.slice_ready=false;
 #else
         app.engine.run(64);
+        // Output may wait for the reader to advance one or more full pages.
+        // A pause reached by this slice starts after that wait, not before it.
+        if(state.status == urq::Status::PAUSE) app.last_ms = mk61_api->millis_ms();
 #endif
         app.dirty=true;
       }

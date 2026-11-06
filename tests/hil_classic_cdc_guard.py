@@ -3,6 +3,9 @@
 No serial device is opened. macOS libproc queries the exact cu/tty pair,
 avoiding lsof scans of unrelated network volumes.
 """
+if not __debug__:
+    raise RuntimeError('Classic CDC checks require assertions; run Python without -O/-OO')
+
 import ctypes
 import os
 from pathlib import Path

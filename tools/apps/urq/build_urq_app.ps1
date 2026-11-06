@@ -44,24 +44,9 @@ try {
     }
     [IO.File]::WriteAllText((Join-Path $OutputDirectory 'urq-build.json'),
         (ConvertTo-Json -InputObject $reports -Depth 8) + [Environment]::NewLine, $utf8)
-    if (-not [string]::IsNullOrWhiteSpace($LibraryOutput)) {
-        $library = Join-Path $root 'programs/urq'
-        foreach ($file in Get-ChildItem -LiteralPath $library -Recurse -File) {
-            if ($file.Extension -cnotin @('.urq', '.uqd', '.wbmp')) { continue }
-            $relative = $file.FullName.Substring($library.Length).TrimStart([char[]]'\/')
-            $destination = Join-Path $LibraryOutput $relative
-            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination))
-            Copy-Item -LiteralPath $file.FullName -Destination $destination -Force
-        }
-    }
-    if (-not [string]::IsNullOrWhiteSpace($LicensesOutput)) {
-        foreach ($folder in Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'sources') -Directory) {
-            $destination = Join-Path $LicensesOutput $folder.Name
-            [void][IO.Directory]::CreateDirectory($destination)
-            foreach ($name in @('AUTHORS.txt', 'LICENSE.txt')) {
-                Copy-Item -LiteralPath (Join-Path $folder.FullName $name) -Destination $destination -Force
-            }
-        }
+    if (-not [string]::IsNullOrWhiteSpace($LibraryOutput) -or -not [string]::IsNullOrWhiteSpace($LicensesOutput)) {
+        & (Join-Path $PSScriptRoot 'copy_urq_library.ps1') -ProjectRoot $root `
+            -LibraryOutput $LibraryOutput -LicensesOutput $LicensesOutput
     }
 } catch {
     [Console]::Error.WriteLine("URQ APP build: $($_.Exception.Message)")
