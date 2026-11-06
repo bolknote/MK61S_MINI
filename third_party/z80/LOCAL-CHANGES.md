@@ -13,12 +13,15 @@ Upstream and pinned revision are recorded in `UPSTREAM`; `LICENSE` is unmodified
 - An M1 address range skips the callback when a fetch cannot change the
   selected disk ROM. The callback still surrounds the same fetch if the
   map changes. The notification path is separate from ordinary fetches.
-- Optional read/write pointers cover four 16 KiB address windows. A null
-  pointer uses the original callback; 16-bit address wrap is preserved.
-- Optional 1 KiB page views cover the lower and upper 16 KiB when a direct
-  window is absent. Spectrum retains these cache pages across bank switches;
-  clean pages trap their first store so only modified pages are written back.
-  Reads through page views are outlined to keep the APP within 48 KiB.
+- One 64-entry table per direction covers all 64 KiB in 1 KiB pages.
+  Every CPU byte access uses a single table lookup; a null pointer uses the
+  original callback. This also keeps code in partially cached upper banks
+  on the inline path. Clean cache pages trap their first store so only
+  modified pages are written back. Spectrum rebuilds both tables after
+  paging, cache misses and first stores; 16-bit address wrap is preserved.
+- Four contiguous 16 KiB views remain available to LDIR batching. They
+  describe the same memory as the CPU page tables and allow a batch to
+  cross internal page boundaries without another lookup.
 - BC/DE/HL and their alternate registers share native 16-bit fields with
   their individual bytes. Both supported hosts and RP2040 are little endian;
   the header rejects other byte orders instead of silently swapping registers.

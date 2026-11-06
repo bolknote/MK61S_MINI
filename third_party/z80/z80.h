@@ -14,7 +14,7 @@ struct z80 {
   void* userdata;
   void (*m1)(void*,uint16_t,bool); /* Local: opcode-fetch paging, before/after. */
   uint16_t m1_start,m1_limit; /* Local: notify if (uint16_t)(PC-start)<=limit. */
-  const uint8_t* read_map[4]; /* Local: direct 16K windows; NULL uses callbacks. */
+  const uint8_t* read_map[4]; /* Local: contiguous windows for LDIR batching. */
   uint8_t* write_map[4];
 
   unsigned long cyc; // cycle count (t-states)
@@ -47,10 +47,10 @@ struct z80 {
   bool iff1 : 1, iff2 : 1;
   bool halted : 1;
   bool int_pending : 1, nmi_pending : 1;
-  /* Optional 1K pages when a 16K window is absent. Indices 0..15 mirror
-   * 0000..3FFF, 16..31 mirror C000..FFFF; direct windows take priority. */
-  const uint8_t* read_pages[32];
-  uint8_t* write_pages[32];
+  /* Authoritative 1K CPU views of all 64K. NULL entries use callbacks.
+   * A clean cache page keeps its write view NULL until its first store. */
+  const uint8_t* read_pages[64];
+  uint8_t* write_pages[64];
   /* Optional LDIR batching deadline in virtual cycles; zero disables it.
    * Caller caps it before the next interrupt edge and clears it after a run. */
   uint32_t ldir_until;

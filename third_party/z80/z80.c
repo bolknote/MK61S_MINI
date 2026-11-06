@@ -61,8 +61,7 @@ static unsigned block_copy(z80* z,unsigned budget) {
     unsigned code_left=16384-offset;
     if(code) code+=offset;
     else {
-        if(pc>=0x4000 && pc<0xC000) return 0;
-        code=z->read_pages[(pc>>10)&31];code_left=1024-(pc&1023);
+        code=z->read_pages[pc>>10];code_left=1024-(pc&1023);
         if(code) code+=pc&1023;
     }
     if(!code || code_left<2 || code[0]!=0xED || code[1]!=0xB0) return 0;
@@ -75,14 +74,12 @@ static unsigned block_copy(z80* z,unsigned budget) {
     unsigned src_left=16384-(hl&16383),dst_left=16384-(de&16383);
     if(from) from+=hl&16383;
     else {
-        if(hl>=0x4000 && hl<0xC000) return 0;
-        from=z->read_pages[(hl>>10)&31];src_left=1024-(hl&1023);
+        from=z->read_pages[hl>>10];src_left=1024-(hl&1023);
         if(from) from+=hl&1023;
     }
     if(to) to+=de&16383;
     else {
-        if(de>=0x4000 && de<0xC000) return 0;
-        to=z->write_pages[(de>>10)&31];dst_left=1024-(de&1023);
+        to=z->write_pages[de>>10];dst_left=1024-(de&1023);
         if(to) to+=de&1023;
     }
     if(!from || !to) return 0;
@@ -113,24 +110,14 @@ static unsigned block_copy(z80* z,unsigned budget) {
 #define Z80_HOT_INLINE
 #endif
 
-#if defined(__GNUC__)
-__attribute__((noinline))
-#endif
-static uint8_t page_read(z80* const z, uint16_t addr) {
-  const uint8_t* base=(addr<0x4000 || addr>=0xC000)?z->read_pages[(addr>>10)&31]:NULL;
+static inline Z80_HOT_INLINE uint8_t rb(z80* const z, uint16_t addr) {
+  const uint8_t* base=z->read_pages[addr>>10];
   if(base) return base[addr&1023];
   return z->read_byte(z->userdata,addr);
 }
-static inline Z80_HOT_INLINE uint8_t rb(z80* const z, uint16_t addr) {
-  const uint8_t* base=z->read_map[addr>>14];
-  if(base) return base[addr&16383];
-  return page_read(z,addr);
-}
 
 static inline void wb(z80* const z, uint16_t addr, uint8_t val) {
-  uint8_t* base=z->write_map[addr>>14];
-  if(base) { base[addr&16383]=val;return; }
-  base=(addr<0x4000 || addr>=0xC000)?z->write_pages[(addr>>10)&31]:NULL;
+  uint8_t* base=z->write_pages[addr>>10];
   if(base) { base[addr&1023]=val;return; }
   z->write_byte(z->userdata, addr, val);
 }
@@ -711,7 +698,7 @@ void z80_init(z80* const z) {
   z->m1 = NULL;
   z->m1_start=0;z->m1_limit=65535;
   for(unsigned i=0;i<4;++i) { z->read_map[i]=NULL;z->write_map[i]=NULL; }
-  for(unsigned i=0;i<32;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
+  for(unsigned i=0;i<64;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
   z->ldir_until=0;
 
   z->cyc = 0;

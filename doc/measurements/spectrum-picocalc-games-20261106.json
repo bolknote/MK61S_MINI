@@ -1,0 +1,833 @@
+{
+  "schema_version": 1,
+  "target_hz": 3500000,
+  "hardware_goal_reached": false,
+  "previous_3_500_archive_claim_corrected": true,
+  "firmware": {
+    "build": "845BC1C3",
+    "crc": "7BBBFEE8",
+    "cpu_hz": 125000000
+  },
+  "measurements": [
+    {
+      "receipt": ".build/spectrum-games-20261106/GAMES-HIL-r1/receipt.json",
+      "receipt_sha256": "d1606e70e4220863b712a462b36072d5733721c8022d6be04023df8df766b24b",
+      "status": "PASS",
+      "error": null,
+      "lease": "released",
+      "games": [
+        {
+          "title": "Manic Miner",
+          "fixture": "SPMN",
+          "whole": {
+            "frames": 316,
+            "cycles": 22710639,
+            "wall_us": 6475674,
+            "mhz": 3.5070695343836022,
+            "xip": 1,
+            "starved": 102
+          },
+          "steady": {
+            "frames": 315,
+            "cycles": 22578968,
+            "wall_us": 6452511,
+            "mhz": 3.499252926496367,
+            "xip": 1,
+            "starved": 69,
+            "first_phase": 327,
+            "last_phase": 95,
+            "kind": "complete-frame interval inside active execution"
+          },
+          "hud_signature": "3C34B945",
+          "frame_sha256": "c505fe9b71415eb3bf426c03fcd9a42910d847d807d0a82a9dc6243e03c41826"
+        },
+        {
+          "title": "Cosmic Payback",
+          "fixture": "SPCP",
+          "whole": {
+            "frames": 314,
+            "cycles": 22546327,
+            "wall_us": 6452838,
+            "mhz": 3.494017206072739,
+            "xip": 1,
+            "starved": 301
+          },
+          "steady": {
+            "frames": 313,
+            "cycles": 22437545,
+            "wall_us": 6415037,
+            "mhz": 3.4976485716294388,
+            "xip": 1,
+            "starved": 223,
+            "first_phase": 160,
+            "last_phase": 1865,
+            "kind": "complete-frame interval inside active execution"
+          },
+          "hud_signature": "67D57373",
+          "frame_sha256": "ffb7e3915e1c4d6bc268dcf482f095ccce115811744e68637c32b1cc910fd5fb"
+        }
+      ]
+    },
+    {
+      "receipt": ".build/spectrum-games-20261106/metrology-v3/PACED-HIL-r1/receipt.json",
+      "receipt_sha256": "ad77ec2faa8b77fb2e3daf22c5bee7f0500f3b7984ad90f1a0b213c0270b32f7",
+      "status": "HOLD",
+      "error": "Hold('New ordinary APP run failed')",
+      "lease": "released",
+      "games": [
+        {
+          "whole": {
+            "frames": 3101,
+            "cycles": 222283300,
+            "wall_us": 63516734,
+            "mhz": 3.499602167831866,
+            "xip": 1,
+            "starved": 172
+          },
+          "steady": {
+            "frames": 3000,
+            "cycles": 215040087,
+            "wall_us": 61440023,
+            "mhz": 3.500000105794231,
+            "xip": 1,
+            "starved": 11,
+            "first_phase": 1134,
+            "last_phase": 1221,
+            "kind": "complete-frame interval inside active execution",
+            "timer_lower_mhz": 3.500000048828106,
+            "timer_upper_mhz": 3.5000001627603585
+          },
+          "windows": [
+            {
+              "index": 0,
+              "frames": 300,
+              "cycles": 21503368,
+              "wall_us": 6143819,
+              "first_phase": 1134,
+              "last_phase": 502,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.5000002441478175,
+              "timer_lower_mhz": 3.49999967446963,
+              "timer_upper_mhz": 3.500000813826191
+            },
+            {
+              "index": 1,
+              "frames": 300,
+              "cycles": 21505336,
+              "wall_us": 6144381,
+              "first_phase": 502,
+              "last_phase": 1838,
+              "first_late_us": 1,
+              "last_late_us": 0,
+              "mhz": 3.5000004068758104,
+              "timer_lower_mhz": 3.4999998372497023,
+              "timer_upper_mhz": 3.5000009765021045
+            },
+            {
+              "index": 2,
+              "frames": 300,
+              "cycles": 21503830,
+              "wall_us": 6143951,
+              "first_phase": 1838,
+              "last_phase": 1668,
+              "first_late_us": 0,
+              "last_late_us": 0,
+              "mhz": 3.500000244142572,
+              "timer_lower_mhz": 3.4999996744766233,
+              "timer_upper_mhz": 3.500000813808706
+            },
+            {
+              "index": 3,
+              "frames": 300,
+              "cycles": 21503631,
+              "wall_us": 6143896,
+              "first_phase": 1668,
+              "last_phase": 1299,
+              "first_late_us": 0,
+              "last_late_us": 1,
+              "mhz": 3.4999991861841413,
+              "timer_lower_mhz": 3.499998616513265,
+              "timer_upper_mhz": 3.4999997558552027
+            },
+            {
+              "index": 4,
+              "frames": 300,
+              "cycles": 21503521,
+              "wall_us": 6143862,
+              "first_phase": 1299,
+              "last_phase": 820,
+              "first_late_us": 1,
+              "last_late_us": 0,
+              "mhz": 3.50000065105629,
+              "timer_lower_mhz": 3.500000081382023,
+              "timer_upper_mhz": 3.5000012207307423
+            },
+            {
+              "index": 5,
+              "frames": 300,
+              "cycles": 21503789,
+              "wall_us": 6143940,
+              "first_phase": 820,
+              "last_phase": 609,
+              "first_late_us": 0,
+              "last_late_us": 0,
+              "mhz": 3.499999837237994,
+              "timer_lower_mhz": 3.4999992675710914,
+              "timer_upper_mhz": 3.5000004069050816
+            },
+            {
+              "index": 6,
+              "frames": 300,
+              "cycles": 21503626,
+              "wall_us": 6143894,
+              "first_phase": 609,
+              "last_phase": 235,
+              "first_late_us": 0,
+              "last_late_us": 1,
+              "mhz": 3.4999995117103255,
+              "timer_lower_mhz": 3.4999989420392112,
+              "timer_upper_mhz": 3.5000000813816254
+            },
+            {
+              "index": 7,
+              "frames": 300,
+              "cycles": 21505596,
+              "wall_us": 6144455,
+              "first_phase": 235,
+              "last_phase": 1831,
+              "first_late_us": 1,
+              "last_late_us": 0,
+              "mhz": 3.5000005696192744,
+              "timer_lower_mhz": 3.5,
+              "timer_upper_mhz": 3.5000011392387345
+            },
+            {
+              "index": 8,
+              "frames": 300,
+              "cycles": 21503745,
+              "wall_us": 6143927,
+              "first_phase": 1831,
+              "last_phase": 1576,
+              "first_late_us": 0,
+              "last_late_us": 0,
+              "mhz": 3.500000081381175,
+              "timer_lower_mhz": 3.499999511713028,
+              "timer_upper_mhz": 3.500000651049508
+            },
+            {
+              "index": 9,
+              "frames": 300,
+              "cycles": 21503645,
+              "wall_us": 6143898,
+              "first_phase": 1576,
+              "last_phase": 1221,
+              "first_late_us": 0,
+              "last_late_us": 0,
+              "mhz": 3.5000003255262375,
+              "timer_lower_mhz": 3.4999997558553617,
+              "timer_upper_mhz": 3.500000895197299
+            }
+          ],
+          "pacing": {
+            "max_late_us": 2,
+            "wait_us": 40516061,
+            "min_wait_us": 6582,
+            "late_frames": 0,
+            "resyncs": 0
+          },
+          "strict_3_5_lower_bound_reached": true,
+          "timer_interval_uncertainty_us": 1,
+          "title": "Manic Miner",
+          "fixture": "SP2M",
+          "hud_signature": "3C34B945",
+          "frame_sha256": "cd0ab9d0636f4eee8c4380898f7cf7261827d73c8a7167fe66bf87c3056fb6ef"
+        },
+        {
+          "whole": {
+            "frames": 3100,
+            "cycles": 222213216,
+            "wall_us": 63601274,
+            "mhz": 3.4938485037265132,
+            "xip": 1,
+            "starved": 4644
+          },
+          "steady": {
+            "frames": 3000,
+            "cycles": 215040351,
+            "wall_us": 61541777,
+            "mhz": 3.494217448417195,
+            "xip": 1,
+            "starved": 4353,
+            "first_phase": 763,
+            "last_phase": 1114,
+            "kind": "complete-frame interval inside active execution",
+            "timer_lower_mhz": 3.494217391639221,
+            "timer_upper_mhz": 3.49421750519517
+          },
+          "windows": [
+            {
+              "index": 0,
+              "frames": 300,
+              "cycles": 21503949,
+              "wall_us": 6144048,
+              "first_phase": 763,
+              "last_phase": 712,
+              "first_late_us": 2118,
+              "last_late_us": 2181,
+              "mhz": 3.499964355747221,
+              "timer_lower_mhz": 3.499963786096107,
+              "timer_upper_mhz": 3.49996492539852
+            },
+            {
+              "index": 1,
+              "frames": 300,
+              "cycles": 21505205,
+              "wall_us": 6148211,
+              "first_phase": 712,
+              "last_phase": 1917,
+              "first_late_us": 2181,
+              "last_late_us": 6048,
+              "mhz": 3.4977987905750143,
+              "timer_lower_mhz": 3.4977982216618426,
+              "timer_upper_mhz": 3.4977993594883716
+            },
+            {
+              "index": 2,
+              "frames": 300,
+              "cycles": 21503002,
+              "wall_us": 6139761,
+              "first_phase": 1917,
+              "last_phase": 919,
+              "first_late_us": 6048,
+              "last_late_us": 2094,
+              "mhz": 3.502253915095392,
+              "timer_lower_mhz": 3.502253344673621,
+              "timer_upper_mhz": 3.502254485517349
+            },
+            {
+              "index": 3,
+              "frames": 300,
+              "cycles": 21503137,
+              "wall_us": 6144078,
+              "first_phase": 919,
+              "last_phase": 56,
+              "first_late_us": 2094,
+              "last_late_us": 2418,
+              "mhz": 3.4998151065139473,
+              "timer_lower_mhz": 3.4998145368899065,
+              "timer_upper_mhz": 3.4998156761381733
+            },
+            {
+              "index": 4,
+              "frames": 300,
+              "cycles": 21505333,
+              "wall_us": 6144178,
+              "first_phase": 56,
+              "last_phase": 1389,
+              "first_late_us": 2418,
+              "last_late_us": 2216,
+              "mhz": 3.5001155565480038,
+              "timer_lower_mhz": 3.5001149868843338,
+              "timer_upper_mhz": 3.500116126211859
+            },
+            {
+              "index": 5,
+              "frames": 300,
+              "cycles": 21503465,
+              "wall_us": 6245437,
+              "first_phase": 1389,
+              "last_phase": 854,
+              "first_late_us": 2216,
+              "last_late_us": 2078,
+              "mhz": 3.443068115169523,
+              "timer_lower_mhz": 3.4430675638762245,
+              "timer_upper_mhz": 3.443068666462998
+            },
+            {
+              "index": 6,
+              "frames": 300,
+              "cycles": 21503184,
+              "wall_us": 6143843,
+              "first_phase": 854,
+              "last_phase": 38,
+              "first_late_us": 2078,
+              "last_late_us": 2155,
+              "mhz": 3.4999566232405352,
+              "timer_lower_mhz": 3.4999560535716725,
+              "timer_upper_mhz": 3.499957192909583
+            },
+            {
+              "index": 7,
+              "frames": 300,
+              "cycles": 21504627,
+              "wall_us": 6151497,
+              "first_phase": 38,
+              "last_phase": 665,
+              "first_late_us": 2155,
+              "last_late_us": 9472,
+              "mhz": 3.4958363793398584,
+              "timer_lower_mhz": 3.4958358110496013,
+              "timer_upper_mhz": 3.4958369476303
+            },
+            {
+              "index": 8,
+              "frames": 300,
+              "cycles": 21505082,
+              "wall_us": 6137305,
+              "first_phase": 665,
+              "last_phase": 1747,
+              "first_late_us": 9472,
+              "last_late_us": 2468,
+              "mhz": 3.503994342793783,
+              "timer_lower_mhz": 3.5039937718601615,
+              "timer_upper_mhz": 3.503994913727591
+            },
+            {
+              "index": 9,
+              "frames": 300,
+              "cycles": 21503367,
+              "wall_us": 6143419,
+              "first_phase": 1747,
+              "last_phase": 1114,
+              "first_late_us": 2468,
+              "last_late_us": 2068,
+              "mhz": 3.5002279675210173,
+              "timer_lower_mhz": 3.5002273977686698,
+              "timer_upper_mhz": 3.5002285372735504
+            }
+          ],
+          "pacing": {
+            "max_late_us": 97750,
+            "wait_us": 11749931,
+            "min_wait_us": 0,
+            "late_frames": 2085,
+            "resyncs": 1
+          },
+          "strict_3_5_lower_bound_reached": false,
+          "timer_interval_uncertainty_us": 1,
+          "title": "Cosmic Payback",
+          "fixture": "SP2C",
+          "hud_signature": "67D57373",
+          "frame_sha256": "9973565aba0c7135922edba3ac088257aa25a06aadc8541058beb1d22c2ccc11"
+        }
+      ]
+    },
+    {
+      "receipt": ".build/spectrum-games-20261106/metrology-v6/PACED-HIL-r1/receipt.json",
+      "receipt_sha256": "1aa7d45e6b6b4ff71a0078e3a289874c76ae49222def48d5080ab43508a5fd50",
+      "status": "PASS",
+      "error": null,
+      "lease": "released",
+      "ordinary_app_sha256": "1c5e2d400ec06fc446eca3bb712b49a9027748e0f749bfccf273b1b753499f59",
+      "ordinary_app_smoke": true,
+      "strict_goal_reached": false,
+      "games": [
+        {
+          "whole": {
+            "frames": 3101,
+            "cycles": 222283642,
+            "wall_us": 63516750,
+            "mhz": 3.499606670681356,
+            "xip": 1,
+            "starved": 172
+          },
+          "steady": {
+            "frames": 3000,
+            "cycles": 215040429,
+            "wall_us": 61440122,
+            "mhz": 3.500000032552019,
+            "xip": 1,
+            "starved": 3,
+            "first_phase": 1134,
+            "last_phase": 1563,
+            "kind": "complete-frame interval inside active execution",
+            "timer_lower_mhz": 3.4999999755859865,
+            "timer_upper_mhz": 3.500000089518053
+          },
+          "windows": [
+            {
+              "index": 0,
+              "frames": 300,
+              "cycles": 21503563,
+              "wall_us": 6143875,
+              "first_phase": 1134,
+              "last_phase": 697,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.500000081381864,
+              "timer_lower_mhz": 3.499999511708895,
+              "timer_upper_mhz": 3.5000006510550183
+            },
+            {
+              "index": 1,
+              "frames": 300,
+              "cycles": 21503425,
+              "wall_us": 6143835,
+              "first_phase": 697,
+              "last_phase": 122,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.5000004069119695,
+              "timer_lower_mhz": 3.4999998372352388,
+              "timer_upper_mhz": 3.5000009765888858
+            },
+            {
+              "index": 2,
+              "frames": 300,
+              "cycles": 21505888,
+              "wall_us": 6144540,
+              "first_phase": 122,
+              "last_phase": 2010,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.4999996745077744,
+              "timer_lower_mhz": 3.499999104896525,
+              "timer_upper_mhz": 3.500000244119209
+            },
+            {
+              "index": 3,
+              "frames": 300,
+              "cycles": 21503631,
+              "wall_us": 6143894,
+              "first_phase": 2010,
+              "last_phase": 1641,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.5000003255264494,
+              "timer_lower_mhz": 3.4999997558552027,
+              "timer_upper_mhz": 3.500000895197882
+            },
+            {
+              "index": 4,
+              "frames": 300,
+              "cycles": 21503521,
+              "wall_us": 6143864,
+              "first_phase": 1641,
+              "last_phase": 1162,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.4999995117079417,
+              "timer_lower_mhz": 3.499998942034045,
+              "timer_upper_mhz": 3.500000081382023
+            },
+            {
+              "index": 5,
+              "frames": 300,
+              "cycles": 21503789,
+              "wall_us": 6143939,
+              "first_phase": 1162,
+              "last_phase": 951,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.5000004069050816,
+              "timer_lower_mhz": 3.499999837237994,
+              "timer_upper_mhz": 3.5000009765723545
+            },
+            {
+              "index": 6,
+              "frames": 300,
+              "cycles": 21503626,
+              "wall_us": 6143892,
+              "first_phase": 951,
+              "last_phase": 577,
+              "first_late_us": 1,
+              "last_late_us": 0,
+              "mhz": 3.500000651053111,
+              "timer_lower_mhz": 3.5000000813816254,
+              "timer_upper_mhz": 3.5000012207247817
+            },
+            {
+              "index": 7,
+              "frames": 300,
+              "cycles": 21503538,
+              "wall_us": 6143868,
+              "first_phase": 577,
+              "last_phase": 115,
+              "first_late_us": 0,
+              "last_late_us": 0,
+              "mhz": 3.5,
+              "timer_lower_mhz": 3.4999994303263953,
+              "timer_upper_mhz": 3.50000056967379
+            },
+            {
+              "index": 8,
+              "frames": 300,
+              "cycles": 21505803,
+              "wall_us": 6144517,
+              "first_phase": 115,
+              "last_phase": 1918,
+              "first_late_us": 0,
+              "last_late_us": 1,
+              "mhz": 3.499998942146307,
+              "timer_lower_mhz": 3.499998372533045,
+              "timer_upper_mhz": 3.4999995117597544
+            },
+            {
+              "index": 9,
+              "frames": 300,
+              "cycles": 21503645,
+              "wall_us": 6143898,
+              "first_phase": 1918,
+              "last_phase": 1563,
+              "first_late_us": 1,
+              "last_late_us": 1,
+              "mhz": 3.5000003255262375,
+              "timer_lower_mhz": 3.4999997558553617,
+              "timer_upper_mhz": 3.500000895197299
+            }
+          ],
+          "pacing": {
+            "max_late_us": 1,
+            "wait_us": 41094495,
+            "min_wait_us": 7110,
+            "late_frames": 0,
+            "resyncs": 0
+          },
+          "strict_3_5_lower_bound_reached": false,
+          "timer_interval_uncertainty_us": 1,
+          "title": "Manic Miner",
+          "fixture": "SP2M",
+          "hud_signature": "3C34B945",
+          "frame_sha256": "38b66b45aeb7465e714aa3bd6b70d7846e41edc557655c46e0eed3629228092e"
+        },
+        {
+          "whole": {
+            "frames": 3100,
+            "cycles": 222211165,
+            "wall_us": 63598984,
+            "mhz": 3.4939420573133684,
+            "xip": 1,
+            "starved": 2799
+          },
+          "steady": {
+            "frames": 3000,
+            "cycles": 215040351,
+            "wall_us": 61541018,
+            "mhz": 3.4942605434313747,
+            "xip": 1,
+            "starved": 2600,
+            "first_phase": 763,
+            "last_phase": 1114,
+            "kind": "complete-frame interval inside active execution",
+            "timer_lower_mhz": 3.494260486652,
+            "timer_upper_mhz": 3.4942606002107506
+          },
+          "windows": [
+            {
+              "index": 0,
+              "frames": 300,
+              "cycles": 21503949,
+              "wall_us": 6144070,
+              "first_phase": 763,
+              "last_phase": 712,
+              "first_late_us": 1058,
+              "last_late_us": 1143,
+              "mhz": 3.499951823465553,
+              "timer_lower_mhz": 3.499951253818519,
+              "timer_upper_mhz": 3.4999523931127725
+            },
+            {
+              "index": 1,
+              "frames": 300,
+              "cycles": 21505205,
+              "wall_us": 6144539,
+              "first_phase": 712,
+              "last_phase": 1917,
+              "first_late_us": 1143,
+              "last_late_us": 1338,
+              "mhz": 3.49988908850607,
+              "timer_lower_mhz": 3.4998885189127256,
+              "timer_upper_mhz": 3.4998896580996
+            },
+            {
+              "index": 2,
+              "frames": 300,
+              "cycles": 21503002,
+              "wall_us": 6143520,
+              "first_phase": 1917,
+              "last_phase": 919,
+              "first_late_us": 1338,
+              "last_late_us": 1143,
+              "mhz": 3.5001110112769225,
+              "timer_lower_mhz": 3.5001104415529793,
+              "timer_upper_mhz": 3.5001115810010517
+            },
+            {
+              "index": 3,
+              "frames": 300,
+              "cycles": 21503137,
+              "wall_us": 6143939,
+              "first_phase": 919,
+              "last_phase": 56,
+              "first_late_us": 1143,
+              "last_late_us": 1328,
+              "mhz": 3.4998942860598063,
+              "timer_lower_mhz": 3.499893716409991,
+              "timer_upper_mhz": 3.499894855709807
+            },
+            {
+              "index": 4,
+              "frames": 300,
+              "cycles": 21505333,
+              "wall_us": 6144219,
+              "first_phase": 56,
+              "last_phase": 1389,
+              "first_late_us": 1328,
+              "last_late_us": 1167,
+              "mhz": 3.5000922004895982,
+              "timer_lower_mhz": 3.5000916308335315,
+              "timer_upper_mhz": 3.500092770145851
+            },
+            {
+              "index": 5,
+              "frames": 300,
+              "cycles": 21503465,
+              "wall_us": 6143794,
+              "first_phase": 1389,
+              "last_phase": 854,
+              "first_late_us": 1167,
+              "last_late_us": 1113,
+              "mhz": 3.5000302744525613,
+              "timer_lower_mhz": 3.5000297047671673,
+              "timer_upper_mhz": 3.500030844138141
+            },
+            {
+              "index": 6,
+              "frames": 300,
+              "cycles": 21503184,
+              "wall_us": 6143805,
+              "first_phase": 854,
+              "last_phase": 38,
+              "first_late_us": 1113,
+              "last_late_us": 1152,
+              "mhz": 3.4999782707947276,
+              "timer_lower_mhz": 3.499977701118818,
+              "timer_upper_mhz": 3.4999788404708223
+            },
+            {
+              "index": 7,
+              "frames": 300,
+              "cycles": 21504627,
+              "wall_us": 6183612,
+              "first_phase": 38,
+              "last_phase": 665,
+              "first_late_us": 1152,
+              "last_late_us": 40584,
+              "mhz": 3.4776805207053743,
+              "timer_lower_mhz": 3.4776799583026947,
+              "timer_upper_mhz": 3.4776810831082354
+            },
+            {
+              "index": 8,
+              "frames": 300,
+              "cycles": 21505082,
+              "wall_us": 6104929,
+              "first_phase": 665,
+              "last_phase": 1747,
+              "first_late_us": 40584,
+              "last_late_us": 1204,
+              "mhz": 3.5225769210419973,
+              "timer_lower_mhz": 3.522576344036705,
+              "timer_upper_mhz": 3.522577498047479
+            },
+            {
+              "index": 9,
+              "frames": 300,
+              "cycles": 21503367,
+              "wall_us": 6244591,
+              "first_phase": 1747,
+              "last_phase": 1114,
+              "first_late_us": 1204,
+              "last_late_us": 1145,
+              "mhz": 3.4435188789786233,
+              "timer_lower_mhz": 3.4435183275384524,
+              "timer_upper_mhz": 3.4435194304189705
+            }
+          ],
+          "pacing": {
+            "max_late_us": 98232,
+            "wait_us": 13887458,
+            "min_wait_us": 0,
+            "late_frames": 1996,
+            "resyncs": 1
+          },
+          "strict_3_5_lower_bound_reached": false,
+          "timer_interval_uncertainty_us": 1,
+          "title": "Cosmic Payback",
+          "fixture": "SP2C",
+          "hud_signature": "67D57373",
+          "frame_sha256": "9973565aba0c7135922edba3ac088257aa25a06aadc8541058beb1d22c2ccc11"
+        }
+      ]
+    }
+  ],
+  "launch_attempts": [
+    {
+      "status": "HOLD",
+      "error": "Hold('New ordinary APP initialization failed')",
+      "lease": "released",
+      "heap_start": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> ",
+      "heap_end": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> ",
+      "changed_sd_files": {
+        "SPECTRUM.APP": "3934b5fe012db4aa8b900cacaa13fb2d8020c3f1d64654760ca9e807adf33826"
+      },
+      "cdc_descriptor_closed": true,
+      "port_close_errors": []
+    },
+    {
+      "status": "HOLD",
+      "error": "Hold('New ordinary APP initialization failed')",
+      "lease": "released",
+      "heap_start": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> ",
+      "heap_end": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> ",
+      "changed_sd_files": {
+        "SPECTRUM.APP": "f72e8af5c591ae043f2426f37e46c62fa7a21d88cf2aa72381171bfcdf599751"
+      },
+      "cdc_descriptor_closed": true,
+      "port_close_errors": []
+    }
+  ],
+  "host_three_game_equivalence": [
+    {
+      "game": "MANIC",
+      "frames": 3100,
+      "all_cpu_scalars_cycles_phase_ram_video_equal": true,
+      "guest_state_sha256": "c3b3b81a8baf2be11db29f979389cb78af07dcecb6cacf99320392d041df1650",
+      "cpu_sha256": "c7ae1238643b88cc7af0d19bb109377d18c4bd0dd9595777fc062503c644557a"
+    },
+    {
+      "game": "COSMIC",
+      "frames": 3100,
+      "all_cpu_scalars_cycles_phase_ram_video_equal": true,
+      "guest_state_sha256": "6ee007dee0c68c776dc122e1e73b6e10a67288892724218e3e81e0cbb15ac9f3",
+      "cpu_sha256": "20013834bf602f5513e57f6cbe6028070404a3cf743b04a4cf872e93f9f0edcd"
+    },
+    {
+      "game": "IANNA",
+      "frames": 3100,
+      "all_cpu_scalars_cycles_phase_ram_video_equal": true,
+      "guest_state_sha256": "1973ad01c70125326f175aab12d771857629571ebc743251be6dcb1f7ac255a5",
+      "cpu_sha256": "e2258e39c2c4d6133108592c9da9ac570eb1f2945b90abe72a0954fba2f4a29f"
+    }
+  ],
+  "method": "cycles/wall_us in MHz; fixed long runs: warmup100, ten consecutive300frame windows, no dropped windows, one microsecond timer interval uncertainty. Strict bound requires cycles*2 >= (wall_us+1)*7 and no deadline resync.",
+  "limitations": [
+    "Rates use the onboard microsecond counter; no external oscillator calibration.",
+    "The split8K ordinary APP passed init/R both before and after the diagnostic game runs. Cosmic Payback still misses the speed target; all windows and its resync are retained.",
+    "The Sword of Ianna is covered only by host state comparison."
+  ],
+  "ordinary_app_launch": {
+    "receipt": ".build/spectrum-games-20261106/ordinary-init/INIT-HIL-r1/receipt.json",
+    "receipt_sha256": "d09ab20b4858ea98b4d85b91471ebabd028731e4883d17996a0e03bf2314fbee",
+    "app_sha256": "1c5e2d400ec06fc446eca3bb712b49a9027748e0f749bfccf273b1b753499f59",
+    "status": "PASS",
+    "lease": "released",
+    "ordinary_app_smoke": true,
+    "stack_watermark_bytes": 24324,
+    "stack_reservation_bytes": 32768,
+    "stack_watermark_inherited": true,
+    "heap_start": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> ",
+    "heap_end": "prof heap\r\nHEAP_BYTES=104372 HEAP_USED=884 HEAP_FREE=103488 HEAP_ARENA=104372 HEAP_FREE_BLOCKS=3 HEAP_TOP=4256\r\nmk61> "
+  }
+}

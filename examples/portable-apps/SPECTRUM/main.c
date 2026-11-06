@@ -6,13 +6,14 @@
 #include <string.h>
 
 static const mk61_app_services* services;
-static spectrum machine;
+static spectrum* active_machine;
+#define machine (*active_machine)
 static uint8_t keys[32],previous_keys[32];
 static char *directory,*snapshot_path;
 static bool started;
-static uint32_t ram_bytes;
 static uint8_t* page_cache;
 static uint8_t* bank_window;
+static uint8_t *guest_blocks[2],*bank_tails[3];
 static bool banked_buffers,mapped_roms;
 static const uint8_t* mapped_rom[3];
 static spectrum_memory bank_memory;
@@ -213,7 +214,7 @@ static bool select_model(unsigned model) {
     }
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
     if(mapped_roms) {
-        if(!spectrum_memory_init_mapped(&bank_memory,machine.ram,page_cache,bank_window,
+        if(!spectrum_memory_init_split(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,bank_window,
             mapped_rom[pentagon?1:0],mapped_rom[pentagon?2:0],io)) return false;
     } else {
       const char* names[]={pentagon?"128-0.rom":"48.rom",pentagon?"128-1.rom":"48.rom"};
@@ -225,12 +226,17 @@ static bool select_model(unsigned model) {
                !external_write(NULL,SPECTRUM_ROM_BASE+bank*16384+at,machine.rom,4096)) return false;
         }
       }
-      if(!spectrum_memory_init_pages(&bank_memory,machine.ram,page_cache,(uint8_t*)machine.rom,io)) return false;
+      if(!spectrum_memory_init_split(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,page_cache,machine.rom,NULL,io)) return false;
     }
     bank_memory.extended=model==2;bank_memory.banks=model==2?64:32;
     if(model==2 && !spectrum_memory_reset(&bank_memory)) return false;
     spectrum_attach_memory(&machine,&bank_memory);machine.pentagon=pentagon;spectrum_disk_reset(&machine);started=false;return true;
 }
+#ifdef SPECTRUM_HIL_SNAPSHOT_ONLY
+/* A fixed-checkpoint timing probe needs no image mounting or SCL unpacker.
+ * Its CPU, renderer and audio paths remain the ordinary APP paths. */
+static void mount_media(unsigned mode) { (void)mode;message("Snapshot timing probe\n\nPress any key"); }
+#else
 static bool media_read(void* raw,uint32_t at,uint8_t* out,uint32_t n) {
     const mounted_media* m=raw;
     return m->scl?external_read(NULL,SPECTRUM_EXTERNAL_BYTES+at,out,n):read_source((void*)m->path,at,out,n);
@@ -281,6 +287,7 @@ static void mount_media(unsigned mode) {
     *io=(spectrum_disk_io){m,scl?SPECTRUM_TRD_BYTES:info.size,media_read,media_write,true,80,2};
     (void)spectrum_disk_mode(&machine,mode);spectrum_reset(&machine);started=false;
 }
+#endif
 static void settings(void) {
     unsigned selected=0;
     for(;;) {
@@ -330,6 +337,41 @@ static bool load_snapshot(void) {
 static void help(void) {
     message("Ctrl: Caps Shift\nAlt: Symbol Shift\nTab/F2: Extended mode\nF1: Edit  F6: Graphics\nBackspace: Delete\nArrows + F5: joystick\nEsc: pause / menu\nF10: exit\n\nPress any key");
 }
+static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t* deadline) {
+    *deadline+=spectrum_frame_cycles(&machine)*2/7;
+    const uint32_t phase_us=machine.frame_tstates*2/7;
+    uint32_t target=*deadline+phase_us;
+    uint32_t now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+#ifdef SPECTRUM_HIL_PACED
+    const uint32_t ready=now;
+    bool resynced=false;
+#endif
+    // Avoid a long catch-up burst after an SD/LCD stall. Include the
+    // already executed part of the following frame in this deadline.
+    if((int32_t)(now-target)>100000) {
+        *deadline=now-phase_us;target=now;
+#ifdef SPECTRUM_HIL_PACED
+        resynced=true;
+#endif
+    }
+    while((int32_t)(now-target)<0) {
+        // A full keyboard bitmap is relatively costly. The outer CPU loop
+        // will scan it just after this boundary if fewer than 512 us remain.
+        const int key=target-now>512?poll_guest(blocked,keyboard_deadline,now):-1;
+        if(escape(key) || key==0x90) {
+            if(key==0x90) started=false;
+            return false;
+        }
+        // The resident millisecond delay already busy-pumps services.
+        // Pump directly so it cannot carry us to the next millisecond.
+        if(target-now>512) mk61_api->service();
+        now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+    }
+#ifdef SPECTRUM_HIL_PACED
+    SPECTRUM_HIL_PACED(&machine,target,now,ready,resynced);
+#endif
+    return true;
+}
 static void emulate(void) {
     uint8_t blocked[32];memcpy(blocked,keys,sizeof(blocked));
     uint32_t keyboard_deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);guest_keyboard(blocked);
@@ -378,19 +420,8 @@ static void emulate(void) {
         spectrum_run(&machine,2048);
         if(machine.memory && machine.memory->fault) goto memory_error;
         if(machine.frames==last_frame) continue;
-        last_frame=machine.frames;present=true;deadline+=spectrum_frame_cycles(&machine)*2/7;
-        uint32_t now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
-        // Avoid a long catch-up burst after the menu or an SD/LCD stall.
-        if((int32_t)(now-deadline)>100000) deadline=now;
-        while((int32_t)(now-deadline)<0) {
-            const int key=poll_guest(blocked,&keyboard_deadline,now);
-            if(escape(key) || key==0x90) {
-                if(key==0x90) started=false;
-                goto done;
-            }
-            mk61_api->delay_ms(1);
-            now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
-        }
+        last_frame=machine.frames;present=true;
+        if(!pace_frame(blocked,&keyboard_deadline,&deadline)) goto done;
     }
     goto done;
 memory_error:
@@ -404,7 +435,7 @@ done:
     color(MK61_COLOR_END,NULL);
     if(error) message(error);
 }
-int main(void) {
+static int app_run(void) {
     /* These paths live for the complete foreground APP session. Keep them
      * in the resident stack reservation instead of enlarging the heap image
      * alongside the 32K/16K guest-memory leases. No I/O outlives main(). */
@@ -419,10 +450,10 @@ int main(void) {
         mk61_api->key_wait();return 0;
     }
     mk61_service_lease ram={0},rom={0};
+    mk61_service_buffer sram[2]={{0}};
     banked_buffers=(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_EXTERNAL_BUFFERS)!=0;
     mapped_roms=banked_buffers && (mapped_rom[0]=cached_rom(SPECTRUM_ROM_48,"48.rom")) &&
         (mapped_rom[1]=cached_rom(SPECTRUM_ROM_128_0,"128-0.rom")) && (mapped_rom[2]=cached_rom(SPECTRUM_ROM_128_1,"128-1.rom"));
-    ram_bytes=banked_buffers?SPECTRUM_FIXED_BYTES:SPECTRUM_RAM_BYTES;
     if(banked_buffers) {
         mk61_service_framebuffer canvas={0};
         if(!mk61_api->graphics_begin() ||
@@ -433,17 +464,28 @@ int main(void) {
         /* UI: 0..9215; running video: 0..7679; disk cache: 7680..9727.
          * RAM pages at 10240 remain valid across both display modes. */
         page_cache=canvas.pixels+10240;
+        /* Fixed banks use 15K heap chunks and 1K stack tails. The complete
+         * sixteen-page cache uses two further 8K leases. */
+        for(unsigned i=0;i<2;++i) {
+            if(!mk61_app_buffer_acquire(services,SPECTRUM_BANK_HEAP_BYTES,MK61_BUFFER_DIRECT,&sram[i]) ||
+               sram[i].storage!=MK61_BUFFER_SRAM || !sram[i].data) {
+                message("Not enough SRAM for Spectrum\n\nPress any key");return 0;
+            }
+            guest_blocks[i]=sram[i].data;
+        }
     }
-    if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,ram_bytes,&ram) ||
-       !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,SPECTRUM_ROM_BYTES,&rom)) {
+    if((!banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,SPECTRUM_RAM_BYTES,&ram)) ||
+       (mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,8192,&ram)) ||
+       (mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,8192,&rom)) ||
+       (!mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,SPECTRUM_ROM_BYTES,&rom))) {
         message("Not enough SRAM for Spectrum\n\nPress any key");return 0;
     }
     if(!mapped_roms && !load_rom(rom.data)) {
         message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP\n\nPress any key");return 0;
     }
-    bank_window=mapped_roms?rom.data:NULL;
+    bank_window=mapped_roms?ram.data:NULL;bank_tails[2]=mapped_roms?rom.data:NULL;
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
-    else { memset(&machine,0,sizeof(machine));machine.ram=ram.data;machine.rom=mapped_roms?mapped_rom[0]:rom.data;
+    else { memset(&machine,0,sizeof(machine));machine.ram=guest_blocks[0];machine.rom=mapped_roms?mapped_rom[0]:rom.data;
         machine.extensions=SPECTRUM_TURBOSOUND|SPECTRUM_COVOX|SPECTRUM_SPECDRUM|SPECTRUM_ULAPLUS; }
     if(!select_model(true)) {
         if(!select_model(false)) return 0;
@@ -487,7 +529,17 @@ int main(void) {
     }
     color(MK61_COLOR_END,NULL);mk61_api->graphics_end();
     if(rom.data) services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,0,&rom);
-    services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,&ram);
+    if(banked_buffers) {
+        for(unsigned i=0;i<2;++i) if(sram[i].handle) mk61_app_buffer_release(services,sram[i].handle);
+    }
+    if(ram.data) services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,&ram);
     if(external.handle) mk61_app_buffer_release(services,external.handle);
     return 0;
+}
+int main(void) {
+    /* The complete machine lives until audio and display have stopped. Keep
+     * it in the resident 32K stack instead of splitting the APP/guest heap. */
+    spectrum state={0};uint8_t tails[2][SPECTRUM_CACHE_PAGE_BYTES];active_machine=&state;
+    for(unsigned i=0;i<2;++i)bank_tails[i]=tails[i];
+    const int result=app_run();active_machine=NULL;return result;
 }

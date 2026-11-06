@@ -17,6 +17,17 @@ clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" 
 if [[ "$test" == spectrum_self_test ]]; then "$build/$test" "$root/third_party/spectrum-rom/48.rom"
 else "$build/$test"; fi
 done
+for test in spectrum_hil_timing_self_test spectrum_hil_games_self_test spectrum_pacing_self_test; do
+    clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
+        -I"$root/sdk/portable/include" -I"$root/code" \
+        "$root/tests/$test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \
+        "$root/examples/portable-apps/SPECTRUM/rom_cache.c" "$root/examples/portable-apps/SPECTRUM/memory.c" \
+        "$root/examples/portable-apps/SPECTRUM/peripherals.c" "$root/examples/portable-apps/SPECTRUM/fdc.c" \
+        "$root/examples/portable-apps/SPECTRUM/spi.c" "$root/examples/portable-apps/SPECTRUM/mapper.c" \
+        "$root/examples/portable-apps/SPECTRUM/media.c" "$root/examples/portable-apps/SPECTRUM/ui.c" \
+        "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/$test"
+    "$build/$test" "$build/$test-wire.txt"
+done
 clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     "$root/tests/emu2149_silent_self_test.c" "$root/third_party/emu2149/emu2149.c" -o "$build/ay-silent"
 "$build/ay-silent"
