@@ -1,4 +1,22 @@
 # Shared native SDK/toolchain discovery. No installed board package is queried.
+function Invoke-NativeCompilerDownload {
+    param([string]$Uri, [string]$OutFile)
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        try {
+            # A failed HTTP transfer can leave a partial archive. Every retry
+            # starts from an empty file; the caller still checks pinned SHA256.
+            if ([IO.File]::Exists($OutFile)) { [IO.File]::Delete($OutFile) }
+            Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $OutFile -ErrorAction Stop
+            return
+        } catch {
+            if ([IO.File]::Exists($OutFile)) { [IO.File]::Delete($OutFile) }
+            if ($attempt -eq 3) { throw }
+            Write-Host "Compiler download failed (attempt $attempt/3); retrying: $($_.Exception.Message)"
+            Start-Sleep -Seconds (2 * $attempt)
+        }
+    }
+}
+
 function Get-NativeFileSha256 {
     param([string]$Path)
     # Arduino can start Windows PowerShell with a different PSModulePath.

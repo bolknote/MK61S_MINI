@@ -43,7 +43,9 @@ u32 owner_crc(const u8* p,u16 n) {
     return mk61_crc32::finish(mk61_crc32::extend(state,p+PREFIX,n+1));
 }
 bool cacheable(const vm::View& v) {
-    return v.bytes && !v.reader && !v.wide && !v.expression && v.size<=vm::MAX_MODULE &&
+    // LBV2 uses wide addresses even in small contiguous images. The cache
+    // remains bounded by MAX_MODULE; paged and borrowed-resource views stay out.
+    return v.bytes && !v.reader && !v.expression && v.size<=vm::MAX_MODULE &&
         (!(v.bytes[7]&vm::RESOURCE_FLAG) || (v.bytes[7]&vm::OWNED_RESOURCE_FLAG));
 }
 bool identity(const char* path,char normalized[files::PATH_SIZE],u16& id) {

@@ -79,6 +79,50 @@ Write-Host "Native SDK: $PSScriptRoot"
     }
     [IO.File]::WriteAllBytes($header, $original)
     . (Join-Path $root 'tools/firmware/stm32/sdk.ps1')
+    # Exercise transient DNS/transfer failure with the same helper on PS 5.1
+    # and PS 7. Each retry must discard the partial file; no real HTTP/sleep.
+    & {
+        $script:downloadAttempts = 0
+        $script:downloadFailures = 2
+        $script:downloadSleeps = @()
+        function Invoke-WebRequest {
+            [CmdletBinding()]
+            param([switch]$UseBasicParsing, [string]$Uri, [string]$OutFile)
+            if ([IO.File]::Exists($OutFile)) { throw 'Partial archive survived a retry' }
+            $script:downloadAttempts++
+            [IO.File]::WriteAllText($OutFile, 'partial')
+            if ($script:downloadAttempts -le $script:downloadFailures) {
+                throw 'DNS fixture: github.com unavailable'
+            }
+            [IO.File]::WriteAllText($OutFile, 'complete')
+        }
+        function Start-Sleep { param([int]$Seconds) $script:downloadSleeps += $Seconds }
+        $archive = Join-Path $work 'compiler-download.fixture'
+        Invoke-NativeCompilerDownload 'https://example.invalid/compiler' $archive
+        if ($script:downloadAttempts -ne 3 -or ($script:downloadSleeps -join ',') -ne '2,4' -or
+            [IO.File]::ReadAllText($archive) -cne 'complete') {
+            throw 'Compiler transfer did not recover within three attempts'
+        }
+        $script:downloadAttempts = 0
+        $script:downloadFailures = 3
+        $script:downloadSleeps = @()
+        $failed = $false
+        try { Invoke-NativeCompilerDownload 'https://example.invalid/compiler' $archive }
+        catch { $failed = $_.Exception.Message -match 'DNS fixture' }
+        if (-not $failed -or $script:downloadAttempts -ne 3 -or
+            ($script:downloadSleeps -join ',') -ne '2,4' -or [IO.File]::Exists($archive)) {
+            throw 'Permanent compiler download failure was hidden or left a partial archive'
+        }
+        $script:downloadAttempts = 0
+        $script:downloadFailures = 0
+        $script:downloadSleeps = @()
+        Invoke-NativeCompilerDownload 'https://example.invalid/compiler' $archive
+        if ($script:downloadAttempts -ne 1 -or $script:downloadSleeps.Count) {
+            throw 'A successful compiler download was repeated'
+        }
+        [IO.File]::Delete($archive)
+        Write-Host 'Compiler download: bounded retries, partial cleanup, recovery and final failure PASS'
+    }
     # A pre-existing Arduino compiler must win over another download. Check
     # actual executables/version, not a matching version directory name.
     $data = Join-Path $work 'custom Arduino15'

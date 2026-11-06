@@ -67,6 +67,12 @@ void picocalc_language_cache_test() {
     assert(services.run_external(b)==0 && reg(0)==24);
     const auto warm=cache::statistics();
     assert(warm.ram_hits==cold.ram_hits+2 && warm.compiles==cold.compiles);
+    // Unified LBV2 uses 32-bit addresses even for these small RAM modules.
+    // A cached certificate must retain that format across the warm lookup.
+    auto prepared=cache::find(a,language_vm::Language::BASIC,true);
+    assert(prepared && prepared.view.wide && !prepared.view.reader &&
+           prepared.view.size<=language_vm::MAX_MODULE);
+    cache::release(prepared);
     assert(files::revision()==revision); // Derived cache writes preserve source identities.
     assert(warm.allocated<=32768 && warm.used<=warm.allocated);
     source("/Cache Tests/screen.bas","10 PRINT \"CACHE FRAME\"\n20 END\n");
