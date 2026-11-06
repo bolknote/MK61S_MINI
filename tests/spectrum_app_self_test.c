@@ -6,7 +6,10 @@
 static const uint8_t* app_rom_cache_find(unsigned,uint32_t*);
 #define spectrum_rom_cache_find app_rom_cache_find
 #define main spectrum_app_main
-#include "../examples/portable-apps/SPECTRUM/main.c"
+#ifndef SPECTRUM_APP_MAIN_SOURCE
+#define SPECTRUM_APP_MAIN_SOURCE "../examples/portable-apps/SPECTRUM/main.c"
+#endif
+#include SPECTRUM_APP_MAIN_SOURCE
 #undef main
 #undef spectrum_rom_cache_find
 
@@ -151,7 +154,12 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         return frames_shown%3?1:2;
     }
     if(op==MK61_SERVICE_AUDIO_STREAM) {
-        if(a==MK61_AUDIO_SYNTH_OPEN) { generator=*(mk61_service_audio_synth*)payload;assert(generator.rate==25000);++audio_opens;return 1; }
+        if(a==MK61_AUDIO_SYNTH_OPEN) {
+            generator=*(mk61_service_audio_synth*)payload;assert(generator.rate==25000);++audio_opens;
+            // Exercise callbacks during a slow native open, before the CPU clock starts.
+            for(unsigned i=0;i<500;++i) { assert(!generator.sample(generator.context));micros_now+=40; }
+            assert(machine.sound.time==(uint32_t)machine.cpu.cyc && !atomic_load(&machine.sound.starved));return 1;
+        }
         assert(a==MK61_AUDIO_CLOSE);generator.sample=NULL;++audio_closes;return 1;
     }
     if(op==MK61_SERVICE_KEYBOARD) {
