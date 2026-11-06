@@ -21,7 +21,19 @@ def main():
     atan=set()
     for x in (2.**-27,1/64,1.,64.,128.,2.**55):
         for v in range(bits(x)-16,bits(x)+17):atan.update((v,v|(1<<63)))
-    groups=dict(exp=qualify_corpus(0)['exp'],atan=sorted(atan))
+    exp=set(qualify_corpus(0)['exp'])
+    # Every input-scaling shift, including the zero and32-bit crossings.
+    # Independent MPFR results catch wrong cross-word bits and rounding.
+    fractions=(0,1,(1<<51)-1,1<<51,(1<<52)-2,(1<<52)-1,
+               0x5555555555555,0xAAAAAAAAAAAAA)
+    for exponent in range(-54,10):
+        for fraction in fractions:
+            x=((exponent+1023)<<52)|fraction
+            exp.update((x,x|(1<<63)))
+    for x in (0xC005754B8935C420,0x401E87A0AD6AC178,0x402508BEB1BC03C0,
+              0x40687013D4330FC8,0xC07F9FF4814E19C2):
+        exp.update(range(x-16,x+17))
+    groups=dict(exp=sorted(exp),atan=sorted(atan))
     for op,values in groups.items():
         for i,x in enumerate(values):
             assert time.monotonic()-start<300
@@ -40,7 +52,7 @@ def main():
         actual_ARM_calls=calls,DIRTY_PENDING_checks=contexts,wrong_rounding=0,MPFR_version=oracle.version,
         records_sha256=digest.hexdigest(),elf_sha256=hashlib.sha256(a.elf.read_bytes()).hexdigest(),
         elapsed_seconds=time.monotonic()-start,hardware_IO=0,pow_calls=0,
-        scope='All512 exp cells at centers/half cells and reduction exponents, adjacent binary64 inputs, underflow/overflow/tiny boundaries, atan dispatch endpoints and sampled interrupted-divider contexts. Finite actual ARM corpus, not physical timing or universal correctness proof.')
+        scope='All512 exp cells at centers/half cells and reduction exponents, all exp input-scaling shifts with mantissa carry edges, five short-path focus points and neighbours, underflow/overflow/tiny boundaries, atan dispatch endpoints and sampled interrupted-divider contexts. Finite actual ARM corpus, not physical timing or universal correctness proof.')
     a.json.parent.mkdir(parents=True,exist_ok=True);a.json.write_text(json.dumps(report,indent=2)+'\n')
     print('PASS boundaries',report['input_cases'],'ARMcalls',calls,'SIOchecks',contexts,flush=True)
 
