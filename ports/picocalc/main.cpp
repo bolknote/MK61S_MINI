@@ -18,6 +18,7 @@
 #include "terminal_command_ids.hpp"
 #include "version.hpp"
 #include "io_worker.hpp"
+#include "audio_stream.hpp"
 #include "console.hpp"
 #include "diagnostics.hpp"
 #include "firmware.hpp"
@@ -82,9 +83,11 @@ u32 used_stack() {
     return (u32)((uintptr_t)__StackTop - (uintptr_t)p);
 }
 
-void tone(u8 volume, unsigned duration = 25) {
-    if(volume == 0) return;
+void notification_tone(unsigned duration) {
     picocalc::script::tone(2000,duration);
+}
+void key_click() {
+    if(ui.settings().key_sound) picocalc::audio_stream::key_click();
 }
 void wake(u64 now) {
     if(sleep_clocks.active()) {
@@ -102,7 +105,7 @@ void input(u8 code, bool physical) {
         (!m61_text::calculator_suspended() && calculator.input(code));
     if(accepted) {
         last_activity = time_us_64();
-        tone(ui.settings().volume);
+        key_click();
         if(physical) { ++physical_keys; last_physical_key = code; }
     }
     calculator.wake_core();
@@ -123,6 +126,10 @@ void report(unsigned math_failures) {
     std::printf("%.*s",(int)firmware_size,diagnostic_status);
     std::printf("UI_FONT_FAMILY=%u UI_FONT_SIZE=%u UI_FONT_KEY=%08lX\n",
         ui.settings().ui_font_family,ui.settings().ui_font_size,(unsigned long)ui.settings().ui_font_key);
+    const auto clicks=picocalc::audio_stream::key_click_statistics();
+    std::printf("KEY_SOUND=%s KEY_CLICK=%s KEY_CLICKS=%lu KEY_CLICKS_COMPLETED=%lu\n",
+        ui.settings().key_sound?"ON":"OFF",clicks.active?"ACTIVE":"IDLE",
+        (unsigned long)clicks.started,(unsigned long)clicks.completed);
     const auto settings_storage=picocalc::settings_storage_statistics();
     std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
         (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,
@@ -281,7 +288,7 @@ void usb_service() {
     if(now>=next_rtc || picocalc::clock::alarm_pending()) {
         picocalc::clock::service();next_rtc=now+1000000;
         unsigned alarm;
-        while(picocalc::clock::take_alarm(alarm)) { wake(now);tone(ui.settings().volume,1000);std::printf("RTC_ALARM=%c\n",'A'+alarm); }
+        while(picocalc::clock::take_alarm(alarm)) { wake(now);notification_tone(1000);std::printf("RTC_ALARM=%c\n",'A'+alarm); }
     }
 }
 bool key_event(picocalc::KeyEvent& event) {
@@ -307,6 +314,7 @@ bool service_pump(void*, u8& key) {
     picocalc::KeyEvent event{};
     if(key_event(event) && event.pressed()) {
         key = event.code;
+        key_click();
         if(physical_event) { ++physical_keys;last_physical_key=key; } last_activity=now;power.activity(now);return true;
     }
     const bool exclusive=terminal.input_active();
@@ -475,7 +483,7 @@ int main() {
             if(captured) {
                 calculator.wake_core();power.activity(time_us_64());
                 if(event.pressed()) {
-                    last_activity=time_us_64();tone(ui.settings().volume);
+                    last_activity=time_us_64();key_click();
                     if(physical_event) { ++physical_keys;last_physical_key=event.code; }
                 }
             } else if(event.pressed()) input(event.code,physical_event);
@@ -580,7 +588,7 @@ int main() {
             if(now >= next_classic_step) { calculator.tick(); next_classic_step = now + 1153846; }
         } else { next_classic_step = 0; calculator.tick(m61_text::active() && m61_text::display_owned(),true); }
         if(current.idle_signal && now - last_activity >= 300000000ULL) {
-            tone(current.volume, 150);
+            notification_tone(150);
             last_activity = now;
         }
         if(settings_dirty && now >= save_at && calculator.idle() && !core_61::is_RUN() && !picocalc::files::usb_active()) save_settings();

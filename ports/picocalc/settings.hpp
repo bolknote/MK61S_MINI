@@ -4,7 +4,10 @@
 
 namespace picocalc {
 struct Settings {
-    u8 volume = 10;
+    // PicoCalc's analog wheel controls the master level. Keep the existing
+    // read-only APP setting at full scale; key feedback has its own switch.
+    static constexpr u8 volume = 10;
+    u8 key_sound = 1;
     u8 idle_signal = 1;
     u8 classic_speed = 0;
     u8 memory = 2; // 105, 112, AUTO, as on STM32.

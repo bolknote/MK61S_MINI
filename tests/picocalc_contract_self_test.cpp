@@ -109,11 +109,12 @@ void buffers_contract(void* context,const mk61_app_api& api,const mk61_app_servi
 }
 void native_contract(void* context,const mk61_app_api& api,const mk61_app_services& s) {
     auto& ui=*(Ui*)context;
-    const auto sound_settings=ui.settings();auto quiet=sound_settings;quiet.volume=10;CHECK(ui.apply_settings(quiet));
+    const auto sound_settings=ui.settings();auto quiet=sound_settings;quiet.key_sound=1;CHECK(ui.apply_settings(quiet));
     CHECK(api.beep(2000,100,100));const auto loud=script::tone_status();CHECK(loud.wrap && loud.level);
     CHECK(api.beep(2000,100,25));CHECK(script::tone_status().level==loud.level/4);
-    quiet.volume=1;CHECK(ui.apply_settings(quiet));CHECK(api.beep(2000,100,100));CHECK(script::tone_status().level>=loud.level/10 && script::tone_status().level<=loud.level/10+1);
-    quiet.volume=0;CHECK(ui.apply_settings(quiet));CHECK(api.beep(2000,100,100));CHECK(!script::tone_status().level);
+    quiet.key_sound=0;CHECK(ui.apply_settings(quiet));CHECK(api.beep(2000,100,100));CHECK(script::tone_status().level==loud.level);
+    CHECK(s.call(MK61_SERVICE_SETTINGS,MK61_SERVICE_VOLUME,0,0,nullptr)==10);
+    CHECK(api.beep(2000,100,0));CHECK(!script::tone_status().level);
     CHECK(!api.beep(65536,1,1) && !api.beep(1,65536,1) && !api.beep(1,0,1) && !api.beep(1,1,101));
     CHECK(ui.apply_settings(sound_settings));CHECK(api.beep(1,65535,100));CHECK(script::tone_status().software);
     api.sound_stop();CHECK(!script::tone_status().wrap && !script::tone_status().software);
