@@ -157,11 +157,12 @@ class Machine:
                 instruction=int.from_bytes(block[i:i+2],'little')
                 alu=instruction<0x4400 or (instruction<0x4700 and instruction&0x87!=0x87)
                 assert alu,('non-ALU in SIO latency block',hex(instruction))
-        seed_start=self.elf.symbols.get('mk61_m0_math_udiv32',0)&~1
-        seed_end=seed_start+self.elf.sizes.get('mk61_m0_math_udiv32',0)
-        if seed_start<=self.divisor_write_pc<seed_end and seed_start<=pc<seed_end:
-            pause=bytes(uc.mem_read(self.divisor_write_pc+2,pc-self.divisor_write_pc-2))
-            assert pause==b'\xff\xe7'*4,('SIO seed pause must match Pico SDK four-branch delay',pause.hex())
+        for name in ('mk61_m0_math_udiv32','mk61_m0_math_sdiv32'):
+            seed_start=self.elf.symbols.get(name,0)&~1
+            seed_end=seed_start+self.elf.sizes.get(name,0)
+            if seed_start<=self.divisor_write_pc<seed_end and seed_start<=pc<seed_end:
+                pause=bytes(uc.mem_read(self.divisor_write_pc+2,pc-self.divisor_write_pc-2))
+                assert pause==b'\xff\xe7'*4,('SIO seed pause must match Pico SDK four-branch delay',name,pause.hex())
         # Reading DIV_QUOTIENT acknowledges and clears DIRTY.
         uc.mem_write(0xD0000078,struct.pack('<I',1))
     def call(self,name,a,b=0,width=64,count=False,shift=False,c=None):

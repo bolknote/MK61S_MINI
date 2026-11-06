@@ -29,6 +29,17 @@ def certify(source_root):
     maximum_cross=65535*(constant_lo+constant_hi)+((65535*constant_lo)>>16)
     assert maximum_cross<1<<32
     assert 65535*constant_hi+(maximum_cross>>16)<1<<32
+    maximum_segment_high=(((1<<32)-1)*0xB8AA3B29)>>32
+    maximum_segment=((maximum_segment_high>>11)+1)>>1
+    assert maximum_segment<=1<<20
+    assert 0xD5E4F1DA&1==0
+    sufficient_threshold=2*((27<<27)-(1<<31)-(1<<18)-2)
+    assert sufficient_threshold==0xAFF7FFFC
+    assert ((sufficient_threshold-2)>>1)+(1<<18)+2<(27<<27)-(1<<31)
+    # Three exact32-bit terms plus the half bit need at most34bits.
+    # SBC folds the -1 into the first carry, so the final modulo2^32
+    # accumulator represents a signed adjustment in[-1,2].
+    assert (3*((1<<32)-1)+(1<<31))>>32==3
     exp_error=F(exp['scaled_error'])
     assert exp_error<5 and 2*exp_error<10
     assert F(atan['polynomial_error'])<54
@@ -80,6 +91,7 @@ def certify(source_root):
     # quantization together add<(1+33)/2^18, below the old allowance.
     assert F(atan['ratio_error'])<33
     assert 33*(1<<24)+1<1<<31
+    assert 0<(1<<18)<(1<<24)-1<1<<31
     assert 1+F(34,1<<18)<quotient_error
     corrected=(F(atan['polynomial_error'])-old_argument-old_tail+
                quotient_error+half+derivative+ninth_term+new_tail)
@@ -98,7 +110,8 @@ def certify(source_root):
     assert ln_main<8 and ln_near<4
     files=['native_eabi_m0_exp_round.inc','native_eabi_m0_atan_correct.inc',
            'native_eabi_m0.cpp','native_eabi_m0_atan_fast.inc',
-           'native_eabi_m0_exp_table.inc','native_eabi_m0_refine_table.inc','native_eabi_m0_log70.inc']
+           'native_eabi_m0_exp_table.inc','native_eabi_m0_refine_table.inc','native_eabi_m0_log70.inc',
+           'native_eabi_m0.S','native_eabi_m0.hpp']
     hashes={name:hashlib.sha256((source_root/'code'/name).read_bytes()).hexdigest() for name in files}
     return dict(status='PASS_RATIONAL_CORRECTION_BOUNDS',source_sha256=hashes,
                 exp=dict(parent=exp,exact_final_absolute_error=str(exact_final),exact_final_absolute_error_float=float(exact_final),
@@ -106,6 +119,12 @@ def certify(source_root):
                          checked_Q94_table_rows=512,strict_error_bounds=[4,3],midpoint_reject_radii=[3,2],
                          first_pass_strict_error_bounds=[5,10],first_pass_reject_radii=[4,9],
                          exact_segment_high32=dict(low=constant_lo,high=constant_hi,maximum_cross=maximum_cross),
+                         fast_tight_guard=dict(maximum_n=maximum_segment,n_bound=1<<20,
+                                              reduction_even=True,table_fraction_distance_bound=1<<31,
+                                              sufficient_reduction_threshold=sufficient_threshold,
+                                              equivalent_carry_sum_maximum_high=3,
+                                              biased_carry_accumulator_signed_range=[-1,2],
+                                              uniform_guard_checked_before_Q94_fraction=True),
                          input_precondition='Tightened mode uses n!=0, which implies e>=-11 and exact input scaling; known table/reduction fractions bound the uncertainty sum below27/32.',
                          error_argument='One half unit for final-product half-up rounding plus<2^-15 from dropping low16-bit partial products; the existing polynomial bound; Q94-derived table distance and exact reduction low word. The uncertainty sum includes outward integer rounding and n/4 step error.'),
                 atan=dict(parent=atan,quotient_estimate_error_exclusive=33,corrected_quotient_error_exclusive=str(quotient_error),
@@ -113,6 +132,9 @@ def certify(source_root):
                           corrected_error=str(corrected),corrected_error_float=float(corrected),guard=10,
                           first_pass_error=str(atan['polynomial_error']),first_pass_guard=53,
                           residual_product_bits=[40,71],
+                          signed_quotient=dict(denominator_minimum=1<<18,denominator_maximum=(1<<24)-1,
+                                               numerator_absolute_exclusive_bound=33*(1<<24)+1,
+                                               rounding='Toward zero: exactly equivalent to abs/unsigned quotient/sign'),
                           error_argument='Recover the signed ceil of the exact128-bit remainder divided by2^40 from product bits40..71. Modulo2^32 is unambiguous under the existing<33 ratio bound. Head quantization and denominator truncation keep ratio error below1+35/2^18; reuse the polynomial, compensate the linear term, add r^9/9. Strict corrected error<11 and first-pass error<54 permit midpoint rejection radii10 and53.'),
                 ln=dict(parent=ln,RP_main_error=str(ln_main),RP_main_error_float=float(ln_main),parent_Q70_near_error=str(ln_near),
                         strict_main_error_bound=8,main_midpoint_reject_radius=7,

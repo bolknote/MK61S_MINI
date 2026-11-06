@@ -10,10 +10,7 @@ static int32_t atan_ratio_adjust(U numerator,U denominator,U estimate) {
   const U low=wide32(al,bl);
   const U middle=wide32(ah,bl)+(low>>32)+wide32(al,bh)+(U(ah*bh)<<32);
   const int32_t residual=int32_t((uint32_t(numerator)<<24)-uint32_t(middle>>8));
-  const bool negative=residual<0;
-  const uint32_t head=negative?0U-uint32_t(residual):uint32_t(residual);
-  const uint32_t correction=mk61_m0_math_udiv32(head,uint32_t(denominator>>40));
-  return negative?-int32_t(correction):int32_t(correction);
+  return mk61_m0_math_sdiv32(residual,int32_t(denominator>>40));
 }
 
 // atan's Q70 magnitude is in [atan(1/64),atan(64)]. Its binary64
