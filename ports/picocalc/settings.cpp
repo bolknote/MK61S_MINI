@@ -18,7 +18,7 @@ u32 get32(const u8 *p) {
 }
 } // namespace
 bool valid_settings(const Settings &s) {
-  return s.key_sound <= 1 && s.idle_signal <= 1 && s.classic_speed <= 1 &&
+  return s.key_sound <= 1 && s.classic_speed <= 1 &&
          s.memory <= 2 && s.random <= 1 && s.russian <= 1 &&
          s.calculator_font <= 1 &&
          (((s.ui_font_family==0 || s.ui_font_family==1 || (s.ui_font_family==3 && s.ui_font_key!=0)) &&
@@ -42,7 +42,7 @@ void encode_settings(const Settings &s, u32 sequence,
   std::memcpy(out, "M61P", 4);
   out[4] = 6;
   put32(out + 8, sequence);
-  const u8 values[] = {s.key_sound,       s.idle_signal,  s.classic_speed,
+  const u8 values[] = {s.key_sound,       0,              s.classic_speed,
                        s.memory,          s.random,       s.russian,
                        s.calculator_font, s.ui_font_size, s.lcd_backlight,
                        s.key_backlight};
@@ -62,7 +62,8 @@ bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
     return false;
   if (get32(page + 64) != checksum(page, 64))
     return false;
-  Settings next{page[12], page[13], page[14], page[15], page[16],
+  // Byte 13 is reserved; idle notifications are not used on PicoCalc.
+  Settings next{page[12], 0, page[14], page[15], page[16],
                 page[17], page[18], page[19], page[20], page[21]};
   next.sleep_minutes = page[22];
   next.rtc_ppm = (i16)((u16)page[23] | (u16)page[24] << 8);

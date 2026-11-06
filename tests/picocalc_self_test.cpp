@@ -173,6 +173,7 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     }
     ui.input(0xB6, calc); ui.input(0xB6, calc); ui.input('\n', calc);
     require(ui.page() == Page::SETTINGS, "Settings action");
+    require(ui.count() == 10, "Pico settings omit the periodic idle beep");
     ui.input(0xB7, calc);
     require(ui.settings().key_sound == 1, "right enables key sound");
     ui.row(0, label);
@@ -184,10 +185,10 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     ui.input(0xB7, calc);
     require(ui.settings().key_sound == 1, "right re-enables key sound");
     ui.input(0xB4, calc);
-    for(unsigned i = 0; i < 5; ++i) ui.input(0xB6, calc);
+    for(unsigned i = 0; i < 4; ++i) ui.input(0xB6, calc);
     ui.input(0xB7, calc);
     require(ui.settings().russian == 0, "language changed to English");
-    ui.row(5, label);
+    ui.row(4, label);
     require(std::strcmp(label, "Language EN") == 0, "live English menu text");
     ui.row(0, label);
     require(std::strcmp(label, "Key sound OFF") == 0, "English key sound label replaces volume");

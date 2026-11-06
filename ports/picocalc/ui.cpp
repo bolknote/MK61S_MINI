@@ -32,7 +32,7 @@ unsigned Ui::count() const {
   case Page::MAIN:
     return menu_model::MAIN_COUNT;
   case Page::SETTINGS:
-    return 11;
+    return 10;
   case Page::FONTS:
     return 3;
   case Page::SYSTEM:
@@ -323,12 +323,9 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
                                   : (u8)(direction > 0);
       break;
     case 1:
-      settings_.idle_signal ^= 1;
-      break;
-    case 2:
       settings_.classic_speed ^= 1;
       break;
-    case 3:
+    case 2:
       if (!calculator.idle() || core_61::is_RUN()) {
         notice(page_, "Wait for the calculator to stop.",
                M8("Дождитесь остановки калькулятора."));
@@ -336,26 +333,26 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
       }
       settings_.memory = (u8)((settings_.memory + (direction > 0 ? 1 : 2)) % 3);
       break;
-    case 4:
+    case 3:
       settings_.random ^= 1;
       break;
-    case 5:
+    case 4:
       settings_.russian ^= 1;
       break;
-    case 6:
+    case 5:
       page_ = Page::FONTS;
       return;
-    case 7:
+    case 6:
       settings_.lcd_backlight = (u8)(16 * (1 + ((settings_.lcd_backlight / 16 -
                                                  1 + (direction > 0 ? 1 : 14)) %
                                                 15)));
       break;
-    case 8:
+    case 7:
       settings_.key_backlight =
           (u8)(40 *
                ((settings_.key_backlight / 40 + (direction > 0 ? 1 : 6)) % 7));
       break;
-    case 9: {
+    case 8: {
       const u8 values[] = {0, 1, 5, 15, 30};
       unsigned at = 0;
       while (at < 4 && values[at] != settings_.sleep_minutes)
@@ -363,7 +360,7 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
       settings_.sleep_minutes = values[(at + (direction > 0 ? 1 : 4)) % 5];
       break;
     }
-    case 10:
+    case 9:
       settings_.rtc_ppm = (i16)(settings_.rtc_ppm + (direction > 0 ? 1 : -1));
       if (settings_.rtc_ppm > 500)
         settings_.rtc_ppm = -500;
@@ -391,44 +388,40 @@ void Ui::row(unsigned index, char out[64]) const {
                     settings_.key_sound ? text("ON", M8("ВКЛ")) : text("OFF", M8("ВЫКЛ")));
       break;
     case 1:
-      std::snprintf(out, 64, "%s %s", text("5 min beep", M8("5 мин звук")),
-                    settings_.idle_signal ? "ON" : "OFF");
-      break;
-    case 2:
       std::snprintf(out, 64, "%s %s", text("Speed", M8("Скорость")),
                     settings_.classic_speed ? "CLASSIC" : "MAXIMUM");
       break;
-    case 3:
+    case 2:
       std::snprintf(out, 64, "%s %s", text("Memory", M8("Память")),
                     settings_.memory == 0   ? "105"
                     : settings_.memory == 1 ? "112+F"
                                             : text("AUTO",M8("АВТО")));
       break;
-    case 4:
+    case 3:
       std::snprintf(out, 64, "%s %s", text("Random", M8("К СЧ")),
                     settings_.random ? "MK61S" : "MK61");
       break;
-    case 5:
+    case 4:
       std::snprintf(out, 64, "%s", text("Language EN", M8("Язык рус")));
       break;
-    case 6:
+    case 5:
       std::snprintf(out, 64, "%s", text("Fonts...", M8("Шрифты...")));
       break;
-    case 7:
+    case 6:
       std::snprintf(out, 64, "%s %u",
                     text("LCD backlight", M8("Подсветка экрана")),
                     settings_.lcd_backlight);
       break;
-    case 8:
+    case 7:
       std::snprintf(out, 64, "%s %u",
                     text("Keyboard light", M8("Подсветка клавиш")),
                     settings_.key_backlight);
       break;
-    case 9:
+    case 8:
       std::snprintf(out, 64, "%s %u min", text("Sleep after", M8("Сон через")),
                     settings_.sleep_minutes);
       break;
-    case 10:
+    case 9:
       std::snprintf(out, 64, "RTC ppm: %+d", settings_.rtc_ppm);
       break;
     }
