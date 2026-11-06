@@ -32,10 +32,18 @@ with tempfile.TemporaryDirectory(prefix='mk61-linked-cli-') as temporary:
     cache=work/'cache';bank=cache/'0010'/'Image0';bank.mkdir(parents=True)
     member=image[first[1]:first[1]+first[2]]
     page=bank/'00000000.bin';page.write_bytes(member+bytes(1024-len(member)))
-    metadata=bytearray(64);metadata[:4]=b'LFP1';metadata[5]=14;metadata[16:48]=member[:32]
+    metadata=bytearray(64);metadata[:4]=b'LFP1';metadata[5]=member[4];metadata[16:48]=member[:32]
     struct.pack_into('<I',metadata,60,zlib.crc32(metadata[:60]))
     (cache/'0010'/'Manifest.bin').write_bytes(metadata)
     assert compare(output,cache)==(1,1,2)
+    # A correct manifest CRC cannot make a mismatched compiler version valid.
+    wrong_version=bytearray(metadata);wrong_version[5]^=1
+    struct.pack_into('<I',wrong_version,60,zlib.crc32(wrong_version[:60]))
+    (cache/'0010'/'Manifest.bin').write_bytes(wrong_version)
+    try:compare(output,cache)
+    except AssertionError:pass
+    else:raise AssertionError('cache compiler version mismatch accepted')
+    (cache/'0010'/'Manifest.bin').write_bytes(metadata)
     damaged_page=bytearray(page.read_bytes());damaged_page[len(member)-1]^=1;page.write_bytes(damaged_page)
     try:compare(output,cache)
     except AssertionError:pass

@@ -6,6 +6,15 @@ from pathlib import Path
 import struct
 import zlib
 
+LBV2_HEADER_SIZE = 40
+LBV2_VERSION = 15
+
+def validate_module(image):
+    assert len(image)>=LBV2_HEADER_SIZE and image[:4]==b'LBV2' and image[4]==LBV2_VERSION
+    assert struct.unpack_from('<I',image,8)[0]==len(image)
+    assert struct.unpack_from('<I',image,12)[0]==LBV2_HEADER_SIZE+8*struct.unpack_from('<H',image,18)[0]
+    assert zlib.crc32(image[LBV2_HEADER_SIZE:])==struct.unpack_from('<I',image,24)[0]
+
 def compare(package,cache):
     data=package.read_bytes()
     assert data[:4]==b'LVP1' and struct.unpack_from('<I',data,8)[0]==len(data)
@@ -15,6 +24,7 @@ def compare(package,cache):
     for i in range(struct.unpack_from('<H',data,6)[0]):
         _,offset,size,_=struct.unpack_from('<4I',data,32+i*16)
         image=data[offset:offset+size]
+        validate_module(image)
         expected[hashlib.sha256(image).hexdigest()]=image
     checked=[]
     for manifest in sorted(cache.glob('*/Manifest.bin')):
@@ -24,8 +34,8 @@ def compare(package,cache):
         size=struct.unpack_from('<I',m,24)[0]
         directory=manifest.parent/f'Image{m[4]}'
         image=b''.join((directory/f'{i:08X}.bin').read_bytes() for i in range((size+1023)//1024))[:size]
-        assert image[:32]==m[16:48] and image[:4]==b'LBV2'
-        assert zlib.crc32(image[32:])==struct.unpack_from('<I',image,24)[0]
+        assert image[:32]==m[16:48] and image[4]==m[5]
+        validate_module(image)
         digest=hashlib.sha256(image).hexdigest()
         assert digest in expected and expected[digest]==image,manifest
         checked.append(digest)

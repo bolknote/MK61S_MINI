@@ -1,4 +1,5 @@
 """Grant and USB release failures must stop before the next hardware owner."""
+import argparse
 import copy
 import json
 import os
@@ -15,6 +16,8 @@ from unittest import mock
 import hil_urq_semion as hil
 import hil_classic_cdc_guard as guard
 
+FOOTER_TOOL = Path(os.environ.get('URQ_TEST_CLASSIC_FOOTER',
+                                  hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer'))
 
 class RuntimeSafetyTests(unittest.TestCase):
     def test_optimized_python_refuses_hardware_modules_before_imports(self):
@@ -31,8 +34,7 @@ class RuntimeSafetyTests(unittest.TestCase):
                         self.assertIn('checks require assertions; run Python without -O/-OO', result.stderr)
 
     def test_footer_uses_explicit_built_helper_from_an_unrelated_cwd(self):
-        source = Path(os.environ.get('URQ_TEST_CLASSIC_FOOTER',
-                                    hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer')).resolve()
+        source = FOOTER_TOOL.resolve()
         with tempfile.TemporaryDirectory() as directory:
             helper = Path(directory) / 'actual-backend-footer'
             shutil.copy2(source, helper)
@@ -318,9 +320,7 @@ class FrameTests(unittest.TestCase):
             self.assertNotEqual(hil.canonical(off), hil.canonical(changed), index)
 
     def test_inventory_header_cannot_be_mistaken_for_main_menu(self):
-        tool = Path(os.environ.get('URQ_TEST_CLASSIC_FOOTER',
-                                   hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer')).resolve()
-        hints = subprocess.check_output([str(tool)])
+        hints = subprocess.check_output([str(FOOTER_TOOL)])
         self.assertEqual(len(hints), 7 * 192)
         menu = hints[5 * 192:6 * 192] + bytes(7 * 192)
         inventory = hints[6 * 192:7 * 192] + bytes(7 * 192)
@@ -350,4 +350,8 @@ class FrameTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--footer', type=Path, default=FOOTER_TOOL)
+    options, remaining = parser.parse_known_args()
+    FOOTER_TOOL = options.footer.resolve()
+    unittest.main(argv=[sys.argv[0], *remaining])
