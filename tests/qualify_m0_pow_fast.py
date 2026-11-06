@@ -17,10 +17,12 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--elf',type=Path,required=True)
     parser.add_argument('--samples',type=int,default=10000)
+    parser.add_argument('--bootrom',type=Path,
+                        help='Execute the captured RP2040 ROM in production SDK ELFs')
     parser.add_argument('--json',type=Path,required=True)
     args=parser.parse_args();assert args.samples>=0
     elf_sha=hashlib.sha256(args.elf.read_bytes()).hexdigest()
-    machine=Machine(args.elf,True,stack_bytes=16384)
+    machine=Machine(args.elf,True,stack_bytes=16384,bootrom=args.bootrom)
     oracle=Oracle();rng=random.Random(0xC0128323);fallback=[0];reports={}
     address=machine.elf.symbols['mk61_m0_cr_pow']&~1
     def entered(*unused):fallback[0]+=1
@@ -204,6 +206,7 @@ def main():
     assert elf_sha==hashlib.sha256(args.elf.read_bytes()).hexdigest()
     result=dict(status='PASS',operations=reports,elf_sha256=elf_sha,mpfr=oracle.version,
         maximum_stack_bytes=SP-machine.stack_lowest,pending_divider_checks=7,nan_identity_checks=6,
+        bootrom_sha256=machine.bootrom_sha256,
         oracle='Directed MPFR bounds, rounded to binary64 RNE; every ARM call verifies R4-R11, SP and bounded stack writes.',
         scope='Finite targeted corpus. Full interval bounds are certified separately; universal fallback pow totality remains unproved.')
     args.json.parent.mkdir(parents=True,exist_ok=True)

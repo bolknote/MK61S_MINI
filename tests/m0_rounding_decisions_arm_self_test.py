@@ -55,6 +55,9 @@ def main():
                     bh=((target-ah*bl-(al>>16)*(bl>>16))*inverse)&MASK
                     vectors.append((i,rng.choice(bounds+nearby),bl|(bh<<32),rng.choice(tails)|(rng.randrange(4)<<10)))
     vectors += [(rng.randrange(512),rng.randrange((1<<20)+1),rng.getrandbits(64),rng.choice(tails)|(rng.randrange(4)<<10)) for _ in range(a.samples)]
+    # The optimized caller passes error4/9 shifted by10, whose unused
+    # bits12/13 must not affect the tail, sign or normalization fields.
+    vectors=[(i,n,mag,cell|((1+(j&1))<<12)) for j,(i,n,mag,cell) in enumerate(vectors)]
     digest=hashlib.sha256();start=time.monotonic();contexts=0
     for count,(i,n,mag,cell) in enumerate(vectors,1):
         assert time.monotonic()-start<300

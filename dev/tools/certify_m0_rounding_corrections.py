@@ -67,6 +67,27 @@ def certify(source_root):
     # and encoded exponent are unchanged while deciding its rounding bit.
     assert 0<512-10-4 and 512+10+4<1024
 
+    # A normalized cell has guards7/5. Taking floor(abs(distance)/2)
+    # maps those guards exactly to3/2, including negative odd distances.
+    # Only radius3 can change its decision when the enclosure tightens.
+    decision_checks=0
+    for normalized in (0,1):
+        for adjustment in range(-2,3):
+            for tail in range(1024):
+                distance=tail-512+adjustment*(1+normalized)
+                radius=abs(distance)>>normalized
+                endpoint=2 if distance>=0 else 1
+                for tight in (False,True):
+                    guard=(2 if tight else 3)*(1+normalized)+normalized
+                    old=endpoint if abs(distance)>guard else 0
+                    new=endpoint if radius>3 or (radius==3 and tight) else 0
+                    assert old==new
+                    decision_checks+=1
+    # The caller may pass unused high bits from error<<10. Error4/9
+    # encode precisely the same normalization bit; bit11 stays clear.
+    for error in (4,9):
+        assert ((error<<10)&3072)==(1024 if error==9 else 0)
+
     # Fast exp packing rejects every exact midpoint. Decompose q=1024*a+t:
     # the old RNE addition and half-up addition depend only on t and a&1.
     # Include the top uint64 quotients to check the identical modulo wrap.
@@ -153,6 +174,9 @@ def certify(source_root):
                                               sufficient_reduction_threshold=sufficient_threshold,
                                               equivalent_carry_sum_maximum_high=3,
                                               biased_carry_accumulator_signed_range=[-1,2],
+                                              equivalent_normalized_radius_checks=decision_checks,
+                                              Q94_fraction_needed_only_at_radius=3,
+                                              caller_error_shift_preserves_cell_fields=True,
                                               uniform_guard_checked_before_Q94_fraction=True),
                          input_precondition='Tightened mode uses n!=0, which implies e>=-11 and exact input scaling; known table/reduction fractions bound the uncertainty sum below27/32.',
                          error_argument='One half unit for final-product half-up rounding plus<2^-15 from dropping low16-bit partial products; the existing polynomial bound; Q94-derived table distance and exact reduction low word. The uncertainty sum includes outward integer rounding and n/4 step error.'),

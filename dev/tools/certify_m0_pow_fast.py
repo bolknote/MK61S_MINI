@@ -203,9 +203,54 @@ assert newton_ideal+newton_rounding<24
 assert (4-F(1,1<<51))*(F(1,2)+F(1,1<<55))**2<1
 assert 256>24
 assert 24*2<512
+# RP2040 replaces the last approximation bit by an enclosure tag. The
+# extra unit still fits the original24-unit interval. The seed bound
+# also confines high32(P) to the small region used by the tag predicate.
+assert newton_ideal+newton_rounding+1<24
+product_residual=(1<<34)+19
+assert (1<<62)-product_residual>0
+for high_delta in range(-5,5):
+    high=(1<<30)+high_delta
+    tight=(((high+1)<<2)&0xffffffff)<8
+    assert tight==(high_delta in (-1,0))
+# In the two accepted high-word cells |P-2^62|<=2^32. The exact
+# product exceeds the truncated P by<3, hence |u|<h, where
+# u=M*seed^2/2^64-1. Ideal Newton undershoots the inverse root:
+# 1-sqrt(1+u)*(1-u/2)=(3*u^2-u^3)/(4*(1+r)).
+# r>(1-h)*(1-h/2)>1-2*h gives the following rational bound.
+tight_h=F((1<<32)+3,1<<62)
+assert 0<tight_h<F(1,1<<29)
+tight_newton=(1<<63)*(3+tight_h)*tight_h**2/(8*(1-tight_h))
+assert tight_newton+2<6  # final floor and replacement of the tag bit
+assert 3+1<6            # omitted product and tag on the other side
+# The shortened reciprocal entry has exactly the old normal/result
+# guard when the dividend is1. All excluded inputs keep the RNE fallback.
+for exponent in range(2048):
+    old_normal=(1<=exponent<=2046 and 0<=2044-exponent<=2043)
+    assert old_normal==(1<=exponent<=2044)
 # Normalizing even a least subnormal input leaves the final inverse
 # square root normal: exponents range from-512 through537.
 assert -1022 < -512 <=537<1024
+# RP2040's square entry accepts only512<=E<=1534. The smallest
+# significand gives 2^-1022 at E=512. At E=1534 the largest square
+# stays below the RNE overflow midpoint (in units of2^918).
+assert 2*(512-1023)==-1022
+assert ((1<<53)-1)**2 < (1<<106)-(1<<52)
+assert ((1<<21)-1)*((1<<32)-1) < 1<<53
+assert 2*((1<<21)-1)*((1<<32)-1) < 1<<54
+# The normal-cell rsqrt guard excludes a midpoint. Replacing the
+# tie-even addend511+bit10 by512 is exact for every accepted tail
+# and both parities of the retained significand.
+rsqrt_round_cells=0
+for radius in (24,6):
+    for retained in (0,1):
+        for tail in range(1024):
+            if not 512-radius<=tail<=512+radius:
+                q=(retained<<10)|tail
+                assert (q+511+retained)>>10 == (q+512)>>10
+                rsqrt_round_cells+=1
+for e in range(-1074,1024):
+    assert -(e>>1)==-(e-(e&1))//2
 result=dict(status='PASS_ARITHMETIC_BOUNDS',log70=a,log94=b,
     relative_q94_rounding=str(relative_rounding),pow_log_tail_extra_error=2,pow_linear_coefficient_error=str(F(2,3)),exp62=d,pow_exp_q62_error=str(main),pow_exp_q62_enclosure='3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise',
     pow_exp_product_error=str(product_error),pow_exp_generic_error=str(main_generic),
@@ -214,6 +259,11 @@ result=dict(status='PASS_ARITHMETIC_BOUNDS',log70=a,log94=b,
     exp94_interval='2^24 + ceil(log_error*2^(53-shift))',
     integer_shortcut_remainder=str(2*t*t),
     exp94_table_cells=len(values),direct_rsqrt_seed_error_q32=str(seed_error),direct_rsqrt_error_q63=str(newton_ideal+newton_rounding),direct_rsqrt_interval_q63=24,
+    rp2040_square_normal_exponents=[512,1534],rp2040_rsqrt_round_cells=rsqrt_round_cells,
+    rp2040_rsqrt_tagged_global_interval=24,rp2040_rsqrt_tagged_tight_interval=6,
+    rp2040_rsqrt_tight_newton_error_q63=str(tight_newton),rp2040_reciprocal_normal_exponents=[1,2044],
+    rp2040_shortcut_source_sha256={name:hashlib.sha256((w/'code'/name).read_bytes()).hexdigest()
+        for name in ('native_eabi_m0.S','native_eabi_m0_rp2040.S','native_eabi_m0_pow_rsqrt_product.inc','native_eabi_m0_pow_reciprocal.inc')},
     source_sha256=hashlib.sha256((w/'code/native_eabi_m0_pow_fast.inc').read_bytes()).hexdigest(),
     scope='Exact rational propagation and exp table cell verification; independent ARM execution and source review required. Universal fallback pow totality remains unresolved.')
 args.json.write_text(json.dumps(result,indent=2)+'\n')

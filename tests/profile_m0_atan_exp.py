@@ -51,7 +51,7 @@ def main():
     machines={r:Machine(f,True,stack_bytes=16384,instruction_budget=20000000) for r,f in paths.items()}
     assert 'audit_atan' in machines['qfp'].elf.symbols,'Use an actual unary Thumb adapter to qfp_datan2(x,1)'
     oracle=Oracle();groups=corpora(a.samples,a.atan_profile);hits={r:Counter() for r in machines}
-    helpers=('atan_round_correct','atan_refine','mk61_m0_cr_atan','exp_round_decide','exp_refine','mk61_m0_cr_exp')
+    helpers=('atan_round_correct','atan_refine','mk61_m0_cr_atan','exp_round_decide','exp_round_fine','exp_refine','mk61_m0_cr_exp')
     for role,m in machines.items():
         for name in helpers:
             addresses={address&~1 for symbol,address in m.elf.symbols.items()

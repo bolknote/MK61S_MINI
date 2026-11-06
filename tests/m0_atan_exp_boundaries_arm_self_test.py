@@ -15,8 +15,9 @@ from profile_m0_math import qualify_corpus
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--elf',type=Path,required=True)
+    p.add_argument('--bootrom',type=Path,help='Execute the captured SDK ROM bit/memory helpers')
     p.add_argument('--json',type=Path,required=True)
-    a=p.parse_args();machine=Machine(a.elf,True,stack_bytes=16384,instruction_budget=20000000)
+    a=p.parse_args();machine=Machine(a.elf,True,stack_bytes=16384,instruction_budget=20000000,bootrom=a.bootrom)
     oracle=Oracle();start=time.monotonic();digest=hashlib.sha256();calls=contexts=0
     atan=set()
     for x in (2.**-27,1/64,1.,64.,128.,2.**55):
@@ -53,6 +54,7 @@ def main():
         records_sha256=digest.hexdigest(),elf_sha256=hashlib.sha256(a.elf.read_bytes()).hexdigest(),
         elapsed_seconds=time.monotonic()-start,hardware_IO=0,pow_calls=0,
         scope='All512 exp cells at centers/half cells and reduction exponents, all exp input-scaling shifts with mantissa carry edges, five short-path focus points and neighbours, underflow/overflow/tiny boundaries, atan dispatch endpoints and sampled interrupted-divider contexts. Finite actual ARM corpus, not physical timing or universal correctness proof.')
+    if a.bootrom:report['actual_bootrom_sha256']=machine.bootrom_sha256
     a.json.parent.mkdir(parents=True,exist_ok=True);a.json.write_text(json.dumps(report,indent=2)+'\n')
     print('PASS boundaries',report['input_cases'],'ARMcalls',calls,'SIOchecks',contexts,flush=True)
 
