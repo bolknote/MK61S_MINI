@@ -611,9 +611,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     case MK61_SERVICE_KEY_SCAN:host.pump();return 1;
     case MK61_SERVICE_KEY_BITMAP: {
       if(b!=32 || c || !payload) return 0;
-      host.pump();auto* bits=(u8*)payload;std::memset(bits,0,32);
-      for(unsigned code=1;code<256;++code) if(controls::pressed((u8)code,millis()))
-        bits[code/8]|=(u8)(1U<<(code&7U));
+      host.pump();controls::bitmap((u8*)payload,millis());
       return 1;
     }
     case MK61_SERVICE_KEY_ANY:host.pump();return controls::any_pressed(millis());

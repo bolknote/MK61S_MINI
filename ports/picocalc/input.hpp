@@ -8,6 +8,7 @@ void event(KeyEvent event, Source source = Source::PHYSICAL);
 void pulse(u8 code, u32 now);
 void clear();
 bool pressed(u8 code, u32 now);
+void bitmap(u8 bits[32],u32 now);
 int logical(u8 code);
 int scan(u8 code);
 int raw_key(u8 code);
