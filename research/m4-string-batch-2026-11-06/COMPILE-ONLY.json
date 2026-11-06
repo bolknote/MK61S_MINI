@@ -1,0 +1,109 @@
+{
+  "status": "COMPILED_ONLY_FUNCTIONAL_AND_HARDWARE_TESTS_NOT_RUN",
+  "base": "43eea5d82875a61cc9a729c4ccc2332eb49d73c8",
+  "branch": "feature/m4-string-batch-20261106",
+  "unroll": 4,
+  "symbols": {
+    "strnlen": {
+      "entry": 134571537,
+      "bytes": 54,
+      "sha256": "b67f867f71331574251e9491d1d1c8e5688092fb45748012fe775e2e23e6e2b7"
+    },
+    "strcpy": {
+      "entry": 134571985,
+      "bytes": 46,
+      "sha256": "8706962e6da54bd2b332f4349aeab40d8b716455c35ecb2054d351966591c41b"
+    },
+    "strncpy": {
+      "entry": 134572033,
+      "bytes": 126,
+      "sha256": "74e1ec3ffe0f5d2d13d1e0d3852206417426f7a67380397f7ed22cdd6f879526"
+    },
+    "strncat": {
+      "entry": 134572161,
+      "bytes": 98,
+      "sha256": "4dfaf5ad7d98f1bcdc7ecc8962efab54bb369b3c5850e6feb73d2b8631764736"
+    }
+  },
+  "firmware_bytes": 400460,
+  "free_Flash": 123828,
+  "minimum_Flash_reserve": 16384,
+  "RAM_globals": 22024,
+  "max_stack_frame": 1928,
+  "stack_limit": 5120,
+  "hardware_IO": 0,
+  "firmware_installed": false,
+  "firmware_sealed": false,
+  "grouped_build": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/grouped-build-001/BUILD.json",
+    "sha256": "713df98dbfa37418fe46a9e5217354a013fd9bb1583f52f9d2fd70fb05600552",
+    "status": "COMPILED_GROUPED_VALIDATION_NOT_RUN",
+    "semantic_execution": false,
+    "runtime21_tail_bytes": 12,
+    "variants": [
+      {
+        "variant": "m4-byte2",
+        "functions": {
+          "strnlen": 34,
+          "strcpy": 26,
+          "strncpy": 90,
+          "strncat": 60
+        }
+      },
+      {
+        "variant": "m4-byte4",
+        "functions": {
+          "strnlen": 54,
+          "strcpy": 46,
+          "strncpy": 126,
+          "strncat": 98
+        }
+      },
+      {
+        "variant": "m4-control",
+        "functions": {
+          "strnlen": 18,
+          "strcpy": 16,
+          "strncpy": 60,
+          "strncat": 40
+        }
+      },
+      {
+        "variant": "f401",
+        "functions": {
+          "strnlen": 18,
+          "strcpy": 16,
+          "strncpy": 60,
+          "strncat": 40
+        }
+      },
+      {
+        "variant": "f401-control",
+        "functions": {
+          "strnlen": 18,
+          "strcpy": 16,
+          "strncpy": 60,
+          "strncat": 40
+        }
+      },
+      {
+        "variant": "m0",
+        "functions": {
+          "strnlen": 20,
+          "strcpy": 14,
+          "strncpy": 38,
+          "strncat": 38
+        }
+      },
+      {
+        "variant": "m0-control",
+        "functions": {
+          "strnlen": 20,
+          "strcpy": 14,
+          "strncpy": 38,
+          "strncat": 38
+        }
+      }
+    ]
+  }
+}
