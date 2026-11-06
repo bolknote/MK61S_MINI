@@ -1,0 +1,21 @@
+{
+  "status": "PASS_RATIONAL_Q70_AND_MIDPOINT_ENCLOSURE",
+  "sources": {
+    "code/native_eabi_m0_exp_fine.inc": "419ef2a58f1918ce3cf1288a395c82c56b1dc03be77694b0b529ef24cbf77661",
+    "code/native_eabi_m0.cpp": "b27f845ea0728f01769979ac6e17455f288bfff9b5f274ff8cbdfaf0c6c633a4",
+    "code/native_eabi_m0_exp_table.inc": "7a2baf22195f075921505e741711ce8ac6fce6790d8d9b794a4228337346fb7b",
+    "code/native_eabi_m0_refine_table.inc": "005dc4bf1e9677e6660ed3613b0732cfc462978573e2eaf2587d1e9f10d17474"
+  },
+  "nonlinear_error_q70": "881773667559322289614668465613549512598370559491/172696196914790197128923154891906738281250000000",
+  "nonlinear_error_q70_float": 5.105924063830989,
+  "nonlinear_radius_q70": 6,
+  "midpoint_error_q62": "38404374286368526127882247816429635/810728476677164570142033694584471552",
+  "midpoint_error_q62_float": 0.04737020518111307,
+  "accepted_radius_q16": 3136,
+  "table_rows_certified": 512,
+  "new_tables_bytes": 0,
+  "new_static_ram_bytes": 0,
+  "domain": "Existing exp caller: n!=0, unnormalized normal Q62 cells, |integer residual|<=0.0007*2^64. Other cases retain the old independent refinement.",
+  "semantics": "Accept only when the entire strict enclosure lies on one side of the binary64 midpoint. Midpoints/undecided intervals fall back; no accuracy tolerance.",
+  "scope": "Exact rational range/error argument and exact integer table certificates; source-pinned ARM implementation/oracle and ABI qualification are separate, not implied by these algebra checks."
+}

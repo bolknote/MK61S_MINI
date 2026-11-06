@@ -1,0 +1,162 @@
+{
+  "schema": 1,
+  "status": "QUALIFIED_MATH_SOURCE_AND_PHYSICAL_MEASUREMENTS",
+  "date": "2026-11-06",
+  "board": "PicoCalc / Pico H / RP2040 B2",
+  "CPU_MHz": 125,
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "runtime_change": "Add a bounded Q70 correction before the existing independent exp refinement; RP2040 only. No new tables or static RAM.",
+  "math_sources": {
+    "code/native_eabi_m0.cpp": "b27f845ea0728f01769979ac6e17455f288bfff9b5f274ff8cbdfaf0c6c633a4",
+    "code/native_eabi_m0_exp_fine.inc": "419ef2a58f1918ce3cf1288a395c82c56b1dc03be77694b0b529ef24cbf77661",
+    "dev/tools/certify_m0_exp_fine.py": "b4ce4a9ac6d1e70768d7884250bb1fef3f34cd7adf1aad41e49a24181f400b8b",
+    "dev/tools/certify_m0_pow_fast.py": "30ffe30b90b637122ccfd9c2a31516195180a4d3a57d8116c80f5d3a17072bff",
+    "dev/tools/certify_m0_rounding_corrections.py": "188771e0d3df9a607c015cc4441f51ab31482cd8cf59c137d6b972884dcc3d82",
+    "tests/m0_atan_exp_boundaries_arm_self_test.py": "def150e64df716bfded0cc99895398705e537cc4aad6976b9c68c22789a62dc7",
+    "tests/m0_exp_fine_arm_self_test.py": "afe180af13bef394d16b76f92e208b35360bb7a44367200a4f0538e320cc20bf",
+    "tests/m0_pow_shortcuts_arm_self_test.py": "7b0a86373137b8b705c6b2e581db3c81b8cfcdcc047a4c9c0d9297bed3da4e03",
+    "tests/m0_rounding_decisions_arm_self_test.py": "84bb42b83d08835ab98ff408bc651b057a7207af735b7c600dae6cf1251cfec6",
+    "tests/profile_m0_atan_exp.py": "073ebcca5581c34ed5be9c197ee690be43cc43de152adff9a115e6928a91081d",
+    "tests/qualify_m0_pow_fast.py": "4b564162dfc5c6849f64ed22e55d9a9da9a66c5818bb05dadd620812dc4150a7"
+  },
+  "working_image": {
+    "build": "7F9BCD99",
+    "crc32": "87D6E195",
+    "bytes": 1538304,
+    "bin_sha256": "f0109caad203e445bfdeb4c2d5ae5b4164a2dd93374ff9f6087b68e2063c9087",
+    "static_ram_bytes": 117312,
+    "flash_delta_bytes": 1280
+  },
+  "hardware_runs": {
+    "BASE": 38,
+    "NEXT": 38,
+    "CURRENT": 38,
+    "RECHECK": 3,
+    "LAYOUT_FOCUS": 3
+  },
+  "hardware_groups": 120,
+  "case_evaluations": 6489,
+  "returned_values": 12978,
+  "unique_MPFR_inputs": 1938,
+  "owned_wrong": 0,
+  "qfplib_wrong": 0,
+  "MPFR_version": "4.2.2",
+  "current_aggregate": {
+    "pow": {
+      "groups": 11,
+      "median_faster": 11,
+      "median_slower": 0,
+      "all6_pairs_nonpositive_groups": 10
+    },
+    "exp": {
+      "groups": 22,
+      "median_faster": 9,
+      "median_slower": 13,
+      "all6_pairs_nonpositive_groups": 9
+    },
+    "sin": {
+      "groups": 2,
+      "median_faster": 2,
+      "median_slower": 0,
+      "all6_pairs_nonpositive_groups": 2
+    },
+    "cos": {
+      "groups": 3,
+      "median_faster": 2,
+      "median_slower": 1,
+      "all6_pairs_nonpositive_groups": 2
+    },
+    "heavy_exp": {
+      "groups": 13,
+      "own_range": [
+        11.7203369140625,
+        12.0238037109375
+      ],
+      "qfplib_range": [
+        6.08154296875,
+        6.9052734375
+      ],
+      "own_mean": 11.811927208533653,
+      "qfplib_mean": 6.405451847956731
+    },
+    "ordinary_exp": {
+      "groups": 9,
+      "own_range": [
+        5.260009765625,
+        6.0362548828125
+      ],
+      "qfplib_range": [
+        5.6796875,
+        6.612060546875
+      ],
+      "own_mean": 5.485527886284722,
+      "qfplib_mean": 6.116048177083333
+    }
+  },
+  "HOST_qualification": {
+    "pow_public_MPFR": 4395,
+    "exp_public_MPFR": 4196,
+    "boundary_ARM_calls": 17311,
+    "DIRTY_PENDING_checks": 272,
+    "other_results_and_instructions_equal_A10": 19430,
+    "pow_results_and_instructions_equal_A10": 1392,
+    "correct_Qfplib_pow_composition_cases_faster": 690,
+    "wrong_rounding": 0,
+    "packet_groups": 38,
+    "packet_cases": 2033,
+    "packet_unique": 1938,
+    "packet_wrong": 0,
+    "packet_numerical_layout_symbols_equal": 420
+  },
+  "M4_generic_byteidentical_objects": 15,
+  "exact_nonlinear_ARM_checks": 40466,
+  "additional_exp_MPFR_cases_on_identical_math": 100196,
+  "protocol": {
+    "rounds": 12,
+    "orders": "Balanced own/reference orders; six paired differences.",
+    "warmup_us": 1000000,
+    "warmup_pairs_cap": 32768,
+    "estimator": "order_balanced_median",
+    "paired_ranges": "Empirical ranges, not confidence intervals."
+  },
+  "working_acceptance": {
+    "flash_readback_equal": true,
+    "native_completion": true,
+    "release": true,
+    "UID_verified": true,
+    "keyboard_panel_math_CRC_SD_PSRAM_health": true,
+    "CDC_closed": true,
+    "owned_temporary_directories_removed": true,
+    "RTC_setters": 0
+  },
+  "remaining": [
+    "13 rare exp refinement cases are still slower than MPFR-correct Qfplib references.",
+    "The broad cos stream is about 0.94% slower on the measured current platform; a repeat confirms it.",
+    "The general pow final undecided interval retains a trap; all-input totality is unproved."
+  ],
+  "unselected_experiments": [
+    "Layout-only 08EEC521 did not remove the broad-cos loss.",
+    "Subsequent state-reuse prototypes are not part of this measurement or source change."
+  ],
+  "scope": [
+    "Finite benchmark/oracle corpus; not a universal speed, all-input RNE or totality proof.",
+    "Pow comparisons use explicit Qfplib compositions and exact-exponent shortcuts; Qfplib has no native pow here.",
+    "Primary timing inputs were selected where both implementations match MPFR; adverse performance results are retained.",
+    "The measured working firmware includes existing platform/AI changes outside this math commit; the clean baseline checkout alone is not claimed to reproduce that complete image.",
+    "All 120 raw groups are retained. The original post-Flash KBD=WAIT holds were resolved by separate read-only native completions, not overwritten."
+  ],
+  "payloads": {
+    "records.jsonl.gz": {
+      "sha256": "afd9ce9fd6bf6ae18620b3dfd59a049823fbed2dc8d5730a72bae774855fbc1b",
+      "bytes": 235747
+    },
+    "groups.csv": {
+      "sha256": "592d381d224c35c0bad6b697a2e6a5f1fc8c017e02c1fd88d389422dca122e9f",
+      "bytes": 20689
+    },
+    "exp-q70-certificate.json": {
+      "sha256": "24efe7fca80551f1da7f607721049d6c0ac7aeae86b2db7df7a2d5c7de67985c",
+      "bytes": 1506
+    }
+  }
+}

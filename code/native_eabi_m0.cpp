@@ -614,6 +614,7 @@ __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
 }
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 #include "native_eabi_m0_exp_round.inc"
+#include "native_eabi_m0_exp_fine.inc"
 #endif
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
@@ -728,7 +729,9 @@ MK61_SOFT_PCS double mk61_m0_exp(double x) {
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
       // Only bit10 of error<<10 is consumed: error is4 or9. The other
       // high bits are outside the cell's tail/sign/normalization fields.
-      const unsigned decision=exp_round_decide(index,n,final_magnitude,tail|(error<<10)|(below?2048U:0U));
+      const unsigned cell=tail|(error<<10)|(below?2048U:0U);
+      unsigned decision=exp_round_decide(index,n,final_magnitude,cell);
+      if(!decision) decision=exp_round_fine(x,n,final_magnitude,cell);
       if(!decision) return exp_refine(x,n);
       const U rounded=(q>>10)+(decision-1U);
       return real((U(k+1022)<<52)+rounded);
