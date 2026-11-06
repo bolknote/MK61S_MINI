@@ -43,6 +43,8 @@ int strcmp(const char* a,const char* b) {
   return (int)(unsigned char)*a-(int)(unsigned char)*b;
 }
 #endif
+#include "memory_strncmp_arm.h"
+#ifndef MK61_ARM_STRNCMP
 int strncmp(const char* a,const char* b,size_t n) {
   while(n--) {
     const unsigned char x=(unsigned char)*a++,y=(unsigned char)*b++;
@@ -51,6 +53,7 @@ int strncmp(const char* a,const char* b,size_t n) {
   }
   return 0;
 }
+#endif
 char* strcpy(char* destination,const char* source) {
   char* d=destination;
   do { *d=*source++; } while(*d++);
