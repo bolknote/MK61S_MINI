@@ -1,3 +1,8 @@
+// Number conversion is a cold service, including compatibility builds whose
+// sketch otherwise uses -O3. Keep the exact algorithm optimized for size.
+#if defined(__GNUC__) && !defined(__clang__) && defined(__arm__)
+#pragma GCC optimize ("Oz")
+#endif
 // Ryu provides shortest round-tripping digits; this adapter applies the
 // ECMAScript decimal/scientific notation thresholds used by UrqW.
 #define RYU_OPTIMIZE_SIZE
@@ -6,18 +11,40 @@
 #define NDEBUG
 #endif
 #include "ecma_number.hpp"
+#if defined(MK61_APP_SHARED_RUNTIME)
+#define MK61_USE_COMPACT_LIBM 1
+#endif
 #include "mk_math.hpp"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <inttypes.h>
+#if defined(MK61_APP_SHARED_RUNTIME) && defined(MK61_TARGET_PICOCALC)
+// The SDK's freestanding stdlib omits allocation. Only d2d is used; the
+// upstream allocating wrapper is discarded by function-section GC.
+extern "C" void* malloc(size_t);
+#endif
 namespace mk61_ryu {
+#if defined(MK61_TEST_COMPACT_DECIMAL) || \
+    (defined(MK61_APP_SHARED_RUNTIME) && !defined(MK61_TARGET_PICOCALC))
+#include "ecma_decimal_compact.hpp"
+#else
 #include "../third_party/ryu/ryu/d2s.c"
 #include "../third_party/ryu/ryu/s2d.c"
+#endif
 }
 
 namespace ecma_number {
-bool fractional(double value,char* out,size_t capacity) {
+namespace {
+// Shared by shortest digits, fixed substitutions and scientific exponents.
+// The returned span is forward-readable and needs no second reverse buffer.
+__attribute__((noinline)) char* decimal_digits(uint64_t value,char* end) {
+  do {*--end=char('0'+value%10);value/=10;}while(value);
+  return end;
+}
+}
+
+__attribute__((noinline)) bool fractional(double value,char* out,size_t capacity) {
   if(!out || capacity<32) return false;
   uint64_t bits;memcpy(&bits,&value,8);const unsigned raw=unsigned((bits>>52)&2047);
   if(raw==2047 || value==0) return format(value,out,capacity);
@@ -34,23 +61,29 @@ bool fractional(double value,char* out,size_t capacity) {
     if((scaled&((UINT64_C(1)<<right)-1))>=(UINT64_C(1)<<(right-1))) ++rounded;
   }
   unsigned n=0;if(bits>>63) out[n++]='-';
-  uint64_t integer=rounded/100;char reverse[24];unsigned used=0;
-  do { reverse[used++]=char('0'+integer%10);integer/=10; } while(integer);
-  while(used) out[n++]=reverse[--used];
+  char buffer[24];const char* end=buffer+sizeof(buffer);
+  for(const char* digit=decimal_digits(rounded/100,buffer+sizeof(buffer));digit!=end;++digit)out[n++]=*digit;
   out[n++]='.';out[n++]=char('0'+(rounded%100)/10);out[n++]=char('0'+rounded%10);out[n]=0;
   return true;
 }
 bool format(double value,char* out,size_t capacity) {
   if(!out || capacity<32) return false;
   if(value==0) { out[0]='0';out[1]=0;return true; }
-  char scientific[32];const unsigned length=unsigned(mk61_ryu::d2s_buffered_n(value,scientific));
-  scientific[length]=0;
-  char* end=strchr(scientific,'E');
-  if(!end) { memcpy(out,scientific,length+1);return true; }
-  const bool negative=scientific[0]=='-';unsigned count=0;char digits[20];
-  for(const char* p=scientific+(negative?1:0);p<end;++p) if(*p!='.') digits[count++]=*p;
-  const char* p=end+1;bool minus=*p=='-';if(minus || *p=='+') ++p;
-  int exponent=0;while(*p) exponent=exponent*10+(*p++-'0');if(minus) exponent=-exponent;
+  uint64_t bits;memcpy(&bits,&value,sizeof(bits));
+  const bool negative=bool(bits>>63);
+  const uint32_t raw=uint32_t((bits>>52)&2047);
+  const uint64_t mantissa=bits&UINT64_C(0xfffffffffffff);
+  if(raw==2047) {
+    const char* source=mantissa?"NaN":negative?"-Infinity":"Infinity";
+    for(char* write=out;(*write++=*source++)!=0;) {}
+    return true;
+  }
+  // Use Ryu's exact decimal result directly. Formatting scientific text and
+  // parsing it back duplicates a decimal formatter in the resident image.
+  const auto decimal=mk61_ryu::d2d(mantissa,raw);
+  char buffer[20];char* digits=decimal_digits(decimal.mantissa,buffer+sizeof(buffer));
+  const unsigned count=unsigned(buffer+sizeof(buffer)-digits);
+  const int exponent=decimal.exponent+int(count)-1;
   unsigned n=0;if(negative) out[n++]='-';
   if(exponent>=-6 && exponent<21) {
     const int point=exponent+1;
@@ -67,13 +100,12 @@ bool format(double value,char* out,size_t capacity) {
     out[n++]=digits[0];if(count>1) out[n++]='.';
     for(unsigned i=1;i<count;++i) out[n++]=digits[i];
     out[n++]='e';out[n++]=exponent<0?'-':'+';
-    unsigned magnitude=unsigned(exponent<0?-exponent:exponent),used=0;char reverse[4];
-    do { reverse[used++]=char('0'+magnitude%10);magnitude/=10; } while(magnitude);
-    while(used) out[n++]=reverse[--used];
+    const unsigned magnitude=unsigned(exponent<0?-exponent:exponent);
+    for(const char* digit=decimal_digits(magnitude,buffer+sizeof(buffer));digit!=buffer+sizeof(buffer);++digit)out[n++]=*digit;
   }
   out[n]=0;return true;
 }
-bool parse(const char* text,double& value) {
+__attribute__((noinline)) bool parse(const char* text,double& value,ParseFallback fallback) {
   while(*text==' ' || *text=='\t' || *text=='\r' || *text=='\n') ++text;
   unsigned size=unsigned(strlen(text));
   while(size && (text[size-1]==' ' || text[size-1]=='\t' || text[size-1]=='\r' || text[size-1]=='\n')) --size;
@@ -96,8 +128,13 @@ bool parse(const char* text,double& value) {
     }
   }
   if(mk61_ryu::s2d_n(number,int(size),&value)==mk61_ryu::SUCCESS) return true;
-  // Retain the existing bounded resident parser for long decimal inputs.
+  if(fallback) return fallback(number,size,value);
+#if defined(MK61_APP_SHARED_RUNTIME)
+  return false;
+#else
+  // Retain the existing bounded parser for host and direct-library clients.
   const char* end=nullptr;value=mk_math::strtod(number,&end);
   return end!=number && unsigned(end-number)==size;
+#endif
 }
 }

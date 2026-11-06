@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #include "terminal_script_backend.hpp"
 #if !defined(MK61_CORE_STANDALONE)
 #include "calculator_control.hpp"
@@ -38,6 +39,6 @@ u32 random_decimal7() {
 terminal_protocol::Result command(u8, const char *line, bool trap) {
   return terminal.execute_script_line(line, trap);
 }
-void error(const char *text) { Serial.println(text); }
+void error(packed_text::Text text) { Serial.println(text); }
 } // namespace terminal_script_backend
 #endif

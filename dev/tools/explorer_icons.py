@@ -13,7 +13,7 @@ ROOT=Path(__file__).resolve().parents[2]
 ARTWORK=ROOT/'doc/explorer-icons'
 PROGRAM_FOLDERS={
     'CHIP8':'chip8', 'Fonts':'fonts', 'app':'applications', 'examples':'examples',
-    'games':'games', 'library':'library', 'sheets':'sheets',
+    'games':'games', 'library':'library', 'sheets':'sheets', 'spectrum':'games',
     'games/Bumblebee':'bumblebee', 'games/Bumblebee Fly':'bee-flight',
     'games/Chase HQ':'chase', 'games/ELITE':'elite', 'games/Fox Hunting':'fox',
     'games/High Noon':'cowboy', 'games/Infinity Story':'story',
@@ -31,11 +31,11 @@ BUNDLE_FOLDERS={**PROGRAM_FOLDERS, 'apps':'applications', 'System':'system',
     'apps/SPECTRUM/games':'games','apps/SPECTRUM/games/Ianna':'games',
     'apps/SPECTRUM/games/ulaplus':'games',
     'urq':'games','apps/URQ':'games',
-    'Games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
+    'games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
     'System/VMCache':'cache', 'licenses':'license', 'licenses/ui-fonts':'font-license'}
-for _urq_game in ('trapped_in_time_ru', 'jim_from_outer_space_ru',
+for _urq_game in ('house_that_jack_built', 'trapped_in_time_ru', 'jim_from_outer_space_ru',
                   'semion_escape', 'semion_road', 'semion_snow'):
-    for _urq_prefix in ('apps/URQ', 'Games/URQ'):
+    for _urq_prefix in ('apps/URQ', 'games/URQ'):
         BUNDLE_FOLDERS[_urq_prefix + '/' + _urq_game] = 'games'
     BUNDLE_FOLDERS['licenses/urq/' + _urq_game] = 'license'
 

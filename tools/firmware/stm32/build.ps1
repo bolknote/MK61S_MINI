@@ -703,14 +703,25 @@ try {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
             -Destination $outputBundle -Recurse -Force
     }
-    if (-not $python) { $python = Get-CommandPath 'python3' 'Python 3' }
-    Invoke-GccTool $python @(
-        (Join-Path $script:ProjectRoot 'tools/apps/urq/build_urq_app.py'),
-        '--target', 'stm32', '--toolchain', $toolchainBin,
-        '--build-dir', (Join-Path $buildDirectory 'urq'),
-        '--output-dir', (Join-Path $outputBundle 'Apps'),
-        '--library-output', (Join-Path $outputBundle 'Games/URQ'),
-        '--licenses-output', (Join-Path $outputBundle 'licenses/urq'))
+    if ($env:OS -eq 'Windows_NT') {
+        Invoke-GccTool $powerShell @(
+            '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+            (Join-Path $script:ProjectRoot 'tools/apps/urq/build_urq_app.ps1'),
+            '-Toolchain', $toolchainBin,
+            '-BuildDirectory', (Join-Path $buildDirectory 'urq'),
+            '-OutputDirectory', (Join-Path $outputBundle 'Apps'),
+            '-LibraryOutput', (Join-Path $outputBundle 'Games/URQ'),
+            '-LicensesOutput', (Join-Path $outputBundle 'licenses/urq'))
+    } else {
+        if (-not $python) { $python = Get-CommandPath 'python3' 'Python 3' }
+        Invoke-GccTool $python @(
+            (Join-Path $script:ProjectRoot 'tools/apps/urq/build_urq_app.py'),
+            '--target', 'stm32', '--toolchain', $toolchainBin,
+            '--build-dir', (Join-Path $buildDirectory 'urq'),
+            '--output-dir', (Join-Path $outputBundle 'Apps'),
+            '--library-output', (Join-Path $outputBundle 'Games/URQ'),
+            '--licenses-output', (Join-Path $outputBundle 'licenses/urq'))
+    }
     $ryuLicenses = Join-Path $outputBundle 'licenses/ryu'
     [IO.Directory]::CreateDirectory($ryuLicenses) | Out-Null
     foreach ($license in @('LICENSE-Apache2', 'LICENSE-Boost', 'README.md')) {

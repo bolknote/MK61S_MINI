@@ -34,6 +34,8 @@ compile_path="$build_root/build"
 compile_log="$build_root/compile.log"
 mkdir -p "$sketch" "$compile_path"
 cp -R "$root/code/." "$sketch/"
+mkdir -p "$build_root/third_party"
+cp -R "$root/third_party/ryu" "$build_root/third_party/ryu"
 
 # Classic V3 is the largest normal UC1609 product.  If its standard -O3 build
 # retains a useful reserve, Mini and -O2 are covered with still more margin.

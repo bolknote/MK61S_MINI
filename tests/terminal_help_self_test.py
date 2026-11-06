@@ -93,6 +93,7 @@ class HelpTest(unittest.TestCase):
         start = source.index('void class_terminal::print_help(void)')
         end = source.index('\n#if MK61_CRASH_DUMP_SUPPORTED', start)
         prelude = r'''
+#include "packed_text.hpp"
 #include <cassert>
 #include <cstdint>
 #include <cstring>

@@ -101,7 +101,7 @@ def main():
     if args.require_no_instruction_regression and not args.baseline_elf:
         parser.error('--require-no-instruction-regression requires --baseline-elf')
     assert not args.legacy_report or args.legacy_streams
-    sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
+    sys.path.insert(0,str(ROOT));from tools.firmware.picocalc.build_picocalc import compiler_bin
     owned=args.owned_elf.resolve();full=not args.legacy_streams
     generator_runtime=(args.generator_runtime_elf or owned).resolve()
     rows,inputs=generator(compiler_bin(args.toolchain),generator_runtime,args.output_dir,full)

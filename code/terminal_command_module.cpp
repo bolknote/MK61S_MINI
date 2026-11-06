@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #if defined(MK61_BUILD_TERMINAL_MODULE)
 #include "bounded_string.hpp"
 #include "ledcontrol.h"

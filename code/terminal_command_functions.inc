@@ -425,7 +425,7 @@ void MK61_TERMINAL_COMMAND_CLASS::print_alarm_line(rtc_clock::AlarmId id) {
       Serial.print("RTC ALARM ");
       Serial.write((u8) alarm_id_letter(id));
       if(!rtc_clock::read_alarm(id, alarm)) {
-        Serial.println(" error");
+        Serial.println(PT(" error"));
         return;
       }
       if(!alarm.enabled) {
@@ -447,7 +447,7 @@ void MK61_TERMINAL_COMMAND_CLASS::print_alarm_line(rtc_clock::AlarmId id) {
           }
           Serial.println();
         } else {
-          Serial.println("invalid");
+          Serial.println(PT("invalid"));
         }
         return;
       }

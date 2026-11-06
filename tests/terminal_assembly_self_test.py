@@ -29,6 +29,7 @@ terminal += (ROOT / 'code/terminal_command_functions.inc').read_text().replace(
 mnemonics = terminal[terminal.index('static constexpr char ISA_61[] ='):
                      terminal.index('#if MK61_DWT_PROFILER_SUPPORTED && MK61_ENABLE_PROFILE_SAVE')]
 prelude = r'''
+#include "packed_text.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>

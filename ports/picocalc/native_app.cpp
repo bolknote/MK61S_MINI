@@ -1,6 +1,5 @@
 #include "app_flow.hpp"
 #include "menu_source.hpp"
-#include "ecma_number.hpp"
 #include "basic_native_io.hpp"
 #include "builtin_font.hpp"
 #include "clock.hpp"
@@ -441,7 +440,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
            (s.color_display_?MK61_SERVICE_CAP_COLOR_DISPLAY:0) |
            (s.color_display_ && host.display.width()==320?MK61_SERVICE_CAP_TEXT_COLORS:0) |
            MK61_SERVICE_CAP_APP_FLOW | MK61_SERVICE_CAP_FILE_BYTES |
-           MK61_SERVICE_CAP_TEXT_INPUT | MK61_SERVICE_CAP_FILE_WRITE_SOURCE | MK61_SERVICE_CAP_MENU_SOURCE | MK61_SERVICE_CAP_NUMBER_FIXED | MK61_SERVICE_CAP_ECMA_NUMBERS
+           MK61_SERVICE_CAP_TEXT_INPUT | MK61_SERVICE_CAP_FILE_WRITE_SOURCE | MK61_SERVICE_CAP_MENU_SOURCE | MK61_SERVICE_CAP_NUMBER_FIXED
 #if defined(PICO_ON_DEVICE)
            | MK61_SERVICE_CAP_RUNTIME | MK61_SERVICE_CAP_AUDIO_STREAM
 #endif
@@ -762,8 +761,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     if (!payload)
       return 0;
     auto &p = *(mk61_service_number_format *)payload;
-    if(a == MK61_NUMBER_ECMA_GENERAL) return ecma_number::format(p.value,p.output,p.capacity);
-    if(a == MK61_NUMBER_ECMA_FRACTIONAL) return ecma_number::fractional(p.value,p.output,p.capacity);
+    if(a == MK61_NUMBER_ECMA_GENERAL || a == MK61_NUMBER_ECMA_FRACTIONAL) return 0;
     if(a == MK61_NUMBER_FIXED || a == MK61_NUMBER_FRACTIONAL) return number_format::fixed_request(p.value, p.significant_digits, p.output, p.capacity, a == MK61_NUMBER_FRACTIONAL);
     if(!p.significant_digits || p.significant_digits>14) return 0;
     return number_format::general(p.value, (u8)p.significant_digits, p.output,
@@ -775,7 +773,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     auto &p = *(mk61_service_number_parse *)payload;
     if (!p.input)
       return 0;
-    if(a==1) { const bool ok=ecma_number::parse(p.input,p.value);p.consumed=ok?std::strlen(p.input):0;return ok; }
+    if(a!=0) return 0;
     const char *end = p.input;
     p.value = mk_math::strtod(p.input, &end);
     const bool ok = end != p.input;

@@ -42,6 +42,8 @@ compile_path="$build_root/build"
 compile_log="$build_root/compile.log"
 mkdir -p "$sketch" "$compile_path"
 cp -R "$root/code/." "$sketch/"
+mkdir -p "$build_root/third_party"
+cp -R "$root/third_party/ryu" "$build_root/third_party/ryu"
 
 # Size-LTO and CORE math are part of the constrained production profile, not
 # optional experiments: together they preserve the same calculator behavior as
@@ -152,11 +154,11 @@ if grep -aFq 'PROF state=' "$compile_path/mk61s-M.ino.elf"; then
 fi
 # Cold terminal commands are part of the matching System bundle. Check the
 # exact resident policy and execute both packed APPs, including RTC alarms.
-tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root" <<'PYTOOLS'
 from pathlib import Path
 import sys
 sys.path.insert(0, sys.argv[2])
-from release_contract import discover_binutils
+from dev.lib.release_contract import discover_binutils
 print(discover_binutils(Path(sys.argv[1]))[1].parent)
 PYTOOLS
 )"

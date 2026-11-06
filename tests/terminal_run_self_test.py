@@ -10,6 +10,7 @@ start=source.index('          case  CMD_RUN: {')
 end=source.index('          case CMD_OPEN:',start)
 body=source[start:end]
 prelude=r'''
+#include "packed_text.hpp"
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
 #include <cassert>
