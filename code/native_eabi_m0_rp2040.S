@@ -778,6 +778,7 @@ l\@_1:
 @ and so 1ulp is 2^-53 and so the calculation above suffices.
 
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
+regular_func mk61_m0_div_small_kernel
 .Lrp2040_small_divisor:
  // R7 is index<<29; R6 is the guarded biased exponent addend.
  lsls r6,#2
@@ -850,6 +851,7 @@ ddiv0:                         @ entry point from dtan
  ldr r7, [r7]
  lsrs r7, r7, #2
  bcs .Lrp2040_div_slow
+regular_func mk61_m0_div_general_kernel
 .Lrp2040_general_divisor:
  lsls r6,#2
  mov r12,r6
@@ -1098,6 +1100,9 @@ regular_func __aeabi_d2uiz
  bx lr
 .size __aeabi_d2uiz,.-__aeabi_d2uiz
 .ltorg
+
+#include "native_eabi_m0_pow_rsqrt_product.inc"
+#include "native_eabi_m0_pow_reciprocal.inc"
 
 #endif
 .section .note.GNU-stack,"",%progbits

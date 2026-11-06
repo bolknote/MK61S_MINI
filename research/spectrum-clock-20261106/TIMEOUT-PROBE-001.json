@@ -1,0 +1,26 @@
+{
+  "action": "step",
+  "role": "timeout-probe",
+  "mhz": 250,
+  "uid": "E6657CD423721C35",
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295138390,
+    "location": 18022400,
+    "session": 6169487164195,
+    "cdc_entry": 4295138422,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "previous_receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/ADMIT-006.result/receipt.json",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/ADMIT-006.result/receipt.json": "d62f8a8d838b7490ecfcce21092f0d9c707f451c562d874d31c03f6dcb186cff"
+  }
+}

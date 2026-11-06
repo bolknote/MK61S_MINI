@@ -1,0 +1,135 @@
+{
+  "status": "PASS",
+  "uid": "E6657CD423721C35",
+  "base_commit": "d54a2a34b",
+  "image_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/firmware-003/manifest.json",
+  "image_manifest_sha256": "bc49a64bc9047c9bc696d659c21a4e9f50589945562e6a504746d03567df08f8",
+  "source_files": {
+    "code/language_vm.cpp": "9893922d1ae25e0591bafca1fd54fc47a25afa6de858bae0c5df03b67dae5946",
+    "code/native_eabi_m0.S": "d5df8f2088c96e90faed3a9b0e0136383539a1be7c89530868f37f04a164db52",
+    "code/native_eabi_m0.cpp": "efad2f328446a2cb2ce6eec5b381ee40f7b3437e3d5a161463635becb05f5f2b",
+    "code/native_eabi_m0_exp_round.inc": "c64b740ada013d1f78a5d1fdb97bddb18302665f4eb734ebea4e447b98dd3c94",
+    "code/native_eabi_m0_pow_fast.inc": "ebe706c45abdc6b2a4f9e806bceee261a156604b5e4fb3c35ac5809c1e5a7cb3",
+    "code/native_eabi_m0_pow_reciprocal.inc": "bc4ef4b641f1555de3065c106f11198608d529fe4627d508d61c1c8000fd6c48",
+    "code/native_eabi_m0_pow_rsqrt_product.inc": "419a3ade03ae39f022255e390a9d5bdabdcb5f707229a6514002ce89af23c04f",
+    "code/native_eabi_m0_rp2040.S": "6a01ebf5952eaf6ba10596a1cb293ce79ebd6a9e56fae1fcd53132c7d81bd569",
+    "ports/picocalc/CMakeLists.txt": "9b16f56ce2b2f1b8a42d511ce62c444f79c0c00f8e5e9f112829cf0ac32c82e1",
+    "ports/picocalc/audio_stream.cpp": "748f44294039952518322fa69a98d7f9468397f6f6c5a01bfad0745bcf66c91f",
+    "ports/picocalc/cosmic_clock.cpp": "94adc7fe971e796edc1e213856f77a672a9ed903a4e8a64a441d664c033f8360",
+    "ports/picocalc/cosmic_clock.hpp": "2ce408ee21fc59a3a04746d55ae1359da0b0c9ac2e70787d7896992d6d88ebec",
+    "ports/picocalc/cosmic_clock_plan.hpp": "2d9a7e4e7d5b87337edd7a209094f17161b5c26021b4aeb53892ae456da4d1a3",
+    "ports/picocalc/diagnostics.cpp": "2e7c442e87826bf5e226824984dd2bf859128f58a3ab1f0e3e7cfd43ca13d7f3",
+    "ports/picocalc/main.cpp": "97b3bba4ab5bf370886e4c091f82a581519b2c5107cde792a76f457e7eaf5f6d",
+    "ports/picocalc/power.cpp": "ef08baed0c0bdef3f5d1e855dd00e51b22bf61ada38771e78e495b198ae6c365",
+    "ports/picocalc/psram.cpp": "64445cd841cb26fe9ad55babd21c61045aa17eeac798856781d942d0fb4a9b19",
+    "ports/picocalc/psram.hpp": "c740e8ba8d1a050069a6c784664d7be7422225807248791f177c59b555b24615",
+    "tests/cosmic_clock_self_test.cpp": "442ad2d275f510c9afa956cc2820c5dd34759b4951ebf2fe03018e135a04c51f",
+    "tests/picocalc_audio_self_test.cpp": "46aa390b974c27094c9542cdf8a7424b7712496ba3d6c310b595b4c2e4836247",
+    "tests/picocalc_audio_self_test.py": "9de6f6bb51851b9e005f62f724cac2002aab1ee2c2a95aa9d980b003eb061ef7",
+    "tools/firmware/picocalc/build_picocalc.py": "0ff6b2f0aa19446580a9cfcc137eedbd3c9c0c2218452ec6b3811f7b8bdb007a"
+  },
+  "new_files": [
+    "code/native_eabi_m0_pow_reciprocal.inc",
+    "code/native_eabi_m0_pow_rsqrt_product.inc",
+    "ports/picocalc/cosmic_clock.cpp",
+    "ports/picocalc/cosmic_clock.hpp",
+    "ports/picocalc/cosmic_clock_plan.hpp",
+    "tests/cosmic_clock_self_test.cpp"
+  ],
+  "source_patch_sha256": "f9a50abbc95b50f9db20c80dc299116442ae421cd7aa49cfe3d0a5c23ac05661",
+  "math_overlay": {
+    "code/native_eabi_m0.S": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0.S",
+      "sha256": "d5df8f2088c96e90faed3a9b0e0136383539a1be7c89530868f37f04a164db52"
+    },
+    "code/native_eabi_m0.cpp": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0.cpp",
+      "sha256": "efad2f328446a2cb2ce6eec5b381ee40f7b3437e3d5a161463635becb05f5f2b"
+    },
+    "code/native_eabi_m0_exp_round.inc": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_exp_round.inc",
+      "sha256": "c64b740ada013d1f78a5d1fdb97bddb18302665f4eb734ebea4e447b98dd3c94"
+    },
+    "code/native_eabi_m0_pow_fast.inc": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_fast.inc",
+      "sha256": "ebe706c45abdc6b2a4f9e806bceee261a156604b5e4fb3c35ac5809c1e5a7cb3"
+    },
+    "code/native_eabi_m0_pow_reciprocal.inc": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_reciprocal.inc",
+      "sha256": "bc4ef4b641f1555de3065c106f11198608d529fe4627d508d61c1c8000fd6c48"
+    },
+    "code/native_eabi_m0_pow_rsqrt_product.inc": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_rsqrt_product.inc",
+      "sha256": "419a3ade03ae39f022255e390a9d5bdabdcb5f707229a6514002ce89af23c04f"
+    },
+    "code/native_eabi_m0_rp2040.S": {
+      "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_rp2040.S",
+      "sha256": "6a01ebf5952eaf6ba10596a1cb293ce79ebd6a9e56fae1fcd53132c7d81bd569"
+    }
+  },
+  "scope": "Experimental RP2040 diagnostic image; primary workspace/index unchanged; no STM32 firmware change",
+  "clocks": {
+    "sequence": [
+      125,
+      130,
+      140,
+      150,
+      160,
+      170,
+      180,
+      190,
+      200,
+      210,
+      220,
+      230,
+      240,
+      250
+    ],
+    "full_cosmic": [
+      125,
+      200,
+      250
+    ],
+    "usb_hz": 48000000,
+    "peri_hz": 48000000,
+    "psram_instruction_hz_max": 100000000,
+    "full_modes_psram_sck_hz": 16666666,
+    "pcm_hz": 25000,
+    "full_modes_pwm_hz": 100000000,
+    "flash_spi_divider": 4,
+    "flash_hz_full_modes": [
+      31250000,
+      50000000,
+      62500000
+    ],
+    "vreg_mv": 1200
+  },
+  "recovery": {
+    "independent_lease_ms": 105000,
+    "watchdog_ms": 8000,
+    "normal_end": "drain I2C/LCD/UART then nonreturning delayed reset",
+    "boot": "open-drain9clocks andSTOP on dedicated I2C6/7; boot always125MHz",
+    "planned_usb_detach_ms": 200
+  },
+  "measurement": {
+    "warmup_frames": 100,
+    "window_frames": 300,
+    "windows": 10,
+    "timer_uncertainty_us": 1,
+    "display": "API accepted submissions; physical LCD scanout unmeasured",
+    "sound": "PSG event timing; physical speaker latency unmeasured",
+    "comparison": "Same firmware and APP; CPU plus XIP change; other full-mode bus/audio clocks fixed"
+  },
+  "memory": "Only in diagnostic build, move unused native integer-span VM kernel from SRAM toXIP to free5904B for the49148B probe; ordinary build unchanged",
+  "earlier_holds": [
+    "Clock125-001: APP SRAM preflight, no clock transition",
+    "FLASH002: startup KBDWAIT before ready, installed readback equal",
+    "Clock125-002: full record saved, delayed reset repeatedly fed, later keyboard I2C NACK; user power-cycled"
+  ],
+  "fixes_verified_by": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/RESET-PROBE-001.result/receipt.json",
+  "results": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/RESULTS.json",
+  "results_sha256": "b9f2dfc777d3cacf6259866078623c6ca94af7c030f3f72bbb7d3410fe83d39b",
+  "controller_archive_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/controllers/manifest.json",
+  "controller_archive_manifest_sha256": "f9b485b59189edd768919f2e1acc8200aede2ccc65efd060f55b7a50401bbc7b",
+  "runtime_source_pin_checks": 196
+}

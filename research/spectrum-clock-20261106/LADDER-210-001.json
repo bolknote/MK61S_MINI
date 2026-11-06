@@ -1,0 +1,26 @@
+{
+  "action": "step",
+  "uid": "E6657CD423721C35",
+  "mhz": 210,
+  "expected": {
+    "build": "C3F35FAE",
+    "crc": "B5299177",
+    "bytes": 1537024
+  },
+  "native_binding": {
+    "uid": "E6657CD423721C35",
+    "cu": "/dev/cu.usbmodem11301",
+    "tty": "/dev/tty.usbmodem11301",
+    "usb_entry": 4295137998,
+    "location": 18022400,
+    "session": 6164817739970,
+    "cdc_entry": 4295138030,
+    "cu_rdev": 150994949,
+    "tty_rdev": 150994948
+  },
+  "previous_receipt": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/LADDER-200-001.result/receipt.json",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/LADDER-200-001.result/receipt.json": "bab2bf806afe102f33dee2d26b861c980ced31eaf9e7e87ece7bbc4f337965e0",
+    "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-clock-diagnostic-20261106/host/make_step_phase.py": "8a27fdd9405389d56ba41537ff97128172576960551b18c6ab77347fedaca28b"
+  }
+}

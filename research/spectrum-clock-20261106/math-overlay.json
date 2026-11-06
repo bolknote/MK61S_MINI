@@ -1,0 +1,30 @@
+{
+  "code/native_eabi_m0.S": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0.S",
+    "sha256": "d5df8f2088c96e90faed3a9b0e0136383539a1be7c89530868f37f04a164db52"
+  },
+  "code/native_eabi_m0.cpp": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0.cpp",
+    "sha256": "efad2f328446a2cb2ce6eec5b381ee40f7b3437e3d5a161463635becb05f5f2b"
+  },
+  "code/native_eabi_m0_exp_round.inc": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_exp_round.inc",
+    "sha256": "c64b740ada013d1f78a5d1fdb97bddb18302665f4eb734ebea4e447b98dd3c94"
+  },
+  "code/native_eabi_m0_pow_fast.inc": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_fast.inc",
+    "sha256": "ebe706c45abdc6b2a4f9e806bceee261a156604b5e4fb3c35ac5809c1e5a7cb3"
+  },
+  "code/native_eabi_m0_pow_reciprocal.inc": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_reciprocal.inc",
+    "sha256": "bc4ef4b641f1555de3065c106f11198608d529fe4627d508d61c1c8000fd6c48"
+  },
+  "code/native_eabi_m0_pow_rsqrt_product.inc": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_pow_rsqrt_product.inc",
+    "sha256": "419a3ade03ae39f022255e390a9d5bdabdcb5f707229a6514002ce89af23c04f"
+  },
+  "code/native_eabi_m0_rp2040.S": {
+    "source": "/private/tmp/mk61-m0-pow-finish-20261106/code/native_eabi_m0_rp2040.S",
+    "sha256": "6a01ebf5952eaf6ba10596a1cb293ce79ebd6a9e56fae1fcd53132c7d81bd569"
+  }
+}

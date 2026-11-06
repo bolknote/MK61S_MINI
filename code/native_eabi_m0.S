@@ -1003,6 +1003,38 @@ end mk61_m0_sqrt
 mk61_m0_pow_fast:
  cmp r2,#0
  bne .Lpow_dispatch
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ // Keep identity first. A sign/range tree avoids the former extra
+ // zero-exponent test on every exact nonzero exponent.
+ ldr r2,=0x3ff00000
+ cmp r3,r2
+ beq .Lpow_identity
+ bhi .Lpow_positive_or_negative_degree
+ cmp r3,#0
+ beq .Lpow_zero_exponent
+ ldr r2,=0x3fe00000
+ cmp r3,r2
+ beq .Lpow_square_root
+ movs r2,#0
+ b .Lpow_dispatch
+.Lpow_positive_or_negative_degree:
+ cmp r3,#0
+ bmi .Lpow_negative_degree
+ ldr r2,=0x40000000
+ cmp r3,r2
+ beq .Lpow_square
+ movs r2,#0
+ b .Lpow_dispatch
+.Lpow_negative_degree:
+ lsls r2,r3,#1
+ beq .Lpow_zero_exponent
+ ldr r2,=0xbff00000
+ cmp r3,r2
+ beq .Lpow_reciprocal
+ ldr r2,=0xbfe00000
+ cmp r3,r2
+ beq .Lpow_inverse_root
+#else
  ldr r2,=0x3ff00000
  cmp r3,r2
  beq .Lpow_identity
@@ -1018,6 +1050,7 @@ mk61_m0_pow_fast:
  ldr r2,=0xbfe00000
  cmp r3,r2
  beq .Lpow_inverse_root
+#endif
 .Lpow_restore_low:
  movs r2,#0
 .Lpow_dispatch:
@@ -1036,7 +1069,31 @@ mk61_m0_pow_fast:
  orrs r1,r2
 .Lpow_identity_return:
  bx lr
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+.Lpow_zero_exponent:
+ // Keep the signaling-NaN identity policy without entering the C++ frame.
+ // All finite inputs, infinities and quiet NaNs produce exactly one.
+ lsls r2,r1,#1
+ ldr r3,=0xffe00000
+ cmp r2,r3
+ blo .Lpow_return_one
+ lsls r3,r2,#11
+ bmi .Lpow_return_one        // quiet bit already set
+ orrs r3,r0
+ beq .Lpow_return_one
+ ldr r3,=0x00080000
+ orrs r1,r3
+ bx lr
+.Lpow_return_one:
+ movs r0,#0
+ ldr r1,=0x3ff00000
+ bx lr
+#endif
 .Lpow_reciprocal:
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ ldr r2,=mk61_m0_pow_reciprocal
+ bx r2
+#else
  ldr r2,=__aeabi_ddiv
  mov r12,r2
  mov r3,r1
@@ -1044,6 +1101,7 @@ mk61_m0_pow_fast:
  movs r0,#0
  ldr r1,=0x3ff00000
  bx r12
+#endif
 .Lpow_square:
  lsls r2,r1,#1
  lsrs r2,#21
@@ -1052,7 +1110,11 @@ mk61_m0_pow_fast:
  bls .Lpow_square_zero
  ldr r3,=1535
  cmp r2,r3
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ blo .Lpow_square_normal_guard
+#else
  blo .Lpow_square_multiply
+#endif
  ldr r3,=2047
  cmp r2,r3
  blo .Lpow_square_infinity
@@ -1062,6 +1124,13 @@ mk61_m0_pow_fast:
  mov r2,r0
  mov r3,r1
  bx r12
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+.Lpow_square_normal_guard:
+ ldr r3,=512
+ cmp r2,r3
+ bhs .Lpow_square_normal
+ b .Lpow_square_multiply
+#endif
 .Lpow_square_zero:
  movs r0,#0
  movs r1,#0
@@ -1087,6 +1156,102 @@ mk61_m0_pow_fast:
 .Lpow_restore_negative_half:
  ldr r3,=0xbfe00000
  b .Lpow_restore_low
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+.Lpow_square_normal:
+ // Here 512<=E<=1534: every rounded square is finite and normal.
+ // Squaring needs XL^2, XH^2 and twice XL*XH, rather than four
+ // independent products. Keep every product bit for IEEE ties to even.
+ push {r4-r7,lr}
+ lsls r6,r2,#1
+ ldr r3,=1023
+ subs r6,r3
+ lsls r6,#20                 // packed exponent addend 2*E-1023
+ lsls r1,#12
+ lsrs r1,#12
+ movs r2,#1
+ lsls r2,#20
+ orrs r1,r2
+ mov r7,r1
+ cmp r0,#0
+ beq .Lpow_square_short
+ mov r5,r0
+ sqrt64_square32 r1          // XL^2 = R3:R4; retain XL in R5
+ mov r12,r4
+ push {r3,r6}                // XL^2 high word and exponent
+ // Exact XL*XH. The cross-term carry contributes 2^16 to its high word.
+ uxth r0,r5
+ uxth r2,r7
+ muls r0,r2
+ lsrs r3,r5,#16
+ muls r2,r3
+ lsrs r4,r7,#16
+ muls r3,r4
+ uxth r1,r5
+ muls r1,r4
+ adds r2,r1
+ movs r4,#0
+ adcs r4,r4
+ lsls r4,#16
+ adds r3,r4
+ lsls r1,r2,#16
+ lsrs r2,#16
+ adds r0,r1
+ adcs r2,r3
+ adds r0,r0
+ adcs r2,r2
+ pop {r3}
+ adds r5,r0,r3
+ movs r0,#0
+ adcs r2,r0
+ mov r6,r2                   // doubled cross high, including XL^2 carry
+ mov r0,r7
+ sqrt64_square32 r1          // XH^2 = R3:R4
+ adds r6,r4
+ movs r7,#0
+ adcs r7,r3
+ pop {r3}
+ b .Lpow_square_pack
+.Lpow_square_short:
+ mov lr,r6
+ movs r5,#0
+ mov r12,r5
+ mov r0,r7
+ sqrt64_square32 r1
+ mov r6,r4
+ mov r7,r3
+ mov r3,lr
+.Lpow_square_pack:
+ // Product limbs R7:R6:R5:R12, identical normalization to the normal
+ // multiplication kernel. The normal-range guard includes rounding carry.
+ lsls r1,r7,#11
+ lsrs r2,r6,#21
+ orrs r1,r2
+ lsls r0,r6,#11
+ lsrs r2,r5,#21
+ orrs r0,r2
+ lsls r5,#11
+ lsrs r2,r1,#20
+ bne 1f
+ adds r5,r5
+ adcs r0,r0
+ adcs r1,r1
+ lsls r1,#12
+ lsrs r1,#12
+1:
+ lsls r5,#1
+ bcc 1f
+ adds r0,#1
+ movs r6,#0
+ adcs r1,r6
+ mov r6,r12
+ orrs r5,r6
+ bne 1f
+ lsrs r0,#1
+ lsls r0,#1
+1:
+ adds r1,r3
+ pop {r4-r7,pc}
+#endif
 .ltorg
 end mk61_m0_pow_fast
 .section .note.GNU-stack,"",%progbits

@@ -61,6 +61,9 @@ void SleepClocks::init() {
                   XOSC_HZ, clock_get_hz(clk_rtc));
 }
 void SleepClocks::enter() {
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+  return; // Diagnostic-only: keep the common PLL and peripheral parents fixed.
+#endif
   if (active_) return;
   io_worker::drain();
   usb_ = usb_power();

@@ -1,4 +1,5 @@
 #include "psram.hpp"
+#include "cosmic_clock_plan.hpp"
 #include "psram_stream.hpp"
 #include "dma_support.hpp"
 #include "diagnostics.hpp"
@@ -19,6 +20,10 @@ Statistics state{};
 #if defined(PICO_ON_DEVICE)
 constexpr unsigned CS=20,SCK=21,MOSI=2,MISO=3;
 PIO bus=pio1;
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+unsigned diagnostic_divider256=320;
+void configure_diagnostic_clock(pio_sm_config& config) {sm_config_set_clkdiv_int_frac(&config,diagnostic_divider256/256,diagnostic_divider256%256);}
+#endif
 int sm=-1,tx=-1,rx=-1;
 unsigned program_offset=UINT32_MAX;
 unsigned qpi_write_offset=UINT32_MAX,qpi_read_offset=UINT32_MAX;
@@ -30,6 +35,9 @@ void park_spi() {
     pio_sm_set_pins_with_mask(bus,(unsigned)sm,(1U<<4)|(1U<<5),(1U<<4)|(1U<<5));
     pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,4,2,true);
     auto config=mk61_psram_spi_program_get_default_config(program_offset);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    configure_diagnostic_clock(config);
+#endif
     sm_config_set_out_pins(&config,MOSI,1);sm_config_set_in_pins(&config,MISO);
     sm_config_set_sideset_pins(&config,CS);
     sm_config_set_out_shift(&config,false,true,32);sm_config_set_in_shift(&config,false,true,32);
@@ -70,6 +78,9 @@ bool quad_packets(const u32* sent,unsigned packet_bytes,unsigned packets) {
     const unsigned words=(packet_bytes+3)/4;
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     auto config=mk61_psram_qpi_write_program_get_default_config(qpi_write_offset);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    configure_diagnostic_clock(config);
+#endif
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
     sm_config_set_out_shift(&config,false,false,32);sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_TX);
     sm_config_set_mov_status(&config,STATUS_TX_LESSTHAN,words);
@@ -101,6 +112,9 @@ bool quad_read(u32 address,u8* bytes,unsigned count) {
     u32 commands[BATCH],received[BATCH*BLOCK/4];
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    configure_diagnostic_clock(config);
+#endif
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_in_pins(&config,MOSI);
     sm_config_set_set_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
     sm_config_set_out_shift(&config,false,false,32);sm_config_set_in_shift(&config,false,true,32);
@@ -261,11 +275,16 @@ bool init() {
         if(!pio_can_add_program(bus,&mk61_psram_qpi_read_program)) return abandon();
         qpi_read_offset=pio_add_program(bus,&mk61_psram_qpi_read_program);
         auto config=mk61_psram_spi_program_get_default_config(program_offset);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    configure_diagnostic_clock(config);
+#endif
         sm_config_set_out_pins(&config,MOSI,1);sm_config_set_in_pins(&config,MISO);
         sm_config_set_sideset_pins(&config,CS);
         sm_config_set_out_shift(&config,false,true,32);
         sm_config_set_in_shift(&config,false,true,32);
+#if !defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) || !MK61_PICOCALC_COSMIC_CLOCK_DIAG
         sm_config_set_clkdiv(&config,1);
+#endif
         const unsigned pins[]={CS,SCK,MOSI,MISO,4,5};
         for(unsigned pin : pins) pio_gpio_init(bus,pin);
         pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,CS,2,true);
@@ -295,7 +314,11 @@ bool init() {
     u8 id[8]{};
     const bool identified=exchange(id_command,sizeof(id_command),nullptr,id,sizeof(id));
     state.id=(u32(id[0])<<16)|(u32(id[1])<<8)|id[2];
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    state.hz=100000000/6;
+#else
     state.hz=clock_get_hz(clk_sys)/6;
+#endif
     if(!identified || !id[0] || id[0]==0xFF || id[1]!=0x5D) return false;
 #if !defined(MK61_PICOCALC_PSRAM_QPI) || MK61_PICOCALC_PSRAM_QPI
     const u8 enter_quad=0x35;
@@ -334,6 +357,23 @@ bool init() {
 #endif
     return state.ready;
 }
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+bool diagnostic_clock_divider(u32 divider256) {
+    bool valid=false;for(const auto& plan:cosmic_clock::plans)if(plan.pio_div256==divider256)valid=true;
+    if(!valid || sm<0 || !state.ready)return false;
+    if(!mutex_try_enter(&bus_mutex,nullptr))return false;
+    const bool idle=!dma_channel_is_busy((unsigned)tx) && !dma_channel_is_busy((unsigned)rx) &&
+        pio_sm_is_tx_fifo_empty(bus,(unsigned)sm) && pio_sm_is_rx_fifo_empty(bus,(unsigned)sm) && gpio_get(CS);
+    if(idle) {
+        pio_sm_set_enabled(bus,(unsigned)sm,false);
+        diagnostic_divider256=divider256;
+        pio_sm_set_clkdiv_int_frac(bus,(unsigned)sm,divider256/256,divider256%256);
+        pio_sm_clkdiv_restart(bus,(unsigned)sm);pio_sm_set_enabled(bus,(unsigned)sm,true);
+    }
+    mutex_exit(&bus_mutex);return idle;
+}
+u32 diagnostic_clock_divider256() { return sm<0?0:bus->sm[sm].clkdiv>>8; }
+#endif
 bool read(u32 address,void* bytes,unsigned count) {
     if(!bounds(address,bytes,count)) return false;
     if(!count) return true;
@@ -360,7 +400,14 @@ bool write(u32 address,const void* bytes,unsigned count) {
     if(ok) state.write_bytes+=count;else { ++state.errors;state.ready=false; }
     return ok;
 }
-Statistics statistics() { return state; }
+Statistics statistics() {
+    Statistics result=state;
+#if defined(PICO_ON_DEVICE) && defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    const u32 div=diagnostic_clock_divider256();
+    if(div)result.hz=(u32)((uint64_t(clock_get_hz(clk_sys))*256/div)/6);
+#endif
+    return result;
+}
 bool self_test(void (*service)()) {
     if(!ready()) return false;
     u8 expected[1024],actual[1024];

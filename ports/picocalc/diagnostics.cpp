@@ -1,4 +1,5 @@
 #include "diagnostics.hpp"
+#include "cosmic_clock.hpp"
 #include "version.hpp"
 #include "storage.hpp"
 #include "script.hpp"
@@ -286,6 +287,9 @@ bool command(u8 id,const char* arguments,const char* cwd,Writer write,void* raw)
       size=crash_report(report,sizeof(report));
     } else return false;
   } else if(id==CMD_PROFILE) {
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    if(!std::strncmp(args,"cosmic ",7))return cosmic_clock::command(args+7,write,raw);
+#endif
 #if defined(PICO_ON_DEVICE)
     if(!std::strcmp(args,"heap")) {
       const auto heap=mallinfo();

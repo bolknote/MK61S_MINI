@@ -1,4 +1,5 @@
 #include "audio_stream.hpp"
+#include "cosmic_clock.hpp"
 #include "pcm_queue.hpp"
 #include "key_click.hpp"
 #include "script.hpp"
@@ -58,7 +59,13 @@ void stop(void*) {
 void prepare_pwm(uint16_t center=128) {
     for(unsigned pin=26;pin<=27;++pin) gpio_set_function(pin,GPIO_FUNC_PWM);
     const unsigned slice=pwm_gpio_to_slice_num(26);
-    pwm_set_enabled(slice,false);pwm_set_clkdiv_int_frac4(slice,1,0);pwm_set_wrap(slice,255);
+    pwm_set_enabled(slice,false);
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+    const unsigned divider=cosmic_clock::pwm_divider16();pwm_set_clkdiv_int_frac4(slice,divider/16,divider%16);
+#else
+    pwm_set_clkdiv_int_frac4(slice,1,0);
+#endif
+    pwm_set_wrap(slice,255);
     pwm_set_both_levels(slice,center,center);pwm_set_enabled(slice,true);
 }
 }

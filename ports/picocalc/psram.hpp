@@ -9,6 +9,10 @@ struct Statistics {
     u32 tail_timeouts,tail_state;
 };
 bool init();
+#if defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG
+bool diagnostic_clock_divider(u32 divider256);
+u32 diagnostic_clock_divider256(); // Read the actual PIO register.
+#endif
 bool ready();
 void prepare_reset(); // Return retained powered RAM to SPI before ROM/old firmware.
 bool read(u32 address,void* bytes,unsigned count);
