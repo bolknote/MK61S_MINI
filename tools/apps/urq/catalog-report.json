@@ -18,7 +18,9 @@
   "published": [
     "jim_from_outer_space_ru",
     "trapped_in_time_ru",
-    "house_that_jack_built"
+    "semion_escape",
+    "semion_road",
+    "semion_snow"
   ],
   "games": [
     {
@@ -284,8 +286,10 @@
         "variables": 5,
         "actions": 6
       },
-      "published": true,
-      "reasons": []
+      "published": false,
+      "reasons": [
+        "literary word-substitution exercise; retained only as a regression fixture"
+      ]
     },
     {
       "title": "Рыцари математики (2019)",
@@ -1681,6 +1685,156 @@
       "reasons": [
         "No QST source (encrypted or absent)"
       ]
+    },
+    {
+      "id": "semion_escape",
+      "title": "Семён: Побег",
+      "author": "Triangle",
+      "lang": "ru",
+      "license": "MIT",
+      "mode": "dosurq",
+      "source": "https://github.com/devapromix/hamsters",
+      "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+      "description": "Побег из клетки: кот, колесо, молоко и инструмент для дверцы.",
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/devapromix/hamsters",
+        "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+        "files": {
+          "Hamster1.qst": "e5f28a05cd99cb15c9b86f4caf64121d2c47c9564bd8946c8aaa64cbe207019b",
+          "LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+        },
+        "license": "MIT",
+        "changes": [
+          "CP1251 is decoded to UTF-8 and line endings are normalized.",
+          "Static BTN caption whitespace is trimmed as in the UrqW parser; P/PLN spacing is retained.",
+          "The original DOS/AkURQ commands, story text and item rules are preserved.",
+          "Optimal independent 512-byte ZX0 pages keep the existing device format."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "733c0bc199a2a9d4cb7797b33051f57b",
+        "source_sha256": "27e14c45677c9e8f7f95581081a54d3f1dd23c12138c31f1084e6a2359c198b3",
+        "logical_bytes": 6572,
+        "lines": 128,
+        "labels": 21,
+        "parts": 1,
+        "stored_bytes": 4885,
+        "title": "Семён: Побег",
+        "ifid": "100027F5-80A2-5E9A-9EC4-6407BADACDD4",
+        "text_resources": 0,
+        "zx0_parser": "optimal"
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 3
+      },
+      "published": true,
+      "reasons": []
+    },
+    {
+      "id": "semion_road",
+      "title": "Семён: На дороге",
+      "author": "Apromix; идея персонажа — Triangle",
+      "lang": "ru",
+      "license": "MIT",
+      "mode": "akurq",
+      "source": "https://github.com/devapromix/hamsters",
+      "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+      "description": "Дорога, погоня кота и загадки с найденными предметами.",
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/devapromix/hamsters",
+        "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+        "files": {
+          "Hamster5.qst": "a20e84bf19bb083cb88dc6813e86f866358349d0bbb4498aa178a56d917d6f4d",
+          "LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+        },
+        "license": "MIT",
+        "changes": [
+          "CP1251 is decoded to UTF-8 and line endings are normalized.",
+          "Static BTN caption whitespace is trimmed as in the UrqW parser; P/PLN spacing is retained.",
+          "The original DOS/AkURQ commands, story text and item rules are preserved.",
+          "Optimal independent 512-byte ZX0 pages keep the existing device format."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "akurq",
+        "id": "036044bd0c794f74e1ced5fa0139ff92",
+        "source_sha256": "018ea8fb3de1f2f494bd7fc3a92fd851657850a133e3b50f5babd19ebe1d56ed",
+        "logical_bytes": 14827,
+        "lines": 298,
+        "labels": 46,
+        "parts": 1,
+        "stored_bytes": 10472,
+        "title": "Семён: На дороге",
+        "ifid": "79C6F18D-F617-53C8-A370-8CF4FAB75A6A",
+        "text_resources": 0,
+        "zx0_parser": "optimal"
+      },
+      "startup": {
+        "status": 1,
+        "variables": 6,
+        "actions": 3
+      },
+      "published": true,
+      "reasons": []
+    },
+    {
+      "id": "semion_snow",
+      "title": "Семён: В снежном плену",
+      "author": "Triangle и Apromix",
+      "lang": "ru",
+      "license": "MIT",
+      "mode": "dosurq",
+      "source": "https://github.com/devapromix/hamsters",
+      "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+      "description": "Выживание в зимнем лесу и необычный способ выбраться из снежного плена.",
+      "adaptation": {
+        "version": 1,
+        "repository": "https://github.com/devapromix/hamsters",
+        "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+        "files": {
+          "Hamster10.qst": "65f7a6bc40eeec40b9b3a2857bf5d8262b7dc8f18f1ae3e9fd82c0e1a6882eb1",
+          "LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+        },
+        "license": "MIT",
+        "changes": [
+          "CP1251 is decoded to UTF-8 and line endings are normalized.",
+          "Static BTN caption whitespace is trimmed as in the UrqW parser; P/PLN spacing is retained.",
+          "The original DOS/AkURQ commands, story text and item rules are preserved.",
+          "Optimal independent 512-byte ZX0 pages keep the existing device format."
+        ],
+        "verification": "tests/urq_library_self_test.py"
+      },
+      "package": {
+        "format": 1,
+        "mode": "dosurq",
+        "id": "5debd1830c08297840aad7bcab75f7b2",
+        "source_sha256": "638926111745f8a78c6d8e2cb55e19d4ee9639478ee57d26eff27ef097841595",
+        "logical_bytes": 10786,
+        "lines": 213,
+        "labels": 37,
+        "parts": 1,
+        "stored_bytes": 7960,
+        "title": "Семён: В снежном плену",
+        "ifid": "617158D3-0624-54BA-A0D5-7A7A0D5BA9E3",
+        "text_resources": 0,
+        "zx0_parser": "optimal"
+      },
+      "startup": {
+        "status": 1,
+        "variables": 7,
+        "actions": 3
+      },
+      "published": true,
+      "reasons": []
     }
   ]
 }

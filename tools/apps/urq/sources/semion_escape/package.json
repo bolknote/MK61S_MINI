@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "mode": "dosurq",
+  "id": "733c0bc199a2a9d4cb7797b33051f57b",
+  "source_sha256": "27e14c45677c9e8f7f95581081a54d3f1dd23c12138c31f1084e6a2359c198b3",
+  "logical_bytes": 6572,
+  "lines": 128,
+  "labels": 21,
+  "parts": 1,
+  "stored_bytes": 4885,
+  "title": "Семён: Побег",
+  "ifid": "100027F5-80A2-5E9A-9EC4-6407BADACDD4",
+  "text_resources": 0,
+  "zx0_parser": "optimal"
+}
