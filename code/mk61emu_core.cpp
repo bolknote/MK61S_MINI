@@ -1905,7 +1905,18 @@ static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
   return should_yield;
 }
 
-static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
+#if defined(MK61_TEST_COLD_PREFETCH)
+#define MK61_COLD_PREFETCH 1
+static bool __attribute__((noinline)) handle_mk61_command_prefetch_slow(
+#elif MK61_F401_PRODUCT_BUILD && \
+    (defined(STM32F401xC) || defined(STM32F401xE)) && \
+    defined(__GNUC__) && !defined(__clang__)
+#define MK61_COLD_PREFETCH 1
+static bool __attribute__((noinline, noclone, optimize("Oz"))) handle_mk61_command_prefetch_slow(
+#else
+#define MK61_COLD_PREFETCH 0
+static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch_slow(
+#endif
     u8 address) {
   if(address == 0x06U) {
     u8 program_address = prefetched_program_address();
@@ -2079,6 +2090,23 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
   }
   return false;
 }
+
+static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(u8 address) {
+#if MK61_COLD_PREFETCH
+  // Ordinary microaddresses never need the extended command dispatcher.
+  // Keep rejection in the O3 loop; compile its large, infrequent paths once.
+  if(address == 0x33U) {
+    if(active_mk61_command.active &&
+       active_mk61_command.source == core_61::Mk61CommandSource::KEYBOARD)
+      keyboard_command_complete_pending = true;
+    return false;
+  }
+  if(address != 0x06U && (address != 0x97U || m_IK1302.key_y == 0 ||
+                         active_mk61_command.active)) return false;
+#endif
+  return handle_mk61_command_prefetch_slow(address);
+}
+#undef MK61_COLD_PREFETCH
 
 } // безымянное пространство имён
 

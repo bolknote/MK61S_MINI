@@ -27,13 +27,13 @@ def build(target, toolchain, work, output, library=None, licenses=None):
         command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"), "--target", target,
                    "--name", name, "--shared-runtime", "--optimize-size", "--arm-toolchain-bin", str(toolchain),
                    "--output-dir", str(directory), "--source", str(ROOT / "examples/portable-apps/URQ" / source)]
-        for path in ["code/urq/engine.cpp", "code/urq/pack.cpp", "code/zx0.cpp"]:
+        for path in ["code/urq/engine.cpp", "code/urq/pack.cpp", "code/zx0.cpp", "code/ecma_number.cpp"]:
             command += ["--source", str(ROOT / path)]
         if name == "URQ": command += ["--handled-magic", "C2"]
         subprocess.run(command, check=True)
         subprocess.run([sys.executable,str(ROOT/"tests/analyze_stack_usage.py"),
             "--compile-commands",str(directory/"compile_commands.json"),
-            "--source-root",str(ROOT/"examples/portable-apps/URQ"),"--source-root",str(ROOT/"code/urq"),
+            "--source-root",str(ROOT/"examples/portable-apps/URQ"),"--source-root",str(ROOT/"code"),
             "--max-frame","5120","--top","1","--summary-json",str(directory/"stack-usage.json")],check=True)
         report = json.loads((directory / (name + ".json")).read_text())
         limit = 20480 if target == "stm32" else 49152

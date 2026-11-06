@@ -96,15 +96,12 @@ class UrqMachine(UserMachine):
             assert selected<self.words(p+8,1)[0];self.put(p+12,selected);return 1
         return super().system(op,a,b,c,p)
 
-def step(m,packed,inode,phase,keys=(),menus=(),result=0):
-    print(f'ARM address={m.address_index} APP={inode} phase={phase} keys={list(keys)} menus={list(menus)}',flush=True)
+def step(m,packed,inode,phase,keys=(),menus=(),result=0,status=0):
     context,flow=m.input+768,m.input+1024
     m.load_overlay(packed);m.keys=list(keys);m.menus=list(menus)
     m.uc.mem_write(flow,bytes(48));m.put(flow,48,1,context,64)
-    m.uc.mem_write(flow+16,struct.pack('<HBBI',inode,4,0,phase));m.put(flow+40,result,0)
+    m.uc.mem_write(flow+16,struct.pack('<HBBI',inode,4,0,phase));m.put(flow+40,result,status)
     assert m.call(4,flow)==1
-    print('  next',m.words(flow+24,6),'state',bytes(m.uc.mem_read(m.workspace,40)).hex(),flush=True)
-    assert not m.keys and not m.menus,(m.keys,m.menus,m.trace[-20:])
     return m.words(flow+32,4)
 
 def main():
@@ -119,29 +116,78 @@ def main():
              ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
         elf=Elf(args.resident_elf)
         packages=[package(reader,args.apps_dir/(name+'.APP'),elf,work) for name in ('URQ','URQUI')]
-        source=b':start\nfile_content="intro.txt"\npln START\nbtn ask,Go\nend\n:ask\nproc inner\nbtn done,Finish\nend\n:inner\ninput answer\nsave\nstamp=answer\nend\n:done\nquit\n'
+        source=b':start\nprecise="1.2345678901234567"*1\nn=0.1+0.2\nfile_content="intro.txt"\ns=""+n\npln #s$\nbtn ask,Go\nend\n:ask\nproc inner\nbtn done,Finish\nend\n:inner\ninput answer\nsave\nstamp=answer\nend\n:done\nquit\n'
         files,_=make_package(source,'urqw','UTF-8',resources={'intro.txt':'Русский текст ресурса'})
         for address in ([args.address] if args.address is not None else range(3)):
             m=UrqMachine(args.resident_elf,True,address)
             m.files={40:(8,'URQ.APP',b''),41:(8,'URQUI.APP',b''),42:(13,'game.urq',files['game.urq']),43:(14,'p0000.uqd',files['p0000.uqd'])}
             m.load_overlay(packages[0]);assert m.call(5)==0x31574C46
             m.uc.mem_write(m.input+768,bytes(64));m.put(m.input+768,42)
-            assert step(m,packages[0],40,2)[:2]==(2,1)
-            assert step(m,packages[1],41,3)[0]==3
-            assert step(m,packages[0],40,1,[1,23,2,16,24,2,2,25])[:2]==(2,1)
-            assert step(m,packages[1],41,1,menus=[1,1])[0]==3
-            input_save=m.files[max(m.files)][2];assert input_save[:6]==b'URQS\x04\0'
-            assert b'Ab' in input_save
-            assert step(m,packages[0],40,1,[19])[:2]==(2,1) # save inside inner
-            assert step(m,packages[1],41,2)[0]==3
-            assert step(m,packages[0],40,1,[25])[:2]==(2,1)
-            assert step(m,packages[1],41,1,menus=[2,1])[0]==3 # restore input/draft
-            assert step(m,packages[0],40,1,[19])[:2]==(2,1)
-            assert step(m,packages[1],41,2)[0]==3
-            assert step(m,packages[0],40,1,[1])[:2]==(2,1)
-            assert step(m,packages[1],41,1,menus=[5,0])[0]==3
-            assert step(m,packages[0],40,1)[0]==4
+            # Follow the public flow protocol rather than private player
+            # phase numbers. Every transition evicts and poisons the old code.
+            inode,phase,result,status=40,2,0,0
+            stack=[]
+            keys=[19,1,23,2,16,24,2,2,25,19,25,19,1]
+            menus=[1,1,2,1,5,0]
+            snapshots=[]
+            for iteration in range(80):
+                action,resume,result,status=step(m,packages[inode-40],inode,phase,keys,menus,result,status)
+                keys,menus=m.keys,m.menus
+                for file in m.files.values():
+                    if file[0]==15 and file[2] not in snapshots:snapshots.append(file[2])
+                flow=m.input+1024
+                if action==2:
+                    stack.append((inode,resume))
+                    inode=struct.unpack('<H',bytes(m.uc.mem_read(flow+24,2)))[0]
+                    phase=m.words(flow+28,1)[0]
+                    result,status=0,0
+                elif action==3:
+                    inode,phase=stack.pop()
+                elif action==4:
+                    assert not stack and not result and not status
+                    break
+                else:raise AssertionError(('unexpected flow action',action))
+            else:raise AssertionError('URQ did not exit')
+            assert not keys and not menus,(keys,menus)
+            assert len(snapshots)>=2
+            for saved in snapshots:
+                assert saved[:6]==b'URQS\x04\0' and b'Ab' in saved
+                assert struct.pack('<d',1.2345678901234567) in saved
+                assert b'0.30000000000000004' in saved
+            assert any(line.startswith('0.300000') for line in m.lines),m.lines
             assert not m.leases and not m.depth
-        print('URQ ARM: three relocation addresses, poisoned overlay swaps, SMS, input/procedure saves, restore and clean exit PASS')
+
+            # A failed helper reload must not leak either resident lease.
+            failed=UrqMachine(args.resident_elf,True,address);failed.files=dict(m.files)
+            failed.uc.mem_write(failed.input+768,bytes(64));failed.put(failed.input+768,42)
+            action,resume,_,_=step(failed,packages[0],40,2)
+            assert action==2
+            helper_phase=failed.words(failed.input+1024+28,1)[0]
+            assert step(failed,packages[1],41,helper_phase)[0]==3
+            action,resume,_,_=step(failed,packages[0],40,resume)
+            assert action==2
+            action,_,result,_=step(failed,packages[0],40,resume,result=0,status=1)
+            assert action==4 and result and not failed.leases and not failed.depth
+
+            # Navigation and USER during a long running script are forwarded
+            # once; the UI must not consume another key before engine progress.
+            busy=UrqMachine(args.resident_elf,True,address);busy.files=dict(m.files)
+            looping,_=make_package(b':start\nx=0\n:loop\nx=x+1\nif x<500 then goto loop\nquit\n','urqw','UTF-8')
+            busy.files[42]=(13,'game.urq',looping['game.urq'])
+            busy.files[43]=(14,'p0000.uqd',looping['p0000.uqd'])
+            busy.uc.mem_write(busy.input+768,bytes(64));busy.put(busy.input+768,42)
+            action,resume,_,_=step(busy,packages[0],40,2);assert action==2
+            helper_phase=busy.words(busy.input+1024+28,1)[0]
+            assert step(busy,packages[1],41,helper_phase)[0]==3
+            for key in (16,25):
+                action,resume,_,_=step(busy,packages[0],40,resume,[key]);assert action==2 and not busy.keys
+                helper_phase=busy.words(busy.input+1024+28,1)[0]
+                assert step(busy,packages[1],41,helper_phase,menus=[5,0] if key==25 else ())[0]==3
+            action,resume,_,_=step(busy,packages[0],40,resume);assert action==2
+            helper_phase=busy.words(busy.input+1024+28,1)[0]
+            assert step(busy,packages[1],41,helper_phase)[0]==3
+            assert step(busy,packages[0],40,resume)[0]==4
+            assert not busy.leases and not busy.depth
+        print('URQ ARM: three relocation addresses, poisoned overlay swaps, local exact numbers, SMS, input/procedure saves, restore and clean exit PASS')
 
 if __name__=='__main__':main()

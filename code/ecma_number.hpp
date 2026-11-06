@@ -4,6 +4,7 @@
 namespace ecma_number {
 bool format(double value,char* output,size_t capacity);
 bool fractional(double value,char* output,size_t capacity);
-bool parse(const char* text,double& value);
+using ParseFallback=bool (*)(const char* text,unsigned length,double& value);
+bool parse(const char* text,double& value,ParseFallback fallback=nullptr);
 }
 #endif

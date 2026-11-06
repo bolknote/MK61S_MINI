@@ -31,12 +31,12 @@ $Systems = @{
     'urq' = @{
         Name = 'URQ'; Macro = 'URQ'; Magic = 'C2'
         Sources = @('../examples/portable-apps/URQ/main.cpp',
-            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp')
+            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp', 'ecma_number.cpp')
     }
     'urq-ui' = @{
         Name = 'URQUI'; Macro = 'URQ'; Magic = $null
         Sources = @('../examples/portable-apps/URQ/cold.cpp',
-            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp')
+            'urq/engine.cpp', 'urq/pack.cpp', 'zx0.cpp', 'ecma_number.cpp')
     }
     'terminal' = @{
         Name = 'TERMINAL'; Macro = 'TERMINAL'; Magic = $null
