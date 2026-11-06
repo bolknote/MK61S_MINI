@@ -391,6 +391,7 @@ static void emulate(void) {
     for(unsigned i=0;i<16;++i) frame.palette[i]=spectrum_color(i);
     mk61_service_audio_synth audio={spectrum_sound_render,&machine,25000,100};
     spectrum_sound_begin(&machine,sound_yield,NULL);
+    spectrum_sound_clock(&machine,false);
     if(!services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_SYNTH_OPEN,0,sizeof(audio),&audio)) {
         spectrum_sound_end(&machine);(void)spectrum_disk_cache_end(&machine);
         message("Audio stream unavailable\n\nPress any key");return;
@@ -398,29 +399,34 @@ static void emulate(void) {
     /* A resumed frame may already be partly executed. Account for that
      * time instead of adding a full frame's wait to its remaining work. */
     uint32_t deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL)-machine.frame_tstates*2/7,last_frame=machine.frames;
-    bool present=true;const char* error=NULL;
+    // The audio device may wait for LCD/I2C while opening. Both virtual
+    // clocks start here, after that wait, rather than during its callbacks.
+    spectrum_sound_clock(&machine,true);
+    const char* error=NULL;
     for(;;) {
         const int c=poll_guest(blocked,&keyboard_deadline,services->call(MK61_SERVICE_MICROS,0,0,0,NULL));
         if(escape(c) || c==0x90) {
             if(c==0x90) started=false;
             break;
         }
-        if(present) {
+        spectrum_run(&machine,2048);
+        if(machine.memory && machine.memory->fault) goto memory_error;
+        if(machine.frames==last_frame) continue;
+        last_frame=machine.frames;
+        // Submit the completed frame before its pacing wait, leaving the
+        // next frame's first CPU/audio slice free of display conversion.
+        {
             uint16_t palette[64];for(unsigned i=0;i<64;++i) palette[i]=spectrum_palette(&machine,i);
             const uint32_t ready=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PALETTE64,0,sizeof(palette),palette);
-            if(ready==2) { present=false;continue; }
+            if(ready==2) goto paced;
             if(!ready) { error="Update color display service\n\nPress any key";break; }
             spectrum_video8(&machine,scratch.pixels,scratch.pixels+SPECTRUM_BITMAP_BYTES);
             if(machine.memory && machine.memory->fault) goto memory_error;
             frame.background=spectrum_border(&machine);
             const uint32_t result=color(MK61_COLOR_PRESENT,&frame);
             if(!result) { error="Color output failed\n\nPress any key";break; }
-            present=false; // Busy frames are retried at the next emulated frame.
         }
-        spectrum_run(&machine,2048);
-        if(machine.memory && machine.memory->fault) goto memory_error;
-        if(machine.frames==last_frame) continue;
-        last_frame=machine.frames;present=true;
+paced:
         if(!pace_frame(blocked,&keyboard_deadline,&deadline)) goto done;
     }
     goto done;

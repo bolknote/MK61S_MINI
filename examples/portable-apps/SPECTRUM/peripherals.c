@@ -10,6 +10,7 @@ void spectrum_sound_reset(spectrum* s) {
     memset(&s->sound,0,sizeof(s->sound));
     atomic_init(&s->sound.read,0);atomic_init(&s->sound.write,0);
     atomic_init(&s->sound.produced,0);atomic_init(&s->sound.starved,0);
+    atomic_init(&s->sound.clock_running,true);
     s->sound.covox=s->sound.specdrum=128;
 }
 void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned value) {
@@ -37,27 +38,41 @@ void spectrum_sound_begin(spectrum* s,void (*yield)(void*),void* context) {
     q->time=(uint32_t)s->cpu.cyc;atomic_store_explicit(&q->produced,q->time,memory_order_release);
     for(unsigned chip=0;chip<2;++chip) memcpy(q->regs[chip],chip?s->ay2.reg:s->ay.reg,16);
     q->yield=yield;q->yield_context=context;q->asynchronous=true;
+    q->startup_samples=0;
+    atomic_store_explicit(&q->clock_running,true,memory_order_release);
+}
+void spectrum_sound_clock(spectrum* s,bool running) {
+    // Arm only while the device is gated (or after its callback has stopped).
+    if(running) s->sound.startup_samples=SPECTRUM_SOUND_START_SAMPLES;
+    atomic_store_explicit(&s->sound.clock_running,running,memory_order_release);
 }
 void spectrum_sound_end(spectrum* s) {
     spectrum_sound* q=&s->sound;
     if(!q->asynchronous) return;
+    atomic_store_explicit(&q->clock_running,true,memory_order_release);
     const uint32_t produced=atomic_load_explicit(&q->produced,memory_order_acquire);
     while((int32_t)(produced-(q->time+140))>=0) (void)spectrum_sound_render(s);
     uint32_t r=atomic_load_explicit(&q->read,memory_order_relaxed),w=atomic_load_explicit(&q->write,memory_order_acquire);
     while(r!=w) { const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];apply(s,e.device,e.reg,e.value);++r; }
-    atomic_store_explicit(&q->read,r,memory_order_release);q->asynchronous=false;
+    atomic_store_explicit(&q->read,r,memory_order_release);q->asynchronous=false;spectrum_sound_clock(s,false);
 }
 uint32_t spectrum_sound_render(void* context) {
     spectrum* s=context;spectrum_sound* q=&s->sound;
+    if(!atomic_load_explicit(&q->clock_running,memory_order_acquire)) return 0;
+    if(q->startup_samples) { --q->startup_samples;return 0; }
     const uint32_t next=q->time+140,available=atomic_load_explicit(&q->produced,memory_order_acquire);
-    if((int32_t)(available-next)<0) {
+    const bool underrun=(int32_t)(available-next)<0;
+    const uint32_t until=underrun?available:next;
+    if(underrun) {
         const uint32_t n=atomic_load_explicit(&q->starved,memory_order_relaxed);
         atomic_store_explicit(&q->starved,n+1,memory_order_relaxed);
-        return (uint16_t)q->output|((uint32_t)(uint16_t)q->output<<16);
     }
     uint32_t r=atomic_load_explicit(&q->read,memory_order_relaxed);
     const uint32_t w=atomic_load_explicit(&q->write,memory_order_acquire);
-    while(r!=w && (int32_t)(q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)].time-next)<=0) {
+    /* The sample clock keeps running even when the producer is late. Drain
+     * only published events, including past events behind that clock, so a
+     * full queue can never wait for the producer to catch up to itself. */
+    while(r!=w && (int32_t)(q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)].time-until)<=0) {
         const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];apply(s,e.device,e.reg,e.value);++r;
     }
     atomic_store_explicit(&q->read,r,memory_order_release);q->time=next;
