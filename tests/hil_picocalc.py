@@ -118,7 +118,7 @@ def main():
                 raise RuntimeError("Menu keys changed the calculator's X register")
             ui_cases.append("Menu owns input; X preserved")
             ui_step(bytes([0xB6, 0xB6, 0x0A]), "UI=SETTINGS SELECT=0")
-            base = ui_step(bytes([0xB6] * 5), "UI=SETTINGS SELECT=5")
+            base = ui_step(bytes([0xB6] * 4), "UI=SETTINGS SELECT=4")
             language = re.search(r"LANG=(RU|EN)", base)[1]
             other = "EN" if language == "RU" else "RU"
             ui_step(bytes([0xB7]), "LANG=" + other)
@@ -129,7 +129,7 @@ def main():
             ui_step(bytes([0xB7]), f"FONT={1-font}/{size}")
             ui_step(bytes([0xB4]), f"FONT={font}/{size}")
             ui_cases.append("Independent calculator font selection and restoration")
-            ui_step(bytes([0xB1]), "UI=SETTINGS SELECT=6")
+            ui_step(bytes([0xB1]), "UI=SETTINGS SELECT=5")
             ui_step(bytes([0xB1]), "UI=MAIN SELECT=2")
             status = ui_step(bytes([0xB1]), "UI=CALCULATOR")
             if x_value(status) != 0:

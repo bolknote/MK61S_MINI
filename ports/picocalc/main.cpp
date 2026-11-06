@@ -587,10 +587,6 @@ int main() {
             if(!next_classic_step) next_classic_step = now + 1153846; // Shared CLASSIC cadence: 15/13 s.
             if(now >= next_classic_step) { calculator.tick(); next_classic_step = now + 1153846; }
         } else { next_classic_step = 0; calculator.tick(m61_text::active() && m61_text::display_owned(),true); }
-        if(current.idle_signal && now - last_activity >= 300000000ULL) {
-            notification_tone(150);
-            last_activity = now;
-        }
         if(settings_dirty && now >= save_at && calculator.idle() && !core_61::is_RUN() && !picocalc::files::usb_active()) save_settings();
         services.tick();
         if(services.take_calculator_request()) ui.calculator_page();

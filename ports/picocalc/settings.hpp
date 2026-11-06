@@ -8,7 +8,7 @@ struct Settings {
     // read-only APP setting at full scale; key feedback has its own switch.
     static constexpr u8 volume = 10;
     u8 key_sound = 1;
-    u8 idle_signal = 1;
+    u8 reserved_sound = 0; // Retired idle-signal slot; keeps the settings layout stable.
     u8 classic_speed = 0;
     u8 memory = 2; // 105, 112, AUTO, as on STM32.
     u8 random = 0;

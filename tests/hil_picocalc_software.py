@@ -40,7 +40,7 @@ def calculator(p):
 
 def font(p,family,size,key=None):
     calculator(p)
-    raw(p,b'\t'+b'\xb5'*20+b'\xb6'*2+b'\r'+b'\xb5'*20+b'\xb6'*6+b'\r'+b'\xb5'*20+b'\xb6')
+    raw(p,b'\t'+b'\xb5'*20+b'\xb6'*2+b'\r'+b'\xb5'*20+b'\xb6'*5+b'\r'+b'\xb5'*20+b'\xb6')
     p.expect('UI=FONTS')
     for _ in range(64):
         status=p.status()
