@@ -5,8 +5,9 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 13;
-static constexpr uint32_t COMPILER_MAGIC = 0x424D5643UL;
+// The sole LBV2 wire and shared Program passes require a matched System set.
+static constexpr uint32_t REQUEST_VERSION = 14;
+static constexpr uint32_t COMPILER_MAGIC = 0x424D5644UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Frontend selection/printing lives below this fixed offset. Flash writers
@@ -142,14 +143,17 @@ inline bool validated_view(const OverlayRequest& p, View& v,const flash::Reader*
   const bool basic = m.language == Language::BASIC;
   if (m.magic != VALIDATED_MAGIC || m.size != r.image_size ||
       m.language != p.state->language || m.flags > 15 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
-      m.code != HEADER_SIZE + uint32_t(m.lines) * (m.wide?8:basic ? 4 : 6) || m.code >= m.end || (!m.wide && m.end > MAX_IMAGE) || m.end > m.size ||
+      !m.wide || m.code != HEADER_SIZE + uint32_t(m.lines) * 8 || m.code >= m.end || m.end > m.size ||
       (uint16_t)(m.source_size - 1) >= source::MAX_SIZE ||
-      (!m.wide && m.lines > (basic ? 192 : 80)) ||
       ((m.flags & 1) ? m.lines || m.source_size > (basic ? 64 : 111) : !m.lines))
     return false;
   v = {r.image, m.size, m.code, m.lines, m.source_size, m.stack, m.language,
-       (m.flags & 1) != 0, (m.flags & 2) != 0, m.end, m.wide?reader:nullptr,m.wide};
-  if(m.wide && r.storage) {v.lookup_context=r.storage->context;v.lookup=r.storage->lookup;}
+       (m.flags & 1) != 0, (m.flags & 2) != 0, m.end,reader,true};
+  // The resident owns the image lease and supplies disjoint numeric banks.
+  // Unlike the public raw run() adapter, this internal certificate is valid
+  // only while that ownership contract holds (including the INPUT loan).
+  v.verified=true;
+  if(r.storage) {v.lookup_context=r.storage->context;v.lookup=r.storage->lookup;}
   return v.expression == (p.action == OverlayAction::EXPRESSION);
 }
 inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,

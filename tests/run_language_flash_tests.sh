@@ -15,6 +15,14 @@ for backend in 0 1; do
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/compiler"
   "$work/compiler"
 done
+for backend in 0 1; do
+  clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
+    -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer \
+    -DMK61_MATH_BACKEND="$backend" -I"$root/code" \
+    "$root/tests/language_wire_self_test.cpp" \
+    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/wire"
+  "$work/wire"
+done
 clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
   -fsanitize=address,undefined -fno-omit-frame-pointer \
   -DLANGUAGE_VM_TEST_COMPARE_BLOCK -I"$root/code" "$root/tests/language_flash_vm_self_test.cpp" \

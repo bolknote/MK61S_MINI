@@ -46,15 +46,15 @@ static void test_language_flash_store() {
     for(u32 at=0;at<size;at+=sizeof(page)) {
       for(unsigned i=0;i<sizeof(page);++i)page[i]=u8(seed+(at+i)*37U);
       if(!at) {
-        memset(page,0,32);memcpy(page,"LBV2",4);page[4]=14;page[5]=1;page[6]=1;
-        lf::dword(page+8,size);lf::dword(page+12,40);lf::word(page+16,sizeof(text)-1);lf::word(page+18,1);
+        memset(page,0,HEADER_SIZE);memcpy(page,"LBV2",4);page[4]=VERSION;page[5]=1;page[6]=1;
+        lf::dword(page+8,size);lf::dword(page+12,HEADER_SIZE+8);lf::word(page+16,sizeof(text)-1);lf::word(page+18,1);
         lf::dword(page+20,seed);lf::dword(page+28,size);
       }
       const unsigned n=size-at<sizeof(page)?size-at:sizeof(page);
       assert(output.write(at,page,n));
     }
     assert(output.flush());(void)store.input(size);
-    return ValidatedImage{VALIDATED_MAGIC,size,40,sizeof(text)-1,size,1,1,0,Language::BASIC,true};
+    return ValidatedImage{VALIDATED_MAGIC,size,HEADER_SIZE+8,sizeof(text)-1,size,1,1,0,Language::BASIC,true};
   };
   {
     lf::Store store(&source_id,12345);
@@ -155,14 +155,14 @@ static void test_language_flash_repeated_run_io() {
     for(unsigned at=0;at<8192;at+=sizeof(page)) {
       for(unsigned i=0;i<sizeof(page);++i)page[i]=u8((at+i)*37U);
       if(!at) {
-        memset(page,0,32);memcpy(page,"LBV2",4);page[4]=14;page[5]=1;page[6]=1;
-        lf::dword(page+8,8192);lf::dword(page+12,40);lf::word(page+16,sizeof(source)-1);
+        memset(page,0,HEADER_SIZE);memcpy(page,"LBV2",4);page[4]=VERSION;page[5]=1;page[6]=1;
+        lf::dword(page+8,8192);lf::dword(page+12,HEADER_SIZE+8);lf::word(page+16,sizeof(source)-1);
         lf::word(page+18,1);lf::dword(page+28,8192);
       }
       assert(writer.write(at,page,sizeof(page)));
     }
     assert(writer.flush());(void)store.input(8192);
-    assert(store.publish({VALIDATED_MAGIC,8192,40,sizeof(source)-1,8192,1,1,0,Language::BASIC,true}));
+    assert(store.publish({VALIDATED_MAGIC,8192,HEADER_SIZE+8,sizeof(source)-1,8192,1,1,0,Language::BASIC,true}));
   }
   lf::PageCache<8192> cache;
   auto measure=[&](lf::ReadCache* shared) {
@@ -216,8 +216,8 @@ static void test_language_flash_repeated_run_io() {
     lf::Store snapshot(&id,789,nullptr,nullptr,&loan_cache);ValidatedImage c;assert(snapshot.load(c));
     const u8* image=nullptr;assert(snapshot.materialize(image) && image && image[7400]==0xA7);
     const auto reads=SPIFlash::readOperations();
-    auto snapshot_io=snapshot.io();u32 number=lf::dword(image+32),pc=0;
-    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+36));
+    auto snapshot_io=snapshot.io();u32 number=lf::dword(image+HEADER_SIZE),pc=0;
+    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+HEADER_SIZE+4));
     auto in=snapshot.input(c.size);u8 bytes[13];
     assert(in.read(in.context,8180,bytes,12) && !memcmp(bytes,image+8180,12));
     assert(!in.read(in.context,8180,bytes,13));
@@ -226,7 +226,7 @@ static void test_language_flash_repeated_run_io() {
     assert(program_store::write_file(entry.parent_id,entry.id,ProgramType::MK61_BINARY,entry.name,page,sizeof(page)));
     for(unsigned i=0;i<80;++i)loan_cache.put(program_store::media_revision(),u16(400+i),i,page);
     assert(image[7400]==0xA7 && in.read(in.context,7400,&value,1) && value==0xA7);
-    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+36));
+    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+HEADER_SIZE+4));
   }
   {
     lf::Store next(&id,789,nullptr,nullptr,&loan_cache);ValidatedImage c;assert(next.load(c));

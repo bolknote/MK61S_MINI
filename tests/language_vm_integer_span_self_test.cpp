@@ -82,9 +82,10 @@ struct Fixture {
     }
     return result;
   }
-  unsigned marks()const {
+  unsigned marks(bool compact=false)const {
     unsigned n=0;for(uint16_t pc=view.code;pc<view.end;pc=instruction_end(image,view.end,pc))
-      n+=(Op)image[pc]==Op::INTEGER_SPAN || (Op)image[pc]==Op::INTEGER_SHORT;
+      n+=(Op)image[pc]==Op::INTEGER_SPAN || (Op)image[pc]==Op::INTEGER_SHORT ||
+          (compact && ((Op)image[pc]==Op::BINARY_PAIR || (Op)image[pc]==Op::BINARY_STORE));
     return n;
   }
 };
@@ -124,7 +125,10 @@ void integer_span_applied(uint16_t first,uint8_t count) {
   // its original marker already. The reference and full bytes are compared.
   if(!aliased_code_fixture)
     assert((Op)executing_view->bytes[first]==Op::INTEGER_SPAN ||
-           (Op)executing_view->bytes[first]==Op::INTEGER_SHORT);
+           (Op)executing_view->bytes[first]==Op::INTEGER_SHORT ||
+           (Op)executing_view->bytes[first]==Op::BINARY_PAIR ||
+           (Op)executing_view->bytes[first]==Op::BINARY_STORE ||
+           (Op)executing_view->bytes[first]==Op::MOVE_LOCAL);
 }
 void integer_short_block_applied(uint16_t) {++short_blocks;}
 }
@@ -219,16 +223,18 @@ int main() {
         }
   }
   for(const char* source:basic)for(Value x:values)for(Value y:{Value(-1),Value(0),Value(3),Value(.5),Value(INT32_MAX)})
-    for(unsigned limit:{0U,1U,2U,3U,4U,5U,7U,15U,30U,31U,32U,33U,34U,65U})for(unsigned stop:{0U,1U,2U}) {
+    for(unsigned limit:{0U,1U,2U,3U,4U,5U,7U,15U,30U,31U,32U,33U,34U,65U})for(unsigned stop:{0U,1U,2U})for(bool certified:{false,true}) {
       Fixture fast(source,Language::BASIC,x,y),reference(source,Language::BASIC,x,y);
+      fast.view.verified=reference.view.verified=certified;
       marked+=fast.marks();fast.stop=reference.stop=stop;equal(fast,reference,limit);
     }
   for(const char* source:{"1.10 S A=(I+3)*(J-2)\n","1.10 F K=1,9;S A=(I+3)*(J-2)\n",
       "1.10 D 2,3;EXIT\n2.10 S A=(I+3)*(J-2);RETURN ARG(1)\n",
       "1.10 S A=(I+3)*(J-2);S B=ABS(I);S C=ABS(ABS(J))\n"})
-    for(Value x:values)for(Value y:{Value(0),Value(3),Value(.5)})for(unsigned limit:{0U,1U,2U,5U,31U,32U,33U,65U}) {
+    for(Value x:values)for(Value y:{Value(0),Value(3),Value(.5)})for(unsigned limit:{0U,1U,2U,5U,31U,32U,33U,65U})for(bool certified:{false,true}) {
       Fixture fast(source,Language::FOCAL,x,y),reference(source,Language::FOCAL,x,y);
-      assert(fast.marks());equal(fast,reference,limit);
+      fast.view.verified=reference.view.verified=certified;
+      assert(fast.marks(true));equal(fast,reference,limit);
     }
   // Every original instruction remains a legal resume point. Include nearly
   // full stacks and call endings inside the expression, not just its labels.
@@ -326,21 +332,25 @@ int main() {
       while((Op)f->image[at]==Op::SOURCE_POS)at=(uint16_t)(at+3);
       assert((Op)f->image[at]==Op::FUNCTION);f->image[at+1]=(uint8_t)function;
       const uint32_t crc=checksum(f->image+HEADER_SIZE,f->view.size-HEADER_SIZE);
-      for(unsigned byte=0;byte<4;++byte)f->image[20+byte]=(uint8_t)(crc>>(byte*8));
+      for(unsigned byte=0;byte<4;++byte)f->image[24+byte]=(uint8_t)(crc>>(byte*8));
       assert(inspect(f->image,f->view.size,f->view)==Error::NONE);
     }
     equal(fast,reference,limit);
   }
+  // Keep a legacy stack stream for byte-level span corruption fixtures.
+  // The ordinary arithmetic corpus above is now lowered to direct operands.
+  const char* stack_stream="10 A=I+128+32768+2147483647\n";
   // Multi-byte span operations must reject every truncated operand before
   // reading it, then retain the scalar error PC/steps and all dead cells.
   for(Op op:{Op::CONST_I8,Op::CONST_I16,Op::CONST_I32,Op::LOAD,
              Op::INTEGER_SPAN,Op::LOAD_ARRAY_FIXED,Op::STORE})
       for(unsigned available=1;available<=wire_widths[(unsigned)op];++available)
       for(unsigned limit:{0U,1U,2U,3U,31U,32U,33U}) {
-    Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+    Fixture fast(stack_stream,Language::BASIC,3,5),reference(stack_stream,Language::BASIC,3,5);
     for(Fixture* f:{&fast,&reference}) {
       uint16_t at=f->view.code;
-      while((Op)f->image[at]!=Op::INTEGER_SPAN)at=instruction_end(f->image,f->view.end,at);
+      while(at<f->view.end && (Op)f->image[at]!=Op::INTEGER_SPAN) {const auto next=instruction_end(f->image,f->view.end,at);assert(next>at);at=next;}
+      assert(at<f->view.end);
       at=(uint16_t)(at+2);f->image[at]=(uint8_t)op;
       std::memset(f->image+at+1,0,wire_widths[(unsigned)op]-1);
       f->view.end=(uint16_t)(at+available);
@@ -352,10 +362,11 @@ int main() {
   for(unsigned op=0;op<256;++op) {
     if(op<sizeof(wire_widths) && wire_widths[op])continue;
     for(unsigned limit:{0U,1U,2U,31U,32U,33U}) {
-      Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+      Fixture fast(stack_stream,Language::BASIC,3,5),reference(stack_stream,Language::BASIC,3,5);
       for(Fixture* f:{&fast,&reference}) {
         uint16_t at=f->view.code;
-        while((Op)f->image[at]!=Op::INTEGER_SPAN)at=instruction_end(f->image,f->view.end,at);
+        while(at<f->view.end && (Op)f->image[at]!=Op::INTEGER_SPAN) {const auto next=instruction_end(f->image,f->view.end,at);assert(next>at);at=next;}
+      assert(at<f->view.end);
         at=(uint16_t)(at+2);f->image[at]=(uint8_t)op;f->view.end=(uint16_t)(at+1);
       }
       equal(fast,reference,limit);
@@ -364,7 +375,7 @@ int main() {
   // A caller may supply only one actual stack cell. Pointer guards must not
   // form a pointer two cells past its beginning, even on an underflow path.
   for(unsigned limit:{0U,1U,2U,3U,31U,32U,33U}) {
-    Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+    Fixture fast(stack_stream,Language::BASIC,3,5),reference(stack_stream,Language::BASIC,3,5);
     Value a[1]={Value(123)},b[1]={Value(123)};
     fast.view.stack=reference.view.stack=1;
     fast.state.stack=a;reference.state.stack=b;

@@ -203,19 +203,19 @@ class Store {
     cached_=UINT32_MAX;return erase(dirs_[space]);
   }
   bool lookup(uint32_t key,bool by_number,uint32_t* result) {
-    uint8_t header[32],record[8];
+    uint8_t header[HEADER_SIZE],record[8];
     if(!result || !read(IMAGE,0,header,sizeof(header)))return false;
     uint32_t low=0,high=word(header+18);
     while(low<high) {
       const uint32_t mid=low+(high-low)/2;
-      if(!read(IMAGE,32+mid*8,record,sizeof(record)))return false;
+      if(!read(IMAGE,HEADER_SIZE+mid*8,record,sizeof(record)))return false;
       const uint32_t found=dword(record+(by_number?0:4));
       if(by_number && found==key){*result=dword(record+4);return true;}
       if(by_number?found<key:found<=key)low=mid+1;else high=mid;
     }
     *result=by_number?UINT32_MAX:0;
     if(!by_number && low) {
-      if(!read(IMAGE,32+(low-1)*8,record,sizeof(record)))return false;
+      if(!read(IMAGE,HEADER_SIZE+(low-1)*8,record,sizeof(record)))return false;
       *result=dword(record);
     }
     return true;
@@ -258,7 +258,7 @@ public:
       [](void* raw,Space s,uint32_t at,const uint8_t* in,uint16_t n){return static_cast<Store*>(raw)->write(s,at,in,n);},
       [](void* raw,Space s,uint32_t n){return static_cast<Store*>(raw)->truncate(s,n);},
       [](void* raw){auto& s=*static_cast<Store*>(raw);return !s.service_ || s.service_();},
-      [](void*,void* program,uint8_t operation){auto& p=*static_cast<Program*>(program);return operation==0x80?p.optimize():p.prepare_index(Language(operation));},
+      [](void*,void* program,uint8_t operation){return Program::prepare_shared(program,operation);},
       [](void* raw,uint32_t key,bool number,uint32_t* result){return static_cast<Store*>(raw)->lookup(key,number,result);}};
   }
   Input input(uint32_t size) {
@@ -280,13 +280,13 @@ public:
     uint16_t file,copied=0;uint8_t m[64];
     if(!find(root_,false,Type::MK61_BINARY,"Manifest",file) ||
        !program_store::read_source_range_id(file,0,m,sizeof(m),&copied) || copied!=sizeof(m) ||
-       memcmp(m,"LFP1",4) || m[4]>1 || m[5]!=14 || word(m+6)!=source_id_ ||
+       memcmp(m,"LFP1",4) || m[4]>1 || m[5]!=VERSION || word(m+6)!=source_id_ ||
        dword(m+8)!=stamp_ || dword(m+12)!=fingerprint_ ||
        mk61_crc32::calculate(m,60)!=dword(m+60))return false;
     bank_=m[4];
     if(!find(root_,true,Type::TEXT,bank_?"Image1":"Image0",dirs_[IMAGE]))return false;
-    uint8_t h[32];
-    if(!read(IMAGE,0,h,sizeof(h)) || memcmp(h,m+16,sizeof(h)) || memcmp(h,"LBV2",4) || h[4]!=14)return false;
+    uint8_t h[HEADER_SIZE];
+    if(!read(IMAGE,0,h,sizeof(h)) || memcmp(h,m+16,sizeof(h)) || memcmp(h,"LBV2",4) || h[4]!=VERSION)return false;
     size_=dword(h+8);
     certificate={VALIDATED_MAGIC,size_,dword(h+12),word(h+16),dword(h+28),word(h+18),h[6],h[7],Language(h[5]),true};
     if(read_cache())read_cache()->remember_image(program_store::media_revision(),
@@ -297,9 +297,9 @@ public:
     if(!building_ || !certificate.wide || certificate.size!=size_)return false;
     uint32_t current;
     if(!program_store::content_stamp(source_id_,current) || current!=stamp_)return false;
-    uint8_t m[64]={};memcpy(m,"LFP1",4);m[4]=bank_;m[5]=14;word(m+6,source_id_);
+    uint8_t m[64]={};memcpy(m,"LFP1",4);m[4]=bank_;m[5]=VERSION;word(m+6,source_id_);
     dword(m+8,stamp_);dword(m+12,fingerprint_);
-    if(!read(IMAGE,0,m+16,32))return false;
+    if(!read(IMAGE,0,m+16,HEADER_SIZE))return false;
     dword(m+60,mk61_crc32::calculate(m,60));uint16_t file=INVALID;
     (void)find(root_,false,Type::MK61_BINARY,"Manifest",file);
     if(!program_store::write_file(root_,file,Type::MK61_BINARY,"Manifest",m,sizeof(m)))return false;

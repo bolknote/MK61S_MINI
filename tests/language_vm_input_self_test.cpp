@@ -130,7 +130,7 @@ void test_borrowed_stack() {
   assert(evaluate_input(view,state,bindings,{}).error==Error::NONE);
   assert(state.input_value==5 && state.control.sp==INPUT_STACK_CAPACITY-1);
   assert(!memcmp(saved_image,image,sizeof(saved_image)));
-  const auto deep=compile_expression(Language::BASIC,"1+(1+1)",7,image,INPUT_IMAGE_CAPACITY);
+  const auto deep=compile_expression(Language::BASIC,"A+(A+A)",7,image,INPUT_IMAGE_CAPACITY);
   assert(deep.error==Error::NONE && inspect(image,deep.size,view)==Error::NONE);
   view.stack=1; // corrupt/understated metadata still meets run-time push bounds
   memcpy(saved_image,image,sizeof(saved_image));
@@ -152,7 +152,7 @@ void test_expression_whitelist() {
     assert(c.error==Error::NONE);
     image[HEADER_SIZE]=(uint8_t)op;
     const uint32_t crc=checksum(image+HEADER_SIZE,c.size-HEADER_SIZE);
-    for(unsigned i=0;i<4;++i) image[20+i]=(uint8_t)(crc>>(8*i));
+    for(unsigned i=0;i<4;++i) image[24+i]=(uint8_t)(crc>>(8*i));
     View view; assert(inspect(image,c.size,view)==Error::INVALID_IMAGE);
   }
 }

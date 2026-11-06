@@ -50,11 +50,24 @@ int main() {
   }
   for(unsigned at=key_offset;at<key_offset+file_cache::KEY_BYTES;++at) {
     prefix[at]^=1;
-    assert(!file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved) && !reserved);
+    // The native entry is aligned, so the prefix cannot distinguish up to
+    // three image-length bytes from padding. Such a reservation is bounded
+    // but remains unverified; the full container CRC must still reject it.
+    const unsigned changed_size=prefix[key_offset+16]|(unsigned(prefix[key_offset+17])<<8);
+    const bool plausible_length=(at==key_offset+16 || at==key_offset+17) &&
+        changed_size>=HEADER_SIZE && changed_size<=MAX_MODULE &&
+        ((file_cache::KEY_BYTES+changed_size+3)&~3U)==((file_cache::KEY_BYTES+bytes+3)&~3U);
+    assert(file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved)==plausible_length);
+    assert(reserved==(plausible_length?changed_size:0));
     const bool only_source_crc=at>=key_offset+8 && at<key_offset+12;
-    assert(file_cache::probe_candidate(key,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved)==only_source_crc);
+    assert(file_cache::probe_candidate(key,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved)==(only_source_crc || plausible_length));
     if(only_source_crc)assert(claimed_crc!=key.source_crc && reserved==bytes);
+    else if(plausible_length)assert(claimed_crc==key.source_crc && reserved==changed_size);
     else assert(!claimed_crc && !reserved);
+    file[at]^=1;
+    const uint8_t* unverified=nullptr;uint16_t unverified_size=0;
+    assert(!file_cache::view(key,file.data(),written,unverified,unverified_size));
+    file[at]^=1;
     prefix[at]^=1;
   }
   // A prefix is deliberately not an executable certificate: corrupt payload

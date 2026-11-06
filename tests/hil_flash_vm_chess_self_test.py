@@ -12,8 +12,8 @@ import hil_flash_vm_chess as hil
 original=dict(sha256='a'*64,bytes=370064,build='3AB3DD45')
 assert hil.same_firmware(original,dict(original))
 assert hil.vm_stage_plan(b'old',b'new')==[('baseline',b'old'),('candidate',b'new'),('control',b'old')]
-assert hil.qualification_apps()==('BASIC.APP','FOCAL.APP','LANGVM.APP','LANGIN.APP','SRCEDIT.APP')
-assert hil.qualification_apps(True)==hil.qualification_apps()+('VMCache/VMSTORE.APP',)
+assert hil.qualification_apps()==('BASIC.APP','FOCAL.APP','LANGVM.APP','LANGIN.APP','SRCEDIT.APP','VMCache/VMSTORE.APP')
+assert hil.qualification_apps(True)==hil.qualification_apps()
 assert [hil.linked_stage_script(name,b'ordinary') for name in ('baseline','candidate','control')]==[
     b'ordinary',b'reinit\nloadfont Turochamp\nvm-linked\n',b'ordinary']
 assert [hil.linked_stage_script(name,b'ordinary',True) for name in ('baseline','candidate','control')]==[

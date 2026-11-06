@@ -5,18 +5,38 @@
 #include "language_integer_spans.hpp"
 
 namespace language_vm { namespace flash {
-static constexpr uint8_t VERSION=14;
-static constexpr uint32_t HEADER_BYTES=32, MAP_BYTES=8, NO_ADDRESS=UINT32_MAX;
+static constexpr uint32_t HEADER_BYTES=language_vm::HEADER_SIZE, MAP_BYTES=8, NO_ADDRESS=UINT32_MAX;
 class Program {
   IO io_;
   source::Reader const& source_;
   LineIndex index_;
   Writer writer_;
   Error error_=Error::NONE;
-  bool writing_=false;
-  uint32_t source_crc_=0,code_end_=0;
+  uint32_t source_crc_=0,code_end_=0,image_size_=0;
+  uint8_t* positions_data_=nullptr;
+  uint16_t source_window_=0,positions_size_=0;
+  struct Finish {
+    uint32_t bytes;
+    uint16_t positions;
+    uint8_t language,stack,flags;
+  } finish_{};
+  enum Pass : uint8_t { POSITIONS=0x80, IMAGE_START, IMAGE_FINISH, READ_LINE };
+  struct LineCall {Program* program;uint16_t index;Line value;};
+  bool shared(uint8_t pass) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_LANGUAGE_VM_COMPILER)
+    return io_.prepare && io_.prepare(io_.context,this,pass);
+#else
+    return io_.prepare?io_.prepare(io_.context,this,pass):prepare_pass(pass);
+#endif
+  }
 public:
   Program(const source::Reader& source,IO io):io_(io),source_(source),index_(io,INDEX_A),writer_(io,INDEX_A) {}
+  ~Program(){if(source_window_)source_.restore_window(source_window_);}
+  bool reserve_positions(uint32_t bytes) {
+    if(bytes>UINT16_MAX)return false;
+    positions_data_=source_.borrow_tail(uint16_t(bytes),source_window_);
+    positions_size_=uint16_t(bytes);return positions_data_!=nullptr;
+  }
   Error error() const {return error_;}
   void fail(Error e=Error::IO) {if(error_==Error::NONE)error_=e;}
   bool poll() {
@@ -26,16 +46,25 @@ public:
   }
   uint16_t count() const {return index_.size();}
   uint32_t code() const {return HEADER_BYTES+uint32_t(count())*MAP_BYTES;}
-  uint32_t size() const {return writer_.size();}
-  bool writing() const {return writing_;}
+  uint32_t size() const {return image_size_?image_size_:writer_.size();}
   bool prepare(Language language) {
-#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_LANGUAGE_VM_COMPILER)
-    // Source indexing/sorting is shared resident code on the small device.
-    // The host fallback executes exactly the same bounded implementation.
-    return io_.prepare && io_.prepare(io_.context,this,uint8_t(language));
-#else
-    return io_.prepare?io_.prepare(io_.context,this,uint8_t(language)):prepare_index(language);
-#endif
+    return shared(uint8_t(language));
+  }
+  static bool prepare_shared(void* raw,uint8_t pass) {
+    if(pass==READ_LINE) {
+      auto& call=*static_cast<LineCall*>(raw);call.value=call.program->line_impl(call.index);
+      return call.program->error()==Error::NONE;
+    }
+    return static_cast<Program*>(raw)->prepare_pass(pass);
+  }
+  bool prepare_pass(uint8_t pass) {
+    switch(pass) {
+      case uint8_t(Language::BASIC):case uint8_t(Language::FOCAL):return prepare_index(Language(pass));
+      case POSITIONS:return begin_positions_impl();
+      case IMAGE_START:return begin_image_impl();
+      case IMAGE_FINISH:return finish_image();
+      default:fail();return false;
+    }
   }
   bool prepare_index(Language language) {
     if(!source_.good() || source_.contains_nul()) {fail(source_.good()?Error::SYNTAX:Error::IO);return false;}
@@ -71,7 +100,7 @@ public:
     if(!writer_.reset(index_.space(),uint32_t(count())*LINE_BYTES)){fail();return false;}
     uint32_t last=0;
     for(uint16_t i=0;i<count();++i) {
-      const auto record=line(i);if(error_!=Error::NONE)return false;
+      const auto record=line_impl(i);if(error_!=Error::NONE)return false;
       if(record.number<=last) {fail(Error::LINE);return false;}last=record.number;
     }
     source_crc_=source_.checksum();
@@ -79,16 +108,23 @@ public:
     return true;
   }
   Line line(uint16_t n) {
-    // Both language frontends revisit this bounded record in sizing and
-    // emission passes, including when no output page needs flushing yet.
-    if(!poll())return {};
-    uint8_t bytes[LINE_BYTES];
-    const bool read=n<count() && (writing_
-        ? io_.read(io_.context,index_.space(),uint32_t(n)*LINE_BYTES,bytes,sizeof(bytes))
-        : writer_.read(uint32_t(n)*LINE_BYTES,bytes,sizeof(bytes)));
-    if(!read) {fail();return {};}
-    return LineIndex::decode(bytes);
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_LANGUAGE_VM_COMPILER)
+    LineCall call;call.program=this;call.index=n;
+    if(!io_.prepare || !io_.prepare(io_.context,&call,READ_LINE)) {fail();return {};}
+    return call.value;
+#else
+    return line_impl(n);
+#endif
   }
+  Line line_impl(uint16_t n) {
+    // Labels/source ranges are immutable. Layout may read a not-yet-flushed
+    // PC, which cannot affect fixed-width sizing. begin_image flushes every
+    // final PC before emission reads it, so the shared index reader suffices.
+    Line record{};
+    if(!poll() || !index_.get(n,record)) {fail();return {};}
+    return record;
+  }
+
   void pc(uint16_t n,uint32_t pc) {
     auto record=line(n);record.pc=pc;
     if(error_==Error::NONE && !index_.set(writer_,n,record))fail();
@@ -104,36 +140,75 @@ public:
     return (group?record.number/1000:record.number)==number?int(low):-1;
   }
   bool begin_image() {
+    return shared(IMAGE_START);
+  }
+  bool begin_image_impl() {
     if(!writer_.reset(IMAGE)) {fail();return false;}
-    writing_=true;
     uint8_t header[HEADER_BYTES]={};
     if(!writer_.write(0,header,sizeof(header))) {fail();return false;}
     for(uint16_t i=0;i<count();++i) {
-      const auto record=line(i);uint8_t bytes[MAP_BYTES];
+      const auto record=line_impl(i);uint8_t bytes[MAP_BYTES];
       dword(bytes,record.number);dword(bytes+4,record.pc);
       if(!writer_.write(HEADER_BYTES+uint32_t(i)*MAP_BYTES,bytes,sizeof(bytes))) {fail();return false;}
     }
     return error_==Error::NONE;
   }
   void byte(uint32_t at,uint8_t b) {if(!writer_.byte(at,b))fail();}
+  bool begin_positions() {
+    return shared(POSITIONS);
+  }
+  bool begin_positions_impl() {
+    if(!writer_.flush() || !io_.truncate(io_.context,BOUNDARIES,0) ||
+       !writer_.reset(BOUNDARIES)) {fail();return false;}
+    return true;
+  }
+  bool source_bytes(uint32_t at,const uint8_t* bytes,uint16_t n) {
+    if(positions_data_) {
+      if(at>positions_size_ || n>positions_size_-at)fail(Error::FULL);
+      else memcpy(positions_data_+at,bytes,n);
+    } else if(!writer_.write(at,bytes,n))fail();
+    return error_==Error::NONE;
+  }
   void address(uint32_t at,uint32_t value) {uint8_t bytes[4];dword(bytes,value);if(!writer_.write(at,bytes,sizeof(bytes)))fail();}
   bool optimize() {
-    Reader reader({this,[](void* raw,uint32_t at,uint8_t* out,uint16_t n){return static_cast<Program*>(raw)->writer_.read(at,out,n);},code_end_});
-    View view={nullptr,code_end_,code(),count(),source_.size(),1,Language::BASIC,false,false,code_end_,&reader,true};
+    auto read=[&](uint32_t at) {uint8_t b=0;if(!writer_.read(at,&b,1))fail();return b;};
     unsigned budget=0;
-    detail::integer_spans(code(),code_end_,[&](uint32_t pc){return view.byte(pc);},
-        [&](uint32_t pc){return reader.good() && ((budget++&31U)!=0 || poll())?instruction_end(view,pc):0;},
-        [&](uint32_t pc,Op op){byte(pc,uint8_t(op));reader.invalidate();});
-    return error_==Error::NONE && reader.good() && writer_.good();
+    detail::integer_spans(code(),code_end_,read,
+        [&](uint32_t pc,Op op) {
+          if(error_!=Error::NONE || ((budget++&31U)==0 && !poll()))return uint32_t(0);
+          const uint8_t width=wire_widths[unsigned(op)];
+          if(width!=255)return pc+width;
+          uint8_t bytes[4];const unsigned prefix=op==Op::DATA?5:3;
+          if(!writer_.read(pc+1,bytes,prefix-1)) {fail();return uint32_t(0);}
+          const uint32_t n=prefix==5?dword(bytes):word(bytes);
+          return pc+prefix+((op==Op::ON_GOTO || op==Op::ON_GOSUB)?n*2:n);
+        },[&](uint32_t pc,Op op){byte(pc,uint8_t(op));});
+    return error_==Error::NONE && writer_.good();
   }
-  bool finish(Language language,uint32_t size,uint8_t stack,bool rf) {
+  bool finish(Language language,uint32_t size,uint8_t stack,bool rf,
+              uint16_t positions=0,uint32_t position_bytes=0) {
     code_end_=size;
-#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_LANGUAGE_VM_COMPILER)
-    const bool optimized=io_.prepare && io_.prepare(io_.context,this,0x80);
-#else
-    const bool optimized=io_.prepare?io_.prepare(io_.context,this,0x80):optimize();
-#endif
-    if(!optimized){fail();return false;}
+    finish_={position_bytes,positions,uint8_t(language),stack,uint8_t(rf?2:0)};
+    return shared(IMAGE_FINISH);
+  }
+  bool finish_image() {
+    uint32_t size=code_end_;const auto& f=finish_;
+    const auto positions=f.positions;const auto position_bytes=f.bytes;
+    if(!optimize()){fail();return false;}
+    if(positions) {
+      uint8_t buffer[64];
+      for(uint32_t at=0;at<position_bytes;) {
+        const uint16_t n=uint16_t(position_bytes-at<sizeof(buffer)?position_bytes-at:sizeof(buffer));
+        if(positions_data_)memcpy(buffer,positions_data_+at,n);
+        else if(!io_.read(io_.context,BOUNDARIES,at,buffer,n)) {fail();return false;}
+        if(!writer_.write(size+at,buffer,n) || !poll()) {fail();return false;}
+        at+=n;
+      }
+      size+=position_bytes;dword(buffer,position_bytes);
+      if(!writer_.write(size,buffer,4)){fail();return false;}
+      size+=4;
+    }
+    image_size_=size;
     uint32_t crc=~uint32_t(0);uint8_t bytes[64];
     for(uint32_t at=HEADER_BYTES;at<size;) {
       const uint16_t n=uint16_t(size-at<sizeof(bytes)?size-at:sizeof(bytes));
@@ -143,9 +218,9 @@ public:
       if(!io_.poll()) {fail(Error::STOPPED);return false;}
     }
     uint8_t header[HEADER_BYTES]={};memcpy(header,"LBV2",4);
-    header[4]=VERSION;header[5]=uint8_t(language);header[6]=stack?stack:1;header[7]=rf?2:0;
+    header[4]=VERSION;header[5]=f.language;header[6]=f.stack?f.stack:1;header[7]=f.flags;
     dword(header+8,size);dword(header+12,code());word(header+16,source_.size());word(header+18,count());
-    dword(header+20,source_crc_);dword(header+24,~crc);dword(header+28,size);
+    dword(header+20,source_crc_);dword(header+24,~crc);dword(header+28,code_end_);word(header+38,positions);
     if(!writer_.write(0,header,sizeof(header)) || !writer_.flush())fail();
     return error_==Error::NONE;
   }
