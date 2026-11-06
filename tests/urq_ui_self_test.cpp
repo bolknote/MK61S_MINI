@@ -33,6 +33,8 @@ std::vector<std::vector<uint8_t>> frames;
 std::vector<int> keys;
 std::vector<std::string> text_rows(24);
 unsigned live_leases = 0;
+uint32_t clock_ms = 1000, pause_started = 0;
+bool pause_probe = false, paging_delay = false, saw_pause = false;
 uint32_t file_size_mock(uint32_t id) { return files.count(id)?uint32_t(files[id].bytes.size()):UINT32_MAX; }
 uint32_t file_read_mock(uint32_t id,uint32_t offset,uint8_t* out,uint32_t size) {
   if(!files.count(id) || offset>files[id].bytes.size()) return UINT32_MAX;
@@ -123,8 +125,19 @@ mk61_app_services service_table{MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSIO
 const void* query(uint32_t,uint32_t) { return &service_table; }
 uint32_t columns() { return 64; }
 uint32_t rows() { return 20; }
-uint32_t milliseconds() { return 1000; }
-int32_t poll_key() { if(keys.empty()) return -1;int key=keys.front();keys.erase(keys.begin());return key; }
+uint32_t milliseconds() { return clock_ms; }
+int32_t poll_key() {
+  if(pause_probe && app.paging) {
+    if(!paging_delay) { clock_ms += 10000; paging_delay = true; }
+    return MK61_APP_KEY_OK;
+  }
+  if(pause_probe && app.engine.state().status == urq::Status::PAUSE && !saw_pause) {
+    saw_pause = true; pause_started = clock_ms;
+  }
+  if(pause_probe && app.engine.state().status == urq::Status::CHOICE) app.quitting = true;
+  if(keys.empty()) return -1;
+  const int key=keys.front();keys.erase(keys.begin());return key;
+}
 int32_t wait_key() { assert(!keys.empty());int key=keys.front();keys.erase(keys.begin());return key; }
 uint32_t available_graphics() { return classic; }
 uint32_t graph_width() {return 192;}
@@ -145,7 +158,8 @@ int main(int argc,char** argv) {
   api.query_service=query;api.file_size=file_size_mock;api.file_read=file_read_mock;
   api.millis_ms=milliseconds;api.display_columns=columns;api.display_rows=rows;
   classic=std::getenv("URQ_TEST_CLASSIC")!=nullptr;
-  api.key_wait=wait_key;api.key_poll=poll_key;api.service=idle;api.delay_ms=[](uint32_t){};mk61_api=&api;
+  api.key_wait=wait_key;api.key_poll=poll_key;api.service=idle;
+  api.delay_ms=[](uint32_t elapsed){clock_ms+=elapsed;};mk61_api=&api;
   api.graphics_available=available_graphics;api.graphics_width=graph_width;api.graphics_height=graph_height;
   api.graphics_begin=graph_begin;api.graphics_present=present;api.graphics_end=idle;
   files[2]={MK61_SERVICE_FILE_URQ,"game.urq",read_file(std::string(argv[1])+"/game.urq")};
@@ -154,6 +168,16 @@ int main(int argc,char** argv) {
   auto& engine=app.engine;engine.run();assert(engine.state().status==urq::Status::INPUT);
   assert(!app.history.external.handle && app.history.end>=2);
   assert(engine.state().depth==2);
+  // Technical handler prefixes and item names both use URQ's
+  // case-insensitive name rules (:USE_key handles the item "Key").
+  assert(engine.set("Key",{1},true));
+  bool found_mixed_case_handler=false;
+  for(unsigned i=0,count=inventory(UINT32_MAX);i<count;++i) {
+    char caption[128],command[128];inventory(i,caption,command);
+    if(urq::equal_name(command,"use_key")) found_mixed_case_handler=true;
+  }
+  assert(found_mixed_case_handler);
+  assert(engine.set("Key",{},true));
   begin_typing(false);
   if(classic) {
 #if !defined(MK61_TARGET_PICOCALC)
@@ -214,6 +238,15 @@ int main(int argc,char** argv) {
   assert(without_spaces(displayed)==without_spaces(engine.text(engine.state().actions[0].caption)));
   game_key(MK61_APP_KEY_SHIFT_RIGHT);draw_game();assert(app.selected==1 && !app.menu);
   assert(text_rows[app.body].find(M8("Второе действие"))!=std::string::npos);
+  // Reading the text before PAUSE advances the mock clock by ten seconds.
+  // The following pause must still last its own five seconds.
+  assert(engine.use("pause_test"));
+  pause_probe=true;paging_delay=saw_pause=false;pause_started=0;app.quitting=false;
+  run_session();pause_probe=false;
+  assert(paging_delay && saw_pause);
+  assert(clock_ms-pause_started>=5000 && clock_ms-pause_started<5100);
+  assert(engine.state().status==urq::Status::CHOICE && !engine.state().pause_ms);
+  app.quitting=false;
 #endif
 #if !defined(MK61_TARGET_PICOCALC)
   if(classic) {
@@ -229,6 +262,59 @@ int main(int argc,char** argv) {
     game_key(MK61_APP_KEY_ESC);draw_game();assert(!app.actions && frames.back()==reading);
   }
 #endif
+  // Recall has a 255-byte input limit, independent of the longer ordinary
+  // strings permitted by the engine pool. Exercise the boundary through an
+  // actual INPUT/procedure and a portable shell save before recalling it.
+  assert(engine.use("inner"));engine.run();
+  assert(engine.state().status==urq::Status::INPUT);
+  const std::string maximum_input(255,'Q');
+  assert(engine.submit(maximum_input.c_str()));engine.run();
+  assert(engine.state().status==urq::Status::CHOICE);
+  assert(engine.use("inner"));engine.run();
+  assert(engine.state().status==urq::Status::INPUT);
+  begin_typing(true);
+  assert(save_slot(0));assert(load_slot(0));
+  assert(strlen(engine.text(engine.state().last_input))==maximum_input.size());
+#if defined(MK61_TARGET_PICOCALC)
+  input_event(MK61_TEXT_UP);
+  assert(app.length==255 && app.cursor==255 && !strcmp(app.draft,maximum_input.c_str()));
+#endif
+  const std::string oversized_input(600,'X');
+  assert(engine.set("oversized_input",{0,oversized_input.c_str(),1}));
+  auto string_reference=[&](const char* name) {
+    for(unsigned i=0;i<engine.state().variables;++i)
+      if(urq::equal_name(engine.text(engine.state().names[i]),name))return engine.state().strings[i];
+    assert(false);return uint16_t(0);
+  };
+  assert(save_slot(0));const auto valid_long_variable=files[100].bytes;
+  auto malformed=valid_long_variable;
+  // Shell v4 contains an engine v3 image at byte 48. Point last_input at
+  // the legitimate 600-byte variable and recompute both CRCs: this is not
+  // a corrupt-byte/CRC test, but a missing semantic-bound check.
+  const uint32_t core_size=urq::le32(malformed.data()+40);
+  assert(!memcmp(malformed.data()+48,"URQS\3\0",6));
+  urq::put16(malformed.data()+48+32+30,string_reference("oversized_input"));
+  urq::put32(malformed.data()+48+28,urq::crc32(malformed.data()+48+32,core_size-32));
+  urq::put32(malformed.data()+28,urq::crc32(malformed.data()+32,uint32_t(malformed.size()-32)));
+  const auto before_rejected_load=engine.state();
+  const std::string draft_before_rejected_load=app.draft;
+  const auto length_before=app.length,cursor_before=app.cursor;
+  files[100].bytes=malformed;
+  assert(!load_slot(0));
+  assert(!memcmp(&engine.state(),&before_rejected_load,offsetof(urq::State,transient)));
+  assert(app.draft==draft_before_rejected_load && app.length==length_before && app.cursor==cursor_before);
+  files[100].bytes=valid_long_variable;assert(load_slot(0));
+  assert(strlen(engine.get("oversized_input").text)==600);
+#if defined(MK61_TARGET_PICOCALC)
+  // Even an unexpected in-memory reference must not turn recall into a
+  // write beyond draft, nor silently replace the current editor contents.
+  const auto valid_reference=engine.state().last_input;
+  engine.state().last_input=string_reference("oversized_input");
+  input_event(MK61_TEXT_UP);
+  assert(app.draft==draft_before_rejected_load && app.length==length_before && app.cursor==cursor_before);
+  assert(!strcmp(app.notice,full_line.data()));
+  engine.state().last_input=valid_reference;
+#endif
   finish_session();assert(!live_leases);
-  std::puts("URQ shell: nested input, edited draft, non-monotonic streamed save, atomic write failure, CRC rejection and cross-profile restore PASS");
+  std::puts("URQ shell: nested input, edited draft, streamed save, atomic failure, CRC/oversized recall rejection and cross-profile restore PASS");
 }

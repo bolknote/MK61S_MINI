@@ -799,6 +799,10 @@ Status Engine::run(uint32_t budget) {
     } else {
       if(state_->pc >= pack_->lines()) { end(); continue; }
       if(!pack_->line(state_->pc++, line, sizeof(line))) { fail(pack_->error()); break; }
+      // Quest.next() applies comments when fetching a source line, under the
+      // current dialect. Already queued compound tails are not reprocessed.
+      if(state_->mode != Mode::URQW)
+        if(char* comment = strchr(line, ';')) *comment = 0;
     }
     if(!execute(line)) break;
     if(state_->selection_stage && (state_->status == Status::INPUT || state_->status == Status::PAUSE || state_->status == Status::ANYKEY)) {
@@ -911,6 +915,66 @@ constexpr Field fields[] = {
   {offsetof(State, pending) + offsetof(Pending, depth), PENDING, 2, sizeof(Pending), DEPTH}
 };
 constexpr uint32_t FIXED_WIRE_BYTES = 35 + VARIABLES * 13 + ITEMS * 10 + ACTIONS * 8 + FRAMES * 8 + PENDING * 4;
+// A load may fail even after validation (e.g. an SD card is removed between
+// reads). Retain a bounded zero-RLE undo image in existing scratch, never a
+// second full State. Incompressible live states reject the load before commit.
+struct RestoreRollback {
+  State& state;
+  Pack& pack;
+  uint8_t* overflow;
+  bool armed = false;
+  static constexpr unsigned DURABLE = offsetof(State, transient);
+  static constexpr unsigned EXTRA = (POOL_BYTES + 7) / 8;
+  uint8_t* storage(unsigned offset) {
+    return offset < sizeof(state.transient) ? state.transient + offset
+                                            : overflow + (offset - sizeof(state.transient));
+  }
+  bool put(uint8_t value, unsigned& out) {
+    if(out == sizeof(state.transient) + EXTRA) return false;
+    *storage(out) = value;
+    ++out; return true;
+  }
+  uint8_t get(unsigned& input) {
+    const uint8_t value = *storage(input);
+    ++input; return value;
+  }
+  bool encode(const uint8_t* input, unsigned bytes, unsigned& out) {
+    unsigned at = 0;
+    while(at < bytes) {
+      if(input[at]) {
+        if(!put(input[at++], out)) return false;
+        continue;
+      }
+      unsigned count = 1;
+      while(count < 255 && at + count < bytes && !input[at + count]) ++count;
+      if(!put(0, out) || !put(uint8_t(count), out)) return false;
+      at += count;
+    }
+    return true;
+  }
+  void decode(uint8_t* output, unsigned bytes, unsigned& input) {
+    unsigned at = 0;
+    while(at < bytes) {
+      const uint8_t value = get(input);
+      if(value) output[at++] = char(value);
+      else {
+        const unsigned count = get(input);
+        memset(output + at, 0, count); at += count;
+      }
+    }
+  }
+  bool prepare() {
+    pack.invalidate();
+    unsigned out = 0;
+    if(!encode(reinterpret_cast<const uint8_t*>(&state), DURABLE, out)) return false;
+    armed = true; return true;
+  }
+  ~RestoreRollback() {
+    if(!armed) return;
+    unsigned input = 0;
+    decode(reinterpret_cast<uint8_t*>(&state), DURABLE, input);
+  }
+};
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 #error "URQ wire cells require the supported little-endian M4/M0+/host targets"
 #endif
@@ -962,28 +1026,25 @@ bool Engine::restore(Source source) {
   const uint16_t used = le16(prefix_bytes + 12), context_size = le16(prefix_bytes + 26);
   if(!used || used > POOL_BYTES || context_size >= sizeof(state_->context) ||
      source.size != 32 + FIXED_WIRE_BYTES + used + context_size) return false;
-  uint32_t crc = 0;
   uint8_t block[128];
-  for(uint32_t at = 32; at < source.size;) {
-    const uint32_t n = source.size - at < sizeof(block) ? source.size - at : sizeof(block);
-    if(!source.read(source.context, at, block, n)) return false;
-    crc = crc32(block, n, crc); at += n;
-  }
-  if(crc != le32(header + 28)) return false;
   uint8_t references[(POOL_BYTES+7)/8]{};
+  RestoreRollback rollback{*state_, *pack_, references};
   // Validate every typed wire cell before applying any field to the live state.
   for(unsigned pass = 0; pass < 2; ++pass) {
     if(pass) {
-      memset(state_, 0, sizeof(*state_));
+      temporary_ = 0; // scratch references expire before the undo image is built
+      if(!rollback.prepare()) return false;
+      memset(state_, 0, RestoreRollback::DURABLE);
       state_->mode = Mode(header[6]); state_->status = Status(header[7]);
-      pack_->invalidate();
     }
-    uint32_t offset = 32, cached = UINT32_MAX, valid = 0;
+    uint32_t offset = 32, cached = UINT32_MAX, valid = 0, pass_crc = 0;
+    uint16_t last_input = 0;
     auto pull = [&](uint8_t* out, unsigned n) {
       while(n--) {
         if(cached == UINT32_MAX || offset - cached >= valid) {
           cached = offset; valid = source.size - offset < sizeof(block) ? source.size - offset : sizeof(block);
           if(!valid || !source.read(source.context, cached, block, valid)) return false;
+          pass_crc = crc32(block, valid, pass_crc);
         }
         *out++ = block[offset++ - cached];
       }
@@ -992,7 +1053,7 @@ bool Engine::restore(Source source) {
     auto* native = reinterpret_cast<uint8_t*>(state_);
     for(const auto& field : fields) for(unsigned i = 0; i < field.count; ++i) {
       uint8_t cell[8]{};
-      if(!pull(cell, field.width)) { if(pass) fail(Error::IO); return false; }
+      if(!pull(cell, field.width)) return false;
       const uint32_t value = le32(cell);
       uint32_t limit = UINT32_MAX;
       switch(field.rule) {
@@ -1016,7 +1077,9 @@ bool Engine::restore(Source source) {
         default: break;
       }
       if(value > limit) return false;
-      if(field.rule==REF || (field.rule==SIZES && (i==6 || i==8 || i==9)))
+      if(field.rule == SIZES && ((i == 0 && value != used) || (i == 7 && value != context_size))) return false;
+      if(field.rule == SIZES && i == 9) last_input = uint16_t(value);
+      if(!pass && (field.rule==REF || (field.rule==SIZES && (i==6 || i==8 || i==9))))
         references[value/8]|=uint8_t(1U<<(value%8));
       if(pass) {
         auto* target=native+field.offset+i*field.stride;
@@ -1028,10 +1091,17 @@ bool Engine::restore(Source source) {
       }
     }
     uint8_t previous=0;
+    unsigned input_length = 0; bool input_string = false;
     for(unsigned i = 0; i < used; ++i) {
       uint8_t value = 0; if(!pull(&value, 1)) return false;
       if((!i || i + 1 == used) && value) return false;
-      if((value && !mk8::valid_byte(value)) || ((references[i/8]&(1U<<(i%8))) && previous)) return false;
+      if((value && !mk8::valid_byte(value)) ||
+         (!pass && (references[i/8]&(1U<<(i%8))) && previous)) return false;
+      if(i == last_input) input_string = true;
+      if(input_string) {
+        if(!value) input_string = false;
+        else if(++input_length >= 256) return false;
+      }
       previous=value;
       if(pass) state_->pool[i] = char(value);
     }
@@ -1039,8 +1109,9 @@ bool Engine::restore(Source source) {
       uint8_t value = 0; if(!pull(&value, 1) || !mk8::valid_byte(value)) return false;
       if(pass) state_->context[i] = char(value);
     }
-    if(offset != source.size) return false;
+    if(offset != source.size || pass_crc != le32(header + 28)) return false;
   }
+  rollback.armed = false;
   temporary_ = 0; collect(); return true;
 }
 }

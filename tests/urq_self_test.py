@@ -51,6 +51,30 @@ class UrqTests(unittest.TestCase):
         texts = [e["text"] for e in events if e["event"] == "text"]
         self.assertEqual(texts, ["OK", "15"])
 
+    def test_runtime_mode_preserves_source_comments(self):
+        for mode in ("dosurq", "ripurq", "akurq", "urqw"):
+            for assignment in ("urq_mode='urqw'", "name='urq_mode'\n#name$='urqw'",
+                               "if 1 then urq_mode='urqw'", "instr urq_mode=urqw"):
+                with self.subTest(mode=mode, assignment=assignment):
+                    events = self.game(":start\n" + assignment + "\npln keep; this\nend", mode=mode)
+                    self.assertEqual([e['text'] for e in events if e['event'] == 'text'], ['keep; this'])
+            if mode in ('akurq', 'urqw'):
+                events = self.game(":start\ninput text\npln #text$\nend\n"
+                                   ":following\npln keep; this\nend",
+                                   "i:[[Change|urq_mode='urqw' & goto following]]", "c:32768", mode=mode)
+                self.assertIn('keep; this', [e['text'] for e in events if e['event'] == 'text'])
+        events = self.game(":start\nfile_content='note.txt'\npln #file_content$\nend\n"
+                           ":following\npln keep; this\nend", "c:32768", mode='akurq',
+                           resources={'note.txt': "[[Change|urq_mode='urqw' & goto following]]"})
+        self.assertIn('keep; this', [e['text'] for e in events if e['event'] == 'text'])
+        events = self.game(":start\nurq_mode='dosurq' & pln queued; text\n"
+                           "pln fetched; removed\nend", mode='urqw')
+        self.assertEqual([e['text'] for e in events if e['event'] == 'text'], ['queued; text', 'fetched'])
+        # Raw labels are indexed separately, but a statically removed classic
+        # comment still must not consume the 1023-byte execution buffer.
+        events = self.game(":start\npln short; " + "x" * 1500 + "\nend", mode='dosurq')
+        self.assertEqual([e['text'] for e in events if e['event'] == 'text'], ['short'])
+
     def test_procedure_continuation_and_snapshot(self):
         events = self.game(":start\nproc ask & pln Вернулись\nend\n"
                            ":ask\ninput имя\npln #имя$\nend\n",

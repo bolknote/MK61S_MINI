@@ -42,6 +42,21 @@ STORIES = [
     (":start\npln [[next]]\nend\n:next\npln done\nend",[]),
     (":start\nbtn x=1,one\nbtn x=2,two\nend",["c:0","c:1"]),
     (":start\na='ё'>'я'\nb='А'<'№'\nc='Ё'<'А'\nd='Щ'>'Ш'\nend",[]),
+    # Comments are processed by Quest.next(), using the current runtime mode.
+    (":start\nurq_mode='urqw'\npln retained; text\nend", []),
+    (":start\nurq_mode='dosurq'\npln before; removed\nend", []),
+    (":start\nname='urq_mode'\n#name$='urqw'\npln retained; text\nend", []),
+    (":start\nif 1 then urq_mode='urqw'\npln retained; text\nend", []),
+    (":start\nbtn urq_mode='urqw' & goto following,Change\nend\n"
+     ":following\npln fetched; text\nend", ["c:0"]),
+    (":start\ninput urq_mode\npln retained; text\nend", ["i:urqw"]),
+    # A switch affects fresh source fetches, not an already queued compound tail.
+    (":start\nurq_mode='dosurq' & pln queued; text\npln fetched; removed\nend", []),
+    # Dynamic printed text can produce an executable assignment link.
+    (":start\ninput text\npln #text$\nend\n:following\npln retained; text\nend",
+     ["i:[[Change|urq_mode='urqw' & goto following]]", "c:32768"]),
+    # Labels are indexed before semicolon comments are applied at execution.
+    (":start; part of label\npln #current_loc$\nend", []),
 ]
 
 
@@ -63,6 +78,8 @@ class DifferentialTests(unittest.TestCase):
     def test_text_semantics(self):
         for mode in ("dosurq", "ripurq", "akurq", "urqw"):
             for index, (source, commands) in enumerate(STORIES):
+                if mode in ('dosurq', 'ripurq') and any(command.startswith('c:32768') for command in commands):
+                    continue  # The oracle disables HTML/link support in these manifests.
                 with self.subTest(mode=mode, story=index), tempfile.TemporaryDirectory(prefix="urq-oracle-") as temp:
                     directory = Path(temp)
                     qst = directory / "source.qst"

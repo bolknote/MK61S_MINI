@@ -63,7 +63,53 @@ def decode_source(data, encoding=None):
     raise ValueError("ambiguous encoding: specify --encoding UTF-8, CP1251 or CP866")
 
 
-def normalize(text, mode):
+def may_change_mode(source, depth=0):
+    """Prove fixed mode conservatively; computed commands/names retain comments."""
+    def writable_mode(name):
+        name = name.strip().lower()
+        while name.startswith('inv_'):
+            name = name[4:]
+        return '#' in name or name == 'urq_mode'
+
+    if depth > 24:
+        return True
+    source = source.strip()
+    if not source or source.startswith(':'):
+        return False
+    if '&' in source:
+        return any(may_change_mode(part, depth + 1) for part in source.split('&'))
+    parts = source.split(None, 1)
+    operation = parts[0].lower()
+    argument = parts[1] if len(parts) == 2 else ''
+    if operation == 'if':
+        branches = re.split(r'\bthen\b', argument, maxsplit=1, flags=re.I)
+        if len(branches) != 2:
+            return True
+        return any(may_change_mode(part, depth + 1)
+                   for part in re.split(r'\belse\b', branches[1], flags=re.I))
+    if operation in ('p', 'print', 'pln', 'println'):
+        # Printed links are executable commands. Dynamic text can introduce
+        # links too (including text obtained through INPUT or file_content).
+        # Only literal character/space/newline tags are statically harmless.
+        literal = re.sub(r'##[0-9]+\$|#/\$|#\$', '', argument)
+        return '[[' in literal or '#' in literal
+    if operation == 'btn':
+        target, comma, _ = argument.partition(',')
+        return not comma or may_change_mode(target, depth + 1)
+    if operation in ('instr', 'input', 'anykey', 'inv+', 'inv-', 'invkill'):
+        name = argument.split('=', 1)[0] if operation == 'instr' else argument
+        if operation in ('inv+', 'inv-'):
+            name = name.split(',', 1)[-1]
+        if operation == 'invkill' and not name.strip():
+            return True  # a restored/dynamic inventory may contain urq_mode
+        return writable_mode(name)
+    if '=' in source:
+        name = source.split('=', 1)[0].rstrip(' \t+-*/').lower()
+        return writable_mode(name)
+    return '#' in operation
+
+
+def normalize(text, mode, *, strip_static_comments=True, validate_lines=True):
     if "\0" in text:
         raise ValueError("NUL in source")
     text = re.sub(r"/\*[\s\S]*?\*/", "", text)
@@ -80,12 +126,15 @@ def normalize(text, mode):
         if lines[i].startswith("_") and not lines[i].startswith("__"):
             lines[i - 1] += lines[i][1:]
             lines[i] = ""
-    # Classic dialects remove semicolon comments at execution time.
-    if mode in ("dosurq", "ripurq", "akurq"):
+    # Preserve old package IDs when fixed classic mode is provable. Otherwise
+    # the executor must apply comments using the mode at source-line fetch.
+    if strip_static_comments and mode in ("dosurq", "ripurq", "akurq") and not any(
+            may_change_mode(line.split(';', 1)[0]) for line in lines):
         lines = [line.split(";", 1)[0] for line in lines]
-    for line in lines:
-        if len(m8(line)) >= 1024:
-            raise ValueError("source line exceeds the 1023-M8-byte execution limit")
+    if validate_lines:
+        for line in lines:
+            if len(m8(line)) >= 1024:
+                raise ValueError("source line exceeds the 1023-M8-byte execution limit")
     return lines
 
 
@@ -99,9 +148,12 @@ def make_package(data, mode, encoding=None, manifest=None, resources=None, zx0_p
         raise ValueError("JavaScript is outside the text profile")
     encoded = [m8(line) for line in lines]
     labels = {}
-    for i in range(len(encoded) - 1, -1, -1):
-        if encoded[i].startswith(b":"):
-            name = encoded[i][1:].strip()
+    # UrqW collects labels before Quest.next() applies dialect comments.
+    label_lines = [m8(line) for line in normalize(
+        text, mode, strip_static_comments=False, validate_lines=False)]
+    for i in range(len(label_lines) - 1, -1, -1):
+        if label_lines[i].startswith(b":"):
+            name = label_lines[i][1:].strip()
             if not name or len(name) >= 128:
                 raise ValueError("label must contain 1..127 M8 bytes")
             labels[fold(name)] = (fold(name), i)

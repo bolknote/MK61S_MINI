@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
+python3 "$root/tests/urq_library_sync_self_test.py"
 for numeric_backend in ryu compact; do
 numeric_flags=()
 if [[ "$numeric_backend" == compact ]]; then numeric_flags=(-DMK61_TEST_COMPACT_DECIMAL=1); fi
@@ -18,6 +19,11 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
   "${sanitizers[@]}" "${numeric_flags[@]}" \
   "$root/tests/urq_host.cpp" "$root/code/urq/engine.cpp" \
   "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-host"
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
+  "${sanitizers[@]}" "${numeric_flags[@]}" \
+  "$root/tests/urq_restore_self_test.cpp" "$root/code/urq/engine.cpp" \
+  "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-restore-test"
+python3 "$root/tests/urq_restore_self_test.py" "$work/urq-restore-test"
 python3 "$root/tests/urq_self_test.py" "$work/urq-host"
 python3 "$root/tests/urq_library_self_test.py" "$work/urq-host"
 clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
@@ -26,13 +32,15 @@ clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
   -I"$root/sdk/portable/include" -I"$root/code" -I"$root/tests/mk_math_shim" \
   "$root/tests/urq_classic_footer.cpp" "$root/code/builtin_font.cpp" \
   "$root/code/ERM19264_graphics_font.cpp" -o "$work/urq-classic-footer"
-python3 "$root/tests/urq_hil_controller_self_test.py"
+URQ_TEST_CLASSIC_FOOTER="$work/urq-classic-footer" python3 "$root/tests/urq_hil_controller_self_test.py"
 python3 - "$work/ui.qst" <<'PY'
 import sys
 from pathlib import Path
 Path(sys.argv[1]).write_text(':start\npln X\nproc outer\nanykey code\nbtn done, ' +
     'Длинное действие, которое надо прочитать целиком, прежде чем выбрать. ' * 5 +
-    '\nbtn done, Второе действие\nend\n:outer\nproc inner\nend\n:inner\ninput answer\nend\n:done\nquit\n')
+    '\nbtn done, Второе действие\nend\n:outer\nproc inner\nend\n:inner\ninput answer\nend\n' +
+    ':USE_key\nend\n:pause_test\ncls\npln ' + 'word ' * 180 +
+    '\npause 5000\nbtn done, Again\nend\n:done\nquit\n')
 PY
 python3 "$root/tools/apps/urq/qst2urq.py" "$work/ui.qst" --mode urqw --encoding UTF-8 --output "$work/ui" >/dev/null
 for profile in stm32 picocalc; do

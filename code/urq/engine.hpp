@@ -76,6 +76,9 @@ class Engine {
   bool evaluate(const char* text, Value& result);
   const char* text(uint16_t offset) const;
   bool snapshot(Sink sink) const;
+  // Rejection preserves durable live state. A bounded undo image reuses
+  // transient and validation scratch; a state that cannot fit rejects before
+  // mutation.
   bool restore(Source source);
   State& state() { return *state_; }
   const State& state() const { return *state_; }

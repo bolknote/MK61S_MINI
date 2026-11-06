@@ -1,9 +1,12 @@
 """Grant and USB release failures must stop before the next hardware owner."""
 import copy
 import json
+import os
 from pathlib import Path
+import shutil
 import tempfile
 import subprocess
+import sys
 import time
 from types import SimpleNamespace
 import unittest
@@ -11,6 +14,38 @@ from unittest import mock
 
 import hil_urq_semion as hil
 import hil_classic_cdc_guard as guard
+
+
+class RuntimeSafetyTests(unittest.TestCase):
+    def test_optimized_python_refuses_hardware_modules_before_imports(self):
+        # Import in a separate optimized interpreter: this also covers
+        # PYTHONOPTIMIZE rather than relying on the parent test's __debug__.
+        with tempfile.TemporaryDirectory() as directory:
+            for module in ('hil_urq_semion', 'hil_classic_cdc_guard'):
+                for flag in ('-O', '-OO'):
+                    with self.subTest(module=module, flag=flag):
+                        script = 'import sys; sys.path.insert(0, ' + repr(str(hil.ROOT / 'tests')) + '); import ' + module
+                        result = subprocess.run([sys.executable, flag, '-c', script], cwd=directory,
+                                                capture_output=True, text=True)
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertIn('checks require assertions; run Python without -O/-OO', result.stderr)
+
+    def test_footer_uses_explicit_built_helper_from_an_unrelated_cwd(self):
+        source = Path(os.environ.get('URQ_TEST_CLASSIC_FOOTER',
+                                    hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer')).resolve()
+        with tempfile.TemporaryDirectory() as directory:
+            helper = Path(directory) / 'actual-backend-footer'
+            shutil.copy2(source, helper)
+            command = [sys.executable, str(Path(__file__).resolve()),
+                       'FrameTests.test_inventory_header_cannot_be_mistaken_for_main_menu']
+            environment = {**os.environ, 'URQ_TEST_CLASSIC_FOOTER': str(helper)}
+            result = subprocess.run(command, cwd=directory, env=environment, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            # An existing legacy helper must never mask a missing explicit one.
+            environment['URQ_TEST_CLASSIC_FOOTER'] = str(helper.with_name('missing-helper'))
+            result = subprocess.run(command, cwd=directory, env=environment, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(environment['URQ_TEST_CLASSIC_FOOTER'], result.stderr)
 
 
 class ControllerTests(unittest.TestCase):
@@ -283,7 +318,8 @@ class FrameTests(unittest.TestCase):
             self.assertNotEqual(hil.canonical(off), hil.canonical(changed), index)
 
     def test_inventory_header_cannot_be_mistaken_for_main_menu(self):
-        tool = hil.ROOT / '.build/urq-tests/urq-classic-footer'
+        tool = Path(os.environ.get('URQ_TEST_CLASSIC_FOOTER',
+                                   hil.ROOT / '.build/urq-tests/ryu/urq-classic-footer')).resolve()
         hints = subprocess.check_output([str(tool)])
         self.assertEqual(len(hints), 7 * 192)
         menu = hints[5 * 192:6 * 192] + bytes(7 * 192)
