@@ -67,6 +67,29 @@ def certify(source_root):
     # and encoded exponent are unchanged while deciding its rounding bit.
     assert 0<512-10-4 and 512+10+4<1024
 
+    # Fast exp packing rejects every exact midpoint. Decompose q=1024*a+t:
+    # the old RNE addition and half-up addition depend only on t and a&1.
+    # Include the top uint64 quotients to check the identical modulo wrap.
+    mask64=(1<<64)-1;packing_checks=0
+    for error in (4,9):
+        for tail in range(1024):
+            if 512-error<=tail<=512+error:continue
+            for head in (0,1,(mask64>>10)-1,mask64>>10):
+                q=(head<<10)|tail
+                assert ((q+511+(head&1))&mask64)>>10==((q+512)&mask64)>>10
+                packing_checks+=1
+    # Positive input scaling uses s=e+12 in[1,21]. Write the low word as
+    # a*2^(32-s)+b: its shifted low word is b*2^s and its high carry is a.
+    # Thus the two32-bit shifts are exactly the old low64-bit left shift.
+    scaled_checks=0;mask32=(1<<32)-1
+    for shift in range(1,22):
+        for hi in (0,1,(1<<20)-1,1<<20,0x7fffffff,mask32):
+            for lo in (0,1,(1<<(32-shift))-1,1<<(32-shift),0x7fffffff,mask32):
+                pair=(((hi<<shift)|(lo>>(32-shift)))&mask32)<<32
+                pair|=(lo<<shift)&mask32
+                assert pair==(((hi<<32)|lo)<<shift)&mask64
+                scaled_checks+=1
+
     h=F(1,128);scale=1<<70;half=F(1,2)
     square=half+F(13,512)
     cube=half+F(13,512)+h*square
@@ -119,6 +142,12 @@ def certify(source_root):
                          checked_Q94_table_rows=512,strict_error_bounds=[4,3],midpoint_reject_radii=[3,2],
                          first_pass_strict_error_bounds=[5,10],first_pass_reject_radii=[4,9],
                          exact_segment_high32=dict(low=constant_lo,high=constant_hi,maximum_cross=maximum_cross),
+                         fast_pack=dict(midpoint_band_excluded=True,reject_radii=[4,9],
+                                        discarded_parity_changes_no_retained_cell=True,
+                                        exhaustive_tail_parity_wrap_checks=packing_checks),
+                         input_scaling=dict(positive_shift_minimum=1,positive_shift_maximum=21,
+                                            error=0,semantics='Exact modulo2^64 left shift from two32-bit words',
+                                            word_boundary_checks=scaled_checks),
                          fast_tight_guard=dict(maximum_n=maximum_segment,n_bound=1<<20,
                                               reduction_even=True,table_fraction_distance_bound=1<<31,
                                               sufficient_reduction_threshold=sufficient_threshold,
