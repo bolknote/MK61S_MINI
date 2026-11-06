@@ -97,7 +97,7 @@ void help_fallback() {
     Serial.write(' ');
   }
   Serial.println();
-  Serial.println("Install matching /System");
+  Serial.println(PT("Install matching /System"));
 }
 const Services services = {sizeof(Services),
                            VERSION,
@@ -165,22 +165,22 @@ terminal_protocol::Result class_terminal::exec_external(u8 command) {
   // unformatted or damaged filesystem. Only the extended report is an APP.
   if (command == CMD_FS_STAT) {
     if (!terminal_core::at_end(command_args())) {
-      Serial.println("Usage: df");
+      Serial.println(PT("Usage: df"));
       return terminal_protocol::Result::error();
     }
     const StorageInfo info = storage_info();
     if (!info.ready) {
       if (info.mount_status ==
           (u32)program_store::MountStatus::FORMAT_REQUIRED) {
-        Serial.println("C9: geometry changed; run format");
-        Serial.println("Files were not modified");
+        Serial.println(PT("C9: geometry changed; run format"));
+        Serial.println(PT("Files were not modified"));
       } else if (info.mount_status ==
                  (u32)program_store::MountStatus::REPAIR_REQUIRED) {
         Serial.println(
-            "C9: catalog damaged; run format or use System > Format disk menu");
-        Serial.println("Files were not modified");
+            PT("C9: catalog damaged; run format or use System > Format disk menu"));
+        Serial.println(PT("Files were not modified"));
       } else
-        Serial.println("C9: unavailable");
+        Serial.println(PT("C9: unavailable"));
       return terminal_protocol::Result::ok();
     }
     char text[320];
@@ -210,7 +210,7 @@ terminal_protocol::Result class_terminal::exec_external(u8 command) {
       help_fallback();
       return terminal_protocol::Result::ok();
     }
-    Serial.print("Install matching ");
+    Serial.print(PT("Install matching "));
     Serial.println(driver);
     return terminal_protocol::Result::error();
   }

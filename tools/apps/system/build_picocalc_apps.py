@@ -24,7 +24,7 @@ APPS={
     'SERVICES':(['examples/portable-apps/SERVICES/main.c'],None),
     'ELIZA':(['examples/portable-apps/ELIZA/main.c','examples/portable-apps/ELIZA/eliza_engine.c'],None),
     'SHEET':(['examples/portable-apps/SHEET/main.cpp','examples/portable-apps/SHEET/sheet_engine.cpp'],'S1'),
-    'URQ':(['examples/portable-apps/URQ/main.cpp','code/urq/engine.cpp','code/urq/pack.cpp','code/zx0.cpp'],'C2'),
+    'URQ':(['examples/portable-apps/URQ/main.cpp','code/urq/engine.cpp','code/urq/pack.cpp','code/zx0.cpp','code/ecma_number.cpp'],'C2'),
     'WBMP':(['examples/portable-apps/WBMP/main.c','examples/portable-apps/WBMP/viewer.cpp','code/wbmp.cpp'],'I1'),
 }
 ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.mks','CYCLE.mks','autoexec.wbmp')

@@ -47,6 +47,7 @@ for index, (command, handler) in enumerate(pairs):
     call = handler+'(script_mode,trap_mode)' if args else handler+'()'
     legacy.append(f'case {command}: {{ const Result result={call}; recive_pos=0; return result; }}')
 cpp = r'''
+#include "packed_text.hpp"
 #include "terminal_protocol.hpp"
 #include "terminal_command_ids.hpp"
 #include <cassert>

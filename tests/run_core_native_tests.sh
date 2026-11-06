@@ -28,12 +28,14 @@ for core_case in 0:0 0:2 1:0 1:2 1:1; do
   if [[ "$dcw_fields" == 1 ]]; then
     dcw_flags=(-DMK61_TEST_DCW_FIELDS=1 -DMK61_CORE_PREDECODED_ROM=0)
   fi
+  cold_flags=()
+  if [[ "$amk_bits" == 6 ]]; then cold_flags=(-DMK61_TEST_COLD_PREFETCH=1); fi
   echo "Native boundary verification: AMK bits=$amk_bits word reads=$amk_words dcw fields=$dcw_fields shared=$shared hot tables=$hot_tables"
   # core_native_self_test includes the real core.cpp to access private ticks;
   # do not link a second copy. Keep the scalar decoder independent of packed AMK.
   clang++ -std=c++17 -O2 -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-cpp \
     "${sanitizer_flags[@]}" \
-    "${sharing_flags[@]}" "${dcw_flags[@]}" "${amk_flags[@]}" \
+    "${sharing_flags[@]}" "${dcw_flags[@]}" "${amk_flags[@]}" "${cold_flags[@]}" \
     -DMK61_CORE_NATIVE_HOT_PATHS=1 -DMK61_CORE_PACKED_AMK=0 \
     -DMK61_CORE_HOT_TABLES_IN_SRAM="$hot_tables" -DMK61_DISPLAY_UC1609 \
     -include "$root/tests/mk_math_shim/debug.h" \

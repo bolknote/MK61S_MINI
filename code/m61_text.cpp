@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #include "m61_text.hpp"
 #include "m61_keys.hpp"
 
@@ -304,7 +305,7 @@ static bool text_font_session_active = false;
 static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
-static const char* line_error_message = NULL;
+static packed_text::Text line_error_message = NULL;
 static bool loading = false;
 
 struct LoadScope {
@@ -809,20 +810,20 @@ bool last_error(Error& out) {
   return has_error;
 }
 
-static void fail_script(const char* message, u16 line) {
+static void fail_script(packed_text::Text message, u16 line) {
   copy_script_name(last_error_info.script, script_name);
   last_error_info.line = line;
-  bounded_string::copy(last_error_info.message,
-                       message == NULL ? "unknown error" : message);
+  packed_text::copy(last_error_info.message, sizeof(last_error_info.message),
+                    message == nullptr ? PT("unknown error") : message);
   stop_runner();
   has_error = true;
 #if defined(MK61_CORE_STANDALONE)
   picocalc::script::report_error(last_error_info);
 #elif !defined(M61_TEXT_HOST_TEST)
-  Serial.print("M61 error in ");
+  Serial.print(PT("M61 error in "));
   Serial.print(last_error_info.script);
   if(line != 0) {
-    Serial.print(" at line ");
+    Serial.print(PT(" at line "));
     Serial.print(line);
   }
   Serial.print(": ");
@@ -1148,7 +1149,7 @@ static bool any_trap_is_active(void) {
   return false;
 }
 
-static bool build_label_index(const char*& error_message, u16& error_line) {
+static bool build_label_index(packed_text::Text & error_message, u16& error_line) {
   const u16 resume_pos = script_pos;
   const u16 resume_line = script_line;
   script_pos = 0;
@@ -1161,7 +1162,7 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
     const u16 line_start = script_pos;
     const u16 line_number = script_line;
     if(!read_next_line(line, sizeof(line))) {
-      error_message = "cannot read script or line is too long";
+      error_message = PT("cannot read script or line is too long");
       error_line = line_number;
       return false;
     }
@@ -1170,18 +1171,18 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
     const LabelParse parsed = parse_label(line, name, len);
     if(parsed == LabelParse::NONE) continue;
     if(parsed == LabelParse::INVALID) {
-      error_message = "invalid label (use 1..31 non-space characters)";
+      error_message = PT("invalid label (use 1..31 non-space characters)");
       error_line = line_number;
       return false;
     }
     if(label_count >= MAX_LABELS) {
-      error_message = "too many labels (maximum 64)";
+      error_message = PT("too many labels (maximum 64)");
       error_line = line_number;
       return false;
     }
     for(u8 i = 0; i < label_count; i++) {
       if(stored_label_equals(label(i), name, len)) {
-        error_message = "duplicate label";
+        error_message = PT("duplicate label");
         error_line = line_number;
         return false;
       }
@@ -1203,7 +1204,7 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
   return true;
 }
 
-static bool build_trap_index(const char*& error_message, u16& error_line) {
+static bool build_trap_index(packed_text::Text & error_message, u16& error_line) {
   const u16 resume_pos = script_pos;
   const u16 resume_line = script_line;
   script_pos = 0;
@@ -1215,7 +1216,7 @@ static bool build_trap_index(const char*& error_message, u16& error_line) {
   while(script_pos < script_len) {
     const u16 line_number = script_line;
     if(!read_next_line(line, sizeof(line))) {
-      error_message = "cannot read script or line is too long";
+      error_message = PT("cannot read script or line is too long");
       error_line = line_number;
       return false;
     }
@@ -1224,18 +1225,18 @@ static bool build_trap_index(const char*& error_message, u16& error_line) {
     const TrapParse result = parse_trap(line, parsed);
     if(result == TrapParse::NONE) continue;
     if(result == TrapParse::INVALID) {
-      error_message = "invalid trap (use: trap <0..111> run :label)";
+      error_message = PT("invalid trap (use: trap <0..111> run :label)");
       error_line = line_number;
       return false;
     }
     if(trap_targets[parsed.address] != INVALID_TRAP_TARGET) {
-      error_message = "duplicate trap address";
+      error_message = PT("duplicate trap address");
       error_line = line_number;
       return false;
     }
     const i16 target = find_label_index(parsed.label, parsed.label_len);
     if(target < 0) {
-      error_message = "trap label not found";
+      error_message = PT("trap label not found");
       error_line = line_number;
       return false;
     }
@@ -1248,7 +1249,7 @@ static bool build_trap_index(const char*& error_message, u16& error_line) {
   return true;
 }
 
-static bool build_bind_index(const char*& error_message, u16& error_line) {
+static bool build_bind_index(packed_text::Text & error_message, u16& error_line) {
   const u16 resume_pos = script_pos;
   const u16 resume_line = script_line;
   script_pos = 0;
@@ -1262,7 +1263,7 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
   while(script_pos < script_len) {
     const u16 line_number = script_line;
     if(!read_next_line(line, sizeof(line))) {
-      error_message = "cannot read script or line is too long";
+      error_message = PT("cannot read script or line is too long");
       error_line = line_number;
       return false;
     }
@@ -1271,19 +1272,19 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
     const BindParse result = parse_bind(line, parsed);
     if(result == BindParse::NONE) continue;
     if(result == BindParse::INVALID) {
-      error_message = "invalid bind (use: bind key <code> down/up run :label)";
+      error_message = PT("invalid bind (use: bind key <code> down/up run :label)");
       error_line = line_number;
       return false;
     }
     if(parsed.timer) {
       if(timer_bind_target != INVALID_BIND_TARGET) {
-        error_message = "duplicate bind timer";
+        error_message = PT("duplicate bind timer");
         error_line = line_number;
         return false;
       }
       const i16 target = find_label_index(parsed.label, parsed.label_len);
       if(target < 0) {
-        error_message = "bind label not found";
+        error_message = PT("bind label not found");
         error_line = line_number;
         return false;
       }
@@ -1293,13 +1294,13 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
     if(parsed.key) {
       u8& target = key_targets[parsed.event][parsed.opcode];
       if(target != INVALID_BIND_TARGET) {
-        error_message = "duplicate bind key event";
+        error_message = PT("duplicate bind key event");
         error_line = line_number;
         return false;
       }
       const i16 found = find_label_index(parsed.label, parsed.label_len);
       if(found < 0) {
-        error_message = "bind label not found";
+        error_message = PT("bind label not found");
         error_line = line_number;
         return false;
       }
@@ -1307,18 +1308,18 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
       continue;
     }
     if(bind_count >= MAX_BINDS) {
-      error_message = "too many binds (maximum 8)";
+      error_message = PT("too many binds (maximum 8)");
       error_line = line_number;
       return false;
     }
     if(find_bind_index(parsed.opcode) >= 0) {
-      error_message = "duplicate bind opcode";
+      error_message = PT("duplicate bind opcode");
       error_line = line_number;
       return false;
     }
     const i16 target = find_label_index(parsed.label, parsed.label_len);
     if(target < 0) {
-      error_message = "bind label not found";
+      error_message = PT("bind label not found");
       error_line = line_number;
       return false;
     }
@@ -1376,11 +1377,11 @@ static bool activate_bind(u8 opcode) {
   return false;
 }
 
-static bool activate_frame(const ScriptFrame& frame, const char*& error_message, u16& error_line) {
+static bool activate_frame(const ScriptFrame& frame, packed_text::Text & error_message, u16& error_line) {
   clear_bind_hooks();
   if(frame.id != script_id) clear_key_runtime();
   if(!restore_frame(frame)) {
-    error_message = "script file is unavailable";
+    error_message = PT("script file is unavailable");
     error_line = frame.line;
     return false;
   }
@@ -1395,7 +1396,7 @@ static bool activate_frame(const ScriptFrame& frame, const char*& error_message,
   discard_undefined_active_traps();
   discard_undefined_active_binds();
   if(!sync_bind_hooks()) {
-    error_message = "calculator command hook capacity is exhausted";
+    error_message = PT("calculator command hook capacity is exhausted");
     error_line = 0;
     return false;
   }
@@ -1403,7 +1404,7 @@ static bool activate_frame(const ScriptFrame& frame, const char*& error_message,
 }
 
 static bool restore_return_frame(const ReturnFrame& returned) {
-  const char* error_message = NULL;
+  packed_text::Text error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(returned.script, error_message, error_line)) {
     fail_script(error_message, error_line);
@@ -1431,7 +1432,7 @@ static bool return_from_script(void) {
   const ReturnFrame returned = return_stack()[--return_stack_depth];
   if(returned.kind == ReturnKind::BIND) {
     if(!bind_handler_active) {
-      fail_script("bind handler context is unavailable", script_line);
+      fail_script(PT("bind handler context is unavailable"), script_line);
       return false;
     }
     if(!restore_return_frame(returned)) return false;
@@ -1471,7 +1472,7 @@ static bool return_from_script(void) {
   }
 
   if(!trap_context_valid() || !restore_trap_context()) {
-    fail_script("cannot restore calculator trap context", script_line);
+    fail_script(PT("cannot restore calculator trap context"), script_line);
     return false;
   }
   release_trap_context();
@@ -1492,11 +1493,11 @@ static void finish_script(void) {
   if(return_stack_depth > 0) {
     const ReturnKind kind = return_stack()[return_stack_depth - 1].kind;
     if(kind == ReturnKind::TRAP) {
-      fail_script("trap handler reached end of script without ret", script_line);
+      fail_script(PT("trap handler reached end of script without ret"), script_line);
       return;
     }
     if(kind == ReturnKind::BIND) {
-      fail_script("bind handler reached end of script without ret", script_line);
+      fail_script(PT("bind handler reached end of script without ret"), script_line);
       return;
     }
   }
@@ -1509,7 +1510,7 @@ static bool open_store_script(const char* name) {
   if(!push_current_frame(ReturnKind::SCRIPT)) return false;
   clear_key_runtime();
 
-  const char* error_message = NULL;
+  packed_text::Text error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
     const ReturnFrame parent = return_stack()[--return_stack_depth];
@@ -1531,7 +1532,7 @@ static bool open_store_script(u16 id) {
   if(!push_current_frame(ReturnKind::SCRIPT)) return false;
   clear_key_runtime();
 
-  const char* error_message = NULL;
+  packed_text::Text error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
     const ReturnFrame parent = return_stack()[--return_stack_depth];
@@ -1645,7 +1646,7 @@ static bool enter_pending_bind(void) {
   }
   const u8 target = pending_bind_target;
   if(!push_current_frame(ReturnKind::BIND)) {
-    line_error_message = "bind return stack is full";
+    line_error_message = PT("bind return stack is full");
     return false;
   }
 
@@ -1709,7 +1710,7 @@ static bool enter_pending_trap(void) {
   const u8 target = pending_trap_target;
 
   if(!push_current_frame(ReturnKind::TRAP)) {
-    line_error_message = "trap return stack is full";
+    line_error_message = PT("trap return stack is full");
     return false;
   }
   core_61::ContextBuffer* saved = core_61::acquire_context_buffer(
@@ -1717,7 +1718,7 @@ static bool enter_pending_trap(void) {
   if(saved == nullptr || !core_61::save_context(*saved)) {
     release_trap_context();
     return_stack_depth--;
-    line_error_message = "cannot save calculator trap context";
+    line_error_message = PT("cannot save calculator trap context");
     return false;
   }
 
@@ -1766,16 +1767,16 @@ static ReferencedOpenResult open_referenced_entry(
     }
     switch(status) {
       case TinyBasicRunStatus::UNAVAILABLE:
-        line_error_message = "TinyBASIC is unavailable";
+        line_error_message = PT("TinyBASIC is unavailable");
         break;
       case TinyBasicRunStatus::COMPILE_ERROR:
-        line_error_message = "TinyBASIC compile error";
+        line_error_message = PT("TinyBASIC compile error");
         break;
       case TinyBasicRunStatus::RUNTIME_ERROR:
-        line_error_message = "TinyBASIC runtime error";
+        line_error_message = PT("TinyBASIC runtime error");
         break;
       case TinyBasicRunStatus::NOT_FOUND:
-        line_error_message = "TinyBASIC file not found";
+        line_error_message = PT("TinyBASIC file not found");
         break;
       case TinyBasicRunStatus::COMPLETED:
       case TinyBasicRunStatus::STOPPED:
@@ -1901,7 +1902,7 @@ static bool execute_loadfont(const char* args) {
   if(token_ends(args)) {
     if(!text_font_session_active) return true;
     if(program_store_text_font_restore() == 1) return true;
-    line_error_message = "cannot restore default font";
+    line_error_message = PT("cannot restore default font");
     return false;
   }
 
@@ -1910,7 +1911,7 @@ static bool execute_loadfont(const char* args) {
     if(begin != 1) {
       line_error_message = begin == -2
           ? "loadfont requires UC1609"
-          : "font service is unavailable";
+          : PT("font service is unavailable");
       return false;
     }
     text_font_session_active = true;
@@ -1925,7 +1926,7 @@ static bool execute_loadfont(const char* args) {
     char name[program_store::NAME_SIZE + 16U];
     if(!terminal_core::parse_token(cursor, name, sizeof(name))) {
       line_error_message =
-          "invalid loadfont syntax (use names separated by spaces)";
+          PT("invalid loadfont syntax (use names separated by spaces)");
       return false;
     }
     if(selected || stopped) continue;
@@ -1943,10 +1944,10 @@ static bool execute_loadfont(const char* args) {
     }
   }
   if(selected) return true;
-  if(result == -1) line_error_message = "font file is invalid";
+  if(result == -1) line_error_message = PT("font file is invalid");
   else if(result == -2) line_error_message = "loadfont requires UC1609";
-  else if(result == -3) line_error_message = "font service is unavailable";
-  else line_error_message = "font not found";
+  else if(result == -3) line_error_message = PT("font service is unavailable");
+  else line_error_message = PT("font not found");
   return false;
 }
 #endif
@@ -2044,11 +2045,11 @@ static bool execute_script_line(const char* raw_line,
   const char* optional_path = optional_open_arguments(line);
   if(optional_path != NULL) {
     if(trap_context_valid()) {
-      line_error_message = "open? is not allowed in a trap handler";
+      line_error_message = PT("open? is not allowed in a trap handler");
       return false;
     }
     if(is_line_end(*optional_path)) {
-      line_error_message = "optional open needs a path";
+      line_error_message = PT("optional open needs a path");
       return false;
     }
     switch(open_referenced_file(optional_path)) {
@@ -2080,7 +2081,7 @@ static bool execute_script_line(const char* raw_line,
     return true;
   }
   if(trap_result == TrapParse::INVALID) {
-    line_error_message = "invalid trap (use: trap <0..111> run :label)";
+    line_error_message = PT("invalid trap (use: trap <0..111> run :label)");
     return false;
   }
 
@@ -2096,11 +2097,11 @@ static bool execute_script_line(const char* raw_line,
       return true;
     }
     if(activate_bind(parsed_bind.opcode)) return true;
-    line_error_message = "cannot activate bind command hooks";
+    line_error_message = PT("cannot activate bind command hooks");
     return false;
   }
   if(bind_result == BindParse::INVALID) {
-    line_error_message = "invalid bind (use: bind key <code> down/up run :label)";
+    line_error_message = PT("invalid bind (use: bind key <code> down/up run :label)");
     return false;
   }
 
@@ -2122,13 +2123,13 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       // Older callers use action(RUN_PROGRAM, ""), whose key is -1.
       const i32 address = result.key == -1 ? 0 : result.key;
       if(address < 0 || (usize) address >= core_61::program_steps()) {
-        line_error_message = "run address is outside current program memory";
+        line_error_message = PT("run address is outside current program memory");
         return false;
       }
       if(start_current_program((u8) address)) return true;
       line_error_message = trap_context_valid()
-          ? "cannot run calculator from a trap handler"
-          : "active trap address is outside current program memory";
+          ? PT("cannot run calculator from a trap handler")
+          : PT("active trap address is outside current program memory");
       return false;
     }
     case terminal_protocol::ResultKind::OPEN_FILE:
@@ -2147,15 +2148,15 @@ static bool execute_script_result(const terminal_protocol::Result& result,
           break;
       }
       if(line_error_message == NULL)
-        line_error_message = "cannot open referenced file";
+        line_error_message = PT("cannot open referenced file");
       return false;
     case terminal_protocol::ResultKind::LOAD_SLOT:
       if(open_slot(result.args)) return true;
-      line_error_message = "cannot load nested slot";
+      line_error_message = PT("cannot load nested slot");
       return false;
     case terminal_protocol::ResultKind::LOAD_BINARY:
       if(trap_context_valid()) {
-        line_error_message = "binary load is not allowed in a trap handler";
+        line_error_message = PT("binary load is not allowed in a trap handler");
         return false;
       }
       if(load_binary_program(current_script_directory(), result.args)) return true;
@@ -2163,11 +2164,11 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       return false;
     case terminal_protocol::ResultKind::GOTO_LABEL:
       if(goto_label(result.args)) return true;
-      line_error_message = "label not found or invalid";
+      line_error_message = PT("label not found or invalid");
       return false;
     case terminal_protocol::ResultKind::WAIT:
       if(result.key <= 0 || result.key > 60000) {
-        line_error_message = "invalid wait duration";
+        line_error_message = PT("invalid wait duration");
         return false;
       }
       wait_until_ms = runner_millis() + (u32) result.key;
@@ -2185,7 +2186,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       } else if(result.key >= 0 && result.key <= 60000) {
         timer = {runner_millis(), (u32)result.key | (result.key ? TIMER_ARMED : 0U)};
       } else {
-        line_error_message = "invalid timer duration";
+        line_error_message = PT("invalid timer duration");
         return false;
       }
       return true;
@@ -2194,7 +2195,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
       return return_from_script();
     case terminal_protocol::ResultKind::REINIT_CALCULATOR:
       if(trap_context_valid()) {
-        line_error_message = "reinit is not allowed in a trap handler";
+        line_error_message = PT("reinit is not allowed in a trap handler");
         return false;
       }
       clear_active_handlers();
@@ -2206,7 +2207,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
     case terminal_protocol::ResultKind::ERROR:
     case terminal_protocol::ResultKind::KEY:
       line_error_message = program_load::blocked()
-          ? program_load::error() : "terminal command failed";
+          ? program_load::error() : PT("terminal command failed");
       return false;
   }
   return false;
@@ -2263,7 +2264,7 @@ void service(void) {
   if(trap_pending) {
     const u16 trap_line = script_line;
     if(!enter_pending_trap()) {
-      fail_script(line_error_message == NULL ? "cannot enter trap handler" : line_error_message,
+      fail_script(line_error_message == NULL ? PT("cannot enter trap handler") : line_error_message,
                   trap_line);
       return;
     }
@@ -2301,7 +2302,7 @@ void service(void) {
     const u16 bind_line = script_line;
     if(!enter_pending_bind()) {
       fail_script(line_error_message == NULL
-                      ? "cannot enter bind handler"
+                      ? PT("cannot enter bind handler")
                       : line_error_message,
                   bind_line);
       return;
@@ -2334,7 +2335,7 @@ void service(void) {
     // window check instead of adding a second refill/revision check per line.
     if(script_len + sizeof(PreparedHeader) + sizeof(PreparedLine) <= PREPARED_END) {
       if(!prepare_read_window()) {
-        fail_script("cannot read script or line is too long", line_number);
+        fail_script(PT("cannot read script or line is too long"), line_number);
         return;
       }
       cached = find_prepared_line();
@@ -2345,7 +2346,7 @@ void service(void) {
       const u16 start = script_pos;
 #endif
       if(!read_next_line(line, sizeof(line))) {
-        fail_script("cannot read script or line is too long", line_number);
+        fail_script(PT("cannot read script or line is too long"), line_number);
         return;
       }
       PreparedLine* prepared = nullptr;
@@ -2360,7 +2361,7 @@ void service(void) {
       // A nested call/ret may already have reported the original failure and
       // cleared its frame. Keep that script name, line and diagnostic intact.
       if(!has_error)
-        fail_script(line_error_message == NULL ? "command failed" : line_error_message, line_number);
+        fail_script(line_error_message == NULL ? PT("command failed") : line_error_message, line_number);
       return;
     }
   }
@@ -2384,11 +2385,11 @@ static bool load_frame(const ScriptFrame& frame) {
   clear_error();
   if(!prepare_runtime()) {
     copy_script_name(script_name, "");
-    fail_script("not enough RAM for script runtime", 0);
+    fail_script(PT("not enough RAM for script runtime"), 0);
     return false;
   }
 
-  const char* error_message = NULL;
+  packed_text::Text error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(next, error_message, error_line)) {
     fail_script(error_message, error_line);
@@ -2403,7 +2404,7 @@ static bool load_frame(const ScriptFrame& frame) {
   clear_bind_runtime();
   if(!core_61::set_mk61_program_boundary_hook(
       program_boundary_hook, active_trap_boundary_hook_data())) {
-    fail_script("calculator boundary hook is unavailable", 0);
+    fail_script(PT("calculator boundary hook is unavailable"), 0);
     return false;
   }
   boundary_hook_installed = true;
@@ -2421,7 +2422,7 @@ bool load_program(const char* name) {
   ScriptFrame frame;
   if(!make_store_frame(name, frame)) {
     copy_script_name(script_name, name);
-    fail_script("script not found", 0);
+    fail_script(PT("script not found"), 0);
     return false;
   }
   return load_frame(frame);

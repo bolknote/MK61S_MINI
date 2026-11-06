@@ -5,6 +5,7 @@
 #include "mk8_literal.hpp"
 #include "phone_input.hpp"
 #include "urq/engine.hpp"
+#include "ecma_number.hpp"
 #include <string.h>
 #include <new>
 #if defined(MK61_TARGET_PICOCALC)
@@ -39,30 +40,36 @@ struct History {
 #endif
   }
   void close() {
+#if defined(MK61_TARGET_PICOCALC)
     if(external.handle) mk61_app_buffer_release(services, external.handle);
+#endif
     external = {};
   }
   void fallback() {
     close();cached = UINT32_MAX;
     if(end - begin > sizeof(local)) begin = end - sizeof(local);
   }
-  uint32_t capacity() const { return external.handle ? external.size / STRIDE : sizeof(local); }
+  uint32_t capacity() const {
+#if defined(MK61_TARGET_PICOCALC)
+    return external.handle ? external.size / STRIDE : sizeof(local);
+#else
+    return sizeof(local); // STM32 never acquires optional PSRAM history.
+#endif
+  }
   bool append(const char* text, unsigned n) {
     while(n) {
       const uint32_t capacity_bytes = capacity();
       const uint32_t offset = end % capacity_bytes;
       unsigned count = n < capacity_bytes - offset ? n : capacity_bytes - offset;
-      if(external.handle) {
 #if defined(MK61_TARGET_PICOCALC)
+      if(external.handle) {
         uint8_t bytes[64 * STRIDE];if(count > 64) count = 64;
         for(unsigned i = 0; i < count; ++i) {
           bytes[i*STRIDE] = uint8_t(text[i]);bytes[i*STRIDE+1] = uint8_t(current_color);bytes[i*STRIDE+2] = uint8_t(current_color>>8);
         }
         if(!mk61_app_buffer_write(services, external.handle, offset * STRIDE, bytes, count * STRIDE)) fallback();
-#else
-        if(!mk61_app_buffer_write(services, external.handle, offset, text, count)) fallback();
-#endif
       }
+#endif
       // A small SRAM tail makes loss of the optional history cache harmless.
       for(unsigned i = 0; i < count; ++i) {
         const unsigned index = (end+i)%sizeof(local);local[index] = text[i];
@@ -77,6 +84,9 @@ struct History {
   }
   bool get(uint32_t at, char& out, uint16_t* color = nullptr) {
     if(at < begin || at >= end) return false;
+#if !defined(MK61_TARGET_PICOCALC)
+    out=local[at%sizeof(local)];(void)color;return true;
+#else
     if(!external.handle) {
       out = local[at % sizeof(local)];
 #if defined(MK61_TARGET_PICOCALC)
@@ -101,10 +111,12 @@ struct History {
     if(color) *color = uint16_t(cache[index+1] | uint16_t(cache[index+2])<<8);
 #endif
     return true;
+#endif
   }
 };
 enum class Screen : uint8_t { GAME, MENU, SAVE, LOAD, INVENTORY, CONFIRM };
-enum class Request : uint8_t { NONE, MENU, SAVE, CONTENT, URL };
+enum class Request : uint8_t { NONE, MENU, SAVE, CONTENT, URL, RUN, INIT, FINISH };
+enum class Pending : uint8_t { NONE, CHOOSE };
 struct App {
   const mk61_app_services* services = nullptr;
   urq::Engine engine;
@@ -122,6 +134,10 @@ struct App {
   bool dirty = true, quitting = false, russian = true, typing = false, paging = false;
   char notice[32]{};
   Request request = Request::NONE;
+  Pending pending = Pending::NONE;
+  uint32_t argument = 0;
+  int forwarded_key = -1;
+  bool slice_ready = false;
 #if defined(MK61_TARGET_PICOCALC)
   uint16_t background = 0, foreground = 0xFFFF;
   bool colored = false;
@@ -135,6 +151,7 @@ static_assert(sizeof(App) <= 1600, "URQ shell must fit the shared SCRATCH arena"
 #endif
 App* app_state;
 #define app (*app_state)
+[[maybe_unused]] void queue(Pending pending,uint32_t argument=0) {app.pending=pending;app.argument=argument;app.request=Request::RUN;}
 void notice(const char* text) { urq::copy_string(app.notice, text); }
 
 uint32_t display(uint32_t operation, uint32_t b = 0, uint32_t c = 0, void* p = nullptr) {
@@ -229,6 +246,13 @@ void begin_typing(bool reset) {
 #endif
   app.typing = true;
 }
+[[maybe_unused]] void draw_paging() {
+  geometry();display(MK61_SERVICE_DISPLAY_BEGIN_UPDATE);display(MK61_SERVICE_DISPLAY_CLEAR);
+  if(app.rows>2)line(0,"URQ");
+  app.next=page(app.view,true);
+  if(app.rows>3)line(app.rows-1,M8("Далее:OK"));
+  display(MK61_SERVICE_DISPLAY_END_UPDATE);app.dirty=false;
+}
 void draw_game() {
   geometry(); display(MK61_SERVICE_DISPLAY_BEGIN_UPDATE);
 #if defined(MK61_TARGET_PICOCALC)
@@ -290,7 +314,12 @@ void print(void*, const char* text, bool newline) {
     if(!app.history.append(text, n)) { app.engine.fail(urq::Error::IO); return; }
     text += n; geometry();
     while(page(app.view, false) < app.history.end && !app.quitting) {
-      app.paging = true; draw_game();
+      app.paging = true;
+#if defined(MK61_URQ_SPLIT) && !defined(MK61_URQ_COLD)
+      draw_paging();
+#else
+      draw_game();
+#endif
       int key = mk61_api->key_wait();
       if(key == MK61_APP_KEY_ESC || key == MK61_APP_KEY_USER) {
         line(app.rows - 1, M8("OK:читать ESC:выйти"));
@@ -330,20 +359,17 @@ uint32_t size(void*, uint16_t part) {
   return id == MK61_SERVICE_INVALID_ID ? 0 : mk61_api->file_size(id);
 }
 void number(void*, double value, bool fixed, char* out, uint16_t capacity) {
-  mk61_service_number_format request{value, out, capacity, 2};
-  if(!app.services->call(MK61_SERVICE_NUMBER_FORMAT, fixed?MK61_NUMBER_ECMA_FRACTIONAL:MK61_NUMBER_ECMA_GENERAL,
-                         0, 0, &request) && capacity) out[0] = 0;
+  if(fixed) ecma_number::fractional(value,out,capacity); else ecma_number::format(value,out,capacity);
 }
 uint32_t clock(void*, bool days) {
   return app.services->call(MK61_SERVICE_SETUP,MK61_SETUP_RTC_VALUE,days?1:0,0,nullptr);
 }
-bool parse(void*, const char* text, double& value) {
-  mk61_service_number_parse request{0, text, 0};
-  if(!app.services->call(MK61_SERVICE_NUMBER_PARSE, 1, 0, 0, &request)) return false;
-  const char* end = text + request.consumed;
-  while(*end == ' ' || *end == '\t' || *end == '\r' || *end == '\n') ++end;
-  value = request.value; return !*end;
+bool parse_long(const char* text,unsigned length,double& value) {
+  mk61_service_number_parse request{0,text,0};
+  if(!app.services->call(MK61_SERVICE_NUMBER_PARSE,0,0,0,&request) || request.consumed!=length)return false;
+  value=request.value;return true;
 }
+bool parse(void*,const char* text,double& value) {return ecma_number::parse(text,value,parse_long);}
 #if !defined(MK61_URQ_SPLIT) || defined(MK61_URQ_COLD)
 struct Range {
   uint32_t offset, size, at, copied;
@@ -535,6 +561,9 @@ void open_menu() {
     app.history.cached = UINT32_MAX; app.length = app.cursor = 0;
   } else if(selected == 5 && menu_choose(Screen::CONFIRM, 2) == 0) app.quitting = true;
 #endif
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+  if(app.engine.state().status==urq::Status::RUNNING)app.request=Request::RUN;
+#endif
   app.last_ms = mk61_api->millis_ms(); app.dirty = true;
 }
 void game_key(int key);
@@ -542,6 +571,9 @@ void input_event(unsigned kind, uint8_t value = 0) {
   if(kind == MK61_TEXT_SUBMIT) {
     end_typing();
     app.engine.submit(app.input); app.length = app.cursor = 0; app.input[0] = 0;
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+    app.request=Request::RUN;
+#endif
   } else if(kind == MK61_TEXT_CANCEL || kind == MK61_TEXT_MENU) open_menu();
 #if defined(MK61_TARGET_PICOCALC)
   else if(kind == MK61_TEXT_PAGE_UP) game_key(MK61_APP_KEY_LEFT);
@@ -615,7 +647,12 @@ void game_key(int key) {
      || key == MK61_APP_KEY_RAW_BASE + 0xD7
 #endif
      ) { if(app.next < app.history.end) app.view = app.next; }
-  else if(app.engine.state().status == urq::Status::ANYKEY) app.engine.resume(key == MK61_APP_KEY_OK ? 13U : uint32_t(key));
+  else if(app.engine.state().status == urq::Status::ANYKEY) {
+    app.engine.resume(key == MK61_APP_KEY_OK ? 13U : uint32_t(key));
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+    app.request=Request::RUN;
+#endif
+  }
   else {
     uint16_t indices[urq::ACTIONS]; const unsigned count = action_indices(indices);
     if(up(key) && app.selected) --app.selected;
@@ -623,7 +660,13 @@ void game_key(int key) {
     else if((key == MK61_APP_KEY_OK || (key >= 0 && key <= 9)) && count) {
       unsigned index = app.selected;
       if(key >= 0 && key <= 9) index = key ? unsigned(key - 1) : 9;
-      if(index < count) app.engine.choose(app.engine.state().actions[indices[index]].id);
+      if(index < count) {
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+        queue(Pending::CHOOSE,app.engine.state().actions[indices[index]].id);
+#else
+        app.engine.choose(app.engine.state().actions[indices[index]].id);
+#endif
+      }
     }
   }
   app.dirty = true;
@@ -659,7 +702,7 @@ void finish_session();
 [[maybe_unused]] uint32_t begin_session(uint32_t id) {
   const auto* services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_FILES |
       MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_NUMBER_IO | MK61_SERVICE_CAP_FILE_WRITE_SOURCE |
-      MK61_SERVICE_CAP_MENU_SOURCE | MK61_SERVICE_CAP_ECMA_NUMBERS);
+      MK61_SERVICE_CAP_MENU_SOURCE);
   if(!services) return MK61_APP_RUNTIME_ERROR;
   if(!(services->call(MK61_SERVICE_SETUP,MK61_SETUP_FEATURES,0,0,nullptr)&MK61_SETUP_FEATURE_RTC_VALUE))
     return MK61_APP_RUNTIME_ERROR;
@@ -696,24 +739,51 @@ void finish_session();
   app.dirty = true; app.typing = false; app.notice[0] = 0; app.selected = app.menu = 0;
   app.length = app.cursor = 0; app.input[0] = 0; app.phone = {};
   if(!bind_session()) { finish_session(); return MK61_APP_INVALID_FILE; }
-  app.engine.start();
+  app.engine.start();app.last_ms=mk61_api->millis_ms();
   return MK61_APP_OK;
 }
 [[maybe_unused]] void run_session() {
   auto& state = app.engine.state();
+#if !defined(MK61_URQ_SPLIT) || !defined(MK61_URQ_COLD)
   app.last_ms = mk61_api->millis_ms();
+#endif
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+  if(app.forwarded_key>=0) {
+    const int key=app.forwarded_key;app.forwarded_key=-1;
+    if(app.typing)input_key(key);else game_key(key);
+    if(!app.quitting && app.request==Request::NONE && app.engine.state().status==urq::Status::RUNNING) {
+      if(app.dirty)draw_game();
+      app.request=Request::RUN;
+    }
+  }
+#endif
   while(!app.quitting && app.request == Request::NONE) {
     mk61_api->service();
     const uint32_t now = mk61_api->millis_ms(), elapsed = now - app.last_ms; app.last_ms = now;
     {
-      app.engine.tick(elapsed);
-      if(state.status == urq::Status::RUNNING) { app.engine.run(64); app.dirty = true; }
+      const auto previous=state.status;app.engine.tick(elapsed);
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+      if(previous!=urq::Status::RUNNING && state.status==urq::Status::RUNNING) {
+        app.request=Request::RUN;break;
+      }
+#else
+      (void)previous;
+#endif
+      if(state.status == urq::Status::RUNNING) {
+#if defined(MK61_URQ_SPLIT) && defined(MK61_URQ_COLD)
+        if(!app.slice_ready) {app.request=Request::RUN;break;}
+        app.slice_ready=false;
+#else
+        app.engine.run(64);
+#endif
+        app.dirty=true;
+      }
       if(state.status == urq::Status::ERROR) {
         open_menu();
       } else if(state.status == urq::Status::INPUT && !app.typing) begin_typing(false);
       else if(state.status == urq::Status::QUIT) open_menu();
     }
-    if(app.request != Request::NONE) break;
+    if(app.quitting || app.request != Request::NONE) break;
     if(app.dirty) draw_game();
 #if defined(MK61_TARGET_PICOCALC)
     if(app.typing) {
@@ -756,8 +826,10 @@ struct FlowContext {
   uint32_t magic;
   App* state;
   uint16_t root, helper;
+  uint32_t file, result;
 };
 constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x31515255;
+enum FlowPhase:uint32_t { AFTER_INIT=1, AFTER_UI=2, AFTER_FINISH=3 };
 static_assert(sizeof(FlowContext) <= MK61_APP_FLOW_USER_CONTEXT_SIZE, "URQ flow context");
 #endif
 }
@@ -766,11 +838,25 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   if(!mk61_app_flow_compatible(flow) || flow->context_size < sizeof(FlowContext)) return 0;
   auto& context = *(FlowContext*)flow->context;
 #if defined(MK61_URQ_COLD)
-  if(context.magic != FLOW_CONTEXT_MAGIC || !context.state) return 0;
-  app_state = context.state;
+  if(context.magic != FLOW_CONTEXT_MAGIC)return 0;
+  const auto request=Request(flow->current.phase);
+  if(request==Request::INIT) {
+    const uint32_t file=context.file==MK61_SERVICE_INVALID_ID?choose_file():context.file;
+    if(file==MK61_SERVICE_INVALID_ID){mk61_app_flow_return(flow,0,MK61_FLOW_OK);return 1;}
+    const uint32_t result=begin_session(file);
+    context.state=result?nullptr:app_state;
+    mk61_app_flow_return(flow,result,MK61_FLOW_OK);return 1;
+  }
+  if(!context.state)return 0;
+  app_state=context.state;
+  if(request==Request::FINISH) {
+    finish_session();context.state=nullptr;
+    mk61_app_flow_return(flow,MK61_APP_OK,MK61_FLOW_OK);return 1;
+  }
   if(!bind_session()) { mk61_app_flow_return(flow, MK61_APP_IO_ERROR, MK61_FLOW_OK); return 1; }
-  const auto request = Request(flow->current.phase); app.request = Request::NONE;
-  if(request == Request::MENU) open_menu();
+  app.request = Request::NONE;
+  if(request == Request::RUN) run_session();
+  else if(request == Request::MENU) open_menu();
   else if(request == Request::SAVE) {
     const bool ok=save_slot(0);notice(ok?M8("Готово"):M8("Ошибка файла"));
     mk61_app_flow_return(flow,ok?MK61_APP_OK:MK61_APP_IO_ERROR,MK61_FLOW_OK);return 1;
@@ -785,37 +871,52 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   mk61_app_flow_return(flow, MK61_APP_OK, MK61_FLOW_OK);
 #else
   if(context.magic != FLOW_CONTEXT_MAGIC) {
-    const uint32_t file = flow->current.phase == MK61_APP_FLOW_FILE_PHASE ?
-        *(const uint32_t*)flow->context : choose_file();
-    if(file == MK61_SERVICE_INVALID_ID) { mk61_app_flow_exit(flow, 0, MK61_FLOW_OK); return 1; }
-    context = {}; context.root = flow->current.file_id;
-    const uint32_t result = begin_session(file);
-    if(result) { mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1; }
-    context.state = app_state; context.magic = FLOW_CONTEXT_MAGIC;
-    mk61_service_file parent{}, helper{};
-    const bool found = app.services->call(MK61_SERVICE_FILE_ENTRY, 0, context.root, 0, &parent) &&
-        app.services->call(MK61_SERVICE_FILE_RESOLVE, parent.parent, MK61_SERVICE_FILE_APP,
-            uint32_t(uintptr_t("URQUI.APP")), &helper) == 0;
-    if(!found) {
-      line(0, "URQUI.APP?"); mk61_api->key_wait(); finish_session();
-      mk61_app_flow_exit(flow, MK61_APP_INVALID_FILE, MK61_FLOW_OK); return 1;
+    const uint32_t file=flow->current.phase==MK61_APP_FLOW_FILE_PHASE?*(const uint32_t*)flow->context:MK61_SERVICE_INVALID_ID;
+    context={};context.root=flow->current.file_id;context.file=file;context.magic=FLOW_CONTEXT_MAGIC;
+    const auto* services=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_FILES);
+    mk61_service_file parent,helper;
+    if(!services || !services->call(MK61_SERVICE_FILE_ENTRY,0,context.root,0,&parent) ||
+       services->call(MK61_SERVICE_FILE_RESOLVE,parent.parent,MK61_SERVICE_FILE_APP,uint32_t(uintptr_t("URQUI.APP")),&helper)!=0) {
+      context={};mk61_app_flow_exit(flow,MK61_APP_INVALID_FILE,MK61_FLOW_OK);return 1;
     }
-    context.helper = uint16_t(helper.id);
-  } else {
-    app_state = context.state;
-    if(!bind_session()) {
-      finish_session(); mk61_app_flow_exit(flow, MK61_APP_IO_ERROR, MK61_FLOW_OK); return 1;
-    }
-    app.request = Request::NONE;
-    app.engine.finish_save(flow->status == MK61_FLOW_OK && !flow->result);
-    if(flow->status != MK61_FLOW_OK || flow->result) notice(M8("Ошибка файла"));
+    context.helper=uint16_t(helper.id);
+    mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,context.helper,uint32_t(Request::INIT)),AFTER_INIT);return 1;
   }
-  run_session();
-  if(app.quitting) {
-    finish_session(); context = {};
-    mk61_app_flow_exit(flow, MK61_APP_OK, MK61_FLOW_OK);
-  } else mk61_app_flow_call(flow, mk61_app_flow_to(MK61_APP_KIND_APPLICATION, context.helper,
-                    uint32_t(app.request)), 1);
+  if((flow->current.phase==AFTER_FINISH && context.state) ||
+     (flow->current.phase==AFTER_UI && flow->status!=MK61_FLOW_OK)) {
+    // A missing/corrupt helper cannot perform FINISH. The caller still owns
+    // the session leases, so it must release them before leaving the flow.
+    app_state=context.state;finish_session();context.state=nullptr;
+    const uint32_t error=MK61_APP_IO_ERROR;context={};
+    mk61_app_flow_exit(flow,error,MK61_FLOW_OK);return 1;
+  }
+  if(flow->current.phase==AFTER_FINISH || (flow->current.phase==AFTER_INIT &&
+      (flow->status!=MK61_FLOW_OK || flow->result || !context.state))) {
+    const uint32_t result=flow->status!=MK61_FLOW_OK?uint32_t(MK61_APP_IO_ERROR):
+        flow->current.phase==AFTER_FINISH?context.result:flow->result;
+    context={};mk61_app_flow_exit(flow,result,MK61_FLOW_OK);return 1;
+  }
+  app_state=context.state;
+  if(!bind_session()) {app.quitting=true;context.result=MK61_APP_IO_ERROR;}
+  else {
+    app.request=Request::NONE;
+    app.engine.finish_save(flow->status==MK61_FLOW_OK&&!flow->result);
+    if(flow->status!=MK61_FLOW_OK || flow->result)notice(M8("Ошибка файла"));
+    const auto pending=app.pending;app.pending=Pending::NONE;
+    if(pending==Pending::CHOOSE)app.engine.choose(uint16_t(app.argument));
+    while(!app.quitting && app.request==Request::NONE && app.engine.state().status==urq::Status::RUNNING) {
+      mk61_api->service();app.engine.run(64);app.dirty=true;
+      app.last_ms=mk61_api->millis_ms();
+      if(app.engine.state().status!=urq::Status::RUNNING || app.request!=Request::NONE)break;
+      app.forwarded_key=mk61_api->key_poll();
+      if(app.forwarded_key>=0)break;
+      mk61_api->delay_ms(1);
+    }
+    app.slice_ready=true;
+  }
+  const Request next=app.quitting?Request::FINISH:app.request==Request::NONE?Request::RUN:app.request;
+  mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,context.helper,uint32_t(next)),app.quitting?AFTER_FINISH:AFTER_UI);
+
 #endif
   return 1;
 }

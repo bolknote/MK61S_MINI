@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #include <Arduino.h>
 #include "bounded_string.hpp"
 #include "config.h"
@@ -932,7 +933,7 @@ isize  calc_address(void) {
   const int address = n_cell * FLASH_SECTOR_SIZE;
 
   #ifdef SERIAL_OUTPUT
-    Serial.print("X-reg as addsress "); Serial.println(address);
+    Serial.print(PT("X-reg as addsress ")); Serial.println(address);
   #endif
   return address;
 }
@@ -1134,7 +1135,7 @@ bool Store(void) {
   if(!program_store::write_mk61(name, script_buffer, script_len)) return false;
 
   #ifdef SERIAL_OUTPUT
-    Serial.println("\nProgramm saved!");
+    Serial.println(PT("\nProgramm saved!"));
   #endif
   return true;
 }              

@@ -52,10 +52,12 @@ context, count, selected, label. Callback label(context,index,out,capacity)
 возвращает 1/selected при OK, 0 при отмене. Старый c=0 формат меню сохранён.
 
 NUMBER_FIXED (бит 29): NUMBER_FORMAT a=1 — фиксированная дробная часть,
-a=2 — с целыми без дробной части. ECMA_NUMBERS (бит 31): a=3 — кратчайшая
-ECMAScript-строка, a=4 — URQL-подстановка с двумя знаками у дробей.
-NUMBER_PARSE a=1 выполняет whole-string преобразование. Старые режимы
-NUMBER_FORMAT/PARSE не меняются.
+a=2 — с целыми без дробной части. Обычные NUMBER_FORMAT/PARSE сохраняют
+свой контракт. Точное ECMAScript-преобразование и URQL-подстановки теперь
+входят в URQ.APP/URQUI.APP и не занимают resident Flash. ECMA_NUMBERS
+(бит 31), NUMBER_FORMAT a=3/4 и NUMBER_PARSE a=1 зарезервированы для
+совместимости с прежними пакетами SDK; текущая прошивка их не объявляет.
+Устанавливайте URQ и URQUI из одного комплекта с прошивкой.
 
 SETUP_FEATURE_RTC_VALUE (бит 9 в SETUP/FEATURES) предоставляет SETUP/RTC_VALUE:
 b=0 — местные секунды с полуночи, b=1 — номер местного календарного дня от

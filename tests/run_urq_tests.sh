@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-work="$root/.build/urq-tests"
+for numeric_backend in ryu compact; do
+numeric_flags=()
+if [[ "$numeric_backend" == compact ]]; then numeric_flags=(-DMK61_TEST_COMPACT_DECIMAL=1); fi
+work="$root/.build/urq-tests/$numeric_backend"
 mkdir -p "$work"
 sanitizers=()
 if [[ "${MK61_TEST_SANITIZERS:-1}" != 0 ]]; then
   sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror \
-  "${sanitizers[@]}" \
+  "${sanitizers[@]}" "${numeric_flags[@]}" \
   "$root/tests/ecma_number_self_test.cpp" "$root/code/ecma_number.cpp" -o "$work/ecma-number-test"
 "$work/ecma-number-test"
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-missing-field-initializers \
-  "${sanitizers[@]}" \
+  "${sanitizers[@]}" "${numeric_flags[@]}" \
   "$root/tests/urq_host.cpp" "$root/code/urq/engine.cpp" \
   "$root/code/urq/pack.cpp" "$root/code/zx0.cpp" "$root/code/ecma_number.cpp" -o "$work/urq-host"
 python3 "$root/tests/urq_self_test.py" "$work/urq-host"
@@ -32,3 +35,5 @@ done
 "$work/urq-ui-picocalc" "$work/ui" "$work/m0.urs" "$work/m4.urs"
 URQ_TEST_PSRAM=fail "$work/urq-ui-picocalc" "$work/ui" "$work/psram-failure.urs" "$work/m4.urs"
 "$work/urq-ui-stm32" "$work/ui" "$work/roundtrip.urs" "$work/m0.urs"
+
+done # numeric backend

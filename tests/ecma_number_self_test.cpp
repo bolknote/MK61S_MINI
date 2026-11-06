@@ -77,6 +77,10 @@ static void check(uint64_t bits) {
     const double roundtrip = strtod(actual, nullptr);
     uint64_t restored; memcpy(&restored, &roundtrip, sizeof(restored));
     assert(restored == bits);
+    double parsed=0;
+    assert(ecma_number::parse(scientific,parsed));
+    memcpy(&restored,&parsed,sizeof(restored));
+    if(restored!=bits){fprintf(stderr,"parse roundtrip %016" PRIx64 " %s -> %016" PRIx64 "\n",bits,scientific,restored);abort();}
   }
 }
 
@@ -92,6 +96,19 @@ int main() {
   for(unsigned i = 0; i < 100000; ++i) {
     random ^= random << 13; random ^= random >> 7; random ^= random << 17;
     check(random);
+  }
+  // Independent native decimal parser, including all binary64 exponent
+  // ranges and signed underflow/overflow. Use at most 17 significant digits,
+  // the exact input range advertised by the resident conversion service.
+  for(unsigned i=0;i<100000;++i) {
+    random ^= random<<13;random ^= random>>7;random ^= random<<17;
+    char input[64];
+    snprintf(input,sizeof(input),"%s%" PRIu64 "e%d",i&1?"-":"",
+             random%UINT64_C(100000000000000000),int((random>>32)%661)-340);
+    double parsed=0;assert(ecma_number::parse(input,parsed));
+    const double reference=strtod(input,nullptr);
+    uint64_t a,b;memcpy(&a,&parsed,8);memcpy(&b,&reference,8);
+    if(a!=b){fprintf(stderr,"parse %s -> %016" PRIx64 " != %016" PRIx64 "\n",input,a,b);abort();}
   }
   char buffer[32];
   assert(!ecma_number::format(1, nullptr, 32));

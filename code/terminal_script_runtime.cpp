@@ -1,3 +1,4 @@
+#include "packed_text.hpp"
 #include "mk61emu_core.h"
 #include "terminal_script.hpp"
 #if !defined(MK61_CORE_STANDALONE)
@@ -22,7 +23,7 @@ constexpr char symbols[16] = {'0', '1', '2', '3', '4', '5',        '6', '7',
                               '8', '9', '-', 'L', 'C', (char)0xC3, 'E', ' '};
 using Result = terminal_protocol::Result;
 using Kind = terminal_protocol::ResultKind;
-Result fail(const char *message) {
+Result fail(packed_text::Text message) {
   terminal_script_backend::error(message);
   return Result::error();
 }
@@ -162,38 +163,38 @@ bool lookup_unsigned(const char* text, u32& value) {
 Result lookup(const char* args, bool trap) {
   // Generic unsigned program-table read. No CPU/stack operation is executed.
   // lookup Rdst base index [row stride] [u24]
-  if(trap) return fail("LOOKUP is not allowed in a trap handler");
+  if(trap) return fail(PT("LOOKUP is not allowed in a trap handler"));
   if(program_load::blocked()) return fail(program_load::error());
-  if(!core_61::expanded_program_is_on()) return fail("LOOKUP needs expanded program memory");
+  if(!core_61::expanded_program_is_on()) return fail(PT("LOOKUP needs expanded program memory"));
   char words[6][20]{};
   unsigned count = 0;
   while(!terminal_core::at_end(args)) {
     if(count == 6 || !terminal_core::parse_token(args, words[count], sizeof(words[count])))
-      return fail("Invalid LOOKUP arguments");
+      return fail(PT("Invalid LOOKUP arguments"));
     ++count;
   }
   u32 width = 1;
   if(count && mk61_ref::streq(words[count-1], "u24")) { width = 3; --count; }
-  if(count != 3 && count != 5) return fail("Invalid LOOKUP arguments");
+  if(count != 3 && count != 5) return fail(PT("Invalid LOOKUP arguments"));
   mk61_ref::Ref target{};
   if(!mk61_ref::parse_name(words[0], target) || target.kind != mk61_ref::Kind::R ||
-     !mk61_ref::register_available(target.reg)) return fail("Invalid LOOKUP destination");
+     !mk61_ref::register_available(target.reg)) return fail(PT("Invalid LOOKUP destination"));
   u32 base = 0, index = 0, row = 0, stride = 0;
   if(!lookup_unsigned(words[1], base) || !lookup_unsigned(words[2], index) ||
      (count == 5 && (!lookup_unsigned(words[3], row) || !lookup_unsigned(words[4], stride))))
-    return fail("Invalid LOOKUP index");
+    return fail(PT("Invalid LOOKUP index"));
   const u32 address = base + width * (index + row * stride);
   if(address > core_61::EXTENDED_ADDRESS_LIMIT ||
-     width > core_61::EXTENDED_ADDRESS_LIMIT-address) return fail("LOOKUP outside program memory");
+     width > core_61::EXTENDED_ADDRESS_LIMIT-address) return fail(PT("LOOKUP outside program memory"));
   u32 value = 0;
   for(u32 byte = 0; byte < width; ++byte) {
     u8 part = 0;
     if(!core_61::read_absolute_program((u16)(address+byte), part))
-      return fail("Cannot read LOOKUP table");
+      return fail(PT("Cannot read LOOKUP table"));
     value |= (u32)part << (8*byte);
   }
   return fits(value) && mk61_ref::write(target, value)
-      ? Result::ok() : fail("Cannot write LOOKUP destination");
+      ? Result::ok() : fail(PT("Cannot write LOOKUP destination"));
 }
 bool hin(const char *args) {
   args = terminal_core::skip_spaces(args);
@@ -323,13 +324,13 @@ Result execute(const char *line, bool trap) {
   usize size = 0;
   while (line[size]) {
     if (!terminal_core::input_can_append(size++))
-      return fail("M61 command is too long");
+      return fail(PT("M61 command is too long"));
   }
   trap = trap || m61_text::trap_handler_active();
   while (const char *tail = terminal_catalog::conditional_arguments(line)) {
     bool truth = false;
     if (!condition(tail, truth))
-      return fail("Invalid IF condition");
+      return fail(PT("Invalid IF condition"));
     if (!truth)
       return Result::ok();
     line = tail;
@@ -347,7 +348,7 @@ Result execute(const char *line, bool trap) {
                                      : terminal_catalog::lookup((const u8 *)line);
   if (!terminal_command_allowed_in_script(id) ||
       (trap && !terminal_command_allowed_in_trap(id)))
-    return fail("Command is not allowed in this M61 context");
+    return fail(PT("Command is not allowed in this M61 context"));
   const char *args = line + (register_assignment ? 3 : 0);
   if (!register_assignment)
     while (!terminal_core::is_end(*args) && !terminal_core::is_space(*args))
@@ -365,7 +366,7 @@ Result execute(const char *line, bool trap) {
     else {
       usize duration = 0;
       if(!terminal_core::parse_single_unsigned(args, 10, 60000, duration))
-        return fail("Invalid TIMER duration");
+        return fail(PT("Invalid TIMER duration"));
       value = (i32)duration;
     }
     return {Kind::TIMER, value, ""};
@@ -374,12 +375,12 @@ Result execute(const char *line, bool trap) {
     if (*args == ':')
       return Result::action(Kind::GOTO_LABEL, args + 1);
     if (trap)
-      return fail("Only run :label is allowed in a trap handler");
+      return fail(PT("Only run :label is allowed in a trap handler"));
     u8 address = 0;
     const auto parsed = terminal_core::parse_run_address(
         args, core_61::program_steps(), address);
     if (parsed == terminal_core::RunAddressParse::INVALID)
-      return fail("Invalid run address");
+      return fail(PT("Invalid run address"));
     if (*args && parsed == terminal_core::RunAddressParse::NOT_ADDRESS)
       return Result::action(Kind::OPEN_FILE, args);
     if (program_load::blocked())
@@ -387,7 +388,7 @@ Result execute(const char *line, bool trap) {
     return Result::run_program(address);
   }
   case CMD_OPEN:
-    return terminal_core::at_end(args) ? fail("OPEN needs a path")
+    return terminal_core::at_end(args) ? fail(PT("OPEN needs a path"))
                                        : Result::action(Kind::OPEN_FILE, args);
   case CMD_LOAD: {
     program_load::Request request{};
@@ -404,12 +405,12 @@ Result execute(const char *line, bool trap) {
     usize ms = 0;
     return terminal_core::parse_single_unsigned(args, 10, 60000, ms) && ms
                ? Result::wait((i32)ms)
-               : fail("Invalid wait duration");
+               : fail(PT("Invalid wait duration"));
   }
   case CMD_RET:
   case CMD_REINIT:
     if (!terminal_core::at_end(args))
-      return fail("Unexpected command arguments");
+      return fail(PT("Unexpected command arguments"));
     return Result::action(
         id == CMD_RET ? Kind::RETURN_SCRIPT : Kind::REINIT_CALCULATOR, "");
   case CMD_REG_SET: {
@@ -417,7 +418,7 @@ Result execute(const char *line, bool trap) {
     mk61_register_init::Value value{};
     if (reg < 0 || !mk61_ref::register_available(reg) ||
         !mk61_register_init::parse(args, value))
-      return fail("Invalid register initialization");
+      return fail(PT("Invalid register initialization"));
     const mk61_ref::Ref target{mk61_ref::Kind::R, (u8)reg};
     bool ok = false;
     if (value.kind == mk61_register_init::Kind::NUMBER)
@@ -432,7 +433,7 @@ Result execute(const char *line, bool trap) {
     }
     else
       ok = mk61_ref::write_raw_register(reg, value.raw);
-    return ok ? Result::ok() : fail("Cannot write register");
+    return ok ? Result::ok() : fail(PT("Cannot write register"));
   }
   case CMD_POKE: {
     mk61_ref::Ref ref{};
@@ -442,25 +443,25 @@ Result execute(const char *line, bool trap) {
         !mk61_ref::parse_name(name, ref) || ref.kind == mk61_ref::Kind::R ||
         !terminal_core::parse_single_decimal(args + 1, value) || !fits(value) ||
         !mk61_ref::write(ref, value))
-      return fail("Invalid stack initialization");
+      return fail(PT("Invalid stack initialization"));
     return Result::ok();
   }
   case CMD_HIN:
   case CMD_SET_CODE:
     return hin(id == CMD_SET_CODE ? line + 4 : args)
                ? Result::ok()
-               : fail("Invalid HIN data or program address");
+               : fail(PT("Invalid HIN data or program address"));
   case CMD_ASM:
     return terminal_script_backend::assemble(args, assembly_address)
                ? Result::ok()
-               : fail("Invalid assembly or program address");
+               : fail(PT("Invalid assembly or program address"));
   case CMD_INS: {
     usize address = 0, opcode = 0;
     if (!terminal_core::parse_unsigned(args, 10, core_61::program_steps() - 1,
                                        address) ||
         !terminal_core::parse_unsigned(args, 16, 255, opcode) ||
         !terminal_core::at_end(args))
-      return fail("Invalid INS arguments");
+      return fail(PT("Invalid INS arguments"));
     u8 page[core_61::MAX_PROGRAM_STEP]{};
     const u16 count = (u16)core_61::program_steps();
     for (u16 i = 0; i < count; ++i)
@@ -488,7 +489,7 @@ Result execute(const char *line, bool trap) {
     usize value = 0;
     if (!terminal_core::parse_single_unsigned(
             args, 16, id == CMD_KBD ? 0x27 : 0xEF, value))
-      return fail("Invalid key or command code");
+      return fail(PT("Invalid key or command code"));
     if (id == CMD_KBD)
       return terminal_script_backend::press_key((u8)value) ? Result::ok()
                                                            : Result::error();
