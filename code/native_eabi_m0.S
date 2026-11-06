@@ -634,6 +634,28 @@ function mk61_m0_math_udiv32
  b __aeabi_uidiv
 end mk61_m0_math_udiv32
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+// Signed counterpart for bounded atan residuals. The denominator is positive;
+// SDIV truncates toward zero exactly like the former abs/UDIV/sign sequence.
+// Preserve an interrupted caller through the ordinary EABI slow path.
+function mk61_m0_math_sdiv32
+ cmp r1,#0
+ beq 2f
+ ldr r2,=0xd0000078
+ ldr r3,[r2]
+ lsrs r3,#2
+ bcs 2f
+ subs r2,#16
+ str r0,[r2]
+ str r1,[r2,#4]
+ b 1f
+1: b 1f
+1: b 1f
+1: b 1f
+1: ldr r0,[r2,#8]
+ bx lr
+2:
+ b __aeabi_idiv
+end mk61_m0_math_sdiv32
 #include "native_eabi_m0_log70_ratio.inc"
 #endif
 .ltorg

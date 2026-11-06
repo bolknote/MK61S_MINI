@@ -49,6 +49,9 @@ MK61_SOFT_PCS double mk61_m0_pow_fast(double,double);
 MK61_SOFT_PCS double mk61_m0_exp(double);
 uint64_t mk61_m0_mul_q62(uint64_t,uint64_t);
 uint32_t mk61_m0_math_udiv32(uint32_t,uint32_t);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+int32_t mk61_m0_math_sdiv32(int32_t,int32_t);
+#endif
 void mk61_m0_sincos_small(double,double,double*,unsigned);
 MK61_SOFT_PCS double mk61_m0_tan_small(double,double);
 uint64_t mk61_m0_atan_reduced(double,int*);
