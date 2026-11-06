@@ -59,3 +59,25 @@ using `--toolchain-bin` and a fresh `--output` directory. The existing native
 libc sanitizer tests also pass. Full firmware and system APP budget results are
 recorded with the final image separately; a change of build configuration is
 never attributed to the42-byte function increase.
+
+
+Final hardware integration passed on the ordinary working build99BEFCD2.
+Fresh318e9d647 normal-profile builds have identical features (resident CHIP8,
+resident SETUP): control400204 bytes, production400244 bytes. Native code grows
+42 bytes; the complete linked image grows40. F411 free Flash124044 >=16384,
+RAM globals22024, maximum frame1928 <=5120. F401 remains256964 bytes, free5180
+>=4096 and C42 unchanged. The complete final System APP bundle fits20480.
+The earlier388720-byte release-case build had different CHIP8/SETUP features;
+that configuration was used only for HOST budget checks and was not installed.
+
+The final actual APP checks the full512KiB CRC of the newly installed ordinary
+prefix plus FF tail, the native84 bytes, actual runtime26 table/slot19 and the
+relocated public12-byte SDK tail. It performs772 functional calls on all16
+alignment pairs and four data-bank combinations, including n0 unmapped pointers
+and alias SIZE_MAX. This is functional integration evidence, with no timing
+claim. All own measurement files were byte-proved before any deletion; both
+measurement directories and the final smoke directory are gone. Descriptor,
+lock, PID, session, EXIT0, reap and no-holder closure are recorded in
+`FINAL-HARDWARE.json`. The coordinator independently accepted CLOSED after verifying image, raw,
+receipt, process and cleanup. The first cleanup guard HOLD remains
+preserved and contained no deletion, firmware installation or APP execution.

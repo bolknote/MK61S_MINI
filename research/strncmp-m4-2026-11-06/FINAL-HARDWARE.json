@@ -1,0 +1,209 @@
+{
+  "status": "ROOT_INDEPENDENT_CLOSED_NATIVE_BYTE4",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "99BEFCD2",
+    "profile": "classic-v3-uc1609"
+  },
+  "working_firmware": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/production-normal-final-001/resident.bin",
+    "bytes": 400244,
+    "sha256": "19e2d035c88145234cd330b1cdac1469d06b2579a47966eef87a403d4c664247"
+  },
+  "working_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/production-normal-final-001/resident.elf",
+    "bytes": 666772,
+    "sha256": "37f32ab824b4fc9c2f92e549c692c758ce2dabcd48abe9490935d9817abfa01a"
+  },
+  "full512KiB_transport": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/production-normal-final-001/internal-full512KiB.bin",
+    "bytes": 524288,
+    "sha256": "e7630a33e2763a8fd66839bd1ae723dc5e5618b0a56e2bc6964d5057e1c6e6d5"
+  },
+  "native": {
+    "entry": 134571841,
+    "address": 134571840,
+    "bytes": 84,
+    "sha256": "25557c04ff36ffb12d0e376c167a57018d15fdada1e9afa2a6d17cc044534276"
+  },
+  "runtime26": {
+    "address": 134576460,
+    "slot": 19,
+    "value": 134571841,
+    "bytes": 104,
+    "crc32": 1068475527
+  },
+  "matched_pair": {
+    "control": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/firmware-control-normal-318-f411/resident.bin",
+      "bytes": 400204,
+      "sha256": "d57296a70c9987647bb4ca2bcbf348b3140f060b991f0420cbe8ead1670622e7"
+    },
+    "production_unsealed": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/firmware-production-normal-318-f411/resident.bin",
+      "bytes": 400244,
+      "sha256": "665cd73f9361aea92e8fd2a049451089fd4a163748f41798d3c74e237282cf03"
+    },
+    "configurations_equal": true,
+    "features_identical_to_Root_normal_profile": true,
+    "normal_features": {
+      "MK61_ENABLE_FOCAL": "1",
+      "MK61_ENABLE_TINYBASIC": "1",
+      "MK61_ENABLE_WBMP_VIEWER": "0",
+      "MK61_ENABLE_MARKDOWN_VIEWER": "1",
+      "MK61_ENABLE_CHIP8": "1",
+      "MK61_ENABLE_SETUP": "1",
+      "MK61_FOCAL_AS_APP": "1",
+      "MK61_TINYBASIC_AS_APP": "1",
+      "MK61_WBMP_VIEWER_AS_APP": "0",
+      "MK61_MARKDOWN_VIEWER_AS_APP": "0",
+      "MK61_CHIP8_AS_APP": "0",
+      "MK61_SETUP_AS_APP": "0",
+      "MK61_EXPLORER_AS_APP": "0",
+      "MK61_ENABLE_USB_SCREEN": "1",
+      "MK61_EXTERNALIZE_USBDISK": "0",
+      "MK61_WS0010_GRAPHICS_100X16": "0",
+      "MK61_ENABLE_EXTENDED_FONT_SETTINGS": "0",
+      "MK61_USER_EXPLORER_SHORTCUT": "1",
+      "MK61_MATH_BACKEND": "0",
+      "MK61_APP_LOCAL_FLOAT_MATH": "0",
+      "MK61_F401_PRODUCT_BUILD": "0",
+      "MK61_USE_COMPACT_LIBM": "1",
+      "MK61_USE_NATIVE_EABI": "1",
+      "MK61_USE_NATIVE_LIBC": "1",
+      "MK61_REQUIRE_RESIDENT_CRC": "1",
+      "MK61_ENABLE_LTO": "1"
+    },
+    "control_bytes": 400204,
+    "production_bytes": 400244,
+    "native_code_delta": 42,
+    "linked_image_delta": 40,
+    "control_profile": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/firmware-control-normal-318-f411/standalone-profile.json",
+      "bytes": 1236,
+      "sha256": "d0dbd4fb64055f5363daede0ddf8ccb7d1f205c3f4d6da965fc8f0e4065232d6"
+    },
+    "production_profile": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/firmware-production-normal-318-f411/standalone-profile.json",
+      "bytes": 1217,
+      "sha256": "7930751a6ece69039b7e36e63931503bc375c341eb78c95224e6821ab7e304f3"
+    },
+    "headroom_cache_seed": 16384
+  },
+  "flash": {
+    "active_bytes": 400244,
+    "total": 524288,
+    "free": 124044,
+    "reserve_contract": 16384,
+    "FF_tail_only": true,
+    "all8_sectors_covered": true
+  },
+  "resident_RAM_globals": 22024,
+  "stack_max_frame": 1928,
+  "F401": {
+    "bytes": 256964,
+    "free": 5180,
+    "reserve_contract": 4096,
+    "native42_unchanged": true
+  },
+  "functional_smoke": {
+    "status": "PASS_NEW_NATIVE_SDK_RUNTIME19_AND_FULL512KIb_CRC",
+    "calls": 772,
+    "header": [
+      1179471443,
+      2579430610,
+      3404956035,
+      2512655745,
+      1068475527,
+      134576460,
+      134571841,
+      3325722937,
+      0,
+      772,
+      0,
+      0,
+      4,
+      0,
+      0,
+      4,
+      536980336,
+      536980213,
+      655492331,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1638383285
+    ],
+    "actual_APP_base": 536979104,
+    "physical_timing_claim": false
+  },
+  "own_file_proofs": 11,
+  "own_files_removed": 11,
+  "all_byte_proofs_before_any_deletion": true,
+  "own_namespaces_removed": [
+    "SNM4-0611",
+    "SNM4-0612",
+    "SNM4-END"
+  ],
+  "old_state_backup_restore": false,
+  "RTC_IO": false,
+  "process": {
+    "pid": 93922,
+    "session_id": 93922,
+    "process_group": 93922,
+    "EXIT": 0,
+    "reaped": true,
+    "group_gone": true,
+    "parent_fds_before": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "parent_fds_after": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "CDC_descriptor_closed": true,
+  "holders_after": "none",
+  "lease": "released",
+  "physical_receipt": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/FINAL-NORMAL-RUN-002/PHASE/receipt.json",
+    "bytes": 103572,
+    "sha256": "4dd075ca686675ade7500c9eadef791c9e879199eb84378297ace5c180030b26"
+  },
+  "supervisor": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/FINAL-NORMAL-RUN-002/PROCESS/PROCESS.json",
+    "bytes": 1605,
+    "sha256": "462b0e9a40574ec86767e086510bcdd39bff6c84984eb4ee6badc89406097220"
+  },
+  "raw": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/FINAL-NORMAL-RUN-002/PHASE/SMOKE-RAW.bin",
+    "bytes": 128,
+    "sha256": "b422a95acac18781e7787022f1522cd416acacf08b05ad014e3b444b93eee2f7"
+  },
+  "retained_first_fault": "FINAL-NORMAL-RUN-001 was HOLD before deletion/install/APP because of C9 canonical .app extension. Immutable old receipt preserved; separately reviewed v2 completed first installation.",
+  "independent_CLOSED": {
+    "status": "ROOT_INDEPENDENT_CLOSED",
+    "coordinator": "01a164b7-9caa-7011-90d1-807e9630921c",
+    "receipt_sha256": "4dd075ca686675ade7500c9eadef791c9e879199eb84378297ace5c180030b26",
+    "process_sha256": "462b0e9a40574ec86767e086510bcdd39bff6c84984eb4ee6badc89406097220",
+    "raw_sha256": "b422a95acac18781e7787022f1522cd416acacf08b05ad014e3b444b93eee2f7",
+    "confirmed": "Root independently verified image/raw/receipt/process, 772 calls, all own cleanup and native/FD/lock/EXIT/reap/no-holder closure. All earlier HOLD receipts preserved."
+  }
+}

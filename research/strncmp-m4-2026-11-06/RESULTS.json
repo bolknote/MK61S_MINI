@@ -1,5 +1,5 @@
 {
-  "status": "HARDWARE_MATRIX_COMPLETE_NATIVE_BYTE4_SELECTED_FINAL_INSTALLATION_PENDING",
+  "status": "HARDWARE_MATRIX_AND_PRODUCTION_INTEGRATION_ROOT_CLOSED",
   "device": "Classic F411 AEB505B6E0067623, 96 MHz",
   "tested_firmware": "6186AE4B with diagnostic35963eeb fixture",
   "native": "84B byte4 SHA25625557c04ff36ffb12d0e376c167a57018d15fdada1e9afa2a6d17cc044534276",
@@ -2046,5 +2046,7 @@
   "coverage_index": {
     "path": "/Users/bolk/Projects/MK61S_MINI/.build/strncmp-m4-20261106-v1/analysis-v2/route3-coverage.json",
     "sha256": "e99358a18918a26791681360539ff5f10f2e55c91c4a528c6f04864e0c1b2206"
-  }
+  },
+  "final_hardware": "FINAL-HARDWARE.json",
+  "final_working_build": "99BEFCD2"
 }
