@@ -68,6 +68,17 @@ jobs:
             --system-dir ".build/no-arduino/${{ matrix.profile }}/System" \
             ".build/no-arduino/${{ matrix.profile }}/resident.elf"
 
+      - name: Execute URQ overlay pair on the native ARM runtime
+        if: matrix.profile == 'classic-v3'
+        run: |
+          python3 -m venv .build/urq-arm-tests
+          .build/urq-arm-tests/bin/python -m pip install unicorn==2.1.4
+          python3 tools/apps/urq/build_urq_app.py --target stm32 \
+            --build-dir .build/urq-arm-build --output-dir .build/urq-arm-apps
+          .build/urq-arm-tests/bin/python tests/run_urq_arm_tests.py \
+            --resident-elf .build/no-arduino/classic-v3/resident.elf \
+            --apps-dir .build/urq-arm-apps
+
   f401-gcc-platforms:
     name: F401 direct GCC (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

@@ -68,9 +68,26 @@ define_value() {
   printf '%s' "$value"
 }
 
+package_urq_apps() {
+  local tool_bin="$1" bundle="$2"
+  local cached="$matrix_root/urq-package"
+  # The players and game library are identical for every STM32 profile.
+  # Build once, then ship the matching pair with each published firmware.
+  if [[ ! -s "$cached/Apps/URQ.APP" || ! -s "$cached/Apps/URQUI.APP" ]]; then
+    python3 "$root/tools/apps/urq/build_urq_app.py" --target stm32 \
+      --toolchain "$tool_bin" --build-dir "$matrix_root/urq-build" \
+      --output-dir "$cached/Apps" --library-output "$cached/Games/URQ" \
+      --licenses-output "$cached/licenses/urq"
+    mkdir -p "$cached/licenses/ryu"
+    cp "$root/third_party/ryu/LICENSE-Apache2" "$root/third_party/ryu/LICENSE-Boost" \
+      "$root/third_party/ryu/README.md" "$cached/licenses/ryu/"
+  fi
+  cp -R "$cached/." "$bundle/"
+}
+
 package_system_apps() {
   local profile="$1" board_flags="$2" artifact_name="$3" build_path="$4"
-  local expect_ws0010_graphics="$5"
+  local expect_ws0010_graphics="$5" tool_bin="$6"
   local focal basic markdown wbmp chip8 setup usb external_usbdisk graphics ui_fonts
   local focal_app basic_app wbmp_app markdown_app chip8_app setup_app explorer_app
   local bundle_name bundle
@@ -120,7 +137,8 @@ package_system_apps() {
   cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
   cp "$build_path/mk61s-M.ino.elf" "$bundle/$bundle_name.elf"
   printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
-  printf 'format 1\nabi 6\n' > "$bundle/build.apps"
+  package_urq_apps "$tool_bin" "$bundle"
+  printf 'format 1\nabi 6\napp Apps/URQ.APP\napp Apps/URQUI.APP\n' > "$bundle/build.apps"
   local expected=()
   [[ "$focal" == 0 || "$focal_app" == 0 ]] || expected+=(FOCAL.APP)
   [[ "$basic" == 0 || "$basic_app" == 0 ]] || expected+=(BASIC.APP)
@@ -313,7 +331,7 @@ PYTOOLS
     cp "$build_path/mk61s-M.ino.elf" \
       "$output_dir/${artifact_name}-${firmware_tag}.elf"
     package_system_apps "$profile" "$board_flags" "$artifact_name" \
-      "$build_path" "$expect_ws0010_graphics"
+      "$build_path" "$expect_ws0010_graphics" "$tool_bin"
   fi
 }
 
