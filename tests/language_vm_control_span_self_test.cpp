@@ -1,4 +1,5 @@
 #include "language_bytecode.hpp"
+#include "language_source_map.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -6,6 +7,17 @@
 using namespace language_vm;
 namespace language_vm {RunResult reference_run(const View&,State&,const Services&,uint32_t,bool);}
 namespace {
+struct Program {
+  std::vector<uint8_t> bytes=std::vector<uint8_t>(HEADER_SIZE,0);unsigned address_bytes;
+  std::vector<uint32_t> positions;
+  explicit Program(bool wide) {View v{};v.wide=wide;address_bytes=v.address_bytes();}
+  uint32_t pc()const{return uint32_t(bytes.size());}
+  void op(Op o){bytes.push_back(uint8_t(o));}
+  void byte(unsigned n){bytes.push_back(uint8_t(n));}
+  void prefix(){positions.push_back(pc());}
+  uint32_t target(){const auto at=pc();bytes.resize(bytes.size()+address_bytes);return at;}
+  void patch(uint32_t at,uint32_t to){for(unsigned i=0;i<address_bytes;++i)bytes[at+i]=uint8_t(to>>(8*i));}
+};
 struct Fixture {
   std::vector<uint8_t> image;
   Value variables[26]{},array[32]{},stack[MAX_STACK]{};
@@ -17,10 +29,20 @@ struct Fixture {
     assert(at<=f.image.size() && n<=f.image.size()-at);
     std::copy_n(f.image.data()+at,n,out);return true;
   }
-  Fixture(const std::vector<uint8_t>& bytes,bool paged,bool wide,Value initial,unsigned stop_at)
-      :image(bytes),reader({this,read,uint32_t(bytes.size())}),stop(stop_at) {
-    view={paged?nullptr:image.data(),uint32_t(image.size()),32,0,1,MAX_STACK,
-          Language::BASIC,false,false,uint32_t(image.size()),paged?&reader:nullptr,wide};
+  Fixture(const Program& program,bool paged,bool wide,Value initial,unsigned stop_at)
+      :image(program.bytes),reader({this,read,uint32_t(program.bytes.size())}),stop(stop_at) {
+    const uint32_t code_end=uint32_t(image.size());
+    source_map::Positions positions;positions.reset(HEADER_SIZE);std::vector<uint8_t> map;
+    auto append=[&](uint32_t at,const uint8_t* bytes,uint16_t n){assert(at==map.size());map.insert(map.end(),bytes,bytes+n);return true;};
+    for(auto pc:program.positions)if(pc<code_end)assert(positions.note(pc,3,append));
+    assert(positions.flush(append));
+    if(positions.count) {
+      flash::word(image.data()+38,positions.count);image.insert(image.end(),map.begin(),map.end());
+      const auto end=image.size();image.resize(end+4);flash::dword(image.data()+end,positions.bytes);
+    }
+    reader=flash::Reader({this,read,uint32_t(image.size())});
+    view={paged?nullptr:image.data(),uint32_t(image.size()),HEADER_SIZE,0,100,MAX_STACK,
+          Language::BASIC,false,false,code_end,paged?&reader:nullptr,wide};
     state.variables=variables;state.array=array;state.array_count=32;state.stack=stack;state.stack_capacity=MAX_STACK;
     for(unsigned i=0;i<MAX_STACK;++i)stack[i]=int32_t(i+100);
     variables[0]=initial;
@@ -42,20 +64,11 @@ struct Fixture {
     cells();
   }
 };
-struct Program {
-  std::vector<uint8_t> bytes=std::vector<uint8_t>(32,0);unsigned address_bytes;
-  explicit Program(bool wide) {View v{};v.wide=wide;address_bytes=v.address_bytes();}
-  uint32_t pc()const{return uint32_t(bytes.size());}
-  void op(Op o){bytes.push_back(uint8_t(o));}
-  void byte(unsigned n){bytes.push_back(uint8_t(n));}
-  void prefix(){op(Op::SOURCE_POS);byte(3);byte(0);}
-  uint32_t target(){const auto at=pc();bytes.resize(bytes.size()+address_bytes);return at;}
-  void patch(uint32_t at,uint32_t to){for(unsigned i=0;i<address_bytes;++i)bytes[at+i]=uint8_t(to>>(8*i));}
-};
+
 unsigned comparisons=0;
 void compare(const Program& p,bool wide,Value initial,unsigned limit,unsigned stop) {
   for(bool paged:{false,true}) {
-    Fixture fast(p.bytes,paged,wide,initial,stop),reference(p.bytes,paged,wide,initial,stop);
+    Fixture fast(p,paged,wide,initial,stop),reference(p,paged,wide,initial,stop);
     fast.execute(false,limit);reference.execute(true,limit);
     if(fast.observations!=reference.observations) {
       std::fprintf(stderr,"control span mismatch #%u paged=%u wide=%u initial=%016llx limit=%u stop=%u size=%zu\n",
@@ -101,8 +114,8 @@ int main() {
     p.op(Op::STORE);p.byte(0);p.op(Op::JUMP);const auto again=p.target();p.patch(again,start);
     for(unsigned limit:{31U,32U,33U,64U,65U,100U})for(unsigned stop:{0U,1U,2U,3U})compare(p,wide,3,limit,stop);
   }
-  // A merged fetch must not commit a SOURCE_POS tail prematurely. Exercise
-  // complete/repeated/truncated prefixes, empty code tails and failing HALT
+  // Cold annotations cannot advance the executable cursor. Exercise repeated
+  // annotations, retired/truncated inline records, empty tails and failing HALT
   // at both sides of the original 32-step poll/limit boundary.
   for(bool wide:{false,true})for(unsigned padding:{0U,27U,28U,29U,30U,31U,32U,33U})
     for(unsigned prefixes:{0U,1U,3U})for(unsigned tail=0;tail<6;++tail) {

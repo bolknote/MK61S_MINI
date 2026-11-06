@@ -48,9 +48,8 @@ bool lookup(void* raw,uint32_t key,bool number,uint32_t* out) {
   // VM completion also asks for a source line after a callback stopped RUN.
   // An invalidated raw image may already have been freed by that callback.
   if(!current(context.program)){*out=number?v.missing():0;if(v.reader)v.reader->fail();return false;}
-  const unsigned stride=v.wide?8:v.language==Language::BASIC?4:6;
-  auto address=[&](unsigned i){auto p=v.at(HEADER_SIZE+uint32_t(i)*stride+stride-(v.wide?4:2));return v.wide?flash::dword(p):uint32_t(flash::word(p));};
-  auto label=[&](unsigned i){auto p=v.at(HEADER_SIZE+uint32_t(i)*stride);return v.wide || v.language==Language::FOCAL?flash::dword(p):uint32_t(flash::word(p));};
+  auto address=[&](unsigned i){return flash::dword(v.at(HEADER_SIZE+uint32_t(i)*8+4));};
+  auto label=[&](unsigned i){return flash::dword(v.at(HEADER_SIZE+uint32_t(i)*8));};
   unsigned low=0,high=v.lines;
   while(low<high){unsigned middle=(low+high)/2;uint32_t at=number?label(middle):address(middle);if(at<key || (!number && at==key))low=middle+1;else high=middle;}
   *out=number?(low<v.lines && label(low)==key?address(low):v.missing()):(low?label(low-1):0);
@@ -139,17 +138,11 @@ Error inspect(Input in,Member* members,uint16_t capacity,Program& out,flash::IO 
       return v.good()?Error::NONE:Error::IO;
     };
     View v={};Error error;
-    if(!memcmp(header,"LBV1",4)) {
-#if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
-      return Error::INVALID_IMAGE;
-#else
-      if(!in.bytes || size>MAX_MODULE)return Error::INVALID_IMAGE;
+    if(in.bytes && size<=MAX_MODULE) {
       error=language_vm::inspect(in.bytes+offset,uint16_t(size),v);
       if(error==Error::NONE)error=supported(v);
-#endif
     } else {
       Slice slice{in,offset,size,stamp};flash::Reader reader(slice.paged());
-      // Validation scratch is not a line-map provider for every member.
       auto temporary=scratch;temporary.lookup=nullptr;
       error=inspect_flash(reader,temporary,v);
       if(error==Error::NONE)error=supported(v);

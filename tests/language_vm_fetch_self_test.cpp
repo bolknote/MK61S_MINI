@@ -1,4 +1,5 @@
 #include "language_bytecode.hpp"
+#include "language_source_map.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
@@ -17,17 +18,27 @@ struct Fixture {
     assert(at<=f.image.size() && n<=f.image.size()-at);
     std::copy_n(f.image.data()+at,n,out);return true;
   }
-  Fixture(bool page,bool prefixes,bool wide):image(32,0),reader({this,read,1024}),paged(page) {
+  Fixture(bool page,bool prefixes,bool wide):image(HEADER_SIZE,0),reader({this,read,1024}),paged(page) {
+    source_map::Positions positions;positions.reset(HEADER_SIZE);
+    std::vector<uint8_t> map;
+    auto append=[&](uint32_t at,const uint8_t* bytes,uint16_t n) {assert(at==map.size());map.insert(map.end(),bytes,bytes+n);return true;};
     image.push_back(uint8_t(Op::LINE));
     for(unsigned i=0;i<80;++i) {
-      if(prefixes)image.insert(image.end(),{uint8_t(Op::SOURCE_POS),uint8_t(i),0});
+      if(prefixes)assert(positions.note(uint32_t(image.size()),uint16_t(i+1),append));
       image.insert(image.end(),{uint8_t(Op::CONST_I8),uint8_t(i),uint8_t(Op::STORE),0});
     }
     image.push_back(uint8_t(Op::HALT));
+    const uint32_t code_end=uint32_t(image.size());
+    assert(positions.flush(append));
+    if(positions.count) {
+      flash::word(image.data()+38,positions.count);
+      image.insert(image.end(),map.begin(),map.end());
+      const auto end=image.size();image.resize(end+4);flash::dword(image.data()+end,positions.bytes);
+    }
     // The reader's bound is the actual image size, including short tails.
     reader=flash::Reader({this,read,uint32_t(image.size())});
-    view={page?nullptr:image.data(),uint32_t(image.size()),32,0,1,MAX_STACK,
-          Language::BASIC,false,false,uint32_t(image.size()),page?&reader:nullptr,wide};
+    view={page?nullptr:image.data(),uint32_t(image.size()),HEADER_SIZE,0,100,MAX_STACK,
+          Language::BASIC,false,false,code_end,page?&reader:nullptr,wide};
     state.variables=variables;state.array=array;state.array_count=32;
     state.stack=stack;state.stack_capacity=MAX_STACK;
     for(unsigned i=0;i<MAX_STACK;++i)stack[i]=int32_t(100+i);
@@ -63,29 +74,29 @@ int main() {
       if(steps==162)assert(f.variables[0]==79);
       ++cases;
     }
-  // The prefix scan precedes service. A changed byte must be fetched again,
-  // but a new SOURCE_POS from service must not be skipped retroactively.
+  // A changed byte must be fetched again after service. The retired inline
+  // metadata opcode must be rejected rather than skipped.
   for(bool paged:{false,true})for(unsigned mutation:{1U,2U,3U,4U,5U}) {
     Fixture f(paged,true,true);f.mutation=mutation;auto r=f.run(0);
     assert(f.polls>=1);
-    if(mutation==1)assert(r.error==Error::NONE && r.pc==32 && r.steps==1);
-    if(mutation==2)assert(r.error==Error::INVALID_IMAGE && r.pc==32 && r.steps==1);
+    if(mutation==1)assert(r.error==Error::NONE && r.pc==HEADER_SIZE && r.steps==1);
+    if(mutation==2)assert(r.error==Error::INVALID_IMAGE && r.pc==HEADER_SIZE && r.steps==1);
     if(mutation==3 || (mutation==4 && !paged))assert(r.error==Error::NONE && r.steps==162 && f.variables[0]==79);
     if(mutation==4 && paged)assert(r.error==Error::IO && r.steps==1);
-    if(mutation==5)assert(r.error==Error::STOPPED && r.steps==1 && r.pc==32);
+    if(mutation==5)assert(r.error==Error::STOPPED && r.steps==1 && r.pc==HEADER_SIZE);
     ++cases;
   }
   // Prefix tails and fixed-width tails remain checked before operand access.
   for(bool paged:{false,true})for(Op op:{Op::SOURCE_POS,Op::CONST_I16,Op::CONST_I32,Op::CONST_F64}) {
     const unsigned width=op==Op::SOURCE_POS || op==Op::CONST_I16?3:op==Op::CONST_I32?5:9;
     for(unsigned tail=1;tail<width;++tail) {
-      Fixture f(paged,false,false);f.image.resize(32+tail);f.image[32]=uint8_t(op);
+      Fixture f(paged,false,false);f.image.resize(HEADER_SIZE+tail);f.image[HEADER_SIZE]=uint8_t(op);
       f.reader=flash::Reader({&f,Fixture::read,uint32_t(f.image.size())});
       f.view.bytes=paged?nullptr:f.image.data();f.view.size=f.view.end=uint32_t(f.image.size());
       auto r=f.run(10);
-      assert(r.error==Error::INVALID_IMAGE && r.pc==32 && r.steps==(op==Op::SOURCE_POS?0:1));
+      assert(r.error==Error::INVALID_IMAGE && r.pc==HEADER_SIZE && r.steps==1);
       ++cases;
     }
   }
-  std::printf("VM fetch: %u raw/paged, prefixes, service mutation, limits and exact-tail cases PASS\n",cases);
+  std::printf("VM fetch: %u raw/paged, cold provenance, service mutation, limits and exact-tail cases PASS\n",cases);
 }

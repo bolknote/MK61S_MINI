@@ -53,7 +53,9 @@ struct Fixture {
       fprintf(stderr, "compile %s at %u: %s\n", error_name(result.error),
               result.source_offset, source);
     assert(result.error == Error::NONE);
-    assert(inspect(image, result.size, view) == Error::NONE);
+    const auto valid=inspect(image,result.size,view);
+    if(valid!=Error::NONE)fprintf(stderr,"inspect %s: %s\n",error_name(valid),source);
+    assert(valid==Error::NONE);
     state.variables = vars;
     state.array = array;
     state.array_count = 385;
@@ -62,7 +64,7 @@ struct Fixture {
   }
   void crc() {
     uint32_t value = checksum(image + HEADER_SIZE, view.size - HEADER_SIZE);
-    for (unsigned i = 0; i < 4; ++i) image[20 + i] = (uint8_t)(value >> (i * 8));
+    for (unsigned i = 0; i < 4; ++i) image[24 + i] = (uint8_t)(value >> (i * 8));
   }
 };
 void test_literals() {
@@ -204,13 +206,13 @@ void test_indexed_lines_and_diagnostic_boundaries() {
     source+=line;
   }
   f.compile(source.c_str());
-  assert(f.view.lines==96 && line_pc(f.view,0)==0xFFFF);
-  assert(line_pc(f.view,9)==0xFFFF && line_pc(f.view,0xFFFFFFFFUL)==0xFFFF);
+  assert(f.view.lines==96 && line_pc(f.view,0)==UINT32_MAX);
+  assert(line_pc(f.view,9)==UINT32_MAX && line_pc(f.view,0xFFFFFFFFUL)==UINT32_MAX);
   for(unsigned i=0;i<96;++i) {
     const auto pc=line_pc(f.view,10+3*i);
-    assert(pc!=0xFFFF && source_line(f.view,pc)==10+3*i);
+    assert(pc!=UINT32_MAX && source_line(f.view,pc)==10+3*i);
     assert(source_line(f.view,(uint16_t)(pc-1))==(i?10+3*(i-1):0));
-    assert(line_pc(f.view,11+3*i)==0xFFFF);
+    assert(line_pc(f.view,11+3*i)==UINT32_MAX);
   }
   assert(source_line(f.view,(uint16_t)(f.view.code-1))==0);
   assert(source_line(f.view,f.view.size)==295);
@@ -270,27 +272,27 @@ void test_validation() {
   View v;
   assert(inspect(f.image, size, v) == Error::INVALID_IMAGE);
   memcpy(f.image, image.data(), size);
-  f.image[24] = 1;
+  f.image[38] = uint8_t(f.image[38]+1);
   assert(inspect(f.image, size, v) == Error::INVALID_IMAGE);
   memcpy(f.image, image.data(), size);
   f.image[size - 1] ^= 1;
   assert(inspect(f.image, size, v) == Error::INVALID_IMAGE);
   f.compile("10 A=1+2\n");
   f.image[f.view.code + 1] = (uint8_t)Op::JUMP;
-  f.image[f.view.code + 2] = (uint8_t)(f.view.code + 3);
-  f.image[f.view.code + 3] = (uint8_t)((f.view.code + 3) >> 8);
+  f.image[f.view.code + 2] = (uint8_t)(f.view.code);
+  f.image[f.view.code] = (uint8_t)((f.view.code) >> 8);
   f.crc();
   assert(inspect(f.image, f.view.size, v) == Error::INVALID_IMAGE);
 }
-void test_diagnostic_prefix_step_limit() {
+void test_diagnostic_map_step_limit() {
   Fixture f;
-  f.compile("10 A=1\n");
-  assert(f.image[f.view.code]==(uint8_t)Op::SOURCE_POS);
+  f.compile("10 A=ABS(.5)\n");
+  assert((Op)f.image[f.view.code]==Op::CONST_DEC8);
   auto limited=run(f.view,f.state,services,1);
   assert(limited.error==Error::LIMIT && limited.steps==1 && f.vars[0]==0);
-  assert(source_column(f.view,limited.pc)==4);
-  auto complete=run(f.view,f.state,services,4);
-  assert(complete.error==Error::NONE && complete.steps==4 && f.vars[0]==1);
+  assert(source_column(f.view,limited.pc)==6);
+  auto complete=run(f.view,f.state,services,5);
+  assert(complete.error==Error::NONE && complete.steps==5 && f.vars[0]==.5);
   f.view.end=(uint16_t)(f.view.code+2);
   assert(run(f.view,f.state,services).error==Error::INVALID_IMAGE);
 }
@@ -336,10 +338,10 @@ void test_controls_and_traps() {
 void test_direct_branches_and_dynamic_fallback() {
   Fixture f;
   f.compile("10 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n");
-  assert((Op)f.image[f.view.code+3]==Op::GOSUB_DIRECT);
+  assert((Op)f.image[f.view.code]==Op::GOSUB_DIRECT);
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==11);
   f.compile("10 GOTO 30\n20 A=99\n30 A=7\n");
-  assert((Op)f.image[f.view.code+3]==Op::GOTO_DIRECT);
+  assert((Op)f.image[f.view.code]==Op::GOTO_DIRECT);
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==7);
   f.compile("10 A=30;GOTO A\n20 A=99\n30 A=A+1\n");
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==31);
@@ -355,7 +357,7 @@ void test_direct_branches_and_dynamic_fallback() {
   f.compile("10 IF 0 GOSUB 999\n20 A=8\n");
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==8);
   f.compile("10 GOTO 30\n20 A=1\n30 END\n");
-  const uint16_t direct=(uint16_t)(f.view.code+3);
+  const uint16_t direct=(uint16_t)(f.view.code);
   f.image[direct+1]=(uint8_t)(direct+1);f.image[direct+2]=(uint8_t)((direct+1)>>8);f.crc();
   View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
 }
@@ -373,7 +375,7 @@ void test_fused_operations() {
           (subtract?"10 A=A-B\n":"10 A=A+B\n") :
           (subtract?"1.10 S A=A-B\n":"1.10 S A=A+B\n");
       f.compile(source,language);
-      const uint16_t pc=(uint16_t)(f.view.code+3);
+      const uint16_t pc=(uint16_t)(f.view.code);
       assert((Op)f.image[pc]==Op::UPDATE_LOCAL);
       const auto sizing=compile(language,source,(uint16_t)strlen(source),nullptr,MAX_IMAGE);
       assert(sizing.size==f.view.size && sizing.stack==f.view.stack);
@@ -399,8 +401,8 @@ void test_fused_operations() {
     }
   for(unsigned n:{0U,1U,15U,16U,63U}) for(bool subtract:{false,true}) {
     Fixture f;const std::string source="10 A=A"+std::string(subtract?"-":"+")+std::to_string(n)+"\n";
-    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code+3);
-    assert(n<=15 ? (Op)f.image[pc]==Op::UPDATE_LOCAL && (f.image[pc+2]&63)==n : (Op)f.image[pc]==Op::LOAD);
+    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code);
+    assert((Op)f.image[pc]==Op::UPDATE_LOCAL && (f.image[pc+2]&63)==n);
     for(Value a:samples) {
       f.vars[0]=a;const Value expected=subtract?a-Value(n):a+Value(n);
       const bool finite=a.finite() && expected.finite();
@@ -411,11 +413,11 @@ void test_fused_operations() {
   // Keep original grouping, dynamic/I/O order and diagnostic prefixes.
   Fixture f;f.compile("10 A=1e16;B=-1e16;C=1;A=A+B+C\n");
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==1);
-  f.compile("10 A=A+64\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
-  f.compile("10 A=A+-0\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
-  f.compile("10 A=A+INPUT()\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
+  f.compile("10 A=A+64\n");assert(scalar_op((Op)f.image[f.view.code])==Op::LOAD);
+  f.compile("10 A=A+-0\n");assert(scalar_op((Op)f.image[f.view.code])==Op::LOAD);
+  f.compile("10 A=A+INPUT()\n");assert(scalar_op((Op)f.image[f.view.code])==Op::LOAD);
   f.compile("10 A=@(128)\n");
-  const uint16_t fixed=(uint16_t)(f.view.code+6);
+  const uint16_t fixed=(uint16_t)(f.view.code);
   assert((Op)f.image[fixed]==Op::LOAD_ARRAY_FIXED);
   f.array[128]=Value(.1);assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==Value(.1));
   f.array[128]=Value(std::numeric_limits<double>::infinity());
@@ -423,12 +425,12 @@ void test_fused_operations() {
   f.state.array_count=128;
   auto result=run(f.view,f.state,services);
   assert(result.error==Error::ARRAY_RANGE && source_column(f.view,result.pc)==6);
-  f.compile("10 A=@(0)\n");assert((Op)f.image[f.view.code+3]==Op::CONST_0); // two-byte form stays smaller
+  f.compile("10 A=@(0)\n");assert((Op)f.image[f.view.code]==Op::CONST_0); // two-byte form stays smaller
   f.compile("10 A=@(65535)\n");assert(run(f.view,f.state,services).error==Error::ARRAY_RANGE);
   const char* relations[]={"=","#","<","<=",">",">="};
   for(unsigned relation=0;relation<6;++relation) {
     const std::string source="10 IF A"+std::string(relations[relation])+"B C=1 ELSE C=2\n";
-    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code+7);
+    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code+4);
     assert((Op)f.image[pc]==Op::COMPARE_FALSE && f.image[pc+1]==comparison_mask((Op)((unsigned)Op::EQ+relation)));
     for(Value a:samples) for(Value b:samples) {
       f.vars[0]=a;f.vars[1]=b;f.vars[2]=0;
@@ -455,6 +457,28 @@ void test_fused_operations() {
   }
 #endif
 }
+void test_comma_assignment_array_lookahead() {
+  const struct {const char* expression;int expected;} cases[]={
+      {"@(INT(4/2))",7},{"@(2/1)+3",10}};
+  for(bool verified:{false,true}) {
+    for(const auto& test:cases) {
+      Fixture f;
+      const std::string source="10 A=1,"+std::string(test.expression)+"\n";
+      f.compile(source.c_str());
+      f.view.verified=verified;
+      f.array[2]=7;
+      assert(run(f.view,f.state,services).error==Error::NONE);
+      assert(f.vars[0]==1 && f.vars[1]==test.expected);
+      assert(f.array[2]==7);
+    }
+    Fixture f;
+    f.compile("10 A=1,@(INT(4/2))=9;B=@(2)+3\n");
+    f.view.verified=verified;
+    f.array[2]=7;
+    assert(run(f.view,f.state,services).error==Error::NONE);
+    assert(f.vars[0]==1 && f.vars[1]==12 && f.array[2]==9);
+  }
+}
 void test_parser_edges() {
   const char* invalid[] = {"10 A=INPUT\n", "10 A=INPUT(1)\n", "10 A=INPUT(,)\n",
                            "10 A=PI.\n",       "10 A=MAX(1)\n",   "10 PAUSE 1\n",
@@ -475,7 +499,7 @@ void test_parser_edges() {
       random = random * 1664525U + 1013904223U;
       f.image[i] = (uint8_t)(random >> 24);
     }
-    if (n % 2 == 0) memcpy(f.image, "LBV1", 4);
+    if (n % 2 == 0) memcpy(f.image, "LBV2", 4);
     View v;
     assert(inspect(f.image, 128, v) != Error::NONE);
   }
@@ -569,24 +593,24 @@ void test_extension_image_validation_and_resume() {
 void test_basic_parameter_wire_validation() {
   Fixture f;
   f.compile("10 A=CALL(100,1,2);END\n100 RETURN ARG(1)+ARG(2)\n");
-  const uint16_t call = f.view.code + 5;
+  const uint16_t call = f.view.code + 2;
   assert(f.image[call] == (uint8_t)Op::CALL_PARAMS);
   assert(run(f.view, f.state, services).error == Error::NONE && f.vars[0] == 3);
   View checked;
-  for (const auto mutation : {std::pair<unsigned, uint8_t>{5, 5}, {6, 2}}) {
+  for (const auto mutation : {std::pair<unsigned, uint8_t>{9, 5}, {10, 2}}) {
     const uint8_t previous = f.image[call + mutation.first];
     f.image[call + mutation.first] = mutation.second; f.crc();
     assert(inspect(f.image, f.view.size, checked) == Error::INVALID_IMAGE);
     f.image[call + mutation.first] = previous;
   }
-  f.image[call + 3] = f.image[call + 4] = 0; f.crc();
+  f.image[call + 5] = f.image[call + 6] = f.image[call + 7] = f.image[call + 8] = 0; f.crc();
   assert(inspect(f.image, f.view.size, checked) == Error::INVALID_IMAGE);
   Fixture procedure;
   procedure.compile("10 GOSUB 100,1;END\n100 RETURN\n");
-  const uint16_t at = procedure.view.code + 4;
+  const uint16_t at = procedure.view.code + 1;
   assert(procedure.image[at] == (uint8_t)Op::CALL_PARAMS);
-  assert(procedure.image[at + 3] == 0 && procedure.image[at + 4] == 0);
-  procedure.image[at + 6] = 1; procedure.crc();
+  assert(procedure.image[at + 5] == 0 && procedure.image[at + 6] == 0 && procedure.image[at + 7] == 0 && procedure.image[at + 8] == 0);
+  procedure.image[at + 10] = 1; procedure.crc();
   assert(inspect(procedure.image, procedure.view.size, checked) == Error::INVALID_IMAGE);
 }
 
@@ -620,7 +644,7 @@ void test_graph_cleanup_and_verification() {
   f.compile("10 X=99:GRAPH X+0+0+0,-1,1,-1,1:A=X\n");
   bool marked=false;
   for(uint16_t at=f.view.code;at<f.view.end;at=instruction_end(f.image,f.view.end,at))
-    marked=marked || (Op)f.image[at]==Op::INTEGER_SPAN;
+    marked=marked || (Op)f.image[at]==Op::INTEGER_SPAN || (Op)f.image[at]==Op::BINARY_PAIR;
   assert(marked); // GRAPH accepts compiler-selected spans and their float fallback.
   struct Canvas {unsigned samples=0;bool cancel=false;} canvas;
   Services host=services;host.context=&canvas;
@@ -650,7 +674,7 @@ void test_graph_cleanup_and_verification() {
   uint16_t body=0,finish=0;
   for(uint16_t at=f.view.code;at+3<f.view.end;++at)
     if(f.image[at]==(uint8_t)Op::GRAPH_BEGIN) {
-      body=at+3;finish=(uint16_t)(f.image[at+1]|f.image[at+2]<<8);break;
+      body=uint16_t(at+1+f.view.address_bytes());finish=uint16_t(f.view.address(f.image+at+1));break;
     }
   assert(body && finish>body);
   for(uint16_t at=body;at<finish;++at)if(f.image[at]==(uint8_t)Op::LOAD) {
@@ -673,11 +697,12 @@ int main() {
   test_indexed_lines_and_diagnostic_boundaries();
   test_service_progress_and_bounded_cancellation();
   test_validation();
-  test_diagnostic_prefix_step_limit();
+  test_diagnostic_map_step_limit();
   test_loop_service_cadence();
   test_controls_and_traps();
   test_direct_branches_and_dynamic_fallback();
   test_fused_operations();
+  test_comma_assignment_array_lookahead();
   test_parser_edges();
   test_yield_resume();
   test_extension_image_validation_and_resume();

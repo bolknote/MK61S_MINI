@@ -114,7 +114,7 @@ enum class Op : uint8_t {
   ON_GOSUB,
   FOR_ARRAY,
   NEXT_ARRAY,
-  SOURCE_POS,
+  SOURCE_POS, // retired; provenance lives after code/resources
   PRINT_RESOURCE,
   INPUT_RESOURCE,
   CONST_I32,
@@ -137,7 +137,10 @@ enum class Op : uint8_t {
   PRINT_AT,        // two coordinates -> a positioned PRINT context
   GRAPH_BEGIN,     // four bounds -> temporary X; word points to GRAPH_NEXT
   GRAPH_NEXT,      // one sample -> raster point; word points to expression body
-  INTEGER_SHORT    // LOAD layout; short array/ABS-to-local block, scalar LOAD fallback
+  INTEGER_SHORT,   // LOAD layout; short array/ABS-to-local block, scalar LOAD fallback
+  BINARY_PAIR,     // scalar opcode, left source, right source -> expression value
+  BINARY_STORE,    // same operands, destination local; consumes optional left TOS
+  MOVE_LOCAL      // source ID, destination local
 };
 // A block mark changes neither the first instruction's width nor its logical
 // identity. Diagnostic/host traces use the original scalar opcode.
@@ -177,16 +180,16 @@ enum class Function : uint8_t {
   GH
 };
 inline constexpr uint8_t wire_widths[] = {
-  1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1, // 0..15
-  1,1,1,1,1,1,1,1,1,1,1,1,2,0,3,3, // 16..31 (29: retired CHECK)
-  1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
-  255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
-  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
-  2,7,1,1,1,3,3,2,2, // 97..105
-  3,1,3,3,2 // GRAPHICS, PRINT_AT, GRAPH_BEGIN, GRAPH_NEXT, INTEGER_SHORT
+  1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,2,0,5,5,
+  1,1,1,2,2,9,7,1,13,1,255,1,1,2,1,2,
+  255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  255,1,1,255,255,1,1,0,3,3,5,1,5,5,3,6,
+  3,2,11,1,1,1,3,3,2,2,3,1,5,5,2,
+  4,5,3,
 };
-static_assert(sizeof(wire_widths)==(unsigned)Op::INTEGER_SHORT+1,"opcode width table changed");
+static_assert(sizeof(wire_widths)==(unsigned)Op::MOVE_LOCAL+1,"opcode width table changed");
 inline uint16_t instruction_end(const uint8_t* bytes, uint16_t end, uint16_t pc) {
   if(pc>=end) return 0;
   const uint8_t op=bytes[pc];
@@ -194,14 +197,15 @@ inline uint16_t instruction_end(const uint8_t* bytes, uint16_t end, uint16_t pc)
   const uint8_t width=wire_widths[op];
   const uint16_t remaining=(uint16_t)(end-pc);
   if(width!=255) return width && width<=remaining ? (uint16_t)(pc+width) : 0;
-  if(remaining<3) return 0;
-  const uint16_t count=(uint16_t)(bytes[pc+1] | ((uint16_t)bytes[pc+2]<<8));
+  const uint16_t prefix=(Op)op==Op::DATA?5:3;
+  if(remaining<prefix) return 0;
+  const uint32_t count=prefix==5?flash::dword(bytes+pc+1):flash::word(bytes+pc+1);
   if((Op)op==Op::ON_GOTO || (Op)op==Op::ON_GOSUB) {
-    if(!count || count>(remaining-3)/2) return 0;
+    if(!count || count>(remaining-3U)/2U) return 0;
     return (uint16_t)(pc+3+count*2);
   }
   if((Op)op==Op::DATA && !count) return 0;
-  return count<=remaining-3 ? (uint16_t)(pc+3+count) : 0;
+  return count<=uint32_t(remaining-prefix) ? (uint16_t)(pc+prefix+count) : 0;
 }
 // Full-program compilers add same-width execution hints after layout.
 void mark_integer_spans(uint8_t*, uint16_t code, uint16_t end);
@@ -215,10 +219,10 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::LT)==1 && comparison_mask(Op::LE)==3 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
-static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 13;
-// LBV1 in-memory compatibility/INPUT tooling only. Stored programs use
-// LBV2 Flash images with 32-bit addresses and no such image quota.
+static constexpr uint16_t HEADER_SIZE = 40;
+static constexpr uint16_t VERSION = 15;
+// One LBV2 format for INPUT, contiguous images and paged programs. Only the
+// bounded contiguous compiler has this workspace quota; addresses are u32.
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -246,6 +250,9 @@ struct View {
   uint32_t end = 0; // instruction boundary; source-backed recipes follow it
   const flash::Reader* reader = nullptr;
   bool wide = false;
+  // Set by the resident certificate adapter while it owns the immutable
+  // image. Public inspect() also supports mutable/aliased raw kernel clients.
+  bool verified = false;
   void* lookup_context = nullptr;
   bool (*lookup)(void*,uint32_t,bool,uint32_t*) = nullptr;
   flash::Cursor at(uint32_t n) const {return {bytes,reader,n};}
@@ -263,19 +270,12 @@ struct View {
 #if defined(MK61_CORE_STANDALONE)
   __attribute__((always_inline))
 #endif
-  bool wide_code() const {
-#if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
-    // Shipping APPs accept LBV2 programs and branch-free LBV1 INPUT recipes.
-    return true;
-#else
-    return wide;
-#endif
-  }
-  uint8_t address_bytes() const {return wide_code()?4:2;}
-  uint32_t address(flash::Cursor p) const {return wide_code()?flash::dword(p):flash::word(p);}
-  uint32_t address(const uint8_t* p) const {return wide_code()?flash::dword(p):flash::word(p);}
-  uint32_t missing() const {return wide_code()?UINT32_MAX:0xFFFF;}
-  uint32_t group_bit() const {return wide_code()?UINT32_C(0x80000000):0x8000;}
+  bool wide_code() const {return true;}
+  uint8_t address_bytes() const {return 4;}
+  uint32_t address(flash::Cursor p) const {return flash::dword(p);}
+  uint32_t address(const uint8_t* p) const {return flash::dword(p);}
+  uint32_t missing() const {return UINT32_MAX;}
+  uint32_t group_bit() const {return UINT32_C(0x80000000);}
   bool good() const {return !reader || reader->good();}
 
 };

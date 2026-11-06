@@ -58,14 +58,18 @@ int main(int argc, char** argv) {
   const int closed = fclose(output);
   if (written != result.size || closed) return 2;
   unsigned count = 0;
-  for(uint16_t at=view.end; at<view.size; at += (uint16_t)(owned ?
+  // This measurement probe is also compiled against archived baselines.
+  const unsigned map_count=language_vm::VERSION>=15?language_vm::flash::word(image.data()+38):0;
+  const unsigned map_bytes=map_count?language_vm::flash::dword(image.data()+view.size-4)+4:0;
+  const unsigned resource_end=view.size-map_bytes;
+  for(uint16_t at=view.end; at<resource_end; at += (uint16_t)(owned ?
       2+language_vm::resource_word(image.data()+at) : 3+image[at+2]*3)) ++count;
   printf(
       "{\"source_bytes\":%zu,\"bytecode_bytes\":%u,\"lines\":%u,\"stack_values\":%u,"
-      "\"code_bytes\":%u,\"resource_recipe_bytes\":%u,\"resource_count\":%u,"
+      "\"code_bytes\":%u,\"resource_recipe_bytes\":%u,\"resource_count\":%u,\"source_map_bytes\":%u,"
       "\"source_zx0_bounded\":%u,\"bytecode_zx0_bounded\":%u,"
       "\"source_zx0_scratch\":%u,\"bytecode_zx0_scratch\":%u}\n",
-      n, result.size, view.lines, view.stack, view.end, view.size-view.end, count, compressed(source.data(), n, 4 * (n + 1)),
+      n, result.size, view.lines, view.stack, view.end, resource_end-view.end, count, map_bytes, compressed(source.data(), n, 4 * (n + 1)),
       compressed(image.data(), result.size, 4 * (result.size + 1)),
       compressed(source.data(), n, 1600), compressed(image.data(), result.size, 1600));
 }

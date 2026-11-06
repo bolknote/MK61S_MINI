@@ -46,7 +46,7 @@ struct Fixture {
   }
   void seal() {
     const auto crc=checksum(image+HEADER_SIZE,view.size-HEADER_SIZE);
-    for(unsigned n=0;n<4;++n)image[20+n]=(uint8_t)(crc>>(8*n));
+    for(unsigned n=0;n<4;++n)image[24+n]=(uint8_t)(crc>>(8*n));
   }
   void scalar() {
     // Independent reference: restore original bytecodes, not merely a flag in

@@ -29,9 +29,9 @@ struct FlowContext {
 #if UINTPTR_MAX == UINT32_MAX
 static_assert(sizeof(FlowContext)==232 && offsetof(FlowContext,input)==184,"paged VM flow ABI");
 #endif
-// Request growth moved compiler-stage fields without changing its total
-// union size. Reject older language APPs before they read those offsets.
-static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x41564C46UL;
+// Compiler APPs call private resident Program passes synchronously. Reject a
+// mismatched System set before either side can enter those passes.
+static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x42564C46UL;
 enum FlowPhase : uint32_t {
   FLOW_VALIDATE_PROGRAM = 0, FLOW_RUN_PROGRAM, FLOW_AFTER_INPUT,
   FLOW_EDIT_INPUT, FLOW_AFTER_EXPRESSION, FLOW_EVALUATE_EXPRESSION, FLOW_FINISH

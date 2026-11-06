@@ -3,7 +3,7 @@
 #include "language_vm_abi.hpp"
 
 namespace language_vm { namespace linked {
-// Experimental LVP1 container. Member LBV1/LBV2 images retain local addresses;
+// Experimental LVP1 container. Member LBV2 images retain local addresses;
 // neither native pointers nor VM/APP layouts are written to disk. Validation
 // and all storage belong to the caller, not a new static cache or allocation.
 // Header: magic[4], version:u8, flags:u8, count:u16, size:u32, entry:u32,
@@ -35,7 +35,7 @@ struct Program {
   uint16_t count=0;
   uint32_t entry=0,epoch=0,identity=0;
 };
-// Scratch BOUNDARIES I/O is needed only to validate LBV2 members. LBV1 is a
+// Scratch BOUNDARIES I/O validates paged members. A RAM member is a
 // raw host-compatibility path; shipping wide-only executors reject it.
 // GRAPH expressions are deliberately left to the ordinary VM for now: its
 // graph cleanup is not resumable at arbitrary step/INPUT boundaries. Regular

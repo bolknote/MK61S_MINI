@@ -50,18 +50,19 @@ class Filesystem:
         self.directories.remove(path)
         return ''
 
-    def cache(self, source=0x10, language=1, owner_only=False, stamp=1):
+    def cache(self, source=0x10, language=1, owner_only=False, stamp=1, version=14):
         root = f'{PAGES}/{source:04X}'
         self.directories.update((PAGES, root, root+'/IndexA', root+'/Image0'))
         owner = bytearray(16); owner[:4] = b'LFW1'; struct.pack_into('<H', owner, 4, source)
         struct.pack_into('<I', owner, 12, zlib.crc32(owner[:12]))
         self.files[root+'/Owner.bin'] = bytes(owner)
         if not owner_only:
-            image = bytearray(1024); image[:4] = b'LBV2'; image[4:6] = bytes((14, language))
+            image = bytearray(1024); image[:4] = b'LBV2'; image[4:6] = bytes((version, language))
             struct.pack_into('<I', image, 8, 1024)
-            manifest = bytearray(64); manifest[:4] = b'LFP1'; manifest[5] = 14
+            manifest = bytearray(64); manifest[:4] = b'LFP1'; manifest[5] = version
             struct.pack_into('<HII', manifest, 6, source, stamp, 0x12345678)
-            manifest[16:48] = image[:32]
+            header = 40 if version == 15 else 32
+            manifest[16:16+header] = image[:header]
             struct.pack_into('<I', manifest, 60, zlib.crc32(manifest[:60]))
             self.files[root+'/Manifest.bin'] = bytes(manifest)
             self.files[root+'/Image0/00000000.bin'] = bytes(image)
@@ -95,6 +96,26 @@ class CacheRestorationTests(unittest.TestCase):
 
     def test_focal_generated_pages_and_directories_removed(self):
         self.fs.cache(0x20, 2); self.restore()
+
+    def test_current_wire_pages_can_be_removed_or_preserved(self):
+        for language in (1,2):
+            self.fs.cache(0x20, language, version=15)
+            current = self.fs.fingerprint()
+            saved = CacheSnapshot(current, self.fs.read)
+            result = saved.restore(current, self.fs.read, self.fs.write, self.fs.command)
+            self.assertEqual(result['removed'], 0)
+            self.assertEqual(self.fs.mutations, [])
+            self.restore()
+            self.fs.mutations.clear()
+
+    def test_unknown_wire_or_mismatched_manifest_stops_before_mutation(self):
+        for manifest_version,image_version in ((16,16),(14,15),(15,14)):
+            root = self.fs.cache(0x20, version=manifest_version)
+            manifest = bytearray(self.fs.files[root+'/Manifest.bin'])
+            manifest[20] = image_version
+            struct.pack_into('<I', manifest, 60, zlib.crc32(manifest[:60]))
+            self.fs.files[root+'/Manifest.bin'] = bytes(manifest)
+            self.refused()
 
     def test_changed_existing_cache_bytes_restored(self):
         self.fs.cache(stamp=2)

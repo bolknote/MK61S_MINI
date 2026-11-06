@@ -5,10 +5,12 @@
 #include "language_bytecode.hpp"
 #include "language_source.hpp"
 #include "language_flash_program.hpp"
+#include "language_compact.hpp"
+#include "language_source_map.hpp"
 namespace focal_next {
-// Two sizing/emission passes, like the BASIC compiler. Only the sorted line
-// map is retained. Emitted literals belong to the image, never to an APP.
-template <bool Expression,bool Paged=false> class Compiler {
+// One grammar serves syntax checks and both image storage adapters. Raw
+// compilation uses two passes; paged emission also stages cold provenance.
+template <bool Expression,bool Paged=false,bool SyntaxOnly=false> class Compiler {
 public:
   using Text = language_vm::source::Cursor;
   using Op = language_vm::Op;
@@ -43,7 +45,7 @@ private:
   }
 
   uint8_t *output_;
-  uint16_t length_,offset_=0;
+  uint16_t length_,offset_=0,line_start_=0;
   uint32_t capacity_,pc_;
   Line *lines_;
   language_vm::flash::Program* flash_;
@@ -57,8 +59,24 @@ private:
   uint16_t count_=0;
   uint8_t pass_ = 0, depth_ = 0, sp_ = 0, maximum_ = 0;
   E error_ = E::NONE;
-  Op before_op_=Op::HALT,previous_op_=Op::HALT;
-  uint32_t before_pc_=0,previous_pc_=0;
+  bool emitting_=false;
+  bool emitting() const {return pool_ || emitting_;}
+  language_vm::compact::Tail compact_;
+  language_vm::source_map::Positions positions_;
+  uint32_t source_map_at_=0;
+  bool source_bytes(uint32_t at,const uint8_t* data,uint16_t n) {
+    if(Paged)return pass_!=1 || flash_->source_bytes(at,data,n);
+    if(!pass_)return true;
+    const uint32_t limit=owned()?language_vm::MAX_MODULE:language_vm::MAX_IMAGE;
+    if(source_map_at_>capacity_ || at>capacity_-source_map_at_ || n>capacity_-source_map_at_-at ||
+       source_map_at_>limit || at>limit-source_map_at_ || n>limit-source_map_at_-at)return false;
+    if(output_)memcpy(output_+source_map_at_+at,data,n);
+    return true;
+  }
+  struct SourceOutput {
+    Compiler* compiler;
+    bool operator()(uint32_t at,const uint8_t* data,uint16_t n) const {return compiler->source_bytes(at,data,n);}
+  };
   bool rf_, requires_rf_ = false, has_calls_ = false, graph_expression_ = false;
   void fail(E error) {
     if (error_ == E::NONE) {
@@ -80,13 +98,14 @@ private:
       fail(E::SYNTAX);
   }
   void byte(uint8_t b) {
+    if constexpr(SyntaxOnly)return; // <=111 source bytes cannot exceed MAX_IMAGE.
     if (pc_ >= capacity_ ||
         (!Paged && pc_ >= (pool_ && owned() ? language_vm::MAX_MODULE
                                  : language_vm::MAX_IMAGE))) {
       fail(E::FULL);
       return;
     }
-    if((output_ || Paged) && pass_)put_byte(pc_,b);
+    if((output_ || Paged) && emitting())put_byte(pc_,b);
     if(Paged && flash_->error()!=E::NONE)fail(flash_->error());
     ++pc_;
   }
@@ -94,27 +113,38 @@ private:
     byte(uint8_t(w));
     byte(uint8_t(w >> 8));
   }
-  void emit_address(uint32_t w) {emit_word(uint16_t(w));if(Paged)emit_word(uint16_t(w>>16));}
+  void emit_address(uint32_t w) {emit_word(uint16_t(w));emit_word(uint16_t(w>>16));}
   void patch_address(uint32_t at,uint32_t value) {
-    if(pass_ && (output_ || Paged)) {for(unsigned i=0;i<(Paged?4U:2U);++i)put_byte(at+i,uint8_t(value>>(i*8)));}
+    if(emitting() && (output_ || Paged)) {for(unsigned i=0;i<4U;++i)put_byte(at+i,uint8_t(value>>(i*8)));}
   }
   void dword(uint32_t w) {
     emit_word(uint16_t(w));
     emit_word(uint16_t(w >> 16));
   }
   void op(Op instruction, int change = 0) {
-    if constexpr (!Expression) {
-#if !defined(LANGUAGE_VM_TEST_NO_COMPILED_BLOCKS)
-      if((output_ || Paged) && pass_ && language_vm::index_block_shape(instruction,pc_,
-          before_op_,before_pc_,previous_op_,previous_pc_))
-        put_byte(before_pc_,uint8_t(Op::BLOCK_INDEX));
-#endif
-      if(instruction!=Op::SOURCE_POS) {
-        before_op_=previous_op_;before_pc_=previous_pc_;
-        previous_op_=instruction;previous_pc_=pc_;
-      }
+    if constexpr(!SyntaxOnly) {
+#if MK61_VM_COMPACT_OPERANDS && !defined(LANGUAGE_VM_TEST_NO_FUSION)
+    language_vm::compact::Rewrite r;
+    if(change==-1 && sp_>=2 &&
+        !language_vm::index_block_shape(instruction,pc_,compact_.before.op,compact_.before.pc,compact_.last.op,compact_.last.pc) &&
+        compact_.rewrite(instruction,pc_,r)) {
+      pc_=r.begin;compact_.barrier();
+      if(r.folded) {sp_-=2;constant(r.value);return;}
+      op(Op::BINARY_PAIR,-1);byte(uint8_t(instruction));byte(r.left);byte(r.right);
+      compact_.last.arguments=uint32_t(instruction)|(uint32_t(r.left)<<8)|(uint32_t(r.right)<<16);
+      return;
     }
+#endif
+    if constexpr(!Expression) {
+#if !defined(LANGUAGE_VM_TEST_NO_COMPILED_BLOCKS)
+      if((output_ || Paged) && emitting() && language_vm::index_block_shape(instruction,pc_,
+          compact_.before.op,compact_.before.pc,compact_.last.op,compact_.last.pc))
+        put_byte(compact_.before.pc,uint8_t(Op::BLOCK_INDEX));
+#endif
+    }
+    compact_.begin(instruction,pc_);
     byte(uint8_t(instruction));
+    }
     if (change < 0 && unsigned(-change) > sp_) {
       fail(E::INVALID_IMAGE);
       return;
@@ -129,25 +159,21 @@ private:
       maximum_ = sp_;
   }
   void constant(double v) {
-    if (v >= 0 && v <= 15 && mk_math::trunc(v) == v)
-      op(Op(unsigned(Op::CONST_0) + unsigned(v)), 1);
-    else if (v >= -128 && v <= 127 && mk_math::trunc(v) == v) {
-      op(Op::CONST_I8, 1);
-      byte(uint8_t(int8_t(v)));
-    } else if (v >= -32768 && v <= 32767 && mk_math::trunc(v) == v) {
-      op(Op::CONST_I16, 1);
-      emit_word(uint16_t(int16_t(v)));
-    } else if (v >= -2147483648.0 && v <= 2147483647.0 &&
-               mk_math::trunc(v) == v) {
-      op(Op::CONST_I32, 1);
-      dword(uint32_t(int32_t(v)));
+    const language_vm::Value number(v);
+    if(number.integer()) {
+      const int32_t n=number.integer_value();
+      if(n>=0 && n<=15)op(Op(unsigned(Op::CONST_0)+unsigned(n)),1);
+      else if(n>=-128 && n<=127) {op(Op::CONST_I8,1);byte(uint8_t(n));}
+      else if(n>=-32768 && n<=32767) {op(Op::CONST_I16,1);emit_word(uint16_t(n));}
+      else {op(Op::CONST_I32,1);dword(uint32_t(n));}
+      compact_.last.arguments=uint32_t(n);
     } else {
-      op(Op::CONST_F64, 1);
-      uint64_t bits = mk_math::bit_copy<uint64_t>(v);
-      for (unsigned i = 0; i < 8; ++i)
-        byte(uint8_t(bits >> (i * 8)));
+      op(Op::CONST_F64,1);
+      const uint64_t bits=mk_math::bit_copy<uint64_t>(v);
+      for(unsigned i=0;i<8;++i)byte(uint8_t(bits>>(i*8)));
     }
   }
+
   int find(Address a) {
     if(Paged)return flash_->find(a.exact?key(a):a.major,!a.exact);
     for (unsigned n = 0; n < count_; ++n)
@@ -165,12 +191,12 @@ private:
   }
   uint32_t label_pc(Address a) {
     int n = find(a);
-    return n < 0 ? (Paged?UINT32_MAX:0xFFFF) : line_at(n).pc;
+    return n < 0 ? UINT32_MAX : line_at(n).pc;
   }
   uint32_t label_end(Address a) {
     int n = find(a);
     if (n < 0)
-      return Paged?UINT32_MAX:0xFFFF;
+      return UINT32_MAX;
     if (a.exact)
       ++n;
     else
@@ -233,6 +259,21 @@ private:
     }
   }
   void store(Target t) {
+#if MK61_VM_COMPACT_OPERANDS && !defined(LANGUAGE_VM_TEST_NO_FUSION)
+    const auto tail=compact_.last;
+    if(!t.kind && tail.pc+tail.width()==pc_) {
+      uint8_t source=0;
+      if(tail.op==Op::BINARY_PAIR || tail.operand(source)) {
+        pc_=tail.pc;compact_.barrier();
+        if(tail.op==Op::BINARY_PAIR) {
+          op(Op::BINARY_STORE,-1);byte(uint8_t(tail.arguments));
+          byte(uint8_t(tail.arguments>>8));byte(uint8_t(tail.arguments>>16));byte(t.index);
+        } else {op(Op::MOVE_LOCAL,-1);byte(source);byte(t.index);}
+        return;
+      }
+    }
+#endif
+
     op(t.kind == 0   ? Op::STORE
        : t.kind == 1 ? Op::STORE_REF
                      : Op::STORE_ARRAY,
@@ -245,8 +286,7 @@ private:
        : t.kind == 1 ? Op::LOAD_REF
                      : Op::LOAD_ARRAY,
        t.kind == 2 ? 0 : 1);
-    if (t.kind < 2)
-      byte(t.index);
+    if (t.kind < 2) {compact_.last.arguments=t.index;byte(t.index);}
   }
   void call(bool function) {
     Address a;
@@ -263,7 +303,7 @@ private:
     has_calls_ = true;
     op(Op::CALL_PARAMS, int(function) - int(count));
     emit_address(label_pc(a));
-    emit_address(label_end(a) | (a.exact?0:Paged?0x80000000U:0x8000U));
+    emit_address(label_end(a) | (a.exact?0:0x80000000U));
     byte(uint8_t(count));
     byte(uint8_t(function));
   }
@@ -743,7 +783,7 @@ private:
     expect('(');
     expression();
     expect(')');
-    const uint32_t missing=Paged?UINT32_MAX:0xFFFF;
+    const uint32_t missing=UINT32_MAX;
     uint32_t targets[3] = {missing,missing,missing};
     for (unsigned i = 0; i < 3 && error_ == E::NONE; ++i) {
       skip_space();
@@ -901,11 +941,8 @@ private:
         fail(E::UNKNOWN_COMMAND);
         return;
       }
-      Text line = at;
-      while (line > source_ && line[-1] != '\r' && line[-1] != '\n')
-        --line;
-      op(Op::SOURCE_POS);
-      emit_word(uint16_t(at - line + 1));
+      compact_.barrier();
+      if(!positions_.note(pc_,uint16_t(at-source_-line_start_+1),SourceOutput{this}))fail(E::FULL);
       if (c == Command::FOR) {
         Target t;
         target(t);
@@ -1022,15 +1059,20 @@ public:
   }
   language_vm::CompileResult compile() {
     if (!source_ || !length_ || length_ > (Expression ? 64 : language_vm::source::MAX_SIZE) ||
-        (!Paged && input_->contains_nul()))
+        (!Paged && input_->template contains_nul<Expression>()))
       return {length_>language_vm::source::MAX_SIZE?E::FULL:!input_->good()?E::IO:E::SYNTAX, 0, 0, 0, 0};
     if (!Expression)
       index_lines();
-    const uint32_t code = language_vm::HEADER_SIZE + uint32_t(count_) * (Paged?8U:6U);
-    for (pass_ = 0; pass_ < 2 && error_ == E::NONE; ++pass_) {
-      if(pass_ && Paged && !flash_->begin_image()) {fail(E::IO);break;}
+    const uint32_t code = language_vm::HEADER_SIZE + uint32_t(count_) * 8U;
+    for (pass_ = 0; pass_ < (Paged?3:2) && error_ == E::NONE; ++pass_) {
+      emitting_=pass_==1;
+      if constexpr(Paged) {
+        emitting_=pass_==2 || (pass_==1 && flash_->reserve_positions(positions_.bytes));
+        if(pass_ && !(emitting_?flash_->begin_image():flash_->begin_positions())) {fail(E::IO);break;}
+      }
       pc_ = code;
-      sp_ = maximum_ = depth_ = 0;
+      if constexpr(!Expression)positions_.reset(code);
+      sp_ = maximum_ = depth_ = 0;compact_.barrier();
       if (Expression) {
         p_ = source_;
         end_ = source_ + length_;
@@ -1041,8 +1083,12 @@ public:
       } else
         for (unsigned i = 0; i < count_ && error_ == E::NONE; ++i) {
           if (!pass_)set_line_pc(uint16_t(i),pc_);
-          p_ = source_ + line_at(i).begin;
-          end_ = source_ + line_at(i).end;
+          const auto current=line_at(i);
+          p_ = source_ + current.begin;
+          end_ = source_ + current.end;
+          Text physical=p_;
+          while(physical>source_ && physical[-1]!='\n' && physical[-1]!='\r')--physical;
+          line_start_=uint16_t(physical-source_);
           commands_list(0);
           if (sp_)
             fail(E::STACK);
@@ -1051,17 +1097,30 @@ public:
       if (!pass_)
         image_halt_ = pc_;
       op(Op::HALT);
+      if constexpr(!Expression) {
+        if(!positions_.flush(SourceOutput{this}))fail(E::FULL);
+        if(!pass_)source_map_at_=pc_+resource_bytes_;
+      }
+      if(Paged && pass_==1 && emitting_)break;
     }
     const uint32_t code_end = pc_;
     if (error_ == E::NONE)
       emit_resources();
     if(Paged) {
-      if(error_==E::NONE && !flash_->finish(language_vm::Language::FOCAL,pc_,has_calls_?language_vm::MAX_STACK:maximum_,requires_rf_))error_=E::IO;
+      if(error_==E::NONE && !flash_->finish(language_vm::Language::FOCAL,pc_,has_calls_?language_vm::MAX_STACK:maximum_,requires_rf_,positions_.count,positions_.bytes))error_=E::IO;
       if(flash_->error()!=E::NONE)error_=flash_->error();
+      if(error_==E::NONE)pc_=flash_->size();
+    } else if(error_==E::NONE && positions_.count) {
+      const uint32_t limit=owned()?language_vm::MAX_MODULE:language_vm::MAX_IMAGE;
+      if(pc_>capacity_ || positions_.bytes+4U>capacity_-pc_ || pc_>limit || positions_.bytes+4U>limit-pc_)fail(E::FULL);
+      else {
+        if(output_)put32(output_+pc_+positions_.bytes,positions_.bytes);
+        pc_+=positions_.bytes+4U;
+      }
     }
     if (error_ == E::NONE && output_) {
       memset(output_, 0, language_vm::HEADER_SIZE);
-      memcpy(output_, "LBV1", 4);
+      memcpy(output_, "LBV2", 4);
       output_[4] = uint8_t(language_vm::VERSION);
       output_[5] = uint8_t(language_vm::Language::FOCAL);
       output_[6] = has_calls_ ? language_vm::MAX_STACK
@@ -1073,25 +1132,27 @@ public:
                               (owned() ? language_vm::OWNED_RESOURCE_FLAG : 0)
                         : 0);
       if (resource_count_) {
-        put16(output_ + 30, code_end);
+        put32(output_ + 28, code_end);
         if (!owned()) {
-          put16(output_ + 24, resources_->id);
-          put32(output_ + 26, resources_->revision);
+          put16(output_ + 32, resources_->id);
+          put32(output_ + 34, resources_->revision);
         }
       }
-      put16(output_ + 8, pc_);
-      put16(output_ + 10, code);
-      put16(output_ + 12, count_);
-      put16(output_ + 14, length_);
-      put32(output_ + 16,
+      put32(output_ + 28, code_end);
+      put32(output_ + 8, pc_);
+      put32(output_ + 12, code);
+      put16(output_ + 18, count_);
+      put16(output_ + 16, length_);
+      put16(output_ + 38, positions_.count);
+      put32(output_ + 20,
             input_->checksum());
       for (unsigned i = 0; i < count_; ++i) {
-        auto *r = output_ + language_vm::HEADER_SIZE + i * 6;
+        auto *r = output_ + language_vm::HEADER_SIZE + i * 8;
         put32(r, line_at(i).number);
-        put16(r + 4, line_at(i).pc);
+        put32(r + 4, line_at(i).pc);
       }
       if constexpr (!Expression)language_vm::mark_integer_spans(output_,code,code_end);
-      put32(output_ + 20,
+      put32(output_ + 24,
             language_vm::checksum(output_ + language_vm::HEADER_SIZE,
                                   pc_ - language_vm::HEADER_SIZE));
     }
@@ -1132,7 +1193,7 @@ inline language_vm::CompileResult compile_expression(const char *source,
 inline bool valid_fragment(const char *source, uint16_t length, bool rf) {
   language_vm::source::Reader input(source,length);
   language_vm::source::CursorScope cursor_scope(input);
-  Compiler<false> compiler(input, length, nullptr, language_vm::MAX_IMAGE, rf,
+  Compiler<false,false,true> compiler(input, length, nullptr, language_vm::MAX_IMAGE, rf,
                            nullptr, nullptr, nullptr);
   return compiler.valid_fragment();
 }

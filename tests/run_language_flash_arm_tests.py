@@ -17,7 +17,7 @@ from run_language_vm_overlay_arm_tests import OverlayMachine, encode_number
 from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Elf, ROOT, run
 
-VERSION=13
+VERSION=14
 STATE_SIZE=1992
 STACK=976
 PROMPT=1860
@@ -72,7 +72,7 @@ class FlashMachine(OverlayMachine):
         elif name=="lookup":
             self.counts['lookup']+=1
             count=struct.unpack_from('<H',self.pages[2],18)[0]
-            rows=[struct.unpack_from('<II',self.pages[2],32+i*8) for i in range(count)]
+            rows=[struct.unpack_from('<II',self.pages[2],40+i*8) for i in range(count)]
             keys=[row[0 if c else 1] for row in rows]
             if c:
                 i=bisect.bisect_left(keys,b);value=rows[i][1] if i<count and keys[i]==b else 0xFFFFFFFF
@@ -100,11 +100,12 @@ class FlashMachine(OverlayMachine):
         self.put(address,0,stub('read'),stub('write'),stub('truncate'),stub('poll'),prepare,stub('lookup'))
         return address,stub('input')
 
-def compile_program(machine,packages,elf,language,rows=4400):
+def compile_program(machine,packages,elf,language,rows=5000):
     basic=language==1
     text='1 GOTO 30000\n' if basic else '1.0 G 9.0\n'
     for i in range(rows):
-        text+=f'{i+2} A=1\n' if basic else f'{2+i//1000}.{i%1000} S A=1\n'
+        indent=' ' if i%4 else '  '
+        text+=f'{i+2}{indent}PRINT 1\n' if basic else f'{2+i//1000}.{i%1000}{indent}P 1\n'
     text+=('30000 S=0;FOR I=1 TO 2;GOSUB 31000;NEXT I;ON 9 GOSUB '+','.join(['32000']*9)+'\n'
            '30010 ON 9 GOTO '+','.join(['32010']*9)+'\n31000 INPUT "value?",B;S=S+B;RETURN\n'
            '32000 S=S+1;RETURN\n32010 S=S-1;.RA=S;END\n'
@@ -124,6 +125,9 @@ def compile_program(machine,packages,elf,language,rows=4400):
     assert result==(1 if basic else 0) and wire[16]==0 and wire[36]==1, (result,wire.hex(),machine.trace[-10:])
     size=struct.unpack_from('<I',wire,20)[0]
     assert (size>65536)==bool(rows) and machine.pages[2][:4]==b'LBV2'
+    if rows:
+        code=struct.unpack_from('<I',machine.pages[2],12)[0]
+        assert code+rows*6>65536 # Executed tail addresses, not just cold metadata.
     assert 0<machine.max_source_read<=MAX_SOURCE_WINDOW
     return bytes(machine.pages[2][:size]),io,input_callback
 

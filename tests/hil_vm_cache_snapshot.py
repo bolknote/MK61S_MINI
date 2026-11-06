@@ -58,8 +58,10 @@ def validate_cache(files, directories):
             assert len(owner) == 16 and owner[:4] == b'LFW1' and _crc(owner, 12) and struct.unpack_from('<H', owner, 4)[0] == source, ('invalid cache owner', name)
         manifest = markers.get('manifest.bin')
         if manifest is not None:
-            assert len(manifest) == 64 and manifest[:4] == b'LFP1' and manifest[4] in (0, 1) and manifest[5] == 14 and _crc(manifest, 60) and struct.unpack_from('<H', manifest, 6)[0] == source, ('invalid cache manifest', name)
-            assert manifest[16:20] == b'LBV2' and manifest[20] == 14 and manifest[21] in (1, 2), ('unknown cache image', name)
+            # Cleanup can encounter either side of a matched wire-format
+            # A/B/A. This identifies owned files; it never executes old code.
+            assert len(manifest) == 64 and manifest[:4] == b'LFP1' and manifest[4] in (0, 1) and manifest[5] in (14, 15) and _crc(manifest, 60) and struct.unpack_from('<H', manifest, 6)[0] == source, ('invalid cache manifest', name)
+            assert manifest[16:20] == b'LBV2' and manifest[20] == manifest[5] and manifest[21] in (1, 2), ('unknown cache image', name)
 
 
 def cache_state(state):

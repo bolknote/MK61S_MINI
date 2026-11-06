@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pinned Classic chess qualification: compile-cold, warm and reboot-cold runs.
 
-Temporarily installs the candidate firmware and five language APPs. Preserves
+Temporarily installs the candidate firmware and six language APPs. Preserves
 all original files and the empty calculator state, restoring them on exit.
 --keep-installed defers restoration during diagnostics; --session-base resumes
 that owned session using its original saved snapshot. --no-firmware-write
@@ -76,7 +76,9 @@ def steady_comparison(stages):
 
 def qualification_apps(linked=False):
     ordinary=('BASIC.APP','FOCAL.APP','LANGVM.APP','LANGIN.APP','SRCEDIT.APP')
-    return ordinary+('VMCache/VMSTORE.APP',) if linked else ordinary
+    # VMSTORE consumes the same request/certificate ABI in ordinary RUN too.
+    # Always qualify a matched set, even when no linked container is loaded.
+    return ordinary+('VMCache/VMSTORE.APP',)
 
 def remove_owned_pages(port,original,current):
     if CACHE not in current['directories']:return

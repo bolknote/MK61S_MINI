@@ -18,7 +18,7 @@ static uint32_t expected(const View& v,uint32_t pc,uint8_t op,uint32_t count) {
   }
   const uint32_t remaining=v.end-pc;
   if(width!=255)return width && width<=remaining?pc+width:0;
-  const unsigned prefix=v.wide && Op(op)==Op::DATA?5:3;
+  const unsigned prefix=Op(op)==Op::DATA?5:3;
   if(remaining<prefix)return 0;
   if(prefix==3)count&=65535;
   if(Op(op)==Op::ON_GOTO || Op(op)==Op::ON_GOSUB)
@@ -28,15 +28,20 @@ static uint32_t expected(const View& v,uint32_t pc,uint8_t op,uint32_t count) {
 }
 int main() {
   uint8_t bytes[80]={};unsigned cases=0;
-  for(bool wide:{false,true})for(unsigned op=0;op<256;++op)
+  flash::Reader reader({bytes,[](void* raw,uint32_t at,uint8_t* out,uint16_t n) {
+    if(at>80 || n>80-at)return false;
+    memcpy(out,static_cast<uint8_t*>(raw)+at,n);return true;
+  },sizeof(bytes)});
+  for(bool paged:{false,true})for(unsigned op=0;op<256;++op)
     for(unsigned remaining=0;remaining<=20;++remaining)
       for(uint32_t count:{0U,1U,2U,31U,65535U,UINT32_MAX}) {
         const uint32_t pc=32;
         bytes[pc]=uint8_t(op);flash::dword(bytes+pc+1,count);
-        View v={bytes,sizeof(bytes),pc,0,1,1,Language::BASIC,false,false,
-                pc+remaining,nullptr,wide};
+        reader.invalidate();
+        View v={paged?nullptr:bytes,sizeof(bytes),pc,0,1,1,Language::BASIC,false,false,
+                pc+remaining,paged?&reader:nullptr,true};
         assert(instruction_end(v,pc)==expected(v,pc,uint8_t(op),count));
         ++cases;
       }
-  std::printf("Instruction widths: %u narrow/wide opcode/count/truncation cases PASS\n",cases);
+  std::printf("Instruction widths: %u single-format raw/paged opcode/count/truncation cases PASS\n",cases);
 }

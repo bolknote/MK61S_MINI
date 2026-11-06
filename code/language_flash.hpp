@@ -15,8 +15,8 @@ struct IO {
   bool (*write)(void*,Space,uint32_t,const uint8_t*,uint16_t);
   bool (*truncate)(void*,Space,uint32_t);
   bool (*service)(void*) = nullptr;
-  // Shared resident passes: language 1/2 builds the index; 0x80 marks
-  // integer spans after emission. The Program object remains caller-owned.
+  // Shared resident index/image passes. The Program object remains owned by
+  // the synchronous compiler invocation; no APP pointer survives the call.
   bool (*prepare)(void*,void*,uint8_t) = nullptr;
   bool (*lookup)(void*,uint32_t,bool,uint32_t*) = nullptr;
   bool poll() const {return !service || service(context);}
@@ -232,18 +232,17 @@ public:
     space_=space;size_=size;begin_=UINT32_MAX;dirty_=false;return true;
   }
   bool byte(uint32_t at,uint8_t value) {return write(at,&value,1);}
-  bool read(uint32_t at,void* output,size_t n) const {
+  bool read(uint32_t at,void* output,size_t n) {
     if(!good_ || at>size_ || n>size_-at || (!output && n))return false;
     auto* bytes=static_cast<uint8_t*>(output);
     while(n) {
-      const uint32_t begin=at/WRITE_BYTES*WRITE_BYTES;
-      unsigned count=WRITE_BYTES-(at-begin);if(count>n)count=unsigned(n);
-      if(begin==begin_)memcpy(bytes,page_+(at-begin),count);
-      else if(!io_.read(io_.context,space_,at,bytes,uint16_t(count)))return false;
-      at+=count;bytes+=count;n-=count;
+      if(!load(at))return false;
+      unsigned count=WRITE_BYTES-(at-begin_);if(count>n)count=unsigned(n);
+      memcpy(bytes,page_+(at-begin_),count);at+=count;bytes+=count;n-=count;
     }
     return true;
   }
+
 };
 
 struct Line {uint32_t number,pc;uint16_t begin,end;};
