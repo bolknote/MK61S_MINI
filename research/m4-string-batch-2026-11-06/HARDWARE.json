@@ -263,5 +263,10 @@
     "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/system-budget-proof-001/RESULT.json",
     "bytes": 14810,
     "sha256": "7b8e8900afcd92b79f235e420f3eaa4e22ec47a518a255af7b30ab0a8d837172"
+  },
+  "fresh_main_integration_validation": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m4-string-batch-20261106/main-integration-001/RESULT.json",
+    "bytes": 14188,
+    "sha256": "427cb114d886ff0b7fe6a1488bc0b4ad9c93f80f62b6a2cc52af4955d2e865fc"
   }
 }

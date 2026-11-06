@@ -83,3 +83,10 @@ Coordinator independently accepted hardware CLOSED after the new-image check.
 The installed image is 13A2194A; 7,168 logical functional calls include 2,688
 real SDK runtime21 forwards. No device IO followed that final closure.
 Exact candidate/SDK source pins are preserved in source-archive-001/ARCHIVE.json.
+
+Integration onto fresh main503e00827 was checked separately: F411400492B,
+free123796 >=16384; F401256996B, free5148 >=4096. Frames and global RAM
+remain within the same limits. All7 compiled comparison variants are byte
+identical to the tested bodies, and the real linked runtime21 binding is
+correct. All20 rebuilt System APPs passed CRC/decode/relocation/budget checks.
+This is build/integration evidence; the hardware image remains13A2194A.
