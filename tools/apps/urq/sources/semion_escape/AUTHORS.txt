@@ -1,0 +1,7 @@
+Семён: Побег
+Triangle
+https://github.com/devapromix/hamsters
+Revision: 43d69cbf63a0bbc9c684d39125a7bf027a9078be
+Source: Hamster1.qst
+License: MIT
+Text/M8 package for MK61S and PicoCalc; original story and rules retained.

@@ -15,6 +15,7 @@ import tempfile
 
 from tools.apps.urq.qst2urq import decode_source, make_package
 from tools.apps.urq.adaptations import adapt
+from tools.apps.urq.library import DEVICE_EXCLUSIONS
 
 ROOT = Path(__file__).resolve().parents[3]
 LOCK = json.loads((ROOT / "tools/apps/urq/upstream.json").read_text())
@@ -82,6 +83,16 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
         record = {name: game.get(name, "") for name in ("title", "author", "lang")}
         record.update(id=key, revision=revision(folder), source=f"https://github.com/urqw/UrqW/tree/{LOCK['commit']}/games/{key}")
         reasons = []
+        if key in DEVICE_EXCLUSIONS:
+            reasons.append(DEVICE_EXCLUSIONS[key])
+            stale = output / key
+            if stale.is_dir():
+                for path in stale.iterdir():
+                    if path.is_file() and (path.name in ('game.urq', 'autoexec.wbmp') or
+                                           re.fullmatch(r'p[0-9]{4}\.uqd', path.name)):
+                        path.unlink()
+                if not any(stale.iterdir()):
+                    stale.rmdir()
         try:
             manifest, paths, text = sources(folder)
             license_id = license_for(paths)
@@ -138,6 +149,10 @@ def build(upstream, host, output, audit_all=False, source_output=None, report_pa
         record["reasons"] = reasons
         records.append(record)
         print(key + ": " + ("published" if not reasons else "; ".join(reasons)), flush=True)
+    from tools.apps.urq.extra_games import publish
+    extra_records = publish(host, output, source_output, smoke)
+    records.extend(extra_records)
+    published.extend(record['id'] for record in extra_records)
     report = {"upstream": LOCK, "profile": {"workspace_bytes": 8192, "line_bytes": 1023,
               "variables": 128, "items": 64, "actions": 48, "frames": 24, "string_pool_bytes": 2560},
               "verification": "Conversion and startup; complete adaptation walkthroughs are in tests/urq_library_self_test.py. Other paths are not certified.",

@@ -1,0 +1,9 @@
+{
+  "manifest_version": 1,
+  "urq_mode": "dosurq",
+  "game_encoding": "UTF-8",
+  "urqw_title": "Семён: Побег",
+  "urqw_game_lang": "ru",
+  "mk61_zx0_parser": "optimal",
+  "urqw_game_ifid": "100027F5-80A2-5E9A-9EC4-6407BADACDD4"
+}

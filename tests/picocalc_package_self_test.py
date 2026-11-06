@@ -54,7 +54,9 @@ class PackageTests(unittest.TestCase):
                     self.assertTrue(payload)
                     self.assertTrue(all(PurePosixPath(name).suffix in ('.urq','.uqd','.wbmp') for name in payload))
                     self.assertFalse(any('/demo/' in name for name in payload))
-                for game in ('house_that_jack_built','trapped_in_time_ru','jim_from_outer_space_ru'):
+                self.assertFalse(any('/house_that_jack_built/' in name for name in reader.namelist()))
+                for game in ('trapped_in_time_ru','jim_from_outer_space_ru',
+                             'semion_escape','semion_road','semion_snow'):
                     for name in ('AUTHORS.txt','LICENSE.txt'):
                         self.assertIn(prefix+'licenses/urq/'+game+'/'+name,reader.namelist())
                 folders={str(parent) for name in reader.namelist()

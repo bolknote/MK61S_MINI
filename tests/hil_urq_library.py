@@ -57,7 +57,7 @@ def main():
             path = paths[key]
             p.command("mkdir " + path)
             report["games"][key] = {}
-            for file in sorted((ROOT / "programs/urq" / key).iterdir()):
+            for file in sorted(library.game_folder(key).iterdir()):
                 if file.suffix not in (".urq", ".uqd"):
                     continue
                 print(("Verifying " if installed else "Uploading ") + key + "/" + file.name, flush=True)

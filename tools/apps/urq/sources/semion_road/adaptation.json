@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "repository": "https://github.com/devapromix/hamsters",
+  "revision": "43d69cbf63a0bbc9c684d39125a7bf027a9078be",
+  "files": {
+    "Hamster5.qst": "a20e84bf19bb083cb88dc6813e86f866358349d0bbb4498aa178a56d917d6f4d",
+    "LICENSE": "feb87a2e0c305de3464cc44077da5393c52d8ca6362d37427157d04ec6f4510d"
+  },
+  "license": "MIT",
+  "changes": [
+    "CP1251 is decoded to UTF-8 and line endings are normalized.",
+    "Static BTN caption whitespace is trimmed as in the UrqW parser; P/PLN spacing is retained.",
+    "The original DOS/AkURQ commands, story text and item rules are preserved.",
+    "Optimal independent 512-byte ZX0 pages keep the existing device format."
+  ],
+  "verification": "tests/urq_library_self_test.py"
+}

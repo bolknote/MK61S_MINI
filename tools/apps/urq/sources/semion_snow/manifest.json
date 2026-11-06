@@ -1,0 +1,9 @@
+{
+  "manifest_version": 1,
+  "urq_mode": "dosurq",
+  "game_encoding": "UTF-8",
+  "urqw_title": "Семён: В снежном плену",
+  "urqw_game_lang": "ru",
+  "mk61_zx0_parser": "optimal",
+  "urqw_game_ifid": "617158D3-0624-54BA-A0D5-7A7A0D5BA9E3"
+}
