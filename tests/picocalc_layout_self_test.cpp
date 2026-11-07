@@ -333,6 +333,36 @@ void clock_during_input() {
     require(clock::set(saved),"restore HOST clock fixture");
     std::puts("PicoCalc clock during real manual press/release: native/logical surfaces, busy minute rollover and RUN/PRG policy PASS");
 }
+void explorer_hints(Calculator& calc) {
+    require(files::mkdir("/ExplorerHints"),"Explorer hint fixture");
+    for(unsigned i=0;i<9;++i) {
+        char name[48];std::snprintf(name,sizeof(name),"/ExplorerHints/File%u.txt",i);
+        require(files::write_text(name,"hint",4),"Explorer hint file");
+    }
+    for(bool russian:{false,true}) {
+        Settings face;face.russian=russian;Ui ui;ui.init(face);
+        Services services;services.set_ui(ui);services.open(Action::EXPLORER,russian,calc);
+        require(services.enter_directory("/ExplorerHints",false),"Explorer hint directory");
+        const char* expected=russian?M8("F1: файл  F8: значки/список"):"F1: file  F8: icons/list";
+        const Text hint(face,expected,12);
+        require(hint.width<=300,"Explorer shortcut hint fits the native footer");
+        for(unsigned mode=0;mode<2;++mode) {
+            if(mode) services.input(0x88);
+            require(services.browser_count()==9,"footer tested with a full page");
+            while(services.browser_selection()<8) services.input(0xB7);
+            Screen screen;screen.render(calc.snapshot(),true,&ui,&services);
+            require(hint.matches(screen,10,303),"F8 hint is visible in icons and list, EN and RU");
+            for(unsigned x=0;x<320;++x) require(screen.pixel(x,299),"Explorer footer separator");
+            if(mode) {
+                char name[64];require(services.browser_label(8,name),"last list entry");
+                const Text label(face,name,16);
+                require(label.matches(screen,16,281,true),"last selected list entry stays above footer");
+            }
+            preview(screen,russian?(mode?"-explorer-list-ru":"-explorer-icons-ru"):
+                                   (mode?"-explorer-list-en":"-explorer-icons-en"));
+        }
+    }
+}
 }
 
 void picocalc_layout_self_test() {
@@ -357,7 +387,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
-    clock_during_input();published_x2();
+    clock_during_input();published_x2();explorer_hints(calc);
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)

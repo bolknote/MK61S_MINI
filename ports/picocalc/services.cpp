@@ -497,7 +497,7 @@ const char* Services::footer() const {
     if(markdown_) return tr("Up/Down: scroll  Left/Right: links  Enter", M8("Up/Down: текст  Left/Right: ссылки"));
     if(viewing_) return tr("Up/Down: scroll  Enter/Esc: close", M8("Up/Down: текст  Enter/Esc: назад"));
     if(page_ == ServicePage::EDITOR) return tr("F1: name F2: save F3: run F8: RU/EN", M8("F1: имя F2: запись F3: пуск F8: RU/EN"));
-    if(page_ == ServicePage::BROWSER) return tr("F1: actions F6: search F7: move", M8("F1: файл F6: поиск F7: перенос"));
+    if(page_ == ServicePage::BROWSER) return tr("F1: file  F8: icons/list", M8("F1: файл  F8: значки/список"));
     if(page_ == ServicePage::USB_DISK) return tr("Eject on computer, then Enter / Esc", M8("Извлечь на ПК, затем Enter / Esc"));
     if(page_ == ServicePage::CONSOLE) return running_ ? "Esc: STOP" : tr("Enter / Esc: editor", M8("Enter / Esc: редактор"));
     return tr("Up/Down  Enter: select  Esc: back", M8("Up/Down  Enter: выбор  Esc: назад"));

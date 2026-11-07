@@ -63,6 +63,10 @@ void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
     }
     if(!services.browser_count()) canvas.empty(services.browser_filtered()?
         (ru?M8("Нет совпадений"):"No matches"):(ru?M8("Папка пуста"):"Folder empty"));
+    if(height==320) {
+        canvas.rectangle(0,299,width,1);
+        canvas.text(10,303,services.footer(),12,width-20);
+    }
 }
 bool manual_clock_visible(const Snapshot& model) {
     // A queued/held key is ordinary manual input, not a display mode change.
