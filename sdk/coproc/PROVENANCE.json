@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "abi": 1,
+  "stable_include_directory": "sdk/coproc",
+  "files": {
+    "stm3_module.h": {
+      "source": "research/picocalc-stm32-runtime-20261107/include/stm3_module.h",
+      "sha256": "1a2d6eca83aeb50010c2c8fca8d627440a965fd8d0bd8c6f956d0b1eaafd71d7"
+    },
+    "module.ld": {
+      "source": "research/picocalc-stm32-runtime-20261107/modules/module.ld",
+      "sha256": "8b264403ad77b7d2dfec33f4e28c4638df04c46ec81955b3566c0077e0fc94e8"
+    },
+    "elf32.py": {
+      "source": "research/picocalc-stm32-runtime-20261107/tools/elf32.py",
+      "sha256": "d27dc082838a00a7b9eec5992878de9e1d6195deed39c88923366f1e0661e4a4"
+    },
+    "pico_uart1.c": {
+      "source": "research/picocalc-stm32-runtime-20261107/pico/pico_uart1.c",
+      "sha256": "21ace812d861500c10c9566da8b5e1e3e028d61bef0901b2af2748f08495231b"
+    },
+    "pico_uart1.h": {
+      "source": "research/picocalc-stm32-runtime-20261107/pico/pico_uart1.h",
+      "sha256": "d83e1684501b83f920516ec942376a582d4a514d0fac02caa0d832002c286bfe"
+    },
+    "stm3_client.c": {
+      "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.c",
+      "sha256": "5d8f866fb18fc571cee7dd0744220ce3f07385c4bef8edbb0be0d728fbd3c7b4"
+    },
+    "stm3_client.h": {
+      "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.h",
+      "sha256": "d1270eabb51f5e5ba45ea49c3751e3b2c8676ceb72eeb5aceb5722481ab7af41"
+    }
+  },
+  "hardware_evidence": {
+    "report": "research/picocalc-stm32-runtime-20261107/HARDWARE_RESULTS.md",
+    "installed_stm32_firmware_sha256": "f16f54f8eec954966a6a810be583a0dd61fb9cd16fb0a461529552dcf12b2069",
+    "native_module_roundtrip": true,
+    "uart_nominal_baud": 2250000,
+    "pico_divisor_actual_baud": 2258823
+  },
+  "behavior_changes": false,
+  "resident_or_product_sources_edited": false
+}
