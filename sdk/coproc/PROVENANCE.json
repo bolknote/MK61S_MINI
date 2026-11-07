@@ -29,9 +29,9 @@
     },
     "stm3_client.h": {
       "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.h",
-      "sha256": "8ad1ed3a71b6703f3b1600c24eaad140aa93acd15ef4224b75620576cb7f45d1",
+      "sha256": "2a6b0128369eb179816adb64bbfbe080611dabb24bf5a11bfee99e5ec32c0bf4",
       "baseline_sha256": "d1270eabb51f5e5ba45ea49c3751e3b2c8676ceb72eeb5aceb5722481ab7af41",
-      "local_extension": "Optional START_RESULT11 and HELLO capability bit2; existing command values and module ABI unchanged"
+      "local_extension": "Optional START_RESULT11/START_RESULT_INPUT12 and HELLO capability bits2/3; existing command values and module ABI unchanged"
     }
   },
   "hardware_evidence": {
@@ -54,6 +54,17 @@
       "relocated_arm_execution_passed": true,
       "physical_hardware_verified": false,
       "evidence": ".build/spectrum-m3-audio-20261107/push-v8/arm-result.json"
+    },
+    {
+      "command": "START_RESULT_INPUT",
+      "opcode": 12,
+      "hello_capability_bit": 3,
+      "maximum_inline_input_bytes": 240,
+      "module_abi_changed": false,
+      "host_sanitizers_passed": true,
+      "relocated_arm_execution_passed": true,
+      "physical_hardware_verified": false,
+      "evidence": ".build/spectrum-m3-audio-20261107/arm-result.json"
     }
   ]
 }

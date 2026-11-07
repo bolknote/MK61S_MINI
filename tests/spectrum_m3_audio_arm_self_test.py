@@ -32,10 +32,12 @@ def build_harness(folder):
     with (out/'build.log').open('w') as log:subprocess.run(cmd,check=True,stdout=log,stderr=subprocess.STDOUT)
     return out/'harness.elf',pins
 
-def deferred(t,module,packet,count):
+def deferred(t,module,packet,count,inline=False):
     t.seq=(t.seq+1)&65535
     payload=struct.pack('<IIII',module,len(packet),10,count)
-    raw=struct.pack('<BBHHH',1,11,t.seq,len(payload),0)+payload
+    if inline:payload+=packet
+    command=12 if inline else 11
+    raw=struct.pack('<BBHHH',1,command,t.seq,len(payload),0)+payload
     raw+=struct.pack('<I',binascii.crc32(raw));frame=b'\0'+vectors.encode(raw)+b'\0'
     response=t.send(frame)
     if not response:
@@ -50,7 +52,7 @@ def deferred(t,module,packet,count):
     def decode(response):
         assert response.endswith(b'\0');decoded=vectors.decode(response[:-1])
         version,op,seq,n,flags=struct.unpack_from('<BBHHH',decoded)
-        assert (version,op,seq,flags)==(1,139,t.seq,0) and len(decoded)==12+n
+        assert (version,op,seq,flags)==(1,command|128,t.seq,0) and len(decoded)==12+n
         assert binascii.crc32(decoded[:-4])==struct.unpack_from('<I',decoded,len(decoded)-4)[0]
         assert struct.unpack_from('<I',decoded,8)[0]==0
         job,slice_us=struct.unpack_from('<II',decoded,12)
@@ -67,7 +69,7 @@ def main():
     folder=ap.parse_args().build_dir.resolve()
     raw=(folder/'arm-vectors.bin').read_bytes();magic,count=struct.unpack_from('<II',raw)
     assert magic==0x31564153 and count==32
-    harness,pins=build_harness(folder);checked_samples=0;instructions=0;render_instructions=Counter()
+    harness,pins=build_harness(folder);checked_samples=0;instructions=0;render_instructions=Counter();fused_jobs=0
     spec=importlib.util.spec_from_file_location('stm3_arm_vectors',folder/'runtime/arm_execution.py')
     vectors=importlib.util.module_from_spec(spec);spec.loader.exec_module(vectors)
     elf=vectors.ELF(folder/'module/AY.elf')
@@ -82,18 +84,22 @@ def main():
             if i>=0 and linked<functions[i][0]+functions[i][1]:render_instructions[functions[i][2]]+=1
         t.u.hook_add(vectors.UC_HOOK_CODE,executed)
         assert t.module_range[0]!=0x20000000
-        hello=t.request(1);assert struct.unpack_from('<I',hello,32)[0]&4
+        hello=t.request(1);assert struct.unpack_from('<I',hello,32)[0]&12==12
         at=8
         for _ in range(count):
             n,out_n=struct.unpack_from('<II',raw,at);at+=8
             packet=raw[at:at+n];at+=n;expected=raw[at:at+out_n];at+=out_n
-            for offset in range(0,n,252):t.request(5,struct.pack('<I',offset)+packet[offset:offset+252])
             profile['active']=packet[4]==1
             if pushed:
-                received=min(244,out_n);job,actual=deferred(t,module,packet,received)
+                inline=n<=240
+                if not inline:
+                    for offset in range(0,n,252):t.request(5,struct.pack('<I',offset)+packet[offset:offset+252])
+                else:fused_jobs+=1
+                received=min(244,out_n);job,actual=deferred(t,module,packet,received,inline)
                 for offset in range(received,out_n,252):
                     actual+=t.request(8,struct.pack('<III',job,offset,min(252,out_n-offset)))
             else:
+                for offset in range(0,n,252):t.request(5,struct.pack('<I',offset)+packet[offset:offset+252])
                 job=struct.unpack('<I',t.request(6,struct.pack('<III',module,n,100)))[0]
                 for tick in range(9):
                     if t.call('harness_state')==4:break
@@ -107,7 +113,8 @@ def main():
             if packet[4]==1:checked_samples+=packet[5]
         assert at==len(raw)
         t.request(10);assert t.call('harness_empty')==1;instructions+=t.module_instructions
-    result=dict(status='PASS',jobs=2*count,legacy_jobs=count,pushed_jobs=count,exact_PCM_samples=checked_samples,
+    result=dict(status='PASS',jobs=2*count,legacy_jobs=count,pushed_jobs=count,fused_input_jobs=fused_jobs,
+                exact_PCM_samples=checked_samples,
                 module_instructions=instructions,real_relocated_Thumb2=True,real_compact_loader=True,
                 pushed_replay_byte_exact=True,pushed_readiness_polls=0,physical_hardware=False,source_pins=pins)
     result['render_instruction_counts']=dict(render_instructions.most_common())

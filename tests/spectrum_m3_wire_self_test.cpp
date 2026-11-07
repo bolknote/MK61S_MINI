@@ -28,9 +28,12 @@ struct Server {
 int main() {
     Server server;Wire w;assert(w.begin(STM3_HELLO,nullptr,0,0));server.exchange(w);
     assert(!w.result && w.reply_bytes==36 && Wire::get32(w.reply())==STM3_ABI);
+    assert(Wire::get32(w.reply()+32)&STM3_TRANSPORT_START_RESULT_INPUT);
     assert(!w.begin(0,nullptr,0,0) && !w.begin(128,nullptr,0,0));
     assert(!w.begin(1,nullptr,0xffffffffu,0));
     std::array<uint8_t,512> bytes{};
+    assert(!w.begin_pair(STM3_START_RESULT_INPUT,bytes.data(),200,bytes.data(),57,0));
+    assert(!w.begin_pair(STM3_START_RESULT_INPUT,nullptr,1,bytes.data(),1,0));
     stm3_header header{};header.magic=STM3_MAGIC;header.abi=STM3_ABI;header.header_bytes=64;header.package_bytes=68;
     header.image_bytes=4;header.bss_bytes=4;header.entry_offset=1;header.input_limit=header.output_limit=512;
     header.stack_hint=128;header.slice_us=2000;header.target=STM3_TARGET;

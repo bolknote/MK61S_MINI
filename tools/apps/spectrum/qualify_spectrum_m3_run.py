@@ -46,6 +46,9 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590):
         for key in ('M3_ERROR','M3_UNDERRUNS','M3_UART_ERRORS','M3_UNLOAD_FAILURES','M3_READY_POLLS','M3_LATE_BLOCKS'):
             checks['zero_'+key]=int(field(after,key))==0
         checks['native_profile']=field(after,'M3_PROFILE')=='1'
+        checks['fused_input_supported']=field(after,'M3_INLINE_INPUT')=='1'
+        checks['fused_input_exercised']=int(field(after,'M3_INLINE_REQUESTS'))>0
+        checks['no_stream_write_roundtrips']=int(field(after,'M3_STREAM_WRITE_REQUESTS'))==0
         # SYNTH_DMA is the live ownership flag, cleared by AUDIO_CLOSE.
         # The retained refill counter proves DMA ran; leaving it active
         # after native return is a resource leak, not successful playback.
@@ -59,6 +62,10 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590):
         metrics.update(samples=samples,blocks=blocks,block_max_us=int(field(after,'M3_BLOCK_US')),
                        block_min_us=int(field(after,'M3_BLOCK_MIN_US')),prime_us=int(field(after,'M3_PRIME_US')),
                        min_queued=int(field(after,'M3_MIN_QUEUED')),
+                       inline_requests=int(field(after,'M3_INLINE_REQUESTS')),
+                       stream_write_requests=int(field(after,'M3_STREAM_WRITE_REQUESTS')),
+                       transport_tx_bytes=int(field(after,'M3_TX_BYTES')),
+                       transport_rx_bytes=int(field(after,'M3_RX_BYTES')),
                        native_render_us=int(field(after,'M3_RENDER_US')),
                        exchange_block_us=int(field(after,'M3_BLOCK_TOTAL_US')))
     failures=[k for k,v in checks.items()if not v]

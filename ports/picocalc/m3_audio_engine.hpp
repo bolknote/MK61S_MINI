@@ -9,7 +9,7 @@ namespace picocalc::m3 {
 // Core1 produces duties, its audio IRQ consumes them. No APP callback runs
 // here. The hardware adapter keeps wire TX pinned through DMA completion.
 struct AudioEngine {
-    static constexpr unsigned BLOCK=96,CAPACITY=256;
+    static constexpr unsigned BLOCK=120,CAPACITY=512,PRIME_BLOCKS=3;
     enum Stage { IDLE,WRITE,RESULT } stage=IDLE;
     Wire wire;
     mk61_service_audio_psg request{};
@@ -24,7 +24,7 @@ struct AudioEngine {
     int32_t starve_ahead=0;
     unsigned bytes=0,offset=0,inflight=0,count=0,missing=0;
     uint16_t sequence=0;
-    bool primed=false,cache_valid=false,prime_waiting=false;
+    bool primed=false,cache_valid=false,prime_waiting=false,inline_input=false;
     unsigned queued() const { return write.load(std::memory_order_acquire)-read.load(std::memory_order_acquire); }
     void fail(int reason) {error.store(reason?reason:-20,std::memory_order_release);stopped.store(true,std::memory_order_release);}
     bool begin(unsigned command,const uint8_t* data,unsigned n,uint32_t now,bool prefix=false,unsigned at=0) {
@@ -36,10 +36,14 @@ struct AudioEngine {
         inflight=bytes-offset;if(inflight>252)inflight=252;
         begin(5,packet+offset,inflight,now,true,offset);
     }
-    void start(uint32_t now) {
+    void start(uint32_t now,bool with_input=false) {
         uint8_t args[16];Wire::put32(args,module);Wire::put32(args+4,bytes);Wire::put32(args+8,10);
         Wire::put32(args+12,8+count);
-        job=0;stage=RESULT;begin(S3_START_RESULT,args,sizeof(args),now);
+        job=0;stage=RESULT;
+        const bool ok=with_input?
+            wire.begin_pair(S3_START_RESULT_INPUT,args,sizeof(args),packet,bytes,now,12000):
+            wire.begin(S3_START_RESULT,args,sizeof(args),now,12000);
+        if(!ok)fail(-21);
     }
     void step(uint32_t now) {
         if(error.load(std::memory_order_acquire))return;
@@ -78,6 +82,11 @@ struct AudioEngine {
         bytes=unsigned(n);count=packet[5];offset=0;
         render_started=now;
         if(bytes==sizeof(cached) && cache_valid && !std::memcmp(packet,cached,sizeof(cached))){start(now);return;}
+        if(inline_input && bytes<=S3_START_RESULT_INPUT_LIMIT) {
+            cache_valid=bytes==sizeof(cached);
+            if(cache_valid)std::memcpy(cached,packet,sizeof(cached));
+            start(now,true);return;
+        }
         stage=WRITE;chunk(now);
     }
     uint32_t sample(uint32_t now=0) {
@@ -85,7 +94,7 @@ struct AudioEngine {
         const uint32_t r=read.load(std::memory_order_relaxed),w=write.load(std::memory_order_acquire);
         if(!primed){
             if(!prime_waiting){prime_waiting=true;prime_started=now;}
-            if(w-r<2*BLOCK)return 0x00800080u;
+            if(w-r<PRIME_BLOCKS*BLOCK)return 0x00800080u;
             primed=true;prime_us=now-prime_started;
         }
         if(r==w) {

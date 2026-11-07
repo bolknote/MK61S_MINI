@@ -28,9 +28,10 @@ struct Context {
     stm3_pico_uart1 uart{};
     std::optional<SleepClockLease<Clocks>> clocks;
     int rx=-1;
-    uint32_t tail=0,requests=0;
+    uint32_t tail=0,requests=0,transport_flags=0,inline_requests=0,stream_write_requests=0,tx_bytes=0,rx_bytes=0;
     unsigned tx_at=0;
     uint8_t capabilities=0;
+    bool inline_input=false;
     std::atomic<bool> control{false};
     bool streaming=false,owned=false,tx_started=false;
 };
@@ -41,7 +42,11 @@ uint16_t last_sequence=0;
 uint32_t micros(void*){return time_us_32();}
 void tx(Context& c) {
     if(!c.engine.wire.pending)return;
-    if(!c.tx_started){c.tx_started=true;c.tx_at=0;++c.requests;}
+    if(!c.tx_started){
+        c.tx_started=true;c.tx_at=0;++c.requests;c.tx_bytes+=c.engine.wire.tx_bytes;
+        if(c.streaming && c.engine.wire.command==S3_START_RESULT_INPUT)++c.inline_requests;
+        if(c.streaming && c.engine.wire.command==S3_WRITE)++c.stream_write_requests;
+    }
     // START_RESULT and constant-DAC packets fit the32-byte FIFO.
     // Larger AY/DAC packets continue on later worker polls. Reserving no
     // TX DMA leaves one of RP2040's12 channels for continuous PWM output.
@@ -62,7 +67,7 @@ void pump(Context& c) {
         if(wire.pending)wire.fail(m3::Wire::IO);
         if(c.streaming)c.engine.fail(m3::Wire::IO);
     }
-    while(c.tail!=head){wire.feed(receive[c.tail&(sizeof(receive)-1)]);++c.tail;}
+    while(c.tail!=head){wire.feed(receive[c.tail&(sizeof(receive)-1)]);++c.tail;++c.rx_bytes;}
     wire.tick(time_us_32());
     if(wire.complete) {
         c.tx_started=false;
@@ -78,6 +83,8 @@ void snapshot(Context& c) {
     last.starve_request_us=e.starve_request_us;last.starve_ahead=e.starve_ahead;
     last.min_block_us=e.blocks?e.min_render_us:0;last.block_us=e.block_us;last.late_blocks=e.late_blocks;
     last.ready_polls=e.ready_polls;last.prime_us=e.prime_us;last.min_queued=e.primed?e.min_queued:0;
+    last.inline_input=c.inline_input;last.transport_flags=c.transport_flags;last.inline_requests=c.inline_requests;
+    last.stream_write_requests=c.stream_write_requests;last.tx_bytes=c.tx_bytes;last.rx_bytes=c.rx_bytes;
 }
 void release(void* raw) {
     auto& c=*(Context*)raw;snapshot(c);last.active=false;
@@ -169,10 +176,12 @@ bool load(Context& c,const char* path,unsigned gain) {
        m3::Wire::get32(e.packet+56)!=0x70301)return false;
     if(!rpc(c,1,nullptr,0) || e.wire.reply_bytes!=36)return false;
     const auto* hello=e.wire.reply();
+    const uint32_t transport=m3::Wire::get32(hello+32);
     if(m3::Wire::get32(hello)!=1 || m3::Wire::get32(hello+4)!=0x70301 ||
        m3::Wire::get32(hello+8)!=6144 || m3::Wire::get32(hello+12)!=512 ||
        m3::Wire::get32(hello+16)!=0 || m3::Wire::get32(hello+28)!=2250000 ||
-       (m3::Wire::get32(hello+32)&7)!=7)return false;
+       (transport&7)!=7)return false;
+    c.transport_flags=transport;c.inline_input=(transport&S3_TRANSPORT_START_RESULT_INPUT)!=0;
     m3::Wire::put32(e.packet,entry.size);
     if(!rpc(c,2,e.packet,4))return false;c.owned=true;
     for(unsigned at=0;at<entry.size;) {
@@ -206,7 +215,7 @@ bool open(const mk61_service_audio_psg& request,unsigned gain) {
     if(!setup(*c)){delete c;return false;}
     if(!load(*c,request.module_path,gain)){close();return false;}
     io_worker::invoke(c,[](void* raw) {
-        auto& c=*(Context*)raw;c.engine.wire.complete=false;c.streaming=true;
+        auto& c=*(Context*)raw;c.engine.wire.complete=false;c.engine.inline_input=c.inline_input;c.streaming=true;
     });
     return true;
 }
@@ -221,7 +230,8 @@ void close() {
             if(c.engine.wire.pending)c.control.store(true,std::memory_order_release);
         });
         if(c->control.load(std::memory_order_acquire))(void)wait_control(*c);
-        if(c->engine.stage==m3::AudioEngine::RESULT && c->engine.wire.command==S3_START_RESULT &&
+        if(c->engine.stage==m3::AudioEngine::RESULT &&
+           (c->engine.wire.command==S3_START_RESULT || c->engine.wire.command==S3_START_RESULT_INPUT) &&
            c->engine.wire.complete && !c->engine.wire.result && c->engine.wire.reply_bytes>=8)
             c->engine.job=m3::Wire::get32(c->engine.wire.reply());
         // Recover the exact oscillator/filter state before APP code resumes.

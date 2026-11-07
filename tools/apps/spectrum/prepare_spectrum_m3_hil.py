@@ -36,6 +36,8 @@ def all_inputs():
     folders = ('examples/portable-apps/SPECTRUM', 'third_party/emu2149', 'third_party/z80',
                'tools/apps/spectrum', 'tools/apps/portable', 'sdk/portable')
     paths = set(firmware_inputs())
+    paths.update(ROOT/'tools/firmware/picocalc'/name for name in
+                 ('build_async_bios.py','bios_pmu_async.py','bios_stm3_input.py'))
     paths.update(ROOT/'firmware/picocalc-southbridge'/name for name in ('manifest.json','source.zip','firmware.bin'))
     paths.update(p for folder in folders for p in (ROOT / folder).rglob('*')
                  if p.is_file() and (p.suffix in (*SOURCE_SUFFIXES, '.py', '.md', '.sh') or p.name == 'CMakeLists.txt'))
@@ -104,10 +106,21 @@ def prepare(args):
     if sha(fw / (TARGET + '.bin')) != metadata['bin_sha256'] or sha(fw / (TARGET + '.uf2')) != metadata['uf2_sha256']:
         raise ValueError('Sealed firmware artifact hashes differ')
     verify_sources(inputs)
+    southbridge_out = out / 'southbridge'
+    run(out, 'build-southbridge', [PYTHON, 'tools/firmware/picocalc/build_async_bios.py',
+                                  '--output-dir', southbridge_out, '--drivers', args.southbridge_drivers,
+                                  '--jobs', args.jobs])
+    southbridge_metadata = json.loads((southbridge_out / 'manifest.json').read_text())
+    southbridge_image = Path(southbridge_metadata['bin'])
+    if (not southbridge_metadata['async_pmu'] or not southbridge_metadata['stm3_start_result_input'] or
+        southbridge_metadata['clock_hz'] != 72000000 or southbridge_metadata['uart_baud'] != 2250000 or
+        southbridge_metadata['physical_io'] or sha(southbridge_image) != southbridge_metadata['bin_sha256']):
+        raise ValueError('Combined async-PMU/fused-input Southbridge candidate differs')
+    verify_sources(inputs)
     run(out, 'build-app', [PYTHON, 'tools/apps/spectrum/build_spectrum_app.py',
                           '--build-dir', out / 'app', '--output-dir', out / 'SPECTRUM'])
     run(out, 'build-dsp-probe', [PYTHON, 'tools/apps/spectrum/build_spectrum_m3_probe.py',
-                                '--build-dir', out, '--frames', '96', '--pwm8'])
+                                '--build-dir', out, '--frames', '120', '--pwm8'])
     run(out, 'build-game-probes', [PYTHON, 'tools/apps/spectrum/build_spectrum_m3_game_probe.py',
                                   '--build-dir', out, '--frames', '600', '--fixture-dir', args.fixture_dir])
     verify_sources(inputs)
@@ -136,8 +149,12 @@ def prepare(args):
             if hashlib.sha256(archive.read(path)).hexdigest() != stm['source_archive_files'][path]:
                 raise ValueError('Changed resident source in firmware archive: '+path)
     artifacts = [fw / (TARGET + suffix) for suffix in ('.bin', '.uf2', '.elf')]
+    artifacts += [southbridge_image, southbridge_out / 'manifest.json']
     artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
+                                   'SPECTRUM/48.rom', 'SPECTRUM/128-0.rom', 'SPECTRUM/128-1.rom',
                                    'remote/app/S3GAME.APP', 'local/app/S3GAME.APP')]
+    game_runtime = {p.name: sha(p) for p in [out/'SPECTRUM/AY.S3M', out/'SPECTRUM/48.rom',
+                    out/'SPECTRUM/128-0.rom', out/'SPECTRUM/128-1.rom']}
     manifest = {
         'status': 'HOST_READY', 'hardware_verified': False, 'physical_io': 0,
         'created_utc': datetime.now(timezone.utc).isoformat(),
@@ -150,22 +167,26 @@ def prepare(args):
         'host_checks': checks, 'source_pins': 'source-pins.json', 'source_pins_sha256': sha(out / 'source-pins.json'),
         'artifacts': {str(p.relative_to(out)): sha(p) for p in artifacts},
         'protected_flash_start': '0x10180000', 'firmware_erase_end_exclusive': hex(0x10000000 + erase_end),
-        'southbridge_prerequisite': {'image': str(southbridge / stm['image']), 'sha256': stm['image_sha256'],
-                                    'installed_verified': False, 'owner': 'Harness / ROOT'},
+        'southbridge_prerequisite': {
+            'image': str(southbridge_image.relative_to(out)), 'sha256': southbridge_metadata['bin_sha256'],
+            'image_bytes': southbridge_metadata['image_bytes'], 'clock_hz': southbridge_metadata['clock_hz'],
+            'uart_baud': southbridge_metadata['uart_baud'], 'async_pmu': True,
+            'stm3_start_result_input': True, 'installed_verified': False, 'owner': 'Harness / ROOT'},
         'pmu_scheduling_prerequisite': {
-            'status': 'REQUIRES_OWNER_VERIFICATION',
-            'audio_block_us': 3840, 'observed_legacy_telemetry_timeout_ms': 4,
+            'status': 'COMBINED_CANDIDATE_HOST_VERIFIED',
+            'audio_block_us': 4800, 'observed_legacy_telemetry_timeout_ms': 4,
             'observed_other_legacy_timeouts_ms': 60,
             'requirement': 'PMU telemetry must not block coprocessor service; legacy AXP waits must also service it',
             'preserve': ['battery protection', 'power button', 'charging', 'I2C1 slave', 'I2C2 ownership'],
-            'evidence': 'HOST PMU foreground gap tests; no physical timing claim',
+            'evidence': 'Async PMU physical readback passed separately; combined candidate HOST/ARM build only',
         },
         'fixture_directory': args.fixture_dir, 'game_frames': 600,
+        'game_runtime_files_next_to_app': game_runtime,
         'remote_policy': 'PSG_ONLY_OPEN6; fail closed, no local synthesis or clock boost',
         'qualification': 'tools/apps/spectrum/qualify_spectrum_m3_run.py',
         'execution_order': ['Fresh coordinator handoff; no earlier receipt is admission',
-                            'Verify installed unified STM32 image and stable I2C/keyboard',
-                            'Verify PMU scheduling fix with its owner; I2C1 health alone does not qualify I2C2 stalls',
+                            'Install and read back the exact combined STM32 image; preserve settings and option bytes',
+                            'Verify async PMU, power button, charging, I2C and keyboard before audio',
                             'Admit exact Pico UID/build and save native C5 baseline',
                             'Install pinned Pico firmware below protected fixtures; verify readback',
                             'Run finite push-only S3SOUND; verify PCM CRC and native render/transport timing',
@@ -181,21 +202,22 @@ def prepare(args):
         'The remote probe requires PSG_ONLY_OPEN6 and cannot fall back to local sound. '
         'Missing or failed M3 closes the finite probe. The local probe is an explicit 200MHz control. '
         'Neither probe changes the STM32 clock.\n\n'
-        'Start only after the coordinator releases the Pico and confirms the unified STM32 image. '
+        'Start only after the coordinator releases the Pico and approves the exact combined STM32 image. '
         'Use the exact artifacts and hashes in manifest.json; source/ contains their input snapshot. '
+        'When the game probe is staged in a temporary folder, put the pinned AY.S3M and all three ROMs '
+        'listed in game_runtime_files_next_to_app beside S3GAME.APP. '
         'Keep old HOLD and failure receipts.\n\n'
-        'PMU scheduling is a separate prerequisite: the old resident performs a blocking I2C2 status read '
-        'with a 4ms timeout before coproc_poll(), versus 3840us per 96 audio samples. '
-        'Other legacy AXP calls use up to 60ms timeouts. Verify nonblocking telemetry and continued '
-        'coprocessor service during legacy waits with the PMU owner, preserving charging/power controls. '
-        'Reordering one poll or clean I2C1 keyboard counters does not prove this requirement. '
+        'The pinned Southbridge candidate combines the already tested async PMU owner with '
+        'START_RESULT_INPUT at stock72MHz. The audio block is120 samples/4800us, with a '
+        'three-block prime. Install/read back that exact BIN and recheck PMU, charging, power button, '
+        'keyboard and I2C before the audio run. '
         'HOST_READY is not physical M3-audio qualification.\n\n'
         'Capture SP3 POLICY/RESULT/FRAME and native C5 before/after each run. Then run:\n\n'
         '```sh\npython3 tools/apps/spectrum/qualify_spectrum_m3_run.py '
         '--wire RUN/game-wire.txt --before RUN/before.txt --after RUN/after.txt '
         '--mode remote --output RUN/qualification.json\n```\n\n'
         'Qualification checks the 3.5MHz floor with only 1us timestamp uncertainty, frame delays, '
-        '25kHz sample coverage, no fallback/underrun/late block, pushed completion without readiness polls, '
+        '25kHz sample coverage, no fallback/underrun/late block, fused input without streaming WRITE polls, '
         'bounded native slices, keyboard/I2C counters and clean native resource return. '
         'Clean app return alone is not a real-time PASS.\n')
     print(json.dumps({'status': manifest['status'], 'kit': str(out), 'pico_build': metadata['build_id'],
@@ -208,6 +230,8 @@ def main():
     ap.add_argument('--output', type=Path, required=True, help='New directory; existing results are never replaced')
     ap.add_argument('--fixture-dir', default='/MK61S-SPECTRUM-HIL-20261105/SPECTRUM')
     ap.add_argument('--jobs', type=int, default=4)
+    ap.add_argument('--southbridge-drivers', type=Path,
+                    default=ROOT/'.build/stm32-module-runtime-20261107/community-southbridge/Drivers')
     ap.add_argument('--firmware-from', type=Path, help='Reuse a sealed build only if all source/flag and artifact hashes match')
     args = ap.parse_args()
     if args.jobs < 1:

@@ -9,7 +9,8 @@ using picocalc::m3::AudioEngine;
 using picocalc::m3::Wire;
 struct Server {
     stm3_runtime runtime{};
-    uint32_t now=0,cost=0,generated=0,invocations=0,writes=0,legacy_jobs=0,completions=0;
+    uint32_t now=0,cost=0,generated=0,invocations=0,writes=0,legacy_jobs=0,completions=0,inline_completions=0;
+    uint32_t request_wire_bytes=0,response_wire_bytes=0;
     uint16_t sequence=0;
     uint16_t sent_sequence=0;bool sent=false;
     Server() {
@@ -21,7 +22,7 @@ struct Server {
             if(op==STM3_FINI || op==STM3_CANCEL)return STM3_DONE;
             s.now+=s.cost;
             const unsigned n=job->input[5];
-            assert(job->input_bytes>=11 && job->input[4]==1 && n && n<=96);
+            assert(job->input_bytes>=11 && job->input[4]==1 && n && n<=AudioEngine::BLOCK);
             if(op==STM3_INIT) {
                 ++s.invocations;Wire::put32(job->output,0x314d5750u);
                 job->output[4]=uint8_t(n);job->output[5]=0;
@@ -42,10 +43,13 @@ struct Server {
             sent=true;sent_sequence=w.sequence;
             if(w.command==5)++writes;
             if(w.command==6 || w.command==7 || w.command==8)++legacy_jobs;
-            if(w.command==STM3_START_RESULT)++completions;
+            if(w.command==STM3_START_RESULT || w.command==STM3_START_RESULT_INPUT)++completions;
+            if(w.command==STM3_START_RESULT_INPUT)++inline_completions;
+            request_wire_bytes+=w.tx_bytes;
             for(unsigned i=0;i<w.tx_bytes;++i)stm3_feed(&runtime,w.tx[i]);
         }
         uint8_t out[272];const unsigned n=stm3_transmit(&runtime,out,sizeof(out));
+        response_wire_bytes+=n;
         for(unsigned i=0;i<n;++i)w.feed(out[i]);
         if(n)assert(!w.pending && w.complete);
     }
@@ -73,9 +77,10 @@ struct Producer {
 };
 int main() {
     {
-        Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
+        Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;e.inline_input=true;
+        s.request_wire_bytes=s.response_wire_bytes=0;
         e.read.store(0xfffffff0u);e.write.store(0xfffffff0u);
-        constexpr unsigned samples=80*96;p.produced=samples*140;unsigned consumed=0;
+        constexpr unsigned samples=80*AudioEngine::BLOCK;p.produced=samples*140;unsigned consumed=0;
         for(unsigned turn=0;turn<samples*8 && consumed<samples;++turn) {
             e.step(s.now);
             if(e.wire.pending)s.exchange(e.wire);
@@ -88,21 +93,53 @@ int main() {
             assert(!e.error.load());
         }
         assert(consumed==samples && e.samples==samples && e.blocks==80 && s.invocations==80);
-        assert(s.writes==1 && s.completions==80 && !s.legacy_jobs && p.time==p.produced && !e.underruns);
+        assert(!s.writes && s.completions==80 && s.inline_completions==1 && !s.legacy_jobs &&
+               p.time==p.produced && !e.underruns);
         assert(!e.ready_polls && e.block_us && e.min_render_us<=e.max_render_us && e.prime_us);
         e.stopping.store(true);e.step(s.now);assert(e.stopped.load() && !e.wire.pending);
+    }
+    {
+        // A changing PSG packet is copied atomically with START_RESULT. It
+        // must not pay for or depend on a preceding WRITE acknowledgement.
+        Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;e.inline_input=true;
+        s.request_wire_bytes=s.response_wire_bytes=0;
+        auto* event=p.events+(p.read&(p.request.event_capacity-1))*8;
+        Wire::put32(event,140);event[4]=0;event[5]=0;event[6]=1;p.write=p.read+1;
+        p.produced=AudioEngine::BLOCK*140;
+        for(unsigned turn=0;turn<500 && !e.blocks;++turn) {
+            e.step(s.now);if(e.wire.pending)s.exchange(e.wire);
+            if(!(turn%10))stm3_tick(&s.runtime);s.now+=40;
+        }
+        assert(e.blocks==1 && e.samples==AudioEngine::BLOCK && !s.writes &&
+               s.inline_completions==1 && p.read==p.write && !e.error.load());
+        const uint32_t fused_bytes=s.request_wire_bytes+s.response_wire_bytes;
+
+        Server legacy;AudioEngine old;Producer old_p;old.module=legacy.load();old.wire.sequence=100;old.request=old_p.request;
+        legacy.request_wire_bytes=legacy.response_wire_bytes=0;
+        auto* old_event=old_p.events+(old_p.read&(old_p.request.event_capacity-1))*8;
+        Wire::put32(old_event,140);old_event[4]=0;old_event[5]=0;old_event[6]=1;old_p.write=old_p.read+1;
+        old_p.produced=AudioEngine::BLOCK*140;
+        for(unsigned turn=0;turn<500 && !old.blocks;++turn) {
+            old.step(legacy.now);if(old.wire.pending)legacy.exchange(old.wire);
+            if(!(turn%10))stm3_tick(&legacy.runtime);legacy.now+=40;
+        }
+        const uint32_t legacy_bytes=legacy.request_wire_bytes+legacy.response_wire_bytes;
+        std::printf("M3 fused input: wire_bytes=%u legacy_bytes=%u legacy_writes=%u blocks=%u error=%d\n",
+                    fused_bytes,legacy_bytes,legacy.writes,old.blocks,old.error.load());
+        assert(old.blocks==1 && legacy.writes==1 && legacy.completions==1 &&
+               !legacy.inline_completions && fused_bytes<legacy_bytes && !old.error.load());
     }
     {
         // A slow block can exceed its deadline while priming, before there
         // is a playback underrun. Preserve that latency in the diagnostics.
         Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
-        p.produced=96*140;
+        p.produced=AudioEngine::BLOCK*140;
         for(unsigned turn=0;turn<300 && !e.blocks;++turn) {
             e.step(s.now);if(e.wire.pending)s.exchange(e.wire);
             if(!(turn%20))stm3_tick(&s.runtime);
             s.now+=40;
         }
-        assert(e.blocks==1 && e.late_blocks==1 && e.min_render_us>3840 && e.block_us==e.max_render_us);
+        assert(e.blocks==1 && e.late_blocks==1 && e.min_render_us>AudioEngine::BLOCK*40 && e.block_us==e.max_render_us);
         assert(!e.underruns && !e.error.load() && !e.ready_polls);
     }
     {
@@ -111,7 +148,7 @@ int main() {
         // fast native synthesis alone must not hide a scheduling stall.
         const auto exercise=[](unsigned gap_us,bool service_during_gap) {
             Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
-            constexpr unsigned samples=20*96;p.produced=samples*140;
+            constexpr unsigned samples=20*AudioEngine::BLOCK;p.produced=samples*140;
             unsigned consumed=0;uint32_t gap_end=0;bool injected=false;
             for(unsigned turn=0;turn<30000 && consumed<samples && !e.error.load();++turn) {
                 if(!injected && consumed>=400 && e.stage==AudioEngine::RESULT && s.runtime.job.progress>=32) {
@@ -134,20 +171,20 @@ int main() {
                         gap_us,service_during_gap,consumed,e.underruns,e.late_blocks,e.max_render_us,e.error.load());
             if(service_during_gap || !gap_us) {
                 assert(consumed==samples && !e.error.load() && !e.underruns && !e.late_blocks);
-            } else if(gap_us==4000) {
+            } else if(gap_us<10000) {
                 assert(consumed==samples && e.late_blocks==1 && !e.underruns && !e.error.load());
             } else {
-                assert(e.underruns==16 && e.error.load()==-29 && consumed<samples);
+                assert(e.error.load()==STM3_E_TIME && consumed<samples);
             }
         };
         exercise(0,false);
-        exercise(4000,false);
-        exercise(5000,false); // Millisecond timeout quantization can add a tick.
-        exercise(5000,true);
+        exercise(5000,false);
+        exercise(12000,false);
+        exercise(12000,true);
     }
     {
         Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
-        p.produced=96*140;s.cost=2001;
+        p.produced=AudioEngine::BLOCK*140;s.cost=2001;
         for(unsigned turn=0;turn<20;++turn) {
             e.step(s.now);if(e.wire.pending)s.exchange(e.wire);s.now+=40;
         }
@@ -157,7 +194,7 @@ int main() {
     {
         // A deferred STEP fault arrives directly, without a STATUS poll.
         Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
-        p.produced=96*140;
+        p.produced=AudioEngine::BLOCK*140;
         for(unsigned turn=0;turn<200 && !e.error.load();++turn) {
             e.step(s.now);if(e.wire.pending)s.exchange(e.wire);
             if(s.runtime.state==STM3_RUNNING){s.cost=2001;stm3_tick(&s.runtime);}
@@ -167,12 +204,12 @@ int main() {
     }
     {
         Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;
-        p.produced=96*140;e.step(s.now);assert(e.stage==AudioEngine::WRITE);
+        p.produced=AudioEngine::BLOCK*140;e.step(s.now);assert(e.stage==AudioEngine::WRITE);
         e.stopping.store(true);
         for(unsigned turn=0;turn<100 && !e.stopped.load();++turn) {
             if(e.wire.pending)s.exchange(e.wire);stm3_tick(&s.runtime);s.now+=40;e.step(s.now);
         }
-        assert(e.stopped.load() && e.samples==96 && e.blocks==1 && !e.wire.pending && !e.error.load());
+        assert(e.stopped.load() && e.samples==AudioEngine::BLOCK && e.blocks==1 && !e.wire.pending && !e.error.load());
     }
     std::puts("M3 audio engine: exact duties, no readiness polls, deferred completion, PMU foreground stalls versus continued service, packet reuse, cursor wrap, drain-on-close and E_TIME PASS");
 }

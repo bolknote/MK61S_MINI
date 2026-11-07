@@ -5,8 +5,11 @@ import hashlib
 import json
 from pathlib import Path
 import zipfile
+import sys
 
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/'tools/firmware/picocalc'))
+from bios_stm3_input import stage_stm3_input
 FILES={
     'stm3_runtime.c':'source/Core/Src/stm3_runtime.c',
     'stm3_runtime.h':'source/Core/Inc/stm3_runtime.h',
@@ -30,6 +33,16 @@ def prepare(output):
             if digest!=manifest['source_archive_files'][path]:
                 raise ValueError('Changed compact-loader fixture: '+path)
             (output/name).write_bytes(data);pins[path]=digest
+    staged=output/'staged'
+    (staged/'Core/Inc').mkdir(parents=True,exist_ok=True)
+    (staged/'Core/Src').mkdir(parents=True,exist_ok=True)
+    (staged/'Core/Inc/stm3_runtime.h').write_bytes((output/'stm3_runtime.h').read_bytes())
+    (staged/'Core/Src/stm3_runtime.c').write_bytes((output/'stm3_runtime.c').read_bytes())
+    stage_stm3_input(staged)
+    (output/'stm3_runtime.h').write_bytes((staged/'Core/Inc/stm3_runtime.h').read_bytes())
+    (output/'stm3_runtime.c').write_bytes((staged/'Core/Src/stm3_runtime.c').read_bytes())
+    pins['staged/Core/Inc/stm3_runtime.h']=hashlib.sha256((output/'stm3_runtime.h').read_bytes()).hexdigest()
+    pins['staged/Core/Src/stm3_runtime.c']=hashlib.sha256((output/'stm3_runtime.c').read_bytes()).hexdigest()
     if (output/'stm3_module.h').read_bytes()!=(ROOT/'sdk/coproc/stm3_module.h').read_bytes():
         raise ValueError('SDK module ABI differs from the archived resident')
     return pins

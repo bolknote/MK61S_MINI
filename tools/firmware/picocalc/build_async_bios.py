@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT), str(Path(__file__).resolve().parent), str(ROOT / "sdk/coproc")]
 from build_picocalc import compiler_bin
 from bios_pmu_async import stage_async_pmu
+from bios_stm3_input import stage_stm3_input
 from elf32 import ELF
 
 
@@ -68,6 +69,7 @@ def main():
     if not (source / "Drivers").exists():
         (source / "Drivers").symlink_to(drivers, target_is_directory=True)
     delta = stage_async_pmu(source)
+    delta.update(stage_stm3_input(source))
     sources = {str(p.relative_to(source)): sha(p) for p in source.rglob("*")
                if p.is_file() and not p.is_relative_to(source / "Drivers") and not p.is_relative_to(source / "build")}
     output.mkdir(parents=True, exist_ok=True)
@@ -89,6 +91,8 @@ def main():
     if binary.stat().st_size > 62 * 1024 or gap < 2048:
         raise ValueError("Async PMU candidate exceeds the existing Flash/RAM/stack budgets")
     result = {"status": "COMPILED_NOT_DEPLOYED", "target": "STM32F103R8", "async_pmu": True,
+              "stm3_start_result_input": True,
+              "clock_hz": 72000000, "uart_baud": 2250000,
               "base_image_sha256": metadata["image_sha256"], "bin": str(binary), "elf": str(elf_path),
               "bin_sha256": sha(binary), "image_bytes": binary.stat().st_size, "global_ram_bytes": globals_bytes,
               "stack_reserved_bytes": 4096, "ram_unallocated_bytes": gap, "pmu_power_protocol": 1,

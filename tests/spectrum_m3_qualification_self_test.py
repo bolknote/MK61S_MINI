@@ -12,6 +12,7 @@ base=dict(SYS_HZ=125000000,PERI_HZ=48000000,KBD='OK',SD='OK',SERVICE='CLOSED',RU
 base.update({key:0 for key in q.COUNTERS});base['I2C_ABORTS']=54
 base.update(SYNTH_UNDERRUNS=0,M3_FALLBACKS=0,M3_ERROR=0,M3_UNDERRUNS=0,M3_UART_ERRORS=0,
             M3_UNLOAD_FAILURES=0,M3_READY_POLLS=0,M3_LATE_BLOCKS=0,M3_PROFILE=1,SYNTH_DMA=0,SYNTH_BLOCKS=9600,
+            M3_INLINE_INPUT=1,M3_INLINE_REQUESTS=2000,M3_STREAM_WRITE_REQUESTS=0,M3_TX_BYTES=100000,M3_RX_BYTES=400000,
             M3_SAMPLES=307200,M3_BLOCKS=3200,M3_RENDER_SAMPLES=307200,M3_PRIME_US=7680,
             M3_RENDER_MAX_SLICE_US=600,M3_BLOCK_US=3700,M3_BLOCK_MIN_US=3100,M3_MIN_QUEUED=32,
             M3_RENDER_US=9000000,M3_BLOCK_TOTAL_US=11520000)
@@ -28,7 +29,9 @@ for changes,key in [({'M3_FALLBACKS':1},'no_fallback'),({'M3_LATE_BLOCKS':1},'ze
                     ({'M3_READY_POLLS':1},'zero_M3_READY_POLLS'),({'I2C_ABORTS':55},'unchanged_I2C_ABORTS'),
                     ({'M3_SAMPLES':672,'M3_RENDER_SAMPLES':672},'continuous_sample_coverage'),
                     ({'M3_ERROR':-29},'zero_M3_ERROR'),({'SYS_HZ':200000000},'native_SYS_HZ'),
-                    ({'SYNTH_DMA':1},'dma_released'),({'SYNTH_BLOCKS':0},'real_dma_output')]:
+                    ({'SYNTH_DMA':1},'dma_released'),({'SYNTH_BLOCKS':0},'real_dma_output'),
+                    ({'M3_INLINE_INPUT':0},'fused_input_supported'),({'M3_INLINE_REQUESTS':0},'fused_input_exercised'),
+                    ({'M3_STREAM_WRITE_REQUESTS':1},'no_stream_write_roundtrips')]:
     result=q.qualify(wire(),status(),status(changes));assert result['status']=='FAIL' and key in result['failures'],result
 assert not q.qualify(wire(fault=1),status(),status())['checks']['no_probe_fault']
 assert not q.qualify(wire(policy=0),status(),status())['checks']['strict_remote_policy']

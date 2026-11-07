@@ -5,7 +5,7 @@ module ABI and PicoCalc UART client. Production consumers can include or compile
 from `sdk/coproc` without importing a dated `research` directory. The files are
 originally copied byte-for-byte from the physical module/DWT tests.
 `PROVENANCE.json` records the original hashes and the subsequently added
-optional START_RESULT completion command. The module ABI is unchanged.
+optional START_RESULT completion commands. The module ABI is unchanged.
 
 | File | Purpose |
 |---|---|
@@ -49,7 +49,8 @@ payload (polynomial0xEDB88320, initial/final XOR0xFFFFFFFF). Responses use
 at most252 useful bytes per frame. The encoded-frame buffer limit is272 bytes.
 
 Commands are HELLO1, LOAD_BEGIN2, LOAD_CHUNK3, LOAD_COMMIT4, WRITE5, START6,
-STATUS7, READ8, CANCEL9, UNLOAD10 and optional START_RESULT11. READ accepts finished jobs. There is one
+STATUS7, READ8, CANCEL9, UNLOAD10, optional START_RESULT11 and optional
+START_RESULT_INPUT12. READ accepts finished jobs. There is one
 module and one job at a time. Identical sequence/command/CRC replay resends the
 cached reply without repeating START. The STM32 does not send unsolicited data.
 
@@ -67,6 +68,14 @@ There is no initial acknowledgement and no STATUS/READ readiness polling.
 INIT/STEP/deadline failures return their original status instead of samples.
 The native2ms slice limit and keyboard processing between module calls remain.
 
+START_RESULT_INPUT requires bit3 (`8`). It has the same first four words and
+appends exactly `input_bytes` of job input to the request. The limit is240
+bytes so the whole operation still fits one256-byte wire payload. The resident
+validates the state, module, deadline, input length and result length before
+changing its input buffer, then applies the same at-most-once deferred reply.
+Jobs above240 bytes keep the WRITE + START_RESULT path. This form removes one
+stop-and-wait request and acknowledgement from each small real-time job.
+
 Only one request may be outstanding. An identical pending replay waits for
 the same job; a completed replay resends the exact cached bytes. A different
 request while completion is pending is ignored and counted as a sequence
@@ -74,12 +83,13 @@ conflict. The requested job deadline bounds this interval. Clients must not
 issue CANCEL/HELLO with a new sequence before the pending reply/deadline;
 transport retries reuse the original frame. Long outputs can be read in
 further ordinary READ chunks after the completion response has arrived.
-Legacy commands retain their meanings; clients must mask known HELLO bits
-rather than requiring the complete flags word to equal3.
+Legacy commands retain their meanings; clients must test required HELLO bits
+rather than requiring the complete flags word to equal a fixed value.
 
-The completion extension has passed host sanitizer and relocated Thumb-2
-tests. It has not yet been verified on physical hardware. Original physical
-evidence below describes the earlier resident, without this extension.
+Both completion forms have passed host sanitizer and relocated Thumb-2 tests.
+START_RESULT_INPUT has not yet been verified on physical hardware. Original
+physical evidence below describes an earlier resident without the fused-input
+form.
 
 ## RP2040 ownership
 

@@ -88,6 +88,25 @@ int main() {
         assert(reply==s.last_reply && !w.result && s.invocations==1);
         assert(w.begin(STM3_UNLOAD,nullptr,0,s.now));s.exchange(w);assert(!w.result && s.runtime.state==STM3_EMPTY);
     }
+    {
+        // The real-time form carries the entire small input in the same
+        // at-most-once request as START_RESULT. No WRITE acknowledgement is
+        // needed, and malformed lengths do not change resident input memory.
+        Server s;Wire w;s.immediate=true;s.load(w);
+        std::array<uint8_t,240> input{};for(unsigned i=0;i<input.size();++i)input[i]=uint8_t(i*3+1);
+        uint8_t arg[16];Wire::put32(arg,s.module);Wire::put32(arg+4,input.size());
+        Wire::put32(arg+8,10);Wire::put32(arg+12,input.size());
+        assert(w.begin_pair(STM3_START_RESULT_INPUT,arg,sizeof(arg),input.data(),input.size(),s.now,12000));
+        s.exchange(w);assert(!w.result && w.reply_bytes==8+input.size() && s.invocations==1);
+        for(unsigned i=0;i<input.size();++i)assert(w.reply()[8+i]==uint8_t(input[i]^0x5a));
+        assert(w.begin(STM3_UNLOAD,nullptr,0,s.now));s.exchange(w);assert(!w.result);
+        s.load(w);Wire::put32(arg,s.module);Wire::put32(arg+4,input.size()-1);
+        Wire::put32(arg+8,10);Wire::put32(arg+12,1);
+        const auto invocations=s.invocations;
+        assert(w.begin_pair(STM3_START_RESULT_INPUT,arg,sizeof(arg),input.data(),input.size(),s.now,12000));
+        s.exchange(w);assert(w.result==STM3_E_SIZE && s.invocations==invocations);
+        for(uint8_t value:s.runtime.input)assert(value==0);
+    }
     for(unsigned fault=0;fault<3;++fault) {
         Server s;Wire w;s.load(w);s.input(w,64);s.now=0xfffffff0u;
         if(fault==0)s.cost=2001; // INIT overrun, even though code returned MORE.

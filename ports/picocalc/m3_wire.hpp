@@ -55,6 +55,21 @@ struct Wire {
         tx[0]=0;const unsigned bytes=encode(frame,12+payload,tx+1);
         tx[bytes+1]=0;tx_bytes=bytes+2;pending=true;return true;
     }
+    bool begin_pair(uint8_t op,const uint8_t* first,unsigned first_n,const uint8_t* second,unsigned second_n,
+                    uint32_t now,uint32_t deadline=5000) {
+        if(pending || !op || (op&128) || first_n>256 || second_n>256-first_n ||
+           (first_n && !first) || (second_n && !second) || !deadline || deadline>1000000)return false;
+        ++sequence;command=op;started=now;timeout=deadline;
+        rx_bytes=reply_bytes=0;result=0;complete=overflow=false;
+        if(first_n)std::memmove(frame+8,first,first_n);
+        if(second_n)std::memmove(frame+8+first_n,second,second_n);
+        const unsigned payload=first_n+second_n;
+        frame[0]=1;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
+        frame[4]=uint8_t(payload);frame[5]=uint8_t(payload>>8);frame[6]=frame[7]=0;
+        put32(frame+8+payload,crc(frame,8+payload));
+        tx[0]=0;const unsigned bytes=encode(frame,12+payload,tx+1);
+        tx[bytes+1]=0;tx_bytes=bytes+2;pending=true;return true;
+    }
     void fail(int error) {result=error;pending=false;complete=true;reply_bytes=0;}
     bool replay(uint32_t now,uint32_t deadline=5000) {
         if(pending || !tx_bytes || !deadline || deadline>1000000)return false;

@@ -9,6 +9,8 @@ struct Statistics {
     uint32_t render_samples,render_jobs,render_slices,max_job_us,render_max_slice_us;
     uint64_t render_us;
     uint32_t min_block_us,late_blocks,ready_polls,prime_us,min_queued;
+    bool inline_input;
+    uint32_t transport_flags,inline_requests,stream_write_requests,tx_bytes,rx_bytes;
     uint64_t block_us;
 };
 #if defined(PICO_ON_DEVICE) || defined(MK61_TEST_M3_AUDIO_BACKEND)

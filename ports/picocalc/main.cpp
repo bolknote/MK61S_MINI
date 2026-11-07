@@ -150,6 +150,10 @@ void report(unsigned math_failures) {
     std::printf("M3_BLOCK_MIN_US=%lu M3_BLOCK_TOTAL_US=%llu M3_LATE_BLOCKS=%lu M3_READY_POLLS=%lu M3_PRIME_US=%lu M3_MIN_QUEUED=%lu\n",
         (unsigned long)m3.min_block_us,(unsigned long long)m3.block_us,(unsigned long)m3.late_blocks,
         (unsigned long)m3.ready_polls,(unsigned long)m3.prime_us,(unsigned long)m3.min_queued);
+    std::printf("M3_TRANSPORT_FLAGS=%lu M3_INLINE_INPUT=%u M3_INLINE_REQUESTS=%lu M3_STREAM_WRITE_REQUESTS=%lu M3_TX_BYTES=%lu M3_RX_BYTES=%lu\n",
+        (unsigned long)m3.transport_flags,m3.inline_input,
+        (unsigned long)m3.inline_requests,(unsigned long)m3.stream_write_requests,
+        (unsigned long)m3.tx_bytes,(unsigned long)m3.rx_bytes);
     const auto settings_storage=picocalc::settings_storage_statistics();
     std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
         (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,
