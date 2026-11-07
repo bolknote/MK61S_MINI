@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "status": "CURRENT_125MHZ_FIXES_VERIFIED",
+  "build": "69071668",
+  "crc": "AE0062FE",
+  "source": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/ui-v4/source",
+  "cpu_hz": 125000000,
+  "firmware_path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/ui-v4/fixes-native/mk61s-picocalc-pico-h.uf2",
+  "ui_redesign": "mockup only; native chat layout awaiting user selection",
+  "mockup": "/Users/bolk/.codex/visualizations/2026/11/06/01a1af8d-de7d-7bb0-9ca0-e66592f7864f/mk61-single-chat.html",
+  "clock_tests": [
+    {
+      "mhz": 200,
+      "status": "PASS",
+      "decode_seconds_per_token": 5.836687,
+      "control125_seconds_per_token": 9.3414575,
+      "speedup": 1.6004725797357302,
+      "stress_ms": 120000,
+      "stress_iterations": 180440,
+      "configured_vreg_mv": 1100,
+      "vreg_register": 4273,
+      "checksums_match": true,
+      "tokens_match": true,
+      "i2c_errors": 0,
+      "restored_hz": 125000000,
+      "receipt_sha256": "1bb70f7e905493ec770bde2a643ac3cc6fe04048717efecf250a71d50f218f18"
+    },
+    {
+      "mhz": 250,
+      "status": "PASS",
+      "decode_seconds_per_token": 4.65664,
+      "control125_seconds_per_token": 9.341884,
+      "speedup": 2.0061426264431006,
+      "stress_ms": 120000,
+      "stress_iterations": 223131,
+      "configured_vreg_mv": 1100,
+      "vreg_register": 4273,
+      "checksums_match": true,
+      "tokens_match": true,
+      "i2c_errors": 0,
+      "restored_hz": 125000000,
+      "receipt_sha256": "6bf7ba29c5f49d0d7ba9b0957b3186a6411eeb8b595a3aa5b317069d9d6f8038"
+    },
+    {
+      "mhz": 300,
+      "status": "FAIL_HARDFAULT_DURING_TRANSITION",
+      "decode_seconds_per_token": null,
+      "configured_vreg_mv": 1100,
+      "crash_report": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/oc-user-20261106/CRASH-300.txt",
+      "recovery": "hardware watchdog rebooted to125MHz",
+      "repeated": false
+    }
+  ],
+  "sine_diagnosis": {
+    "task": "посчитай синус 22",
+    "first_model_reply": "MODEL\ntask=2 program=0\n<done/>\n",
+    "program_created": false,
+    "test_count": 0,
+    "cursor": "vertical insertion caret in empty composer",
+    "emulator_reference": "sin22 DEG: status=1 passed=1 X=0.3746066 commands=4\nsin22 RAD: status=1 passed=1 X=-0.008851685 commands=4\n"
+  },
+  "fixes": {
+    "scope": "Physical LCD status publication before freeze; explicit empty-result text. No chat redesign implemented.",
+    "files": [
+      {
+        "path": "ports/picocalc/native_app.cpp",
+        "before_sha256": "b695d0403b8192bda64ea52ec38d1548980397f4f9a968673f7d1d257564d888",
+        "after_sha256": "4a8ff18de2b8614a31af1d388ea032487ad05cc6e463ec9b06b3d8bcb584bd4a"
+      },
+      {
+        "path": "ports/picocalc/ai_harness.cpp",
+        "before_sha256": "fa040618ed0f2d3be14d554941fc2002996fbc9eacc0f034e7fa117f8b8de866",
+        "after_sha256": "227e51af2563b4ae25a2a01ed62713e31809d3384e868bdafa8d5d763f60e3b5"
+      }
+    ],
+    "host_asan": true,
+    "cross_build": "69071668",
+    "crc": "AE0062FE",
+    "hardware_verified": true,
+    "physical_lcd_publication_verified": true,
+    "presentation_proof": {
+      "status": "PASS",
+      "authorization_authority": "direct human user",
+      "root_review_claimed": false,
+      "build": "69071668",
+      "crc": "AE0062FE",
+      "reset": false,
+      "calculator_data_saved_or_restored": false,
+      "frame_sha256": "27837fdf6d5657760ae086c46c5e640f96bf791fbfe80ce3a0775d0a189e9db4",
+      "physical_lcd_crc": "BA13EA39",
+      "entered_forward": true,
+      "observed_title": [
+        "M61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[МК-61 #1 | Читаю усл]"
+      ],
+      "cdc_closed": true
+    },
+    "presentation_supervisor": {
+      "pid": 99959,
+      "reaped": true,
+      "exit_code": 0,
+      "elapsed_seconds": 42.79199279099703
+    },
+    "current_cpu_hz": 125000000,
+    "patch_sha256": "7828690ba14cd357817d0f57cabe86a7b09d997b9d4829972c6b91d983372bc9",
+    "flash_record_note": "New image written and picotool verification OK once. Initial controller final status parse HOLD (missing BUILD in one reply); independent native admission, real-forward frame capture, physical LCD CRC, exit and final health PASS. Both original records retained."
+  },
+  "final_foreground": "calculator; task1 paused after capture probe",
+  "cdc_closed": true,
+  "all_owned_processes_reaped": true,
+  "old_state_saved_or_restored": false,
+  "pending": [
+    "Implement approved single-chat UI",
+    "Improve model ability beyond empty done response",
+    "Long-duration overclock stability"
+  ],
+  "primary_integration": {
+    "status": "30 AI files merged;4 upstream-owned integration files deferred to Spectrum",
+    "files": 30,
+    "excluded": [
+      "ports/picocalc/CMakeLists.txt",
+      "ports/picocalc/psram.cpp",
+      "ports/picocalc/psram.hpp",
+      "tools/firmware/picocalc/build_picocalc.py"
+    ],
+    "native_app_sha256": "4a8ff18de2b8614a31af1d388ea032487ad05cc6e463ec9b06b3d8bcb584bd4a",
+    "ai_harness_sha256": "227e51af2563b4ae25a2a01ed62713e31809d3384e868bdafa8d5d763f60e3b5",
+    "index_or_head_modified": false
+  },
+  "device_handoff": "Released to Spectrum by separately verified direct human authorization; .build/mk61ai/ui-v4/SPECTRUM-RELEASE.json. No further device I/O by Harness."
+}

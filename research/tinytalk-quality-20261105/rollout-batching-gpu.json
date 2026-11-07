@@ -1,0 +1,15 @@
+{
+  "model_sha256": "10cc23bd636c854569ec03f77030245c0700d8849d4e9fd73a4cbd370326885f",
+  "device": "cuda",
+  "replies": 60,
+  "identical_token_sequences": 60,
+  "all_reply_metadata_identical": true,
+  "case_contexts_identical": true,
+  "histories_identical": true,
+  "seconds": {
+    "sequential": 9.992832162999548,
+    "batched": 1.9481599269784056
+  },
+  "scenarios": 20,
+  "reserved_audit3_opened": false
+}

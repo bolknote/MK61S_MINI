@@ -1,0 +1,11 @@
+{
+  "model_sha256": "bc2731148309bffcceda6311ad55d47e9e544086176153141fab31c2740ff6ea",
+  "compared": 10,
+  "identical_raw_decoded_replies": 10,
+  "actual_kv_storage_dtypes": [
+    "torch.float16"
+  ],
+  "host_attention_arithmetic": "FP32",
+  "manual_quality_check_passed": false,
+  "native_runtime_measured": false
+}

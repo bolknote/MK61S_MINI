@@ -1,0 +1,21 @@
+{
+  "model": "TheREZOR/TinyTalk",
+  "parameters": 8278400,
+  "quantized_weights_estimate_bytes": 4692680,
+  "kv_fp16_context256_bytes": 1048576,
+  "compact_tokenizer_design": {
+    "token_count": 50257,
+    "raw_token_bytes": 320827,
+    "offsets_bytes": 201032,
+    "merge_count": 50000,
+    "merge_index_bytes": 400000,
+    "header_bytes": 64,
+    "total_bytes": 921923,
+    "layout": "u32 token offsets; raw byte tokens; sorted u32 pair key + u16 rank + u16 result per merge"
+  },
+  "subtotal_bytes": 6663179,
+  "remaining_psram_before_other_runtime_data": 1725429,
+  "quantization_executed": false,
+  "native_tokenizer_implemented": false,
+  "device_verified": false
+}

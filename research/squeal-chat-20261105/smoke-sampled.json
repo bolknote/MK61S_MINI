@@ -1,0 +1,182 @@
+{
+  "model": "Squeal-Studio/squeal_ai_8m-instruct",
+  "revision": "24dd4690ffa674a608387cf864c695239ed7964f",
+  "files": {
+    "config.json": {
+      "bytes": 912,
+      "sha256": "544ff5530093215f28f10cdc8fc702ded975d6896b66039dc465e312392d89e4"
+    },
+    "generation_config.json": {
+      "bytes": 226,
+      "sha256": "fa652a43cf514e0281319747b3d06a7d559e6ed6b1fffa163f2eef81026932f4"
+    },
+    "model.safetensors": {
+      "bytes": 31443984,
+      "sha256": "a33c406fa70d8e5b07d02c681e5d3a7a3d89bb1e08c20be6e0c4d5e4d2ab2681"
+    },
+    "tokenizer.json": {
+      "bytes": 2419396,
+      "sha256": "9d12f19955e1f3573e5b62e45c4c43ecab579ec412b3f0e5dd6ab29e2ee7b5b8"
+    },
+    "tokenizer_config.json": {
+      "bytes": 297,
+      "sha256": "a1d8d0c16a8f6ba93f93fcce7e7d40a04af271ef16df79cde260a49030f6b940"
+    },
+    "chat_template.jinja": {
+      "bytes": 194,
+      "sha256": "34857664019710d32eb4b69505f485e1ec1d22918b10ffee11435d4c751c5a21"
+    }
+  },
+  "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "2.4.0"
+  },
+  "settings": {
+    "download_only": false,
+    "smoke": true,
+    "prompt": null,
+    "json": "research/squeal-chat-20261105/smoke-sampled.json",
+    "temperature": 0.7,
+    "seed": 42,
+    "context": 256,
+    "max_new_tokens": 80,
+    "threads": 2
+  },
+  "parameter_count": 7858368,
+  "chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}<|user|>\n{{ message['content'] }}\n{% elif message['role'] == 'bot' %}<|assistant|>\n{{ message['content'] }}\n{% endif %}{% endfor %}",
+  "prompt_format": "Author template with bot roles and an explicit assistant generation marker",
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Привет! Как тебя зовут?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nПривет! Как тебя зовут?\n<|assistant|>\n",
+      "prompt_tokens": 22,
+      "generated_tokens": 31,
+      "reply": "Я люблю посетить \"А-то\" - это не все, что вам нужно. Я люблю его, и я считаю, что это необходимо.",
+      "raw_reply": "Я люблю посетить \"А-то\" - это не все, что вам нужно. Я люблю его, и я считаю, что это необходимо.<eos>",
+      "seconds": 0.09880474998499267,
+      "tokens_per_second": 313.75009809456077,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Что ты любишь делать?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nЧто ты любишь делать?\n<|assistant|>\n",
+      "prompt_tokens": 21,
+      "generated_tokens": 14,
+      "reply": "Я могу узнать о том, что я могу найти свой город.",
+      "raw_reply": "Я могу узнать о том, что я могу найти свой город.<eos>",
+      "seconds": 0.046147292014211416,
+      "tokens_per_second": 303.3764147133182,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Я сегодня устал. Посоветуй что-нибудь простое."
+        }
+      ],
+      "rendered_prompt": "<|user|>\nЯ сегодня устал. Посоветуй что-нибудь простое.\n<|assistant|>\n",
+      "prompt_tokens": 28,
+      "generated_tokens": 12,
+      "reply": "Я думаю, что он был очень очень интересной.",
+      "raw_reply": "Я думаю, что он был очень очень интересной.<eos>",
+      "seconds": 0.036424666992388666,
+      "tokens_per_second": 329.44707504141445,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Почему зимой идёт снег?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nПочему зимой идёт снег?\n<|assistant|>\n",
+      "prompt_tokens": 21,
+      "generated_tokens": 68,
+      "reply": "Митария - это два лучших книг, который может быть использован для решения жизни. Но в качестве ингредиенты - это вопрос, которая содержит различные навыков и работы. Он также могут привести к предложением, чтобы создать их, чтобы получить внимание на работе и улучшить их в более эффективную и более эффективно.",
+      "raw_reply": "Митария - это два лучших книг, который может быть использован для решения жизни. Но в качестве ингредиенты - это вопрос, которая содержит различные навыков и работы. Он также могут привести к предложением, чтобы создать их, чтобы получить внимание на работе и улучшить их в более эффективную и более эффективно.<eos>",
+      "seconds": 0.19963637500768527,
+      "tokens_per_second": 340.61928843068927,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Сколько будет два плюс два?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nСколько будет два плюс два?\n<|assistant|>\n",
+      "prompt_tokens": 22,
+      "generated_tokens": 13,
+      "reply": "Я люблю путешествовать, и я не могу увидеть его.",
+      "raw_reply": "Я люблю путешествовать, и я не могу увидеть его.<eos>",
+      "seconds": 0.04237700000521727,
+      "tokens_per_second": 306.7701819005474,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Меня зовут Борис. Как дела?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nМеня зовут Борис. Как дела?\n<|assistant|>\n",
+      "prompt_tokens": 23,
+      "generated_tokens": 11,
+      "reply": "Я хочу помочь тебе, чтобы ты любит читать.",
+      "raw_reply": "Я хочу помочь тебе, чтобы ты любит читать.<eos>",
+      "seconds": 0.03432220799732022,
+      "tokens_per_second": 320.49220145914995,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Меня зовут Борис. Как дела?"
+        },
+        {
+          "role": "assistant",
+          "content": "Я хочу помочь тебе, чтобы ты любит читать."
+        },
+        {
+          "role": "user",
+          "content": "Как меня зовут?"
+        }
+      ],
+      "rendered_prompt": "<|user|>\nМеня зовут Борис. Как дела?\n<|assistant|>\nЯ хочу помочь тебе, чтобы ты любит читать.\n<|user|>\nКак меня зовут?\n<|assistant|>\n",
+      "prompt_tokens": 54,
+      "generated_tokens": 25,
+      "reply": "Я бы хотел бы отправиться в ресторан, чтобы ты не мог бы провести время на прогулку, и я могу попробовать.",
+      "raw_reply": "Я бы хотел бы отправиться в ресторан, чтобы ты не мог бы провести время на прогулку, и я могу попробовать.<eos>",
+      "seconds": 0.07758283300790936,
+      "tokens_per_second": 322.2362348826746,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    }
+  ]
+}

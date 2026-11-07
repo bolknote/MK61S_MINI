@@ -1,0 +1,111 @@
+{
+  "device": "cpu",
+  "models": {
+    "consistent-top4": {
+      "parameters": 10577920,
+      "best_step": 8000,
+      "packed_bytes": 6038016,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "Sure. How are you feeling today?",
+          "b200": "Sure. How are you feeling today?"
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "I am ready to chat with you. How are you?",
+          "b200": "I am ready to chat with you. How are you?"
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "I am TinyTalk, a small friendly chat bot.",
+          "b200": "I am TinyTalk, a small friendly chat bot."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "I am ready to chat with you. How are you?",
+          "b200": "I am ready to chat with you. How are you?"
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Try reading a short story.",
+          "b200": "Try reading a short story."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "You could try folding a little paper animal.",
+          "b200": "You could try folding a little paper animal."
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "That sounds frustrating. Would you like to talk about it?",
+          "b200": "That sounds frustrating. Would you like to talk about it?"
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try reading a short story.",
+          "b200": "Try reading a short story."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "Try writing a tiny story about a rainy day.",
+          "b200": "Try writing a tiny story about a rainy day."
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "You could draw a funny animal.",
+          "b200": "You could draw a funny animal."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That sounds like a lovely book. What did you like about it?",
+          "b200": "That sounds like a lovely book. What did you like about it?"
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "Wow! What did you enjoy most?",
+          "b200": "Wow! What did you enjoy most?"
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "Oh no. That sounds frustrating.",
+          "b200": "Oh no. That sounds frustrating."
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "Oh no. That sounds frustrating.",
+          "b200": "Oh no. That sounds frustrating."
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "That sounds like a lovely little moment.",
+          "b200": "That sounds like a lovely little moment."
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "That sounds like a lovely little moment.",
+          "b200": "That sounds like a lovely little moment."
+        }
+      ]
+    }
+  },
+  "uses_reserved_test": false
+}

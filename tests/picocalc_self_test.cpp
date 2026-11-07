@@ -241,6 +241,11 @@ void picocalc_software_test(const char* preview_path);
 void picocalc_contract_test();
 void picocalc_firmware_test();
 int main(int argc, char** argv) {
+    if(argc==2&&(!std::strcmp(argv[1],"--ai-native")||!std::strcmp(argv[1],"--native-contract"))){
+        require(picocalc::sd::init()&&picocalc::files::format(),"isolated native FAT fixture");
+        if(!std::strcmp(argv[1],"--ai-native")){extern void picocalc_ai_test();picocalc_ai_test();}
+        else picocalc_contract_test();return 0;
+    }
     if(argc==2 && !std::strcmp(argv[1],"--explorer-native")) {
         require(picocalc::sd::init() && picocalc::files::format(),"isolated Explorer FAT fixture");
         extern void picocalc_explorer_test();picocalc_explorer_test();return 0;
@@ -332,6 +337,7 @@ int main(int argc, char** argv) {
     picocalc_parity_test();
     picocalc_software_test(argc == 2 ? argv[1] : nullptr);
     picocalc_contract_test();
+    extern void picocalc_ai_test();picocalc_ai_test();
     picocalc_firmware_test();
     extern void picocalc_io_test();
     picocalc_io_test();

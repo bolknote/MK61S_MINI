@@ -1,0 +1,1334 @@
+{
+  "model": "TheREZOR/TinyTalk",
+  "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+  "files": {
+    "config.json": {
+      "bytes": 1054,
+      "sha256": "08e9e9012b7051a291a53a034422facc8d3b762b57ce0c11cd1b47dfb5abfe70"
+    },
+    "generation_config.json": {
+      "bytes": 140,
+      "sha256": "b76cbcd00dd8ff4aa105fdf77f5685c13c061af99c930b8a469f1339c40371fb"
+    },
+    "model.safetensors": {
+      "bytes": 33124616,
+      "sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77"
+    },
+    "tokenizer.json": {
+      "bytes": 3557680,
+      "sha256": "1fe93b6152957cf9cfd6d89002467f789ce8b3f3e000b3a2edf27c808ddd0b9e"
+    },
+    "tokenizer_config.json": {
+      "bytes": 314,
+      "sha256": "6959fa789244fb0db075863e5167414ae2bae8c6b28e343935b0b1479fcc1f2c"
+    },
+    "vocab.json": {
+      "bytes": 798156,
+      "sha256": "3ba3c3109ff33976c4bd966589c11ee14fcaa1f4c9e5e154c2ed7f99d80709e7"
+    },
+    "merges.txt": {
+      "bytes": 456318,
+      "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5"
+    }
+  },
+  "packed_q4": {
+    "format": "TTQ4v1",
+    "origin": {
+      "model": "TheREZOR/TinyTalk",
+      "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+      "source_sha256": "e5a47755e951c69ab9bebdba7bb3d9ff2bf1f5335af69ba49ac7e2cd77b8c984"
+    },
+    "parameters": 8278400,
+    "config": {
+      "activation_function": "gelu_new",
+      "architectures": [
+        "GPTNeoForCausalLM"
+      ],
+      "attention_dropout": 0,
+      "attention_layers": [
+        "global",
+        "local",
+        "global",
+        "local",
+        "global",
+        "local",
+        "global",
+        "local"
+      ],
+      "attention_types": [
+        [
+          [
+            "global",
+            "local"
+          ],
+          4
+        ]
+      ],
+      "bos_token_id": 50256,
+      "classifier_dropout": 0.1,
+      "dtype": "float32",
+      "embed_dropout": 0,
+      "eos_token_id": 50256,
+      "gradient_checkpointing": false,
+      "hidden_size": 128,
+      "initializer_range": 0.02,
+      "intermediate_size": null,
+      "layer_norm_epsilon": 1e-05,
+      "max_position_embeddings": 2048,
+      "model_type": "gpt_neo",
+      "num_heads": 16,
+      "num_layers": 8,
+      "pad_token_id": null,
+      "resid_dropout": 0,
+      "summary_activation": null,
+      "summary_first_dropout": 0.1,
+      "summary_proj_to_labels": true,
+      "summary_type": "cls_index",
+      "summary_use_proj": true,
+      "tie_word_embeddings": true,
+      "transformers_version": "5.19.0",
+      "use_cache": true,
+      "vocab_size": 50257,
+      "window_size": 256
+    },
+    "tied_output": true,
+    "payload_bytes": 4692680,
+    "tensors": [
+      {
+        "name": "transformer.wte.weight",
+        "shape": [
+          50257,
+          128
+        ],
+        "offset": 0,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 3618504
+      },
+      {
+        "name": "transformer.wpe.weight",
+        "shape": [
+          2048,
+          128
+        ],
+        "offset": 3618504,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 147456
+      },
+      {
+        "name": "transformer.h.0.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 3765960,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.0.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3766472,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.0.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3766984,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.0.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3776200,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.0.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3785416,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.0.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3794632,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.0.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3803848,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.0.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 3804360,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.0.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3804872,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.0.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 3805384,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.0.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 3842248,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.0.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 3844296,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.0.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3881160,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 3881672,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3882184,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3882696,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.1.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3891912,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.1.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3901128,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.1.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3910344,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.1.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3919560,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 3920072,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3920584,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.1.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 3921096,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.1.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 3957960,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.1.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 3960008,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.1.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3996872,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 3997384,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 3997896,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 3998408,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.2.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4007624,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.2.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4016840,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.2.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4026056,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.2.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4035272,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4035784,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4036296,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.2.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4036808,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.2.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4073672,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.2.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4075720,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.2.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4112584,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4113096,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4113608,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4114120,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.3.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4123336,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.3.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4132552,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.3.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4141768,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.3.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4150984,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4151496,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4152008,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.3.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4152520,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.3.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4189384,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.3.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4191432,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.3.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4228296,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4228808,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4229320,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4229832,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.4.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4239048,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.4.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4248264,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.4.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4257480,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.4.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4266696,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4267208,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4267720,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.4.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4268232,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.4.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4305096,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.4.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4307144,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.4.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4344008,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4344520,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4345032,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4345544,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.5.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4354760,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.5.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4363976,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.5.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4373192,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.5.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4382408,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4382920,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4383432,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.5.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4383944,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.5.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4420808,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.5.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4422856,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.5.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4459720,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4460232,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4460744,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4461256,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.6.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4470472,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.6.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4479688,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.6.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4488904,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.6.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4498120,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4498632,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4499144,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.6.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4499656,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.6.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4536520,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.6.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4538568,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.6.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4575432,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.ln_1.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4575944,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.ln_1.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4576456,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.attn.attention.k_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4576968,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.7.attn.attention.v_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4586184,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.7.attn.attention.q_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4595400,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.7.attn.attention.out_proj.weight",
+        "shape": [
+          128,
+          128
+        ],
+        "offset": 4604616,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 9216
+      },
+      {
+        "name": "transformer.h.7.attn.attention.out_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4613832,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.ln_2.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4614344,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.ln_2.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4614856,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.h.7.mlp.c_fc.weight",
+        "shape": [
+          512,
+          128
+        ],
+        "offset": 4615368,
+        "format": "q4_32",
+        "padded_columns": 128,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.7.mlp.c_fc.bias",
+        "shape": [
+          512
+        ],
+        "offset": 4652232,
+        "format": "fp32",
+        "bytes": 2048
+      },
+      {
+        "name": "transformer.h.7.mlp.c_proj.weight",
+        "shape": [
+          128,
+          512
+        ],
+        "offset": 4654280,
+        "format": "q4_32",
+        "padded_columns": 512,
+        "bytes": 36864
+      },
+      {
+        "name": "transformer.h.7.mlp.c_proj.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4691144,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.ln_f.weight",
+        "shape": [
+          128
+        ],
+        "offset": 4691656,
+        "format": "fp32",
+        "bytes": 512
+      },
+      {
+        "name": "transformer.ln_f.bias",
+        "shape": [
+          128
+        ],
+        "offset": 4692168,
+        "format": "fp32",
+        "bytes": 512
+      }
+    ],
+    "layout": "magic[8], little-endian u32 JSON length, UTF8 JSON, pad to 16, tensor payload",
+    "block": "little-endian fp16 d; 16 bytes q[j] | q[j+16]<<4; value=d*(q-8)",
+    "file_bytes": 4706696,
+    "file_sha256": "25dc632057a394b3d4bf85198251f7f658aac3ea5c58bd00bf7bc3561df4b6ae"
+  },
+  "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "2.4.0"
+  },
+  "settings": {
+    "profile": "tinytalk",
+    "download_only": false,
+    "smoke": true,
+    "prompt": null,
+    "model_dir": "/Users/bolk/Projects/MK61S_MINI/.build/tinytalk-chat-20261105/model",
+    "packed_q4": "/Users/bolk/Projects/MK61S_MINI/.build/tinytalk-conversation-20261105/server-results/selected/model.ttq4",
+    "json": "research/tinytalk-conversation-20261105/smoke-selected.json",
+    "temperature": 0.0,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repetition_penalty": 1.0,
+    "system_prompt": null,
+    "seed": 42,
+    "context": 256,
+    "max_new_tokens": 40,
+    "threads": 2
+  },
+  "parameter_count": 8278400,
+  "chat_template": null,
+  "prompt_format": "User: message, newline, Bot: reply; EOS between exchanges; final Bot: generation marker",
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! What is your name?"
+        }
+      ],
+      "rendered_prompt": "User: Hi! What is your name?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 19,
+      "reply": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+      "raw_reply": " I'm TinyTalk, a little chat bot. What would you like to talk about?<|endoftext|>",
+      "seconds": 0.03664774997741915,
+      "tokens_per_second": 518.449291203608,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What do you like to do?"
+        }
+      ],
+      "rendered_prompt": "User: What do you like to do?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 15,
+      "reply": "I like to read, listen to music, and listen to music.",
+      "raw_reply": " I like to read, listen to music, and listen to music.<|endoftext|>",
+      "seconds": 0.027234708017203957,
+      "tokens_per_second": 550.7677919853083,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm tired today. Can you suggest something simple?"
+        }
+      ],
+      "rendered_prompt": "User: I'm tired today. Can you suggest something simple?\nBot:",
+      "prompt_tokens": 16,
+      "generated_tokens": 7,
+      "reply": "Sure. What is it?",
+      "raw_reply": " Sure. What is it?<|endoftext|>",
+      "seconds": 0.013385500002186745,
+      "tokens_per_second": 522.9539426137561,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does it snow in winter?"
+        }
+      ],
+      "rendered_prompt": "User: Why does it snow in winter?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 16,
+      "reply": "I don't know. I just feel like I'm going to rain.",
+      "raw_reply": " I don't know. I just feel like I'm going to rain.<|endoftext|>",
+      "seconds": 0.029244915989693254,
+      "tokens_per_second": 547.1036403605624,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is two plus two?"
+        }
+      ],
+      "rendered_prompt": "User: What is two plus two?\nBot:",
+      "prompt_tokens": 11,
+      "generated_tokens": 11,
+      "reply": "I'm TinyTalk, a little chat bot.",
+      "raw_reply": " I'm TinyTalk, a little chat bot.<|endoftext|>",
+      "seconds": 0.019245541014242917,
+      "tokens_per_second": 571.5609653092789,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        }
+      ],
+      "rendered_prompt": "User: My name is Boris. How are you?\nBot:",
+      "prompt_tokens": 14,
+      "generated_tokens": 13,
+      "reply": "I'm doing well, thank you. How are you?",
+      "raw_reply": " I'm doing well, thank you. How are you?<|endoftext|>",
+      "seconds": 0.02431941599934362,
+      "tokens_per_second": 534.5523099876605,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        },
+        {
+          "role": "assistant",
+          "content": "I'm doing well, thank you. How are you?"
+        },
+        {
+          "role": "user",
+          "content": "What is my name?"
+        }
+      ],
+      "rendered_prompt": "User: My name is Boris. How are you?\nBot: I'm doing well, thank you. How are you?<|endoftext|>\nUser: What is my name?\nBot:",
+      "prompt_tokens": 38,
+      "generated_tokens": 19,
+      "reply": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+      "raw_reply": " I'm TinyTalk, a little chat bot. What would you like to talk about?<|endoftext|>",
+      "seconds": 0.034323333005886525,
+      "tokens_per_second": 553.5592943943253,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "model": "TheREZOR/TinyTalk",
+  "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+  "files": {
+    "config.json": {
+      "bytes": 1054,
+      "sha256": "08e9e9012b7051a291a53a034422facc8d3b762b57ce0c11cd1b47dfb5abfe70"
+    },
+    "generation_config.json": {
+      "bytes": 140,
+      "sha256": "b76cbcd00dd8ff4aa105fdf77f5685c13c061af99c930b8a469f1339c40371fb"
+    },
+    "model.safetensors": {
+      "bytes": 33124616,
+      "sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77"
+    },
+    "tokenizer.json": {
+      "bytes": 3557680,
+      "sha256": "1fe93b6152957cf9cfd6d89002467f789ce8b3f3e000b3a2edf27c808ddd0b9e"
+    },
+    "tokenizer_config.json": {
+      "bytes": 314,
+      "sha256": "6959fa789244fb0db075863e5167414ae2bae8c6b28e343935b0b1479fcc1f2c"
+    },
+    "vocab.json": {
+      "bytes": 798156,
+      "sha256": "3ba3c3109ff33976c4bd966589c11ee14fcaa1f4c9e5e154c2ed7f99d80709e7"
+    },
+    "merges.txt": {
+      "bytes": 456318,
+      "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5"
+    }
+  },
+  "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "2.4.0"
+  },
+  "settings": {
+    "profile": "tinytalk",
+    "download_only": false,
+    "smoke": true,
+    "prompt": null,
+    "model_dir": "/Users/bolk/Projects/MK61S_MINI/.build/tinytalk-chat-20261105/model",
+    "json": "research/tinytalk-chat-20261105/smoke-greedy.json",
+    "temperature": 0.0,
+    "seed": 42,
+    "context": 256,
+    "max_new_tokens": 80,
+    "threads": 2
+  },
+  "parameter_count": 8278400,
+  "chat_template": null,
+  "prompt_format": "User: message, newline, Bot: reply; EOS between exchanges; final Bot: generation marker",
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! What is your name?"
+        }
+      ],
+      "rendered_prompt": "User: Hi! What is your name?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 12,
+      "reply": "Hi, I'm Sarah. Nice to meet you.",
+      "raw_reply": " Hi, I'm Sarah. Nice to meet you.<|endoftext|>",
+      "seconds": 0.02984704199479893,
+      "tokens_per_second": 402.0498916472557,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What do you like to do?"
+        }
+      ],
+      "rendered_prompt": "User: What do you like to do?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 10,
+      "reply": "I like to read and listen to music.",
+      "raw_reply": " I like to read and listen to music.<|endoftext|>",
+      "seconds": 0.022402250004233792,
+      "tokens_per_second": 446.3837336923793,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm tired today. Can you suggest something simple?"
+        }
+      ],
+      "rendered_prompt": "User: I'm tired today. Can you suggest something simple?\nBot:",
+      "prompt_tokens": 16,
+      "generated_tokens": 7,
+      "reply": "Sure, what is it?",
+      "raw_reply": " Sure, what is it?<|endoftext|>",
+      "seconds": 0.01582833399879746,
+      "tokens_per_second": 442.24490085512576,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does it snow in winter?"
+        }
+      ],
+      "rendered_prompt": "User: Why does it snow in winter?\nBot:",
+      "prompt_tokens": 12,
+      "generated_tokens": 13,
+      "reply": "I don't know. It's just a snowstorm.",
+      "raw_reply": " I don't know. It's just a snowstorm.<|endoftext|>",
+      "seconds": 0.026814542012289166,
+      "tokens_per_second": 484.81156210097004,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is two plus two?"
+        }
+      ],
+      "rendered_prompt": "User: What is two plus two?\nBot:",
+      "prompt_tokens": 11,
+      "generated_tokens": 7,
+      "reply": "We're not really sure.",
+      "raw_reply": " We're not really sure.<|endoftext|>",
+      "seconds": 0.014932583988411352,
+      "tokens_per_second": 468.7735227494753,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        }
+      ],
+      "rendered_prompt": "User: My name is Boris. How are you?\nBot:",
+      "prompt_tokens": 14,
+      "generated_tokens": 11,
+      "reply": "I'm good, thanks. How are you?",
+      "raw_reply": " I'm good, thanks. How are you?<|endoftext|>",
+      "seconds": 0.022638166992692277,
+      "tokens_per_second": 485.9050648204362,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        },
+        {
+          "role": "assistant",
+          "content": "I'm good, thanks. How are you?"
+        },
+        {
+          "role": "user",
+          "content": "What is my name?"
+        }
+      ],
+      "rendered_prompt": "User: My name is Boris. How are you?\nBot: I'm good, thanks. How are you?<|endoftext|>\nUser: What is my name?\nBot:",
+      "prompt_tokens": 36,
+      "generated_tokens": 6,
+      "reply": "I'm a lawyer.",
+      "raw_reply": " I'm a lawyer.<|endoftext|>",
+      "seconds": 0.014487999986158684,
+      "tokens_per_second": 414.13583695004036,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    }
+  ]
+}

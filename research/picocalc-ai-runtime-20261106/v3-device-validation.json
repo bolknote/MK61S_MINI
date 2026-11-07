@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "status": "INSTALLED_125MHZ_BENCH_PASS_USER_UI_OPEN",
+  "uid": "E6657CD423721C35",
+  "build": "8F230610",
+  "crc": "B50733D1",
+  "image_bytes": 1537048,
+  "authorization_authority": "direct human user",
+  "root_review_claimed": false,
+  "physical_io": true,
+  "flash_writes": 1,
+  "flash_verified": true,
+  "ready_after_startup": true,
+  "first_flash_phase_status": "HOLD: initial readiness probe preceded startup completion; no repeat flash. Independent read-only diagnosis and later performance phase PASS.",
+  "cpu_hz": 125000000,
+  "weights": "Q4",
+  "arithmetic": "LUT_FP32",
+  "vocab": 8192,
+  "context_at_decode": "2-4 tokens",
+  "prefill": 2,
+  "decode": 2,
+  "target_repeats": 2,
+  "seconds_per_token": {
+    "previous_serial_reference": 16.655302,
+    "dual_core_frozen_sram": 8.06369475
+  },
+  "speedup": 2.0654678179627273,
+  "matching_tokens": true,
+  "matching_all_linear_checksums": true,
+  "freeze_count": 9,
+  "thaw_count": 9,
+  "freeze_violations": 0,
+  "worker_jobs": 20550,
+  "worker_max_us": 6639,
+  "i2c_errors": 0,
+  "control_probe_calls": 1,
+  "heap_peak_bytes": 57604,
+  "heap_capacity_bytes": 93292,
+  "stack_upper_bytes": 23676,
+  "service_gap_us": 293712,
+  "model_sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+  "model_load_us": 11191127,
+  "model_overwritten": false,
+  "overclock_tested": false,
+  "device_esc_f5_tested": false,
+  "scope": "Short on-device comparison, not 512-token dialogue throughput or long-term stability. Native Esc/F5 have HOST coverage; current device phase checks the core-1 control invoke while LCD is held.",
+  "current_foreground": "/Apps/MK61AI/MK61AI.APP",
+  "device_handed_to_user": true,
+  "cdc_closed": true,
+  "test_processes_reaped": true,
+  "old_state_saved_or_restored": false,
+  "proof": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/01-FLASH.result/flash-verification.txt": {
+      "sha256": "8b36f569c26a46dede5c1ed97a44b156ddf52310d2a9d1536a0c60c96b8d6f32",
+      "bytes": 11389
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/01-FLASH.result/receipt.json": {
+      "sha256": "0c171fa42537265d3d6324aad28f3ed37a41d5c339d0b0503476f360fcb94caa",
+      "bytes": 388
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/01-FLASH.result/supervisor.json": {
+      "sha256": "5abd5b8a13f3ceb441de6db8ca69bc106fcb0a2a0038300d7526715369db56f8",
+      "bytes": 141
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/01-READINESS-DIAG.json": {
+      "sha256": "971f9094bc374e59d7eb624a66d6ba34caa18437d1f707216388d2ddd7c41495",
+      "bytes": 1584
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/02-PERF.result/performance.json": {
+      "sha256": "03e102ea59abe193995f1655d0201ff826c873827c0c30225f2713f2625baf87",
+      "bytes": 2356
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/02-PERF.result/receipt.json": {
+      "sha256": "781f292520f02325c952342f8f248157153965e20a94dc768060250bad728e9d",
+      "bytes": 928
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/02-PERF.result/supervisor.json": {
+      "sha256": "7019dec108581dfd215e84de96f870000458f377167c5ceea87880d4819e73ad",
+      "bytes": 141
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/deploy-user-20261106/03-UI-HANDOFF.json": {
+      "sha256": "26fd6522666c5448c56b0884b110aba7075bbd935f2367d573ee64cd0a542ec4",
+      "bytes": 784
+    }
+  },
+  "pending": [
+    "Esc/F5 device latency",
+    "full variant speed comparisons",
+    "200/250/300MHz stability"
+  ]
+}

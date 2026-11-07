@@ -1,0 +1,36 @@
+{
+  "objective": "Fix all six native PicoCalc harness issues",
+  "status": "complete",
+  "validation_report": "research/picocalc-ai-runtime-20261106/native-validation.json",
+  "artifacts": {
+    "bundle": ".build/mk61ai/bundle-v2.zip",
+    "firmware": ".build/mk61ai/v2b-native/mk61s-picocalc-pico-h.uf2",
+    "source_patch": ".build/mk61ai/native-harness-v2.patch",
+    "readme": "examples/portable-apps/MK61AI/README.md",
+    "source_overlay": ".build/mk61ai/source-v2b-overlay.tar.gz",
+    "integration_package": ".build/mk61ai/integration-v2b.zip"
+  },
+  "completed": [
+    "compact unsolved prompt, trimmed R/S padding for input, full-page address patches, exact context-budget check",
+    "remaining-context generation budget; byte grammar reserves completion; 105-byte spaced or dense writes",
+    "separate dev and heldout conditions, hidden cases, frozen model/prompt/executable/conditions hashes, all-row denominator",
+    "failed candidate/reply memory, cycle stop, best tested version rollback, exact common-prefix KV rewind, plan ablation",
+    "read-only menus preserve paused continuation; persistent monotonic IDs and safe draft checkpoints",
+    "all register/stack assertions, preserve masks, up to four subsequent key/input stops, on-device heap/stack/speed/service/cancel diagnostics",
+    "Loading/benchmark rendering observes80ms throttle; model_load_us and progress markers separate load from compute."
+  ],
+  "hardware": "Full PASS, device returned to idle calculator, temporary directories removed, CDC closed and supervisor reaped; released to coordinator",
+  "remaining": [],
+  "constraints": [
+    "No model training/job changes",
+    "No old calculator/firmware/settings/clock backup or restoration; no RTC setter",
+    "No STM32/UART/Spectrum changes",
+    "Git index and main unchanged by this task"
+  ],
+  "quantization": {
+    "matrix_weights": "Q4 in both measured FP32 and LUT FP32 modes",
+    "linear_input_activations": "FP32 default; INT8 optional and compared separately",
+    "kv_cache": "FP32 in all implemented arithmetic modes",
+    "normalization_and_nonlinearity": "FP32"
+  }
+}

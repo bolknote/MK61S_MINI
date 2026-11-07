@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "scope": "supplemental after gate failure; not selection or retraining",
+  "identical_functional_rows": 20,
+  "excluded_fields": [
+    "elapsed_us"
+  ],
+  "regression_independent_of_layout": true
+}

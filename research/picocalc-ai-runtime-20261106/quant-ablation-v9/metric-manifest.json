@@ -1,0 +1,79 @@
+{
+  "status": "FROZEN_BEFORE_METRICS",
+  "model_sha256": "7355022789e1ea8632901d25b957cd0d4b9bda67ea65505d50b3c920c90bf3f0",
+  "model_source": "harness-debug-v3/selected-budget/active-best/step1500",
+  "weights": "sameQ4 in all activation profiles",
+  "baseline": "Q4 weights + FP32 activation LUT, not full-precision weights",
+  "fixed_scales": "one symmetric dynamic activation scale per group32; subgroup variants16/8",
+  "metrics": [
+    "KL(baseline||candidate), nats",
+    "top1 agreement",
+    "conditional target NLL and perplexity",
+    "mean/max absolute logit error",
+    "baseline argmax margin on changed choices"
+  ],
+  "support": {
+    "commands": "40 allowed output tokens, target next-token command continuation",
+    "natural": "all8224 logits without output restriction; diagnostic distribution, not production Russian generation"
+  },
+  "calibration_tasks": [
+    "hd-validation:new:119",
+    "hd-validation:new:107",
+    "hd-validation:new:136",
+    "hd-validation:new:130",
+    "hd-validation:new:158",
+    "hd-validation:new:102:near",
+    "hd-validation:new:80",
+    "hd-validation:new:82"
+  ],
+  "audit_tasks": [
+    "hd-validation:new:2",
+    "hd-validation:new:109",
+    "hd-validation:new:137",
+    "hd-validation:new:31",
+    "hd-validation:new:36",
+    "hd-validation:new:35",
+    "hd-validation:new:113",
+    "hd-validation:new:141",
+    "hd-validation:new:62",
+    "hd-validation:new:44",
+    "hd-validation:new:84",
+    "hd-validation:new:99",
+    "hd-validation:new:89",
+    "hd-validation:new:92",
+    "hd-validation:new:103",
+    "hd-validation:new:85"
+  ],
+  "source_pins": {
+    "source/block_read.hpp": "689ffb8695978197812dadef158911bae7a2c9d2632ad38d22c65769ae929184",
+    "source/codec_native_bridge.hpp": "0f6d3026b40bdf749d38a31818cc53a612925aa1fdd9cef6e536a16030633184",
+    "source/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "source/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+    "source/mk61_ai_linear.cpp": "2f1773de9deaffe21f5fabc7d97ab2286ec7f85a441e13aedd451a28bd9825b0",
+    "source/mk61_ai_linear.hpp": "79ac7e9c0e246da1dad33a797db124b656ad8ae1353e653c6299b05abdf1a471",
+    "source/mk61_ai_model.cpp": "8194db550de8f122e4ec7530e2929d3b238654bf44eab13b9aa330f1f6d67d48",
+    "source/mk61_ai_model.hpp": "e18c7a635d0da4bb28b75d30c1692d0001d27c69cab557e5da7d7376525a5483",
+    "source/mk61_ai_swar.hpp": "27a7ab76f0b678384c573e901f17404d9029a0096d1312a8369d6848bc48920e",
+    "source/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+    "source/probe.cpp": "2210aa86e517ca7ef557a89660b155994efde2cdce94c12a7a0f85a359b87159",
+    "runtime/core_bridge.cpp": "a5536b95f536a17c2a8c12348954f046ca281ca81ed15051f9ca7acb40eb614a",
+    "runtime/emulator.py": "89d46b818e1d8fc9e80b17287cd90470627262ff8b381978b2c8e6fadce6a91f",
+    "runtime/full_isa_bridge.cpp": "0a71ccd7c8180c93eeb1f4ffb31f4caf445b4b31926cca0456afe540bd1d2424",
+    "runtime/full_isa_math.py": "807fcc8a0d9b26f5d115c5049d471f935887aea87ef6e04d4fee59faf59bd7c7",
+    "runtime/full_isa_protocol.py": "fc9dce88ababa25de447533e69935b87121040767b926431e8e71a4da852a2a6",
+    "runtime/full_isa_vm.py": "7db7025ef2ba11ce5c658aba622701230247ba96ce4bf0dd62019d2967a330e9",
+    "runtime/ha_protocol.py": "69ab80671928721387c37c88051d2d008e2b63b4b32aaee9e1702a7549c89a5e",
+    "runtime/ha_runtime.py": "568e50733098842aeb9cf8a821d7ba5e230f8235d336438dfa3d5317d59d9d8f",
+    "runtime/hf_runtime.py": "d4833495614792fbc7efa69bef59c49f410d9dff5f6738561cc0edf19e7f265b",
+    "runtime/tasks.py": "3ca17c7f0edb28a0a6e55418233f9c779248058a1d7e7f68ae0f198dec7a64f4"
+  },
+  "input_pins": {
+    "metric-calibration.json": "be31de290ffa212881f38fe7b45222383e450d5937d5bac2f2be23d836ccebb4",
+    "metric-audit.json": "e5d7b30369c7cb283f825e0e3b771d7cf3654df83083dbc3fe723bce07a959fb",
+    "profiles.json": "4d8436d21964e8b6387884691e04e1fcc5f54094e4311b2ee4cdf123a37a12f8"
+  },
+  "library_sha256": "0357bed6fe071d3ff6272edf515d37fa0686446ae0b3aa0a88d4656060ffdc00",
+  "hardware_io": 0,
+  "training": 0,
+  "selection": "Activation profiles chosen on calibration KL/top1 only; functional1175 retained as audit, no profile tuning on audit outputs; stochastic3 seeds reported separately and averaged, no seed selection"
+}

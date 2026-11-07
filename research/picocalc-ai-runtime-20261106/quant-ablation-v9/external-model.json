@@ -1,0 +1,18 @@
+{
+  "model_source": "harness-debug-v3/selected-budget/active-best/step1500",
+  "local_model_directory": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/model",
+  "files": {
+    "model.mka": {
+      "bytes": 2160856,
+      "sha256": "7355022789e1ea8632901d25b957cd0d4b9bda67ea65505d50b3c920c90bf3f0"
+    },
+    "model-nibble.mka": {
+      "bytes": 2160856,
+      "sha256": "404565dba9f0864c4f1de1d9ef118f21a700d4bf69aef8de5673660fb7ec60f6"
+    },
+    "model.mkqb": {
+      "bytes": 1725716,
+      "sha256": "1b53d0e26f8156141f47a877393d2a617e13014fbe36d7d8cf1ca907a6d1647c"
+    }
+  }
+}

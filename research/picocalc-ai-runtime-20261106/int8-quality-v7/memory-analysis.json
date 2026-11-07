@@ -1,0 +1,18 @@
+{
+  "status": "CALCULATION_ONLY_NOT_IMPLEMENTED",
+  "quality_gate": "FAIL",
+  "lut_removed": false,
+  "default": "LUT_FLOAT32",
+  "model_context": 512,
+  "vocab": 8192,
+  "workspace_bytes": 18832,
+  "lut_reserved_bytes": 6144,
+  "hypothetical_int8_only_workspace_bytes": 12688,
+  "hypothetical_sram_saving_bytes": 6144,
+  "kv_bytes_per_token": 5120,
+  "kv_total_bytes": 2621440,
+  "kv_location": "external PSRAM",
+  "workspace_location": "internal SRAM",
+  "automatic_context_extension": false,
+  "note": "Removing SRAM lookup does not enlarge external KV allocation, stored RoPE table, model header context, or training length."
+}

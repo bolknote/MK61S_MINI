@@ -1,0 +1,36 @@
+{
+  "authority": "direct human user",
+  "user_quote": "вот ещё советы, попробуем?",
+  "root_technical_review_claimed": false,
+  "deadline_seconds": 150,
+  "start_before": 1794037170.527107,
+  "controller_sha256": "ec54bbd5ec26fbd2047ce1114ebe5b14a853e857d1b0fc284036fcf8dc61eaeb",
+  "helper_sha256": "6fc6f4173f0f0deaf3d08660332a31dcabcef09a38637838171dc5d0b70dbac5",
+  "release_path": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-lcd-app-20261107/release.json",
+  "pins": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-lcd-app-20261107/release.json",
+      "sha256": "9ce39e5893b84dc83b6f7245983a65f173ab563c3aa2c02361db02d0a13071a8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/arm/app/QKERNEL.APP",
+      "sha256": "de3fddcba964eabc07e58cd6033cc85364abd968d189aa8f217735515b3f977d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/arm/bench-host.log",
+      "sha256": "c6acfb3442246c732214f0e6b781eb5ca9defc0bb70deaa49921d9e741d8c450"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/kernel_benchmark.cpp",
+      "sha256": "e06963327ab715ce9375eae29d160b78080bc2cc392936ef899eff117a22a224"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/arm/libqkernels.a",
+      "sha256": "8fdcf175b48843e776244c817f777925b1a543ff129d91422abc5e4652b2f8e3"
+    }
+  ],
+  "destination": "/Apps/QK-BD020C976EEC/QKERNEL.APP",
+  "payload": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/arm/app/QKERNEL.APP",
+  "host_log": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/arm/bench-host.log",
+  "output": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/QKERNEL-001.result"
+}

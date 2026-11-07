@@ -1,0 +1,1 @@
+A8/A16 group8/16/32 and nibble/bitplane kernels vs independent int64: 48000 rows PASS

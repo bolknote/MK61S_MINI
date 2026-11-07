@@ -5,6 +5,7 @@
 #include "sleep_clock_lease.hpp"
 #include "console_route.hpp"
 #include "i2c_transfer.hpp"
+#include "worker_job_slot.hpp"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
@@ -30,6 +31,8 @@ struct I2cJob {
     bool read=false;unsigned length=0;u8 bytes[2]{};int result=0;
 } i2c;
 std::atomic<bool> ready{false},frame{false};
+std::atomic<bool> display_suspended{false};
+std::atomic<u32> display_frames{0},display_refused{0};
 std::atomic<bool> uart_active{false};
 std::atomic<u32> transactions{0},uart_bytes{0};
 std::atomic<u32> i2c_irqs{0},i2c_timeouts{0},i2c_aborts{0},i2c_busy_us{0};
@@ -93,6 +96,8 @@ void i2c_irq() { i2c_irqs.fetch_add(1,std::memory_order_relaxed);finish_i2c(); }
 void i2c_timeout(unsigned) { finish_i2c(); }
 std::atomic<u32> uart_wait_us{0},uart_flush_us{0},uart_flushes{0};
 std::atomic<u32> idle_us{0},uart_event_waits{0};
+WorkerJobSlot compute;
+std::atomic<u32> compute_jobs{0},compute_us{0},compute_max_us{0};
 std::atomic<u32> uart_sleep_holds{0};
 std::atomic<int> uart_dma_channel{-1};
 u8 uart_buffer[64]{};
@@ -208,6 +213,11 @@ void uart_flush() {
 // USB. Its implicit printf flush must not wait for a separate UART stream.
 // drain() still calls uart_flush directly at clock/sleep/reset boundaries.
 void uart_stdio_flush() { if(console::routing.uart_output_enabled()) uart_flush(); }
+bool queue_function(void* context,void (*function)(void*)) {
+    if(!ready.load(std::memory_order_acquire) || frame.load(std::memory_order_acquire)) return false;
+    frame_context=context;frame_transfer=function;
+    frame.store(true,std::memory_order_release);__sev();return true;
+}
 void worker() {
     flash_safe_execute_core_init();
     i2c_alarm=hardware_alarm_claim_unused(false);
@@ -223,7 +233,19 @@ void worker() {
             frame_transfer(frame_context);
             frame.store(false,std::memory_order_release);__sev();
         }
+        if(compute.queued()) {
+            const u64 started=time_us_64();
+            compute.run();
+            const u32 elapsed=(u32)(time_us_64()-started);
+            compute_jobs.fetch_add(1,std::memory_order_relaxed);
+            compute_us.fetch_add(elapsed,std::memory_order_relaxed);
+            if(elapsed>compute_max_us.load(std::memory_order_relaxed))
+                compute_max_us.store(elapsed,std::memory_order_relaxed);
+            __sev();
+            service();
+        }
         if(!frame.load(std::memory_order_acquire) &&
+           !compute.queued() &&
            (uart_queue.empty() || uart_active.load(std::memory_order_acquire)) &&
            i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
             const u64 started=time_us_64();
@@ -231,7 +253,7 @@ void worker() {
                 best_effort_wfe_or_timeout(make_timeout_time_us(1000));
             else __wfe();
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
-        } else if(!frame.load(std::memory_order_acquire) &&
+        } else if(!frame.load(std::memory_order_acquire) && !compute.queued() &&
                   uart_dma_channel.load(std::memory_order_relaxed)<0 &&
                   i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
             // If DMA allocation failed, the UART FIFO still drains in
@@ -277,10 +299,15 @@ int blocking_i2c(bool read,u8* bytes,unsigned length) {
 bool frame_pending() { return frame.load(std::memory_order_acquire); }
 bool input_ready() { return i2c.stage.load(std::memory_order_acquire)==DONE; }
 bool submit_frame(void* context,void (*transfer)(void*)) {
-    if(!ready.load(std::memory_order_acquire) || frame_pending()) return false;
-    frame_context=context;frame_transfer=transfer;
-    frame.store(true,std::memory_order_release);__sev();return true;
+    if(frames_suspended()) { display_refused.fetch_add(1,std::memory_order_relaxed);return false; }
+    if(!queue_function(context,transfer)) return false;
+    display_frames.fetch_add(1,std::memory_order_relaxed);return true;
 }
+void suspend_frames(bool suspended) {
+    if(suspended) drain();
+    display_suspended.store(suspended,std::memory_order_release);
+}
+bool frames_suspended() { return display_suspended.load(std::memory_order_acquire); }
 void service(bool allow_i2c) {
     drain_uart();
     (void)allow_i2c; // Starting the FIFO is bounded even for tiny LCD windows.
@@ -299,15 +326,27 @@ void service(bool allow_i2c) {
 }
 void drain() {
     if(!ready.load(std::memory_order_acquire)) return;
-    while(frame_pending() || i2c.stage.load(std::memory_order_acquire)==QUEUED ||
+    while(frame_pending() || compute.active() || i2c.stage.load(std::memory_order_acquire)==QUEUED ||
           i2c.stage.load(std::memory_order_acquire)==WORKING) { __sev();tight_loop_contents(); }
     uart_flush();
 }
 void invoke(void* context,void (*function)(void*)) {
     if(get_core_num()==1) { function(context);return; }
     start();drain();
-    while(!submit_frame(context,function)) drain();
+    // Control work (including the key-click timer) must still run while
+    // presentation is suspended, otherwise Esc could deadlock on invoke().
+    while(!queue_function(context,function)) drain();
     drain();
+}
+bool submit_compute(void* context,void (*function)(void*)) {
+    if(get_core_num()!=0 || !ready.load(std::memory_order_acquire) || frame_pending()) return false;
+    if(!compute.submit(context,function)) return false;
+    __sev();return true;
+}
+void join_compute() {
+    // This is deliberately independent of the UI: callers dispatch tiny
+    // tiles and pump cancellation between them. Never return with a live job.
+    while(!compute.join()) __wfe();
 }
 Statistics statistics() {
     u32 baud=0;
@@ -323,6 +362,8 @@ Statistics statistics() {
         uart_event_waits.load(std::memory_order_relaxed),uart_sleep_holds.load(std::memory_order_relaxed),baud,
         i2c_irqs.load(std::memory_order_relaxed),i2c_timeouts.load(std::memory_order_relaxed),
         i2c_aborts.load(std::memory_order_relaxed),i2c_busy_us.load(std::memory_order_relaxed),
-        i2c_sleep_holds.load(std::memory_order_relaxed)};
+        i2c_sleep_holds.load(std::memory_order_relaxed),compute_jobs.load(std::memory_order_relaxed),
+        compute_us.load(std::memory_order_relaxed),compute_max_us.load(std::memory_order_relaxed),
+        display_frames.load(std::memory_order_relaxed),display_refused.load(std::memory_order_relaxed)};
 }
 }

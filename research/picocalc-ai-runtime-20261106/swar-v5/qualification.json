@@ -1,0 +1,42 @@
+{
+  "status": "HOST_AND_ARM_CROSS_BUILD_PASS_HARDWARE_NOT_RUN",
+  "device_io": 0,
+  "current_device_image_unchanged": true,
+  "base_image": "C047D816/F7035006",
+  "candidate_build": "04FD5AED",
+  "candidate_crc": "EBF92364",
+  "candidate_static_ram": 119304,
+  "candidate_heap": 110072,
+  "required_heap": 108544,
+  "extra_hot_code_sram_bytes": 896,
+  "arithmetic": "Q4 weights x INT8 activations; group32 scales unchanged",
+  "exhaustive_lane_combinations": 16777216,
+  "full_group_tests": 200084,
+  "model_full_logit_comparisons": 12,
+  "model_kv_positions": 16,
+  "model_layouts": [
+    "bitplanes",
+    "nibbles"
+  ],
+  "tests": [
+    "ASan",
+    "UBSan",
+    "FLASH/SRAM",
+    "2CPUcores",
+    "DMA prefetch"
+  ],
+  "assembler": {
+    "architecture": "ARMv6-M Cortex-M0+",
+    "muls_per_32_MAC": 16,
+    "helper_calls": 0,
+    "float_operations_in_dot": 0,
+    "hardware_cycles_measured": false
+  },
+  "limitations": [
+    "No hardware speed measured for SWAR.",
+    "Model equivalence is to ordinary INT8 activations; quality relative to current LUT_FLOAT32 requires a separate evaluation.",
+    "Default firmware/UI remains LUT_FLOAT32; arithmetic=4 explicitly selects the candidate in its diagnostic configuration."
+  ],
+  "reproducible_test_script_passed": true,
+  "repro_log_sha256": "0f15de38cbbd8bc14d4eee4feff6452ccce98011036a3ec9d842760a475036fd"
+}

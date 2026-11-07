@@ -1,0 +1,668 @@
+{
+  "schema": 2,
+  "status": "all six fixes implemented and verified; full physical PicoCalc validation PASS",
+  "source_base_commit": "bb05bd8998b7d9373e0cece6b56baf2dcabefa08",
+  "firmware": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.16",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537048,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 133144,
+    "static_ram_data_bss_bytes": 81904,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074560,
+    "bin_sha256": "888cadba70f2e670076f9cfbe7630be8bd6c9bccfc68293c0ad728be48ff010e",
+    "uf2_sha256": "0e3df1ff383bf70b0964779bb244a8c133cdd7a65411c4e40bc9468e673a7c0e",
+    "hardware_verified": false,
+    "source_sha256": "674e77572a992cdabd119b00a9108dce3d896907e42aa8974826fe1f0544b668",
+    "build_id": "b0cf78c9",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537048,
+      "footer_offset": 900512,
+      "profile_id": "50434831",
+      "crc32": "96b1d0e2"
+    }
+  },
+  "model": {
+    "format": "M61AI01",
+    "file": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/bundle-v2/sd/AI/MODEL.MKA",
+    "bytes": 2093896,
+    "sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+    "source_weights_sha256": "bb57ff07f45be1e07009d98a0b1c9fc55bc14e04c47e8511bd72bf0c93c44f1b",
+    "unicode": "17.0.0",
+    "tensors": 112,
+    "vocab": 8192,
+    "merges": 7933,
+    "layout": "lut",
+    "architecture": {
+      "transformers_version": "5.19.0",
+      "architectures": [
+        "Qwen3ForCausalLM"
+      ],
+      "output_hidden_states": false,
+      "return_dict": true,
+      "dtype": "float32",
+      "chunk_size_feed_forward": 0,
+      "is_encoder_decoder": false,
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "problem_type": null,
+      "vocab_size": 8192,
+      "hidden_size": 128,
+      "intermediate_size": 384,
+      "num_hidden_layers": 10,
+      "num_attention_heads": 4,
+      "num_key_value_heads": 2,
+      "head_dim": 32,
+      "hidden_act": "silu",
+      "max_position_embeddings": 512,
+      "initializer_range": 0.02,
+      "rms_norm_eps": 1e-05,
+      "use_cache": true,
+      "tie_word_embeddings": true,
+      "rope_parameters": {
+        "rope_theta": 10000.0,
+        "rope_type": "default"
+      },
+      "attention_bias": false,
+      "use_sliding_window": false,
+      "sliding_window": null,
+      "max_window_layers": 28,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "attention_dropout": 0.0,
+      "pad_token_id": 0,
+      "bos_token_id": 1,
+      "eos_token_id": 2,
+      "_name_or_path": ".build/mk61-agent-20261106/distill-v1/direct-clean/best",
+      "model_type": "qwen3",
+      "output_attentions": false
+    }
+  },
+  "validation": {
+    "core_and_controller": "ASan + UBSan PASS; full 105-byte write beyond 160 tokens; full-page patch; hidden examples; cycle detection; best rollback; emulator live-context isolation",
+    "session_compatibility": "v1 fixture migration, v2 roundtrip and monotonic ID persistence PASS",
+    "native_ui": "real APP host/service/keyboard/forms PASS; pause -> log -> settings -> resume manual tool without model PASS; diagnostic version/path validation PASS",
+    "full_picocalc_regression": "Final full suite PASS on bb05bd899 + AI overlay, including model-load throttle code, native UI, 70001B C5/M8 boundaries and exact2MB journal-capacity rollback regression",
+    "public_api": "PASS in full regression",
+    "model_oracle": {
+      "prefix_rewind_parity": "passed",
+      "argmax_policy": "passed",
+      "tokenizer_cases": 1234,
+      "logit_positions": 20,
+      "max_logit_delta": 2.86102294921875e-05,
+      "workspace_bytes": 15344,
+      "kv_bytes": 2621440,
+      "cancellation_retry": "passed",
+      "corrupt_package": "rejected",
+      "context_limit": "passed",
+      "arithmetic": {
+        "int8": {
+          "max_logit_delta": 0.7908273339271545,
+          "argmax_matches": 20,
+          "positions": 20
+        },
+        "lut_int8": {
+          "max_logit_delta": 0.7908273339271545,
+          "argmax_matches": 20,
+          "positions": 20
+        },
+        "lut_float32": {
+          "max_logit_delta": 3.0219554901123047e-05,
+          "argmax_matches": 20,
+          "positions": 20
+        }
+      },
+      "scope": "host reference arithmetic; device performance and INT8 quality not asserted"
+    },
+    "hil_controller_guards": "20/20 HOST guards PASS (16 shared +4 finish); source/phase/payloads independently reviewed by coordinator",
+    "native_full_model_benchmark": "HOST actual native service:36forward/greedy parity/tool grammar/max-session transaction+codec PASS with RAM-backedFAT and8MiBPSRAM; device speed separate",
+    "sha_probe_oracle": "60/60 independent hashlib cases PASS, including exact model, padding boundaries and chunk sizes"
+  },
+  "quality": {
+    "predeclared": {
+      "schema": 2,
+      "selection": "Default compact prompt selected on four dev conditions: all three prefixes 3/4; shortest wins tie. No held-out outcomes used.",
+      "heldout": "20 predeclared Russian conditions, all counted once in each arm",
+      "arms": [
+        {
+          "name": "plan",
+          "planning": true
+        },
+        {
+          "name": "no-plan",
+          "planning": false
+        }
+      ],
+      "decoding": "LUT FP32, greedy with byte grammar, 512 context; bounded four attempts; model unchanged",
+      "hashes": {
+        "tests/data/mk61_ai_dev_v2.jsonl": "df8ea745aa12f62aefca6d0802afbcf45a0c11622a1be01d3718bc616910311b",
+        "tests/data/mk61_ai_holdout_v2.jsonl": "12455ff79e40c09d908fc33f2cf870370019ffc0da539c2f1a4218a63a39c315",
+        ".build/mk61ai/eval-v2": "ddfe1723abc51310dbd44b69a47d3d657f9362017b41208ac89296e19b6d9bfa",
+        ".build/mk61ai/sd/AI/MODEL.MKA": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166"
+      },
+      "dev": {
+        "dev-default": 0.75,
+        "dev-role": 0.75,
+        "dev-system": 0.75
+      }
+    },
+    "plan": {
+      "sha256": "12455ff79e40c09d908fc33f2cf870370019ffc0da539c2f1a4218a63a39c315",
+      "rows": 20,
+      "model_sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+      "executable_sha256": "ddfe1723abc51310dbd44b69a47d3d657f9362017b41208ac89296e19b6d9bfa",
+      "prefix_sha256": "firmware-default",
+      "runtime_sources": {
+        "code/mk61_ai_agent.cpp": "3ccc7bc771fc0eff14ecb2a1a396f7ec5e2ae4a069e3f979878711b75bc5533f",
+        "code/mk61_ai_agent.hpp": "40cd40e5a33a834774aadd8948caea7b04be31596b96189c84d4ee92f8f628cf",
+        "code/mk61_ai_grammar.cpp": "61c3001b1ce09e2189d8eddbc9bb2cc1b706db8a6d77f10d4dfe2b87bc620d9d",
+        "code/mk61_ai_grammar.hpp": "a7b8b29a1971527dbe0e3aa15bf4e0d34baaf1be4afa079e2636bafd4611db15",
+        "code/mk61_ai_harness.cpp": "0e6d4374b70bf9b2ed68b3be2e081175e694e61d971ad95fec1f336a0ecd82ce",
+        "code/mk61_ai_harness.hpp": "3d5f2b0c652e8bcccb13365ad37689b84fb85db0aae1d53270c6bb1846624c62",
+        "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+        "code/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+        "code/mk61_ai_model.cpp": "c5ca042e7082d46b6f1a6e95c4143bca713b97f74e232680e22d580872223238",
+        "code/mk61_ai_model.hpp": "b66532d6773c63a3509e29d8b554840d84d574e94520db54540cd4023640007f",
+        "code/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+        "code/mk61_ai_tools.cpp": "f4d5b4e40955a22d8d4ef1ba3b595fd03498556ef1b54c7a6249dc0e168da298"
+      },
+      "planning": true,
+      "policy": "All declared rows count; runtime errors and context failures fail. No reruns or best-of selection.",
+      "passed": 6,
+      "total": 20,
+      "accuracy": 0.3,
+      "valid_replies": 42,
+      "replies": 42,
+      "public_cases": 40,
+      "hidden_cases": 58,
+      "source": "tests/data/mk61_ai_holdout_v2.jsonl",
+      "scope": "Functional outcomes, including register/preserve/scenario assertions; no claim of novel algorithm families or device speed.",
+      "families": {
+        "binary": {
+          "passed": 3,
+          "total": 5
+        },
+        "power": {
+          "passed": 1,
+          "total": 2
+        },
+        "root": {
+          "passed": 0,
+          "total": 2
+        },
+        "absolute": {
+          "passed": 1,
+          "total": 1
+        },
+        "ternary": {
+          "passed": 1,
+          "total": 2
+        },
+        "branch": {
+          "passed": 0,
+          "total": 1
+        },
+        "loop": {
+          "passed": 0,
+          "total": 2
+        },
+        "affine": {
+          "passed": 0,
+          "total": 1
+        },
+        "registers": {
+          "passed": 0,
+          "total": 1
+        },
+        "scenario": {
+          "passed": 0,
+          "total": 1
+        },
+        "fix": {
+          "passed": 0,
+          "total": 2
+        }
+      }
+    },
+    "no_plan": {
+      "sha256": "12455ff79e40c09d908fc33f2cf870370019ffc0da539c2f1a4218a63a39c315",
+      "rows": 20,
+      "model_sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+      "executable_sha256": "ddfe1723abc51310dbd44b69a47d3d657f9362017b41208ac89296e19b6d9bfa",
+      "prefix_sha256": "firmware-default",
+      "runtime_sources": {
+        "code/mk61_ai_agent.cpp": "3ccc7bc771fc0eff14ecb2a1a396f7ec5e2ae4a069e3f979878711b75bc5533f",
+        "code/mk61_ai_agent.hpp": "40cd40e5a33a834774aadd8948caea7b04be31596b96189c84d4ee92f8f628cf",
+        "code/mk61_ai_grammar.cpp": "61c3001b1ce09e2189d8eddbc9bb2cc1b706db8a6d77f10d4dfe2b87bc620d9d",
+        "code/mk61_ai_grammar.hpp": "a7b8b29a1971527dbe0e3aa15bf4e0d34baaf1be4afa079e2636bafd4611db15",
+        "code/mk61_ai_harness.cpp": "0e6d4374b70bf9b2ed68b3be2e081175e694e61d971ad95fec1f336a0ecd82ce",
+        "code/mk61_ai_harness.hpp": "3d5f2b0c652e8bcccb13365ad37689b84fb85db0aae1d53270c6bb1846624c62",
+        "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+        "code/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+        "code/mk61_ai_model.cpp": "c5ca042e7082d46b6f1a6e95c4143bca713b97f74e232680e22d580872223238",
+        "code/mk61_ai_model.hpp": "b66532d6773c63a3509e29d8b554840d84d574e94520db54540cd4023640007f",
+        "code/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+        "code/mk61_ai_tools.cpp": "f4d5b4e40955a22d8d4ef1ba3b595fd03498556ef1b54c7a6249dc0e168da298"
+      },
+      "planning": false,
+      "policy": "All declared rows count; runtime errors and context failures fail. No reruns or best-of selection.",
+      "passed": 6,
+      "total": 20,
+      "accuracy": 0.3,
+      "valid_replies": 42,
+      "replies": 42,
+      "public_cases": 40,
+      "hidden_cases": 58,
+      "source": "tests/data/mk61_ai_holdout_v2.jsonl",
+      "scope": "Functional outcomes, including register/preserve/scenario assertions; no claim of novel algorithm families or device speed.",
+      "families": {
+        "binary": {
+          "passed": 3,
+          "total": 5
+        },
+        "power": {
+          "passed": 1,
+          "total": 2
+        },
+        "root": {
+          "passed": 0,
+          "total": 2
+        },
+        "absolute": {
+          "passed": 1,
+          "total": 1
+        },
+        "ternary": {
+          "passed": 1,
+          "total": 2
+        },
+        "branch": {
+          "passed": 0,
+          "total": 1
+        },
+        "loop": {
+          "passed": 0,
+          "total": 2
+        },
+        "affine": {
+          "passed": 0,
+          "total": 1
+        },
+        "registers": {
+          "passed": 0,
+          "total": 1
+        },
+        "scenario": {
+          "passed": 0,
+          "total": 1
+        },
+        "fix": {
+          "passed": 0,
+          "total": 2
+        }
+      }
+    },
+    "interpretation": "6/20 functional outcomes in each arm; permitting a bounded plan did not improve outcomes. This does not establish trained reasoning ability. Hidden expected values never enter model prompts. Scripted inference tests count only as controller validation.",
+    "activation_int8": {
+      "sha256": "12455ff79e40c09d908fc33f2cf870370019ffc0da539c2f1a4218a63a39c315",
+      "rows": 20,
+      "model_sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+      "executable_sha256": "6a131675177a30b08768ef8f7bdc095c73be17fef0a415e21b15c4873fa5abcc",
+      "prefix_sha256": "firmware-default",
+      "runtime_sources": {
+        "code/mk61_ai_agent.cpp": "3ccc7bc771fc0eff14ecb2a1a396f7ec5e2ae4a069e3f979878711b75bc5533f",
+        "code/mk61_ai_agent.hpp": "40cd40e5a33a834774aadd8948caea7b04be31596b96189c84d4ee92f8f628cf",
+        "code/mk61_ai_grammar.cpp": "61c3001b1ce09e2189d8eddbc9bb2cc1b706db8a6d77f10d4dfe2b87bc620d9d",
+        "code/mk61_ai_grammar.hpp": "a7b8b29a1971527dbe0e3aa15bf4e0d34baaf1be4afa079e2636bafd4611db15",
+        "code/mk61_ai_harness.cpp": "0e6d4374b70bf9b2ed68b3be2e081175e694e61d971ad95fec1f336a0ecd82ce",
+        "code/mk61_ai_harness.hpp": "3d5f2b0c652e8bcccb13365ad37689b84fb85db0aae1d53270c6bb1846624c62",
+        "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+        "code/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+        "code/mk61_ai_model.cpp": "c5ca042e7082d46b6f1a6e95c4143bca713b97f74e232680e22d580872223238",
+        "code/mk61_ai_model.hpp": "b66532d6773c63a3509e29d8b554840d84d574e94520db54540cd4023640007f",
+        "code/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+        "code/mk61_ai_tools.cpp": "f4d5b4e40955a22d8d4ef1ba3b595fd03498556ef1b54c7a6249dc0e168da298"
+      },
+      "planning": true,
+      "arithmetic": "lut-int8",
+      "policy": "All declared rows count; runtime errors and context failures fail. No reruns or best-of selection.",
+      "passed": 5,
+      "total": 20,
+      "accuracy": 0.25,
+      "valid_replies": 43,
+      "replies": 43,
+      "public_cases": 40,
+      "hidden_cases": 58,
+      "source": "tests/data/mk61_ai_holdout_v2.jsonl",
+      "scope": "Functional outcomes, including register/preserve/scenario assertions; no claim of novel algorithm families or device speed.",
+      "families": {
+        "binary": {
+          "passed": 2,
+          "total": 5
+        },
+        "power": {
+          "passed": 1,
+          "total": 2
+        },
+        "root": {
+          "passed": 0,
+          "total": 2
+        },
+        "absolute": {
+          "passed": 1,
+          "total": 1
+        },
+        "ternary": {
+          "passed": 1,
+          "total": 2
+        },
+        "branch": {
+          "passed": 0,
+          "total": 1
+        },
+        "loop": {
+          "passed": 0,
+          "total": 2
+        },
+        "affine": {
+          "passed": 0,
+          "total": 1
+        },
+        "registers": {
+          "passed": 0,
+          "total": 1
+        },
+        "scenario": {
+          "passed": 0,
+          "total": 1
+        },
+        "fix": {
+          "passed": 0,
+          "total": 2
+        }
+      }
+    },
+    "activation_int8_interpretation": "Paired arithmetic comparison on the already reported20-condition set;5/20 vs6/20, lost ru-div. Weights remain identicalQ4; no default switch or training."
+  },
+  "fixes": [
+    {
+      "id": 1,
+      "change": "compact unsolved prompt, trimmed R/S padding for input, full-page address patches, exact context-budget check",
+      "verified": "105-byte page patch within 512 context in controller regression"
+    },
+    {
+      "id": 2,
+      "change": "remaining-context generation budget; byte grammar reserves completion; 105-byte spaced or dense writes",
+      "verified": ">160-token actual 105-byte candidate executes with expected result in real emulator"
+    },
+    {
+      "id": 3,
+      "change": "separate dev and heldout conditions, hidden cases, frozen model/prompt/executable/conditions hashes, all-row denominator",
+      "verified": "6/20 heldout, 42/42 syntactically valid calls, all failures retained"
+    },
+    {
+      "id": 4,
+      "change": "failed candidate/reply memory, cycle stop, best tested version rollback, exact common-prefix KV rewind, plan ablation",
+      "verified": "controller failure/retry/rollback assertions + independent HF rewind parity"
+    },
+    {
+      "id": 5,
+      "change": "read-only menus preserve paused continuation; persistent monotonic IDs and safe draft checkpoints",
+      "verified": "native pause/log/settings/resume and ID reboot simulation"
+    },
+    {
+      "id": 6,
+      "change": "all register/stack assertions, preserve masks, up to four subsequent key/input stops, on-device heap/stack/speed/service/cancel diagnostics",
+      "verified": "HOST register/preserve/scenarios + full device36forward, grammar, worst-session codec under loaded model/KV/UI, heap/stack/service/cancel latency, launcher lifecycle PASS"
+    }
+  ],
+  "memory": {
+    "package_bytes": 2093896,
+    "kv_bytes": 2621440,
+    "psram_payload_bytes": 4715336,
+    "model_workspace_bytes": 15344,
+    "static_ram_bytes": 133144,
+    "reserved_core0_stack_bytes": 32768,
+    "note": "Heap sampled at UI/service and transactional allocation boundaries; stack canary is conservative. Not an exhaustive malloc trace.",
+    "sampled_heap_peak_bytes": 66432,
+    "heap_capacity_bytes": 96232,
+    "stack_high_water_upper_bound_bytes": 20380
+  },
+  "hardware": {
+    "performed": true,
+    "phase": ".build/mk61ai/hil-v2b/final-phase.json",
+    "phase_sha256": "28e05c6d82f1426825c4362f550390e0401ef2253953d28c98442fa0c3593a19",
+    "save_or_restore": false,
+    "rtc_writes": false,
+    "stm32_uart_changes": false,
+    "partial": {
+      "schema": 2,
+      "device": true,
+      "context_at_decode": 8,
+      "model": "MKA-00D61AB7-2093896",
+      "cancelled": true,
+      "matching_greedy_tokens": true,
+      "max_session_roundtrip": true,
+      "reference": {
+        "prefill_tokens": 8,
+        "prefill_us": 219065381,
+        "decode_tokens": 4,
+        "decode_us": 157787835,
+        "max_step_us": 39493845
+      },
+      "lut_fp32": {
+        "prefill_tokens": 8,
+        "prefill_us": 94341369,
+        "decode_tokens": 4,
+        "decode_us": 67616342,
+        "max_step_us": 16939937
+      },
+      "constrained_lut": {
+        "prefill_tokens": 4,
+        "prefill_us": 44137202,
+        "decode_tokens": 0,
+        "decode_us": 0
+      },
+      "valid_tool_prefix": true,
+      "cancel_return_us": 195,
+      "heap_capacity": 96232,
+      "sampled_heap_peak": 67592,
+      "stack_high_water": 20380,
+      "service_gap_us": 271634,
+      "model_load_us": 12694809
+    },
+    "passed": true,
+    "result": {
+      "passed": true,
+      "save_or_restore": false,
+      "model_rewritten": false,
+      "drained_previous_bytes": 0,
+      "model": {
+        "bytes": 2093896,
+        "sha256": "45ebc482d2247d36d386c9563becb89d3ca08868db66aad001afa977703b0166",
+        "hash_ms": 5638
+      },
+      "final": {
+        "build": "B0CF78C9",
+        "crc": "96B1D0E2",
+        "ready": true,
+        "service": "CLOSED",
+        "runtime": "NONE",
+        "ui": "CALCULATOR",
+        "run": 0,
+        "physical_keys": 0
+      },
+      "temporary_removed": true,
+      "cdc_closed": true
+    },
+    "supervisor": {
+      "pid": 16104,
+      "phase_sha256": "28e05c6d82f1426825c4362f550390e0401ef2253953d28c98442fa0c3593a19",
+      "reaped": true,
+      "exit_code": 0
+    },
+    "benchmark": {
+      "schema": 2,
+      "device": true,
+      "context_at_decode": 8,
+      "model": "MKA-00D61AB7-2093896",
+      "cancelled": false,
+      "matching_greedy_tokens": true,
+      "max_session_roundtrip": true,
+      "reference": {
+        "prefill_tokens": 8,
+        "prefill_us": 219061550,
+        "decode_tokens": 4,
+        "decode_us": 157788923,
+        "max_step_us": 39493024
+      },
+      "lut_fp32": {
+        "prefill_tokens": 8,
+        "prefill_us": 94339191,
+        "decode_tokens": 4,
+        "decode_us": 67618329,
+        "max_step_us": 16940410
+      },
+      "constrained_lut": {
+        "prefill_tokens": 8,
+        "prefill_us": 94339840,
+        "decode_tokens": 4,
+        "decode_us": 67845908
+      },
+      "valid_tool_prefix": true,
+      "cancel_return_us": 0,
+      "heap_capacity": 96232,
+      "sampled_heap_peak": 66432,
+      "stack_high_water": 20380,
+      "service_gap_us": 240302,
+      "model_load_us": 15864298
+    },
+    "cancellation": {
+      "schema": 2,
+      "device": true,
+      "context_at_decode": 8,
+      "model": "MKA-00D61AB7-2093896",
+      "cancelled": true,
+      "matching_greedy_tokens": true,
+      "max_session_roundtrip": true,
+      "reference": {
+        "prefill_tokens": 0,
+        "prefill_us": 0,
+        "decode_tokens": 0,
+        "decode_us": 0,
+        "max_step_us": 107026
+      },
+      "lut_fp32": {
+        "prefill_tokens": 0,
+        "prefill_us": 0,
+        "decode_tokens": 0,
+        "decode_us": 0,
+        "max_step_us": 0
+      },
+      "constrained_lut": {
+        "prefill_tokens": 0,
+        "prefill_us": 0,
+        "decode_tokens": 0,
+        "decode_us": 0
+      },
+      "valid_tool_prefix": true,
+      "cancel_return_us": 303,
+      "heap_capacity": 96232,
+      "sampled_heap_peak": 66432,
+      "stack_high_water": 20380,
+      "service_gap_us": 240537,
+      "model_load_us": 15866701,
+      "host_cancel_response_seconds": 0.05682270901161246
+    },
+    "release_receipt": ".build/mk61ai/hil-v2b/final-results/release-receipt.json",
+    "release_receipt_sha256": "6bf3c0f94ef5101f404cdc8fd3eb78a118c82efb5d7399cb127665f8f2e3a3fa",
+    "port_released_to_coordinator": true,
+    "no_further_device_io": true,
+    "rtc_setter_calls": 0,
+    "old_state_backup_restore": false,
+    "prior_partial": "Earlier600s schedule stopped after4 constrainedprefill, included separately as partial, not counted as full PASS. Earlier USB/C5 runner faults are retained under .build/mk61ai/hil-v2."
+  },
+  "artifacts": {
+    "bundle": ".build/mk61ai/bundle-v2.zip",
+    "firmware": ".build/mk61ai/v2b-native/mk61s-picocalc-pico-h.uf2",
+    "source_patch": ".build/mk61ai/native-harness-v2.patch",
+    "readme": "examples/portable-apps/MK61AI/README.md",
+    "source_overlay": ".build/mk61ai/source-v2b-overlay.tar.gz",
+    "integration_package": ".build/mk61ai/integration-v2b.zip"
+  },
+  "limitations": [
+    "512-token checkpoint; long conditions still consume reply capacity.",
+    "Current frozen model solves 6/20 declared conditions; loops, fixes, register/store and game scenario fail.",
+    "At most eight examples and four subsequent scenario stages; each stage asserts one output.",
+    "FP32/LUT timing phase measures context 8-12 only; no 512-context interactive speed claim.",
+    "Q4 parity is checked; INT8/Q2/Q3 quality is not established."
+  ],
+  "quantization": {
+    "matrix_weights": "Q4 in both measured FP32 and LUT FP32 modes",
+    "linear_input_activations": "FP32 default; INT8 optional and compared separately",
+    "kv_cache": "FP32 in all implemented arithmetic modes",
+    "normalization_and_nonlinearity": "FP32"
+  },
+  "source_provenance": {
+    "reconstruction_base_commit": "bb05bd8998b7d9373e0cece6b56baf2dcabefa08",
+    "source_sha256": "674e77572a992cdabd119b00a9108dce3d896907e42aa8974826fe1f0544b668",
+    "tested_build": "b0cf78c9",
+    "files": 675,
+    "overlay_sha256": "c2c72498422b8d5c7b3257bc52cc03f1a915de6538e62f2b89aeac478cf4b7b6",
+    "overlay_bytes": 2589889,
+    "note": "Current source-hash inputs match testedB0 byte-for-byte, including already integrated M4-only conditional sources. Source patch against this base contains only AI changes. No main/index mutation."
+  },
+  "device_performance": {
+    "scope": "RP2040 125MHz; Q4 weights, FP32 activations/KV, context8-12, 8prefill+4decode each mode. Not a512-context dialogue rate.",
+    "seconds_per_decode_token": {
+      "reference": 39.44723075,
+      "lut_fp32": 16.90458225,
+      "constrained_lut": 16.961477
+    },
+    "lut_speedup_over_reference": 2.3335229564753073,
+    "model_load_seconds": 15.864298,
+    "sampled_heap_peak_bytes_full_pass": 66432,
+    "sampled_heap_peak_max_observed_including_prior_partial": 67592,
+    "heap_capacity_bytes": 96232,
+    "stack_high_water_upper_bound_bytes": 20380,
+    "stack_reservation_bytes": 32768,
+    "host_key_to_service_ms": 56.82270901161246,
+    "cancel_service_to_forward_return_us": 303
+  },
+  "additional_fix": "Loading/benchmark rendering observes80ms throttle; model_load_us and progress markers separate load from compute."
+}

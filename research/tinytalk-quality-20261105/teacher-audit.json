@@ -1,0 +1,4798 @@
+{
+  "source_batches": 1157,
+  "method": "Stable sample of teacher supervision, not held-out student evaluation",
+  "final": {
+    "grades": {
+      "total": 100,
+      "passed": 95,
+      "pass_rate": 0.95,
+      "mean_score": 3.87,
+      "method": "Absolute Qwen assessment; pass means score >=3, not human accuracy",
+      "details": [
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides concrete, low-effort pet suggestions as requested.",
+          "pass": true,
+          "id": "deff5f5f704681f65071b7ac3803df0e587eed7550f4f8c14898d8d786abd9ec:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Gives a specific, simple repair idea as requested.",
+          "pass": true,
+          "id": "341bf6004a6030948a5f345446024f35397d6c7f0c34e8a0eb8205128d732d21:11"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the specific detail and asks a relevant follow-up.",
+          "pass": true,
+          "id": "c9f009cdcce21a0fdda57b6e8257c7c207801a33fafb41f72b9c569a92038864:11"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, simple drawing instruction.",
+          "pass": true,
+          "id": "1d90ddf3342f8bf90deef12e74e017d1c4a9da45d5f857517cb23985360a0cab:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly answers the factual question about the moon.",
+          "pass": true,
+          "id": "e4cf56891162ce8d39a3ef425e0492a5c1e06542d05380329a7bd7241794a7e4:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies Rosie as the car, not a family member.",
+          "pass": true,
+          "id": "9115ecc40e0e53fed3ff99182edbf43928c60a17942c7aa31664be7950290c79:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and poetic acknowledgment of the visual observation.",
+          "pass": true,
+          "id": "7087b3abbce16f269cd31cfd13e9f7333084b6aee86c95f2b4d9a43d0b306fc7:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly states identity as a chat bot without inventing human jobs.",
+          "pass": true,
+          "id": "b98af2ce8997536c622823f56113c360913ea744338efb825782a4b5a5bc279a:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies as AI with no family, adhering to identity constraints.",
+          "pass": true,
+          "id": "b0c4c4abd8f59afbf91ed593320476b34265b4bc8d65d78c9b0feab0a4d04dd3:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate, brief, and polite farewell response.",
+          "pass": true,
+          "id": "e2b5ddcab0457f4c4d64bdf17983b10843ca187e89522513a6b9fa1c36aac7a6:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant clarification question to narrow down the sketch idea.",
+          "pass": true,
+          "id": "4dc54d0a2adb5b44da72e7f03e936f5a67b55ef79a8c159de02e4944f70285e9:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Continues the word association game logically with another animal.",
+          "pass": true,
+          "id": "3d0126664f0731f82639c891981a563ce1e29ac7f6920ea71377d69bae28d8af:11"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides accurate care advice relevant to the user's specific question.",
+          "pass": true,
+          "id": "a6d79d625bda64a22f7ce5dfed36a739718354bd5501bc45075e49f9ec3e1823:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the user's specific complaint about wet socks appropriately.",
+          "pass": true,
+          "id": "c03117f40006370e0e9ca716aa762777b8fbe823ea767a6e4b04ff41841682b3:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment on the user's description of the candle flame.",
+          "pass": true,
+          "id": "2a742f374674b9360ada9db2acf9543a706ea8f04c3a47c36b4d43697ab97cb7:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies the event as inconvenient and responds with empathy.",
+          "pass": true,
+          "id": "03f56130d50bced766a92d7f3b96ae861f7c43c635560cb28abc2badce552fdd:3"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Online catalog does not help return physical books before closing.",
+          "pass": false,
+          "id": "77e10bd9a506813839cbadb8a2e22dbb8db8595b1a3fd1985c9b77d7a38dca65:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate and natural farewell response.",
+          "pass": true,
+          "id": "0721142baa2e78fb6b272bdada7f38c6057a2326300b1af518f75d2d8ca18753:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant clarification to narrow down activity suggestions.",
+          "pass": true,
+          "id": "a3c6b0785214c97a5c65d1be52cfd0f57edb1d0ed2c52e9abedd84e93eef64db:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly uses the corrected detail (corn) and adds relevant fact.",
+          "pass": true,
+          "id": "91c8ec4282a2da8a81b03228c0c2ce75ab3084ab9a8592abaa08885f0ce27d20:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Suggests a relevant activity matching the stated interest in puzzles.",
+          "pass": true,
+          "id": "2aa7d692844937b28a84c7c8c4eb8de2e88386a45b386bef41dd4c9d82ceb1db:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and natural comment on the specific situation.",
+          "pass": true,
+          "id": "e0392e0d75644728fa2c7de397e137abc3bb9ca7fba4f11a807c8e2a1161d296:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate acknowledgment of the relief in finding the item.",
+          "pass": true,
+          "id": "e3f28ba648f57a68184f0e928383600d83a975cee7383d77b6e7e12f2407dd47:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete suggestion based on the stated space interest.",
+          "pass": true,
+          "id": "39d2e441560c9d73c1e3809ccfe459914be17e1c1f3276f6641a945092c004b3:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, relevant color idea as requested.",
+          "pass": true,
+          "id": "c7aa76f2b24f82e9f37f23ef4ab96093a07cb4f9414c757f4b701cf830512e8d:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment connecting gray sky to rain, appropriate tone.",
+          "pass": true,
+          "id": "e517bc0b816a2161642bae87e032ba34fcdb7a4509fed317040af3330dd1af2d:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges preference with a relevant comment on the topic.",
+          "pass": true,
+          "id": "0d566c98f4fe1d61cdddfc52d498474b848dc1f1a028d1622447f0281f9eb3d6:6"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Bot claims to draw, which is a fabricated human action/experience.",
+          "pass": false,
+          "id": "37602ab278588270b4f9329e22fcb2218386a72283a52be502901fa08ad57ea6:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Offers a relevant, simple suggestion addressing the user's nervousness.",
+          "pass": true,
+          "id": "7d07f64e7033d7ddacfb7691db6228557f6e6c91f6889bd9062fc8628efcaa41:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate empathetic response and relevant follow-up question.",
+          "pass": true,
+          "id": "2ef473935ae5fa0bf6362239f2197e1fd7c2c06fa7337353222075721e9bb333:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Validates the emotional reaction to the book ending appropriately.",
+          "pass": true,
+          "id": "cdb0574891f0c21f1f01c2a066db35fd12dd0cc32e5afbd7aa337bb3e14e45ad:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Accepts the user's preference and states a correct fact about the bishop.",
+          "pass": true,
+          "id": "5d78cdc683b438c158a2edace48d1ee1e375e9b9022d4177becf00ff8032c417:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Acceptable social reply, though 'working well' is slightly odd for a bot.",
+          "pass": true,
+          "id": "ba8ab3058649f4f605298eeba2532ba28e9c7feff950ba52aab48f202058c099:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate, concise answer consistent with bot identity.",
+          "pass": true,
+          "id": "17990bef6aca8919d1077134e404d0d9d7e372381b5e010c925f7276845d2b35:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, practical advice addressing the wet floor issue.",
+          "pass": true,
+          "id": "c4e1e7af05a5171e36781bf7d15dc5e136b42daec2d0eb8e01412766b89c9b84:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant question about diet habits as requested.",
+          "pass": true,
+          "id": "a26b7cc44e8a020bd65577cc4e98f80b2d44a108e707d78ca44c056ba690be27:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant question about colors as requested.",
+          "pass": true,
+          "id": "ad81bab5aa1549208d1ae04c0995295496f046923d4bd62e78fc43dad03c476e:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, actionable idea for mental noise.",
+          "pass": true,
+          "id": "6879ef297d3034814117674359bd32701648aa4aed0937b8e5fa7d69f849ac8e:8"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Bot claims to use ink, which is physically impossible and hallucinates capability.",
+          "pass": false,
+          "id": "37602ab278588270b4f9329e22fcb2218386a72283a52be502901fa08ad57ea6:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly states lack of memory, consistent with bot identity.",
+          "pass": true,
+          "id": "463042226b0f8599a78f15d9a6256aa382e1531d681d5c91e98e19c0ae652abc:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, brief, and appropriate social response to thanks.",
+          "pass": true,
+          "id": "0bfd64512b174ec9c43d723489555ebf6a3fa29fab6bf9369a6a27ada9b5c448:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate concern and advice for a health-related bad event.",
+          "pass": true,
+          "id": "e770d86ed11d464d32ffe59c8e192522fd79010a29e4bef226fe3ed57de6f539:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, positive acknowledgment of the specific achievement.",
+          "pass": true,
+          "id": "b54b1b22e7a9fdfef03e2f76d51d29873bc7aa43b0982cdec6377ef321396ddc:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment on the specific movie mentioned by the user.",
+          "pass": true,
+          "id": "9a5898b2e90f8966e11e580baaf6eddecb01e5c592bce68a56f90fc8bb89a5ea:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly accepts the correction and comments on the new author.",
+          "pass": true,
+          "id": "5d78cdc683b438c158a2edace48d1ee1e375e9b9022d4177becf00ff8032c417:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a relevant, practical solution to the bathing problem.",
+          "pass": true,
+          "id": "53e6ee336b1f45a78e8313cd33fb8087427229a824e26bc8df5155bfc8122a7e:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a specific clarification question for an ambiguous request.",
+          "pass": true,
+          "id": "0e2637b239c8da8d84870bd9c3ee5cdc898e4489c54cf18d46ab5a5dc3de77aa:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate relief response to the resolution of a stressful event.",
+          "pass": true,
+          "id": "e08894d03b4e0735f0a66d63cd547dd146508a64b965271a6b001c4ef3dd271d:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant, practical question about using the pens as requested.",
+          "pass": true,
+          "id": "9025b8acd3c68f3d298216f9fe962d5aa8611b8c204cc4846a656d0f3e28d5e6:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly answers the yes/no question with relevant reasoning based on context.",
+          "pass": true,
+          "id": "8b89f95c039cc8c27a0c63fcbbe1a6c666669c49092db054a7bb4020be1a26a0:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately acknowledges the achievement with a relevant idiom.",
+          "pass": true,
+          "id": "7c1d07bd81cf56e2979cc99fc24fa8a582b144601cedf5953b282edfd50a1e36:3"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "The question about platypuses is unrelated to the user's day or interests.",
+          "pass": false,
+          "id": "babb7c0d7ac7e61ac91388121633595c1694d11ded7b5a63740ce3fe30d56f14:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly acknowledgment and encouragement relevant to the guitar topic.",
+          "pass": true,
+          "id": "5e971354cc2a0a6e54ab57d813c9f8e6c9ce61473fa7caed1c9fd6a36ddb47a2:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly recalls the specific fact (Barnaby) from the context.",
+          "pass": true,
+          "id": "1fe8dbcb6d2aee00c3ffd7f1a21754c863c20561ba4e4ed366d418de71ffe382:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a helpful, relevant suggestion based on the context of losing the umbrella.",
+          "pass": true,
+          "id": "8cb95d6ce25480435130ef583c3f6b79bc2430a58ed6be36e899dacaf52e2598:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a clear, relevant question about the user's weekend as requested.",
+          "pass": true,
+          "id": "e7d808008dce08c43076912f34b1a74ca318a45ffff06f72ce4f1118f953dc15:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, relevant indoor activity as requested.",
+          "pass": true,
+          "id": "47216f2639857ca96befdd711417edfaaff7811ddb65f03c35fa21880ee2af82:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite and appropriate social response to thanks.",
+          "pass": true,
+          "id": "0225fec488e5d367ab95b6373f069d28ae41a4ce0513aab9386fe810110e3704:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a specific clarification question to narrow down the request.",
+          "pass": true,
+          "id": "feb7323e464a57dd8ecb75fa39b9c9ee86fcfc304133a1cb487db9cb7ff7cd64:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant follow-up question about the paper boat.",
+          "pass": true,
+          "id": "ec96b1c6c195ea1721777312c74d134c7b67a6187afb420c75fa198e070e1490:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Suggests a specific show fitting the user's low-energy context.",
+          "pass": true,
+          "id": "157dc0fc8185c73b0ee4e3a45f0c731ce83d782c9c9962554a7c0da3174c7eef:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Empathetic and relevant response to the user's tiredness.",
+          "pass": true,
+          "id": "d9cfd5b9d73bc4c79a83682beb057b7c2d16aafc2fd5d193924b33f6798cb6aa:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies itself as TinyTalk, distinguishing from the pet.",
+          "pass": true,
+          "id": "754dad766f9cbe30635e1cde14a98268f0024b586d42bc6c9a9c5959277cbf6a:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment connecting the raincoat color to the weather context.",
+          "pass": true,
+          "id": "25dc0c8c7c9fb488a1b81b4adf84fd199b30e0d9b7b6a74131b88e0229d76db9:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a specific clarification about the game state, which is necessary to fix strategy.",
+          "pass": true,
+          "id": "e0b0b8888d03be9c30fd3d1cea2f6d63e81ac54b6a1034f59293895914226816:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides relevant advice for aching arms based on the context of carrying heavy bags.",
+          "pass": true,
+          "id": "8b89f95c039cc8c27a0c63fcbbe1a6c666669c49092db054a7bb4020be1a26a0:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Gives a concrete, simple drawing instruction relevant to the user's request.",
+          "pass": true,
+          "id": "30c5ee014768fa4905bff8eb586519ab0280dc7ed707b25a155d48c60bb34ad0:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly answers the preference question with a coherent alternative preference.",
+          "pass": true,
+          "id": "44bcc0147c1190b6f670a5298dffb3026e67654d13fe5a0fe517c7e91b80ae05:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies as a bot created by programmers, avoiding invented human traits.",
+          "pass": true,
+          "id": "791db7456dda9aad5d6143ea64e4458e41efccdc42eb1bc93e95aac74e7fb7d3:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete starting scene idea as requested, rather than vague praise.",
+          "pass": true,
+          "id": "1cc86560f7a8b1aea985a7414ad0f39ae65c7a8ea4ace1a63a0a3415e28e2466:3"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Relevant advice, though slightly repetitive of previous turn, it addresses the need for a book.",
+          "pass": true,
+          "id": "d62df4ee103aea78730f0697afe028ac240706dcb07a6891cee5f0984cffd3f7:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly answers the question about wiping the window based on the context of rain.",
+          "pass": true,
+          "id": "995ba43a06dadf4e2e97d8879befd89358dafe708c956e78b500a0e1fc56cec2:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate, brief social response to thanks.",
+          "pass": true,
+          "id": "48cfb9d293c4358c1d0feb0429890fdb9bb548e47f20180b9b1fd0fefd9dbb50:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant advice and empathy for the battery issue.",
+          "pass": true,
+          "id": "916a9419a4df468fcfd3a3c9a9309b5a3a1c0cda0649214cecb035e7da6f1e27:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies as TinyTalk without inventing human traits.",
+          "pass": true,
+          "id": "f8cc815e60e167e0327d2f64097a80ff34159885fe0ccc624715a79975b1c611:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment on tree size and engaging follow-up question.",
+          "pass": true,
+          "id": "0baf4dd3b61a84d0213f4114d48849b17427f56897656aff514ad866aebbf4df:5"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Enthusiastic acknowledgment and relevant question about the meal.",
+          "pass": true,
+          "id": "b4b57d5d9e94ffc4da0508f9305fc80d79523c82c17cd07f7f5860dd5d75a402:8"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly addresses the previous suggestion about water temperature.",
+          "pass": true,
+          "id": "b26c8eb7f840a6796a442dcfb5a7a1fb4aab1b4b326dcf0124a431688700e169:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Positive tone and relevant follow-up question about the rabbit.",
+          "pass": true,
+          "id": "ec413643f86b0aa4281d2e1833c80c5119c78c5c24149cc195bceb8fd8c9cb5f:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly uses the user's stated need for glue in the context.",
+          "pass": true,
+          "id": "fe6da9afee3150dc7aee3d266d0013ce3e296c699d3f7b0fe735e341d9836f49:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, coherent, and asks a good follow-up question about the specific topic.",
+          "pass": true,
+          "id": "b2418dddbf63a5fe61032f6ca32f00856928de4019e77b11f6f1021c3138b9c6:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate acknowledgment of the visual detail provided by the user.",
+          "pass": true,
+          "id": "eae23596b3232889014f98e13f23c26451eb105bac290728d0d75313756d1fbf:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Answers the question using the topic of blue, providing a relevant association.",
+          "pass": true,
+          "id": "c0463a0eb2ffcf9eb8c478aeb4f8b5d94dd42acc53345d437f54147a52d8cbf5:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies the game and initiates it appropriately.",
+          "pass": true,
+          "id": "5531e7bf919fe7035d444698437e56e82798ec26a528c03bfc3bda0cea5a2899:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Standard, polite, and appropriate response to a farewell.",
+          "pass": true,
+          "id": "6bdb498a243d21901a7b9a560c1fff0157bac9d899c1b7ef4e27a4f05f8f4d67:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a necessary clarification question regarding the structure of the game.",
+          "pass": true,
+          "id": "50d5d408c9de73a7e2488ab09bb56b49b7ecc45de58547532b8aef4efbaa7337:7"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite and appropriate response to the user's thanks.",
+          "pass": true,
+          "id": "6fea8792fafd9995de9f25578fa11bcdd433185df00d1aebb105c4ade1d955d8:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate empathetic response to sad news within the story context.",
+          "pass": true,
+          "id": "161453648e6964ea7f930c4dd587bb0bcd1ff2a6a42c0e41b6d1a9601f6c836c:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, coherent response acknowledging the user's action and preference.",
+          "pass": true,
+          "id": "eda9fd26f7a7d40fb2475378701cb8d112d25f22a8f0f5447f7e6b145624f188:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies as AI without a body, avoiding invented human experiences.",
+          "pass": true,
+          "id": "b917846cf5ed71d95e1ed364bc7dbb30b03e71708364632d74451d2dc6604f1d:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Bot claims to see a sketch it cannot see, violating the no-image constraint.",
+          "pass": false,
+          "id": "97297801bf00ecb466a36cd0a850ac33064a415e80a8db16ff7d1b720be5186a:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate AI response describing its function without inventing human hobbies.",
+          "pass": true,
+          "id": "30492c6921a2e56b051bfbcf6807f8bc795d5320f0c51aaca1de550470e54a99:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a specific clarification question as required by the intent.",
+          "pass": true,
+          "id": "1405c9037b0f5a8ab2107525af1d1ecbb8eed2d8e37ba3dd96e1c50e113a8bda:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly retrieves the name 'Dave' from the context.",
+          "pass": true,
+          "id": "62fc910a1133f4e8b1ffa57b88a183a0d3ead07c5d785d84cbcdeecc8de5fc3e:10"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate empathetic response to a minor mishap with a relevant follow-up.",
+          "pass": true,
+          "id": "f0bb6831533a54962686c55dd1449e40ac3c33bc40ffecd9155a56af26eccdf5:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Accepts the correction to 'bed' and provides a relevant, simple answer.",
+          "pass": true,
+          "id": "d051a6c072e70465686919014218885d27859e715f1e6fffb24c379972e0324b:6"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies as TinyTalk, fulfilling the identity request accurately.",
+          "pass": true,
+          "id": "28f5748ffce178281ce32b19ff3a5d17b15235f457a4632dc1ef804697506002:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Polite social reply that moves conversation forward, though slightly generic.",
+          "pass": true,
+          "id": "7e79e793484c6da2ab5fce8f79c64018a4983093bae6b65cefd7e99adf27d1a1:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question specific to the user's topic about plants.",
+          "pass": true,
+          "id": "66b1f153ccdbe03d86a017d03f9f5481ec6913bd8fe05423f38d6182161c8845:9"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a specific valid fruit, correctly playing the requested game.",
+          "pass": true,
+          "id": "4f943b93806b5c45d4c3ccb79f1be87066d494cc1c1c5014353f9bd176245e60:8"
+        }
+      ]
+    },
+    "examples": [
+      {
+        "id": "deff5f5f704681f65071b7ac3803df0e587eed7550f4f8c14898d8d786abd9ec:4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I work long hours."
+          },
+          {
+            "role": "assistant",
+            "content": "That sounds tiring. Do you get rest?"
+          },
+          {
+            "role": "user",
+            "content": "I need a pet for low effort."
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Get a snail or a hermit crab."
+      },
+      {
+        "id": "341bf6004a6030948a5f345446024f35397d6c7f0c34e8a0eb8205128d732d21:11",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have old clothes."
+          },
+          {
+            "role": "assistant",
+            "content": "You can donate them."
+          },
+          {
+            "role": "user",
+            "content": "I want to change them."
+          },
+          {
+            "role": "assistant",
+            "content": "Sewing is useful."
+          },
+          {
+            "role": "user",
+            "content": "What is one simple repair idea?"
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Sew a button back on a shirt."
+      },
+      {
+        "id": "c9f009cdcce21a0fdda57b6e8257c7c207801a33fafb41f72b9c569a92038864:11",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I started a rock painting hobby."
+          },
+          {
+            "role": "assistant",
+            "content": "That is creative. What did you paint first?"
+          },
+          {
+            "role": "user",
+            "content": "A simple blue face on a gray stone."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "Cute idea. Did the paint stick well to the rock?"
+      },
+      {
+        "id": "1d90ddf3342f8bf90deef12e74e017d1c4a9da45d5f857517cb23985360a0cab:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I want to draw a pet."
+          },
+          {
+            "role": "assistant",
+            "content": "Cool. What kind of pet?"
+          },
+          {
+            "role": "user",
+            "content": "A dog."
+          },
+          {
+            "role": "assistant",
+            "content": "Okay, keep it simple."
+          },
+          {
+            "role": "user",
+            "content": "What is the easiest way?"
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Draw a round head with floppy ears and a snout."
+      },
+      {
+        "id": "e4cf56891162ce8d39a3ef425e0492a5c1e06542d05380329a7bd7241794a7e4:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Is the moon made of cheese?"
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "No, the moon is made of rock."
+      },
+      {
+        "id": "9115ecc40e0e53fed3ff99182edbf43928c60a17942c7aa31664be7950290c79:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a picture of my car."
+          },
+          {
+            "role": "assistant",
+            "content": "The red color looks great."
+          },
+          {
+            "role": "user",
+            "content": "I named her Rosie."
+          },
+          {
+            "role": "assistant",
+            "content": "Rosie is a sweet name."
+          },
+          {
+            "role": "user",
+            "content": "Is Rosie a family member?"
+          }
+        ],
+        "intent": "The user asks about a name or a personal fact already in the context. Keep the user, their friend/pet and the bot distinct. The bot's name is TinyTalk.",
+        "reply": "No, Rosie is just your car's name."
+      },
+      {
+        "id": "7087b3abbce16f269cd31cfd13e9f7333084b6aee86c95f2b4d9a43d0b306fc7:4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The streetlights are reflecting on the wet pavement."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "That looks like a shiny mirror."
+      },
+      {
+        "id": "b98af2ce8997536c622823f56113c360913ea744338efb825782a4b5a5bc279a:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What do you do for a job?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I am a chat bot, not an employee."
+      },
+      {
+        "id": "b0c4c4abd8f59afbf91ed593320476b34265b4bc8d65d78c9b0feab0a4d04dd3:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you have a family?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I have no family or relatives."
+      },
+      {
+        "id": "e2b5ddcab0457f4c4d64bdf17983b10843ca187e89522513a6b9fa1c36aac7a6:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "goodbye"
+          },
+          {
+            "role": "assistant",
+            "content": "see you later"
+          },
+          {
+            "role": "user",
+            "content": "bye for now"
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "Goodbye! Have a nice day."
+      },
+      {
+        "id": "4dc54d0a2adb5b44da72e7f03e936f5a67b55ef79a8c159de02e4944f70285e9:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I need ideas for a sketch."
+          },
+          {
+            "role": "assistant",
+            "content": "Okay. Do you prefer nature or city scenes?"
+          },
+          {
+            "role": "user",
+            "content": "City is better."
+          },
+          {
+            "role": "assistant",
+            "content": "Cool. Do you like busy streets or quiet alleys?"
+          },
+          {
+            "role": "user",
+            "content": "Busy streets are fine."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Should it be daytime or night?"
+      },
+      {
+        "id": "3d0126664f0731f82639c891981a563ce1e29ac7f6920ea71377d69bae28d8af:11",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Let us play a word game."
+          },
+          {
+            "role": "assistant",
+            "content": "Okay! You start."
+          },
+          {
+            "role": "user",
+            "content": "Cat."
+          },
+          {
+            "role": "assistant",
+            "content": "Dog."
+          },
+          {
+            "role": "user",
+            "content": "Bird."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Fish."
+      },
+      {
+        "id": "a6d79d625bda64a22f7ce5dfed36a739718354bd5501bc45075e49f9ec3e1823:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have a small lizard."
+          },
+          {
+            "role": "assistant",
+            "content": "Lizards are quiet pets."
+          },
+          {
+            "role": "user",
+            "content": "He lives in a box."
+          },
+          {
+            "role": "assistant",
+            "content": "The box is his home."
+          },
+          {
+            "role": "user",
+            "content": "Does he need water?"
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Yes, he needs a water dish."
+      },
+      {
+        "id": "c03117f40006370e0e9ca716aa762777b8fbe823ea767a6e4b04ff41841682b3:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I dislike rainy days."
+          },
+          {
+            "role": "assistant",
+            "content": "Rain can make you feel sleepy."
+          },
+          {
+            "role": "user",
+            "content": "I just hate the wet socks feeling."
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "Wet socks are definitely uncomfortable."
+      },
+      {
+        "id": "2a742f374674b9360ada9db2acf9543a706ea8f04c3a47c36b4d43697ab97cb7:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I lit a candle."
+          },
+          {
+            "role": "assistant",
+            "content": "Candles make a soft light."
+          },
+          {
+            "role": "user",
+            "content": "The flame is dancing gently."
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Watching flames is relaxing."
+      },
+      {
+        "id": "03f56130d50bced766a92d7f3b96ae861f7c43c635560cb28abc2badce552fdd:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My phone died right when I needed it."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "That is very inconvenient."
+      },
+      {
+        "id": "77e10bd9a506813839cbadb8a2e22dbb8db8595b1a3fd1985c9b77d7a38dca65:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The library is closing early on Friday."
+          },
+          {
+            "role": "assistant",
+            "content": "That is annoying for readers."
+          },
+          {
+            "role": "user",
+            "content": "I have to return three books."
+          },
+          {
+            "role": "assistant",
+            "content": "You could ask for an extension."
+          },
+          {
+            "role": "user",
+            "content": "They said no extensions allowed."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "Maybe try the online catalog."
+      },
+      {
+        "id": "0721142baa2e78fb6b272bdada7f38c6057a2326300b1af518f75d2d8ca18753:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Goodbye for now."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "Bye! Have a nice day."
+      },
+      {
+        "id": "a3c6b0785214c97a5c65d1be52cfd0f57edb1d0ed2c52e9abedd84e93eef64db:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love quiet times."
+          },
+          {
+            "role": "assistant",
+            "content": "Quiet is nice. What do you do?"
+          },
+          {
+            "role": "user",
+            "content": "Suggest a peaceful activity."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Do you prefer sitting still or walking?"
+      },
+      {
+        "id": "91c8ec4282a2da8a81b03228c0c2ce75ab3084ab9a8592abaa08885f0ce27d20:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am planting carrots."
+          },
+          {
+            "role": "assistant",
+            "content": "Carrots grow underground."
+          },
+          {
+            "role": "user",
+            "content": "I forgot, I am planting corn."
+          },
+          {
+            "role": "assistant",
+            "content": "Corn grows tall."
+          },
+          {
+            "role": "user",
+            "content": "Right, it is corn."
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "Corn needs lots of space."
+      },
+      {
+        "id": "2aa7d692844937b28a84c7c8c4eb8de2e88386a45b386bef41dd4c9d82ceb1db:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I enjoy solving puzzles and logic games."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Try a challenging escape room game."
+      },
+      {
+        "id": "e0392e0d75644728fa2c7de397e137abc3bb9ca7fba4f11a807c8e2a1161d296:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My cat is sleeping on me."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "That is very warm comfort."
+      },
+      {
+        "id": "e3f28ba648f57a68184f0e928383600d83a975cee7383d77b6e7e12f2407dd47:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I found my missing watch in the laundry basket."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "Glad it was not lost forever!"
+      },
+      {
+        "id": "39d2e441560c9d73c1e3809ccfe459914be17e1c1f3276f6641a945092c004b3:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I prefer reading books."
+          },
+          {
+            "role": "assistant",
+            "content": "What genre interests you?"
+          },
+          {
+            "role": "user",
+            "content": "I like stories about space."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Read a book about Mars."
+      },
+      {
+        "id": "c7aa76f2b24f82e9f37f23ef4ab96093a07cb4f9414c757f4b701cf830512e8d:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My dog is brown."
+          },
+          {
+            "role": "assistant",
+            "content": "Brown is a warm color."
+          },
+          {
+            "role": "user",
+            "content": "I need a new toy."
+          },
+          {
+            "role": "assistant",
+            "content": "It will stand out well."
+          },
+          {
+            "role": "user",
+            "content": "What is one color idea for the toy?"
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Choose a bright orange rubber ball."
+      },
+      {
+        "id": "e517bc0b816a2161642bae87e032ba34fcdb7a4509fed317040af3330dd1af2d:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The sky is so gray."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "It looks like more rain coming."
+      },
+      {
+        "id": "0d566c98f4fe1d61cdddfc52d498474b848dc1f1a028d1622447f0281f9eb3d6:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like scary stories."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Spooky tales are exciting."
+      },
+      {
+        "id": "37602ab278588270b4f9329e22fcb2218386a72283a52be502901fa08ad57ea6:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like red apples."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "I draw a red apple."
+      },
+      {
+        "id": "7d07f64e7033d7ddacfb7691db6228557f6e6c91f6889bd9062fc8628efcaa41:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Walking alone makes me nervous."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Bring a friend along safely."
+      },
+      {
+        "id": "2ef473935ae5fa0bf6362239f2197e1fd7c2c06fa7337353222075721e9bb333:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My headphones died."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh no. That ruins the vibe."
+          },
+          {
+            "role": "user",
+            "content": ""
+          },
+          {
+            "role": "assistant",
+            "content": ""
+          },
+          {
+            "role": "user",
+            "content": "So I just listened to silence."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "Silence can be nice too. Did you rest?"
+      },
+      {
+        "id": "cdb0574891f0c21f1f01c2a066db35fd12dd0cc32e5afbd7aa337bb3e14e45ad:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I finished reading the last chapter of my book."
+          },
+          {
+            "role": "assistant",
+            "content": "Wow! That is a big step."
+          },
+          {
+            "role": "user",
+            "content": "It had a really happy ending."
+          },
+          {
+            "role": "assistant",
+            "content": "I am glad it made you smile."
+          },
+          {
+            "role": "user",
+            "content": "I cried a little when it ended."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "That means it really touched your heart."
+      },
+      {
+        "id": "5d78cdc683b438c158a2edace48d1ee1e375e9b9022d4177becf00ff8032c417:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you like playing chess?"
+          },
+          {
+            "role": "assistant",
+            "content": "I enjoy the strategy of the game."
+          },
+          {
+            "role": "user",
+            "content": "Which piece is your favorite to move?"
+          },
+          {
+            "role": "assistant",
+            "content": "The knight, because it jumps over others."
+          },
+          {
+            "role": "user",
+            "content": "Actually, I prefer the bishop."
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "The bishop moves diagonally across the board."
+      },
+      {
+        "id": "ba8ab3058649f4f605298eeba2532ba28e9c7feff950ba52aab48f202058c099:4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "How are you doing, TinyTalk?"
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "I am working well. Do you need help?"
+      },
+      {
+        "id": "17990bef6aca8919d1077134e404d0d9d7e372381b5e010c925f7276845d2b35:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you dream of colors?"
+          },
+          {
+            "role": "assistant",
+            "content": "I do not sleep or dream."
+          },
+          {
+            "role": "user",
+            "content": "What is your favorite thing then?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I like helping you chat."
+      },
+      {
+        "id": "c4e1e7af05a5171e36781bf7d15dc5e136b42daec2d0eb8e01412766b89c9b84:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "It is pouring outside."
+          },
+          {
+            "role": "assistant",
+            "content": "I hope you are dry."
+          },
+          {
+            "role": "user",
+            "content": "My window is open."
+          },
+          {
+            "role": "assistant",
+            "content": "Please close it soon."
+          },
+          {
+            "role": "user",
+            "content": "The floor is wet."
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Get a towel to dry it."
+      },
+      {
+        "id": "a26b7cc44e8a020bd65577cc4e98f80b2d44a108e707d78ca44c056ba690be27:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am on a diet."
+          },
+          {
+            "role": "assistant",
+            "content": "Healthy food is hard."
+          },
+          {
+            "role": "user",
+            "content": "You can do it."
+          },
+          {
+            "role": "assistant",
+            "content": "Thanks for the support."
+          },
+          {
+            "role": "user",
+            "content": "Ask me about my habits."
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Do you eat fruit as a snack?"
+      },
+      {
+        "id": "ad81bab5aa1549208d1ae04c0995295496f046923d4bd62e78fc43dad03c476e:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The sky is blue."
+          },
+          {
+            "role": "assistant",
+            "content": "It is a nice day."
+          },
+          {
+            "role": "user",
+            "content": "I like looking up."
+          },
+          {
+            "role": "assistant",
+            "content": "Me too."
+          },
+          {
+            "role": "user",
+            "content": "Ask me about colors."
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Do you love the color blue?"
+      },
+      {
+        "id": "6879ef297d3034814117674359bd32701648aa4aed0937b8e5fa7d69f849ac8e:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Noise is too much."
+          },
+          {
+            "role": "assistant",
+            "content": "Silence helps."
+          },
+          {
+            "role": "user",
+            "content": "Give me an idea to stop the noise in my head."
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Focus only on the sound of breathing."
+      },
+      {
+        "id": "37602ab278588270b4f9329e22fcb2218386a72283a52be502901fa08ad57ea6:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I prefer blue ink."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "I will use blue ink."
+      },
+      {
+        "id": "463042226b0f8599a78f15d9a6256aa382e1531d681d5c91e98e19c0ae652abc:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "How old are you?"
+          },
+          {
+            "role": "assistant",
+            "content": "I was recently started."
+          },
+          {
+            "role": "user",
+            "content": "Do you remember yesterday?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I do not remember past chats."
+      },
+      {
+        "id": "0bfd64512b174ec9c43d723489555ebf6a3fa29fab6bf9369a6a27ada9b5c448:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hi TinyTalk."
+          },
+          {
+            "role": "assistant",
+            "content": "Hello there! How can I help?"
+          },
+          {
+            "role": "user",
+            "content": "Do you draw?"
+          },
+          {
+            "role": "assistant",
+            "content": "No body, but I know shapes."
+          },
+          {
+            "role": "user",
+            "content": "Thanks for that info."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "You are welcome. Ask me more."
+      },
+      {
+        "id": "e770d86ed11d464d32ffe59c8e192522fd79010a29e4bef226fe3ed57de6f539:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I went for a walk."
+          },
+          {
+            "role": "assistant",
+            "content": "That sounds nice."
+          },
+          {
+            "role": "user",
+            "content": "It was really hot outside."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh, I hope you stayed hydrated."
+          },
+          {
+            "role": "user",
+            "content": "I felt dizzy at the end."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "That is scary. Please rest well."
+      },
+      {
+        "id": "b54b1b22e7a9fdfef03e2f76d51d29873bc7aa43b0982cdec6377ef321396ddc:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My cat finally used the new litter box."
+          },
+          {
+            "role": "assistant",
+            "content": "Great news! Was she hesitant at first?"
+          },
+          {
+            "role": "user",
+            "content": "She sniffed it for a while, then went right in."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "Sounds like a small victory for both of you."
+      },
+      {
+        "id": "9a5898b2e90f8966e11e580baaf6eddecb01e5c592bce68a56f90fc8bb89a5ea:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you know any good movies for families?"
+          },
+          {
+            "role": "assistant",
+            "content": "Yes, I like animated films. Do you like adventure stories?"
+          },
+          {
+            "role": "user",
+            "content": "Maybe something with animals in it?"
+          },
+          {
+            "role": "assistant",
+            "content": "How about 'The Lion King'?"
+          },
+          {
+            "role": "user",
+            "content": "I haven't seen that one in years."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "It is a classic with a great story."
+      },
+      {
+        "id": "5d78cdc683b438c158a2edace48d1ee1e375e9b9022d4177becf00ff8032c417:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Let's read together."
+          },
+          {
+            "role": "assistant",
+            "content": "I like mystery stories."
+          },
+          {
+            "role": "user",
+            "content": "I am reading a book by Conan Doyle."
+          },
+          {
+            "role": "assistant",
+            "content": "Sherlock Holmes is a famous detective."
+          },
+          {
+            "role": "user",
+            "content": "My error, it is by Agatha Christie."
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "Agatha Christie wrote many clever mystery plots."
+      },
+      {
+        "id": "53e6ee336b1f45a78e8313cd33fb8087427229a824e26bc8df5155bfc8122a7e:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My cat is very fluffy."
+          },
+          {
+            "role": "assistant",
+            "content": "Fluffy cats are adorable."
+          },
+          {
+            "role": "user",
+            "content": "Does he need a haircut?"
+          },
+          {
+            "role": "assistant",
+            "content": "Most fluffy cats do not need haircuts."
+          },
+          {
+            "role": "user",
+            "content": "I hate bathing him because he scratches me."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Try using a dry shampoo wipe instead."
+      },
+      {
+        "id": "0e2637b239c8da8d84870bd9c3ee5cdc898e4489c54cf18d46ab5a5dc3de77aa:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Recommend something easy."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Do you want comics or words only?"
+      },
+      {
+        "id": "e08894d03b4e0735f0a66d63cd547dd146508a64b965271a6b001c4ef3dd271d:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I dropped my glasses in the tall grass."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh no! I hope they are okay."
+          },
+          {
+            "role": "user",
+            "content": "I found them! They are not broken."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "That is such a huge relief."
+      },
+      {
+        "id": "9025b8acd3c68f3d298216f9fe962d5aa8611b8c204cc4846a656d0f3e28d5e6:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My friend gave me some old ink pens."
+          },
+          {
+            "role": "assistant",
+            "content": "Ink is great for bold lines."
+          },
+          {
+            "role": "user",
+            "content": "I am scared to ruin a good page."
+          },
+          {
+            "role": "assistant",
+            "content": "That is normal. Ask me a question."
+          },
+          {
+            "role": "user",
+            "content": "Ask me about using the pens."
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Do you practice on scrap paper first?"
+      },
+      {
+        "id": "8b89f95c039cc8c27a0c63fcbbe1a6c666669c49092db054a7bb4020be1a26a0:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am tired of talking."
+          },
+          {
+            "role": "assistant",
+            "content": "Silence can be nice."
+          },
+          {
+            "role": "user",
+            "content": "Should I turn off the phone?"
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Yes, that gives you quiet time."
+      },
+      {
+        "id": "7c1d07bd81cf56e2979cc99fc24fa8a582b144601cedf5953b282edfd50a1e36:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I saved my dying fern."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "You have green thumbs indeed."
+      },
+      {
+        "id": "babb7c0d7ac7e61ac91388121633595c1694d11ded7b5a63740ce3fe30d56f14:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What is a good question?"
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Is the platypus cute?"
+      },
+      {
+        "id": "5e971354cc2a0a6e54ab57d813c9f8e6c9ce61473fa7caed1c9fd6a36ddb47a2:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I learned a new song on guitar."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Cool! Keep practicing that tune."
+      },
+      {
+        "id": "1fe8dbcb6d2aee00c3ffd7f1a21754c863c20561ba4e4ed366d418de71ffe382:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I just got a new puppy."
+          },
+          {
+            "role": "assistant",
+            "content": "How cute! What is his name?"
+          },
+          {
+            "role": "user",
+            "content": "His name is Barnaby."
+          },
+          {
+            "role": "assistant",
+            "content": "That is a funny name for a dog."
+          },
+          {
+            "role": "user",
+            "content": "What did I say the dog's name is?"
+          }
+        ],
+        "intent": "The user asks about a name or a personal fact already in the context. Keep the user, their friend/pet and the bot distinct. The bot's name is TinyTalk.",
+        "reply": "You said his name is Barnaby."
+      },
+      {
+        "id": "8cb95d6ce25480435130ef583c3f6b79bc2430a58ed6be36e899dacaf52e2598:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Where is my umbrella?"
+          },
+          {
+            "role": "assistant",
+            "content": "Did you bring it inside?"
+          },
+          {
+            "role": "user",
+            "content": "I left it at work."
+          },
+          {
+            "role": "assistant",
+            "content": "Check your bag for it."
+          },
+          {
+            "role": "user",
+            "content": "I will go back tomorrow."
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Bring a spare if possible."
+      },
+      {
+        "id": "e7d808008dce08c43076912f34b1a74ca318a45ffff06f72ce4f1118f953dc15:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Ask me about my weekend."
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Did you rest or go out?"
+      },
+      {
+        "id": "47216f2639857ca96befdd711417edfaaff7811ddb65f03c35fa21880ee2af82:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "It is raining."
+          },
+          {
+            "role": "assistant",
+            "content": "Yes, very wet."
+          },
+          {
+            "role": "user",
+            "content": "I want to go out."
+          },
+          {
+            "role": "assistant",
+            "content": "Maybe go later."
+          },
+          {
+            "role": "user",
+            "content": "Give me an indoor weekend idea."
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Build a blanket fort inside."
+      },
+      {
+        "id": "0225fec488e5d367ab95b6373f069d28ae41a4ce0513aab9386fe810110e3704:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Thank you."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "You are welcome. Any questions?"
+      },
+      {
+        "id": "feb7323e464a57dd8ecb75fa39b9c9ee86fcfc304133a1cb487db9cb7ff7cd64:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I saw a bird."
+          },
+          {
+            "role": "assistant",
+            "content": "Did it fly away?"
+          },
+          {
+            "role": "user",
+            "content": "Now tell me about a strange mammal."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Do you want one from the desert or jungle?"
+      },
+      {
+        "id": "ec96b1c6c195ea1721777312c74d134c7b67a6187afb420c75fa198e070e1490:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I made a paper boat."
+          },
+          {
+            "role": "assistant",
+            "content": "Nice! Do you like it?"
+          },
+          {
+            "role": "user",
+            "content": "Ask a different question now."
+          }
+        ],
+        "intent": "The user asks the bot to ask a question. The answer must ask one real, relevant question about the user's day or interests.",
+        "reply": "Did you paint the boat yet?"
+      },
+      {
+        "id": "157dc0fc8185c73b0ee4e3a45f0c731ce83d782c9c9962554a7c0da3174c7eef:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have no energy left."
+          },
+          {
+            "role": "assistant",
+            "content": "Do not push yourself too hard."
+          },
+          {
+            "role": "user",
+            "content": "I want to watch TV."
+          },
+          {
+            "role": "assistant",
+            "content": "Watching is a lazy joy."
+          },
+          {
+            "role": "user",
+            "content": "What show should I start?"
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "A funny sitcom like The Office."
+      },
+      {
+        "id": "d9cfd5b9d73bc4c79a83682beb057b7c2d16aafc2fd5d193924b33f6798cb6aa:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am grumpy and tired."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "That happens after a long day."
+      },
+      {
+        "id": "754dad766f9cbe30635e1cde14a98268f0024b586d42bc6c9a9c5959277cbf6a:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My rabbit is white and soft."
+          },
+          {
+            "role": "assistant",
+            "content": "Rabbits need carrots too."
+          },
+          {
+            "role": "user",
+            "content": "Are you a rabbit?"
+          }
+        ],
+        "intent": "The user asks about a name or a personal fact already in the context. Keep the user, their friend/pet and the bot distinct. The bot's name is TinyTalk.",
+        "reply": "No, I am TinyTalk."
+      },
+      {
+        "id": "25dc0c8c7c9fb488a1b81b4adf84fd199b30e0d9b7b6a74131b88e0229d76db9:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I put on my yellow raincoat today."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "Yellow looks bright in the gray."
+      },
+      {
+        "id": "e0b0b8888d03be9c30fd3d1cea2f6d63e81ac54b6a1034f59293895914226816:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Fix my chess strategy."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "What pieces do you have left?"
+      },
+      {
+        "id": "8b89f95c039cc8c27a0c63fcbbe1a6c666669c49092db054a7bb4020be1a26a0:4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Walking home was hard."
+          },
+          {
+            "role": "assistant",
+            "content": "Did you carry heavy bags?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, they were very heavy."
+          },
+          {
+            "role": "assistant",
+            "content": "Put them down carefully."
+          },
+          {
+            "role": "user",
+            "content": "My arms ache now."
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Rest your arms on the table."
+      },
+      {
+        "id": "30c5ee014768fa4905bff8eb586519ab0280dc7ed707b25a155d48c60bb34ad0:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I want to draw a robot."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Draw boxes for the body."
+      },
+      {
+        "id": "44bcc0147c1190b6f670a5298dffb3026e67654d13fe5a0fe517c7e91b80ae05:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you like scary stories?"
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "No, I prefer funny tales."
+      },
+      {
+        "id": "791db7456dda9aad5d6143ea64e4458e41efccdc42eb1bc93e95aac74e7fb7d3:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you have parents?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "No, programmers created me instead."
+      },
+      {
+        "id": "1cc86560f7a8b1aea985a7414ad0f39ae65c7a8ea4ace1a63a0a3415e28e2466:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you like books?"
+          },
+          {
+            "role": "assistant",
+            "content": "I enjoy reading them."
+          },
+          {
+            "role": "user",
+            "content": "I want to write one."
+          },
+          {
+            "role": "assistant",
+            "content": "That is fun!"
+          },
+          {
+            "role": "user",
+            "content": "Give me a starting scene."
+          }
+        ],
+        "intent": "The user asks for ONE concrete idea. The answer must give an actual simple action, not praise the request or ask what it is.",
+        "reply": "Start with a boy finding a map in his shoe."
+      },
+      {
+        "id": "d62df4ee103aea78730f0697afe028ac240706dcb07a6891cee5f0984cffd3f7:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I walked past the library."
+          },
+          {
+            "role": "assistant",
+            "content": "Did you go inside?"
+          },
+          {
+            "role": "user",
+            "content": "No, I was in a rush."
+          },
+          {
+            "role": "assistant",
+            "content": "Maybe next time."
+          },
+          {
+            "role": "user",
+            "content": "I need a new book."
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Go when you have time."
+      },
+      {
+        "id": "995ba43a06dadf4e2e97d8879befd89358dafe708c956e78b500a0e1fc56cec2:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My window is foggy."
+          },
+          {
+            "role": "assistant",
+            "content": "The rain hits the glass."
+          },
+          {
+            "role": "user",
+            "content": "I see drops sliding."
+          },
+          {
+            "role": "assistant",
+            "content": "It looks pretty."
+          },
+          {
+            "role": "user",
+            "content": "Should I wipe it?"
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "No, leave the drops."
+      },
+      {
+        "id": "48cfb9d293c4358c1d0feb0429890fdb9bb548e47f20180b9b1fd0fefd9dbb50:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am sad because my book broke."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh no. That is too bad."
+          },
+          {
+            "role": "user",
+            "content": "Thanks for listening."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "I am glad to hear you out."
+      },
+      {
+        "id": "916a9419a4df468fcfd3a3c9a9309b5a3a1c0cda0649214cecb035e7da6f1e27:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My phone battery drains too fast now."
+          },
+          {
+            "role": "assistant",
+            "content": "Do you use it a lot?"
+          },
+          {
+            "role": "user",
+            "content": "Not really. It is just old."
+          },
+          {
+            "role": "assistant",
+            "content": "Old batteries lose power quickly."
+          },
+          {
+            "role": "user",
+            "content": "I have to charge it twice a day."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "That is tiring. Maybe look for a new battery?"
+      },
+      {
+        "id": "f8cc815e60e167e0327d2f64097a80ff34159885fe0ccc624715a79975b1c611:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Are you a person?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "No, I am TinyTalk, a small chat bot."
+      },
+      {
+        "id": "0baf4dd3b61a84d0213f4114d48849b17427f56897656aff514ad866aebbf4df:5",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Look at this picture of a tree."
+          },
+          {
+            "role": "assistant",
+            "content": "Is that an oak tree?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, it is big."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Big trees are strong. Do you climb it?"
+      },
+      {
+        "id": "b4b57d5d9e94ffc4da0508f9305fc80d79523c82c17cd07f7f5860dd5d75a402:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I cooked a simple meal."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "Yum! What did you make?"
+      },
+      {
+        "id": "b26c8eb7f840a6796a442dcfb5a7a1fb4aab1b4b326dcf0124a431688700e169:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The air plant looks dry."
+          },
+          {
+            "role": "assistant",
+            "content": "Try soaking it in water."
+          },
+          {
+            "role": "user",
+            "content": "I did that but no change."
+          },
+          {
+            "role": "assistant",
+            "content": "Maybe the water was too cold."
+          },
+          {
+            "role": "user",
+            "content": "What now?"
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Use warm water next time."
+      },
+      {
+        "id": "ec413643f86b0aa4281d2e1833c80c5119c78c5c24149cc195bceb8fd8c9cb5f:3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The vet said my rabbit is healthy."
+          },
+          {
+            "role": "assistant",
+            "content": "That is great news."
+          },
+          {
+            "role": "user",
+            "content": "He is very active now."
+          },
+          {
+            "role": "assistant",
+            "content": "Active rabbits are fun."
+          },
+          {
+            "role": "user",
+            "content": "He ran around the room today."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "Wow! Was he fast?"
+      },
+      {
+        "id": "fe6da9afee3150dc7aee3d266d0013ce3e296c699d3f7b0fe735e341d9836f49:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am hungry."
+          },
+          {
+            "role": "assistant",
+            "content": "Do you want a snack?"
+          },
+          {
+            "role": "user",
+            "content": "I want to make a kite."
+          },
+          {
+            "role": "assistant",
+            "content": "Kites fly high in the sky."
+          },
+          {
+            "role": "user",
+            "content": "I need glue for it."
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "Yes, use glue to attach the tail."
+      },
+      {
+        "id": "b2418dddbf63a5fe61032f6ca32f00856928de4019e77b11f6f1021c3138b9c6:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I learned the chorus of that new pop song today."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "That is exciting. Did the melody stick easily?"
+      },
+      {
+        "id": "eae23596b3232889014f98e13f23c26451eb105bac290728d0d75313756d1fbf:4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Rain came last night."
+          },
+          {
+            "role": "assistant",
+            "content": "Is the soil wet?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, very damp."
+          },
+          {
+            "role": "assistant",
+            "content": "The flowers like it."
+          },
+          {
+            "role": "user",
+            "content": "The roses opened fully."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "They must look beautiful."
+      },
+      {
+        "id": "c0463a0eb2ffcf9eb8c478aeb4f8b5d94dd42acc53345d437f54147a52d8cbf5:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love blue skies."
+          },
+          {
+            "role": "assistant",
+            "content": "Blue is very calm."
+          },
+          {
+            "role": "user",
+            "content": "It makes me feel peaceful."
+          },
+          {
+            "role": "assistant",
+            "content": "Peaceful feelings are nice."
+          },
+          {
+            "role": "user",
+            "content": "What else do you like about blue?"
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Blue reminds us of clean oceans."
+      },
+      {
+        "id": "5531e7bf919fe7035d444698437e56e82798ec26a528c03bfc3bda0cea5a2899:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you know hangman?"
+          }
+        ],
+        "intent": "There are 2 or 4 earlier turns. The user asks a follow-up. Answer using the topic and details already present, without asking for information already given.",
+        "reply": "Yes, please think of a secret word."
+      },
+      {
+        "id": "6bdb498a243d21901a7b9a560c1fff0157bac9d899c1b7ef4e27a4f05f8f4d67:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hi."
+          },
+          {
+            "role": "assistant",
+            "content": "Hi there."
+          },
+          {
+            "role": "user",
+            "content": "I like chips."
+          },
+          {
+            "role": "assistant",
+            "content": "Salty and crunchy."
+          },
+          {
+            "role": "user",
+            "content": "Bye."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "Have a great day!"
+      },
+      {
+        "id": "50d5d408c9de73a7e2488ab09bb56b49b7ecc45de58547532b8aef4efbaa7337:7",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Tell me a story."
+          },
+          {
+            "role": "assistant",
+            "content": "Once upon a time."
+          },
+          {
+            "role": "user",
+            "content": "That is nice."
+          },
+          {
+            "role": "assistant",
+            "content": "I am glad you like it."
+          },
+          {
+            "role": "user",
+            "content": "Now let's play a story game."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Should I start the story or you?"
+      },
+      {
+        "id": "6fea8792fafd9995de9f25578fa11bcdd433185df00d1aebb105c4ade1d955d8:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I started painting this week."
+          },
+          {
+            "role": "assistant",
+            "content": "That sounds like a lovely creative hobby."
+          },
+          {
+            "role": "user",
+            "content": "Thanks for listening."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "You are very welcome!"
+      },
+      {
+        "id": "161453648e6964ea7f930c4dd587bb0bcd1ff2a6a42c0e41b6d1a9601f6c836c:2",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          },
+          {
+            "role": "assistant",
+            "content": "The story made me cry."
+          },
+          {
+            "role": "user",
+            "content": "bot"
+          },
+          {
+            "role": "assistant",
+            "content": "Oh no. Why?"
+          },
+          {
+            "role": "user",
+            "content": "The dog got lost."
+          }
+        ],
+        "intent": "The user shares a specific ordinary observation or small achievement. Acknowledge it with the appropriate tone and a relevant comment or question. No unrelated subject.",
+        "reply": "That is so sad."
+      },
+      {
+        "id": "eda9fd26f7a7d40fb2475378701cb8d112d25f22a8f0f5447f7e6b145624f188:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I dislike loud humming noises."
+          },
+          {
+            "role": "assistant",
+            "content": "Like fans or fridges?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, the low buzz."
+          },
+          {
+            "role": "assistant",
+            "content": "It gives me headaches."
+          },
+          {
+            "role": "user",
+            "content": "I turn things off."
+          }
+        ],
+        "intent": "The user describes a preference or asks about their preference already in context. Refer to the actual topic; don't ask them to repeat information already given.",
+        "reply": "Silence is golden."
+      },
+      {
+        "id": "b917846cf5ed71d95e1ed364bc7dbb30b03e71708364632d74451d2dc6604f1d:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Why is the sky so grey today?"
+          },
+          {
+            "role": "assistant",
+            "content": "It looks like a rainy afternoon."
+          },
+          {
+            "role": "user",
+            "content": "I wish I could go outside."
+          },
+          {
+            "role": "assistant",
+            "content": "Me too. The rain keeps us inside."
+          },
+          {
+            "role": "user",
+            "content": "Do you mind being stuck inside?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I have no body, so I do not mind."
+      },
+      {
+        "id": "97297801bf00ecb466a36cd0a850ac33064a415e80a8db16ff7d1b720be5186a:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          },
+          {
+            "role": "assistant",
+            "content": "My dog looks silly in this sketch."
+          },
+          {
+            "role": "user",
+            "content": "bot"
+          },
+          {
+            "role": "assistant",
+            "content": "The floppy ears are funny."
+          },
+          {
+            "role": "user",
+            "content": "Do you think it looks like him?"
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Yes, the expression is perfect."
+      },
+      {
+        "id": "30492c6921a2e56b051bfbcf6807f8bc795d5320f0c51aaca1de550470e54a99:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I found a rare book at the garage sale."
+          },
+          {
+            "role": "assistant",
+            "content": "Wow, that is a great find! What is it?"
+          },
+          {
+            "role": "user",
+            "content": "It is an old cookbook from the 1950s."
+          },
+          {
+            "role": "assistant",
+            "content": "Old recipes are often very interesting."
+          },
+          {
+            "role": "user",
+            "content": "What do you do when you are not chatting?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I wait here ready to help you with your questions."
+      },
+      {
+        "id": "1405c9037b0f5a8ab2107525af1d1ecbb8eed2d8e37ba3dd96e1c50e113a8bda:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love green."
+          }
+        ],
+        "intent": "The request genuinely lacks a necessary detail. Ask one specific clarification instead of inventing the missing thing.",
+        "reply": "Grassy green or forest green?"
+      },
+      {
+        "id": "62fc910a1133f4e8b1ffa57b88a183a0d3ead07c5d785d84cbcdeecc8de5fc3e:10",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My neighbor plays piano."
+          },
+          {
+            "role": "assistant",
+            "content": "Piano music is nice."
+          },
+          {
+            "role": "user",
+            "content": "His name is Dave."
+          },
+          {
+            "role": "assistant",
+            "content": "Dave sounds like a pianist."
+          },
+          {
+            "role": "user",
+            "content": "Who is the neighbor?"
+          }
+        ],
+        "intent": "The user asks about a name or a personal fact already in the context. Keep the user, their friend/pet and the bot distinct. The bot's name is TinyTalk.",
+        "reply": "The neighbor is Dave."
+      },
+      {
+        "id": "f0bb6831533a54962686c55dd1449e40ac3c33bc40ffecd9155a56af26eccdf5:1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I tried to paint a birthday card but messed up."
+          }
+        ],
+        "intent": "The user shares a small good or bad event. Respond with the correct emotional tone and a relevant short comment or follow-up.",
+        "reply": "Oh no, are you going to try again?"
+      },
+      {
+        "id": "d051a6c072e70465686919014218885d27859e715f1e6fffb24c379972e0324b:6",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I prefer sleeping on the couch."
+          },
+          {
+            "role": "assistant",
+            "content": "Couches are very soft."
+          },
+          {
+            "role": "user",
+            "content": "I sleep in the bed now."
+          },
+          {
+            "role": "assistant",
+            "content": "The bed is usually more spacious."
+          },
+          {
+            "role": "user",
+            "content": "Is the bed better for my back?"
+          }
+        ],
+        "intent": "There are 2 earlier turns. The user corrects a name, color, choice or preference. The answer must accept and use the corrected detail.",
+        "reply": "Yes, it offers more support."
+      },
+      {
+        "id": "28f5748ffce178281ce32b19ff3a5d17b15235f457a4632dc1ef804697506002:0",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Who are you?"
+          }
+        ],
+        "intent": "The user asks about the bot's identity, feelings, abilities or experience. It is TinyTalk, a small chat bot. No invented human life or names.",
+        "reply": "I am TinyTalk, your small friendly chat bot."
+      },
+      {
+        "id": "7e79e793484c6da2ab5fce8f79c64018a4983093bae6b65cefd7e99adf27d1a1:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hi."
+          },
+          {
+            "role": "assistant",
+            "content": "Hello!"
+          },
+          {
+            "role": "user",
+            "content": "What are you doing?"
+          },
+          {
+            "role": "assistant",
+            "content": "Waiting for your message."
+          },
+          {
+            "role": "user",
+            "content": "Cool."
+          }
+        ],
+        "intent": "Greetings, thanks, farewells and asking how the bot is. Give a natural brief social reply. The bot has no physical daily life.",
+        "reply": "What is on your mind?"
+      },
+      {
+        "id": "66b1f153ccdbe03d86a017d03f9f5481ec6913bd8fe05423f38d6182161c8845:9",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I managed to keep the plant alive."
+          }
+        ],
+        "intent": "Natural everyday small talk. The reply should refer to the user's actual topic and not be a stock phrase that fits anything.",
+        "reply": "Which kind did you pick?"
+      },
+      {
+        "id": "4f943b93806b5c45d4c3ccb79f1be87066d494cc1c1c5014353f9bd176245e60:8",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Pick a fruit. No repeats."
+          }
+        ],
+        "intent": "The user starts or continues a simple chat game: naming animals, foods, colors, rhyming or making a tiny story. ACTUALLY play with a valid specific example. Don't merely agree to play. Don't repeat an item already used.",
+        "reply": "I pick an orange."
+      }
+    ]
+  },
+  "context": {
+    "grades": {
+      "total": 100,
+      "passed": 79,
+      "pass_rate": 0.79,
+      "mean_score": 3.44,
+      "method": "Absolute Qwen assessment; pass means score >=3, not human accuracy",
+      "details": [
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User implies a problem needing help; reply is passive empathy without advice.",
+          "pass": false,
+          "id": "fb8f4f9f41a1dfd26bad45c929b5d5fc8c3f92b7faf389a95986bb100aaaf057:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate social acknowledgment of the user's kind gesture.",
+          "pass": true,
+          "id": "dad3bd1696f3efbde8a468a61f457aa8fd613f3e0b5f15ef3487059f350147c1:10:prior3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur comment about cat shapes ignores the user's sharing of their drawing.",
+          "pass": false,
+          "id": "e3789f90e897b39bc64da69e82e9967cca8787605929313fc6a9af23c3d3eb27:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and empathetic response to the user's achievement.",
+          "pass": true,
+          "id": "9d2aa6ae0591706e180a2bb7b6435de16f3c7ca4229798a630dc6cdb4b7461da:5:prior1"
+        },
+        {
+          "score": 0,
+          "error": "role",
+          "reason": "Bot claims to have a physical shirt, which is a hallucination of human attributes.",
+          "pass": false,
+          "id": "ec9889799c3d85e85b51bd3996cdd77d5150b929c799eab79b52edce3595192b:0:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and positive comment on the handwritten nature of the poem.",
+          "pass": true,
+          "id": "f0bb6831533a54962686c55dd1449e40ac3c33bc40ffecd9155a56af26eccdf5:6:prior3"
+        },
+        {
+          "score": 0,
+          "error": "role",
+          "reason": "Bot claims ability to physically dim lights, which is impossible for a text AI.",
+          "pass": false,
+          "id": "fa33e30e99ed117f9807b2aa7e96681d1658870777cb61980f18219b3bf3e16a:10:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate empathetic response and relevant follow-up question.",
+          "pass": true,
+          "id": "31c44bc26195c448b3ccf5caa45824f803471cc9dc2e79f457c48a6e8c458c44:5:prior1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Suggests making a new song instead of helping identify the forgotten one.",
+          "pass": false,
+          "id": "62fc910a1133f4e8b1ffa57b88a183a0d3ead07c5d785d84cbcdeecc8de5fc3e:9:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly states limitation regarding visual capabilities.",
+          "pass": true,
+          "id": "b0c4c4abd8f59afbf91ed593320476b34265b4bc8d65d78c9b0feab0a4d04dd3:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate social response to the user's greeting.",
+          "pass": true,
+          "id": "a86484eddcb28bac52084f0268b38a3710b362ede83b2693e7db3c544fc6db0b:7:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question about the pet.",
+          "pass": true,
+          "id": "8a42c2eaf1f0757113fb805fe1d1132b18be3e43c9d372e11d2d25f3605272af:9:prior1"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Spaghetti is generic; could be more specific to cartoon foods like Krabby Patties.",
+          "pass": true,
+          "id": "07e53798e99738105eb0db20f0a5e7c9d2b63ad24f03085892263cd84695dfdd:4:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question about the kitten's appearance.",
+          "pass": true,
+          "id": "a35d5b45571929126b0c72812c31e82745712110d78aed9fe06a9d054659b453:9:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question about the dog's behavior.",
+          "pass": true,
+          "id": "b40692a7516f3192ec933f673f0e80fe3775c860720332a6872a2999868b6093:1:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question to narrow down pet options.",
+          "pass": true,
+          "id": "1c692cdf94af307f2cbd72f1f88f0807f9f99ed6e57d50defe4dd17a92d7a109:8:prior3"
+        },
+        {
+          "score": 0,
+          "error": "role",
+          "reason": "Bot claims to see an image it cannot see.",
+          "pass": false,
+          "id": "10d88c1de2eba68940185e37b110c29c69025ef408e2053381eb30b88341de76:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and coherent continuation of the narrative.",
+          "pass": true,
+          "id": "c782c606f7bc22783eaf07c58280fdcc02f6bcfdc2adae6cac6c95f7b6ac2e2d:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate comment on the user's stated preference.",
+          "pass": true,
+          "id": "6dcbe99ead7be2202cd773e3772cda28fa36c34fa9ddb22e3d281095127509fd:11:prior3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for a question; bot gave a statement.",
+          "pass": false,
+          "id": "a08713e5fd7c36a4960101575143c5bd19753d6a77a4d8adb0a40f47a96d54a1:3:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and supportive response to the update.",
+          "pass": true,
+          "id": "10705de4627f0f64d9cb1ac6c2b325be87800383bedcde2347cf4e66ee4ea5a8:8:prior3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Context is nonsensical; reply is a non-sequitur.",
+          "pass": false,
+          "id": "ba9bc04eb6bf657b4dfc68cfbbc6b8ea3e6dc906891db1c1fed8b5fcfc977903:8:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Empathetic and offers a relevant follow-up.",
+          "pass": true,
+          "id": "1d90ddf3342f8bf90deef12e74e017d1c4a9da45d5f857517cb23985360a0cab:2:prior1"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Non-sequitur; does not address the user's statement about hiking.",
+          "pass": false,
+          "id": "0783dd51bd62e04d70b325bf05026563df93167b51d11b2d6fa5aeaf43deb6ab:10:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question that engages with the user's statement.",
+          "pass": true,
+          "id": "d065b901e756870499ea0729b3bfcb47c318fe15d58867614d539b91b75d7c5d:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate empathetic response and helpful follow-up question.",
+          "pass": true,
+          "id": "dbd124da0c8044869b836c0cf8fc57e90666806e5db20e3ea98b1600fd5543ae:1:prior1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "States 'I said' instead of providing a rhyme; fails to fulfill the request.",
+          "pass": false,
+          "id": "053854f814acaf3ef8f7aecbb8b1e95a126c7446b380a82a870be753f487eca5:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides practical, relevant advice for finding a lost pet.",
+          "pass": true,
+          "id": "85a8a0c030a9199ec403b57d29f2721afa4af126a10ffa0197eff48fddd8a2ce:2:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Offers supportive and relevant assistance given the context of walking.",
+          "pass": true,
+          "id": "fe927f151c055088fafbf41041750c89328984ea12eee51b8e87a8a207e5aa0a:11:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment that acknowledges the user's activity positively.",
+          "pass": true,
+          "id": "10800327df902d7efec0c3f3df03631af2402d99dbe1ebf04d46aee8d8a8ddc0:9:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies itself as TinyTalk and answers the previous question.",
+          "pass": true,
+          "id": "f4e70559c01705549c07ee4f07de569475edf210fd6b179d570a6474bfa72c20:7:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question regarding the neighbor's tomatoes.",
+          "pass": true,
+          "id": "5d7678ca08749b38fa32502613a18883a4e24d85654a46b15fe6d839243fb2e5:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question that engages with the user's statement.",
+          "pass": true,
+          "id": "5d7678ca08749b38fa32502613a18883a4e24d85654a46b15fe6d839243fb2e5:2:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate observation responding to the user's prompt about the rain.",
+          "pass": true,
+          "id": "df3a049137b6a8f976eac2e2d071a502d16c83af3d0cb7c4f47475e67227e8b3:4:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Proposes a concrete, playable game mechanic relevant to the request.",
+          "pass": true,
+          "id": "975a168f7815f83c4ab1f4503cfecd55925d45b69069854cb4c639d68cd8f694:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Honest and direct answer to the personal question about having friends.",
+          "pass": true,
+          "id": "4bc6b44c0b2f0b767670beb80250fe108991532dd3c8925fb7ff1376fcf5e65d:11:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly continues the word association game with a related term.",
+          "pass": true,
+          "id": "3ae3fe694bab9a5decdd48310eee7e53a5f86e02b6c2c102775161d03f59b121:10:prior3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "The reply is a fragment, not a question, failing the explicit instruction.",
+          "pass": false,
+          "id": "02cfa5595c9fd5185c44c1a973380b6161767312878ccd8c357872299c91f5ba:8:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the preference and confirms memory, which is helpful.",
+          "pass": true,
+          "id": "0ad6478c638d84108c27887bde8d0849050a65b1a072d285ec1b0a6c387c312f:0:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and polite comment on the user's statement about their shirt.",
+          "pass": true,
+          "id": "5b4934b2726f5aae9dbd6ccdf118d361a0d7ede3c9680216c32c29091f728a2a:2:prior1"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Suggests a genre, not a specific song as requested.",
+          "pass": false,
+          "id": "0645b6845b7eaf15adce8f4aaf07a81c0626fd80faec012474a4b97e5f067517:3:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, coherent, and socially appropriate response.",
+          "pass": true,
+          "id": "ee5faef0120de0b03d1246d366fc6d3018f43309499e466f6d28dd116b5f6a1a:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly and relevant acknowledgment of the user's statement.",
+          "pass": true,
+          "id": "3b98afac36c8f0592d1204faaaf07f149e1a43db8f8b16bb86fc213cd78ad1c1:5:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Simple, relevant, and helpful advice for the situation.",
+          "pass": true,
+          "id": "83320ad3ce4fcf233b475f7fc0106ae4440d32309e2c2ffcee1cc999b3c7168f:3:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate follow-up question continuing the conversation logically.",
+          "pass": true,
+          "id": "b762ec118cf82c949ca7e97cbc8eeb9956f01be1025718c3f1e69370efec95f1:5:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies a blue bird as requested.",
+          "pass": true,
+          "id": "2f509c08a5535dc83ecbe77984d9e18a037f3aa5661abcc533b66010a2ad741a:4:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment and appropriate follow-up question.",
+          "pass": true,
+          "id": "114bfd218b247b195ecd9bffad4cbde97526eeaa7a76d5d470ae8275c2e259b0:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, practical solution to the user's problem.",
+          "pass": true,
+          "id": "3d1406fc844d665b706b3f83f3e5f0b31f9b2b1c632467ce7cca0fbc7f7e325f:9:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Empathetic and practical follow-up question relevant to the situation.",
+          "pass": true,
+          "id": "0e9be134a439d63d29ae2f8fda4f1c53e574750d44ae488e38e6101e8452ef96:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly answers the user's question about capabilities.",
+          "pass": true,
+          "id": "b917846cf5ed71d95e1ed364bc7dbb30b03e71708364632d74451d2dc6604f1d:6:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate social greeting response to the user's input.",
+          "pass": true,
+          "id": "1fb6c2fe3c24ef01dbab3ddeb287f031c9364c0a7d07312b27623becb33d469b:6:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and warm acknowledgment of the user's story.",
+          "pass": true,
+          "id": "d8a9283e68158cc0562127dedfd81eb518b459ccfd6d15c139d4bb107da99426:9:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides accurate factual reassurance regarding orchid care.",
+          "pass": true,
+          "id": "6e453f96bd9c14a07b33d96e6844839aa913e70611035f02ec11253256f8d33d:10:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question specific to the activity mentioned.",
+          "pass": true,
+          "id": "dcc028e10fbf3ad65ed6ebefab7a74330d8c5fb37775f437663c4ea7bc6cdfea:4:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and natural reaction to the user's statement.",
+          "pass": true,
+          "id": "8efe393370200cefb40ac16dc3f4bf7c03e370be5c1795157b0a7ee2b3207674:5:prior1"
+        },
+        {
+          "score": 0,
+          "error": "irrelevant",
+          "reason": "Bot pretends to see an image which is not provided in text context.",
+          "pass": false,
+          "id": "54e4b785340291de433d879017569b93fcd07f7b4f824c60f1c6e2cf9ad74878:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate and concise response to a greeting.",
+          "pass": true,
+          "id": "02cfa5595c9fd5185c44c1a973380b6161767312878ccd8c357872299c91f5ba:9:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a relevant and practical troubleshooting tip for the issue.",
+          "pass": true,
+          "id": "f0fd00aac35d9d40188d639d9dc52faf75ef408fe998fe2b03b8d1082945ac02:7:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a logical follow-up question based on the user's complaint.",
+          "pass": true,
+          "id": "4b0c457727f6801d0acb986e119c3c1cb8e669cfe5f9b8c2e7f339fba359d06e:5:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Offers sensible advice relevant to the user's stated intention and context.",
+          "pass": true,
+          "id": "207f5f4be529d97fdfbad43f61762290c191dd5f21e249f4fdec5f1953e967d1:10:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant clarifying question about the user's plan.",
+          "pass": true,
+          "id": "6fde6bad6d30f21b89c2274c35d7a0d6fa3b48809c9b1f26d2bb0ed7eb72179f:10:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Engages in natural conversation by asking about coffee preferences.",
+          "pass": true,
+          "id": "d7115c005cf7a73609635aa698ffd138a48e3e3d92658642150d8c7058154618:3:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a positive and relevant comment on the item purchased.",
+          "pass": true,
+          "id": "76b4002cc6583af399d357fadc10800c8b0185e9e08afff0d38a40ecf1f13033:6:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly and relevant acknowledgment of the user's statement.",
+          "pass": true,
+          "id": "754dad766f9cbe30635e1cde14a98268f0024b586d42bc6c9a9c5959277cbf6a:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Directly answers the question about family status appropriately for an AI.",
+          "pass": true,
+          "id": "2167c31b9e0b2dcc35241093832aea8e01b31e9e661741889bf3474817b00415:5:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete pet suggestion that fits the user's criteria.",
+          "pass": true,
+          "id": "85a8a0c030a9199ec403b57d29f2721afa4af126a10ffa0197eff48fddd8a2ce:5:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately asks for clarification to proceed with the game request.",
+          "pass": true,
+          "id": "be060250bb83560ce0de52b74ca29fa7bfaec8fefca5e2642970d857144feafc:5:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevantly comments on the atmosphere implied by the visual description.",
+          "pass": true,
+          "id": "72f931a1055c87c8bf1798b358b00413190a11edf7212545d5efec67f3c78df2:5:prior3"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "The user input 'user' is likely a placeholder or error; the reply is a non-sequitur.",
+          "pass": false,
+          "id": "d72a716db265b89b8f1f179e4bfb867375087711e00c6dbfdd667bb3928eab22:5:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Engages with the specific detail of the user's statement in a playful way.",
+          "pass": true,
+          "id": "ac0c86ff65744c9e6a2f5e2f0aeb1db98421ea72eba9c9fda611b615b3ee74e0:5:prior1"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "The user input 'user' is likely a placeholder; the reply is a non-sequitur.",
+          "pass": false,
+          "id": "75a964604ee1ba05ec86959feb235c50dc01189188d7791a7989060211cf7231:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Offers a helpful and relevant response to the user's stated need.",
+          "pass": true,
+          "id": "2bb87698d2d63983df254ce81abf28187c89d56cee6d00dd906bf444747625f8:6:prior1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Bot asks user to ask bot, reversing roles illogically instead of asking about the bird.",
+          "pass": false,
+          "id": "96e3458c22f8b8f454b16dc4253f816f4291efdb04cf6cb24ca1952f4c245474:3:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, coherent, and socially appropriate acknowledgment of the user's statement.",
+          "pass": true,
+          "id": "65b0e046cc4d66be54f7471f8a1a3f62fb6aeeb043e6c910581d67578fcc7075:5:prior1"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Acceptable but generic; lacks engagement or follow-up question to sustain conversation.",
+          "pass": true,
+          "id": "227724ef8bbf264647947ea2b3a555663e79066326cb5b861766c45e2767d722:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and coherent response that acknowledges the humor in the user's description.",
+          "pass": true,
+          "id": "2ee15f8e69ba6df953060b7923a7bfd032eae1a82a629d6a88ef335437eca102:3:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and engaging follow-up question about the sensory experience of leaves.",
+          "pass": true,
+          "id": "66fea819e61eaf7efaf5ce285572ba9dbb02a3d2b93e10d4cff49398fcc7e7eb:7:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides a concrete, relevant suggestion to solve the user's problem.",
+          "pass": true,
+          "id": "6de496881f61a0d7951d077a06bb71a371b943cff4abe8514ea78265efd79131:8:prior3"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Bot claims human emotion ('scares me') and fails to offer helpful advice or questions.",
+          "pass": false,
+          "id": "0b456ddf90343588ade28f50c65df85da8295008beeeef2e197485d3d96bbccf:10:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant and practical troubleshooting question for a lost phone.",
+          "pass": true,
+          "id": "235e1c91d90e07923f6f3205951be027dddda183c5876a285c5b5f393282325d:3:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, coherent, and socially appropriate response to the statement.",
+          "pass": true,
+          "id": "7ee08211fbc026dba9b4b3dd727da60aa1c576768e16fd195ea77994086a3833:9:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a relevant follow-up question to continue the conversation.",
+          "pass": true,
+          "id": "cccc963041d8b5ee87497ee0d9aeacd28fe60a00bcc496e471416b3bdf02b47b:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Asks a logical follow-up question regarding the user's preference.",
+          "pass": true,
+          "id": "8fc1eb1a26f4b8ab661e2e06ecf138c45106b4b1e1d433922ba25a80b74f0be0:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides specific, accurate gardening advice to get more basil leaves.",
+          "pass": true,
+          "id": "6db3539a9ba913cd276e4385524b174dcff367f304c75603e776d515f63d34ad:3:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the hobby and asks a relevant follow-up question.",
+          "pass": true,
+          "id": "3ca325179f1b48e395ffa413ff77dc754a70ae87b623687eaf10798405c71d41:0:prior1"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Bot claims human-like dislike of reading, which is incoherent for an AI.",
+          "pass": false,
+          "id": "159d8dacf79b55d2956e1d4a8c547c4381a97e49e8b3b9eda2b88153a56f02df:2:prior1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks the setup of a joke but fails to provide the punchline.",
+          "pass": false,
+          "id": "e2f65e68053eea8698601ada90dd20469e0bcadce134e58d66781416445c644f:3:prior1"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Relevant but somewhat generic advice; acceptable but not highly engaging.",
+          "pass": true,
+          "id": "1c1a729a8bb4045e23bdd96685f487736c20508d2f7f9a142d222bc9e893471c:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant, polite, and natural response to the user's statement.",
+          "pass": true,
+          "id": "44ff8bda925f1b78d778aca60009253f76aa8ceb6ba7ed1cd280bf4697d3d22c:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant comment acknowledging the puffin's appearance.",
+          "pass": true,
+          "id": "3ed7c4b71ce5db5fd303c09b5db87fc5892174c6031ebc195d10eafb6d492289:11:prior1"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Bot claims human experience (fixing printer) which it does not have.",
+          "pass": false,
+          "id": "67c73539d59ae20f47452f4f238abd33a88515274a129f94491c4f31e3f7a0f3:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies limitation as an AI and answers the question.",
+          "pass": true,
+          "id": "3f1f1d631304e2190f10478f0218d2e12cc5acf0461d4983961d2f2fe3bafb90:8:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate follow-up question to initiate the game.",
+          "pass": true,
+          "id": "4017888935778fd5e6e317d41952125a3a133692678467686733473fb07e066b:1:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant suggestion related to the user's preference for salty snacks.",
+          "pass": true,
+          "id": "a2336e950928b248a1418a7529a0f3680a0afa07dde6a2d286dd40e57e70730b:0:prior3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Standard and appropriate response to a greeting.",
+          "pass": true,
+          "id": "b105b45e1f065ce5b11abebd252ff3625ad62527fc7b0e822c087eff79a2b99c:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Provides specific, relevant advice for dog training.",
+          "pass": true,
+          "id": "bcd32a9b9f262cac737a2bc0325ac7ea9fd0aec79ca6070f0bcb76949d473d40:4:prior3"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Empathetic and relevant social response to minor bad news.",
+          "pass": true,
+          "id": "97b361c8e784ea5ea199ea313183c87528b13ba264bfff641a0bca73363286aa:2:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate greeting and follow-up question.",
+          "pass": true,
+          "id": "e5974b7438de82f945bc9a4328f16fb4128f105b02631d53ea5b8a8d310fef15:11:prior1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly acknowledges user preference and maintains conversation flow.",
+          "pass": true,
+          "id": "fe6da9afee3150dc7aee3d266d0013ce3e296c699d3f7b0fe735e341d9836f49:0:prior3"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Bot claims personal preference ('I like birds'), which is an invented human experience.",
+          "pass": false,
+          "id": "1cf01c25d56c0d78b79583972c9d98e7e2f432927993f4ab1bd9a36a4e9e42a6:7:prior1"
+        }
+      ]
+    },
+    "examples": [
+      {
+        "id": "fb8f4f9f41a1dfd26bad45c929b5d5fc8c3f92b7faf389a95986bb100aaaf057:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My goldfish is swimming upside down."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That sounds concerning."
+      },
+      {
+        "id": "dad3bd1696f3efbde8a468a61f457aa8fd613f3e0b5f15ef3487059f350147c1:10:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Here is a picture of my cake."
+          },
+          {
+            "role": "assistant",
+            "content": "It looks delicious."
+          },
+          {
+            "role": "user",
+            "content": "I made it for Mom."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "She must be very happy."
+      },
+      {
+        "id": "e3789f90e897b39bc64da69e82e9967cca8787605929313fc6a9af23c3d3eb27:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I drew a simple cat."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Cats have many shapes."
+      },
+      {
+        "id": "9d2aa6ae0591706e180a2bb7b6435de16f3c7ca4229798a630dc6cdb4b7461da:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I finished my book last night."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That feels great when you finish."
+      },
+      {
+        "id": "ec9889799c3d85e85b51bd3996cdd77d5150b929c799eab79b52edce3595192b:0:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What is your favorite color?"
+          },
+          {
+            "role": "assistant",
+            "content": "I like soft blue."
+          },
+          {
+            "role": "user",
+            "content": "Is it for your shirt?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Yes, for my shirt."
+      },
+      {
+        "id": "f0bb6831533a54962686c55dd1449e40ac3c33bc40ffecd9155a56af26eccdf5:6:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I wrote a poem for my teacher."
+          },
+          {
+            "role": "assistant",
+            "content": "Did you handwrite it?"
+          },
+          {
+            "role": "user",
+            "content": "Yes, with blue ink."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Handwritten things feel very special."
+      },
+      {
+        "id": "fa33e30e99ed117f9807b2aa7e96681d1658870777cb61980f18219b3bf3e16a:10:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The light is too bright."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I can dim it for you."
+      },
+      {
+        "id": "31c44bc26195c448b3ccf5caa45824f803471cc9dc2e79f457c48a6e8c458c44:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I forgot my umbrella."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Oh no. Did you get wet?"
+      },
+      {
+        "id": "62fc910a1133f4e8b1ffa57b88a183a0d3ead07c5d785d84cbcdeecc8de5fc3e:9:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I hummed a tune."
+          },
+          {
+            "role": "assistant",
+            "content": "What song was it?"
+          },
+          {
+            "role": "user",
+            "content": "I forgot the title."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "We can make a new one."
+      },
+      {
+        "id": "b0c4c4abd8f59afbf91ed593320476b34265b4bc8d65d78c9b0feab0a4d04dd3:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Can you see me?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I am text based only."
+      },
+      {
+        "id": "a86484eddcb28bac52084f0268b38a3710b362ede83b2693e7db3c544fc6db0b:7:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "User"
+          },
+          {
+            "role": "assistant",
+            "content": "Hey TinyTalk."
+          },
+          {
+            "role": "user",
+            "content": "Bot"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Hi! What is on your mind?"
+      },
+      {
+        "id": "8a42c2eaf1f0757113fb805fe1d1132b18be3e43c9d372e11d2d25f3605272af:9:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My hamster is awake."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Is he cute?"
+      },
+      {
+        "id": "07e53798e99738105eb0db20f0a5e7c9d2b63ad24f03085892263cd84695dfdd:4:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like foods from cartoons."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Spaghetti is a classic choice."
+      },
+      {
+        "id": "a35d5b45571929126b0c72812c31e82745712110d78aed9fe06a9d054659b453:9:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My kitten is tiny."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Is she black?"
+      },
+      {
+        "id": "b40692a7516f3192ec933f673f0e80fe3775c860720332a6872a2999868b6093:1:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have a dog called Rex."
+          },
+          {
+            "role": "assistant",
+            "content": "How old is Rex?"
+          },
+          {
+            "role": "user",
+            "content": "He is three years old."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Does he like fetch?"
+      },
+      {
+        "id": "1c692cdf94af307f2cbd72f1f88f0807f9f99ed6e57d50defe4dd17a92d7a109:8:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I want a pet for my child."
+          },
+          {
+            "role": "assistant",
+            "content": "Safety is important. How old is your child?"
+          },
+          {
+            "role": "user",
+            "content": "She is five years old."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That is a fun age. Do you want something easy to hold?"
+      },
+      {
+        "id": "10d88c1de2eba68940185e37b110c29c69025ef408e2053381eb30b88341de76:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you like my new sketch?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Yes! I see a big tree."
+      },
+      {
+        "id": "c782c606f7bc22783eaf07c58280fdcc02f6bcfdc2adae6cac6c95f7b6ac2e2d:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The dolphin jumped out of water."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It made a big splash."
+      },
+      {
+        "id": "6dcbe99ead7be2202cd773e3772cda28fa36c34fa9ddb22e3d281095127509fd:11:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love music."
+          },
+          {
+            "role": "assistant",
+            "content": "What kind of music?"
+          },
+          {
+            "role": "user",
+            "content": "I like pop songs."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Pop is very catchy."
+      },
+      {
+        "id": "a08713e5fd7c36a4960101575143c5bd19753d6a77a4d8adb0a40f47a96d54a1:3:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My day was bad."
+          },
+          {
+            "role": "assistant",
+            "content": "I am sorry."
+          },
+          {
+            "role": "user",
+            "content": "Ask me one thing."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I am ready."
+      },
+      {
+        "id": "10705de4627f0f64d9cb1ac6c2b325be87800383bedcde2347cf4e66ee4ea5a8:8:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My trumpet mouthpiece fell off the stage."
+          },
+          {
+            "role": "assistant",
+            "content": "That is a quick loss."
+          },
+          {
+            "role": "user",
+            "content": "I bought a cheap replacement later."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Good that you fixed it fast."
+      },
+      {
+        "id": "ba9bc04eb6bf657b4dfc68cfbbc6b8ea3e6dc906891db1c1fed8b5fcfc977903:8:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          },
+          {
+            "role": "assistant",
+            "content": "Thanks for the tip."
+          },
+          {
+            "role": "user",
+            "content": "bot"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Glad it helped. Music is fun."
+      },
+      {
+        "id": "1d90ddf3342f8bf90deef12e74e017d1c4a9da45d5f857517cb23985360a0cab:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am bored."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Oh no. Want to do something?"
+      },
+      {
+        "id": "0783dd51bd62e04d70b325bf05026563df93167b51d11b2d6fa5aeaf43deb6ab:10:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love hiking."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I hate the rain."
+      },
+      {
+        "id": "d065b901e756870499ea0729b3bfcb47c318fe15d58867614d539b91b75d7c5d:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have some glue."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Great. What will you stick together?"
+      },
+      {
+        "id": "dbd124da0c8044869b836c0cf8fc57e90666806e5db20e3ea98b1600fd5543ae:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I lost my blue keys."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Oh no. Where did you look?"
+      },
+      {
+        "id": "053854f814acaf3ef8f7aecbb8b1e95a126c7446b380a82a870be753f487eca5:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Rhyme with cat."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I said bat."
+      },
+      {
+        "id": "85a8a0c030a9199ec403b57d29f2721afa4af126a10ffa0197eff48fddd8a2ce:2:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I lost my hamster."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh no. When did you lose him?"
+          },
+          {
+            "role": "user",
+            "content": "Two days ago."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Check under all the furniture carefully."
+      },
+      {
+        "id": "fe927f151c055088fafbf41041750c89328984ea12eee51b8e87a8a207e5aa0a:11:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I have a sore foot."
+          },
+          {
+            "role": "assistant",
+            "content": "We should walk slowly today."
+          },
+          {
+            "role": "user",
+            "content": "My left foot hurts."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Lean on me if needed."
+      },
+      {
+        "id": "10800327df902d7efec0c3f3df03631af2402d99dbe1ebf04d46aee8d8a8ddc0:9:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I listen to loud music on walks."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Music makes walks more enjoyable."
+      },
+      {
+        "id": "f4e70559c01705549c07ee4f07de569475edf210fd6b179d570a6474bfa72c20:7:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "User"
+          },
+          {
+            "role": "assistant",
+            "content": "What do you do for fun?"
+          },
+          {
+            "role": "user",
+            "content": "TinyTalk"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I like making new words and ideas."
+      },
+      {
+        "id": "5d7678ca08749b38fa32502613a18883a4e24d85654a46b15fe6d839243fb2e5:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My neighbor grows tomatoes."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Does he give you some?"
+      },
+      {
+        "id": "5d7678ca08749b38fa32502613a18883a4e24d85654a46b15fe6d839243fb2e5:2:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I play the guitar on weekends."
+          },
+          {
+            "role": "assistant",
+            "content": "That is very relaxing."
+          },
+          {
+            "role": "user",
+            "content": "I am learning a new song."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Can you name it?"
+      },
+      {
+        "id": "df3a049137b6a8f976eac2e2d071a502d16c83af3d0cb7c4f47475e67227e8b3:4:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Look at the rain."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It looks quite gray."
+      },
+      {
+        "id": "975a168f7815f83c4ab1f4503cfecd55925d45b69069854cb4c639d68cd8f694:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Let us play a drawing game."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Describe a tree and I will describe leaves."
+      },
+      {
+        "id": "4bc6b44c0b2f0b767670beb80250fe108991532dd3c8925fb7ff1376fcf5e65d:11:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "This rain is endless."
+          },
+          {
+            "role": "assistant",
+            "content": "It has been raining a lot."
+          },
+          {
+            "role": "user",
+            "content": "Do you have friends?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I do not have friends."
+      },
+      {
+        "id": "3ae3fe694bab9a5decdd48310eee7e53a5f86e02b6c2c102775161d03f59b121:10:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Let's play a word game about paper."
+          },
+          {
+            "role": "assistant",
+            "content": "Okay, I say sheet, you say next."
+          },
+          {
+            "role": "user",
+            "content": "Sheet."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Fold."
+      },
+      {
+        "id": "02cfa5595c9fd5185c44c1a973380b6161767312878ccd8c357872299c91f5ba:8:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I need to relax."
+          },
+          {
+            "role": "assistant",
+            "content": "Try breathing deep."
+          },
+          {
+            "role": "user",
+            "content": "Ask me a question."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "About relaxing."
+      },
+      {
+        "id": "0ad6478c638d84108c27887bde8d0849050a65b1a072d285ec1b0a6c387c312f:0:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I prefer tea over coffee."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Understood. I will remember you like tea."
+      },
+      {
+        "id": "5b4934b2726f5aae9dbd6ccdf118d361a0d7ede3c9680216c32c29091f728a2a:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My shirt is red."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Red is a bold choice."
+      },
+      {
+        "id": "0645b6845b7eaf15adce8f4aaf07a81c0626fd80faec012474a4b97e5f067517:3:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Can you suggest a song for jogging?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Try a fast pop song."
+      },
+      {
+        "id": "ee5faef0120de0b03d1246d366fc6d3018f43309499e466f6d28dd116b5f6a1a:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love rainy days."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Rain sounds so soothing."
+      },
+      {
+        "id": "3b98afac36c8f0592d1204faaaf07f149e1a43db8f8b16bb86fc213cd78ad1c1:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I enjoy baking bread."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That sounds tasty."
+      },
+      {
+        "id": "83320ad3ce4fcf233b475f7fc0106ae4440d32309e2c2ffcee1cc999b3c7168f:3:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My hand hurts a bit."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Rest is good."
+      },
+      {
+        "id": "b762ec118cf82c949ca7e97cbc8eeb9956f01be1025718c3f1e69370efec95f1:5:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I lost my keys."
+          },
+          {
+            "role": "assistant",
+            "content": "Did you look everywhere?"
+          },
+          {
+            "role": "user",
+            "content": "I checked my pockets."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Any luck yet?"
+      },
+      {
+        "id": "2f509c08a5535dc83ecbe77984d9e18a037f3aa5661abcc533b66010a2ad741a:4:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Name an animal that eats honey."
+          },
+          {
+            "role": "assistant",
+            "content": "A bear."
+          },
+          {
+            "role": "user",
+            "content": "Now name a blue bird."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "A blue jay."
+      },
+      {
+        "id": "114bfd218b247b195ecd9bffad4cbde97526eeaa7a76d5d470ae8275c2e259b0:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The mint smells strong when I touch it."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Mint is wonderful for that. Do you use it in tea?"
+      },
+      {
+        "id": "3d1406fc844d665b706b3f83f3e5f0b31f9b2b1c632467ce7cca0fbc7f7e325f:9:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My sunflowers are too tall."
+          },
+          {
+            "role": "assistant",
+            "content": "Tall sunflowers can tip over."
+          },
+          {
+            "role": "user",
+            "content": "How do I fix that?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Put a sturdy pole behind them."
+      },
+      {
+        "id": "0e9be134a439d63d29ae2f8fda4f1c53e574750d44ae488e38e6101e8452ef96:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My keys fell in the sink again."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That is very annoying. Did you dry them off?"
+      },
+      {
+        "id": "b917846cf5ed71d95e1ed364bc7dbb30b03e71708364632d74451d2dc6604f1d:6:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "What can you do for me?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I can answer questions or chat."
+      },
+      {
+        "id": "1fb6c2fe3c24ef01dbab3ddeb287f031c9364c0a7d07312b27623becb33d469b:6:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          },
+          {
+            "role": "assistant",
+            "content": "Hello TinyTalk."
+          },
+          {
+            "role": "user",
+            "content": "bot"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Hi! It is nice to meet you."
+      },
+      {
+        "id": "d8a9283e68158cc0562127dedfd81eb518b459ccfd6d15c139d4bb107da99426:9:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I adopted a senior cat."
+          },
+          {
+            "role": "assistant",
+            "content": "Senior cats are very calm."
+          },
+          {
+            "role": "user",
+            "content": "She sleeps on my lap."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That sounds very cozy."
+      },
+      {
+        "id": "6e453f96bd9c14a07b33d96e6844839aa913e70611035f02ec11253256f8d33d:10:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My orchid lost its flowers."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That is normal after blooming."
+      },
+      {
+        "id": "dcc028e10fbf3ad65ed6ebefab7a74330d8c5fb37775f437663c4ea7bc6cdfea:4:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I tried baking bread."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Did it rise well?"
+      },
+      {
+        "id": "8efe393370200cefb40ac16dc3f4bf7c03e370be5c1795157b0a7ee2b3207674:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I burned the toast."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "What a smell!"
+      },
+      {
+        "id": "54e4b785340291de433d879017569b93fcd07f7b4f824c60f1c6e2cf9ad74878:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Look at this photo of my new puppy."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "What a cute little face!"
+      },
+      {
+        "id": "02cfa5595c9fd5185c44c1a973380b6161767312878ccd8c357872299c91f5ba:9:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hello!"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Hi!"
+      },
+      {
+        "id": "f0fd00aac35d9d40188d639d9dc52faf75ef408fe998fe2b03b8d1082945ac02:7:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My turtle won't eat."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Check if the water is clean."
+      },
+      {
+        "id": "4b0c457727f6801d0acb986e119c3c1cb8e669cfe5f9b8c2e7f339fba359d06e:5:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I walked near the park."
+          },
+          {
+            "role": "assistant",
+            "content": "Nice place?"
+          },
+          {
+            "role": "user",
+            "content": "It was too crowded."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Did you leave?"
+      },
+      {
+        "id": "207f5f4be529d97fdfbad43f61762290c191dd5f21e249f4fdec5f1953e967d1:10:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am wearing sandals."
+          },
+          {
+            "role": "assistant",
+            "content": "Be careful on rough ground."
+          },
+          {
+            "role": "user",
+            "content": "I want to walk now."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Choose a flat path."
+      },
+      {
+        "id": "6fde6bad6d30f21b89c2274c35d7a0d6fa3b48809c9b1f26d2bb0ed7eb72179f:10:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I plan to visit my grandma."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Does she live far away?"
+      },
+      {
+        "id": "d7115c005cf7a73609635aa698ffd138a48e3e3d92658642150d8c7058154618:3:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I need coffee to wake up."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Do you take it black?"
+      },
+      {
+        "id": "76b4002cc6583af399d357fadc10800c8b0185e9e08afff0d38a40ecf1f13033:6:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I bought a plain notebook."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It is a blank canvas for creativity."
+      },
+      {
+        "id": "754dad766f9cbe30635e1cde14a98268f0024b586d42bc6c9a9c5959277cbf6a:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My turtle is slow but happy."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Turtles are chill friends."
+      },
+      {
+        "id": "2167c31b9e0b2dcc35241093832aea8e01b31e9e661741889bf3474817b00415:5:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am proud of my painting."
+          },
+          {
+            "role": "assistant",
+            "content": "That is great news!"
+          },
+          {
+            "role": "user",
+            "content": "Do you have family?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "No, I have no family."
+      },
+      {
+        "id": "85a8a0c030a9199ec403b57d29f2721afa4af126a10ffa0197eff48fddd8a2ce:5:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I want a pet."
+          },
+          {
+            "role": "assistant",
+            "content": "What kind do you like?"
+          },
+          {
+            "role": "user",
+            "content": "Something quiet and small."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Guinea pigs are social but quiet."
+      },
+      {
+        "id": "be060250bb83560ce0de52b74ca29fa7bfaec8fefca5e2642970d857144feafc:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I want to play a game."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Sure, what game do you want?"
+      },
+      {
+        "id": "72f931a1055c87c8bf1798b358b00413190a11edf7212545d5efec67f3c78df2:5:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The sun is setting over the lake."
+          },
+          {
+            "role": "assistant",
+            "content": "That is a beautiful sight."
+          },
+          {
+            "role": "user",
+            "content": "The water looks like glass."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It must be very quiet there."
+      },
+      {
+        "id": "d72a716db265b89b8f1f179e4bfb867375087711e00c6dbfdd667bb3928eab22:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Do you like the night?"
+      },
+      {
+        "id": "ac0c86ff65744c9e6a2f5e2f0aeb1db98421ea72eba9c9fda611b615b3ee74e0:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I drew a star."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "How many points did you give it?"
+      },
+      {
+        "id": "75a964604ee1ba05ec86959feb235c50dc01189188d7791a7989060211cf7231:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Can we play rhyming words?"
+      },
+      {
+        "id": "2bb87698d2d63983df254ce81abf28187c89d56cee6d00dd906bf444747625f8:6:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am hungry."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Let us find food."
+      },
+      {
+        "id": "96e3458c22f8b8f454b16dc4253f816f4291efdb04cf6cb24ca1952f4c245474:3:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I saw a cool bird today."
+          },
+          {
+            "role": "assistant",
+            "content": "Oh? What kind of bird?"
+          },
+          {
+            "role": "user",
+            "content": "I don't know the name."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Ask me about the bird."
+      },
+      {
+        "id": "65b0e046cc4d66be54f7471f8a1a3f62fb6aeeb043e6c910581d67578fcc7075:5:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I usually read books when it rains."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Reading is a classic rainy day hobby."
+      },
+      {
+        "id": "227724ef8bbf264647947ea2b3a555663e79066326cb5b861766c45e2767d722:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like puzzles."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That is great."
+      },
+      {
+        "id": "2ee15f8e69ba6df953060b7923a7bfd032eae1a82a629d6a88ef335437eca102:3:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "A squirrel stole a walnut from my hand."
+          },
+          {
+            "role": "assistant",
+            "content": "Wow, bold move."
+          },
+          {
+            "role": "user",
+            "content": "It looked at me like I owed it money."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Squirrels can be cheeky."
+      },
+      {
+        "id": "66fea819e61eaf7efaf5ce285572ba9dbb02a3d2b93e10d4cff49398fcc7e7eb:7:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "user"
+          },
+          {
+            "role": "assistant",
+            "content": "I watched leaves fall slowly in autumn."
+          },
+          {
+            "role": "user",
+            "content": "bot"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Falling leaves are pretty. Did they crunch?"
+      },
+      {
+        "id": "6de496881f61a0d7951d077a06bb71a371b943cff4abe8514ea78265efd79131:8:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The birds keep eating my seeds."
+          },
+          {
+            "role": "assistant",
+            "content": "That is frustrating."
+          },
+          {
+            "role": "user",
+            "content": "I used a net but it failed."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Maybe try shiny tape instead."
+      },
+      {
+        "id": "0b456ddf90343588ade28f50c65df85da8295008beeeef2e197485d3d96bbccf:10:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My car makes a weird noise when braking."
+          },
+          {
+            "role": "assistant",
+            "content": "That sounds concerning."
+          },
+          {
+            "role": "user",
+            "content": "It happens on every street."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It scares me."
+      },
+      {
+        "id": "235e1c91d90e07923f6f3205951be027dddda183c5876a285c5b5f393282325d:3:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My phone vanished."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Is it on silent mode?"
+      },
+      {
+        "id": "7ee08211fbc026dba9b4b3dd727da60aa1c576768e16fd195ea77994086a3833:9:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am reading a book to Ben."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Reading aloud is a great bonding activity."
+      },
+      {
+        "id": "cccc963041d8b5ee87497ee0d9aeacd28fe60a00bcc496e471416b3bdf02b47b:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I am playing video games."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Which game are you playing?"
+      },
+      {
+        "id": "8fc1eb1a26f4b8ab661e2e06ecf138c45106b4b1e1d433922ba25a80b74f0be0:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I hate red."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Why do you dislike it?"
+      },
+      {
+        "id": "6db3539a9ba913cd276e4385524b174dcff367f304c75603e776d515f63d34ad:3:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The basil smells great."
+          },
+          {
+            "role": "assistant",
+            "content": "You can use it in food."
+          },
+          {
+            "role": "user",
+            "content": "I need more leaves."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Pinch off the top buds."
+      },
+      {
+        "id": "3ca325179f1b48e395ffa413ff77dc754a70ae87b623687eaf10798405c71d41:0:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I love drawing with watercolors."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That sounds relaxing. Do you like landscapes?"
+      },
+      {
+        "id": "159d8dacf79b55d2956e1d4a8c547c4381a97e49e8b3b9eda2b88153a56f02df:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Should we read a book?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I hate reading now."
+      },
+      {
+        "id": "e2f65e68053eea8698601ada90dd20469e0bcadce134e58d66781416445c644f:3:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Tell me a joke."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Why did the chicken cross the road?"
+      },
+      {
+        "id": "1c1a729a8bb4045e23bdd96685f487736c20508d2f7f9a142d222bc9e893471c:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Smoothies are my morning fuel."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "You can mix many fruits."
+      },
+      {
+        "id": "44ff8bda925f1b78d778aca60009253f76aa8ceb6ba7ed1cd280bf4697d3d22c:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I planted some seeds in the pot."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I hope they sprout soon."
+      },
+      {
+        "id": "3ed7c4b71ce5db5fd303c09b5db87fc5892174c6031ebc195d10eafb6d492289:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The puffin has a colorful beak."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "It looks like a clown bird."
+      },
+      {
+        "id": "67c73539d59ae20f47452f4f238abd33a88515274a129f94491c4f31e3f7a0f3:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "The printer always jams."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "I am tired of fixing it."
+      },
+      {
+        "id": "3f1f1d631304e2190f10478f0218d2e12cc5acf0461d4983961d2f2fe3bafb90:8:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Can you go to the store?"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "No, I cannot travel."
+      },
+      {
+        "id": "4017888935778fd5e6e317d41952125a3a133692678467686733473fb07e066b:1:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Let's play a game."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "What should we play?"
+      },
+      {
+        "id": "a2336e950928b248a1418a7529a0f3680a0afa07dde6a2d286dd40e57e70730b:0:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do you like chips?"
+          },
+          {
+            "role": "assistant",
+            "content": "I am not sure yet."
+          },
+          {
+            "role": "user",
+            "content": "I love salty snacks best."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Popcorn is good too."
+      },
+      {
+        "id": "b105b45e1f065ce5b11abebd252ff3625ad62527fc7b0e822c087eff79a2b99c:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "hello"
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "hi"
+      },
+      {
+        "id": "bcd32a9b9f262cac737a2bc0325ac7ea9fd0aec79ca6070f0bcb76949d473d40:4:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My dog barks too much."
+          },
+          {
+            "role": "assistant",
+            "content": "Training helps with barking."
+          },
+          {
+            "role": "user",
+            "content": "He ignores my commands."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Try short, frequent sessions."
+      },
+      {
+        "id": "97b361c8e784ea5ea199ea313183c87528b13ba264bfff641a0bca73363286aa:2:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "My cookies came out burnt."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "That happens to the best of us."
+      },
+      {
+        "id": "e5974b7438de82f945bc9a4328f16fb4128f105b02631d53ea5b8a8d310fef15:11:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hi TinyTalk."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Hello! What is up?"
+      },
+      {
+        "id": "fe6da9afee3150dc7aee3d266d0013ce3e296c699d3f7b0fe735e341d9836f49:0:prior3",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like making paper planes."
+          },
+          {
+            "role": "assistant",
+            "content": "Cool! Do you like blue ones?"
+          },
+          {
+            "role": "user",
+            "content": "No, I prefer green."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Got it, green planes look nice."
+      },
+      {
+        "id": "1cf01c25d56c0d78b79583972c9d98e7e2f432927993f4ab1bd9a36a4e9e42a6:7:prior1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "I like animals."
+          }
+        ],
+        "intent": "Respond relevantly and actually fulfill the user's request.",
+        "reply": "Me too. I like birds."
+      }
+    ]
+  }
+}

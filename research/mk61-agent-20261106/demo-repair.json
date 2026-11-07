@@ -1,0 +1,72 @@
+{
+  "id": "hard-fresh:5",
+  "kind": "natural_language",
+  "task": "Запас ходов составляет R2, использовано R0. Нужно узнать число ещё доступных ходов. Входные данные уже в регистрах МК-61. Результат оставь в X и остановись С/П.",
+  "public_tests": [
+    {
+      "registers": {
+        "R0": 14,
+        "R2": 23
+      },
+      "expected_X": "9"
+    },
+    {
+      "registers": {
+        "R0": 2,
+        "R2": 23
+      },
+      "expected_X": "21"
+    }
+  ],
+  "hidden_tests": [
+    {
+      "registers": {
+        "R0": 3,
+        "R2": 14
+      },
+      "expected_X": "11"
+    },
+    {
+      "registers": {
+        "R0": 14,
+        "R2": 18
+      },
+      "expected_X": "4"
+    },
+    {
+      "registers": {
+        "R0": 1,
+        "R2": 6
+      },
+      "expected_X": "5"
+    },
+    {
+      "registers": {
+        "R0": 2,
+        "R2": 2
+      },
+      "expected_X": "0"
+    },
+    {
+      "registers": {
+        "R0": 8,
+        "R2": 23
+      },
+      "expected_X": "15"
+    },
+    {
+      "registers": {
+        "R0": 8,
+        "R2": 23
+      },
+      "expected_X": "15"
+    },
+    {
+      "registers": {
+        "R0": 4,
+        "R2": 8
+      },
+      "expected_X": "4"
+    }
+  ]
+}

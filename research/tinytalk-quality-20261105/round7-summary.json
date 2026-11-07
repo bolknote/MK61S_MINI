@@ -1,0 +1,24 @@
+{
+  "selected": {
+    "mode": "consistent-top4",
+    "step": 8000,
+    "goal_met": true,
+    "score": 0.8313333333333333,
+    "acceptable": 0.83,
+    "context": 0.8,
+    "multi_turn": 0.8333333333333334
+  },
+  "independent_audit": {
+    "context_pass_rate": 0.8,
+    "malformed": 0,
+    "goal_met": false,
+    "direct": 0.7666666666666667,
+    "direct_count": 46,
+    "direct_total": 60,
+    "multi_turn": 0.6666666666666666,
+    "multi_turn_count": 12,
+    "multi_turn_total": 18,
+    "packed_sha256": "a405f18cd630fb2a86ebe6eb573bbe2521b583c45a09633771b0c60b5ab67a33",
+    "packed_reload_max_abs_error": 0.0
+  }
+}

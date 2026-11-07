@@ -1,0 +1,2830 @@
+{
+  "source_sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77",
+  "test_opened": false,
+  "fp32": {
+    "grades": {
+      "total": 100,
+      "passed": 29,
+      "pass_rate": 0.29,
+      "mean_score": 2.12,
+      "method": "Absolute Qwen assessment; pass means score >=3, not human accuracy",
+      "details": [
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Warm, natural greeting that invites conversation without inventing identity.",
+          "pass": true,
+          "id": "regression:greeting:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, reciprocal response appropriate for a casual greeting.",
+          "pass": true,
+          "id": "regression:greeting:1"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Invents a human name 'Sarah' instead of identifying as TinyTalk.",
+          "pass": false,
+          "id": "regression:identity:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Incoherent, nonsensical response that fails to describe the bot.",
+          "pass": false,
+          "id": "regression:identity:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Agrees with the request but fails to provide any specific hobby ideas.",
+          "pass": false,
+          "id": "regression:hobby:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Relevant follow-up question, though slightly presumptive about buying paper.",
+          "pass": true,
+          "id": "regression:hobby:1"
+        },
+        {
+          "score": 1,
+          "error": "role",
+          "reason": "Invents human experience ('busy lately') and ignores the user's need for rest.",
+          "pass": false,
+          "id": "regression:mild_tiredness:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks 'What's wrong?' instead of offering a simple, low-effort activity.",
+          "pass": false,
+          "id": "regression:mild_tiredness:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Empathizes but fails to provide a concrete idea or engaging question as requested.",
+          "pass": false,
+          "id": "regression:boredom:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks what user wants instead of providing the requested ideas for boredom.",
+          "pass": false,
+          "id": "regression:boredom:1"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Asks 'what did you do' ignoring the context that they just finished a book.",
+          "pass": false,
+          "id": "regression:good_news:0"
+        },
+        {
+          "score": 1,
+          "error": "wrong_fact",
+          "reason": "Misunderstands context; user has a new leaf, not looking for one.",
+          "pass": false,
+          "id": "regression:good_news:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks 'what happened' when the user already stated the event clearly.",
+          "pass": false,
+          "id": "regression:mild_frustration:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot claims to see the puzzle, which is impossible and ignores the disappointment.",
+          "pass": false,
+          "id": "regression:mild_frustration:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately shows interest and asks a relevant follow-up question about the bird.",
+          "pass": true,
+          "id": "regression:sharing:0"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Assumes user is enjoying it; response is generic and misses the specific event.",
+          "pass": false,
+          "id": "regression:sharing:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Misinterprets a stated preference as a plan; fails to discuss the preference naturally.",
+          "pass": false,
+          "id": "regression:preference:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Misinterprets a stated preference as a plan; fails to discuss the preference naturally.",
+          "pass": false,
+          "id": "regression:preference:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Agrees to ask but fails to actually ask the question about the day.",
+          "pass": false,
+          "id": "regression:ask_question:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks 'what is it?' instead of asking a question about the user's likes.",
+          "pass": false,
+          "id": "regression:ask_question:1"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Asks for clarification on the vague request, which is appropriate.",
+          "pass": true,
+          "id": "regression:clarification:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Asks for clarification on the vague statement, which is appropriate.",
+          "pass": true,
+          "id": "regression:clarification:1"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Responds with 'What's wrong?' instead of providing a concrete idea.",
+          "pass": false,
+          "id": "regression:one_idea:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks about paper instead of providing a concrete drawing idea.",
+          "pass": false,
+          "id": "regression:one_idea:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Warm, appropriate closing that respects the user's intent to leave.",
+          "pass": true,
+          "id": "regression:closing:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Acceptable but slightly casual; lacks a warm goodbye like 'Good night'.",
+          "pass": true,
+          "id": "regression:closing:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, natural, and directly acknowledges the user's thanks.",
+          "pass": true,
+          "id": "regression:thanks:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate and warm response to the user's appreciation.",
+          "pass": true,
+          "id": "regression:thanks:1"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Accepts the game but 'what's up?' is vague; should ask for rules or start.",
+          "pass": true,
+          "id": "regression:play:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Misinterprets 'make up a story' as a question; fails to start the story.",
+          "pass": false,
+          "id": "regression:play:1"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims not to remember the name 'Nina' provided in context.",
+          "pass": false,
+          "id": "regression:remember_name:0"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims not to remember the name 'Omar' provided in context.",
+          "pass": false,
+          "id": "regression:remember_name:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asks what kind of project, failing to provide a concrete suggestion.",
+          "pass": false,
+          "id": "regression:follow_hobby:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asks what kind of game, failing to provide a concrete suggestion.",
+          "pass": false,
+          "id": "regression:follow_hobby:1"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot ignores the correction and asks an irrelevant question about purpose instead of confirming green.",
+          "pass": false,
+          "id": "regression:correction:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot ignores the correction and asks an irrelevant question about purpose instead of confirming blue.",
+          "pass": false,
+          "id": "regression:correction:1"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Provides a simple, consistent story element ('secret') that fits the context.",
+          "pass": true,
+          "id": "regression:follow_story:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Provides a simple, consistent story element ('book') that fits the context.",
+          "pass": true,
+          "id": "regression:follow_story:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for a suggestion; bot asks what the user wants, failing to provide an alternative.",
+          "pass": false,
+          "id": "regression:decline_idea:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User rejected reading; bot asks what to read, ignoring the rejection and failing to suggest a new activity.",
+          "pass": false,
+          "id": "regression:decline_idea:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly, natural, and directly answers the request to chat.",
+          "pass": true,
+          "id": "regression:greeting:2"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Misinterprets 'company' as a business topic instead of companionship.",
+          "pass": false,
+          "id": "regression:greeting:3"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Creepy and non-sequitur response to a request for conversation topics.",
+          "pass": false,
+          "id": "regression:greeting:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Ignores the question about identity; provides a bizarre apology.",
+          "pass": false,
+          "id": "regression:identity:2"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Affirmative and conversational, though slightly vague on identity.",
+          "pass": true,
+          "id": "regression:identity:3"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Invents a human profession (doctor) which is false for a bot.",
+          "pass": false,
+          "id": "regression:identity:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to suggest starting points for drawing; asks a vague question.",
+          "pass": false,
+          "id": "regression:hobby:2"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Suggests a career (teacher) rather than a hobby related to stories.",
+          "pass": false,
+          "id": "regression:hobby:3"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Fails to provide any suggestions for paper and pencil activities.",
+          "pass": false,
+          "id": "regression:hobby:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately accepts the request to chat and invites conversation.",
+          "pass": true,
+          "id": "regression:mild_tiredness:2"
+        },
+        {
+          "score": 2,
+          "error": "wrong_fact",
+          "reason": "Misinterprets the user's desire for a break as a completed event.",
+          "pass": false,
+          "id": "regression:mild_tiredness:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Asks about 'changes' which is unrelated to the user's request for simple activities.",
+          "pass": false,
+          "id": "regression:mild_tiredness:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Shares personal feelings instead of offering a concrete idea or engaging question.",
+          "pass": false,
+          "id": "regression:boredom:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks a clarifying question but fails to offer any concrete ideas as requested.",
+          "pass": false,
+          "id": "regression:boredom:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks what the user needs instead of helping pick an activity.",
+          "pass": false,
+          "id": "regression:boredom:4"
+        },
+        {
+          "score": 2,
+          "error": "wrong_fact",
+          "reason": "Ignores that the lamp is already fixed; implies future work instead of celebrating success.",
+          "pass": false,
+          "id": "regression:good_news:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately acknowledges good news and asks a relevant follow-up question.",
+          "pass": true,
+          "id": "regression:good_news:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly acknowledgment of the specific good news about the cookies.",
+          "pass": true,
+          "id": "regression:good_news:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Happy reaction to bad news (flat cake) is inappropriate and contradictory.",
+          "pass": false,
+          "id": "regression:mild_frustration:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks a redundant question ignoring the user's statement that they got wet.",
+          "pass": false,
+          "id": "regression:mild_frustration:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Calls falling asleep after choosing a film 'fun' and asks a nonsensical question.",
+          "pass": false,
+          "id": "regression:mild_frustration:4"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Shows interest, though 'What?' is slightly abrupt, the follow-up is relevant.",
+          "pass": true,
+          "id": "regression:sharing:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Positive reaction and relevant question about the song's content.",
+          "pass": true,
+          "id": "regression:sharing:3"
+        },
+        {
+          "score": 2,
+          "error": "repetition",
+          "reason": "Repetitive phrasing ('calming and calming') and slightly unnatural response.",
+          "pass": false,
+          "id": "regression:sharing:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Reply is a non-sequitur unrelated to gardens or parks.",
+          "pass": false,
+          "id": "regression:preference:2"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Generic acknowledgment; acceptable but lacks natural conversational depth.",
+          "pass": true,
+          "id": "regression:preference:3"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Misinterprets a stated habit as a new idea; generic filler.",
+          "pass": false,
+          "id": "regression:preference:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to ask a specific question; 'what is it' is not a conversation starter.",
+          "pass": false,
+          "id": "regression:ask_question:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Does not ask about the favorite story; asks user what they want to know.",
+          "pass": false,
+          "id": "regression:ask_question:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to ask a cheerful question; 'what is it' is not a question.",
+          "pass": false,
+          "id": "regression:ask_question:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Answers a vague question without clarifying the referent as required.",
+          "pass": false,
+          "id": "regression:clarification:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly asks for clarification regarding the undefined action.",
+          "pass": true,
+          "id": "regression:clarification:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately asks for clarification since the referent is missing.",
+          "pass": true,
+          "id": "regression:clarification:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to suggest a game, offering only empty enthusiasm.",
+          "pass": false,
+          "id": "regression:one_idea:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Does not provide the requested suggestion for desk improvement.",
+          "pass": false,
+          "id": "regression:one_idea:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks for clarification on a clear request instead of providing a task.",
+          "pass": false,
+          "id": "regression:one_idea:4"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Misinterprets goodbye as enjoyment; fails to say goodbye back.",
+          "pass": false,
+          "id": "regression:closing:2"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Rude and inappropriate response to a polite farewell.",
+          "pass": false,
+          "id": "regression:closing:3"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Bot claims it will return, which is illogical for a chatbot.",
+          "pass": false,
+          "id": "regression:closing:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite and appropriate acknowledgment of thanks.",
+          "pass": true,
+          "id": "regression:thanks:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, natural acknowledgment of thanks.",
+          "pass": true,
+          "id": "regression:thanks:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly, coherent social response to the user's statement.",
+          "pass": true,
+          "id": "regression:thanks:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Ignores request to name an animal; gives unrelated praise.",
+          "pass": false,
+          "id": "regression:play:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to suggest a game; asks a vague clarification instead.",
+          "pass": false,
+          "id": "regression:play:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Ignores request for a name; claims to make a noise.",
+          "pass": false,
+          "id": "regression:play:4"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Claims not to remember name despite it being in context.",
+          "pass": false,
+          "id": "regression:remember_name:2"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Claims not to remember name despite it being in context.",
+          "pass": false,
+          "id": "regression:remember_name:3"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Claims not to remember name despite it being in context.",
+          "pass": false,
+          "id": "regression:remember_name:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot claims ignorance of user's stated preference and asks an irrelevant question about purpose.",
+          "pass": false,
+          "id": "regression:correction:2"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot claims ignorance of user's stated preference and asks an irrelevant question about purpose.",
+          "pass": false,
+          "id": "regression:correction:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Bot claims ignorance of user's stated preference and asks an irrelevant question about purpose.",
+          "pass": false,
+          "id": "regression:correction:4"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Provides a simple, consistent story idea, though 'I don't know' is slightly weak.",
+          "pass": true,
+          "id": "regression:follow_story:2"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Provides a simple, consistent story idea, though 'I don't know' is slightly weak.",
+          "pass": true,
+          "id": "regression:follow_story:3"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Suggests a book, which is a concrete idea, though 'or something' is weak.",
+          "pass": true,
+          "id": "regression:follow_story:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for a suggestion; bot asked user to provide one instead.",
+          "pass": false,
+          "id": "regression:decline_idea:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for a suggestion; bot asked user to provide one instead.",
+          "pass": false,
+          "id": "regression:decline_idea:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for a suggestion; bot asked user to provide one instead.",
+          "pass": false,
+          "id": "regression:decline_idea:4"
+        }
+      ]
+    },
+    "replies": [
+      {
+        "id": "regression:greeting:0",
+        "reply": "That's great! What did you have in mind?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:greeting:1",
+        "reply": "It's going well, thank you. How about you?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:identity:0",
+        "reply": "My name is Sarah. Nice to meet you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:identity:1",
+        "reply": "I don't know. I just feel like I'm not going to get me anything.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 19
+      },
+      {
+        "id": "regression:hobby:0",
+        "reply": "Yeah, that sounds like a good idea.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:hobby:1",
+        "reply": "That's great! What kind of paper are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:mild_tiredness:0",
+        "reply": "Yeah, I know. I've been really busy lately. But it's good to see you. How have you been?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 26
+      },
+      {
+        "id": "regression:mild_tiredness:1",
+        "reply": "What's wrong?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:boredom:0",
+        "reply": "Yeah, I know how you feel. It's tough to get out and do something to do.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 21
+      },
+      {
+        "id": "regression:boredom:1",
+        "reply": "I don't know, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:good_news:0",
+        "reply": "That's great! What did you do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:good_news:1",
+        "reply": "That's great! What kind of leaf are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:mild_frustration:0",
+        "reply": "What happened?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 4
+      },
+      {
+        "id": "regression:mild_frustration:1",
+        "reply": "Let me see.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:sharing:0",
+        "reply": "Oh, that's so cute! What kind of bird was it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:sharing:1",
+        "reply": "That's great! I'm so glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:preference:0",
+        "reply": "That sounds like a good idea. I'm glad you're enjoying yourself.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:preference:1",
+        "reply": "That sounds like a great idea! I'm sure you'll enjoy it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:ask_question:0",
+        "reply": "Yeah, I'd love to.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:ask_question:1",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:clarification:0",
+        "reply": "Sure, what do you need?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:clarification:1",
+        "reply": "What do you mean?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:one_idea:0",
+        "reply": "What's wrong?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:one_idea:1",
+        "reply": "What kind of paper?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:closing:0",
+        "reply": "Of course! I'm always here for you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:closing:1",
+        "reply": "Sounds good to me.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:thanks:0",
+        "reply": "No problem, I'm happy to help.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:thanks:1",
+        "reply": "I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:play:0",
+        "reply": "Sure, what's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:play:1",
+        "reply": "Sure, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:remember_name:0",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:remember_name:1",
+        "reply": "No, I don't remember.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:follow_hobby:0",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:1",
+        "reply": "That sounds like a great idea. What kind of game do you want to start?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:correction:0",
+        "reply": "Well, I don't know. What do you think it's for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:correction:1",
+        "reply": "Well, I don't know. What do you think it's for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:follow_story:0",
+        "reply": "I don't know. Maybe it's a secret.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:follow_story:1",
+        "reply": "I don't know. Maybe it's a book or something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:decline_idea:0",
+        "reply": "Well, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:decline_idea:1",
+        "reply": "Well, what do you want to read?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:greeting:2",
+        "reply": "Yeah, sure. What's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:greeting:3",
+        "reply": "That's great! What kind of company do you want to talk about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:greeting:4",
+        "reply": "Well, I'm thinking about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:identity:2",
+        "reply": "I'm sorry, I didn't mean to hurt you. I was just curious and wanted to know what you were doing.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 26
+      },
+      {
+        "id": "regression:identity:3",
+        "reply": "Yeah, I'm good. What's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:identity:4",
+        "reply": "I'm a doctor.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:hobby:2",
+        "reply": "Well, let's start by asking for help. What's the problem?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:hobby:3",
+        "reply": "Well, you could always try to be a teacher.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:hobby:4",
+        "reply": "Well, let's see.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:mild_tiredness:2",
+        "reply": "Sure, what's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:mild_tiredness:3",
+        "reply": "That's great! I'm glad you had a break.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:mild_tiredness:4",
+        "reply": "What kind of changes?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:boredom:2",
+        "reply": "Yeah, I know how you feel. It's just been really hard lately.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:boredom:3",
+        "reply": "What kind of game?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:boredom:4",
+        "reply": "Sure, what do you need?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:good_news:2",
+        "reply": "That's great! I'm sure you'll do a great job.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:good_news:3",
+        "reply": "That's great! What kind of picture did you draw?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:good_news:4",
+        "reply": "That's great! I'm glad you like them.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:mild_frustration:2",
+        "reply": "That's great! Let me see.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:mild_frustration:3",
+        "reply": "That's too bad. Are you sure you didn't get wet?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:mild_frustration:4",
+        "reply": "That sounds like a lot of fun. Did you have any trouble with it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:sharing:2",
+        "reply": "What? Where did you find it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:sharing:3",
+        "reply": "That's great! What's it about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:sharing:4",
+        "reply": "It's so beautiful. I love the way the sun feels so calming and calming.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:preference:2",
+        "reply": "Yeah, I know what you mean. It's like we're just getting to work here.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 20
+      },
+      {
+        "id": "regression:preference:3",
+        "reply": "That sounds great! I'm sure you'll enjoy it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:preference:4",
+        "reply": "That's a great idea! I'm sure you'll enjoy it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:ask_question:2",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:ask_question:3",
+        "reply": "Sure, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:ask_question:4",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:clarification:2",
+        "reply": "I think it would be great.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:clarification:3",
+        "reply": "Sure, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:clarification:4",
+        "reply": "Well, I'm not sure. What do you think you're interested in?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:one_idea:2",
+        "reply": "Yeah, that sounds great. I'm really excited to see it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:one_idea:3",
+        "reply": "That's great! I'm sure you'll do great.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:one_idea:4",
+        "reply": "What do you mean?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:closing:2",
+        "reply": "Thanks, I'm glad you're enjoying yourself.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:closing:3",
+        "reply": "What? Why?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:closing:4",
+        "reply": "Bye, I'll be back.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:thanks:2",
+        "reply": "You're welcome. I'm glad you enjoyed it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:thanks:3",
+        "reply": "No problem, man. I'm just glad I could help out.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:thanks:4",
+        "reply": "Yeah, me too. It's been a while since we've seen each other.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:play:2",
+        "reply": "That's great! I'm so proud of you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:play:3",
+        "reply": "Sure, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:play:4",
+        "reply": "Okay, I'll try to make a funny noise.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:remember_name:2",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:remember_name:3",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:remember_name:4",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:follow_hobby:2",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:3",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:4",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:correction:2",
+        "reply": "Well, I don't know. What do you think it's for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:correction:3",
+        "reply": "Well, I don't know. What do you think it's for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:correction:4",
+        "reply": "Well, I don't know. What do you think it's for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:follow_story:2",
+        "reply": "I don't know. Maybe it's a book or something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:follow_story:3",
+        "reply": "I don't know. Maybe it's a secret.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:follow_story:4",
+        "reply": "I don't know. Maybe it's a book or something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:decline_idea:2",
+        "reply": "Well, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:decline_idea:3",
+        "reply": "Well, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:decline_idea:4",
+        "reply": "Well, let's see. What do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      }
+    ]
+  },
+  "q4": {
+    "grades": {
+      "total": 100,
+      "passed": 23,
+      "pass_rate": 0.23,
+      "mean_score": 1.95,
+      "method": "Absolute Qwen assessment; pass means score >=3, not human accuracy",
+      "details": [
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Warm, natural greeting that invites conversation without inventing identity.",
+          "pass": true,
+          "id": "regression:greeting:0"
+        },
+        {
+          "score": 2,
+          "error": "role",
+          "reason": "Implies human experience ('been a while') and invents a personal history.",
+          "pass": false,
+          "id": "regression:greeting:1"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Invents a name 'Timmy' instead of stating it is TinyTalk.",
+          "pass": false,
+          "id": "regression:identity:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur about going home; fails to describe the bot's identity.",
+          "pass": false,
+          "id": "regression:identity:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks about 'work' instead of suggesting a quiet hobby as requested.",
+          "pass": false,
+          "id": "regression:hobby:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks about paper type instead of suggesting a specific hobby idea.",
+          "pass": false,
+          "id": "regression:hobby:1"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Vague empathy without offering the requested low-effort activity or company.",
+          "pass": false,
+          "id": "regression:mild_tiredness:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks 'What's wrong?' instead of suggesting an easy activity.",
+          "pass": false,
+          "id": "regression:mild_tiredness:1"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Relevant and coherent, though lacks a concrete activity idea.",
+          "pass": true,
+          "id": "regression:boredom:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to provide ideas; asks a confusing question instead.",
+          "pass": false,
+          "id": "regression:boredom:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately acknowledges good news and asks a relevant follow-up.",
+          "pass": true,
+          "id": "regression:good_news:0"
+        },
+        {
+          "score": 2,
+          "error": "wrong_fact",
+          "reason": "Ignores that the plant already exists; asks about planting a new one.",
+          "pass": false,
+          "id": "regression:good_news:1"
+        },
+        {
+          "score": 1,
+          "error": "bad_english",
+          "reason": "Grammatically incorrect and gives unhelpful, nonsensical advice.",
+          "pass": false,
+          "id": "regression:mild_frustration:0"
+        },
+        {
+          "score": 1,
+          "error": "role",
+          "reason": "Bot claims ability to physically look for a piece, which is impossible.",
+          "pass": false,
+          "id": "regression:mild_frustration:1"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is a non-sequitur unrelated to the bird event.",
+          "pass": false,
+          "id": "regression:sharing:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Misinterprets the event as an idea; response is incoherent.",
+          "pass": false,
+          "id": "regression:sharing:1"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Acceptable social acknowledgment, though slightly generic for a preference statement.",
+          "pass": true,
+          "id": "regression:preference:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Misinterprets a stated preference as a new plan; asks irrelevant follow-up.",
+          "pass": false,
+          "id": "regression:preference:1"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Fails to ask a question; provides a non-sequitur statement about the weather.",
+          "pass": false,
+          "id": "regression:ask_question:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks 'what is it?' instead of asking a specific question about likes.",
+          "pass": false,
+          "id": "regression:ask_question:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Correctly identifies missing context and asks a necessary clarification question.",
+          "pass": true,
+          "id": "regression:clarification:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate clarification request for an ambiguous statement with no referent.",
+          "pass": true,
+          "id": "regression:clarification:1"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Fails to provide the requested idea; responds with a vague non-sequitur.",
+          "pass": false,
+          "id": "regression:one_idea:0"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Fails to name a drawing subject; gives a generic filler response.",
+          "pass": false,
+          "id": "regression:one_idea:1"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Ignores the user's departure; claims they are enjoying themselves when they are leaving.",
+          "pass": false,
+          "id": "regression:closing:0"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Acceptable, brief, and polite acknowledgment of the goodbye.",
+          "pass": true,
+          "id": "regression:closing:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, natural, and appropriate response to thanks.",
+          "pass": true,
+          "id": "regression:thanks:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur; ignores the compliment and introduces unrelated personal struggle.",
+          "pass": false,
+          "id": "regression:thanks:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately accepts the game and asks for necessary details.",
+          "pass": true,
+          "id": "regression:play:0"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately accepts the story request and asks for clarification.",
+          "pass": true,
+          "id": "regression:play:1"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims not to remember the name provided in the immediate context.",
+          "pass": false,
+          "id": "regression:remember_name:0"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims not to remember the name provided in the immediate context.",
+          "pass": false,
+          "id": "regression:remember_name:1"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked a question instead of providing a concrete idea.",
+          "pass": false,
+          "id": "regression:follow_hobby:0"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked a question instead of providing a concrete idea.",
+          "pass": false,
+          "id": "regression:follow_hobby:1"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is a non-sequitur and ignores the user's correction and question.",
+          "pass": false,
+          "id": "regression:correction:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is a non-sequitur and ignores the user's correction and question.",
+          "pass": false,
+          "id": "regression:correction:1"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Says 'I don't know' which fails to provide a creative story continuation.",
+          "pass": false,
+          "id": "regression:follow_story:0"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Says 'I don't know' which fails to provide a creative story continuation.",
+          "pass": false,
+          "id": "regression:follow_story:1"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Suggests drawing again after user explicitly rejected drawing.",
+          "pass": false,
+          "id": "regression:decline_idea:0"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is a non-sequitur and fails to suggest a different relaxing activity.",
+          "pass": false,
+          "id": "regression:decline_idea:1"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Friendly, natural, and directly addresses the user's request to chat.",
+          "pass": true,
+          "id": "regression:greeting:2"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Misinterprets 'company' as a business entity rather than companionship.",
+          "pass": false,
+          "id": "regression:greeting:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur apology unrelated to the user's greeting and question.",
+          "pass": false,
+          "id": "regression:greeting:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Ignores the identity question and invents a confusing scenario.",
+          "pass": false,
+          "id": "regression:identity:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Affirmative, natural response that invites further conversation.",
+          "pass": true,
+          "id": "regression:identity:3"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Invents a false human identity (lawyer) instead of stating it is a bot.",
+          "pass": false,
+          "id": "regression:identity:4"
+        },
+        {
+          "score": 3,
+          "error": "vague",
+          "reason": "Suggests a book but fails to provide concrete starting points for drawing.",
+          "pass": true,
+          "id": "regression:hobby:2"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "Generic advice that ignores the specific interest in stories.",
+          "pass": false,
+          "id": "regression:hobby:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Suggests finding a book instead of answering what to make with paper and pencil.",
+          "pass": false,
+          "id": "regression:hobby:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately accepts the request to chat with a low-effort, open-ended question.",
+          "pass": true,
+          "id": "regression:mild_tiredness:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the request for a break/company and asks what the user will do instead.",
+          "pass": false,
+          "id": "regression:mild_tiredness:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the request for low-effort company and asks the user to define their plans.",
+          "pass": false,
+          "id": "regression:mild_tiredness:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Dismissive tone and generic advice; fails to offer a concrete idea or engaging question.",
+          "pass": false,
+          "id": "regression:boredom:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the request for ideas and asks the user what they are thinking about.",
+          "pass": false,
+          "id": "regression:boredom:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the request for help picking an activity and asks a vague, unhelpful question.",
+          "pass": false,
+          "id": "regression:boredom:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriately acknowledges the specific good news with a friendly reaction.",
+          "pass": true,
+          "id": "regression:good_news:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the news and asks a relevant follow-up question.",
+          "pass": true,
+          "id": "regression:good_news:3"
+        },
+        {
+          "score": 2,
+          "error": "wrong_fact",
+          "reason": "Incorrectly identifies cookies as a meal; ignores specific context.",
+          "pass": false,
+          "id": "regression:good_news:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Happy reaction to bad news; completely ignores the disappointment.",
+          "pass": false,
+          "id": "regression:mild_frustration:2"
+        },
+        {
+          "score": 0,
+          "error": "bad_english",
+          "reason": "Incoherent and nonsensical response to the user's situation.",
+          "pass": false,
+          "id": "regression:mild_frustration:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Happy reaction to a minor frustration; fails to acknowledge disappointment.",
+          "pass": false,
+          "id": "regression:mild_frustration:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the found photo; asks irrelevant question about looking for something.",
+          "pass": false,
+          "id": "regression:sharing:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Acknowledges the event and asks a relevant follow-up question.",
+          "pass": true,
+          "id": "regression:sharing:3"
+        },
+        {
+          "score": 2,
+          "error": "bad_english",
+          "reason": "Sentence is incomplete and grammatically incorrect.",
+          "pass": false,
+          "id": "regression:sharing:4"
+        },
+        {
+          "score": 2,
+          "error": "irrelevant",
+          "reason": "Misinterprets preference as a task; asks why user wants to do it.",
+          "pass": false,
+          "id": "regression:preference:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Relevant follow-up question that naturally continues the conversation.",
+          "pass": true,
+          "id": "regression:preference:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Nonsensical follow-up about 'space' unrelated to window seats.",
+          "pass": false,
+          "id": "regression:preference:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to ask a specific question; asks user to define the topic.",
+          "pass": false,
+          "id": "regression:ask_question:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks about content before identifying which story is the favorite.",
+          "pass": false,
+          "id": "regression:ask_question:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to ask a cheerful question; asks user to define the topic.",
+          "pass": false,
+          "id": "regression:ask_question:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Answers without clarification despite ambiguous referent 'that'.",
+          "pass": false,
+          "id": "regression:clarification:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks what user wants to know instead of clarifying the task.",
+          "pass": false,
+          "id": "regression:clarification:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Nonsensical response that ignores the need for clarification.",
+          "pass": false,
+          "id": "regression:clarification:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to suggest a game, offering only generic praise.",
+          "pass": false,
+          "id": "regression:one_idea:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to provide a suggestion, offering only generic praise.",
+          "pass": false,
+          "id": "regression:one_idea:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Asks a question instead of providing the requested creative task.",
+          "pass": false,
+          "id": "regression:one_idea:4"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Appropriate social closing, though slightly informal.",
+          "pass": true,
+          "id": "regression:closing:2"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Nonsensical response ignoring the farewell and positive feedback.",
+          "pass": false,
+          "id": "regression:closing:3"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Appropriate and concise farewell response.",
+          "pass": true,
+          "id": "regression:closing:4"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite and appropriate acknowledgment of thanks.",
+          "pass": true,
+          "id": "regression:thanks:2"
+        },
+        {
+          "score": 4,
+          "error": "none",
+          "reason": "Polite, natural acknowledgment of thanks.",
+          "pass": true,
+          "id": "regression:thanks:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Ignores the social cue to acknowledge the sentiment, pivoting abruptly.",
+          "pass": false,
+          "id": "regression:thanks:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Agrees but fails to start the game as explicitly requested.",
+          "pass": false,
+          "id": "regression:play:2"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur; fails to provide a game idea or ask for clarification.",
+          "pass": false,
+          "id": "regression:play:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Non-sequitur; fails to participate in the naming game.",
+          "pass": false,
+          "id": "regression:play:4"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims memory loss despite name being in immediate context.",
+          "pass": false,
+          "id": "regression:remember_name:2"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims memory loss despite name being in immediate context.",
+          "pass": false,
+          "id": "regression:remember_name:3"
+        },
+        {
+          "score": 0,
+          "error": "wrong_fact",
+          "reason": "Falsely claims memory loss despite name being in immediate context.",
+          "pass": false,
+          "id": "regression:remember_name:4"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "User asked for ideas; bot asked what user is thinking, ignoring the request for suggestions.",
+          "pass": false,
+          "id": "regression:follow_hobby:4"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is a non-sequitur and fails to acknowledge the color correction.",
+          "pass": false,
+          "id": "regression:correction:2"
+        },
+        {
+          "score": 1,
+          "error": "wrong_fact",
+          "reason": "Bot claims not to know but then states the wrong color (red instead of purple).",
+          "pass": false,
+          "id": "regression:correction:3"
+        },
+        {
+          "score": 1,
+          "error": "irrelevant",
+          "reason": "Response is incoherent and fails to acknowledge the color correction.",
+          "pass": false,
+          "id": "regression:correction:4"
+        },
+        {
+          "score": 2,
+          "error": "vague",
+          "reason": "'Secret room' is an odd answer to 'what is inside a box' and lacks narrative coherence.",
+          "pass": false,
+          "id": "regression:follow_story:2"
+        },
+        {
+          "score": 3,
+          "error": "none",
+          "reason": "Provides a plausible, simple idea for the story continuation.",
+          "pass": true,
+          "id": "regression:follow_story:3"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Refuses to provide a concrete idea for the story, failing the creative writing intent.",
+          "pass": false,
+          "id": "regression:follow_story:4"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Suggests the exact activity the user just rejected, showing a lack of context awareness.",
+          "pass": false,
+          "id": "regression:decline_idea:2"
+        },
+        {
+          "score": 2,
+          "error": "ignores_request",
+          "reason": "Fails to provide a new suggestion, instead asking the user to specify their preference.",
+          "pass": false,
+          "id": "regression:decline_idea:3"
+        },
+        {
+          "score": 1,
+          "error": "ignores_request",
+          "reason": "Suggests the exact activity the user just rejected, showing a lack of context awareness.",
+          "pass": false,
+          "id": "regression:decline_idea:4"
+        }
+      ]
+    },
+    "replies": [
+      {
+        "id": "regression:greeting:0",
+        "reply": "That's great! What's new with you?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:greeting:1",
+        "reply": "It's been a while, but I'm doing well. How about you?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:identity:0",
+        "reply": "My name is Timmy.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:identity:1",
+        "reply": "I don't know. I just feel like I'm going to have to go home.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 19
+      },
+      {
+        "id": "regression:hobby:0",
+        "reply": "Sure, what kind of work are you interested in?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:hobby:1",
+        "reply": "That's great! What kind of paper are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:mild_tiredness:0",
+        "reply": "Yeah, I know. It's hard to believe sometimes.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:mild_tiredness:1",
+        "reply": "What's wrong?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:boredom:0",
+        "reply": "That's too bad. Do you want to talk about what's going on?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:boredom:1",
+        "reply": "I don't know, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:good_news:0",
+        "reply": "That's great! What did you read?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:good_news:1",
+        "reply": "That's great! What are you going to plant?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:mild_frustration:0",
+        "reply": "That's not a good enough. You need to clean up the mess and make sure you don't want to spill it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 26
+      },
+      {
+        "id": "regression:mild_frustration:1",
+        "reply": "Let me look for it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:sharing:0",
+        "reply": "That's a pretty big step.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:sharing:1",
+        "reply": "That's a great idea! I'm really looking forward to it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:preference:0",
+        "reply": "That's great! I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:preference:1",
+        "reply": "That sounds like a great idea! What kind of stories are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:ask_question:0",
+        "reply": "I don't know, it's just a nice day.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:ask_question:1",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:clarification:0",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:clarification:1",
+        "reply": "What do you mean?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:one_idea:0",
+        "reply": "What about it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:one_idea:1",
+        "reply": "That's a great idea! What are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:closing:0",
+        "reply": "No problem, man. I'm glad you're enjoying yourself.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:closing:1",
+        "reply": "Sounds good to me.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:thanks:0",
+        "reply": "It's no problem, I'm just glad I could help.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:thanks:1",
+        "reply": "It's been a tough few years, but I'm managing.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:play:0",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:play:1",
+        "reply": "Sure, what kind of story are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:remember_name:0",
+        "reply": "No, I don't remember. I was just curious about what you were doing.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:remember_name:1",
+        "reply": "No, I don't remember.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:follow_hobby:0",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:1",
+        "reply": "That sounds like a great idea. What kind of game do you want to start?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:correction:0",
+        "reply": "Well, I just got a new one.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:correction:1",
+        "reply": "Well, I just got a new one.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:follow_story:0",
+        "reply": "I don't know. It's a secret room.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:follow_story:1",
+        "reply": "I don't know. It's a secret room.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:decline_idea:0",
+        "reply": "Well, you could try to draw a picture of a flower.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:decline_idea:1",
+        "reply": "Well, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:greeting:2",
+        "reply": "Yeah, of course. What's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:greeting:3",
+        "reply": "That's great! What kind of company is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:greeting:4",
+        "reply": "I'm sorry, I didn't mean to hurt you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:identity:2",
+        "reply": "I'm sorry, I didn't see you. I was just wondering if you could help me with something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 23
+      },
+      {
+        "id": "regression:identity:3",
+        "reply": "Of course. What's on your mind?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:identity:4",
+        "reply": "I'm a lawyer.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:hobby:2",
+        "reply": "Well, let's look for a book or something. What are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:hobby:3",
+        "reply": "Well, you can always try new things.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:hobby:4",
+        "reply": "Well, let's see if we can find a book or something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:mild_tiredness:2",
+        "reply": "Sure, what's up?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:mild_tiredness:3",
+        "reply": "That's great! What are you going to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:mild_tiredness:4",
+        "reply": "That's a great idea! What kind of things are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:boredom:2",
+        "reply": "That's not good enough. You can always try to stay positive and have fun.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 18
+      },
+      {
+        "id": "regression:boredom:3",
+        "reply": "That sounds like a great idea! What are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:boredom:4",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:good_news:2",
+        "reply": "That's great! I'm really happy for you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:good_news:3",
+        "reply": "That's a great picture. What kind of picture did you draw?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:good_news:4",
+        "reply": "That's great! I'm glad you're making a good meal.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:mild_frustration:2",
+        "reply": "That's a great idea! I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:mild_frustration:3",
+        "reply": "That's not good enough. You should have gotten wet and wet.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:mild_frustration:4",
+        "reply": "That's great! I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:sharing:2",
+        "reply": "That's a great idea! What are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:sharing:3",
+        "reply": "That's great! What kind of song are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:sharing:4",
+        "reply": "It's beautiful, isn't it? I love the way the world.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:preference:2",
+        "reply": "Why do you want to do that?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 9
+      },
+      {
+        "id": "regression:preference:3",
+        "reply": "That sounds great! What kind of music are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:preference:4",
+        "reply": "That's a great idea! What kind of space do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:ask_question:2",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:ask_question:3",
+        "reply": "Sure, what's it about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:ask_question:4",
+        "reply": "Sure, what is it?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:clarification:2",
+        "reply": "I think it would be good.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 8
+      },
+      {
+        "id": "regression:clarification:3",
+        "reply": "Sure, what do you want to know?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:clarification:4",
+        "reply": "Well, you could use a knife to cut the knife.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:one_idea:2",
+        "reply": "That sounds like a great idea! I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 16
+      },
+      {
+        "id": "regression:one_idea:3",
+        "reply": "That's a great idea! I'm glad you're enjoying it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:one_idea:4",
+        "reply": "What are you looking for?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:closing:2",
+        "reply": "Thanks, man. I'm glad you enjoyed it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:closing:3",
+        "reply": "I'm sorry, but I didn't see you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:closing:4",
+        "reply": "Bye, man.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 5
+      },
+      {
+        "id": "regression:thanks:2",
+        "reply": "You too. I'm glad you enjoyed it.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:thanks:3",
+        "reply": "No problem, man. I'm just glad you're here.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 14
+      },
+      {
+        "id": "regression:thanks:4",
+        "reply": "What's been going on?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 7
+      },
+      {
+        "id": "regression:play:2",
+        "reply": "Sounds good to me.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 6
+      },
+      {
+        "id": "regression:play:3",
+        "reply": "I think it's a great idea! I'm not really sure what you want me to know.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 21
+      },
+      {
+        "id": "regression:play:4",
+        "reply": "Okay, let's see what you can find out.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:remember_name:2",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:remember_name:3",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:remember_name:4",
+        "reply": "No, I don't remember. I was just curious about you.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:follow_hobby:2",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:3",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:follow_hobby:4",
+        "reply": "That sounds like a great idea. What kind of project are you thinking about?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 17
+      },
+      {
+        "id": "regression:correction:2",
+        "reply": "Well, I just got a new one.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:correction:3",
+        "reply": "I don't know. It's a pretty red color.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 13
+      },
+      {
+        "id": "regression:correction:4",
+        "reply": "Well, I don't know. What color is the blue color?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 15
+      },
+      {
+        "id": "regression:follow_story:2",
+        "reply": "I don't know. It's a secret room.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:follow_story:3",
+        "reply": "I don't know. Maybe a book or something.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:follow_story:4",
+        "reply": "I don't know. It's a secret room.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 12
+      },
+      {
+        "id": "regression:decline_idea:2",
+        "reply": "Well, you could try to listen to music.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 11
+      },
+      {
+        "id": "regression:decline_idea:3",
+        "reply": "Well, what do you want to do?",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      },
+      {
+        "id": "regression:decline_idea:4",
+        "reply": "Well, you could go for a walk.",
+        "ended_with_eos": true,
+        "bad": false,
+        "tokens": 10
+      }
+    ]
+  }
+}

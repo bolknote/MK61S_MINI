@@ -1,0 +1,4924 @@
+{
+  "objective": "Evaluate a Russian small model for local PicoCalc MK-61 programming with bounded calculator tools",
+  "phase": "action_training_comparison_complete",
+  "candidate": "akanemind/Flourish-3M",
+  "revision": "33b38dfec202c39c3698f7f2d1a9933a34a2de1a",
+  "artifacts": ".build/mk61-agent-20261106",
+  "training_started": true,
+  "remote_training_jobs_started_by_this_experiment": 2,
+  "original_tinytalk_experiment_modified": false,
+  "next_action": "Review measured limits; no automatic device deployment.",
+  "limitations": [
+    "Finite regression tests do not prove arbitrary MK-61 program correctness.",
+    "Compact DIAG/action outputs do not demonstrate general natural-language reasoning.",
+    "No independent semantic success checker is available for unrestricted user questions.",
+    "Physical PicoCalc peak RAM and speed were not measured.",
+    "Historical corpus contains462 normalized listings and selected prose from9 books."
+  ],
+  "remote_directory": "/home/sad/mk61-agent-20261106-yttarpfa",
+  "baseline_local": {
+    "basic": {
+      "passed": 0,
+      "total": 12,
+      "valid_tool_tasks": 0
+    },
+    "validation_expression": {
+      "passed": 0,
+      "total": 60,
+      "valid_tool_tasks": 0
+    }
+  },
+  "training_dataset": {
+    "rows": 34320,
+    "sha256": "38e6b76bc82ee7c6a3b70e477c3a5ac68f09152fd8c7ff77691d96aa2a8277d6",
+    "book_units": 302,
+    "book_count": 9,
+    "historical_programs": 462
+  },
+  "planned": {
+    "domain_steps": 600,
+    "sft_steps_each": 3000,
+    "arms": [
+      "plan",
+      "no-plan"
+    ],
+    "qat_start": 2001,
+    "context": 512,
+    "max_new_tokens": 160,
+    "turns": 3
+  },
+  "q4_mechanics": {
+    "packed_bytes": 1724476,
+    "reload_max_error": 0.0,
+    "qat_gradients_finite": true,
+    "actual_trained_exports_verified": true,
+    "host_activations_and_kv": "FP32"
+  },
+  "remote_controller_pid": 95083,
+  "parallel_control_pid": 46461,
+  "domain_complete": {
+    "steps": 600,
+    "loss": 2.591805839538574
+  },
+  "development": {
+    "plan_step": 1000,
+    "q4_passed": 20,
+    "total": 24,
+    "fresh_test_evaluated_after_training": false
+  },
+  "natural_baseline": {
+    "fp32": {
+      "passed": 0,
+      "total": 12
+    },
+    "q4": {
+      "passed": 0,
+      "total": 12
+    }
+  },
+  "first_round_complete": true,
+  "first_round_natural_diagnostic": {
+    "passed": 0,
+    "total": 12
+  },
+  "language_data": {
+    "rows": 41333,
+    "new_russian_rows": 25333,
+    "replay_rows": 16000,
+    "sha256": "95e1fb02a6dd8102f21e1e9f47c11ccfce1d4d107a0c8535b3e19280ec29970c",
+    "fresh_audit_rows": 24,
+    "fresh_audit_sha256": "f0325483bad302c274ccc18e43e4e1b0acf5db9a2d28bb7837640aea4c820c3c"
+  },
+  "training_and_evaluation_complete": true,
+  "free_language_coding_target_met": false,
+  "remote_experiment_jobs_complete": true,
+  "selected_by_validation": "plan",
+  "result_report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/ACTION_TRAINING_RESULTS.md",
+  "export_directory": ".build/mk61-agent-20261106/export",
+  "completed_training": {
+    "domain_steps": 600,
+    "first_sft_steps_per_arm": 3000,
+    "additional_russian_sft_steps_per_arm": 2000,
+    "arms": [
+      "plan",
+      "no-plan"
+    ],
+    "context": 512,
+    "effective_batch": 32,
+    "micro_batch": 16,
+    "gradient_accumulation": 2,
+    "selection": "Language validation only; fresh manual Russian audit not used for selection"
+  },
+  "final_q4_scores": {
+    "original": {
+      "passed": 0,
+      "total": 64
+    },
+    "pre_teacher": {
+      "passed": 8,
+      "total": 64
+    },
+    "teacher_selected": {
+      "passed": 26,
+      "total": 64,
+      "formal_passed": 96,
+      "formal_total": 98
+    },
+    "dpo": {
+      "passed": 29,
+      "total": 64,
+      "formal_passed": 94,
+      "formal_total": 98
+    },
+    "text_only": {
+      "passed": 22,
+      "total": 64,
+      "formal_passed": 97,
+      "formal_total": 98
+    },
+    "selected_plus_public_example_repair": {
+      "passed": 49,
+      "total": 64,
+      "formal_passed": 98,
+      "formal_total": 98
+    }
+  },
+  "teacher_round": ".build/mk61-agent-20261106/distill-v1",
+  "fresh_russian_tasks": 64,
+  "natural_validation_tasks": 32,
+  "teacher_verified_statements": 1817,
+  "fresh_russian_probes_version": "v2, 64 statements, signed abs/neg probes, corrected before gradients",
+  "preparation_updates": "JSON AST object/list normalization; numerical-domain revision of held-out probes before gradients",
+  "teacher_augmented_tasks": 21804,
+  "teacher_base_rows": 56648,
+  "initial_teacher_steps_each": 6000,
+  "planned_clean_steps_each": 4000,
+  "round_method": "research/mk61-agent-20261106/DISTILLATION.md",
+  "broad_teacher_pid": 80165,
+  "broad_preparation_pid": 80222,
+  "broad_teacher_data": ".build/mk61-agent-20261106/distill-broad",
+  "own_error_rows": {
+    "unique_prompts": 729,
+    "mixed_rows": 9441,
+    "total_first_round_rows": 66089
+  },
+  "latest_natural_validation": {
+    "structured_clean": {
+      "selected_step": 2500,
+      "passed": 18,
+      "total": 32,
+      "formal_passed": 20,
+      "formal_total": 20
+    },
+    "direct_clean": {
+      "selected_step": 1250,
+      "passed": 22,
+      "total": 32,
+      "formal_passed": 20,
+      "formal_total": 20
+    }
+  },
+  "initial_teacher_training_direct_complete": true,
+  "initial_teacher_training_both_complete": true,
+  "broad_teacher_verified_statements": 1855,
+  "auxiliary_semantic_validation": {
+    "passed": 11,
+    "total": 32,
+    "valid_formulas": 32
+  },
+  "post_training_fresh_audit_opened": true,
+  "clean_training_rows": 75436,
+  "clean_training_sha256": "612c372481d7944e8da086ea2873a440989e0528419b1b406b8c8ade5678231e",
+  "teacher_v1_retained_after_memory_filter": 1606,
+  "teacher_broad_retained_after_memory_filter": 1839,
+  "broad_augmented_tasks": 7356,
+  "real_error_correction_prompts": 833,
+  "current_broad_training_rollout": {
+    "passed": 333,
+    "total": 512
+  },
+  "teacher_unique_retained_descriptions": 3445,
+  "selected_before_fresh_audit": "direct-clean",
+  "clean_teacher_training_both_complete": true,
+  "teacher_round_complete": true,
+  "teacher_round_report": "research/mk61-agent-20261106/DISTILLATION_RESULTS.md",
+  "teacher_round_export": ".build/mk61-agent-20261106/distill-v1/export",
+  "teacher_round_result": {
+    "selected": "direct-clean",
+    "new_russian_q4": {
+      "passed": 30,
+      "total": 64
+    },
+    "new_russian_fp32": {
+      "passed": 28,
+      "total": 64
+    },
+    "formal_q4": {
+      "passed": 96,
+      "total": 98
+    },
+    "previous_direct_same_new_set": {
+      "passed": 13,
+      "total": 64
+    },
+    "original_same_new_set": {
+      "passed": 0,
+      "total": 64
+    },
+    "quality_target_met": false
+  },
+  "hard_round": ".build/mk61-agent-20261106/distill-hard",
+  "hard_new_audit_sha256": "ba571abfdfa11f7ad114c1d8dd7d572e2600d485e5812e19e77268a74eb20ef1",
+  "hard_new_selection_sha256": "28367c06cf86ed802cf2afbb59a065f0d60f16fd76ec5e85ad09f94fa75cdc79",
+  "current_status_command": "python3 research/mk61-agent-20261106/codec_remote.py status",
+  "current_fetch_command": "python3 research/mk61-agent-20261106/codec_remote.py fetch",
+  "hard_training_data": {
+    "pairs": 4276,
+    "actual_error_pairs": 85,
+    "code_only_sft_rows": 62122,
+    "rollout_training_tasks": 1536,
+    "rollout_passed": 1498,
+    "pair_sha256": "80f4f4b1293fd6e9174991d6e190cd8c88b4e916b7a6df4573a0669ec57709dc",
+    "sft_sha256": "56f6217b0c733277e1b98b790acbb661c63592d217b17279971b74ff6ef0a85b"
+  },
+  "hard_baseline_validation": {
+    "with_numeric_examples": {
+      "passed": 43,
+      "total": 64,
+      "formal_passed": 20
+    },
+    "without_numeric_examples": {
+      "passed": 0,
+      "total": 64,
+      "formal_passed": 6
+    }
+  },
+  "repair_prototype": {
+    "source": "research/mk61-agent-20261106/repair_search.py",
+    "policy": ".build/mk61-agent-20261106/distill-hard/repair-policy.json",
+    "source_sha256": "6aa9465192dd1e41b4463c6bf7d252d32495679f31ab606828ff0eb866763284",
+    "validation_natural_before": 22,
+    "validation_natural_after": 31,
+    "natural_total": 32,
+    "validation_formal_passed": 20,
+    "formal_total": 20,
+    "public_only_candidate_budget": 512,
+    "hidden_tests_never_guide_search": true,
+    "metric_is_hybrid_not_neural_accuracy": true,
+    "requires_expected_numerical_examples": true,
+    "tests_passed": 5
+  },
+  "hard_training_complete": true,
+  "hard_preselected": "baseline",
+  "hard_fresh_scores": {
+    "baseline_q4": 26,
+    "baseline_fp32": 26,
+    "dpo_q4": 29,
+    "dpo_fp32": 28,
+    "text_only_q4": 22,
+    "text_only_fp32": 26,
+    "total": 64
+  },
+  "hybrid_scores": {
+    "fresh": {
+      "passed": 49,
+      "total": 64
+    },
+    "formal": {
+      "passed": 98,
+      "total": 98
+    },
+    "fresh_candidate_trials": 3280,
+    "candidate_limit": 512
+  },
+  "neural_quality_target_met": false,
+  "hybrid_example_guided_quality_target_met": false,
+  "final_report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/HUFFMAN_QAT_RESULTS.md",
+  "final_model_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/composition-v1/server-results/export/selected-budget/manifest.json",
+  "final_export": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/codec-qat-v1/server-results/export",
+  "selected_model": "composition-v1 small",
+  "completed_training_runs": 59,
+  "final_verification": {
+    "integration_tests_passed": 13,
+    "q4_reload_exact_models": [
+      "baseline",
+      "dpo",
+      "text-only"
+    ],
+    "all_export_sha256_verified": true,
+    "local_hybrid_demo": "PASS after7 public-only repair trials",
+    "preference_mask_and_ce_check": "PASS exact HF cross entropy",
+    "final_report_artifact_links": "PASS"
+  },
+  "current_round": ".build/mk61-agent-20261106/codec-qat-v1",
+  "grown_parameters": 4492544,
+  "kv_dimensions_unchanged": true,
+  "low_bit_requested": true,
+  "current_training_jobs_started": 6,
+  "current_teacher_pid": 118949,
+  "current_controller_pid": 174576,
+  "borrowed_methodology": "thread://01a1acb9-cce5-76e1-bd0f-f94f2d01c167?hostId=local",
+  "current_teacher_complete": true,
+  "current_teacher_training_descriptions": 7587,
+  "opaque_checker_verified_descriptions": 9452,
+  "current_teacher_rejected": 1640,
+  "current_first_training_loss_equal": 4.398962736129761,
+  "expanded_blocks_receive_gradients": true,
+  "current_controller_script": "compose_round.py",
+  "current_completed_primary_updates_per_size": 4000,
+  "current_recovery_steps_per_size": 2000,
+  "current_replay_examples_fraction": 0.3,
+  "current_fresh_opened": true,
+  "current_new_optimizer_updates": 15000,
+  "capacity_v1": {
+    "matrix": [
+      {
+        "label": "small-q4-fresh",
+        "parameters": 3017984,
+        "bytes": 1724490,
+        "manual_parse": 59,
+        "manual_program": 60,
+        "manual_total": 84,
+        "teacher_program": 93,
+        "teacher_total": 98,
+        "formal20": 20
+      },
+      {
+        "label": "grown-q4-fresh",
+        "parameters": 4492544,
+        "bytes": 2553945,
+        "manual_parse": 58,
+        "manual_program": 58,
+        "manual_total": 84,
+        "teacher_program": 91,
+        "teacher_total": 98,
+        "formal20": 20
+      },
+      {
+        "label": "small-q3-qat-fresh",
+        "parameters": 3017984,
+        "bytes": 1346563,
+        "manual_parse": 58,
+        "manual_program": 55,
+        "manual_total": 84,
+        "teacher_program": 88,
+        "teacher_total": 98,
+        "formal20": 19
+      },
+      {
+        "label": "grown-q3-qat-fresh",
+        "parameters": 4492544,
+        "bytes": 1991712,
+        "manual_parse": 56,
+        "manual_program": 55,
+        "manual_total": 84,
+        "teacher_program": 92,
+        "teacher_total": 98,
+        "formal20": 18
+      },
+      {
+        "label": "small-q2-qat-fresh",
+        "parameters": 3017984,
+        "bytes": 969690,
+        "manual_parse": 37,
+        "manual_program": 43,
+        "manual_total": 84,
+        "teacher_program": 79,
+        "teacher_total": 98,
+        "formal20": 14
+      },
+      {
+        "label": "grown-q2-qat-fresh",
+        "parameters": 4492544,
+        "bytes": 1430528,
+        "manual_parse": 43,
+        "manual_program": 45,
+        "manual_total": 84,
+        "teacher_program": 82,
+        "teacher_total": 98,
+        "formal20": 15
+      },
+      {
+        "label": "small-mixed-qat-fresh",
+        "parameters": 3017984,
+        "bytes": 1354769,
+        "manual_parse": 49,
+        "manual_program": 53,
+        "manual_total": 84,
+        "teacher_program": 91,
+        "teacher_total": 98,
+        "formal20": 19
+      },
+      {
+        "label": "grown-mixed-qat-fresh",
+        "parameters": 4492544,
+        "bytes": 1815591,
+        "manual_parse": 48,
+        "manual_program": 50,
+        "manual_total": 84,
+        "teacher_program": 88,
+        "teacher_total": 98,
+        "formal20": 17
+      }
+    ],
+    "full_formal98": {
+      "selected-budget": 98,
+      "small-primary": 98,
+      "grown-primary": 96
+    },
+    "selection_used_fresh": false,
+    "single_operation_gate_met": false,
+    "tests_passed": 21,
+    "verification": {
+      "exports": {
+        "grown-budget": {
+          "sha256_verified": true,
+          "reload_max_error": 0.0,
+          "bytes": 1815591
+        },
+        "grown-primary": {
+          "sha256_verified": true,
+          "reload_max_error": 0.0,
+          "bytes": 2553945
+        },
+        "selected-budget": {
+          "sha256_verified": true,
+          "reload_max_error": 0.0,
+          "bytes": 1724490
+        },
+        "small-budget": {
+          "sha256_verified": true,
+          "reload_max_error": 0.0,
+          "bytes": 1724490
+        },
+        "small-primary": {
+          "sha256_verified": true,
+          "reload_max_error": 0.0,
+          "bytes": 1724490
+        }
+      },
+      "compared": 16,
+      "cpu_b200_reply_matches": 16,
+      "fp16_fp32_reply_matches": 16,
+      "fp16_kv_storage_and_byte_count_verified": true,
+      "native_device_inference_measured": false,
+      "attention_math": "Host FP32; persistent keys/values FP16 in the half-storage probe"
+    },
+    "matched_training_steps_per_size": 6000,
+    "additional_qat_steps_per_precision_per_size": 500,
+    "new_completed_training_runs": 10,
+    "new_optimizer_updates_total": 15000,
+    "semantic_tasks_are_single_operation_only": true,
+    "selected_export": "export/selected-budget",
+    "native_device_runtime_measured": false
+  },
+  "capacity_v1_selected": {
+    "format": "q4",
+    "kind": "primary",
+    "model": ".build/mk61-agent-20261106/capacity-v1/small-recovery/best",
+    "key": [
+      true,
+      0.8035714285714286,
+      0.8794642857142857,
+      1.0
+    ],
+    "packed": {
+      "file": ".build/mk61-agent-20261106/capacity-v1/results/small-q4-final-validation.mkq4",
+      "bytes": 1724490,
+      "payload_bytes": 1709056,
+      "parameters": 3017984,
+      "tensors": 112
+    },
+    "arm": "small"
+  },
+  "capacity_v1_gate90_met": false,
+  "all_own_remote_jobs_complete": true,
+  "proposed_next_architecture": ".build/mk61-agent-20261106/capacity-v1/proposed-mixed-design/design.json",
+  "proposed_next_architecture_trained": true,
+  "native_mixed_v1": {
+    "architectures": {
+      "q4": 5789568,
+      "mixed": 7509888
+    },
+    "context_configured": 2048,
+    "long_context_validated": false,
+    "language_tokens_per_arm": 100000000,
+    "sft_steps_per_arm": 8000,
+    "target_precision_from_first_update": true,
+    "q2_group_scales_learned": true,
+    "new_teacher_training_descriptions": 2184,
+    "fresh_level1_statements": 84,
+    "teacher_pid": 143520,
+    "controller_pid": 146942,
+    "completed": true,
+    "hidden_symmetry_confirmed_and_activated": true,
+    "common_retained_warmup_step": 2000,
+    "retained_warmup_tokens_per_arm": 32768000,
+    "further_language_tokens_per_arm": 100000000,
+    "target_microbatch": 16,
+    "activation_preserves_packed_sample_argmaxes": true,
+    "activation_logit_error_below": 1.5e-05,
+    "language_training_completed": true,
+    "language_validation_nll": {
+      "q4": 3.396552488207817,
+      "mixed": 3.430656410753727
+    },
+    "standard_isa_only_for_executable_targets": true,
+    "extended_memory_commands_enabled": false,
+    "local_native_unit_tests_passed": 4,
+    "compound_training_enabled": false,
+    "selected": "q4",
+    "summary": {
+      "matrix": [
+        {
+          "arm": "q4",
+          "parameters": 5789568,
+          "bytes": 3291771,
+          "manual_parse": {
+            "passed": 67,
+            "total": 84,
+            "rate": 0.7976190476190477
+          },
+          "manual_program": {
+            "passed": 65,
+            "total": 84,
+            "rate": 0.7738095238095238
+          },
+          "teacher_program": {
+            "passed": 134,
+            "total": 140,
+            "rate": 0.9571428571428572
+          },
+          "composed_program": {
+            "passed": 0,
+            "total": 40,
+            "rate": 0.0
+          },
+          "context1024_program": {
+            "passed": 10,
+            "total": 14,
+            "rate": 0.7142857142857143
+          },
+          "context2048_program": {
+            "passed": 9,
+            "total": 14,
+            "rate": 0.6428571428571429
+          },
+          "full_formal": {
+            "passed": 95,
+            "total": 98
+          },
+          "tool_rollouts": {
+            "passed": 67,
+            "total": 84
+          }
+        },
+        {
+          "arm": "mixed",
+          "parameters": 7509888,
+          "bytes": 3276417,
+          "manual_parse": {
+            "passed": 65,
+            "total": 84,
+            "rate": 0.7738095238095238
+          },
+          "manual_program": {
+            "passed": 67,
+            "total": 84,
+            "rate": 0.7976190476190477
+          },
+          "teacher_program": {
+            "passed": 133,
+            "total": 140,
+            "rate": 0.95
+          },
+          "composed_program": {
+            "passed": 0,
+            "total": 40,
+            "rate": 0.0
+          },
+          "context1024_program": {
+            "passed": 10,
+            "total": 14,
+            "rate": 0.7142857142857143
+          },
+          "context2048_program": {
+            "passed": 9,
+            "total": 14,
+            "rate": 0.6428571428571429
+          },
+          "full_formal": {
+            "passed": 96,
+            "total": 98
+          },
+          "tool_rollouts": {
+            "passed": 68,
+            "total": 84
+          }
+        }
+      ],
+      "selected_arm": "q4",
+      "selection_used_fresh": false,
+      "selection_rule": "Max frozen validation key; exact ties prefer smaller mixed payload",
+      "paired_manual_outcomes": {
+        "both_pass": 54,
+        "q4_only": 11,
+        "mixed_only": 13,
+        "both_fail": 6
+      },
+      "previous_3m_same_fresh": {
+        "parse": {
+          "passed": 63,
+          "total": 84,
+          "rate": 0.75
+        },
+        "program": {
+          "passed": 63,
+          "total": 84,
+          "rate": 0.75
+        }
+      },
+      "basic_curriculum_gate_met": false,
+      "training": {
+        "q4": {
+          "steps": 8000,
+          "best_step": 8000,
+          "best_key": [
+            true,
+            0.8,
+            0.888888888888889,
+            0.9285714285714286,
+            1.0
+          ],
+          "actual_sample_counts": {
+            "formal_or_tool_replay": 76822,
+            "public_language_lm_replay": 12772,
+            "language_replay": 25583,
+            "program": 61238,
+            "trace_repair": 7747,
+            "parse": 61352,
+            "repair": 15636,
+            "book_and_game_lm_replay": 12811,
+            "done": 7622
+          },
+          "optimizer_steps_by_context": {
+            "512": 6672,
+            "1024": 683,
+            "2048": 645
+          },
+          "composed_training_enabled": false
+        },
+        "mixed": {
+          "steps": 8000,
+          "best_step": 7000,
+          "best_key": [
+            false,
+            0.7714285714285715,
+            0.8857142857142857,
+            0.9285714285714286,
+            0.9
+          ],
+          "actual_sample_counts": {
+            "formal_or_tool_replay": 76822,
+            "public_language_lm_replay": 12772,
+            "language_replay": 25583,
+            "program": 61238,
+            "trace_repair": 7747,
+            "parse": 61352,
+            "repair": 15636,
+            "book_and_game_lm_replay": 12811,
+            "done": 7622
+          },
+          "optimizer_steps_by_context": {
+            "512": 6672,
+            "1024": 683,
+            "2048": 645
+          },
+          "composed_training_enabled": false
+        }
+      },
+      "language_validation_nll": {
+        "q4": 3.396552488207817,
+        "mixed": 3.430656410753727
+      },
+      "standard_mk61_program_bytes": 105,
+      "standard_mk61_registers": "R0..R9,Ra..Re",
+      "extensions_enabled": false,
+      "configured_context": 2048,
+      "fp16_kv_bytes_per_token": 1280,
+      "native_unit_tests_passed": 4,
+      "verification": {
+        "exports": {
+          "mixed": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 3276417,
+            "parameters": 7509888
+          },
+          "q4": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 3291771,
+            "parameters": 5789568
+          },
+          "selected-budget": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 3291771,
+            "parameters": 5789568
+          }
+        },
+        "selected_arm": "q4",
+        "compared": 22,
+        "cpu_b200_reply_matches": 22,
+        "fp16_fp32_reply_matches": 22,
+        "fp16_program_passes": 12,
+        "original_program_passes": 12,
+        "fp16_kv_storage_and_byte_count_verified": true,
+        "frozen_files_hashes_verified": true,
+        "max_probed_prompt_tokens": 1804,
+        "attention_math": "Host FP32 with persistent FP16 key/value tensors in the half-storage probe",
+        "native_device_inference_measured": false
+      },
+      "native_device_measured": false,
+      "activation_diagnostics": {
+        "models": {
+          "q4": {
+            "warm_source_sha256": "986b0290e0abfd3a11fb405db44bc27144872003f06f93add27875e788bfc7fa",
+            "changed_query_coefficients_per_layer": [
+              6030,
+              6162,
+              5965,
+              6009,
+              5948,
+              5992,
+              6018,
+              6013,
+              5977,
+              5956
+            ],
+            "real_packed_preservation": [
+              {
+                "max_logit_error": 6.67572021484375e-06,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 6.67572021484375e-06,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 1.4781951904296875e-05,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 5.0067901611328125e-06,
+                "argmax_equal": true
+              }
+            ],
+            "packed": {
+              "file": "/work/.build/mk61-agent-20261106/native-mixed-v1/initial-active/q4.mkqb",
+              "bytes": 3291779,
+              "payload_bytes": 3277312,
+              "parameters": 5789568,
+              "sha256": "c70b39714aa7b108a635c801711c427e0348a2cbb0a765c82e8a0690744c1517",
+              "mode": "q4",
+              "learned_group_scale_count": 0
+            },
+            "embedding_gradient_half_difference_l2": 0.10996704548597336,
+            "embedding_half_difference_after_diagnostic_step": 0.00019999220967292786,
+            "diagnostic_updates_saved": false
+          },
+          "mixed": {
+            "warm_source_sha256": "4ff4ba291982d0341b2f4a7c181c4a7dd336ba8091682e48625870ef91108381",
+            "changed_query_coefficients_per_layer": [
+              6013,
+              6158,
+              5978,
+              6023,
+              5955,
+              6026,
+              6054,
+              6013,
+              5951,
+              5937
+            ],
+            "real_packed_preservation": [
+              {
+                "max_logit_error": 4.76837158203125e-06,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 5.7220458984375e-06,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 1.239776611328125e-05,
+                "argmax_equal": true
+              },
+              {
+                "max_logit_error": 5.7220458984375e-06,
+                "argmax_equal": true
+              }
+            ],
+            "packed": {
+              "file": "/work/.build/mk61-agent-20261106/native-mixed-v1/initial-active/mixed.mkqb",
+              "bytes": 3276425,
+              "payload_bytes": 3261952,
+              "parameters": 7509888,
+              "sha256": "9fe1ad1931ffc0acf9dbf9ce1ec4b526498332679e489f6ae70765803e02d1af",
+              "mode": "mixed",
+              "learned_group_scale_count": 122880
+            },
+            "embedding_gradient_half_difference_l2": 0.114449642598629,
+            "embedding_half_difference_after_diagnostic_step": 0.00020000338554382324,
+            "diagnostic_updates_saved": false
+          }
+        },
+        "method": "Opposite integer Q4-code perturbations in duplicated input coordinates; maximum-code scale anchors untouched",
+        "common_warmup_step": 2000,
+        "extra_language_tokens_each": 100000000,
+        "fresh_opened": false
+      }
+    },
+    "long_context_validated_as_stress_test_only": true,
+    "completed_new_training_stages": 4,
+    "completed_additional_language_updates_each": 6104,
+    "completed_sft_updates_each": 8000,
+    "long_context_evaluated": true,
+    "long_context_reliability_established": false
+  },
+  "completed_training_runs_before_native": 21,
+  "historical_optimizer_updates_before_native": 51600,
+  "total_accounted_optimizer_updates_lower_bound": 239358,
+  "new_exports_native_device_execution_measured": false,
+  "interrupted_warmup_runs": 2,
+  "interrupted_warmup_extra_updates_not_fully_counted": true,
+  "composition_v1": {
+    "arms": {
+      "champion": 5789568,
+      "small": 3017984
+    },
+    "frozen": {
+      "files": {
+        "fresh1.jsonl": {
+          "rows": 42,
+          "sha256": "df1d25d1f1ad71a065eb81deee0e30011ae906896bda02c16270e280bbe073f0"
+        },
+        "fresh2.jsonl": {
+          "rows": 64,
+          "sha256": "7cf56ce66ead30bc6ae8e3d35eaa50e9273aa4538fce0ed30bdd9720ab9a183c"
+        },
+        "fresh3.jsonl": {
+          "rows": 32,
+          "sha256": "6c5b5965f7c0333f530035c903ad7dc39f890f55562972d85bb59765826141ec"
+        },
+        "development1.jsonl": {
+          "rows": 224,
+          "sha256": "783e4f7ce7476c9ea52669b7e6067bce42b38377b1729dc6bd2d0ebddb1a4709"
+        },
+        "development2.jsonl": {
+          "rows": 60,
+          "sha256": "f7bce969c82be2ce583e8d6bd1f89310b11c2e12edffcf5e4a0fbcb5829e35f5"
+        },
+        "development3.jsonl": {
+          "rows": 24,
+          "sha256": "b3a8e2d64237c3433f6bd0bc784c03daf75eea9e8cce3659f13c1c52b58eea6f"
+        }
+      },
+      "fresh_used_for_selection": false,
+      "before_new_teacher_and_gradients": true,
+      "standard_program_bytes": 105,
+      "source_packets": {
+        "champion": "54cc751eb305567dec6ae00d0694e0f44060561204497e19a41302f208f74042",
+        "small": "479ce04e7d36a6013812af270478e8389d14ddc360126a4982dd2998f98522ec"
+      },
+      "arms": {
+        "champion": 5789568,
+        "small": 3017984
+      },
+      "both_target_precision": "Q4 from first update",
+      "contexts": [
+        512,
+        1024,
+        2048
+      ],
+      "small_context_extension_requires_this_new_training": true,
+      "primary_quality_target": {
+        "manual1": 0.9,
+        "manual2": 0.9,
+        "manual3": 0.9,
+        "formal_regression": 0.95,
+        "context2048": 0.8
+      },
+      "original_40_compound_probes_now": "Observed development, not new fresh or gradient targets"
+    },
+    "teacher_pid": 156321,
+    "teacher_restarted_before_any_gradients": true,
+    "policy": {
+      "arms": [
+        "champion-5.79M-Q4",
+        "previous-3M-Q4"
+      ],
+      "standard_mk61_only": true,
+      "steps_per_phase": 8000,
+      "extra_phases_if_validation_target_not_met": 3,
+      "selection_uses_fresh": false,
+      "elementary_examples_fraction_after_first1000": 0.25,
+      "formal_tool_replay_fraction": 0.25,
+      "language_replay_fraction": 0.05,
+      "remaining_examples": "Two/three-operation parsing, neural bytecode, formula-to-code drills and actual emulator repair",
+      "train_multioperation_structures": "Phases1-3: split_of(AST)==train. Phase4: all bounded1/2/3-operation structures.",
+      "manual_and_fresh_gradient_targets": false,
+      "actual_memory_context": "Champion1280B/token KV FP16;3M2560B/token;both configured2048 and explicitly trained",
+      "optimizer_checkpoint_resume": true,
+      "teacher_generation_v1": "Rejected before gradients; extra invented operations",
+      "teacher_generation_v2": "Single explicit AST and infix expression per request, independent blind inverse parse"
+    },
+    "completed": true,
+    "current_training_pending_verified_data": false,
+    "new_local_composition_tests_passed": 12,
+    "controller_pid": 165928,
+    "completed_training_phases_each": 4,
+    "active_phase": null,
+    "course_counts": {
+      "total": 15161,
+      "simple": 10303,
+      "two_operations": 2457,
+      "three_operations": 2401
+    },
+    "common_phase2_and_phase3_extra_rows": 2581,
+    "extra_composition_procedural": 2175,
+    "extra_verified_teacher": 310,
+    "extra_verified_rewrites": 96,
+    "semantic_focus_in_phase3": true,
+    "native_host_architecture_preflight": {
+      "small_decode_speed_ratio": 1.8958,
+      "cache_storage": "FP32",
+      "oracle_argmax_positions_each": 23,
+      "picocalc_device_measured": false
+    },
+    "coordinator_barrier": {
+      "old_pid": 158294,
+      "held": false,
+      "resolved_by_extension_pid": 165720,
+      "new_pid": 165928,
+      "active_optimizer_workers_terminated": false
+    },
+    "train_fit_diagnostic": {
+      "champion_step_phase2": 6000,
+      "seen_and_register_renamed_rates": ".9167..1.0",
+      "manual3_same_checkpoint": "1/24"
+    },
+    "rag_probe": {
+      "development_only": true,
+      "adopted": false,
+      "reason": "Severe regression without retrieval-conditioned training"
+    },
+    "next_curriculum": "Correct Russian cases and word orders; all2/3-operation structures; explicit novel-wording versus novel-structure reporting",
+    "completed_optimizer_updates_each": 32000,
+    "phase4_data": {
+      "rows": 7729,
+      "new_verified": 5148,
+      "carried": 2581,
+      "morphological": 4842,
+      "teacher_morph": 306,
+      "families": 755,
+      "sha256": "fc10fb7099c0acf528e265194e89c44f7b273e5c57ccf781a7e708f1a7c56eec"
+    },
+    "primary_audit_scope_after_phase4": "New Russian wordings of known1/2/3-operation structures; NOT novel mathematical trees",
+    "additional_closed_probe": "fresh4-structure.jsonl:64 controlled Russian4-operation descriptions, frozen before phase4 and not sent to teacher",
+    "current_unit_tests_passed": 12,
+    "constraint_probe": {
+      "development_only": true,
+      "maximum_operations": 3,
+      "all_mentioned_registers_assumed_relevant": true,
+      "external_compiler_at_inference": false,
+      "used_for_primary_audit": false,
+      "first_diagnostic_failed_without_weight_changes": true,
+      "restarted_on_same_snapshot": true,
+      "result": "Small two-op gains only; no three-op improvement. Not adopted for primary audit."
+    },
+    "development_error_analysis": {
+      "phase": 4,
+      "step": 7000,
+      "both_models_own_calc_bytecode_exact": 84,
+      "conditions_each": 84,
+      "champion_3op_conditions_predicted_2ops": 12,
+      "three_operation_conditions": 24
+    },
+    "quality_target_met": false,
+    "summary": {
+      "matrix": [
+        {
+          "arm": "champion",
+          "parameters": 5789568,
+          "packed_bytes": 3291773,
+          "before": {
+            "manual1": {
+              "parse": {
+                "passed": 27,
+                "total": 42,
+                "rate": 0.6428571428571429
+              },
+              "program": {
+                "passed": 30,
+                "total": 42,
+                "rate": 0.7142857142857143
+              }
+            },
+            "manual2": {
+              "parse": {
+                "passed": 0,
+                "total": 64,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 64,
+                "rate": 0.0
+              }
+            },
+            "manual3": {
+              "parse": {
+                "passed": 0,
+                "total": 32,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 32,
+                "rate": 0.0
+              }
+            },
+            "teacher2": {
+              "parse": {
+                "passed": 1,
+                "total": 23,
+                "rate": 0.043478260869565216
+              },
+              "program": {
+                "passed": 1,
+                "total": 23,
+                "rate": 0.043478260869565216
+              }
+            },
+            "teacher3": {
+              "parse": {
+                "passed": 2,
+                "total": 46,
+                "rate": 0.043478260869565216
+              },
+              "program": {
+                "passed": 2,
+                "total": 46,
+                "rate": 0.043478260869565216
+              }
+            },
+            "formal": {
+              "passed": 67,
+              "total": 72,
+              "rate": 0.9305555555555556
+            },
+            "context1024": {
+              "parse": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              }
+            },
+            "context2048": {
+              "parse": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              }
+            }
+          },
+          "after": {
+            "manual1": {
+              "parse": {
+                "passed": 29,
+                "total": 42,
+                "rate": 0.6904761904761905
+              },
+              "program": {
+                "passed": 29,
+                "total": 42,
+                "rate": 0.6904761904761905
+              }
+            },
+            "manual2": {
+              "parse": {
+                "passed": 18,
+                "total": 64,
+                "rate": 0.28125
+              },
+              "program": {
+                "passed": 21,
+                "total": 64,
+                "rate": 0.328125
+              }
+            },
+            "manual3": {
+              "parse": {
+                "passed": 3,
+                "total": 32,
+                "rate": 0.09375
+              },
+              "program": {
+                "passed": 3,
+                "total": 32,
+                "rate": 0.09375
+              }
+            },
+            "teacher2": {
+              "parse": {
+                "passed": 16,
+                "total": 23,
+                "rate": 0.6956521739130435
+              },
+              "program": {
+                "passed": 15,
+                "total": 23,
+                "rate": 0.6521739130434783
+              }
+            },
+            "teacher3": {
+              "parse": {
+                "passed": 31,
+                "total": 46,
+                "rate": 0.6739130434782609
+              },
+              "program": {
+                "passed": 31,
+                "total": 46,
+                "rate": 0.6739130434782609
+              }
+            },
+            "formal": {
+              "passed": 71,
+              "total": 72,
+              "rate": 0.9861111111111112
+            },
+            "context1024": {
+              "parse": {
+                "passed": 3,
+                "total": 14,
+                "rate": 0.21428571428571427
+              },
+              "program": {
+                "passed": 3,
+                "total": 14,
+                "rate": 0.21428571428571427
+              }
+            },
+            "context2048": {
+              "parse": {
+                "passed": 1,
+                "total": 14,
+                "rate": 0.07142857142857142
+              },
+              "program": {
+                "passed": 2,
+                "total": 14,
+                "rate": 0.14285714285714285
+              }
+            }
+          },
+          "formal98_before": {
+            "passed": 95,
+            "total": 98,
+            "pass_rate": 0.9693877551020408
+          },
+          "formal98_after": {
+            "passed": 95,
+            "total": 98,
+            "pass_rate": 0.9693877551020408
+          },
+          "tool_rollouts": {
+            "passed": 55,
+            "total": 138
+          },
+          "fresh_quality_target_met": false,
+          "selected_phase": 4,
+          "selected_step_in_phase": 8000,
+          "fp16_kv_bytes_per_token": 1280
+        },
+        {
+          "arm": "small",
+          "parameters": 3017984,
+          "packed_bytes": 1723410,
+          "before": {
+            "manual1": {
+              "parse": {
+                "passed": 32,
+                "total": 42,
+                "rate": 0.7619047619047619
+              },
+              "program": {
+                "passed": 31,
+                "total": 42,
+                "rate": 0.7380952380952381
+              }
+            },
+            "manual2": {
+              "parse": {
+                "passed": 0,
+                "total": 64,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 1,
+                "total": 64,
+                "rate": 0.015625
+              }
+            },
+            "manual3": {
+              "parse": {
+                "passed": 0,
+                "total": 32,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 32,
+                "rate": 0.0
+              }
+            },
+            "teacher2": {
+              "parse": {
+                "passed": 0,
+                "total": 23,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 23,
+                "rate": 0.0
+              }
+            },
+            "teacher3": {
+              "parse": {
+                "passed": 1,
+                "total": 46,
+                "rate": 0.021739130434782608
+              },
+              "program": {
+                "passed": 1,
+                "total": 46,
+                "rate": 0.021739130434782608
+              }
+            },
+            "formal": {
+              "passed": 71,
+              "total": 72,
+              "rate": 0.9861111111111112
+            },
+            "context1024": {
+              "parse": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              }
+            },
+            "context2048": {
+              "parse": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              }
+            }
+          },
+          "after": {
+            "manual1": {
+              "parse": {
+                "passed": 26,
+                "total": 42,
+                "rate": 0.6190476190476191
+              },
+              "program": {
+                "passed": 24,
+                "total": 42,
+                "rate": 0.5714285714285714
+              }
+            },
+            "manual2": {
+              "parse": {
+                "passed": 13,
+                "total": 64,
+                "rate": 0.203125
+              },
+              "program": {
+                "passed": 13,
+                "total": 64,
+                "rate": 0.203125
+              }
+            },
+            "manual3": {
+              "parse": {
+                "passed": 3,
+                "total": 32,
+                "rate": 0.09375
+              },
+              "program": {
+                "passed": 2,
+                "total": 32,
+                "rate": 0.0625
+              }
+            },
+            "teacher2": {
+              "parse": {
+                "passed": 16,
+                "total": 23,
+                "rate": 0.6956521739130435
+              },
+              "program": {
+                "passed": 16,
+                "total": 23,
+                "rate": 0.6956521739130435
+              }
+            },
+            "teacher3": {
+              "parse": {
+                "passed": 28,
+                "total": 46,
+                "rate": 0.6086956521739131
+              },
+              "program": {
+                "passed": 26,
+                "total": 46,
+                "rate": 0.5652173913043478
+              }
+            },
+            "formal": {
+              "passed": 71,
+              "total": 72,
+              "rate": 0.9861111111111112
+            },
+            "context1024": {
+              "parse": {
+                "passed": 1,
+                "total": 14,
+                "rate": 0.07142857142857142
+              },
+              "program": {
+                "passed": 1,
+                "total": 14,
+                "rate": 0.07142857142857142
+              }
+            },
+            "context2048": {
+              "parse": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              },
+              "program": {
+                "passed": 0,
+                "total": 14,
+                "rate": 0.0
+              }
+            }
+          },
+          "formal98_before": {
+            "passed": 98,
+            "total": 98,
+            "pass_rate": 1.0
+          },
+          "formal98_after": {
+            "passed": 98,
+            "total": 98,
+            "pass_rate": 1.0
+          },
+          "tool_rollouts": {
+            "passed": 45,
+            "total": 138
+          },
+          "fresh_quality_target_met": false,
+          "selected_phase": 4,
+          "selected_step_in_phase": 7000,
+          "fp16_kv_bytes_per_token": 2560
+        }
+      ],
+      "selected": "small",
+      "selected_quality_target_met": false,
+      "selection_used_fresh": false,
+      "completed_phases": 4,
+      "observed_first_program_totals_out_of138": {
+        "champion": 53,
+        "small": 39
+      },
+      "new_optimizer_updates_each": 32000,
+      "shared_initial_course": {
+        "train": 15161,
+        "counts_by_level": {
+          "1": 10303,
+          "2": 2457,
+          "3": 2401
+        },
+        "counts_by_source": {
+          "elementary_legacy": 9771,
+          "compound_legacy": 1374,
+          "teacher_new": 2515,
+          "procedural": 1501
+        },
+        "validation_test_counts": {
+          "validation": 214,
+          "test": 219
+        },
+        "rejected": {
+          "invalid_or_degenerate_reference": 2
+        },
+        "training_sha256": "f80b1523b85613f2de0c6d2cd1b4d787b6e11839b3d27ecbd3994122aaf454bc",
+        "all_references_checked_in_microcode": true,
+        "fresh_or_manual_targets_added": false,
+        "structural_multioperation_training_split": "Only split_of(AST)==train",
+        "procedural_descriptions_are_separately_labelled": true
+      },
+      "supplemental_data": {
+        "balanced-phase2": {
+          "source": "systematic_shapes_with_distinct_inputs",
+          "procedural": 2175,
+          "teacher_generated": 461,
+          "blind_verified": 321,
+          "teacher_added": 310,
+          "previous_augmentation": 96,
+          "total": 2581,
+          "families": 596,
+          "by_level_and_distinct_inputs": {
+            "(2, 3)": 20,
+            "(2, 2)": 21,
+            "(3, 4)": 151,
+            "(3, 3)": 266,
+            "(3, 2)": 138
+          },
+          "rejected": {},
+          "errors": [
+            "Extra data: line 2 column 1 (char 178)"
+          ],
+          "saved_for_next_phase": true,
+          "heldout_or_manual_gradient_targets": false,
+          "training_dedup_preserves_register_equality_pattern": true
+        },
+        "augmentation-phase2": {
+          "teacher": "Qwen/Qwen3.8-Flash-Next-FP8",
+          "source_training_conditions": 504,
+          "generated": 918,
+          "blind_verified": 98,
+          "reference_verified": 96,
+          "rejected": {
+            "exact_existing_or_heldout_text": 2
+          },
+          "errors": [],
+          "saved_for_next_phase": true,
+          "optional_minimum300_novel_examples_reached": false,
+          "all_sources_from_training": true,
+          "manual_or_fresh_sent_to_teacher": false,
+          "target_phase": 2
+        },
+        "morphology-phase4": {
+          "rows": 7729,
+          "new_verified_rows": 5148,
+          "carried_rows": 2581,
+          "families": 755,
+          "candidate_rows": 6467,
+          "new_by_level": {
+            "3": 4613,
+            "1": 109,
+            "2": 426
+          },
+          "new_by_source": {
+            "morphological": 4842,
+            "teacher_morph": 306
+          },
+          "new_by_style": {
+            "4": 639,
+            "6": 617,
+            "human": 306,
+            "2": 547,
+            "5": 622,
+            "1": 647,
+            "3": 563,
+            "0": 640,
+            "7": 567
+          },
+          "rejected": {},
+          "errors": [
+            "Invalid control character at: line 1 column 220 (char 219)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)",
+            "Expecting value: line 1 column 1 (char 0)"
+          ],
+          "structural_family_policy": "All1/2/3-operation structures",
+          "primary_audit_now_tests": "New wordings of known bounded mathematical structures",
+          "manual_or_fresh_wordings_used_as_targets": false,
+          "independent_inverse": "Exact AST or160 rational trials with>=64 valid cases plus actual MK61 execution",
+          "gradient_targets_sha256": "fc10fb7099c0acf528e265194e89c44f7b273e5c57ccf781a7e708f1a7c56eec",
+          "teacher": "Qwen/Qwen3.8-Flash-Next-FP8"
+        }
+      },
+      "matched_sample_counts_verified": true,
+      "verification": {
+        "exports": {
+          "champion": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 3291773,
+            "parameters": 5789568
+          },
+          "selected-budget": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 1723410,
+            "parameters": 3017984
+          },
+          "small": {
+            "sha256_verified": true,
+            "checkpoint_hashes_verified": true,
+            "reexport_payload_identical": true,
+            "reload_max_error": 0.0,
+            "packed_bytes": 1723410,
+            "parameters": 3017984
+          }
+        },
+        "compared": 50,
+        "cpu_b200_matches": 50,
+        "fp16_fp32_matches": 50,
+        "fp16_kv_actual_storage_and_byte_count_verified": true,
+        "frozen_file_hashes_verified": true,
+        "max_actual_prompt_tokens": 1794,
+        "host_attention_math": "FP32, persistent cache FP16 in half-storage probes",
+        "native_device_measured": false
+      },
+      "new_unit_checks_passed": 12,
+      "full_bounded_grammar_training_included": true,
+      "controlled_structural4_probe": {
+        "structural4-small-baseline": {
+          "parse": {
+            "passed": 0,
+            "total": 64,
+            "rate": 0.0
+          },
+          "program": {
+            "passed": 0,
+            "total": 64,
+            "rate": 0.0
+          }
+        },
+        "structural4-champion-final": {
+          "parse": {
+            "passed": 5,
+            "total": 64,
+            "rate": 0.078125
+          },
+          "program": {
+            "passed": 1,
+            "total": 64,
+            "rate": 0.015625
+          }
+        },
+        "structural4-champion-baseline": {
+          "parse": {
+            "passed": 0,
+            "total": 64,
+            "rate": 0.0
+          },
+          "program": {
+            "passed": 0,
+            "total": 64,
+            "rate": 0.0
+          }
+        },
+        "structural4-small-final": {
+          "parse": {
+            "passed": 6,
+            "total": 64,
+            "rate": 0.09375
+          },
+          "program": {
+            "passed": 2,
+            "total": 64,
+            "rate": 0.03125
+          }
+        }
+      },
+      "training_fit_diagnostics": {
+        "champion-phase2-step6000": {
+          "arm": "champion",
+          "phase": 2,
+          "step": 6000,
+          "source_packet_sha256": "0659a842b4869c82263db4ee74c4cf1e3ea8e9babf073719bbb55fcc06658e4f",
+          "training_fit": {
+            "level1-language-seen": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level1-language-renamed": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level2-language-seen": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level2-language-renamed": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level2-procedural-seen": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level2-procedural-renamed": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level3-language-seen": {
+              "parse": {
+                "passed": 23,
+                "total": 24,
+                "rate": 0.9583333333333334
+              },
+              "program": {
+                "passed": 23,
+                "total": 24,
+                "rate": 0.9583333333333334
+              }
+            },
+            "level3-language-renamed": {
+              "parse": {
+                "passed": 22,
+                "total": 24,
+                "rate": 0.9166666666666666
+              },
+              "program": {
+                "passed": 22,
+                "total": 24,
+                "rate": 0.9166666666666666
+              }
+            },
+            "level3-procedural-seen": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            },
+            "level3-procedural-renamed": {
+              "parse": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              },
+              "program": {
+                "passed": 24,
+                "total": 24,
+                "rate": 1.0
+              }
+            }
+          },
+          "development": {
+            "manual1": {
+              "parse": {
+                "passed": 174,
+                "total": 224,
+                "rate": 0.7767857142857143
+              },
+              "program": {
+                "passed": 175,
+                "total": 224,
+                "rate": 0.78125
+              }
+            },
+            "manual2": {
+              "parse": {
+                "passed": 24,
+                "total": 60,
+                "rate": 0.4
+              },
+              "program": {
+                "passed": 25,
+                "total": 60,
+                "rate": 0.4166666666666667
+              }
+            },
+            "manual3": {
+              "parse": {
+                "passed": 1,
+                "total": 24,
+                "rate": 0.041666666666666664
+              },
+              "program": {
+                "passed": 1,
+                "total": 24,
+                "rate": 0.041666666666666664
+              }
+            },
+            "teacher2": {
+              "parse": {
+                "passed": 15,
+                "total": 21,
+                "rate": 0.7142857142857143
+              },
+              "program": {
+                "passed": 14,
+                "total": 21,
+                "rate": 0.6666666666666666
+              }
+            },
+            "teacher3": {
+              "parse": {
+                "passed": 23,
+                "total": 46,
+                "rate": 0.5
+              },
+              "program": {
+                "passed": 25,
+                "total": 46,
+                "rate": 0.5434782608695652
+              }
+            },
+            "formal": {
+              "passed": 70,
+              "total": 72,
+              "rate": 0.9722222222222222
+            },
+            "context1024": {
+              "parse": {
+                "passed": 5,
+                "total": 14,
+                "rate": 0.35714285714285715
+              },
+              "program": {
+                "passed": 3,
+                "total": 14,
+                "rate": 0.21428571428571427
+              }
+            },
+            "context2048": {
+              "parse": {
+                "passed": 2,
+                "total": 14,
+                "rate": 0.14285714285714285
+              },
+              "program": {
+                "passed": 2,
+                "total": 14,
+                "rate": 0.14285714285714285
+              }
+            }
+          },
+          "all_probes_from_training_only": true,
+          "no_gradient_updates": true,
+          "fresh_conditions_opened": false
+        }
+      },
+      "untrained_retrieval_probe": {
+        "adopted": false,
+        "metrics": {
+          "manual1": {
+            "parse_passed": 36,
+            "program_passed": 45,
+            "total": 224
+          },
+          "manual2": {
+            "parse_passed": 1,
+            "program_passed": 2,
+            "total": 60
+          },
+          "manual3": {
+            "parse_passed": 1,
+            "program_passed": 1,
+            "total": 24
+          }
+        }
+      },
+      "untrained_constraint_probes": {
+        "constraint-small-phase4-step5000": {
+          "source_packet_sha256": "732e10e68b2f54f7fafd9303c31ecc2d6bcff8523c78e095ad2b5c46c8e80e94",
+          "arm": "small",
+          "phase": 4,
+          "step": 5000,
+          "seconds": 28.29970442299964,
+          "fresh_opened": false,
+          "no_gradient_updates": true,
+          "external_compiler_at_inference": false,
+          "reference_expression_used_for_generation": false,
+          "numeric_tests_used_for_generation": false,
+          "grammar_input": "Only names R0-R3 mentioned in task text; all assumed relevant; at most three operations",
+          "pure_model_accuracy": false,
+          "adopted_for_primary_evaluation": false,
+          "metrics": {
+            "manual2": {
+              "program_passed": 20,
+              "parse_passed": 20,
+              "total": 60,
+              "plain_program_passed": 15
+            },
+            "manual3": {
+              "program_passed": 5,
+              "parse_passed": 5,
+              "total": 24,
+              "plain_program_passed": 5
+            }
+          }
+        },
+        "constraint-champion-phase4-step5000": {
+          "source_packet_sha256": "b423fbbf74f46ffa656b1296e82ef3cbf0d49bc6a1d2e067158de00cdba6a21b",
+          "arm": "champion",
+          "phase": 4,
+          "step": 5000,
+          "seconds": 29.06732229399495,
+          "fresh_opened": false,
+          "no_gradient_updates": true,
+          "external_compiler_at_inference": false,
+          "reference_expression_used_for_generation": false,
+          "numeric_tests_used_for_generation": false,
+          "grammar_input": "Only names R0-R3 mentioned in task text; all assumed relevant; at most three operations",
+          "pure_model_accuracy": false,
+          "adopted_for_primary_evaluation": false,
+          "metrics": {
+            "manual2": {
+              "program_passed": 28,
+              "parse_passed": 28,
+              "total": 60,
+              "plain_program_passed": 26
+            },
+            "manual3": {
+              "program_passed": 6,
+              "parse_passed": 6,
+              "total": 24,
+              "plain_program_passed": 6
+            }
+          }
+        }
+      },
+      "development_error_analysis": {
+        "champion": {
+          "phase": 4,
+          "step": 7000,
+          "metrics": {
+            "manual2": {
+              "total": 60,
+              "program_passed": 27,
+              "valid_self_calc": 60,
+              "predicted_operation_count_2": 42,
+              "covers_all_mentioned_registers": 44,
+              "bytecode_exactly_follows_own_calc": 60,
+              "predicted_operation_count_1": 18
+            },
+            "manual3": {
+              "total": 24,
+              "program_passed": 5,
+              "valid_self_calc": 24,
+              "predicted_operation_count_2": 12,
+              "covers_all_mentioned_registers": 14,
+              "bytecode_exactly_follows_own_calc": 24,
+              "predicted_operation_count_3": 12
+            }
+          }
+        },
+        "small": {
+          "phase": 4,
+          "step": 7000,
+          "metrics": {
+            "manual2": {
+              "total": 60,
+              "program_passed": 24,
+              "valid_self_calc": 60,
+              "predicted_operation_count_1": 23,
+              "covers_all_mentioned_registers": 39,
+              "bytecode_exactly_follows_own_calc": 60,
+              "predicted_operation_count_2": 34,
+              "predicted_operation_count_3": 3
+            },
+            "manual3": {
+              "total": 24,
+              "program_passed": 9,
+              "valid_self_calc": 24,
+              "predicted_operation_count_2": 7,
+              "covers_all_mentioned_registers": 15,
+              "bytecode_exactly_follows_own_calc": 24,
+              "predicted_operation_count_3": 13,
+              "predicted_operation_count_1": 4
+            }
+          }
+        }
+      },
+      "native_host_benchmark": {
+        "models": {
+          "champion": {
+            "source_packet_sha256": "d9daa748015ac25d97b2d5d3b783ef69f62210827d6ff0234861e79ddc3e4468",
+            "native_package_bytes": 3857464,
+            "workspace_bytes": 21880,
+            "cache_bytes": 5242880,
+            "context": 2048,
+            "native_cache_storage": "FP32",
+            "arithmetic": "Native Q4 LUT with FP32 activations",
+            "tokenizer_exact_for_common_prompt": true,
+            "logit_argmax_matches": 23,
+            "logit_positions": 23,
+            "max_logit_delta": 2.2411346435546875e-05,
+            "prefill_tokens": 512,
+            "decode_calls": 32,
+            "prefill_seconds_median": 0.7215420830179937,
+            "decode_tokens_per_second_median": 420.23382258068295,
+            "runs": [
+              {
+                "prefill_seconds": 0.7215420830179937,
+                "decode_seconds": 0.07614808299695142
+              },
+              {
+                "prefill_seconds": 0.7173081670189276,
+                "decode_seconds": 0.07584824998048134
+              },
+              {
+                "prefill_seconds": 0.7230417499959003,
+                "decode_seconds": 0.07685124999261461
+              }
+            ]
+          },
+          "small": {
+            "source_packet_sha256": "d8d976953d4813a7dc5ad15122262c5448d8e05d2223193d0ae1250f2e0dafee",
+            "native_package_bytes": 2289208,
+            "workspace_bytes": 21488,
+            "cache_bytes": 10485760,
+            "context": 2048,
+            "native_cache_storage": "FP32",
+            "arithmetic": "Native Q4 LUT with FP32 activations",
+            "tokenizer_exact_for_common_prompt": true,
+            "logit_argmax_matches": 23,
+            "logit_positions": 23,
+            "max_logit_delta": 2.0503997802734375e-05,
+            "prefill_tokens": 512,
+            "decode_calls": 32,
+            "prefill_seconds_median": 0.409259917010786,
+            "decode_tokens_per_second_median": 740.1781880780507,
+            "runs": [
+              {
+                "prefill_seconds": 0.4060006670188159,
+                "decode_seconds": 0.042587957985233516
+              },
+              {
+                "prefill_seconds": 0.409259917010786,
+                "decode_seconds": 0.04323283300618641
+              },
+              {
+                "prefill_seconds": 0.4134522090025712,
+                "decode_seconds": 0.044334250007523224
+              }
+            ]
+          }
+        },
+        "small_decode_speed_ratio": 1.761348440571891,
+        "source_files_sha256": {
+          "export_model.py": "891bdffc3aad5adf9fb3710f65295122472a74e4d0f73f755cbf75124d508d65",
+          "mk61_ai_model_probe.cpp": "a966b1f8c3654af24f8693fe43010b4e5936c51b781715f657202c31ad618ba1",
+          "mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+          "mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+          "mk61_ai_model.hpp": "b66532d6773c63a3509e29d8b554840d84d574e94520db54540cd4023640007f",
+          "mk61_ai_model.cpp": "c5ca042e7082d46b6f1a6e95c4143bca713b97f74e232680e22d580872223238",
+          "mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df"
+        },
+        "host": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+        "target_picocalc_device_measured": false,
+        "same_frozen_native_kernel_as_architecture_preflight": true,
+        "scope": "Same native Q4 kernel on the host; these timings do not measure RP2350 or PSRAM/SD bandwidth."
+      },
+      "picocalc_device_measured": false,
+      "fresh_condition_authorship": "Codex authored these conditions before teacher generation and gradients; no independent human study",
+      "scope": "Seven arithmetic operations onR0-R3, two/three-op Russian conditions; standard105-step ISA and separate formal/control regression"
+    }
+  },
+  "completed_training_runs_before_composition": 25,
+  "accounted_optimizer_updates_before_composition": 83808,
+  "codec_vocabulary_study": {
+    "complete": true,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/CODEC_STUDY.md",
+    "output_tokens_tested": 54,
+    "input_vocabulary_kept": 8192,
+    "new_codec_quality_measured": false,
+    "new_codec_training_started": false,
+    "primary_model_weights_modified": false,
+    "product_sources_modified": false,
+    "head_decode_speed_ratio": {
+      "champion": 1.29741746351471,
+      "small": 1.2766136521723106
+    },
+    "greedy_generations_unchanged": 12,
+    "huffman32_symbols_per_byte_on_development": 1.0016638935108153,
+    "codec_unit_tests_passed": 3,
+    "emulator_roundtrips": 48
+  },
+  "codec_qat_v1": {
+    "arms": [
+      "champion-hex",
+      "champion-h32",
+      "small-hex",
+      "small-h32"
+    ],
+    "stages_each": 8000,
+    "effective_batch": 128,
+    "both_full_b200_allocated_by_user": true,
+    "input_russian_vocabulary_preserved": 8192,
+    "new_huffman_symbols": 32,
+    "output_rows": {
+      "hex": 54,
+      "h32": 68
+    },
+    "new_fresh_counts": {
+      "1": 28,
+      "2": 64,
+      "3": 48
+    },
+    "training_started": true,
+    "four_jobs_parallel": true,
+    "controller_pid": 174576,
+    "micro_batch_at_all_contexts": 128,
+    "old_q4_parameters_preserved_exactly": true,
+    "all_known_teacher_partitions_fresh_exact_overlap": 0,
+    "collector_session_id": 82521,
+    "local_technical_tests_passed": 22,
+    "native_bridge_preflight": {
+      "valid_decode_roundtrips": 356,
+      "invalid_inputs_rejected": 5,
+      "tokenizer_probes_matched": 24,
+      "generation_probes_matched": 8,
+      "product_sources_modified": false
+    },
+    "background_language_old_vocabulary_verified_documents": 770,
+    "all_four_sample_plan_digest_confirmed_through_step": 1850,
+    "completed": true,
+    "primary_summary": {
+      "champion-hex": {
+        "programs": {
+          "manual1": {
+            "passed": 20,
+            "total": 28,
+            "rate": 0.7142857142857143,
+            "generated_tokens": 1160
+          },
+          "manual2": {
+            "passed": 12,
+            "total": 64,
+            "rate": 0.1875,
+            "generated_tokens": 2962
+          },
+          "manual3": {
+            "passed": 3,
+            "total": 48,
+            "rate": 0.0625,
+            "generated_tokens": 2363
+          },
+          "context1024": {
+            "passed": 1,
+            "total": 14,
+            "rate": 0.07142857142857142,
+            "generated_tokens": 665
+          },
+          "context2048": {
+            "passed": 2,
+            "total": 14,
+            "rate": 0.14285714285714285,
+            "generated_tokens": 650
+          }
+        },
+        "passed": 35,
+        "total": 140,
+        "macro": 0.32142857142857145,
+        "valid_program_calls": 140,
+        "codec_errors": 0,
+        "generated_tokens_mean": 46.32142857142857,
+        "formal98": 97,
+        "tool_rollouts": 40,
+        "public_language_nll": 3.5282553285360336,
+        "parameters": 5797760,
+        "packed_bytes": 3296376,
+        "output_rows": 54
+      },
+      "champion-h32": {
+        "programs": {
+          "manual1": {
+            "passed": 18,
+            "total": 28,
+            "rate": 0.6428571428571429,
+            "generated_tokens": 991
+          },
+          "manual2": {
+            "passed": 12,
+            "total": 64,
+            "rate": 0.1875,
+            "generated_tokens": 2458
+          },
+          "manual3": {
+            "passed": 3,
+            "total": 48,
+            "rate": 0.0625,
+            "generated_tokens": 1917
+          },
+          "context1024": {
+            "passed": 0,
+            "total": 14,
+            "rate": 0.0,
+            "generated_tokens": 571
+          },
+          "context2048": {
+            "passed": 0,
+            "total": 14,
+            "rate": 0.0,
+            "generated_tokens": 540
+          }
+        },
+        "passed": 33,
+        "total": 140,
+        "macro": 0.2976190476190476,
+        "valid_program_calls": 140,
+        "codec_errors": 0,
+        "generated_tokens_mean": 38.32857142857143,
+        "formal98": 95,
+        "tool_rollouts": 37,
+        "public_language_nll": 3.531206861138344,
+        "parameters": 5797760,
+        "packed_bytes": 3296376,
+        "output_rows": 68
+      },
+      "small-hex": {
+        "programs": {
+          "manual1": {
+            "passed": 21,
+            "total": 28,
+            "rate": 0.75,
+            "generated_tokens": 1161
+          },
+          "manual2": {
+            "passed": 15,
+            "total": 64,
+            "rate": 0.234375,
+            "generated_tokens": 2916
+          },
+          "manual3": {
+            "passed": 3,
+            "total": 48,
+            "rate": 0.0625,
+            "generated_tokens": 2296
+          },
+          "context1024": {
+            "passed": 2,
+            "total": 14,
+            "rate": 0.14285714285714285,
+            "generated_tokens": 658
+          },
+          "context2048": {
+            "passed": 1,
+            "total": 14,
+            "rate": 0.07142857142857142,
+            "generated_tokens": 1779
+          }
+        },
+        "passed": 39,
+        "total": 140,
+        "macro": 0.3489583333333333,
+        "valid_program_calls": 140,
+        "codec_errors": 0,
+        "generated_tokens_mean": 45.52142857142857,
+        "formal98": 98,
+        "tool_rollouts": 45,
+        "public_language_nll": 3.6004166156053543,
+        "parameters": 3022080,
+        "packed_bytes": 1725709,
+        "output_rows": 54
+      },
+      "small-h32": {
+        "programs": {
+          "manual1": {
+            "passed": 20,
+            "total": 28,
+            "rate": 0.7142857142857143,
+            "generated_tokens": 990
+          },
+          "manual2": {
+            "passed": 11,
+            "total": 64,
+            "rate": 0.171875,
+            "generated_tokens": 2407
+          },
+          "manual3": {
+            "passed": 3,
+            "total": 48,
+            "rate": 0.0625,
+            "generated_tokens": 1900
+          },
+          "context1024": {
+            "passed": 0,
+            "total": 14,
+            "rate": 0.0,
+            "generated_tokens": 532
+          },
+          "context2048": {
+            "passed": 0,
+            "total": 14,
+            "rate": 0.0,
+            "generated_tokens": 543
+          }
+        },
+        "passed": 34,
+        "total": 140,
+        "macro": 0.3162202380952381,
+        "valid_program_calls": 140,
+        "codec_errors": 0,
+        "generated_tokens_mean": 37.83571428571429,
+        "formal98": 97,
+        "tool_rollouts": 39,
+        "public_language_nll": 3.6142658591270447,
+        "parameters": 3022080,
+        "packed_bytes": 1725709,
+        "output_rows": 68
+      }
+    },
+    "paired_comparisons": {
+      "champion": {
+        "levels": {
+          "1": {
+            "total": 28,
+            "hex_passed": 20,
+            "h32_passed": 18,
+            "both_pass": 17,
+            "hex_only": 3,
+            "h32_only": 1,
+            "both_fail": 7
+          },
+          "2": {
+            "total": 64,
+            "hex_passed": 12,
+            "h32_passed": 12,
+            "both_pass": 10,
+            "hex_only": 2,
+            "h32_only": 2,
+            "both_fail": 50
+          },
+          "3": {
+            "total": 48,
+            "hex_passed": 3,
+            "h32_passed": 3,
+            "both_pass": 3,
+            "hex_only": 0,
+            "h32_only": 0,
+            "both_fail": 45
+          }
+        },
+        "macro_delta_h32_minus_hex": -0.023809523809523808,
+        "macro_delta_bootstrap95": [
+          -0.07663690476190475,
+          0.023809523809523808
+        ],
+        "bootstrap_repeats": 10000,
+        "scenario_clusters": 84,
+        "shared_mathematical_families_not_independent": true,
+        "independent_human_population_claim": false
+      },
+      "small": {
+        "levels": {
+          "1": {
+            "total": 28,
+            "hex_passed": 21,
+            "h32_passed": 20,
+            "both_pass": 19,
+            "hex_only": 2,
+            "h32_only": 1,
+            "both_fail": 6
+          },
+          "2": {
+            "total": 64,
+            "hex_passed": 15,
+            "h32_passed": 11,
+            "both_pass": 9,
+            "hex_only": 6,
+            "h32_only": 2,
+            "both_fail": 47
+          },
+          "3": {
+            "total": 48,
+            "hex_passed": 3,
+            "h32_passed": 3,
+            "both_pass": 3,
+            "hex_only": 0,
+            "h32_only": 0,
+            "both_fail": 45
+          }
+        },
+        "macro_delta_h32_minus_hex": -0.03273809523809524,
+        "macro_delta_bootstrap95": [
+          -0.08035714285714286,
+          0.011904761904761904
+        ],
+        "bootstrap_repeats": 10000,
+        "scenario_clusters": 84,
+        "shared_mathematical_families_not_independent": true,
+        "independent_human_population_claim": false
+      }
+    },
+    "quality_target_met": false,
+    "all_four_sample_plans_matched": true,
+    "steps_completed_each": 8000,
+    "final_exports": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/codec-qat-v1/server-results/export",
+    "new_audit_opened": true,
+    "collector_completed_session_id": 30826,
+    "all_export_links_and_hashes_verified": true,
+    "source_masters_and_language_streams_unchanged": true,
+    "both_full_b200_released": true,
+    "practical_candidate": {
+      "variant": "small-hex",
+      "role": "best_by_validation",
+      "step": 2000,
+      "packed_model": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/codec-qat-v1/server-results/export/best/small-hex/model.mkqb",
+      "post_audit_architecture_preference": "Comparable measured quality with smaller weights and faster host decoding; no claim of statistically superior general intelligence"
+    }
+  },
+  "completed_training_runs_before_codec_qat": 33,
+  "accounted_optimizer_updates_before_codec_qat": 147808,
+  "all_own_jobs_complete": true,
+  "semantic_3m_v1": {
+    "selected_label": "direct-best",
+    "selected_step": 0,
+    "data": {
+      "new_teacher_training_conditions": 3469,
+      "legacy_replay_conditions": 8000,
+      "actual_training_errors": 298
+    },
+    "milestones": {
+      "two_operations_50_percent": false,
+      "three_operations_25_percent": false,
+      "simple_drop_at_most_3_percentage_points": true,
+      "formal_at_least_95_percent": true
+    },
+    "all_milestones_met": false,
+    "selected_packed_sha256": "89eec7e228ff88b890818505817bda125c716979bedbd5e80c0a254cea0ed753",
+    "parameters": 3022080,
+    "optimizer_updates_each": 2000,
+    "same_core_sample_plan": true,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/SEMANTIC_3M_RESULTS.md",
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/semantic-3m-v1/server-results/export/selected-budget/model.mkqb",
+    "completed": true,
+    "sine_probe": {
+      "completed": true,
+      "passed": false,
+      "native_matches": 6,
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/semantic-3m-v1/server-results/sine-probe/results.json",
+      "unsupported_operation_in_current_course": true
+    }
+  },
+  "full_isa_v1": {
+    "complete_training": false,
+    "catalog_entries": 256,
+    "old_formal_unique_opcodes": 28,
+    "old_supervised_unique_opcodes": 32,
+    "output_rows": 37,
+    "seven_operation_calc_removed_in_new_protocol": true,
+    "full_semantic_corpus_ready": false,
+    "new_gpu_training_started": false,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/FULL_ISA_RESULTS.md",
+    "base_train_rows": 7768,
+    "base_validation_rows": 1060,
+    "base_audit_rows": 1201,
+    "closed_natural_rows": 153,
+    "historical_fragments": 160,
+    "reference_all_256_executed": true,
+    "teacher_controller_pid": 189898,
+    "training_controller_pid": 195486,
+    "verified_teacher_conditions": 1468,
+    "optimizer_updates_planned_each": 8000,
+    "variants": [
+      "full",
+      "protected"
+    ],
+    "training_started": true,
+    "training_completed": true,
+    "completed_optimizer_updates_each": 8000,
+    "preselected_arm": "protected",
+    "preselected_step": 2000,
+    "completed": true,
+    "selected_label": "protected-best",
+    "selected_step": 2000,
+    "optimizer_updates_each": 8000,
+    "teacher_verified": 1468,
+    "documented_scores": {
+      "passed": 648,
+      "exact": 648,
+      "total": 648,
+      "rate": 1.0
+    },
+    "documented_opcodes_passing_all_modes": 216,
+    "milestones": {
+      "documented_instructions_95_percent": true,
+      "numeric_synthesis_80_percent": true,
+      "programming_80_percent": true,
+      "stateful_80_percent": true
+    },
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/full-isa-v1/server-results/export/selected-budget/model.mkqb",
+    "selected_packed_sha256": "12199170a5b0362277f4b17762753474e65fce37048bf484f18dd72b310914fa"
+  },
+  "full_isa_natural_v1": {
+    "completed": true,
+    "selected_label": "protected-best",
+    "selected_step": 2500,
+    "fresh_language": [
+      355,
+      606
+    ],
+    "documented": {
+      "passed": 648,
+      "exact": 648,
+      "total": 648,
+      "rate": 1.0
+    },
+    "observed_user_27": [
+      18,
+      27
+    ],
+    "sine22": [
+      {
+        "angle": "RAD",
+        "pass": true,
+        "reply": "<write>0E 0D 02 02 1C 50</write><run/>",
+        "actual_X": "-8.8516850 -03",
+        "expected_X": "-8.8516850 -03"
+      },
+      {
+        "angle": "DEG",
+        "pass": true,
+        "reply": "<write>0E 0D 02 02 1C 50</write><run/>",
+        "actual_X": "3.7460660 -01",
+        "expected_X": "3.7460660 -01"
+      },
+      {
+        "angle": "GRAD",
+        "pass": true,
+        "reply": "<write>0E 0D 02 02 1C 50</write><run/>",
+        "actual_X": "3.3873790 -01",
+        "expected_X": "3.3873790 -01"
+      }
+    ],
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/NATURAL_LANGUAGE_RESULTS.md",
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/full-isa-natural-v1/server-results/export/selected-budget/model.mkqb",
+    "optimizer_updates_each": 3000,
+    "selected_packed_sha256": "5ca6063e33cfbf81c82eadbd1e5e53569b987b7ff675678dd86ce7a7138e6f95"
+  },
+  "harness_ablation_v1": {
+    "completed": true,
+    "controller_pid": 200248,
+    "collector_pid": 86462,
+    "train_rows": 8617,
+    "validation_rows": 599,
+    "fresh_rows": 599,
+    "arms": [
+      "direct",
+      "asm"
+    ],
+    "working_context": 1024,
+    "output_rows": 40,
+    "steps_planned_each": 4000,
+    "selected_label": "direct-best",
+    "selected_step": 2000,
+    "scores": {
+      "direct-best": {
+        "language": [
+          473,
+          599
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 48,
+            "total": 60,
+            "rate": 0.8,
+            "exact": 45
+          },
+          "literal_function": {
+            "passed": 81,
+            "total": 120,
+            "rate": 0.675,
+            "exact": 78
+          },
+          "register_source": {
+            "passed": 36,
+            "total": 48,
+            "rate": 0.75,
+            "exact": 36
+          },
+          "stack_source": {
+            "passed": 10,
+            "total": 12,
+            "rate": 0.8333333333333334,
+            "exact": 10
+          },
+          "composition": {
+            "passed": 221,
+            "total": 240,
+            "rate": 0.9208333333333333,
+            "exact": 221
+          },
+          "algorithm_clamp": {
+            "passed": 4,
+            "total": 40,
+            "rate": 0.1,
+            "exact": 2
+          },
+          "algorithm_subroutine": {
+            "passed": 40,
+            "total": 40,
+            "rate": 1.0,
+            "exact": 40
+          },
+          "algorithm_branch": {
+            "passed": 33,
+            "total": 39,
+            "rate": 0.8461538461538461,
+            "exact": 33
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "isa_groups": {
+          "Ввод чисел, десятичная точка, знак, порядок": {
+            "passed": 39,
+            "total": 39,
+            "rate": 1.0,
+            "exact": 39
+          },
+          "Стек и очистка": {
+            "passed": 15,
+            "total": 15,
+            "rate": 1.0,
+            "exact": 15
+          },
+          "Базовая арифметика и модуль": {
+            "passed": 18,
+            "total": 18,
+            "rate": 1.0,
+            "exact": 18
+          },
+          "Степени, корень, логарифмы, константа π": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0,
+            "exact": 24
+          },
+          "Тригонометрия и обратные функции": {
+            "passed": 18,
+            "total": 18,
+            "rate": 1.0,
+            "exact": 18
+          },
+          "Служебные, ошибочные и недокументированные коды": {
+            "passed": 117,
+            "total": 120,
+            "rate": 0.975,
+            "exact": 117
+          },
+          "Преобразования градусов/минут/секунд": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Знак, целая/дробная часть, максимум": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Логические операции": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Генератор псевдослучайных чисел": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0,
+            "exact": 3
+          },
+          "Прямая работа со всеми R0–RE": {
+            "passed": 90,
+            "total": 90,
+            "rate": 1.0,
+            "exact": 90
+          },
+          "Останов, переход, подпрограмма, возврат, НОП": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "Прямые условные переходы": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Все четыре счётчика циклов L0–L3": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Косвенная адресация, память, вызовы и условия": {
+            "passed": 360,
+            "total": 360,
+            "rate": 1.0,
+            "exact": 360
+          },
+          "scientific_synthesis": {
+            "passed": 284,
+            "total": 288,
+            "rate": 0.9861111111111112,
+            "exact": 283
+          },
+          "branch_programs": {
+            "passed": 54,
+            "total": 54,
+            "rate": 1.0,
+            "exact": 54
+          },
+          "loop_programs": {
+            "passed": 19,
+            "total": 27,
+            "rate": 0.7037037037037037,
+            "exact": 19
+          },
+          "memory_programs": {
+            "passed": 27,
+            "total": 27,
+            "rate": 1.0,
+            "exact": 27
+          },
+          "subroutine_programs": {
+            "passed": 27,
+            "total": 27,
+            "rate": 1.0,
+            "exact": 27
+          },
+          "stateful_interactions": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          }
+        },
+        "isa_kinds": {
+          "primitive": {
+            "passed": 765,
+            "total": 768,
+            "rate": 0.99609375,
+            "exact": 765
+          },
+          "numeric_synthesis": {
+            "passed": 284,
+            "total": 288,
+            "rate": 0.9861111111111112,
+            "exact": 283
+          },
+          "programming": {
+            "passed": 127,
+            "total": 135,
+            "rate": 0.9407407407407408,
+            "exact": 127
+          },
+          "interactive_game": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          }
+        },
+        "legacy": [
+          66,
+          98
+        ],
+        "observed_previous_language": [
+          356,
+          606
+        ],
+        "user_reproductions": [
+          18,
+          27
+        ],
+        "tools": {
+          "passed": 31,
+          "total": 96,
+          "initially_wrong": 72,
+          "repaired": 11,
+          "false_accepts": 31,
+          "trace_requests": 79,
+          "patch_requests": 39,
+          "run_requests": 63,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false
+        },
+        "intermediate_programs_correct": 48,
+        "language_nll": 3.6751608550548553
+      },
+      "asm-best": {
+        "language": [
+          571,
+          599
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 59,
+            "total": 60,
+            "rate": 0.9833333333333333,
+            "exact": 59
+          },
+          "literal_function": {
+            "passed": 103,
+            "total": 120,
+            "rate": 0.8583333333333333,
+            "exact": 103
+          },
+          "register_source": {
+            "passed": 44,
+            "total": 48,
+            "rate": 0.9166666666666666,
+            "exact": 44
+          },
+          "stack_source": {
+            "passed": 10,
+            "total": 12,
+            "rate": 0.8333333333333334,
+            "exact": 10
+          },
+          "composition": {
+            "passed": 238,
+            "total": 240,
+            "rate": 0.9916666666666667,
+            "exact": 238
+          },
+          "algorithm_clamp": {
+            "passed": 40,
+            "total": 40,
+            "rate": 1.0,
+            "exact": 40
+          },
+          "algorithm_subroutine": {
+            "passed": 39,
+            "total": 40,
+            "rate": 0.975,
+            "exact": 39
+          },
+          "algorithm_branch": {
+            "passed": 38,
+            "total": 39,
+            "rate": 0.9743589743589743,
+            "exact": 38
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "isa_groups": {
+          "Ввод чисел, десятичная точка, знак, порядок": {
+            "passed": 39,
+            "total": 39,
+            "rate": 1.0,
+            "exact": 39
+          },
+          "Стек и очистка": {
+            "passed": 15,
+            "total": 15,
+            "rate": 1.0,
+            "exact": 15
+          },
+          "Базовая арифметика и модуль": {
+            "passed": 18,
+            "total": 18,
+            "rate": 1.0,
+            "exact": 18
+          },
+          "Степени, корень, логарифмы, константа π": {
+            "passed": 24,
+            "total": 24,
+            "rate": 1.0,
+            "exact": 24
+          },
+          "Тригонометрия и обратные функции": {
+            "passed": 18,
+            "total": 18,
+            "rate": 1.0,
+            "exact": 18
+          },
+          "Служебные, ошибочные и недокументированные коды": {
+            "passed": 120,
+            "total": 120,
+            "rate": 1.0,
+            "exact": 120
+          },
+          "Преобразования градусов/минут/секунд": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Знак, целая/дробная часть, максимум": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Логические операции": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Генератор псевдослучайных чисел": {
+            "passed": 3,
+            "total": 3,
+            "rate": 1.0,
+            "exact": 3
+          },
+          "Прямая работа со всеми R0–RE": {
+            "passed": 90,
+            "total": 90,
+            "rate": 1.0,
+            "exact": 90
+          },
+          "Останов, переход, подпрограмма, возврат, НОП": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "Прямые условные переходы": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Все четыре счётчика циклов L0–L3": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          },
+          "Косвенная адресация, память, вызовы и условия": {
+            "passed": 360,
+            "total": 360,
+            "rate": 1.0,
+            "exact": 360
+          },
+          "scientific_synthesis": {
+            "passed": 284,
+            "total": 288,
+            "rate": 0.9861111111111112,
+            "exact": 282
+          },
+          "branch_programs": {
+            "passed": 54,
+            "total": 54,
+            "rate": 1.0,
+            "exact": 54
+          },
+          "loop_programs": {
+            "passed": 23,
+            "total": 27,
+            "rate": 0.8518518518518519,
+            "exact": 23
+          },
+          "memory_programs": {
+            "passed": 27,
+            "total": 27,
+            "rate": 1.0,
+            "exact": 27
+          },
+          "subroutine_programs": {
+            "passed": 27,
+            "total": 27,
+            "rate": 1.0,
+            "exact": 27
+          },
+          "stateful_interactions": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          }
+        },
+        "isa_kinds": {
+          "primitive": {
+            "passed": 768,
+            "total": 768,
+            "rate": 1.0,
+            "exact": 768
+          },
+          "numeric_synthesis": {
+            "passed": 284,
+            "total": 288,
+            "rate": 0.9861111111111112,
+            "exact": 282
+          },
+          "programming": {
+            "passed": 131,
+            "total": 135,
+            "rate": 0.9703703703703703,
+            "exact": 131
+          },
+          "interactive_game": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          }
+        },
+        "legacy": [
+          52,
+          98
+        ],
+        "observed_previous_language": [
+          413,
+          606
+        ],
+        "user_reproductions": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 41,
+          "total": 96,
+          "initially_wrong": 72,
+          "repaired": 21,
+          "false_accepts": 33,
+          "trace_requests": 69,
+          "patch_requests": 13,
+          "run_requests": 75,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false
+        },
+        "intermediate_programs_correct": 54,
+        "language_nll": 3.658402681350708
+      }
+    },
+    "goals": {
+      "direct": {
+        "literal_at_least_90_percent": false,
+        "composition_at_least_80_percent": true,
+        "documented_full_exam_100_percent": true,
+        "validation_retention_guard_passed": true,
+        "literal_score": [
+          129,
+          180
+        ]
+      },
+      "asm": {
+        "literal_at_least_90_percent": true,
+        "composition_at_least_80_percent": true,
+        "documented_full_exam_100_percent": true,
+        "validation_retention_guard_passed": false,
+        "literal_score": [
+          162,
+          180
+        ]
+      }
+    },
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/HARNESS_ABLATION_RESULTS.md",
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/harness-ablation-v1/server-results/export/selected-budget/model.mkqb",
+    "selected_packed_sha256": "65dc54a62dc1b6a53a7e72737b6b0c490a0230e4279d988206cbb9c39afa176f"
+  },
+  "harness_retention_v1": {
+    "completed": true,
+    "selected_label": "fast-best",
+    "selected_step": 900,
+    "results": {
+      "asm-baseline": {
+        "fresh": [
+          94,
+          360
+        ],
+        "groups": {
+          "literal_function": {
+            "passed": 41,
+            "total": 92,
+            "rate": 0.44565217391304346,
+            "exact": 40
+          },
+          "register_source": {
+            "passed": 12,
+            "total": 23,
+            "rate": 0.5217391304347826,
+            "exact": 12
+          },
+          "stack_source": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "literal_copy": {
+            "passed": 12,
+            "total": 24,
+            "rate": 0.5,
+            "exact": 12
+          },
+          "composition": {
+            "passed": 8,
+            "total": 200,
+            "rate": 0.04,
+            "exact": 2
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "legacy": [
+          52,
+          98
+        ],
+        "observed_ablation": [
+          571,
+          599
+        ],
+        "observed_previous_language": [
+          413,
+          606
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 19,
+          "total": 40,
+          "initially_wrong": 30,
+          "repaired": 11,
+          "false_accepts": 14,
+          "trace_requests": 24,
+          "patch_requests": 0,
+          "run_requests": 33,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false
+        }
+      },
+      "slow-best": {
+        "fresh": [
+          265,
+          360
+        ],
+        "groups": {
+          "literal_function": {
+            "passed": 69,
+            "total": 92,
+            "rate": 0.75,
+            "exact": 66
+          },
+          "register_source": {
+            "passed": 15,
+            "total": 23,
+            "rate": 0.6521739130434783,
+            "exact": 15
+          },
+          "stack_source": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "literal_copy": {
+            "passed": 21,
+            "total": 24,
+            "rate": 0.875,
+            "exact": 21
+          },
+          "composition": {
+            "passed": 139,
+            "total": 200,
+            "rate": 0.695,
+            "exact": 122
+          }
+        },
+        "documented": {
+          "passed": 645,
+          "total": 648,
+          "rate": 0.9953703703703703,
+          "exact": 645
+        },
+        "legacy": [
+          65,
+          98
+        ],
+        "observed_ablation": [
+          569,
+          599
+        ],
+        "observed_previous_language": [
+          409,
+          606
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 16,
+          "total": 40,
+          "initially_wrong": 30,
+          "repaired": 12,
+          "false_accepts": 9,
+          "trace_requests": 40,
+          "patch_requests": 4,
+          "run_requests": 26,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false
+        }
+      },
+      "fast-best": {
+        "fresh": [
+          292,
+          360
+        ],
+        "groups": {
+          "literal_function": {
+            "passed": 72,
+            "total": 92,
+            "rate": 0.782608695652174,
+            "exact": 69
+          },
+          "register_source": {
+            "passed": 14,
+            "total": 23,
+            "rate": 0.6086956521739131,
+            "exact": 14
+          },
+          "stack_source": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "literal_copy": {
+            "passed": 22,
+            "total": 24,
+            "rate": 0.9166666666666666,
+            "exact": 22
+          },
+          "composition": {
+            "passed": 163,
+            "total": 200,
+            "rate": 0.815,
+            "exact": 149
+          }
+        },
+        "documented": {
+          "passed": 645,
+          "total": 648,
+          "rate": 0.9953703703703703,
+          "exact": 645
+        },
+        "legacy": [
+          67,
+          98
+        ],
+        "observed_ablation": [
+          566,
+          599
+        ],
+        "observed_previous_language": [
+          429,
+          606
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 21,
+          "total": 40,
+          "initially_wrong": 30,
+          "repaired": 13,
+          "false_accepts": 9,
+          "trace_requests": 32,
+          "patch_requests": 0,
+          "run_requests": 31,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false
+        }
+      }
+    },
+    "retention_guard_passed": true,
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/harness-retention-v1/server-results/export/selected-budget/model.mkqb",
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/HARNESS_RETENTION_RESULTS.md",
+    "updates_each": 1200,
+    "native_boundary_smoke": {
+      "asm-baseline": {
+        "first_program_correct": 8,
+        "program_correct": 8,
+        "finished_correct": 8,
+        "total": 16
+      },
+      "fast-best": {
+        "first_program_correct": 15,
+        "program_correct": 15,
+        "finished_correct": 13,
+        "total": 16
+      }
+    }
+  },
+  "harness_debug_v1": {
+    "completed": false,
+    "aborted": true,
+    "aborted_updates_accounted": true,
+    "reason": "Observed regression caused by changing initial generation prompt; preserve initial prompt in v2",
+    "superseded_by": "harness-debug-v2",
+    "steps_lower_bound": {
+      "safe": 1300,
+      "active": 1250
+    },
+    "own_controllers_stopped": [
+      205372,
+      205718,
+      205719
+    ],
+    "own_containers_stopped": [
+      "69561812793b",
+      "96d7e8a219ff"
+    ],
+    "unix": 1794014099.281732
+  },
+  "aborted_training_runs": 2,
+  "harness_debug_v2": {
+    "completed": true,
+    "selected_label": "active-best",
+    "selected_step": 2500,
+    "results": {
+      "asm-baseline": {
+        "fresh": [
+          339,
+          436
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 33,
+            "total": 36,
+            "rate": 0.9166666666666666,
+            "exact": 33
+          },
+          "literal_function": {
+            "passed": 64,
+            "total": 78,
+            "rate": 0.8205128205128205,
+            "exact": 62
+          },
+          "register_source": {
+            "passed": 25,
+            "total": 31,
+            "rate": 0.8064516129032258,
+            "exact": 25
+          },
+          "stack_source": {
+            "passed": 16,
+            "total": 16,
+            "rate": 1.0,
+            "exact": 16
+          },
+          "composition": {
+            "passed": 140,
+            "total": 200,
+            "rate": 0.7,
+            "exact": 137
+          },
+          "algorithm_clamp": {
+            "passed": 20,
+            "total": 20,
+            "rate": 1.0,
+            "exact": 20
+          },
+          "algorithm_subroutine": {
+            "passed": 19,
+            "total": 21,
+            "rate": 0.9047619047619048,
+            "exact": 19
+          },
+          "algorithm_branch": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0,
+            "exact": 22
+          },
+          "stop_command": {
+            "passed": 0,
+            "total": 12,
+            "rate": 0.0,
+            "exact": 0
+          }
+        },
+        "documented": {
+          "passed": 645,
+          "total": 648,
+          "rate": 0.9953703703703703,
+          "exact": 645
+        },
+        "stop": {
+          "passed": 0,
+          "total": 3,
+          "rate": 0.0,
+          "exact": 0
+        },
+        "legacy": [
+          67,
+          98
+        ],
+        "observed_retention": [
+          292,
+          360
+        ],
+        "observed_ablation": [
+          566,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 0,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 0,
+          "false_accepts": 1,
+          "wrong_done_attempts": 1,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 30,
+          "unfinished_correct": 26,
+          "program_correct": 26,
+          "trace_requests": 392,
+          "patch_requests": 43,
+          "run_requests": 55,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 0,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 0,
+          "false_accepts": 1,
+          "wrong_done_attempts": 1,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 30,
+          "unfinished_correct": 26,
+          "program_correct": 26,
+          "trace_requests": 392,
+          "patch_requests": 43,
+          "run_requests": 55,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 0,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 0,
+          "false_accepts": 0,
+          "wrong_done_attempts": 0,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 35,
+          "program_correct": 35,
+          "trace_requests": 130,
+          "patch_requests": 2,
+          "run_requests": 24,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      },
+      "safe-best": {
+        "fresh": [
+          364,
+          436
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 34,
+            "total": 36,
+            "rate": 0.9444444444444444,
+            "exact": 34
+          },
+          "literal_function": {
+            "passed": 63,
+            "total": 78,
+            "rate": 0.8076923076923077,
+            "exact": 62
+          },
+          "register_source": {
+            "passed": 29,
+            "total": 31,
+            "rate": 0.9354838709677419,
+            "exact": 29
+          },
+          "stack_source": {
+            "passed": 16,
+            "total": 16,
+            "rate": 1.0,
+            "exact": 16
+          },
+          "composition": {
+            "passed": 172,
+            "total": 200,
+            "rate": 0.86,
+            "exact": 170
+          },
+          "algorithm_clamp": {
+            "passed": 18,
+            "total": 20,
+            "rate": 0.9,
+            "exact": 18
+          },
+          "algorithm_subroutine": {
+            "passed": 1,
+            "total": 21,
+            "rate": 0.047619047619047616,
+            "exact": 1
+          },
+          "algorithm_branch": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0,
+            "exact": 22
+          },
+          "stop_command": {
+            "passed": 9,
+            "total": 12,
+            "rate": 0.75,
+            "exact": 9
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "stop": {
+          "passed": 3,
+          "total": 3,
+          "rate": 1.0,
+          "exact": 3
+        },
+        "legacy": [
+          47,
+          98
+        ],
+        "observed_retention": [
+          313,
+          360
+        ],
+        "observed_ablation": [
+          530,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 72,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 43,
+          "false_accepts": 44,
+          "wrong_done_attempts": 44,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 29,
+          "correct_controls": 30,
+          "unfinished_correct": 0,
+          "program_correct": 72,
+          "trace_requests": 135,
+          "patch_requests": 60,
+          "run_requests": 95,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 72,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 43,
+          "false_accepts": 44,
+          "wrong_done_attempts": 44,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 29,
+          "correct_controls": 30,
+          "unfinished_correct": 0,
+          "program_correct": 72,
+          "trace_requests": 135,
+          "patch_requests": 60,
+          "run_requests": 95,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 48,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 48,
+          "false_accepts": 0,
+          "wrong_done_attempts": 0,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 0,
+          "program_correct": 48,
+          "trace_requests": 0,
+          "patch_requests": 0,
+          "run_requests": 48,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      },
+      "active-best": {
+        "fresh": [
+          388,
+          436
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 34,
+            "total": 36,
+            "rate": 0.9444444444444444,
+            "exact": 34
+          },
+          "literal_function": {
+            "passed": 69,
+            "total": 78,
+            "rate": 0.8846153846153846,
+            "exact": 68
+          },
+          "register_source": {
+            "passed": 27,
+            "total": 31,
+            "rate": 0.8709677419354839,
+            "exact": 26
+          },
+          "stack_source": {
+            "passed": 16,
+            "total": 16,
+            "rate": 1.0,
+            "exact": 16
+          },
+          "composition": {
+            "passed": 177,
+            "total": 200,
+            "rate": 0.885,
+            "exact": 173
+          },
+          "algorithm_clamp": {
+            "passed": 13,
+            "total": 20,
+            "rate": 0.65,
+            "exact": 13
+          },
+          "algorithm_subroutine": {
+            "passed": 21,
+            "total": 21,
+            "rate": 1.0,
+            "exact": 21
+          },
+          "algorithm_branch": {
+            "passed": 22,
+            "total": 22,
+            "rate": 1.0,
+            "exact": 22
+          },
+          "stop_command": {
+            "passed": 9,
+            "total": 12,
+            "rate": 0.75,
+            "exact": 9
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "stop": {
+          "passed": 3,
+          "total": 3,
+          "rate": 1.0,
+          "exact": 3
+        },
+        "legacy": [
+          59,
+          98
+        ],
+        "observed_retention": [
+          328,
+          360
+        ],
+        "observed_ablation": [
+          535,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 86,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 56,
+          "false_accepts": 33,
+          "wrong_done_attempts": 33,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 30,
+          "correct_controls": 30,
+          "unfinished_correct": 1,
+          "program_correct": 87,
+          "trace_requests": 121,
+          "patch_requests": 69,
+          "run_requests": 97,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 86,
+          "total": 124,
+          "initially_wrong": 94,
+          "repaired": 56,
+          "false_accepts": 33,
+          "wrong_done_attempts": 33,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 30,
+          "correct_controls": 30,
+          "unfinished_correct": 1,
+          "program_correct": 87,
+          "trace_requests": 121,
+          "patch_requests": 69,
+          "run_requests": 97,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 46,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 46,
+          "false_accepts": 2,
+          "wrong_done_attempts": 2,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 0,
+          "program_correct": 46,
+          "trace_requests": 0,
+          "patch_requests": 0,
+          "run_requests": 48,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      }
+    },
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/HARNESS_DEBUG_RESULTS.md",
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/harness-debug-v2/server-results/export/selected-budget/model.mkqb",
+    "observed_target_met": false,
+    "updates_each": 3000,
+    "gate_guarantees_semantics": false
+  },
+  "harness_debug_v3": {
+    "completed": true,
+    "selected_label": "active-best",
+    "selected_step": 1500,
+    "results": {
+      "asm-baseline": {
+        "fresh": [
+          238,
+          282
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 17,
+            "total": 17,
+            "rate": 1.0,
+            "exact": 17
+          },
+          "literal_function": {
+            "passed": 39,
+            "total": 40,
+            "rate": 0.975,
+            "exact": 39
+          },
+          "register_source": {
+            "passed": 9,
+            "total": 13,
+            "rate": 0.6923076923076923,
+            "exact": 9
+          },
+          "stack_source": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "composition": {
+            "passed": 126,
+            "total": 160,
+            "rate": 0.7875,
+            "exact": 121
+          },
+          "algorithm_clamp": {
+            "passed": 6,
+            "total": 10,
+            "rate": 0.6,
+            "exact": 6
+          },
+          "algorithm_subroutine": {
+            "passed": 9,
+            "total": 10,
+            "rate": 0.9,
+            "exact": 9
+          },
+          "algorithm_branch": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "stop_command": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "stop": {
+          "passed": 3,
+          "total": 3,
+          "rate": 1.0,
+          "exact": 3
+        },
+        "legacy": [
+          59,
+          98
+        ],
+        "observed_retention": [
+          328,
+          360
+        ],
+        "observed_ablation": [
+          535,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 56,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 38,
+          "false_accepts": 13,
+          "wrong_done_attempts": 13,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 56,
+          "trace_requests": 75,
+          "patch_requests": 41,
+          "run_requests": 61,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 56,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 38,
+          "false_accepts": 13,
+          "wrong_done_attempts": 13,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 56,
+          "trace_requests": 75,
+          "patch_requests": 41,
+          "run_requests": 61,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 41,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 41,
+          "false_accepts": 7,
+          "wrong_done_attempts": 7,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 0,
+          "program_correct": 41,
+          "trace_requests": 0,
+          "patch_requests": 0,
+          "run_requests": 48,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      },
+      "safe-best": {
+        "fresh": [
+          250,
+          282
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 17,
+            "total": 17,
+            "rate": 1.0,
+            "exact": 17
+          },
+          "literal_function": {
+            "passed": 39,
+            "total": 40,
+            "rate": 0.975,
+            "exact": 39
+          },
+          "register_source": {
+            "passed": 12,
+            "total": 13,
+            "rate": 0.9230769230769231,
+            "exact": 12
+          },
+          "stack_source": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "composition": {
+            "passed": 134,
+            "total": 160,
+            "rate": 0.8375,
+            "exact": 133
+          },
+          "algorithm_clamp": {
+            "passed": 6,
+            "total": 10,
+            "rate": 0.6,
+            "exact": 6
+          },
+          "algorithm_subroutine": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "algorithm_branch": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "stop_command": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "stop": {
+          "passed": 3,
+          "total": 3,
+          "rate": 1.0,
+          "exact": 3
+        },
+        "legacy": [
+          56,
+          98
+        ],
+        "observed_retention": [
+          340,
+          360
+        ],
+        "observed_ablation": [
+          548,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 51,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 33,
+          "false_accepts": 19,
+          "wrong_done_attempts": 19,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 51,
+          "trace_requests": 42,
+          "patch_requests": 15,
+          "run_requests": 62,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 51,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 33,
+          "false_accepts": 19,
+          "wrong_done_attempts": 19,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 51,
+          "trace_requests": 42,
+          "patch_requests": 15,
+          "run_requests": 62,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 44,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 44,
+          "false_accepts": 2,
+          "wrong_done_attempts": 2,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 0,
+          "program_correct": 44,
+          "trace_requests": 0,
+          "patch_requests": 0,
+          "run_requests": 46,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      },
+      "active-best": {
+        "fresh": [
+          256,
+          282
+        ],
+        "groups": {
+          "literal_copy": {
+            "passed": 17,
+            "total": 17,
+            "rate": 1.0,
+            "exact": 17
+          },
+          "literal_function": {
+            "passed": 39,
+            "total": 40,
+            "rate": 0.975,
+            "exact": 39
+          },
+          "register_source": {
+            "passed": 12,
+            "total": 13,
+            "rate": 0.9230769230769231,
+            "exact": 12
+          },
+          "stack_source": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "composition": {
+            "passed": 136,
+            "total": 160,
+            "rate": 0.85,
+            "exact": 134
+          },
+          "algorithm_clamp": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "algorithm_subroutine": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "algorithm_branch": {
+            "passed": 10,
+            "total": 10,
+            "rate": 1.0,
+            "exact": 10
+          },
+          "stop_command": {
+            "passed": 12,
+            "total": 12,
+            "rate": 1.0,
+            "exact": 12
+          }
+        },
+        "documented": {
+          "passed": 648,
+          "total": 648,
+          "rate": 1.0,
+          "exact": 648
+        },
+        "stop": {
+          "passed": 3,
+          "total": 3,
+          "rate": 1.0,
+          "exact": 3
+        },
+        "legacy": [
+          69,
+          98
+        ],
+        "observed_retention": [
+          338,
+          360
+        ],
+        "observed_ablation": [
+          565,
+          599
+        ],
+        "user": [
+          27,
+          27
+        ],
+        "tools": {
+          "passed": 55,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 37,
+          "false_accepts": 17,
+          "wrong_done_attempts": 17,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 55,
+          "trace_requests": 45,
+          "patch_requests": 22,
+          "run_requests": 63,
+          "context_overflows": 0,
+          "gate_enabled": false,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "tools_gated": {
+          "passed": 55,
+          "total": 72,
+          "initially_wrong": 54,
+          "repaired": 37,
+          "false_accepts": 17,
+          "wrong_done_attempts": 17,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 18,
+          "correct_controls": 18,
+          "unfinished_correct": 0,
+          "program_correct": 55,
+          "trace_requests": 45,
+          "patch_requests": 22,
+          "run_requests": 63,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        },
+        "from_scratch": {
+          "passed": 46,
+          "total": 48,
+          "initially_wrong": 48,
+          "repaired": 46,
+          "false_accepts": 2,
+          "wrong_done_attempts": 2,
+          "premature_done_rejected": 0,
+          "correct_controls_completed": 0,
+          "correct_controls": 0,
+          "unfinished_correct": 0,
+          "program_correct": 46,
+          "trace_requests": 0,
+          "patch_requests": 0,
+          "run_requests": 48,
+          "context_overflows": 0,
+          "gate_enabled": true,
+          "observations_have_expected_outputs": false,
+          "hidden_cases_available_to_model": false,
+          "max_turns": 6
+        }
+      }
+    },
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/HARNESS_DEBUG_V3_RESULTS.md",
+    "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/harness-debug-v3/server-results/export/selected-budget/model.mkqb",
+    "observed_target_met": false,
+    "updates_each": 2000,
+    "gate_guarantees_semantics": false
+  },
+  "semantic_verifier_v1": {
+    "completed": true,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/VERIFIER_RESULTS.md",
+    "mode": "fast-best",
+    "single_qualified": false,
+    "ensemble_qualified": false,
+    "results": {
+      "baseline": {
+        "validation": {
+          "true_positive": 0,
+          "positive": 215,
+          "false_positive": 0,
+          "negative": 215,
+          "coverage": 0.0,
+          "threshold": 6.979006538391113,
+          "auc": 0.48819902650081126,
+          "accuracy_at_zero": 0.4930232558139535
+        },
+        "fresh": {
+          "true_positive": 0,
+          "positive": 282,
+          "false_positive": 0,
+          "negative": 282,
+          "coverage": 0.0,
+          "threshold": 6.979006538391113,
+          "auc": 0.49690659423570244,
+          "accuracy_at_zero": 0.49645390070921985
+        }
+      },
+      "slow-best": {
+        "validation": {
+          "true_positive": 33,
+          "positive": 215,
+          "false_positive": 0,
+          "negative": 215,
+          "coverage": 0.15348837209302327,
+          "threshold": 2.6976344978809355,
+          "auc": 0.832493239588967,
+          "accuracy_at_zero": 0.7418604651162791
+        },
+        "fresh": {
+          "true_positive": 34,
+          "positive": 282,
+          "false_positive": 4,
+          "negative": 282,
+          "coverage": 0.12056737588652482,
+          "threshold": 2.6976344978809355,
+          "auc": 0.7802550173532519,
+          "accuracy_at_zero": 0.6950354609929078
+        }
+      },
+      "fast-best": {
+        "validation": {
+          "true_positive": 44,
+          "positive": 215,
+          "false_positive": 0,
+          "negative": 215,
+          "coverage": 0.20465116279069767,
+          "threshold": 6.136203715801239,
+          "auc": 0.8684694429421309,
+          "accuracy_at_zero": 0.7651162790697674
+        },
+        "fresh": {
+          "true_positive": 44,
+          "positive": 282,
+          "false_positive": 3,
+          "negative": 282,
+          "coverage": 0.15602836879432624,
+          "threshold": 6.136203715801239,
+          "auc": 0.8289950203712086,
+          "accuracy_at_zero": 0.7340425531914894
+        }
+      }
+    },
+    "ensemble_fresh": {
+      "true_positive": 44,
+      "positive": 282,
+      "false_positive": 3,
+      "negative": 282,
+      "validation_coverage": 0.20465116279069767,
+      "thresholds": {
+        "slow": -1000000.0,
+        "fast": 6.136203715801239
+      },
+      "coverage": 0.15602836879432624
+    },
+    "updates_each": 2000
+  },
+  "latest_training_outcome": {
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/ACTION_TRAINING_RESULTS.md",
+    "selected_research_artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/action-alignment-v2/server-results/export/selected-research/model.mka",
+    "automatic_DONE_goal_met": false,
+    "all_own_jobs_complete": true,
+    "new_optimizer_updates": 6600,
+    "source_checkpoint_preserved": true
+  },
+  "readiness_probes": {
+    "completed": true,
+    "activated": false,
+    "validation_results": {
+      "readiness-v1": {
+        "l2": 0.1,
+        "validation_positive_coverage": 0.013953488372093023,
+        "validation_false_accepts": 0,
+        "threshold_logit": 1.9139086763605542,
+        "validation_positive_total": 215,
+        "validation_negative_total": 215
+      },
+      "readiness-v2": {
+        "l2": 0.1,
+        "validation_positive_coverage": 0.03255813953488372,
+        "validation_false_accepts": 0,
+        "threshold_logit": 3.4321455063227946,
+        "validation_positive_total": 215,
+        "validation_negative_total": 215
+      }
+    }
+  },
+  "active_experiment": null,
+  "action_alignment_v1": {
+    "completed": true,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/ACTION_ALIGNMENT_RESULTS.md",
+    "selected_artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/action-alignment-v1/server-results/export/selected-research/model.mka",
+    "summary": {
+      "selected_arm": "sft",
+      "release_eligible": false,
+      "results": {
+        "sft": {
+          "selected_stage": 1,
+          "language": [
+            220,
+            250
+          ],
+          "tools": {
+            "total": 500,
+            "passed": 286,
+            "false_DONE": 73,
+            "premature_DONE": 0,
+            "abstained": 121,
+            "initially_wrong": 250,
+            "repaired": 63,
+            "unfinished_correct": 26,
+            "by_public_count": {
+              "1": {
+                "total": 126,
+                "passed": 70,
+                "false_DONE": 19,
+                "premature_DONE": 0,
+                "abstained": 33
+              },
+              "2": {
+                "total": 126,
+                "passed": 69,
+                "false_DONE": 21,
+                "premature_DONE": 0,
+                "abstained": 33
+              },
+              "3": {
+                "total": 124,
+                "passed": 73,
+                "false_DONE": 20,
+                "premature_DONE": 0,
+                "abstained": 24
+              },
+              "4": {
+                "total": 124,
+                "passed": 74,
+                "false_DONE": 13,
+                "premature_DONE": 0,
+                "abstained": 31
+              }
+            },
+            "actions": {
+              "error": 1179,
+              "unsure": 121,
+              "done": 359,
+              "run": 293,
+              "trace": 115,
+              "diag": 99,
+              "patch": 86
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          },
+          "isa": [
+            638,
+            648
+          ],
+          "legacy": [
+            52,
+            98
+          ],
+          "from_scratch": {
+            "total": 64,
+            "passed": 56,
+            "false_DONE": 6,
+            "premature_DONE": 0,
+            "abstained": 2,
+            "initially_wrong": 64,
+            "repaired": 56,
+            "unfinished_correct": 1,
+            "by_public_count": {
+              "1": {
+                "total": 16,
+                "passed": 15,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "2": {
+                "total": 16,
+                "passed": 15,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "3": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 2
+              },
+              "4": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 3,
+                "premature_DONE": 0,
+                "abstained": 0
+              }
+            },
+            "actions": {
+              "write": 64,
+              "done": 62,
+              "run": 94,
+              "trace": 1,
+              "error": 8,
+              "unsure": 2
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          }
+        },
+        "preference": {
+          "selected_stage": 3,
+          "language": [
+            210,
+            250
+          ],
+          "tools": {
+            "total": 500,
+            "passed": 287,
+            "false_DONE": 55,
+            "premature_DONE": 0,
+            "abstained": 148,
+            "initially_wrong": 250,
+            "repaired": 62,
+            "unfinished_correct": 24,
+            "by_public_count": {
+              "1": {
+                "total": 126,
+                "passed": 65,
+                "false_DONE": 18,
+                "premature_DONE": 0,
+                "abstained": 40
+              },
+              "2": {
+                "total": 126,
+                "passed": 72,
+                "false_DONE": 10,
+                "premature_DONE": 0,
+                "abstained": 43
+              },
+              "3": {
+                "total": 124,
+                "passed": 71,
+                "false_DONE": 21,
+                "premature_DONE": 0,
+                "abstained": 28
+              },
+              "4": {
+                "total": 124,
+                "passed": 79,
+                "false_DONE": 6,
+                "premature_DONE": 0,
+                "abstained": 37
+              }
+            },
+            "actions": {
+              "error": 1261,
+              "unsure": 148,
+              "done": 342,
+              "diag": 82,
+              "patch": 78,
+              "run": 247,
+              "trace": 81,
+              "context_overflow": 1
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          },
+          "isa": [
+            641,
+            648
+          ],
+          "legacy": [
+            42,
+            98
+          ],
+          "from_scratch": {
+            "total": 64,
+            "passed": 58,
+            "false_DONE": 6,
+            "premature_DONE": 0,
+            "abstained": 0,
+            "initially_wrong": 64,
+            "repaired": 58,
+            "unfinished_correct": 0,
+            "by_public_count": {
+              "1": {
+                "total": 16,
+                "passed": 16,
+                "false_DONE": 0,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "2": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 3,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "3": {
+                "total": 16,
+                "passed": 15,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "4": {
+                "total": 16,
+                "passed": 14,
+                "false_DONE": 2,
+                "premature_DONE": 0,
+                "abstained": 0
+              }
+            },
+            "actions": {
+              "write": 64,
+              "done": 64,
+              "run": 96
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          }
+        }
+      },
+      "updates_total": 3800,
+      "native_verification_complete": true,
+      "physical_picocalc_measured": false
+    }
+  },
+  "action_alignment_v2": {
+    "completed": true,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/ACTION_ALIGNMENT_V2_RESULTS.md",
+    "selected_artifact": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/action-alignment-v2/server-results/export/selected-research/model.mka",
+    "summary": {
+      "selected_arm": "sft",
+      "release_eligible": false,
+      "results": {
+        "sft": {
+          "selected_stage": 3,
+          "language": [
+            213,
+            250
+          ],
+          "tools": {
+            "total": 500,
+            "passed": 259,
+            "false_DONE": 163,
+            "premature_DONE": 0,
+            "abstained": 16,
+            "initially_wrong": 250,
+            "repaired": 49,
+            "unfinished_correct": 9,
+            "by_public_count": {
+              "1": {
+                "total": 126,
+                "passed": 63,
+                "false_DONE": 47,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "2": {
+                "total": 126,
+                "passed": 78,
+                "false_DONE": 34,
+                "premature_DONE": 0,
+                "abstained": 3
+              },
+              "3": {
+                "total": 124,
+                "passed": 51,
+                "false_DONE": 54,
+                "premature_DONE": 0,
+                "abstained": 6
+              },
+              "4": {
+                "total": 124,
+                "passed": 67,
+                "false_DONE": 28,
+                "premature_DONE": 0,
+                "abstained": 7
+              }
+            },
+            "actions": {
+              "trace": 128,
+              "diag": 420,
+              "patch": 355,
+              "done": 422,
+              "run": 365,
+              "error": 163,
+              "unsure": 16,
+              "context_overflow": 1
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          },
+          "isa": [
+            643,
+            648
+          ],
+          "legacy": [
+            50,
+            98
+          ],
+          "from_scratch": {
+            "total": 64,
+            "passed": 55,
+            "false_DONE": 1,
+            "premature_DONE": 0,
+            "abstained": 1,
+            "initially_wrong": 64,
+            "repaired": 55,
+            "unfinished_correct": 0,
+            "by_public_count": {
+              "1": {
+                "total": 16,
+                "passed": 14,
+                "false_DONE": 0,
+                "premature_DONE": 0,
+                "abstained": 1
+              },
+              "2": {
+                "total": 16,
+                "passed": 14,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "3": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 0,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "4": {
+                "total": 16,
+                "passed": 14,
+                "false_DONE": 0,
+                "premature_DONE": 0,
+                "abstained": 0
+              }
+            },
+            "actions": {
+              "write": 64,
+              "done": 56,
+              "run": 93,
+              "diag": 30,
+              "patch": 24,
+              "unsure": 1,
+              "error": 7,
+              "context_overflow": 1
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          }
+        },
+        "preference": {
+          "selected_stage": 3,
+          "language": [
+            205,
+            250
+          ],
+          "tools": {
+            "total": 500,
+            "passed": 260,
+            "false_DONE": 183,
+            "premature_DONE": 0,
+            "abstained": 18,
+            "initially_wrong": 250,
+            "repaired": 44,
+            "unfinished_correct": 2,
+            "by_public_count": {
+              "1": {
+                "total": 126,
+                "passed": 60,
+                "false_DONE": 53,
+                "premature_DONE": 0,
+                "abstained": 1
+              },
+              "2": {
+                "total": 126,
+                "passed": 81,
+                "false_DONE": 35,
+                "premature_DONE": 0,
+                "abstained": 4
+              },
+              "3": {
+                "total": 124,
+                "passed": 52,
+                "false_DONE": 59,
+                "premature_DONE": 0,
+                "abstained": 4
+              },
+              "4": {
+                "total": 124,
+                "passed": 67,
+                "false_DONE": 36,
+                "premature_DONE": 0,
+                "abstained": 9
+              }
+            },
+            "actions": {
+              "trace": 124,
+              "diag": 344,
+              "patch": 319,
+              "done": 443,
+              "run": 416,
+              "error": 131,
+              "unsure": 18
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          },
+          "isa": [
+            630,
+            648
+          ],
+          "legacy": [
+            65,
+            98
+          ],
+          "from_scratch": {
+            "total": 64,
+            "passed": 52,
+            "false_DONE": 6,
+            "premature_DONE": 0,
+            "abstained": 0,
+            "initially_wrong": 64,
+            "repaired": 52,
+            "unfinished_correct": 1,
+            "by_public_count": {
+              "1": {
+                "total": 16,
+                "passed": 15,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "2": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 3,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "3": {
+                "total": 16,
+                "passed": 11,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              },
+              "4": {
+                "total": 16,
+                "passed": 13,
+                "false_DONE": 1,
+                "premature_DONE": 0,
+                "abstained": 0
+              }
+            },
+            "actions": {
+              "write": 63,
+              "done": 58,
+              "run": 88,
+              "diag": 17,
+              "patch": 13,
+              "error": 22,
+              "trace": 1
+            },
+            "gate_enabled": false,
+            "reference_answers_in_feedback": false
+          }
+        }
+      },
+      "updates_total": 2800,
+      "native_verification_complete": true,
+      "physical_picocalc_measured": false
+    }
+  }
+}

@@ -1,0 +1,244 @@
+{
+  "original_sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77",
+  "preselected": {
+    "selected": {
+      "arm": "qat",
+      "step": 1500,
+      "dev_score": [
+        0.11250000000000002,
+        -5.8338666560050605
+      ]
+    },
+    "candidates": [
+      {
+        "arm": "qat",
+        "step": 1500,
+        "dev_score": [
+          0.11250000000000002,
+          -5.8338666560050605
+        ]
+      },
+      {
+        "arm": "staged",
+        "step": 1500,
+        "dev_score": [
+          0.0125,
+          -5.925093475696473
+        ]
+      }
+    ],
+    "test_used_for_selection": false
+  },
+  "models": {
+    "qat": {
+      "packed_sha256": "25dc632057a394b3d4bf85198251f7f658aac3ea5c58bd00bf7bc3561df4b6ae",
+      "packed_bytes": 4706696,
+      "parameters": 8278400,
+      "packed_reload_max_abs_error": 0.0,
+      "cpu_matches_b200": 16,
+      "comparisons": [
+        {
+          "id": "greeting:2",
+          "matches": true,
+          "cpu": "Yeah, sure. What's up?",
+          "b200": "Yeah, sure. What's up?"
+        },
+        {
+          "id": "greeting:3",
+          "matches": true,
+          "cpu": "I'm glad you could make it.",
+          "b200": "I'm glad you could make it."
+        },
+        {
+          "id": "greeting:4",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "identity:2",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a friendly chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a friendly chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "identity:3",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "identity:4",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "hobby:2",
+          "matches": true,
+          "cpu": "Well, let's think about what you're drawing.",
+          "b200": "Well, let's think about what you're drawing."
+        },
+        {
+          "id": "hobby:3",
+          "matches": true,
+          "cpu": "Well, let's see if we can find a new video game.",
+          "b200": "Well, let's see if we can find a new video game."
+        },
+        {
+          "id": "hobby:4",
+          "matches": true,
+          "cpu": "Well, let's see if we can figure out what you're making.",
+          "b200": "Well, let's see if we can figure out what you're making."
+        },
+        {
+          "id": "mild_tiredness:2",
+          "matches": true,
+          "cpu": "Sure. What would you like to talk about?",
+          "b200": "Sure. What would you like to talk about?"
+        },
+        {
+          "id": "mild_tiredness:3",
+          "matches": true,
+          "cpu": "That sounds like a nice day. What kind of quiet is it?",
+          "b200": "That sounds like a nice day. What kind of quiet is it?"
+        },
+        {
+          "id": "mild_tiredness:4",
+          "matches": true,
+          "cpu": "That is a great way to unwind.",
+          "b200": "That is a great way to unwind."
+        },
+        {
+          "id": "boredom:2",
+          "matches": true,
+          "cpu": "That sounds really frustrating. Do you want to talk about it?",
+          "b200": "That sounds really frustrating. Do you want to talk about it?"
+        },
+        {
+          "id": "boredom:3",
+          "matches": true,
+          "cpu": "That sounds like a great plan. What are you thinking about?",
+          "b200": "That sounds like a great plan. What are you thinking about?"
+        },
+        {
+          "id": "boredom:4",
+          "matches": true,
+          "cpu": "Sure, what do you need?",
+          "b200": "Sure, what do you need?"
+        },
+        {
+          "id": "good_news:2",
+          "matches": true,
+          "cpu": "That's great! What are you going to do with it?",
+          "b200": "That's great! What are you going to do with it?"
+        }
+      ]
+    },
+    "staged": {
+      "packed_sha256": "40add4d63ef52ae25a7a370c2130148ed815436a68f4697d6200605c9238cee1",
+      "packed_bytes": 4706696,
+      "parameters": 8278400,
+      "packed_reload_max_abs_error": 0.0,
+      "cpu_matches_b200": 16,
+      "comparisons": [
+        {
+          "id": "greeting:2",
+          "matches": true,
+          "cpu": "Yeah, sure. What's up?",
+          "b200": "Yeah, sure. What's up?"
+        },
+        {
+          "id": "greeting:3",
+          "matches": true,
+          "cpu": "I love you too. What's your name?",
+          "b200": "I love you too. What's your name?"
+        },
+        {
+          "id": "greeting:4",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot.",
+          "b200": "I'm TinyTalk, a little chat bot."
+        },
+        {
+          "id": "identity:2",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "identity:3",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "identity:4",
+          "matches": true,
+          "cpu": "I'm TinyTalk, a little chat bot. What would you like to talk about?",
+          "b200": "I'm TinyTalk, a little chat bot. What would you like to talk about?"
+        },
+        {
+          "id": "hobby:2",
+          "matches": true,
+          "cpu": "That's a good idea. What are you thinking about?",
+          "b200": "That's a good idea. What are you thinking about?"
+        },
+        {
+          "id": "hobby:3",
+          "matches": true,
+          "cpu": "Well, let's see if you can try something new.",
+          "b200": "Well, let's see if you can try something new."
+        },
+        {
+          "id": "hobby:4",
+          "matches": true,
+          "cpu": "That sounds like a great idea! What kind of pencil are you looking for?",
+          "b200": "That sounds like a great idea! What kind of pencil are you looking for?"
+        },
+        {
+          "id": "mild_tiredness:2",
+          "matches": true,
+          "cpu": "Sure. What's on your mind?",
+          "b200": "Sure. What's on your mind?"
+        },
+        {
+          "id": "mild_tiredness:3",
+          "matches": true,
+          "cpu": "That sounds nice. Do you want to talk about it?",
+          "b200": "That sounds nice. Do you want to talk about it?"
+        },
+        {
+          "id": "mild_tiredness:4",
+          "matches": true,
+          "cpu": "That is a nice way to relax.",
+          "b200": "That is a nice way to relax."
+        },
+        {
+          "id": "boredom:2",
+          "matches": true,
+          "cpu": "That sounds really frustrating. What are you going to do?",
+          "b200": "That sounds really frustrating. What are you going to do?"
+        },
+        {
+          "id": "boredom:3",
+          "matches": true,
+          "cpu": "That sounds like a great idea. What are you thinking about?",
+          "b200": "That sounds like a great idea. What are you thinking about?"
+        },
+        {
+          "id": "boredom:4",
+          "matches": true,
+          "cpu": "Sure, what do you need?",
+          "b200": "Sure, what do you need?"
+        },
+        {
+          "id": "good_news:2",
+          "matches": true,
+          "cpu": "That's great! What are you going to do with it?",
+          "b200": "That's great! What are you going to do with it?"
+        }
+      ]
+    }
+  }
+}

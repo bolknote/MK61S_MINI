@@ -1,0 +1,51 @@
+{
+  "mode": "int8",
+  "suites": {
+    "fresh282": {
+      "total": 282,
+      "passed": 256,
+      "false_done": 0,
+      "model_errors": 0,
+      "valid": 281
+    },
+    "documented648": {
+      "total": 648,
+      "passed": 648,
+      "false_done": 0,
+      "model_errors": 0,
+      "valid": 648
+    },
+    "legacy98": {
+      "total": 98,
+      "passed": 69,
+      "false_done": 0,
+      "model_errors": 0,
+      "valid": 98
+    },
+    "user27": {
+      "total": 27,
+      "passed": 27,
+      "false_done": 0,
+      "model_errors": 0,
+      "valid": 27
+    },
+    "tools72": {
+      "total": 72,
+      "passed": 55,
+      "false_done": 17,
+      "model_errors": 0,
+      "valid": 72
+    },
+    "scratch48": {
+      "total": 48,
+      "passed": 46,
+      "false_done": 2,
+      "model_errors": 0,
+      "valid": 48
+    }
+  },
+  "total": 1175,
+  "duration_seconds": 283.7431795829907,
+  "pid": 76611,
+  "hidden_references_in_runtime": false
+}

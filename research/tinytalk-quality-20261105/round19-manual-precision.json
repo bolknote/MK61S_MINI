@@ -1,0 +1,65 @@
+{
+  "model_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+  "packed_sha256": "aa28dd907033795267fd81760fc85997c35589804d32574a703ac13e40ea8299",
+  "fp16_actual_cache_dtypes": [
+    "torch.float16"
+  ],
+  "fp32_actual_cache_dtypes": [
+    "torch.float32"
+  ],
+  "comparisons": [
+    {
+      "id": "manual:0:0",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:0:1",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:0:2",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:1:0",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:1:1",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:1:2",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:2:0",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:2:1",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:3:0",
+      "same_raw_tokens": true,
+      "same_reply": true
+    },
+    {
+      "id": "manual:3:1",
+      "same_raw_tokens": true,
+      "same_reply": true
+    }
+  ],
+  "matching_raw_token_sequences": 10,
+  "quality_goal_met": false,
+  "conclusion": "Observed manual failures persist in both cache precisions; no quality improvement established"
+}

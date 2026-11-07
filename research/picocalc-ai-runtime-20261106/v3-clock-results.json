@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "hardware": true,
+  "rows": [
+    {
+      "mhz": 200,
+      "status": "PASS",
+      "decode_seconds_per_token": 5.836687,
+      "control125_seconds_per_token": 9.3414575,
+      "speedup": 1.6004725797357302,
+      "stress_ms": 120000,
+      "stress_iterations": 180440,
+      "configured_vreg_mv": 1100,
+      "vreg_register": 4273,
+      "checksums_match": true,
+      "tokens_match": true,
+      "i2c_errors": 0,
+      "restored_hz": 125000000,
+      "receipt_sha256": "1bb70f7e905493ec770bde2a643ac3cc6fe04048717efecf250a71d50f218f18"
+    },
+    {
+      "mhz": 250,
+      "status": "PASS",
+      "decode_seconds_per_token": 4.65664,
+      "control125_seconds_per_token": 9.341884,
+      "speedup": 2.0061426264431006,
+      "stress_ms": 120000,
+      "stress_iterations": 223131,
+      "configured_vreg_mv": 1100,
+      "vreg_register": 4273,
+      "checksums_match": true,
+      "tokens_match": true,
+      "i2c_errors": 0,
+      "restored_hz": 125000000,
+      "receipt_sha256": "6bf7ba29c5f49d0d7ba9b0957b3186a6411eeb8b595a3aa5b317069d9d6f8038"
+    },
+    {
+      "mhz": 300,
+      "status": "FAIL_HARDFAULT_DURING_TRANSITION",
+      "decode_seconds_per_token": null,
+      "configured_vreg_mv": 1100,
+      "crash_report": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/oc-user-20261106/CRASH-300.txt",
+      "recovery": "hardware watchdog rebooted to125MHz",
+      "repeated": false
+    }
+  ],
+  "scope": "Flourish Q4/LUT_FP32,8192vocab,2cores,frozenLCD,SRAM kernel. Context2-4,4 target decode tokens per successful rate.120s stress is a short test of this board, not long-term reliability evidence.",
+  "comparison": "Each OC result uses its own125MHz control in the diagnostic image (Flash /6). Ordinary125MHz image uses Flash /2 and is a separate measurement.",
+  "after300": {
+    "action": "read-only after300HOLD",
+    "reset": false,
+    "status": [
+      "RESET_REASON=00010001 BOOTS=26 CRASH=AVAILABLE BUILD=F64DE93C",
+      "WATCHDOG=ON TIMEOUT_MS=8000 RELOADS=29702 MAX_GAP_MS=752 BOOT_WATCHDOG=1 PREVIOUS_VALID=1 PREVIOUS_RELOADS=81135 PREVIOUS_GAP_MS=2457",
+      "FIRMWARE_CRC=valid REQUIRED=1 IMAGE=1537048 FOOTER=917424 EXPECTED=A4F76302 ACTUAL=A4F76302 CHECK_US=1126744",
+      "PSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=58824 WRITE_BYTES=53516 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=274 WRITE_BATCHES=8079 TAIL_TIMEOUTS=0 TAIL_STATE=00000000",
+      "KBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0",
+      "SD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]",
+      "SERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]",
+      "POWER_MODE=SLEEP_USB SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0 SLEEP_CLOCK0=00200000 SLEEP_CLOCK1=00001C20",
+      "RUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=1",
+      "M61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]"
+    ],
+    "cdc_closed": true
+  }
+}

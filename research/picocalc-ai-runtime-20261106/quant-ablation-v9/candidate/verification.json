@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "profiles": [
+    {
+      "profile": 0,
+      "workspace": 20880,
+      "allocated_capacity": 20880,
+      "generations_match": 13
+    },
+    {
+      "profile": 1,
+      "workspace": 14736,
+      "allocated_capacity": 14736,
+      "generations_match": 13
+    },
+    {
+      "profile": 2,
+      "workspace": 15120,
+      "allocated_capacity": 15120,
+      "generations_match": 13
+    },
+    {
+      "profile": 17,
+      "workspace": 17168,
+      "allocated_capacity": 17168,
+      "generations_match": 13
+    },
+    {
+      "profile": 24,
+      "workspace": 15504,
+      "allocated_capacity": 15504,
+      "generations_match": 13
+    }
+  ],
+  "asan_ubsan_int64_kernel_rows": 48000,
+  "allocation_bounds_rejected": true,
+  "unsupported_rebind_rejected": true
+}

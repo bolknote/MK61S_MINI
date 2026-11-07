@@ -3,6 +3,7 @@
 #include "rust_types.h"
 #include "cosmic_clock.hpp"
 #include "psram_probe.hpp"
+#include "block_read.hpp"
 namespace picocalc::psram {
 constexpr u32 CAPACITY=8U*1024*1024;
 struct Statistics {
@@ -19,6 +20,11 @@ u32 diagnostic_clock_divider256(); // Read the actual PIO register.
 bool ready();
 void prepare_reset(); // Return retained powered RAM to SPI before ROM/old firmware.
 bool read(u32 address,void* bytes,unsigned count);
+// Optional zero-copy QPI/DMA read. Aligned 16-byte spans must concatenate into
+// one aligned SRAM destination, at most 2048 bytes. Refusal starts no DMA.
+// The calling core owns the bus/destination until read_finish() returns.
+bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count);
+bool read_finish();
 bool write(u32 address,const void* bytes,unsigned count);
 Statistics statistics();
 bool self_test(void (*service)()=nullptr);

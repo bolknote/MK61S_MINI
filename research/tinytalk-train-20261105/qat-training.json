@@ -1,0 +1,151 @@
+{
+  "model": "TheREZOR/TinyTalk",
+  "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+  "original_sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77",
+  "parameters": 8278400,
+  "settings": {
+    "mode": "train",
+    "model": "model",
+    "data": "data",
+    "teacher": null,
+    "output": "qat",
+    "candidate": null,
+    "report": "research/tinytalk-train-20261105/evaluation.json",
+    "device": "cuda",
+    "seed": 5927,
+    "steps": 500,
+    "batch_size": 16,
+    "grad_accum": 1,
+    "lr": 5e-05,
+    "context": 256,
+    "eval_every": 100,
+    "eval_batch_size": 8,
+    "limit": 0,
+    "qat": true
+  },
+  "device": "cuda",
+  "packages": {
+    "torch": "2.14.0+cu130",
+    "transformers": "5.19.0",
+    "safetensors": "0.8.0"
+  },
+  "data": {
+    "model": "TheREZOR/TinyTalk",
+    "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+    "teacher_counts": [
+      605,
+      121,
+      124
+    ],
+    "purpose": "Targeted English skill pilot; not a general intelligence benchmark",
+    "split_policy": "Disjoint context values within each category and question forms; addition pairs grouped before splitting; teacher topic groups preassigned",
+    "train": {
+      "rows": 2933,
+      "kinds": {
+        "context": 1272,
+        "teacher": 605,
+        "arithmetic": 1056
+      },
+      "sha256": "f716cd48f6502e3d88307295082397bd827a7fbfc9c912f28fda30a4f6fcb760"
+    },
+    "validation": {
+      "rows": 345,
+      "kinds": {
+        "context": 184,
+        "arithmetic": 40,
+        "teacher": 121
+      },
+      "sha256": "e21050167716dd598fad8b8fbfc59777be31046f6c397fc5659cc256d69bc31a"
+    },
+    "test": {
+      "rows": 357,
+      "kinds": {
+        "context": 184,
+        "teacher": 124,
+        "arithmetic": 49
+      },
+      "sha256": "e53e631ee051227ca776947fe6f1b74a63cefbb573aab45714c92c688320ef82"
+    }
+  },
+  "training_rows": 2933,
+  "skipped_training_rows": 0,
+  "optimizer_storage_floor_bytes": 132454400,
+  "test_used_for_training_or_selection": false,
+  "history": [
+    {
+      "mean_kind_nll": 2.415037436554156,
+      "by_kind_nll": {
+        "arithmetic": 1.6873770117759705,
+        "context": 0.7420586351247934,
+        "teacher": 4.815676662761703
+      },
+      "step": 100,
+      "seconds": 11.557955779018812,
+      "natural_language_guard_passed": true
+    },
+    {
+      "mean_kind_nll": 2.3420534820441223,
+      "by_kind_nll": {
+        "arithmetic": 1.3348331113656362,
+        "context": 0.7650533404717078,
+        "teacher": 4.926273994295022
+      },
+      "step": 200,
+      "seconds": 20.381175607966725,
+      "natural_language_guard_passed": true
+    },
+    {
+      "mean_kind_nll": 2.3387098008281395,
+      "by_kind_nll": {
+        "arithmetic": 1.388709839185079,
+        "context": 0.7010985777928279,
+        "teacher": 4.9263209855065115
+      },
+      "step": 300,
+      "seconds": 29.193770840996876,
+      "natural_language_guard_passed": true
+    },
+    {
+      "mean_kind_nll": 2.3535232919561095,
+      "by_kind_nll": {
+        "arithmetic": 1.2992977460225423,
+        "context": 0.7204742893805871,
+        "teacher": 5.040797840465199
+      },
+      "step": 400,
+      "seconds": 38.012741672981065,
+      "natural_language_guard_passed": true
+    },
+    {
+      "mean_kind_nll": 2.3827894753880114,
+      "by_kind_nll": {
+        "arithmetic": 1.3117357045412064,
+        "context": 0.7620325363599337,
+        "teacher": 5.074600185262894
+      },
+      "step": 500,
+      "seconds": 46.679888074984774,
+      "natural_language_guard_passed": true
+    }
+  ],
+  "gpu": {
+    "name": "NVIDIA B200",
+    "free_bytes_before_training": 23510712320,
+    "total_bytes": 191502876672,
+    "peak_allocated_bytes": 442813440,
+    "peak_reserved_bytes": 966787072
+  },
+  "baseline_validation": {
+    "mean_kind_nll": 5.119883015007188,
+    "by_kind_nll": {
+      "arithmetic": 6.251615142822265,
+      "context": 3.3746761145958533,
+      "teacher": 5.733357787603446
+    }
+  },
+  "best_step": 300,
+  "seconds": 46.77385638497071,
+  "original_unchanged": true,
+  "best_sha256": "7887c35f73d9334a63bfc48bdb7dfce298525d76e92399382f435f909b48b923",
+  "best_parameters": 8278400
+}

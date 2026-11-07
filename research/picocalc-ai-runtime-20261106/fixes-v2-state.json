@@ -1,0 +1,67 @@
+{
+  "objective": "Fix all six reviewed harness problems; user explicitly authorized all six, including hardware measurements.",
+  "status": "complete",
+  "completed_code": [
+    "dynamic generation budget and compact program prompts without solved algorithm example",
+    "105-byte writes and address patches; byte grammar filters greedy argmax inside Model.forward; UTF-8 text and bounded completion",
+    "prefix KV reuse via rewind, failed-candidate memory, cycle stop and rollback to best tested version",
+    "persistent monotonic task IDs, read-only menus preserve pause; manual tools resume without loading model; autosave drafts at token boundaries",
+    "register/stack assertions, preserve masks, four multi-stop key/input scenarios and hidden tests; M61SES1 read compatibility / M61SES2 writer",
+    "viewport-sized UI storage, zero-copy encoder, sized record buffers, heap allocation observer and on-device stack watermark",
+    "optional AI service v2 benchmark; AIBENCH.APP; F7 metrics export",
+    "native evaluator + declared 4 dev tasks and 20 held-out Russian tasks; plan/no-plan ablation support"
+  ],
+  "passed": [
+    "sanitized core tests including registers/preserve/scenarios",
+    "scripted-inference controller tests using real tokenizer + real emulator: >160-token 105-byte write, full-page patch, hidden tests, prefix reuse, cancellation and rollback",
+    "real-model smoke 2/2 cases (infrastructure only; held-out quality separate)",
+    "native UI including pause -> log -> settings -> resume manual tests without model",
+    "full Pico regression PASS on 318e9d647",
+    "HF rewind and argmax mask oracle PASS",
+    "20 conditions both arms: 6/20; all retained",
+    "10 physical-controller host guards PASS",
+    "real model + native diagnostic service36forward/max-session transaction/codec PASS on host RAM-backedFAT+PSRAM",
+    "full physical36-step benchmark, max-session codec, on-device SHA, early cancellation and installed launcher lifecycle PASS"
+  ],
+  "remaining": [],
+  "hardware": {
+    "port": "/dev/cu.usbmodem11301",
+    "uid": "E6657CD423721C35",
+    "state": "Full device validation PASS; B0CF78C9/96B1D0E2 idle/closed, own temporary directories removed, CDC closed/reaped, released to coordinator",
+    "current_build": "2483E8A7",
+    "picotool": "/private/tmp/mk61-spectrum-20261105/picotool-build/picotool",
+    "access": "/dev requires exec require_escalated; clock/status reads already auto-approved; no flash done yet",
+    "other_port": "/dev/cu.usbmodem2068336B47311 is the Classic F411; do not touch it"
+  },
+  "paths": {
+    "new_firmware_build": ".build/mk61ai/v2-native-build",
+    "new_firmware_output": ".build/mk61ai/v2b-native",
+    "model": ".build/mk61ai/sd/AI/MODEL.MKA",
+    "evaluator": ".build/mk61ai/eval-v2",
+    "tests_log": ".build/mk61ai/v2-sanitizers.log",
+    "ui_log": ".build/mk61ai/ui-test-v2.log",
+    "dev_reports": [
+      ".build/mk61ai/dev-default",
+      ".build/mk61ai/dev-role",
+      ".build/mk61ai/dev-system",
+      ".build/mk61ai/dev-v2-final"
+    ],
+    "bundle": ".build/mk61ai/bundle-v2.zip"
+  },
+  "constraints": [
+    "No model training or B200 job changes; read frozen checkpoints only.",
+    "No STM32 firmware, UART, pins or Spectrum changes; apps run in turn.",
+    "Do not spawn subagents unless explicitly requested.",
+    "Do not touch Git index or unrelated changes."
+  ],
+  "user_latest": "ничего сохранять не надо: no calculator/old firmware/data/settings/clock inventory, backup, or restoration. Leave working new firmware.",
+  "coordination": {
+    "thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+    "physical_io": "CLOSED; no more physical I/O by this task",
+    "next": "Prepare pinned image, manifest, SD path scope and finite controller; send for coordinator review. No user confirmation needed.",
+    "phase_sha256": "1d824fc164a3241e503c7f10581578b511cc9549cdf0076bef1c0986c6cc87c3",
+    "recovery_phase": ".build/mk61ai/hil-v2/msc-recovery-phase.json",
+    "finish_phase": ".build/mk61ai/hil-v2/finish-phase.json",
+    "candidate": "B0CF78C9/96B1D0E2"
+  }
+}

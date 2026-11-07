@@ -1,0 +1,17 @@
+{
+  "arm": "asm",
+  "working_context": 1024,
+  "parent_contract": "harness-ablation-v1/asm-best",
+  "harness_generation": "harness-debug-v3",
+  "done_gate": "all public cases executed on current revision and stopped; no expected answers",
+  "macros": {
+    "FF00": "raw FF",
+    "FF01kk": "constant kk",
+    "FF02ll": "label ll",
+    "FF03ll": "label address"
+  },
+  "oracle_free_feedback": true,
+  "model_done_is_claim_not_semantic_proof": true,
+  "independent_success_check_required_for_verified_status": true,
+  "automatic_completion_reliability_achieved": false
+}

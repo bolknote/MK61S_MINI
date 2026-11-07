@@ -1,0 +1,182 @@
+[
+  {
+    "mode": 0,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 243624,
+    "checksum": "7162D280",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 28394,
+    "checksum": "F71AA500",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 28295,
+    "checksum": "9B277780",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 28566,
+    "checksum": "67894A00",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 28290,
+    "checksum": "66401C80",
+    "correct": 1
+  },
+  {
+    "mode": 0,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 156192,
+    "checksum": "A14BEF00",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 28345,
+    "checksum": "22ACC180",
+    "correct": 1
+  },
+  {
+    "mode": 0,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 156213,
+    "checksum": "F4629400",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 128,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 28756,
+    "checksum": "206D6680",
+    "correct": 1
+  },
+  {
+    "mode": 0,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 470670,
+    "checksum": "C5B33900",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 79600,
+    "checksum": "E54E0B80",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 0,
+    "us": 78243,
+    "checksum": "893DDE00",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 79845,
+    "checksum": "BB82B080",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 78155,
+    "checksum": "861C8300",
+    "correct": 1
+  },
+  {
+    "mode": 0,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 1,
+    "us": 470563,
+    "checksum": "F30B5580",
+    "correct": 1
+  },
+  {
+    "mode": 2,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 78022,
+    "checksum": "0C4F2800",
+    "correct": 1
+  },
+  {
+    "mode": 0,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 470026,
+    "checksum": "DBE7FA80",
+    "correct": 1
+  },
+  {
+    "mode": 1,
+    "cols": 384,
+    "rows": 8,
+    "loops": 128,
+    "repeat": 2,
+    "us": 79600,
+    "checksum": "6BD5CD00",
+    "correct": 1
+  }
+]

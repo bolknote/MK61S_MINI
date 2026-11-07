@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "hardware_io": false,
+  "rebuilt_source": true,
+  "checked_kernel_rows": 48000,
+  "compact_backend_generations": 65,
+  "metrics": [],
+  "functional": false,
+  "backend_sha256": "037050715a5f22d1c2d26e2f175de2f50136e8ac233c9a9cc368509f3cb10e8f",
+  "candidate_sha256": "930737f1a8d06295e7dc5e31486338afed6b7d84d7b9b5abf93b0fcb029dd910"
+}

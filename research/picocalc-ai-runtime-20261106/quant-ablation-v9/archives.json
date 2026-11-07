@@ -1,0 +1,47 @@
+[
+  {
+    "path": "cases/documented648.jsonl.gz",
+    "uncompressed_sha256": "266185e302489db6b07d731e6988bd68b9cdd1f93df9e89b82ec074a370379f1",
+    "bytes": 4729050
+  },
+  {
+    "path": "cases/fresh-tool-seeds.jsonl.gz",
+    "uncompressed_sha256": "37d04fd088e8972b128207a49e4347e71f7ceef7f1ddcd9f1f71e6b6b5213de6",
+    "bytes": 17716
+  },
+  {
+    "path": "cases/fresh.jsonl.gz",
+    "uncompressed_sha256": "4c6a5ede2ddbec05493834b20ecb00c03ae6d69df6f78e172f8b92ac4dbf5e75",
+    "bytes": 2378379
+  },
+  {
+    "path": "cases/isa-audit.jsonl.gz",
+    "uncompressed_sha256": "57f5bc34bbd02fa43b2f790fbc64ecff9ecfc0992bde013f0fe7783fed5f9a40",
+    "bytes": 9108658
+  },
+  {
+    "path": "cases/legacy-development.jsonl.gz",
+    "uncompressed_sha256": "972deba8e4e31264e5aa6de3ff2caff0e42db8a2728b1198b1745af363f09f50",
+    "bytes": 726346
+  },
+  {
+    "path": "cases/observed-user-reproductions.jsonl.gz",
+    "uncompressed_sha256": "1971e5f289f3b12c78f3cb8ba6130f096ba0e58d2ac6d071003548faac290030",
+    "bytes": 210541
+  },
+  {
+    "path": "candidate/run-lut-fp32/results.jsonl.gz",
+    "uncompressed_sha256": "05a09aa4e8252145a3794c9efc7cbfc7f76f0f1326a1cd51f029fd3a92bee7d6",
+    "bytes": 2004955
+  },
+  {
+    "path": "candidate/run-int16/results.jsonl.gz",
+    "uncompressed_sha256": "05a09aa4e8252145a3794c9efc7cbfc7f76f0f1326a1cd51f029fd3a92bee7d6",
+    "bytes": 2004955
+  },
+  {
+    "path": "candidate/run-a16-head-fp32/results.jsonl.gz",
+    "uncompressed_sha256": "05a09aa4e8252145a3794c9efc7cbfc7f76f0f1326a1cd51f029fd3a92bee7d6",
+    "bytes": 2004955
+  }
+]

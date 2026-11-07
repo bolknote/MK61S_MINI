@@ -1,0 +1,4659 @@
+{
+  "model_sha256": "10cc23bd636c854569ec03f77030245c0700d8849d4e9fd73a4cbd370326885f",
+  "packed_sha256": "41b0428a8dc021d0ad4d21893ece25317d0995bd275b909ce71e9f2fec983d08",
+  "suite_sha256": "8a16e713d13195b631685c60f2506adf9b92bd453a5b7863b80c0303cce70495",
+  "compared": 100,
+  "identical_token_sequences": 100,
+  "all_match": true,
+  "native_runtime_measured": false,
+  "storage_precision": "FP16",
+  "attention_arithmetic": "host FP32",
+  "storage_checks": [
+    {
+      "batch": 8,
+      "context_tokens": 62,
+      "actual_bytes": 4063232,
+      "formula_bytes": 4063232
+    },
+    {
+      "batch": 8,
+      "context_tokens": 82,
+      "actual_bytes": 5373952,
+      "formula_bytes": 5373952
+    },
+    {
+      "batch": 8,
+      "context_tokens": 74,
+      "actual_bytes": 4849664,
+      "formula_bytes": 4849664
+    },
+    {
+      "batch": 8,
+      "context_tokens": 68,
+      "actual_bytes": 4456448,
+      "formula_bytes": 4456448
+    },
+    {
+      "batch": 8,
+      "context_tokens": 72,
+      "actual_bytes": 4718592,
+      "formula_bytes": 4718592
+    },
+    {
+      "batch": 8,
+      "context_tokens": 64,
+      "actual_bytes": 4194304,
+      "formula_bytes": 4194304
+    },
+    {
+      "batch": 8,
+      "context_tokens": 60,
+      "actual_bytes": 3932160,
+      "formula_bytes": 3932160
+    },
+    {
+      "batch": 8,
+      "context_tokens": 67,
+      "actual_bytes": 4390912,
+      "formula_bytes": 4390912
+    },
+    {
+      "batch": 8,
+      "context_tokens": 74,
+      "actual_bytes": 4849664,
+      "formula_bytes": 4849664
+    },
+    {
+      "batch": 8,
+      "context_tokens": 53,
+      "actual_bytes": 3473408,
+      "formula_bytes": 3473408
+    },
+    {
+      "batch": 8,
+      "context_tokens": 54,
+      "actual_bytes": 3538944,
+      "formula_bytes": 3538944
+    },
+    {
+      "batch": 8,
+      "context_tokens": 74,
+      "actual_bytes": 4849664,
+      "formula_bytes": 4849664
+    },
+    {
+      "batch": 4,
+      "context_tokens": 56,
+      "actual_bytes": 1835008,
+      "formula_bytes": 1835008
+    }
+  ],
+  "fp32_cache_replies": [
+    {
+      "id": "audit2:greeting:0",
+      "reply": "I am fine, thanks!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "greet"
+      ],
+      "raw_token_ids": [
+        220,
+        16385,
+        314,
+        712,
+        3425,
+        11,
+        4540,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:1",
+      "reply": "I do not like red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        587,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:2",
+      "reply": "Max is a good dog.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "correction"
+      ],
+      "raw_token_ids": [
+        220,
+        16401,
+        4726,
+        318,
+        257,
+        911,
+        3052,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:3",
+      "reply": "Warm tea feels very nice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        12812,
+        6905,
+        4628,
+        836,
+        3329,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:4",
+      "reply": "The sky is blue.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        383,
+        5654,
+        318,
+        3779,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:0",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:1",
+      "reply": "What is the name of your pet?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        1800,
+        318,
+        262,
+        1399,
+        286,
+        534,
+        3859,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:2",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:3",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:4",
+      "reply": "I am TinyTalk.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:2",
+      "reply": "Great! Did you like the sound of the rhymes?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 15,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        3544,
+        0,
+        6257,
+        345,
+        587,
+        262,
+        2039,
+        286,
+        262,
+        7238,
+        11916,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:4",
+      "reply": "Good plan. Try folding it later.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        4117,
+        1375,
+        13,
+        7478,
+        13698,
+        340,
+        1520,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:0-supplement0",
+      "reply": "You could make the pen white.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        910,
+        710,
+        782,
+        262,
+        2901,
+        2226,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:2-supplement0",
+      "reply": "Yes, you start with big blocks.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        3115,
+        11,
+        345,
+        912,
+        351,
+        1240,
+        5823,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:3-supplement0",
+      "reply": "Use less water.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        4954,
+        1311,
+        1608,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:0",
+      "reply": "Your ball is red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        2472,
+        318,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:1",
+      "reply": "I do not have a.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify",
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        257,
+        16400,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:3",
+      "reply": "You have two blue books.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        423,
+        730,
+        3779,
+        3510,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:0-supplement0",
+      "reply": "Your ball is red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        2472,
+        318,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:1-supplement0",
+      "reply": "You have not told me your cat's name.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        910,
+        423,
+        407,
+        1269,
+        502,
+        534,
+        3475,
+        338,
+        1399,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:0",
+      "reply": "That sounds delicious. Well done!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        4583,
+        8730,
+        13,
+        3556,
+        1703,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:1",
+      "reply": "Star is a lovely color.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        2727,
+        318,
+        257,
+        9322,
+        2911,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:2",
+      "reply": "That is a big win!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        257,
+        1240,
+        1542,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:3",
+      "reply": "That sounds delicious. Did she enjoy it?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        1290,
+        4583,
+        8730,
+        13,
+        6257,
+        669,
+        2707,
+        340,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:4",
+      "reply": "That is a great start!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        257,
+        1034,
+        912,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:1",
+      "reply": "I am sorry to hear that.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "negative"
+      ],
+      "raw_token_ids": [
+        220,
+        16392,
+        314,
+        712,
+        6371,
+        284,
+        3047,
+        326,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:3",
+      "reply": "I am sorry to hear that.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "negative"
+      ],
+      "raw_token_ids": [
+        220,
+        16392,
+        314,
+        712,
+        6371,
+        284,
+        3047,
+        326,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:0-supplement0",
+      "reply": "Your favorite color was the hat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        3644,
+        2911,
+        373,
+        262,
+        5729,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:1-supplement0",
+      "reply": "You dropped vanilla.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        4911,
+        10358,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:2-supplement0",
+      "reply": "No, you waited patiently.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        1365,
+        11,
+        345,
+        9072,
+        14846,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:0",
+      "reply": "Yes, clouds are fluffy and white.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        3115,
+        11,
+        9734,
+        389,
+        15109,
+        290,
+        2226,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:1",
+      "reply": "Do you prefer music or a quiet song?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        2052,
+        345,
+        4198,
+        2501,
+        393,
+        257,
+        5045,
+        3227,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:2",
+      "reply": "Did you enjoy the dog?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        6257,
+        345,
+        2707,
+        262,
+        3052,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:3",
+      "reply": "You are welcome. I am glad we could chat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "thanks"
+      ],
+      "raw_token_ids": [
+        220,
+        16387,
+        910,
+        389,
+        5842,
+        13,
+        314,
+        712,
+        7323,
+        356,
+        710,
+        6713,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:4",
+      "reply": "I do not have a body.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        257,
+        1710,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:0",
+      "reply": "Draw a cat wearing a hat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        9809,
+        257,
+        3475,
+        4951,
+        257,
+        5729,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:1",
+      "reply": "Try growing a bean in a small pot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        7478,
+        3603,
+        257,
+        12972,
+        287,
+        257,
+        1367,
+        1727,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:2",
+      "reply": "I do not have favorites.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        10977,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:3",
+      "reply": "That sounds delicious. Well done!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        4583,
+        8730,
+        13,
+        3556,
+        1703,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:4",
+      "reply": "You could make the umbrella bright red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        910,
+        710,
+        782,
+        262,
+        12772,
+        5132,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:0",
+      "reply": "ted the bird softly.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        1470,
+        262,
+        5472,
+        13010,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:1",
+      "reply": "Your favorite food is chocolate.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        3644,
+        1974,
+        318,
+        8138,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:2",
+      "reply": "Your car is blue.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1081,
+        318,
+        3779,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:3",
+      "reply": "You like Alice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        587,
+        9646,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:4",
+      "reply": "Your cat's name is Milo.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        338,
+        1399,
+        318,
+        14157,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:0",
+      "reply": "Red apples are sweet.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        2195,
+        12035,
+        389,
+        5143,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:1",
+      "reply": "Dogs can be lovely companions.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        11719,
+        460,
+        307,
+        9322,
+        11135,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:2",
+      "reply": "Yes, it flies higher than a kite.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        3115,
+        11,
+        340,
+        10619,
+        2322,
+        620,
+        257,
+        479,
+        578,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:3",
+      "reply": "Whiskers is a good name for a cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "correction"
+      ],
+      "raw_token_ids": [
+        220,
+        16401,
+        844,
+        1904,
+        364,
+        318,
+        257,
+        911,
+        1399,
+        329,
+        257,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:4",
+      "reply": "Sleep well, you earned it.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "tired"
+      ],
+      "raw_token_ids": [
+        220,
+        16393,
+        10544,
+        869,
+        11,
+        345,
+        6025,
+        340,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:0",
+      "reply": "I have no eyes or physical skin.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        423,
+        643,
+        2765,
+        393,
+        3245,
+        3776,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:1",
+      "reply": "Your dog is named Midnight.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        3401,
+        13307,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:2",
+      "reply": "Your banana is an apple.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        12882,
+        318,
+        281,
+        10475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:3",
+      "reply": "Your keys are on the wet floor.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        6553,
+        389,
+        319,
+        262,
+        7269,
+        3890,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:4",
+      "reply": "Your brother is growing well.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3602,
+        318,
+        3603,
+        869,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:0",
+      "reply": "Your cat's name is Snow.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        338,
+        1399,
+        318,
+        6393,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:1",
+      "reply": "You said banana.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        531,
+        12882,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:2",
+      "reply": "That is great news!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        1034,
+        1651,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:3",
+      "reply": "Yes, your dog is brown.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3115,
+        11,
+        534,
+        3052,
+        318,
+        6166,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:4",
+      "reply": "Rain is sunny and calm.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        7633,
+        318,
+        13261,
+        290,
+        7215,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:1",
+      "reply": "I guess it is a fruit.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        4216,
+        340,
+        318,
+        257,
+        6542,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:2",
+      "reply": "Is it a clock?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        1130,
+        340,
+        257,
+        6862,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:3",
+      "reply": "I say bat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        899,
+        6024,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:4",
+      "reply": "You are welcome!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "thanks"
+      ],
+      "raw_token_ids": [
+        220,
+        16387,
+        910,
+        389,
+        5842,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:0-supplement0",
+      "reply": "I say cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        899,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:0",
+      "reply": "I do not have feelings, but I am glad you enjoyed it.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 17,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        6213,
+        11,
+        475,
+        314,
+        712,
+        7323,
+        345,
+        6619,
+        340,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:1",
+      "reply": "Yes, it is often better when we are together.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        3115,
+        11,
+        340,
+        318,
+        1637,
+        1333,
+        617,
+        356,
+        389,
+        1900,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:2",
+      "reply": "I cannot bring any memories.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        2212,
+        2127,
+        596,
+        7409,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:3",
+      "reply": "Yes, if you want to find the word.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        3115,
+        11,
+        610,
+        345,
+        760,
+        284,
+        1048,
+        262,
+        1525,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:4",
+      "reply": "What is your favorite color to use?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "ask_question"
+      ],
+      "raw_token_ids": [
+        220,
+        16389,
+        1800,
+        318,
+        534,
+        3644,
+        2911,
+        284,
+        774,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:0",
+      "reply": "Goodbye! Have a good day.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        15753,
+        0,
+        6519,
+        257,
+        911,
+        1093,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:1",
+      "reply": "Bye! Enjoy your run.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        16136,
+        0,
+        10794,
+        534,
+        1042,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:2",
+      "reply": "Have a nice night.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        6519,
+        257,
+        3329,
+        1698,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:3",
+      "reply": "Talk soon and!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye",
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        8522,
+        2447,
+        290,
+        16388,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:4",
+      "reply": "Goodbye. Close your eyes.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        15753,
+        13,
+        9239,
+        534,
+        2765,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:0",
+      "reply": "Your name is Sam.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1399,
+        318,
+        3153,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:1",
+      "reply": "Yes, red apples are very healthy.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        3115,
+        11,
+        2165,
+        12035,
+        389,
+        836,
+        4735,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:2",
+      "reply": "Your dog is Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:3",
+      "reply": "What is the weather for?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        1800,
+        318,
+        262,
+        5257,
+        329,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:4",
+      "reply": "You have blue cats.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        423,
+        3779,
+        8394,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:0",
+      "reply": "Your cat is named Luna.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        318,
+        3401,
+        12351,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:1",
+      "reply": "Your dog is named Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        3401,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:2",
+      "reply": "Your hamster is named Speedy.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        6906,
+        1652,
+        318,
+        3401,
+        2401,
+        4210,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:3",
+      "reply": "Your fish is named Nemo.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        5061,
+        318,
+        3401,
+        12048,
+        78,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:4",
+      "reply": "Your turtle is named Shelly.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        13459,
+        318,
+        3401,
+        1343,
+        8807,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:0",
+      "reply": "Your name is Bananas.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1399,
+        318,
+        7618,
+        10045,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:1",
+      "reply": "Your dog is black.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        1960,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:2",
+      "reply": "You play tennis.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        707,
+        11542,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:3",
+      "reply": "Your cat is named Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        318,
+        3401,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:4",
+      "reply": "Do you want a red shirt?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        2052,
+        345,
+        760,
+        257,
+        2165,
+        7556,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:1",
+      "reply": "Let's take turns naming animals. I will start: cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 16,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        3570,
+        338,
+        997,
+        4380,
+        11092,
+        4192,
+        13,
+        314,
+        481,
+        912,
+        25,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:2",
+      "reply": "Let us try a new game.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        3570,
+        514,
+        1873,
+        257,
+        647,
+        970,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:4",
+      "reply": "Take the bus.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        5939,
+        262,
+        1293,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:0-supplement0",
+      "reply": "Check the road street street.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        5695,
+        262,
+        2786,
+        4175,
+        4175,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:1-supplement0",
+      "reply": "Salad is a great choice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        15547,
+        318,
+        257,
+        1034,
+        3287,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:0",
+      "reply": "Draw a simple house.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        9809,
+        257,
+        2659,
+        2066,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:1",
+      "reply": "Try making a chocolate chip cookie.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        7478,
+        1590,
+        257,
+        8138,
+        8265,
+        11237,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:3",
+      "reply": "Try learning a short simple tune.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        7478,
+        4173,
+        257,
+        1730,
+        2659,
+        9293,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:4",
+      "reply": "Try a short story.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        7478,
+        257,
+        1730,
+        1570,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:0-supplement0",
+      "reply": "Draw a cat with a round face.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        9809,
+        257,
+        3475,
+        351,
+        257,
+        2665,
+        1906,
+        13,
+        16384
+      ]
+    }
+  ],
+  "fp16_cache_replies": [
+    {
+      "id": "audit2:greeting:0",
+      "reply": "I am fine, thanks!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "greet"
+      ],
+      "raw_token_ids": [
+        220,
+        16385,
+        314,
+        712,
+        3425,
+        11,
+        4540,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:1",
+      "reply": "I do not like red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        587,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:2",
+      "reply": "Max is a good dog.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "correction"
+      ],
+      "raw_token_ids": [
+        220,
+        16401,
+        4726,
+        318,
+        257,
+        911,
+        3052,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:3",
+      "reply": "Warm tea feels very nice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        12812,
+        6905,
+        4628,
+        836,
+        3329,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:greeting:4",
+      "reply": "The sky is blue.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        383,
+        5654,
+        318,
+        3779,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:0",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:1",
+      "reply": "What is the name of your pet?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        1800,
+        318,
+        262,
+        1399,
+        286,
+        534,
+        3859,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:2",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:3",
+      "reply": "I am TinyTalk, a small friendly chat bot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        11,
+        257,
+        1367,
+        6430,
+        6713,
+        7594,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:identity:4",
+      "reply": "I am TinyTalk.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        712,
+        11458,
+        12811,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:2",
+      "reply": "Great! Did you like the sound of the rhymes?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 15,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        3544,
+        0,
+        6257,
+        345,
+        587,
+        262,
+        2039,
+        286,
+        262,
+        7238,
+        11916,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:4",
+      "reply": "Good plan. Try folding it later.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        4117,
+        1375,
+        13,
+        7478,
+        13698,
+        340,
+        1520,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:0-supplement0",
+      "reply": "You could make the pen white.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        910,
+        710,
+        782,
+        262,
+        2901,
+        2226,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:2-supplement0",
+      "reply": "Yes, you start with big blocks.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        3115,
+        11,
+        345,
+        912,
+        351,
+        1240,
+        5823,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:idea:3-supplement0",
+      "reply": "Use less water.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        4954,
+        1311,
+        1608,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:0",
+      "reply": "Your ball is red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        2472,
+        318,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:1",
+      "reply": "I do not have a.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify",
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        257,
+        16400,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:3",
+      "reply": "You have two blue books.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        423,
+        730,
+        3779,
+        3510,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:0-supplement0",
+      "reply": "Your ball is red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        2472,
+        318,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:ask:1-supplement0",
+      "reply": "You have not told me your cat's name.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        910,
+        423,
+        407,
+        1269,
+        502,
+        534,
+        3475,
+        338,
+        1399,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:0",
+      "reply": "That sounds delicious. Well done!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        4583,
+        8730,
+        13,
+        3556,
+        1703,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:1",
+      "reply": "Star is a lovely color.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        2727,
+        318,
+        257,
+        9322,
+        2911,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:2",
+      "reply": "That is a big win!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        257,
+        1240,
+        1542,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:3",
+      "reply": "That sounds delicious. Did she enjoy it?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        1290,
+        4583,
+        8730,
+        13,
+        6257,
+        669,
+        2707,
+        340,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:good_news:4",
+      "reply": "That is a great start!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        257,
+        1034,
+        912,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:1",
+      "reply": "I am sorry to hear that.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "negative"
+      ],
+      "raw_token_ids": [
+        220,
+        16392,
+        314,
+        712,
+        6371,
+        284,
+        3047,
+        326,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:3",
+      "reply": "I am sorry to hear that.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "negative"
+      ],
+      "raw_token_ids": [
+        220,
+        16392,
+        314,
+        712,
+        6371,
+        284,
+        3047,
+        326,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:0-supplement0",
+      "reply": "Your favorite color was the hat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        3644,
+        2911,
+        373,
+        262,
+        5729,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:1-supplement0",
+      "reply": "You dropped vanilla.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        4911,
+        10358,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bad_news:2-supplement0",
+      "reply": "No, you waited patiently.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        1365,
+        11,
+        345,
+        9072,
+        14846,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:0",
+      "reply": "Yes, clouds are fluffy and white.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        3115,
+        11,
+        9734,
+        389,
+        15109,
+        290,
+        2226,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:1",
+      "reply": "Do you prefer music or a quiet song?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        2052,
+        345,
+        4198,
+        2501,
+        393,
+        257,
+        5045,
+        3227,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:2",
+      "reply": "Did you enjoy the dog?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "sharing"
+      ],
+      "raw_token_ids": [
+        220,
+        16394,
+        6257,
+        345,
+        2707,
+        262,
+        3052,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:3",
+      "reply": "You are welcome. I am glad we could chat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "thanks"
+      ],
+      "raw_token_ids": [
+        220,
+        16387,
+        910,
+        389,
+        5842,
+        13,
+        314,
+        712,
+        7323,
+        356,
+        710,
+        6713,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:company:4",
+      "reply": "I do not have a body.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        257,
+        1710,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:0",
+      "reply": "Draw a cat wearing a hat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        9809,
+        257,
+        3475,
+        4951,
+        257,
+        5729,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:1",
+      "reply": "Try growing a bean in a small pot.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 12,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        7478,
+        3603,
+        257,
+        12972,
+        287,
+        257,
+        1367,
+        1727,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:2",
+      "reply": "I do not have favorites.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        10977,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:3",
+      "reply": "That sounds delicious. Well done!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        4583,
+        8730,
+        13,
+        3556,
+        1703,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:hobby:4",
+      "reply": "You could make the umbrella bright red.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        910,
+        710,
+        782,
+        262,
+        12772,
+        5132,
+        2165,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:0",
+      "reply": "ted the bird softly.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        1470,
+        262,
+        5472,
+        13010,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:1",
+      "reply": "Your favorite food is chocolate.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        3644,
+        1974,
+        318,
+        8138,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:2",
+      "reply": "Your car is blue.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1081,
+        318,
+        3779,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:3",
+      "reply": "You like Alice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        587,
+        9646,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:share:4",
+      "reply": "Your cat's name is Milo.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        338,
+        1399,
+        318,
+        14157,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:0",
+      "reply": "Red apples are sweet.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        2195,
+        12035,
+        389,
+        5143,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:1",
+      "reply": "Dogs can be lovely companions.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        11719,
+        460,
+        307,
+        9322,
+        11135,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:2",
+      "reply": "Yes, it flies higher than a kite.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        3115,
+        11,
+        340,
+        10619,
+        2322,
+        620,
+        257,
+        479,
+        578,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:3",
+      "reply": "Whiskers is a good name for a cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "correction"
+      ],
+      "raw_token_ids": [
+        220,
+        16401,
+        844,
+        1904,
+        364,
+        318,
+        257,
+        911,
+        1399,
+        329,
+        257,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:preference:4",
+      "reply": "Sleep well, you earned it.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "tired"
+      ],
+      "raw_token_ids": [
+        220,
+        16393,
+        10544,
+        869,
+        11,
+        345,
+        6025,
+        340,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:0",
+      "reply": "I have no eyes or physical skin.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        423,
+        643,
+        2765,
+        393,
+        3245,
+        3776,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:1",
+      "reply": "Your dog is named Midnight.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        3401,
+        13307,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:2",
+      "reply": "Your banana is an apple.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        12882,
+        318,
+        281,
+        10475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:3",
+      "reply": "Your keys are on the wet floor.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        6553,
+        389,
+        319,
+        262,
+        7269,
+        3890,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:clarify:4",
+      "reply": "Your brother is growing well.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3602,
+        318,
+        3603,
+        869,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:0",
+      "reply": "Your cat's name is Snow.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        338,
+        1399,
+        318,
+        6393,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:1",
+      "reply": "You said banana.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        531,
+        12882,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:2",
+      "reply": "That is great news!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "positive"
+      ],
+      "raw_token_ids": [
+        220,
+        16391,
+        1290,
+        318,
+        1034,
+        1651,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:3",
+      "reply": "Yes, your dog is brown.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3115,
+        11,
+        534,
+        3052,
+        318,
+        6166,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:one_question:4",
+      "reply": "Rain is sunny and calm.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        7633,
+        318,
+        13261,
+        290,
+        7215,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:1",
+      "reply": "I guess it is a fruit.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        4216,
+        340,
+        318,
+        257,
+        6542,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:2",
+      "reply": "Is it a clock?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        1130,
+        340,
+        257,
+        6862,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:3",
+      "reply": "I say bat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        899,
+        6024,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:4",
+      "reply": "You are welcome!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "thanks"
+      ],
+      "raw_token_ids": [
+        220,
+        16387,
+        910,
+        389,
+        5842,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:game:0-supplement0",
+      "reply": "I say cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "play"
+      ],
+      "raw_token_ids": [
+        220,
+        16397,
+        314,
+        899,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:0",
+      "reply": "I do not have feelings, but I am glad you enjoyed it.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 17,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        466,
+        407,
+        423,
+        6213,
+        11,
+        475,
+        314,
+        712,
+        7323,
+        345,
+        6619,
+        340,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:1",
+      "reply": "Yes, it is often better when we are together.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 14,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "chat"
+      ],
+      "raw_token_ids": [
+        220,
+        16404,
+        3115,
+        11,
+        340,
+        318,
+        1637,
+        1333,
+        617,
+        356,
+        389,
+        1900,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:2",
+      "reply": "I cannot bring any memories.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "identify"
+      ],
+      "raw_token_ids": [
+        220,
+        16386,
+        314,
+        2212,
+        2127,
+        596,
+        7409,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:3",
+      "reply": "Yes, if you want to find the word.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 13,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        3115,
+        11,
+        610,
+        345,
+        760,
+        284,
+        1048,
+        262,
+        1525,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:thanks:4",
+      "reply": "What is your favorite color to use?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "ask_question"
+      ],
+      "raw_token_ids": [
+        220,
+        16389,
+        1800,
+        318,
+        534,
+        3644,
+        2911,
+        284,
+        774,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:0",
+      "reply": "Goodbye! Have a good day.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        15753,
+        0,
+        6519,
+        257,
+        911,
+        1093,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:1",
+      "reply": "Bye! Enjoy your run.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        16136,
+        0,
+        10794,
+        534,
+        1042,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:2",
+      "reply": "Have a nice night.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        6519,
+        257,
+        3329,
+        1698,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:3",
+      "reply": "Talk soon and!",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye",
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        8522,
+        2447,
+        290,
+        16388,
+        0,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:bye:4",
+      "reply": "Goodbye. Close your eyes.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "goodbye"
+      ],
+      "raw_token_ids": [
+        220,
+        16388,
+        15753,
+        13,
+        9239,
+        534,
+        2765,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:0",
+      "reply": "Your name is Sam.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1399,
+        318,
+        3153,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:1",
+      "reply": "Yes, red apples are very healthy.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "preference"
+      ],
+      "raw_token_ids": [
+        220,
+        16395,
+        3115,
+        11,
+        2165,
+        12035,
+        389,
+        836,
+        4735,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:2",
+      "reply": "Your dog is Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:3",
+      "reply": "What is the weather for?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        1800,
+        318,
+        262,
+        5257,
+        329,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:name:4",
+      "reply": "You have blue cats.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        423,
+        3779,
+        8394,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:0",
+      "reply": "Your cat is named Luna.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        318,
+        3401,
+        12351,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:1",
+      "reply": "Your dog is named Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        3401,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:2",
+      "reply": "Your hamster is named Speedy.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        6906,
+        1652,
+        318,
+        3401,
+        2401,
+        4210,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:3",
+      "reply": "Your fish is named Nemo.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        5061,
+        318,
+        3401,
+        12048,
+        78,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:pet:4",
+      "reply": "Your turtle is named Shelly.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        13459,
+        318,
+        3401,
+        1343,
+        8807,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:0",
+      "reply": "Your name is Bananas.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        3150,
+        1399,
+        318,
+        7618,
+        10045,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:1",
+      "reply": "Your dog is black.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3052,
+        318,
+        1960,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:2",
+      "reply": "You play tennis.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_user"
+      ],
+      "raw_token_ids": [
+        220,
+        16399,
+        910,
+        707,
+        11542,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:3",
+      "reply": "Your cat is named Max.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "remember_other"
+      ],
+      "raw_token_ids": [
+        220,
+        16400,
+        3150,
+        3475,
+        318,
+        3401,
+        4726,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:correct:4",
+      "reply": "Do you want a red shirt?",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "clarify"
+      ],
+      "raw_token_ids": [
+        220,
+        16396,
+        2052,
+        345,
+        760,
+        257,
+        2165,
+        7556,
+        30,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:1",
+      "reply": "Let's take turns naming animals. I will start: cat.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 16,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        3570,
+        338,
+        997,
+        4380,
+        11092,
+        4192,
+        13,
+        314,
+        481,
+        912,
+        25,
+        3475,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:2",
+      "reply": "Let us try a new game.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        3570,
+        514,
+        1873,
+        257,
+        647,
+        970,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:4",
+      "reply": "Take the bus.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 7,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        5939,
+        262,
+        1293,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:0-supplement0",
+      "reply": "Check the road street street.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        5695,
+        262,
+        2786,
+        4175,
+        4175,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:reject:1-supplement0",
+      "reply": "Salad is a great choice.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 9,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "alternative"
+      ],
+      "raw_token_ids": [
+        220,
+        16403,
+        15547,
+        318,
+        257,
+        1034,
+        3287,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:0",
+      "reply": "Draw a simple house.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        9809,
+        257,
+        2659,
+        2066,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:1",
+      "reply": "Try making a chocolate chip cookie.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        7478,
+        1590,
+        257,
+        8138,
+        8265,
+        11237,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:3",
+      "reply": "Try learning a short simple tune.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 10,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        7478,
+        4173,
+        257,
+        1730,
+        2659,
+        9293,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:4",
+      "reply": "Try a short story.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 8,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "suggest"
+      ],
+      "raw_token_ids": [
+        220,
+        16390,
+        7478,
+        257,
+        1730,
+        1570,
+        13,
+        16384
+      ]
+    },
+    {
+      "id": "audit2:project:0-supplement0",
+      "reply": "Draw a cat with a round face.",
+      "ended_with_eos": true,
+      "bad": false,
+      "tokens": 11,
+      "omitted_context_pairs": 0,
+      "intent_tokens": [
+        "followup"
+      ],
+      "raw_token_ids": [
+        220,
+        16402,
+        9809,
+        257,
+        3475,
+        351,
+        257,
+        2665,
+        1906,
+        13,
+        16384
+      ]
+    }
+  ]
+}

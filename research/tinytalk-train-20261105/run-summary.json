@@ -1,0 +1,16 @@
+{
+  "source_files": {
+    "teacher.py": "3faa94477c9ab9066bf530185ee894886091f06f0f251a8ac55ca35b7409a17c",
+    "quantize.py": "d2e0485c5e22caa0921b7223a7243b3f3705f0d20d36a77dff308f15a1cfdd47",
+    "experiment.py": "8563258f81f2bf08380c6dff7fa41ff37377b5bfeac944c4c011e8b5e61e3b3c",
+    "run_remote.py": "8c945a8cd117dba1433331044d958ef1e5124b620c25af033e33ede3124b0c1a"
+  },
+  "runtime_status": "completed",
+  "qwen_after": {
+    "running": true,
+    "restart_count": 0,
+    "oom_killed": false,
+    "models_api_http_status": 200
+  },
+  "temporary_training_containers_after": 0
+}

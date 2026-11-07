@@ -1,0 +1,57 @@
+[
+  {
+    "path": "code/mk61_ai_model.hpp",
+    "before_sha256": "5b550b14fd14e00ffdb4f352a9b3bdd118e867736ec78759b3e092a1be063aa2",
+    "after_sha256": "c93a7b40ead8353a7e3ac0ad7ed986c709a02dfae8312ef80bdd1310b6889d3c"
+  },
+  {
+    "path": "code/mk61_ai_model.cpp",
+    "before_sha256": "394d9180cea7e26732fd90448a3f6808ab9559cecd902d9916afe94b3a220563",
+    "after_sha256": "1f0c18f62561e241e6a854d91f11ff3ec338be8b9259beb23be8d79778a8562f"
+  },
+  {
+    "path": "code/mk61_ai_linear.cpp",
+    "before_sha256": "3402960a7a5ac0a838fb5a92bc1d711cba8bf5efca326d1f686e76365db4f4aa",
+    "after_sha256": "62627b4106227b289a85b085dcc901be1385f59d3eafed73267e829e60fc7221"
+  },
+  {
+    "path": "code/mk61_ai_swar.hpp",
+    "before_sha256": null,
+    "after_sha256": "27a7ab76f0b678384c573e901f17404d9029a0096d1312a8369d6848bc48920e"
+  },
+  {
+    "path": "code/mk61_ai_perf.hpp",
+    "before_sha256": "62b5205a37b770f4e5add1002c6fe408ecd5d4cb2f0ad4c38f67157521214e9e",
+    "after_sha256": "514dd4dd623ca5e01d7536e0b2448e369b139b1f309d0b146490acb23b04bc9f"
+  },
+  {
+    "path": "tests/hil_mk61_ai_perf.py",
+    "before_sha256": "3ac18222f154ee4b3bfa97e93741bfe6a59e8b0e16f75d494e50328c395cbd1c",
+    "after_sha256": "e4c80a5937bd586a640f499a8fd8915bcf7ef697799c9196c00cd9d2baa89f75"
+  },
+  {
+    "path": "tests/mk61_ai_swar_self_test.cpp",
+    "before_sha256": null,
+    "after_sha256": "41357461cb8c7a0f35c95ce1be25f9dc9350340877ce2fa4f02179ffae2d5081"
+  },
+  {
+    "path": "tests/mk61_ai_swar_fixture.hpp",
+    "before_sha256": null,
+    "after_sha256": "325904a8d4a93ca35863c24eb7f17df1615b9d8e4e4cd460eed61637e07c63b5"
+  },
+  {
+    "path": "tests/mk61_ai_swar_model_test.cpp",
+    "before_sha256": null,
+    "after_sha256": "9c09cd4fba6f702bb6d6cabc94c2f4de2b03d6f42bf8a5d36787b3ad0dfacfe7"
+  },
+  {
+    "path": "tests/run_mk61_ai_swar_tests.sh",
+    "before_sha256": null,
+    "after_sha256": "d7650fc645041039cb5e916ede2732503603df12afc72027831f323e69282250"
+  },
+  {
+    "path": "tools/apps/mk61ai/repack_q4.py",
+    "before_sha256": null,
+    "after_sha256": "8783d280e4e132de451370fbd9799907aa5f7d4f2694802dcd2d5f22c46910a8"
+  }
+]

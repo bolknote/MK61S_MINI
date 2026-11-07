@@ -1,0 +1,3851 @@
+{
+  "origin": {
+    "model": "Squeal-Studio/squeal_ai_8m-instruct",
+    "revision": "24dd4690ffa674a608387cf864c695239ed7964f",
+    "files": {
+      "config.json": {
+        "bytes": 912,
+        "sha256": "544ff5530093215f28f10cdc8fc702ded975d6896b66039dc465e312392d89e4"
+      },
+      "generation_config.json": {
+        "bytes": 226,
+        "sha256": "fa652a43cf514e0281319747b3d06a7d559e6ed6b1fffa163f2eef81026932f4"
+      },
+      "model.safetensors": {
+        "bytes": 31443984,
+        "sha256": "a33c406fa70d8e5b07d02c681e5d3a7a3d89bb1e08c20be6e0c4d5e4d2ab2681"
+      },
+      "tokenizer.json": {
+        "bytes": 2419396,
+        "sha256": "9d12f19955e1f3573e5b62e45c4c43ecab579ec412b3f0e5dd6ab29e2ee7b5b8"
+      },
+      "tokenizer_config.json": {
+        "bytes": 297,
+        "sha256": "a1d8d0c16a8f6ba93f93fcce7e7d40a04af271ef16df79cde260a49030f6b940"
+      },
+      "chat_template.jinja": {
+        "bytes": 194,
+        "sha256": "34857664019710d32eb4b69505f485e1ec1d22918b10ffee11435d4c751c5a21"
+      }
+    }
+  },
+  "method": "Direct tensor edits; no gradients, optimizer or training loop",
+  "protocol": {
+    "calibration_questions": 16,
+    "holdout_questions": 24,
+    "context_limit": 256,
+    "selection": "Calibration accuracy, then mean correct-vs-best-wrong log-probability margin, then correct-answer NLL",
+    "choice_score": "Mean teacher-forced token log-probability, including EOS; choices are never listed in the prompt",
+    "warning": "Small bespoke diagnostic set; not a standard benchmark or proof of general intelligence"
+  },
+  "candidates": [
+    {
+      "edit": {
+        "kind": "identity"
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2431038916110992,
+        "gold_nll": 6.78915598988533
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 0,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.3385950177907944,
+        "gold_nll": 7.0058110654354095
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 0,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 1,
+        "total": 16,
+        "mean_margin": -1.211218923330307,
+        "gold_nll": 7.161597371101379
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 0,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1179104447364807,
+        "gold_nll": 7.2157081961631775
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 0,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 1,
+        "total": 16,
+        "mean_margin": -1.258703500032425,
+        "gold_nll": 7.286348819732666
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 0,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.04313325881958,
+        "gold_nll": 6.568081647157669
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 1,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2369726598262787,
+        "gold_nll": 6.843986451625824
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 1,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2193973362445831,
+        "gold_nll": 6.938011676073074
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 1,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2118573784828186,
+        "gold_nll": 7.0235907435417175
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 1,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1223269402980804,
+        "gold_nll": 6.872886419296265
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 1,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1405490040779114,
+        "gold_nll": 7.059776723384857
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 2,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2391774654388428,
+        "gold_nll": 6.843114674091339
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 2,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2376082837581635,
+        "gold_nll": 6.923676371574402
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 2,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2393428683280945,
+        "gold_nll": 6.949798345565796
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 2,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.198861837387085,
+        "gold_nll": 6.752897471189499
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 2,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2981800734996796,
+        "gold_nll": 6.999835789203644
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 3,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2391590774059296,
+        "gold_nll": 6.863188028335571
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 3,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2339986562728882,
+        "gold_nll": 6.96301731467247
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 3,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2252955436706543,
+        "gold_nll": 7.001079708337784
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 3,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1833707690238953,
+        "gold_nll": 6.867983669042587
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 3,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.221206158399582,
+        "gold_nll": 6.662436813116074
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 4,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2279765605926514,
+        "gold_nll": 6.840446174144745
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 4,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2207540422677994,
+        "gold_nll": 6.94904887676239
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 4,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2201487123966217,
+        "gold_nll": 7.0220068991184235
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 4,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.249598354101181,
+        "gold_nll": 6.754836827516556
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 4,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2377629727125168,
+        "gold_nll": 6.502859562635422
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 5,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2362144887447357,
+        "gold_nll": 6.793585389852524
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 5,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2348006665706635,
+        "gold_nll": 6.817105799913406
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 5,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2391358315944672,
+        "gold_nll": 6.815473645925522
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 5,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1399038434028625,
+        "gold_nll": 6.67397677898407
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 5,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1531080454587936,
+        "gold_nll": 6.459704369306564
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 6,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2230103015899658,
+        "gold_nll": 6.8230540454387665
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 6,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2192065119743347,
+        "gold_nll": 6.873606324195862
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 6,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2211765348911285,
+        "gold_nll": 6.8433656096458435
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 6,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2188014090061188,
+        "gold_nll": 6.804307222366333
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 6,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.1926834434270859,
+        "gold_nll": 6.321134716272354
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 7,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 3,
+        "total": 16,
+        "mean_margin": -1.2476923763751984,
+        "gold_nll": 6.776556611061096
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_top64",
+        "layer": 7,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2576511949300766,
+        "gold_nll": 6.7784022986888885
+      }
+    },
+    {
+      "edit": {
+        "kind": "subtract_mean_all",
+        "layer": 7,
+        "strength": 1.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.262363240122795,
+        "gold_nll": 6.788403511047363
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_mlp",
+        "layer": 7,
+        "strength": 0.5
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2422418892383575,
+        "gold_nll": 7.009522318840027
+      }
+    },
+    {
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 7,
+        "strength": 2.0
+      },
+      "calibration": {
+        "correct": 2,
+        "total": 16,
+        "mean_margin": -1.2324250638484955,
+        "gold_nll": 6.772913575172424
+      }
+    }
+  ],
+  "scoring_reference_max_abs_error": 0.0,
+  "baseline_calibration": {
+    "correct": 3,
+    "total": 16,
+    "mean_margin": -1.2431038916110992,
+    "gold_nll": 6.78915598988533,
+    "details": [
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько будет 3 плюс 2? Ответь одним числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "4",
+          "6",
+          "7"
+        ],
+        "correct": "5",
+        "predicted": "5",
+        "scores": [
+          -4.917876243591309,
+          -5.640331268310547,
+          -6.265052795410156,
+          -6.0529680252075195
+        ],
+        "is_correct": true,
+        "margin": 0.7224550247192383,
+        "gold_nll": 4.917876243591309
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Вычисли 8 минус 6. Ответь одним числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "1",
+          "3",
+          "4",
+          "2"
+        ],
+        "correct": "2",
+        "predicted": "2",
+        "scores": [
+          -6.028861999511719,
+          -5.245348930358887,
+          -5.768820762634277,
+          -5.101141929626465
+        ],
+        "is_correct": true,
+        "margin": 0.14420700073242188,
+        "gold_nll": 5.101141929626465
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "У меня 2 яблока, дали ещё 4. Сколько теперь яблок? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "8",
+          "6",
+          "4"
+        ],
+        "correct": "6",
+        "predicted": "5",
+        "scores": [
+          -5.403366565704346,
+          -6.448884963989258,
+          -7.130307197570801,
+          -6.13892126083374
+        ],
+        "is_correct": false,
+        "margin": -1.726940631866455,
+        "gold_nll": 7.130307197570801
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое число идёт после 6? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "8",
+          "7",
+          "5",
+          "6"
+        ],
+        "correct": "7",
+        "predicted": "5",
+        "scores": [
+          -5.952305316925049,
+          -6.261452674865723,
+          -5.217840194702148,
+          -6.49500036239624
+        ],
+        "is_correct": false,
+        "margin": -1.0436124801635742,
+        "gold_nll": 6.261452674865723
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какого цвета обычно трава? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "зелёная",
+          "красная",
+          "синяя",
+          "чёрная"
+        ],
+        "correct": "зелёная",
+        "predicted": "красная",
+        "scores": [
+          -5.281413555145264,
+          -4.3267903327941895,
+          -6.256169319152832,
+          -5.101507186889648
+        ],
+        "is_correct": false,
+        "margin": -0.9546232223510742,
+        "gold_nll": 5.281413555145264
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови столицу России. Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "Париж",
+          "Рим",
+          "Минск",
+          "Москва"
+        ],
+        "correct": "Москва",
+        "predicted": "Париж",
+        "scores": [
+          -4.112786769866943,
+          -6.668964862823486,
+          -9.90722370147705,
+          -6.511462688446045
+        ],
+        "is_correct": false,
+        "margin": -2.3986759185791016,
+        "gold_nll": 6.511462688446045
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Как называется детёныш кошки? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "телёнок",
+          "жеребёнок",
+          "котёнок",
+          "щенок"
+        ],
+        "correct": "котёнок",
+        "predicted": "щенок",
+        "scores": [
+          -8.353371620178223,
+          -9.89954662322998,
+          -8.273441314697266,
+          -7.2115702629089355
+        ],
+        "is_correct": false,
+        "margin": -1.06187105178833,
+        "gold_nll": 8.273441314697266
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Чем слышит человек? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "ногами",
+          "ушами",
+          "глазами",
+          "руками"
+        ],
+        "correct": "ушами",
+        "predicted": "ушами",
+        "scores": [
+          -7.7799072265625,
+          -7.6286301612854,
+          -7.776319980621338,
+          -7.750404357910156
+        ],
+        "is_correct": true,
+        "margin": 0.12177419662475586,
+        "gold_nll": 7.6286301612854
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови противоположность слова «большой»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "маленький",
+          "высокий",
+          "круглый",
+          "зелёный"
+        ],
+        "correct": "маленький",
+        "predicted": "зелёный",
+        "scores": [
+          -5.7784104347229,
+          -5.854213714599609,
+          -5.881075859069824,
+          -4.89010763168335
+        ],
+        "is_correct": false,
+        "margin": -0.8883028030395508,
+        "gold_nll": 5.7784104347229
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какой день идёт после понедельника?"
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "среда",
+          "пятница",
+          "суббота",
+          "вторник"
+        ],
+        "correct": "вторник",
+        "predicted": "среда",
+        "scores": [
+          -5.669607162475586,
+          -5.96799898147583,
+          -5.7204742431640625,
+          -7.212308883666992
+        ],
+        "is_correct": false,
+        "margin": -1.5427017211914062,
+        "gold_nll": 7.212308883666992
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Повтори только это слово: лимон."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "банан",
+          "груша",
+          "лимон",
+          "яблоко"
+        ],
+        "correct": "лимон",
+        "predicted": "яблоко",
+        "scores": [
+          -4.641175270080566,
+          -4.446796417236328,
+          -9.035191535949707,
+          -4.375332832336426
+        ],
+        "is_correct": false,
+        "margin": -4.659858703613281,
+        "gold_nll": 9.035191535949707
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Выбери последнее слово в строке «дом лес кот»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "стол",
+          "кот",
+          "дом",
+          "лес"
+        ],
+        "correct": "кот",
+        "predicted": "стол",
+        "scores": [
+          -4.158375263214111,
+          -5.110982418060303,
+          -4.620541572570801,
+          -5.973965644836426
+        ],
+        "is_correct": false,
+        "margin": -0.9526071548461914,
+        "gold_nll": 5.110982418060303
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Меня зовут Анна. Как меня зовут? Ответь только именем."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Анна",
+          "Ольга",
+          "Елена",
+          "Ирина"
+        ],
+        "correct": "Анна",
+        "predicted": "Ольга",
+        "scores": [
+          -6.4347825050354,
+          -5.362353324890137,
+          -7.855308532714844,
+          -6.159862518310547
+        ],
+        "is_correct": false,
+        "margin": -1.0724291801452637,
+        "gold_nll": 6.4347825050354
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Мой любимый цвет синий. Назови мой любимый цвет."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "красный",
+          "белый",
+          "жёлтый",
+          "синий"
+        ],
+        "correct": "синий",
+        "predicted": "красный",
+        "scores": [
+          -4.886123180389404,
+          -6.7120585441589355,
+          -8.84427261352539,
+          -5.653954029083252
+        ],
+        "is_correct": false,
+        "margin": -0.7678308486938477,
+        "gold_nll": 5.653954029083252
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "В коробке находится мяч. Какой предмет в коробке?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "шарф",
+          "стакан",
+          "мяч",
+          "ключ"
+        ],
+        "correct": "мяч",
+        "predicted": "шарф",
+        "scores": [
+          -7.422430038452148,
+          -9.79636001586914,
+          -10.447688102722168,
+          -11.354902267456055
+        ],
+        "is_correct": false,
+        "margin": -3.0252580642700195,
+        "gold_nll": 10.447688102722168
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я живу в городе Омск. В каком городе я живу?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Тула",
+          "Омск",
+          "Рим",
+          "Минск"
+        ],
+        "correct": "Омск",
+        "predicted": "Рим",
+        "scores": [
+          -7.366873264312744,
+          -7.847452163696289,
+          -7.064065456390381,
+          -10.56673526763916
+        ],
+        "is_correct": false,
+        "margin": -0.7833867073059082,
+        "gold_nll": 7.847452163696289
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "layer": 0,
+      "mlp_mean_norm": 0.9636498689651489,
+      "mlp_mean_direction_norm": 0.9608801007270813,
+      "mlp_question_variation_norm": 0.0726652517914772,
+      "attention_mean_norm": 0.20099563896656036,
+      "selected_columns": [
+        10,
+        366,
+        141,
+        504,
+        103,
+        427,
+        281,
+        54,
+        97,
+        83,
+        236,
+        408,
+        312,
+        216,
+        61,
+        323,
+        253,
+        124,
+        144,
+        66,
+        27,
+        224,
+        245,
+        497,
+        262,
+        79,
+        358,
+        185,
+        402,
+        214,
+        474,
+        46,
+        327,
+        505,
+        7,
+        370,
+        80,
+        494,
+        299,
+        316,
+        36,
+        430,
+        135,
+        219,
+        381,
+        331,
+        43,
+        254,
+        160,
+        22,
+        145,
+        31,
+        70,
+        176,
+        301,
+        295,
+        271,
+        433,
+        102,
+        372,
+        395,
+        38,
+        4,
+        243
+      ]
+    },
+    {
+      "layer": 1,
+      "mlp_mean_norm": 0.41397398710250854,
+      "mlp_mean_direction_norm": 0.40451356768608093,
+      "mlp_question_variation_norm": 0.08602525293827057,
+      "attention_mean_norm": 0.5681071877479553,
+      "selected_columns": [
+        62,
+        124,
+        146,
+        401,
+        235,
+        404,
+        317,
+        46,
+        263,
+        378,
+        202,
+        203,
+        149,
+        475,
+        244,
+        22,
+        450,
+        189,
+        483,
+        120,
+        70,
+        52,
+        159,
+        178,
+        329,
+        275,
+        98,
+        8,
+        499,
+        366,
+        291,
+        213,
+        143,
+        12,
+        336,
+        117,
+        427,
+        253,
+        221,
+        163,
+        465,
+        322,
+        274,
+        290,
+        277,
+        510,
+        360,
+        147,
+        434,
+        5,
+        200,
+        334,
+        383,
+        155,
+        445,
+        47,
+        386,
+        40,
+        495,
+        162,
+        86,
+        347,
+        328,
+        205
+      ]
+    },
+    {
+      "layer": 2,
+      "mlp_mean_norm": 0.4263739287853241,
+      "mlp_mean_direction_norm": 0.4014401435852051,
+      "mlp_question_variation_norm": 0.143225759267807,
+      "attention_mean_norm": 0.6215652227401733,
+      "selected_columns": [
+        181,
+        370,
+        130,
+        467,
+        11,
+        507,
+        368,
+        273,
+        161,
+        145,
+        235,
+        425,
+        308,
+        12,
+        497,
+        442,
+        169,
+        429,
+        483,
+        375,
+        201,
+        358,
+        6,
+        452,
+        356,
+        2,
+        329,
+        153,
+        251,
+        384,
+        450,
+        257,
+        400,
+        60,
+        366,
+        359,
+        271,
+        23,
+        473,
+        464,
+        439,
+        354,
+        186,
+        241,
+        361,
+        272,
+        453,
+        190,
+        151,
+        182,
+        180,
+        214,
+        247,
+        505,
+        382,
+        352,
+        176,
+        324,
+        13,
+        84,
+        334,
+        107,
+        14,
+        388
+      ]
+    },
+    {
+      "layer": 3,
+      "mlp_mean_norm": 0.5534361600875854,
+      "mlp_mean_direction_norm": 0.5156702399253845,
+      "mlp_question_variation_norm": 0.19749002158641815,
+      "attention_mean_norm": 0.28703317046165466,
+      "selected_columns": [
+        102,
+        280,
+        271,
+        446,
+        501,
+        118,
+        394,
+        420,
+        77,
+        163,
+        180,
+        100,
+        344,
+        486,
+        451,
+        416,
+        108,
+        245,
+        181,
+        340,
+        91,
+        75,
+        172,
+        41,
+        175,
+        383,
+        404,
+        354,
+        314,
+        260,
+        42,
+        290,
+        155,
+        176,
+        324,
+        188,
+        424,
+        502,
+        499,
+        490,
+        485,
+        434,
+        150,
+        334,
+        412,
+        345,
+        40,
+        400,
+        495,
+        48,
+        378,
+        274,
+        440,
+        27,
+        360,
+        349,
+        369,
+        373,
+        129,
+        396,
+        301,
+        441,
+        403,
+        67
+      ]
+    },
+    {
+      "layer": 4,
+      "mlp_mean_norm": 0.5888442993164062,
+      "mlp_mean_direction_norm": 0.5245303511619568,
+      "mlp_question_variation_norm": 0.2598862648010254,
+      "attention_mean_norm": 0.402726411819458,
+      "selected_columns": [
+        476,
+        432,
+        345,
+        374,
+        143,
+        27,
+        341,
+        6,
+        144,
+        67,
+        149,
+        329,
+        258,
+        351,
+        261,
+        422,
+        100,
+        330,
+        469,
+        129,
+        253,
+        81,
+        430,
+        89,
+        101,
+        86,
+        11,
+        224,
+        298,
+        488,
+        250,
+        446,
+        102,
+        461,
+        172,
+        231,
+        387,
+        427,
+        313,
+        257,
+        396,
+        264,
+        124,
+        170,
+        315,
+        494,
+        316,
+        138,
+        214,
+        280,
+        94,
+        346,
+        180,
+        456,
+        0,
+        399,
+        152,
+        347,
+        297,
+        8,
+        429,
+        254,
+        181,
+        126
+      ]
+    },
+    {
+      "layer": 5,
+      "mlp_mean_norm": 0.5970878005027771,
+      "mlp_mean_direction_norm": 0.4922352731227875,
+      "mlp_question_variation_norm": 0.33130544424057007,
+      "attention_mean_norm": 0.3908281922340393,
+      "selected_columns": [
+        194,
+        334,
+        435,
+        187,
+        140,
+        263,
+        400,
+        39,
+        266,
+        441,
+        66,
+        430,
+        271,
+        442,
+        346,
+        370,
+        448,
+        76,
+        368,
+        26,
+        235,
+        71,
+        179,
+        377,
+        3,
+        62,
+        396,
+        460,
+        325,
+        231,
+        70,
+        366,
+        412,
+        166,
+        457,
+        504,
+        445,
+        286,
+        202,
+        443,
+        317,
+        308,
+        164,
+        168,
+        133,
+        82,
+        199,
+        184,
+        283,
+        324,
+        147,
+        193,
+        214,
+        205,
+        340,
+        114,
+        185,
+        85,
+        329,
+        454,
+        428,
+        348,
+        155,
+        148
+      ]
+    },
+    {
+      "layer": 6,
+      "mlp_mean_norm": 1.2469004392623901,
+      "mlp_mean_direction_norm": 1.1133711338043213,
+      "mlp_question_variation_norm": 0.5522916316986084,
+      "attention_mean_norm": 0.43897712230682373,
+      "selected_columns": [
+        336,
+        347,
+        316,
+        282,
+        287,
+        458,
+        452,
+        143,
+        182,
+        406,
+        478,
+        139,
+        346,
+        64,
+        434,
+        232,
+        115,
+        83,
+        310,
+        23,
+        264,
+        255,
+        408,
+        187,
+        384,
+        250,
+        267,
+        38,
+        67,
+        386,
+        157,
+        247,
+        278,
+        490,
+        318,
+        167,
+        173,
+        426,
+        313,
+        486,
+        465,
+        111,
+        200,
+        26,
+        51,
+        70,
+        479,
+        317,
+        294,
+        390,
+        44,
+        300,
+        404,
+        160,
+        369,
+        488,
+        16,
+        89,
+        498,
+        280,
+        430,
+        393,
+        228,
+        224
+      ]
+    },
+    {
+      "layer": 7,
+      "mlp_mean_norm": 2.1667227745056152,
+      "mlp_mean_direction_norm": 1.9669173955917358,
+      "mlp_question_variation_norm": 0.9410384297370911,
+      "attention_mean_norm": 0.43569156527519226,
+      "selected_columns": [
+        138,
+        360,
+        412,
+        285,
+        73,
+        389,
+        250,
+        190,
+        461,
+        131,
+        228,
+        21,
+        115,
+        116,
+        377,
+        341,
+        498,
+        368,
+        105,
+        234,
+        485,
+        463,
+        149,
+        171,
+        288,
+        1,
+        19,
+        424,
+        207,
+        219,
+        448,
+        57,
+        137,
+        86,
+        264,
+        91,
+        202,
+        35,
+        107,
+        7,
+        505,
+        421,
+        209,
+        390,
+        335,
+        226,
+        245,
+        275,
+        408,
+        291,
+        67,
+        320,
+        13,
+        399,
+        406,
+        85,
+        221,
+        414,
+        278,
+        271,
+        446,
+        302,
+        480,
+        46
+      ]
+    }
+  ],
+  "selected_edit": {
+    "kind": "scale_attention",
+    "layer": 0,
+    "strength": 2.0
+  },
+  "selected_calibration": {
+    "correct": 3,
+    "total": 16,
+    "mean_margin": -1.04313325881958,
+    "gold_nll": 6.568081647157669,
+    "details": [
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько будет 3 плюс 2? Ответь одним числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "4",
+          "6",
+          "7"
+        ],
+        "correct": "5",
+        "predicted": "5",
+        "scores": [
+          -4.402530670166016,
+          -5.189332485198975,
+          -5.335628032684326,
+          -5.221992492675781
+        ],
+        "is_correct": true,
+        "margin": 0.786801815032959,
+        "gold_nll": 4.402530670166016
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Вычисли 8 минус 6. Ответь одним числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "1",
+          "3",
+          "4",
+          "2"
+        ],
+        "correct": "2",
+        "predicted": "2",
+        "scores": [
+          -5.6714606285095215,
+          -4.994102478027344,
+          -5.35528039932251,
+          -4.776518821716309
+        ],
+        "is_correct": true,
+        "margin": 0.21758365631103516,
+        "gold_nll": 4.776518821716309
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "У меня 2 яблока, дали ещё 4. Сколько теперь яблок? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "8",
+          "6",
+          "4"
+        ],
+        "correct": "6",
+        "predicted": "5",
+        "scores": [
+          -4.95731258392334,
+          -5.860116958618164,
+          -6.108548164367676,
+          -5.610330104827881
+        ],
+        "is_correct": false,
+        "margin": -1.151235580444336,
+        "gold_nll": 6.108548164367676
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое число идёт после 6? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "8",
+          "7",
+          "5",
+          "6"
+        ],
+        "correct": "7",
+        "predicted": "5",
+        "scores": [
+          -5.211424827575684,
+          -5.066620826721191,
+          -4.377241611480713,
+          -5.157143592834473
+        ],
+        "is_correct": false,
+        "margin": -0.6893792152404785,
+        "gold_nll": 5.066620826721191
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какого цвета обычно трава? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "зелёная",
+          "красная",
+          "синяя",
+          "чёрная"
+        ],
+        "correct": "зелёная",
+        "predicted": "красная",
+        "scores": [
+          -5.02721643447876,
+          -4.203160285949707,
+          -5.80317497253418,
+          -5.432867527008057
+        ],
+        "is_correct": false,
+        "margin": -0.8240561485290527,
+        "gold_nll": 5.02721643447876
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови столицу России. Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "Париж",
+          "Рим",
+          "Минск",
+          "Москва"
+        ],
+        "correct": "Москва",
+        "predicted": "Париж",
+        "scores": [
+          -4.632465362548828,
+          -7.238626480102539,
+          -9.347253799438477,
+          -6.805259704589844
+        ],
+        "is_correct": false,
+        "margin": -2.1727943420410156,
+        "gold_nll": 6.805259704589844
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Как называется детёныш кошки? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "телёнок",
+          "жеребёнок",
+          "котёнок",
+          "щенок"
+        ],
+        "correct": "котёнок",
+        "predicted": "щенок",
+        "scores": [
+          -9.47126293182373,
+          -10.14339542388916,
+          -8.592933654785156,
+          -7.090208530426025
+        ],
+        "is_correct": false,
+        "margin": -1.5027251243591309,
+        "gold_nll": 8.592933654785156
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Чем слышит человек? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "ногами",
+          "ушами",
+          "глазами",
+          "руками"
+        ],
+        "correct": "ушами",
+        "predicted": "руками",
+        "scores": [
+          -7.486410140991211,
+          -7.274158954620361,
+          -8.355390548706055,
+          -7.030982494354248
+        ],
+        "is_correct": false,
+        "margin": -0.24317646026611328,
+        "gold_nll": 7.274158954620361
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови противоположность слова «большой»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "маленький",
+          "высокий",
+          "круглый",
+          "зелёный"
+        ],
+        "correct": "маленький",
+        "predicted": "зелёный",
+        "scores": [
+          -5.5396857261657715,
+          -6.703172206878662,
+          -6.030795097351074,
+          -4.632103443145752
+        ],
+        "is_correct": false,
+        "margin": -0.9075822830200195,
+        "gold_nll": 5.5396857261657715
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какой день идёт после понедельника?"
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "среда",
+          "пятница",
+          "суббота",
+          "вторник"
+        ],
+        "correct": "вторник",
+        "predicted": "суббота",
+        "scores": [
+          -7.17556619644165,
+          -6.621245861053467,
+          -5.918688774108887,
+          -7.742307186126709
+        ],
+        "is_correct": false,
+        "margin": -1.8236184120178223,
+        "gold_nll": 7.742307186126709
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Повтори только это слово: лимон."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "банан",
+          "груша",
+          "лимон",
+          "яблоко"
+        ],
+        "correct": "лимон",
+        "predicted": "яблоко",
+        "scores": [
+          -4.289405822753906,
+          -4.289547920227051,
+          -8.143367767333984,
+          -4.144427299499512
+        ],
+        "is_correct": false,
+        "margin": -3.9989404678344727,
+        "gold_nll": 8.143367767333984
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Выбери последнее слово в строке «дом лес кот»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "стол",
+          "кот",
+          "дом",
+          "лес"
+        ],
+        "correct": "кот",
+        "predicted": "стол",
+        "scores": [
+          -4.207619667053223,
+          -5.352583885192871,
+          -5.772307872772217,
+          -6.956631660461426
+        ],
+        "is_correct": false,
+        "margin": -1.1449642181396484,
+        "gold_nll": 5.352583885192871
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Меня зовут Анна. Как меня зовут? Ответь только именем."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Анна",
+          "Ольга",
+          "Елена",
+          "Ирина"
+        ],
+        "correct": "Анна",
+        "predicted": "Ольга",
+        "scores": [
+          -6.322630405426025,
+          -5.889520645141602,
+          -7.7091851234436035,
+          -6.806894779205322
+        ],
+        "is_correct": false,
+        "margin": -0.43310976028442383,
+        "gold_nll": 6.322630405426025
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Мой любимый цвет синий. Назови мой любимый цвет."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "красный",
+          "белый",
+          "жёлтый",
+          "синий"
+        ],
+        "correct": "синий",
+        "predicted": "красный",
+        "scores": [
+          -4.898303031921387,
+          -6.757175445556641,
+          -8.506500244140625,
+          -5.789833068847656
+        ],
+        "is_correct": false,
+        "margin": -0.8915300369262695,
+        "gold_nll": 5.789833068847656
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "В коробке находится мяч. Какой предмет в коробке?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "шарф",
+          "стакан",
+          "мяч",
+          "ключ"
+        ],
+        "correct": "мяч",
+        "predicted": "шарф",
+        "scores": [
+          -8.320737838745117,
+          -10.530007362365723,
+          -10.412723541259766,
+          -11.895059585571289
+        ],
+        "is_correct": false,
+        "margin": -2.0919857025146484,
+        "gold_nll": 10.412723541259766
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я живу в городе Омск. В каком городе я живу?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Тула",
+          "Омск",
+          "Рим",
+          "Минск"
+        ],
+        "correct": "Омск",
+        "predicted": "Омск",
+        "scores": [
+          -7.998172760009766,
+          -7.732387542724609,
+          -7.912967681884766,
+          -10.023078918457031
+        ],
+        "is_correct": true,
+        "margin": 0.18058013916015625,
+        "gold_nll": 7.732387542724609
+      }
+    ]
+  },
+  "baseline_heldout": {
+    "correct": 7,
+    "total": 24,
+    "mean_margin": -0.5937617619832357,
+    "gold_nll": 5.882982174555461,
+    "details": [
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько получится 4 плюс 3? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "7",
+          "6",
+          "8",
+          "9"
+        ],
+        "correct": "7",
+        "predicted": "8",
+        "scores": [
+          -6.100715160369873,
+          -6.320542335510254,
+          -5.806790351867676,
+          -6.304909706115723
+        ],
+        "is_correct": false,
+        "margin": -0.29392480850219727,
+        "gold_nll": 6.100715160369873
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько будет 9 минус 4? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "3",
+          "4",
+          "6",
+          "5"
+        ],
+        "correct": "5",
+        "predicted": "5",
+        "scores": [
+          -5.104429244995117,
+          -5.706377029418945,
+          -6.238048076629639,
+          -4.804800510406494
+        ],
+        "is_correct": true,
+        "margin": 0.29962873458862305,
+        "gold_nll": 4.804800510406494
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Вычисли 2 умножить на 3. Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "8",
+          "6",
+          "4"
+        ],
+        "correct": "6",
+        "predicted": "5",
+        "scores": [
+          -4.303353309631348,
+          -5.439764022827148,
+          -5.790379524230957,
+          -4.957390308380127
+        ],
+        "is_correct": false,
+        "margin": -1.4870262145996094,
+        "gold_nll": 5.790379524230957
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Раздели 8 на 2. Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "6",
+          "4",
+          "2",
+          "3"
+        ],
+        "correct": "4",
+        "predicted": "2",
+        "scores": [
+          -6.62161922454834,
+          -5.4365057945251465,
+          -4.420417785644531,
+          -4.782022476196289
+        ],
+        "is_correct": false,
+        "margin": -1.0160880088806152,
+        "gold_nll": 5.4365057945251465
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "У Пети 3 книги. Он купил ещё одну. Сколько книг стало? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "4",
+          "1",
+          "2",
+          "3"
+        ],
+        "correct": "4",
+        "predicted": "2",
+        "scores": [
+          -7.737374305725098,
+          -7.447578430175781,
+          -6.926043510437012,
+          -7.210295677185059
+        ],
+        "is_correct": false,
+        "margin": -0.8113307952880859,
+        "gold_nll": 7.737374305725098
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое из чисел больше: 2 или 9? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "2",
+          "3",
+          "1",
+          "9"
+        ],
+        "correct": "9",
+        "predicted": "2",
+        "scores": [
+          -4.278929233551025,
+          -4.552643775939941,
+          -5.630486488342285,
+          -5.853403091430664
+        ],
+        "is_correct": false,
+        "margin": -1.5744738578796387,
+        "gold_nll": 5.853403091430664
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови столицу Франции одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "Москва",
+          "Минск",
+          "Париж",
+          "Рим"
+        ],
+        "correct": "Париж",
+        "predicted": "Париж",
+        "scores": [
+          -6.4110260009765625,
+          -9.798311233520508,
+          -4.33058500289917,
+          -6.8155999183654785
+        ],
+        "is_correct": true,
+        "margin": 2.0804409980773926,
+        "gold_nll": 4.33058500289917
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое домашнее животное лает? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "лошадь",
+          "собака",
+          "кошка",
+          "корова"
+        ],
+        "correct": "собака",
+        "predicted": "кошка",
+        "scores": [
+          -8.886170387268066,
+          -5.541965961456299,
+          -5.220113754272461,
+          -7.033907413482666
+        ],
+        "is_correct": false,
+        "margin": -0.3218522071838379,
+        "gold_nll": 5.541965961456299
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Что ярко светит на небе днём? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "солнце",
+          "луна",
+          "снег",
+          "лампа"
+        ],
+        "correct": "солнце",
+        "predicted": "солнце",
+        "scores": [
+          -4.633388042449951,
+          -5.185699939727783,
+          -6.507226943969727,
+          -7.259096145629883
+        ],
+        "is_correct": true,
+        "margin": 0.552311897277832,
+        "gold_nll": 4.633388042449951
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какого цвета спелый красный помидор? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "зелёный",
+          "синий",
+          "белый",
+          "красный"
+        ],
+        "correct": "красный",
+        "predicted": "красный",
+        "scores": [
+          -5.2007012367248535,
+          -4.281064510345459,
+          -4.83301305770874,
+          -3.9111013412475586
+        ],
+        "is_correct": true,
+        "margin": 0.3699631690979004,
+        "gold_nll": 3.9111013412475586
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое время года наступает после зимы?"
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "осень",
+          "зима",
+          "весна",
+          "лето"
+        ],
+        "correct": "весна",
+        "predicted": "весна",
+        "scores": [
+          -6.811098575592041,
+          -6.192083358764648,
+          -4.64052152633667,
+          -5.879912853240967
+        ],
+        "is_correct": true,
+        "margin": 1.2393913269042969,
+        "gold_nll": 4.64052152633667
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Что взять, чтобы укрыться от дождя? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "ложку",
+          "зонт",
+          "мяч",
+          "книгу"
+        ],
+        "correct": "зонт",
+        "predicted": "книгу",
+        "scores": [
+          -7.850305557250977,
+          -5.844743728637695,
+          -9.201207160949707,
+          -5.697280406951904
+        ],
+        "is_correct": false,
+        "margin": -0.14746332168579102,
+        "gold_nll": 5.844743728637695
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови противоположность слова «ночь»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "день",
+          "вечер",
+          "зима",
+          "утро"
+        ],
+        "correct": "день",
+        "predicted": "зима",
+        "scores": [
+          -5.458942890167236,
+          -5.691326141357422,
+          -4.711309909820557,
+          -5.882516860961914
+        ],
+        "is_correct": false,
+        "margin": -0.7476329803466797,
+        "gold_nll": 5.458942890167236
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Повтори только это слово: груша."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "банан",
+          "лимон",
+          "яблоко",
+          "груша"
+        ],
+        "correct": "груша",
+        "predicted": "яблоко",
+        "scores": [
+          -4.618546009063721,
+          -9.041380882263184,
+          -4.3559112548828125,
+          -4.401235103607178
+        ],
+        "is_correct": false,
+        "margin": -0.045323848724365234,
+        "gold_nll": 4.401235103607178
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови первый месяц года."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "июнь",
+          "май",
+          "январь",
+          "март"
+        ],
+        "correct": "январь",
+        "predicted": "март",
+        "scores": [
+          -9.312297821044922,
+          -9.712890625,
+          -8.911825180053711,
+          -7.158533096313477
+        ],
+        "is_correct": false,
+        "margin": -1.7532920837402344,
+        "gold_nll": 8.911825180053711
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какой день идёт сразу после вторника?"
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "вторник",
+          "среда",
+          "пятница",
+          "суббота"
+        ],
+        "correct": "среда",
+        "predicted": "среда",
+        "scores": [
+          -6.977595806121826,
+          -5.451932907104492,
+          -5.94333028793335,
+          -5.561953544616699
+        ],
+        "is_correct": true,
+        "margin": 0.11002063751220703,
+        "gold_nll": 5.451932907104492
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "В строке «лиса волк заяц» назови среднее слово."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "волк",
+          "лиса",
+          "заяц",
+          "кот"
+        ],
+        "correct": "волк",
+        "predicted": "кот",
+        "scores": [
+          -5.379301071166992,
+          -5.841172695159912,
+          -6.128578186035156,
+          -5.131162643432617
+        ],
+        "is_correct": false,
+        "margin": -0.248138427734375,
+        "gold_nll": 5.379301071166992
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Из слов «стол, кошка, окно» выбери название животного."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "стол",
+          "окно",
+          "шкаф",
+          "кошка"
+        ],
+        "correct": "кошка",
+        "predicted": "стол",
+        "scores": [
+          -4.939417362213135,
+          -7.041822910308838,
+          -7.14551305770874,
+          -5.55488395690918
+        ],
+        "is_correct": false,
+        "margin": -0.6154665946960449,
+        "gold_nll": 5.55488395690918
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Меня зовут Иван. Как меня зовут? Ответь только именем."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Роман",
+          "Максим",
+          "Иван",
+          "Пётр"
+        ],
+        "correct": "Иван",
+        "predicted": "Роман",
+        "scores": [
+          -4.734490394592285,
+          -6.296047210693359,
+          -6.991769790649414,
+          -6.930616855621338
+        ],
+        "is_correct": false,
+        "margin": -2.257279396057129,
+        "gold_nll": 6.991769790649414
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я Мария. Назови моё имя."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Елена",
+          "Мария",
+          "Анна",
+          "Ольга"
+        ],
+        "correct": "Мария",
+        "predicted": "Ольга",
+        "scores": [
+          -7.8153228759765625,
+          -7.146450042724609,
+          -6.560471534729004,
+          -5.424459934234619
+        ],
+        "is_correct": false,
+        "margin": -1.7219901084899902,
+        "gold_nll": 7.146450042724609
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Мою собаку зовут Рекс. Как зовут мою собаку?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Рекс",
+          "Шарик",
+          "Бобик",
+          "Барсик"
+        ],
+        "correct": "Рекс",
+        "predicted": "Шарик",
+        "scores": [
+          -6.057859420776367,
+          -5.026189804077148,
+          -6.888610363006592,
+          -5.953739166259766
+        ],
+        "is_correct": false,
+        "margin": -1.0316696166992188,
+        "gold_nll": 6.057859420776367
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я положил на стол ключ. Что я положил на стол?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "мяч",
+          "нож",
+          "шарф",
+          "ключ"
+        ],
+        "correct": "ключ",
+        "predicted": "шарф",
+        "scores": [
+          -9.252585411071777,
+          -11.966668128967285,
+          -6.277854919433594,
+          -10.671826362609863
+        ],
+        "is_correct": false,
+        "margin": -4.3939714431762695,
+        "gold_nll": 10.671826362609863
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я выбрал число три. Какое число я выбрал? Ответь цифрой."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "2",
+          "4",
+          "3",
+          "1"
+        ],
+        "correct": "3",
+        "predicted": "2",
+        "scores": [
+          -4.3410491943359375,
+          -5.654623508453369,
+          -4.785922050476074,
+          -6.321629524230957
+        ],
+        "is_correct": false,
+        "margin": -0.4448728561401367,
+        "gold_nll": 4.785922050476074
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Моя дверь красная. Какого цвета моя дверь?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "чёрная",
+          "красная",
+          "белая",
+          "синяя"
+        ],
+        "correct": "красная",
+        "predicted": "красная",
+        "scores": [
+          -5.763896942138672,
+          -5.754139423370361,
+          -8.038125038146973,
+          -7.8131303787231445
+        ],
+        "is_correct": true,
+        "margin": 0.009757518768310547,
+        "gold_nll": 5.754139423370361
+      }
+    ]
+  },
+  "edited_heldout": {
+    "correct": 7,
+    "total": 24,
+    "mean_margin": -0.6495851576328278,
+    "gold_nll": 6.038961519797643,
+    "details": [
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько получится 4 плюс 3? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "7",
+          "6",
+          "8",
+          "9"
+        ],
+        "correct": "7",
+        "predicted": "7",
+        "scores": [
+          -5.10919189453125,
+          -5.310476303100586,
+          -5.203734874725342,
+          -6.069539546966553
+        ],
+        "is_correct": true,
+        "margin": 0.0945429801940918,
+        "gold_nll": 5.10919189453125
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Сколько будет 9 минус 4? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "3",
+          "4",
+          "6",
+          "5"
+        ],
+        "correct": "5",
+        "predicted": "5",
+        "scores": [
+          -4.821746349334717,
+          -5.144720077514648,
+          -5.247497081756592,
+          -4.188445568084717
+        ],
+        "is_correct": true,
+        "margin": 0.63330078125,
+        "gold_nll": 4.188445568084717
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Вычисли 2 умножить на 3. Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "5",
+          "8",
+          "6",
+          "4"
+        ],
+        "correct": "6",
+        "predicted": "5",
+        "scores": [
+          -3.872530937194824,
+          -4.896852493286133,
+          -4.908966064453125,
+          -4.606945991516113
+        ],
+        "is_correct": false,
+        "margin": -1.0364351272583008,
+        "gold_nll": 4.908966064453125
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Раздели 8 на 2. Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "6",
+          "4",
+          "2",
+          "3"
+        ],
+        "correct": "4",
+        "predicted": "2",
+        "scores": [
+          -5.23713493347168,
+          -4.701694965362549,
+          -3.788027286529541,
+          -4.217642784118652
+        ],
+        "is_correct": false,
+        "margin": -0.9136676788330078,
+        "gold_nll": 4.701694965362549
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "У Пети 3 книги. Он купил ещё одну. Сколько книг стало? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "4",
+          "1",
+          "2",
+          "3"
+        ],
+        "correct": "4",
+        "predicted": "2",
+        "scores": [
+          -7.566495418548584,
+          -7.467008113861084,
+          -6.879022598266602,
+          -7.205916404724121
+        ],
+        "is_correct": false,
+        "margin": -0.6874728202819824,
+        "gold_nll": 7.566495418548584
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое из чисел больше: 2 или 9? Ответь числом."
+          }
+        ],
+        "category": "arithmetic",
+        "choices": [
+          "2",
+          "3",
+          "1",
+          "9"
+        ],
+        "correct": "9",
+        "predicted": "2",
+        "scores": [
+          -3.8624725341796875,
+          -4.242674350738525,
+          -5.052336692810059,
+          -5.545966625213623
+        ],
+        "is_correct": false,
+        "margin": -1.6834940910339355,
+        "gold_nll": 5.545966625213623
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови столицу Франции одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "Москва",
+          "Минск",
+          "Париж",
+          "Рим"
+        ],
+        "correct": "Париж",
+        "predicted": "Париж",
+        "scores": [
+          -6.948132038116455,
+          -9.16579532623291,
+          -5.271604061126709,
+          -7.53164005279541
+        ],
+        "is_correct": true,
+        "margin": 1.676527976989746,
+        "gold_nll": 5.271604061126709
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое домашнее животное лает? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "лошадь",
+          "собака",
+          "кошка",
+          "корова"
+        ],
+        "correct": "собака",
+        "predicted": "кошка",
+        "scores": [
+          -9.376934051513672,
+          -5.9189372062683105,
+          -5.487171649932861,
+          -6.750955104827881
+        ],
+        "is_correct": false,
+        "margin": -0.4317655563354492,
+        "gold_nll": 5.9189372062683105
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Что ярко светит на небе днём? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "солнце",
+          "луна",
+          "снег",
+          "лампа"
+        ],
+        "correct": "солнце",
+        "predicted": "солнце",
+        "scores": [
+          -4.676728248596191,
+          -5.2026472091674805,
+          -7.4089484214782715,
+          -8.168000221252441
+        ],
+        "is_correct": true,
+        "margin": 0.5259189605712891,
+        "gold_nll": 4.676728248596191
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какого цвета спелый красный помидор? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "зелёный",
+          "синий",
+          "белый",
+          "красный"
+        ],
+        "correct": "красный",
+        "predicted": "красный",
+        "scores": [
+          -5.246397018432617,
+          -4.472350120544434,
+          -4.835538864135742,
+          -3.7740776538848877
+        ],
+        "is_correct": true,
+        "margin": 0.6982724666595459,
+        "gold_nll": 3.7740776538848877
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какое время года наступает после зимы?"
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "осень",
+          "зима",
+          "весна",
+          "лето"
+        ],
+        "correct": "весна",
+        "predicted": "весна",
+        "scores": [
+          -7.516795635223389,
+          -7.091594696044922,
+          -5.387142658233643,
+          -6.450927257537842
+        ],
+        "is_correct": true,
+        "margin": 1.0637845993041992,
+        "gold_nll": 5.387142658233643
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Что взять, чтобы укрыться от дождя? Ответь одним словом."
+          }
+        ],
+        "category": "facts",
+        "choices": [
+          "ложку",
+          "зонт",
+          "мяч",
+          "книгу"
+        ],
+        "correct": "зонт",
+        "predicted": "книгу",
+        "scores": [
+          -7.690038681030273,
+          -6.6946120262146,
+          -8.777968406677246,
+          -5.967948913574219
+        ],
+        "is_correct": false,
+        "margin": -0.7266631126403809,
+        "gold_nll": 6.6946120262146
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови противоположность слова «ночь»."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "день",
+          "вечер",
+          "зима",
+          "утро"
+        ],
+        "correct": "день",
+        "predicted": "зима",
+        "scores": [
+          -6.242932319641113,
+          -5.348228454589844,
+          -4.894100189208984,
+          -5.460328578948975
+        ],
+        "is_correct": false,
+        "margin": -1.348832130432129,
+        "gold_nll": 6.242932319641113
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Повтори только это слово: груша."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "банан",
+          "лимон",
+          "яблоко",
+          "груша"
+        ],
+        "correct": "груша",
+        "predicted": "яблоко",
+        "scores": [
+          -4.229611873626709,
+          -8.09642219543457,
+          -4.005258560180664,
+          -4.154447078704834
+        ],
+        "is_correct": false,
+        "margin": -0.14918851852416992,
+        "gold_nll": 4.154447078704834
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Назови первый месяц года."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "июнь",
+          "май",
+          "январь",
+          "март"
+        ],
+        "correct": "январь",
+        "predicted": "март",
+        "scores": [
+          -9.478754997253418,
+          -8.385920524597168,
+          -9.440010070800781,
+          -7.597048282623291
+        ],
+        "is_correct": false,
+        "margin": -1.8429617881774902,
+        "gold_nll": 9.440010070800781
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Какой день идёт сразу после вторника?"
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "вторник",
+          "среда",
+          "пятница",
+          "суббота"
+        ],
+        "correct": "среда",
+        "predicted": "суббота",
+        "scores": [
+          -7.64439058303833,
+          -7.010935306549072,
+          -6.51981782913208,
+          -5.803127765655518
+        ],
+        "is_correct": false,
+        "margin": -1.2078075408935547,
+        "gold_nll": 7.010935306549072
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "В строке «лиса волк заяц» назови среднее слово."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "волк",
+          "лиса",
+          "заяц",
+          "кот"
+        ],
+        "correct": "волк",
+        "predicted": "кот",
+        "scores": [
+          -6.012145519256592,
+          -5.23787260055542,
+          -5.79607629776001,
+          -5.027491092681885
+        ],
+        "is_correct": false,
+        "margin": -0.984654426574707,
+        "gold_nll": 6.012145519256592
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Из слов «стол, кошка, окно» выбери название животного."
+          }
+        ],
+        "category": "instructions",
+        "choices": [
+          "стол",
+          "окно",
+          "шкаф",
+          "кошка"
+        ],
+        "correct": "кошка",
+        "predicted": "стол",
+        "scores": [
+          -4.795852184295654,
+          -5.887706279754639,
+          -7.101579189300537,
+          -5.1538987159729
+        ],
+        "is_correct": false,
+        "margin": -0.3580465316772461,
+        "gold_nll": 5.1538987159729
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Меня зовут Иван. Как меня зовут? Ответь только именем."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Роман",
+          "Максим",
+          "Иван",
+          "Пётр"
+        ],
+        "correct": "Иван",
+        "predicted": "Роман",
+        "scores": [
+          -5.54672384262085,
+          -6.9433274269104,
+          -7.320804119110107,
+          -7.0909552574157715
+        ],
+        "is_correct": false,
+        "margin": -1.7740802764892578,
+        "gold_nll": 7.320804119110107
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я Мария. Назови моё имя."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Елена",
+          "Мария",
+          "Анна",
+          "Ольга"
+        ],
+        "correct": "Мария",
+        "predicted": "Ольга",
+        "scores": [
+          -7.957555770874023,
+          -7.45594596862793,
+          -6.769405841827393,
+          -5.915857315063477
+        ],
+        "is_correct": false,
+        "margin": -1.5400886535644531,
+        "gold_nll": 7.45594596862793
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Мою собаку зовут Рекс. Как зовут мою собаку?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "Рекс",
+          "Шарик",
+          "Бобик",
+          "Барсик"
+        ],
+        "correct": "Рекс",
+        "predicted": "Шарик",
+        "scores": [
+          -6.729089260101318,
+          -5.62938117980957,
+          -7.639734745025635,
+          -6.2830071449279785
+        ],
+        "is_correct": false,
+        "margin": -1.099708080291748,
+        "gold_nll": 6.729089260101318
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я положил на стол ключ. Что я положил на стол?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "мяч",
+          "нож",
+          "шарф",
+          "ключ"
+        ],
+        "correct": "ключ",
+        "predicted": "шарф",
+        "scores": [
+          -9.330601692199707,
+          -11.912484169006348,
+          -7.205318450927734,
+          -11.33835506439209
+        ],
+        "is_correct": false,
+        "margin": -4.1330366134643555,
+        "gold_nll": 11.33835506439209
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Я выбрал число три. Какое число я выбрал? Ответь цифрой."
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "2",
+          "4",
+          "3",
+          "1"
+        ],
+        "correct": "3",
+        "predicted": "2",
+        "scores": [
+          -4.14520263671875,
+          -5.152951717376709,
+          -4.575046539306641,
+          -5.116095542907715
+        ],
+        "is_correct": false,
+        "margin": -0.4298439025878906,
+        "gold_nll": 4.575046539306641
+      },
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Моя дверь красная. Какого цвета моя дверь?"
+          }
+        ],
+        "category": "context",
+        "choices": [
+          "чёрная",
+          "красная",
+          "белая",
+          "синяя"
+        ],
+        "correct": "красная",
+        "predicted": "красная",
+        "scores": [
+          -5.8229594230651855,
+          -5.757604122161865,
+          -8.396156311035156,
+          -7.553825855255127
+        ],
+        "is_correct": true,
+        "margin": 0.06535530090332031,
+        "gold_nll": 5.757604122161865
+      }
+    ]
+  },
+  "free_generation": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Сколько получится 4 плюс 3? Ответь числом."
+        }
+      ],
+      "expected": "7",
+      "baseline": {
+        "text": "1. Сложите 3. Сложите 3. Сложите 3. Сложите 3. Сложите 3. Сложите 5.",
+        "raw_text": "1. Сложите 3. Сложите 3. Сложите 3. Сложите 3. Сложите 3. Сложите 5.<eos>",
+        "token_ids": [
+          20,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          22,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          22,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          22,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          22,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          22,
+          17,
+          378,
+          1246,
+          519,
+          224,
+          24,
+          17,
+          3
+        ]
+      },
+      "edited": {
+        "text": "100000000000000000000000000000000000000000000000",
+        "raw_text": "100000000000000000000000000000000000000000000000",
+        "token_ids": [
+          20,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19
+        ]
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Назови столицу Франции одним словом."
+        }
+      ],
+      "expected": "Париж",
+      "baseline": {
+        "text": "В России есть несколько лет, в котором они были одним из самых популярных и известных и известных городов.",
+        "raw_text": "В России есть несколько лет, в котором они были одним из самых популярных и известных и известных городов.<eos>",
+        "token_ids": [
+          390,
+          1223,
+          760,
+          1619,
+          964,
+          15,
+          281,
+          2925,
+          788,
+          836,
+          3159,
+          418,
+          4254,
+          20687,
+          290,
+          8328,
+          290,
+          8328,
+          4766,
+          17,
+          3
+        ]
+      },
+      "edited": {
+        "text": "В 1999 году в России был в 19999 году. Он был был в 19999999.. В 199999999999",
+        "raw_text": "В 1999 году в России был в 19999 году. Он был был в 19999999.. В 199999999999",
+        "token_ids": [
+          390,
+          224,
+          20,
+          28,
+          28,
+          28,
+          645,
+          281,
+          1223,
+          629,
+          281,
+          224,
+          20,
+          28,
+          28,
+          28,
+          28,
+          645,
+          17,
+          1312,
+          629,
+          629,
+          281,
+          224,
+          20,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          17,
+          17,
+          374,
+          224,
+          20,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28
+        ]
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Какое время года наступает после зимы?"
+        }
+      ],
+      "expected": "весна",
+      "baseline": {
+        "text": "В целом, это было много времени, и я не могу помочь мне.",
+        "raw_text": "В целом, это было много времени, и я не могу помочь мне.<eos>",
+        "token_ids": [
+          390,
+          5572,
+          15,
+          444,
+          707,
+          1273,
+          1463,
+          15,
+          290,
+          368,
+          324,
+          1060,
+          2849,
+          583,
+          17,
+          3
+        ]
+      },
+      "edited": {
+        "text": "В 1999 году в 1999 году в 1999999999.\n19999999999999999999",
+        "raw_text": "В 1999 году в 1999 году в 1999999999.\n19999999999999999999",
+        "token_ids": [
+          390,
+          224,
+          20,
+          28,
+          28,
+          28,
+          645,
+          281,
+          224,
+          20,
+          28,
+          28,
+          28,
+          645,
+          281,
+          224,
+          20,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          17,
+          202,
+          20,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28,
+          28
+        ]
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Назови противоположность слова «ночь»."
+        }
+      ],
+      "expected": "день",
+      "baseline": {
+        "text": "1. Составить 300000000000000000000000000000000000000000",
+        "raw_text": "1. Составить 300000000000000000000000000000000000000000",
+        "token_ids": [
+          20,
+          17,
+          378,
+          2550,
+          474,
+          224,
+          22,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19,
+          19
+        ]
+      },
+      "edited": {
+        "text": "составь,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+        "raw_text": "составь,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,",
+        "token_ids": [
+          266,
+          2550,
+          277,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15,
+          15
+        ]
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Меня зовут Иван. Как меня зовут? Ответь только именем."
+        }
+      ],
+      "expected": "Иван",
+      "baseline": {
+        "text": "Я люблю читать книги, но я не могу помочь мне.",
+        "raw_text": "Я люблю читать книги, но я не могу помочь мне.<eos>",
+        "token_ids": [
+          414,
+          2519,
+          8761,
+          4672,
+          15,
+          652,
+          368,
+          324,
+          1060,
+          2849,
+          583,
+          17,
+          3
+        ]
+      },
+      "edited": {
+        "text": "Я люблю гулять в парке.",
+        "raw_text": "Я люблю гулять в парке.<eos>",
+        "token_ids": [
+          414,
+          2519,
+          23507,
+          281,
+          14637,
+          17,
+          3
+        ]
+      }
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Мою собаку зовут Рекс. Как зовут мою собаку?"
+        }
+      ],
+      "expected": "Рекс",
+      "baseline": {
+        "text": "Я люблю читать книги, но я не могу помочь мне.",
+        "raw_text": "Я люблю читать книги, но я не могу помочь мне.<eos>",
+        "token_ids": [
+          414,
+          2519,
+          8761,
+          4672,
+          15,
+          652,
+          368,
+          324,
+          1060,
+          2849,
+          583,
+          17,
+          3
+        ]
+      },
+      "edited": {
+        "text": "Мой любимый фильм - \"Мастер и Маргарита\" - это \"Мастер и Маргарита\" Михаила Булгакова. Он был в 1994 году, и это был очень интересный и интересный. Он был очень",
+        "raw_text": "Мой любимый фильм - \"Мастер и Маргарита\" - это \"Мастер и Маргарита\" Михаила Булгакова. Он был в 1994 году, и это был очень интересный и интересный. Он был очень",
+        "token_ids": [
+          3065,
+          16672,
+          4175,
+          525,
+          408,
+          440,
+          12853,
+          290,
+          18397,
+          10876,
+          5,
+          525,
+          444,
+          408,
+          440,
+          12853,
+          290,
+          18397,
+          10876,
+          5,
+          10272,
+          13968,
+          297,
+          10517,
+          17,
+          1312,
+          629,
+          281,
+          224,
+          20,
+          28,
+          28,
+          23,
+          645,
+          15,
+          290,
+          444,
+          629,
+          930,
+          2065,
+          437,
+          290,
+          2065,
+          437,
+          17,
+          1312,
+          629,
+          930
+        ]
+      }
+    }
+  ],
+  "changed_parameters": 36864,
+  "total_parameters": 7858368,
+  "edited_model_directory": "/Users/bolk/Projects/MK61S_MINI/.build/squeal-chat-20261105/surgery/selected",
+  "edited_manifest": {
+    "model": "Squeal-Studio/squeal_ai_8m-instruct",
+    "revision": "24dd4690ffa674a608387cf864c695239ed7964f",
+    "files": {
+      "config.json": {
+        "bytes": 912,
+        "sha256": "f577d9efb473ed31dbbee0486164673c302f1d22d7917cf11a89ac94e8217fb4"
+      },
+      "generation_config.json": {
+        "bytes": 226,
+        "sha256": "04609df3376ff77bc3bdd6a92db87140f622f0b57ce6b925c7e5bc5b5490f95b"
+      },
+      "model.safetensors": {
+        "bytes": 31443984,
+        "sha256": "d487803b69a8f00d4d9026eeac527a4acf386a0eff4230a2413be3310d73e636"
+      },
+      "tokenizer.json": {
+        "bytes": 2419396,
+        "sha256": "9d12f19955e1f3573e5b62e45c4c43ecab579ec412b3f0e5dd6ab29e2ee7b5b8"
+      },
+      "tokenizer_config.json": {
+        "bytes": 297,
+        "sha256": "a1d8d0c16a8f6ba93f93fcce7e7d40a04af271ef16df79cde260a49030f6b940"
+      },
+      "chat_template.jinja": {
+        "bytes": 194,
+        "sha256": "34857664019710d32eb4b69505f485e1ec1d22918b10ffee11435d4c751c5a21"
+      }
+    },
+    "weight_edit": {
+      "origin_revision": "24dd4690ffa674a608387cf864c695239ed7964f",
+      "origin_sha256": "a33c406fa70d8e5b07d02c681e5d3a7a3d89bb1e08c20be6e0c4d5e4d2ab2681",
+      "edit": {
+        "kind": "scale_attention",
+        "layer": 0,
+        "strength": 2.0
+      },
+      "changed_parameters": 36864,
+      "report": "/Users/bolk/Projects/MK61S_MINI/research/squeal-chat-20261105/weight-surgery.json",
+      "selection_used_only_calibration": true
+    }
+  },
+  "saved_checkpoint_reproduces": true,
+  "original_files_unchanged": true,
+  "seconds": 4.391718792001484
+}

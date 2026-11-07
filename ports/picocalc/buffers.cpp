@@ -22,7 +22,8 @@ u8 pattern(u32 address) { return (u8)((address*73U)^(address>>8)^(address>>16)^0
 }
 bool init() {
     if(initialized) return true;
-    initialized=shared_memory::configure_buffer_backend({psram::CAPACITY,psram::ready,read,write,foreground});
+    initialized=shared_memory::configure_buffer_backend({psram::CAPACITY,psram::ready,read,write,foreground,
+        psram::read_begin,psram::read_finish});
     return initialized;
 }
 TestResult self_test(void (*service)()) {

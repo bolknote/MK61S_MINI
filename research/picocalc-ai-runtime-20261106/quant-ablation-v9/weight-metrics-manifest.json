@@ -1,0 +1,24 @@
+{
+  "status": "FROZEN_BEFORE_WEIGHT_LOGITS",
+  "profiles": {
+    "100": "same uniformQ4/directFP32 arithmetic control",
+    "101": "4bit signed logarithmic7positive levels+zero",
+    "102": "4bit signed APoT B=3 magnitude construction (15 effective signed levels)"
+  },
+  "source_pins": {
+    "weights-source/mk61_ai_linear.hpp": "79ac7e9c0e246da1dad33a797db124b656ad8ae1353e653c6299b05abdf1a471",
+    "weights-source/codec_native_bridge.hpp": "0f6d3026b40bdf749d38a31818cc53a612925aa1fdd9cef6e536a16030633184",
+    "weights-source/probe.cpp": "3f71393381e3225525c49152df4f09b4a4fb0bcefe5c0b9b51ed4b63c1321fff",
+    "weights-source/mk61_ai_swar.hpp": "27a7ab76f0b678384c573e901f17404d9029a0096d1312a8369d6848bc48920e",
+    "weights-source/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+    "weights-source/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+    "weights-source/mk61_ai_model.hpp": "e18c7a635d0da4bb28b75d30c1692d0001d27c69cab557e5da7d7376525a5483",
+    "weights-source/block_read.hpp": "689ffb8695978197812dadef158911bae7a2c9d2632ad38d22c65769ae929184",
+    "weights-source/mk61_ai_model.cpp": "9c909b8d7114e1e7207eeb4410412636a7780676557f301690346cbce8b49aff",
+    "weights-source/mk61_ai_linear.cpp": "31b7f266866bc6c5ef47516a4aabd6a49536381e9aa1f5a1147b5975260ee738",
+    "weights-source/research_codebook.hpp": "b3f35503e5e2803e91d55e5b7e6f6697ee8fbb79f0a3a3eb3f13c8c685801458",
+    "weights-source/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df"
+  },
+  "library_sha256": "67b873dc8345f285b2ed2a3ba7ab13d5696e16e3dc11bfee75cb8d667118f732",
+  "scope": "posttraining recode of existingQ4 dequantized weights; no QAT, no activation quantization; quality only, no native shift-kernel performance claim"
+}

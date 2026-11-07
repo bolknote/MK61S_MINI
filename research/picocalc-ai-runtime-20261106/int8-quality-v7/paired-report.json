@@ -1,0 +1,54 @@
+{
+  "status": "FAIL_NONREGRESSION_GATE",
+  "default_switch_allowed": false,
+  "suites": {
+    "regression20": {
+      "total": 20,
+      "lut_passed": 6,
+      "int8_passed": 5,
+      "lost": [
+        "ru-div"
+      ],
+      "gained": [],
+      "changed_answers": [
+        "ru-div",
+        "ru-mul-add"
+      ],
+      "lut_valid_fraction": 1.0,
+      "int8_valid_fraction": 1.0
+    },
+    "fresh64": {
+      "total": 64,
+      "lut_passed": 4,
+      "int8_passed": 4,
+      "lost": [],
+      "gained": [],
+      "changed_answers": [
+        "fresh-difference-2",
+        "fresh-quotient-1",
+        "fresh-square-3",
+        "fresh-negative-3",
+        "fresh-muladd-3",
+        "fresh-reverse-2",
+        "fresh-absdiff-1",
+        "fresh-absdiff-3"
+      ],
+      "lut_valid_fraction": 1.0,
+      "int8_valid_fraction": 1.0
+    }
+  },
+  "hardware_io": 0,
+  "training": 0,
+  "policy": [
+    "all declared cases count, no retries or best-of",
+    "same prompts/planning/budget/greedy/SRAM/fullhead for both modes",
+    "each task must pass public and hidden cases",
+    "retain every baseline-solved task in both suites",
+    "fresh solved count must not decrease",
+    "valid tool replies and runtime error rates must not worsen",
+    "do not infer noninferiority from zero successes or numerical closeness",
+    "switch default and reclaim LUT only if gate passes"
+  ],
+  "scope": "paired native-model functional outcomes; not a universal statistical equivalence proof",
+  "manifest_sha256": "a63b2c3e58d24816ecacf54a1295cf08db2da1993a8154d962f88c5b184be31f"
+}

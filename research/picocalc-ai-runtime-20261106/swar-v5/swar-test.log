@@ -1,0 +1,1 @@
+SWAR PASS: 16777216 exhaustive signed lane/weight combinations; 200084 full32 groups, carry boundaries, negative lanes, unaligned weights; exact scalar INT8 sums.

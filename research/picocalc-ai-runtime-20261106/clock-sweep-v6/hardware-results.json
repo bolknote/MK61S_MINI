@@ -1,0 +1,262 @@
+{
+  "status": "HOLD",
+  "build": "33180483",
+  "crc": "A012D2BF",
+  "stock_vsel": "1.10 V configured, unchanged; no analogue measurement",
+  "temperature": "internal ADC estimate assuming3.3V",
+  "scope": "120s load per target; context2..4; full8192-vocab Flourish3M/Q4 with INT8 activations",
+  "rows": [
+    {
+      "label": "QUALIFY125",
+      "status": "PASS",
+      "cdc_closed": true,
+      "reaped": true,
+      "exit_code": 0,
+      "receipt_sha256": "4e061e84ad169807b8e3cd9f58e4a9ea6d1fa102195f2334db73f781c1dbca67",
+      "mhz": 125,
+      "control_seconds_per_token": 3.331801,
+      "decode_seconds_per_token": [
+        2.5095745
+      ],
+      "max_temperature_mc": 29011,
+      "min_temperature_mc": 28543,
+      "vreg_raw": 4273,
+      "measured_khz": 125000,
+      "stress_iterations": 1019,
+      "stress_ms": 1000,
+      "cancel_return_us": 0,
+      "transport": {
+        "usb_reenumerations": 0,
+        "cancel_sent": false,
+        "cancel_response_seconds": null,
+        "app_error": false
+      },
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "i2c_errors": 0,
+      "freeze_violations": 0,
+      "heap_capacity": 110012,
+      "sampled_heap_peak": 59564,
+      "stack_high_water": 23468,
+      "service_gap_us": 674113,
+      "performance_sha256": "953df737f5b0b49fb2f8e6e693bdb4b12b264aadefab72a3570ca031a149239d"
+    },
+    {
+      "label": "CLOCK250",
+      "status": "PASS",
+      "cdc_closed": true,
+      "reaped": true,
+      "exit_code": 0,
+      "receipt_sha256": "fcaf3c31f0c6f72f257ec8b5a7c9ed37c8275692f001e81fcab2a20fc0d743e5",
+      "mhz": 250,
+      "control_seconds_per_token": 2.509178,
+      "decode_seconds_per_token": [
+        1.2050185,
+        1.2053895
+      ],
+      "max_temperature_mc": 34628,
+      "min_temperature_mc": 29011,
+      "vreg_raw": 4273,
+      "measured_khz": 250000,
+      "stress_iterations": 245055,
+      "stress_ms": 120000,
+      "cancel_return_us": 366,
+      "transport": {
+        "usb_reenumerations": 2,
+        "cancel_sent": true,
+        "cancel_response_seconds": 0.04599245800636709,
+        "app_error": false
+      },
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "i2c_errors": 0,
+      "freeze_violations": 0,
+      "heap_capacity": 110012,
+      "sampled_heap_peak": 58404,
+      "stack_high_water": 23468,
+      "service_gap_us": 648886,
+      "performance_sha256": "9319cb55d0c9c04ee770a4df127e7b1c58b5e40b040d55ccb90c027be9c8bcee"
+    },
+    {
+      "label": "CLOCK260",
+      "status": "PASS",
+      "cdc_closed": true,
+      "reaped": true,
+      "exit_code": 0,
+      "receipt_sha256": "74c8d16951180d3a6321af0ff375d64c0c64a96dbcfe1b5faa799dc3c3bc7fd7",
+      "mhz": 260,
+      "control_seconds_per_token": 2.510137,
+      "decode_seconds_per_token": [
+        1.155404,
+        1.1554225
+      ],
+      "max_temperature_mc": 36501,
+      "min_temperature_mc": 30883,
+      "vreg_raw": 4273,
+      "measured_khz": 260000,
+      "stress_iterations": 254185,
+      "stress_ms": 120000,
+      "cancel_return_us": 348,
+      "transport": {
+        "usb_reenumerations": 2,
+        "cancel_sent": true,
+        "cancel_response_seconds": 0.048189791967161,
+        "app_error": false
+      },
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "i2c_errors": 0,
+      "freeze_violations": 0,
+      "heap_capacity": 110012,
+      "sampled_heap_peak": 58404,
+      "stack_high_water": 23660,
+      "service_gap_us": 649519,
+      "performance_sha256": "49e29baee602da8667e052155a0930e5c877ec9a4c1c29c2a6cbb12b75f3a937"
+    },
+    {
+      "label": "CLOCK270",
+      "status": "PASS",
+      "cdc_closed": true,
+      "reaped": true,
+      "exit_code": 0,
+      "receipt_sha256": "252310daed98602e635eabb50d42af54f88fd4772ba89a786f7a1261b7669a0f",
+      "mhz": 270,
+      "control_seconds_per_token": 2.509002,
+      "decode_seconds_per_token": [
+        1.11232,
+        1.114016
+      ],
+      "max_temperature_mc": 37437,
+      "min_temperature_mc": 32288,
+      "vreg_raw": 4273,
+      "measured_khz": 270000,
+      "stress_iterations": 263339,
+      "stress_ms": 120000,
+      "cancel_return_us": 349,
+      "transport": {
+        "usb_reenumerations": 2,
+        "cancel_sent": true,
+        "cancel_response_seconds": 0.04874962504254654,
+        "app_error": false
+      },
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "i2c_errors": 0,
+      "freeze_violations": 0,
+      "heap_capacity": 110012,
+      "sampled_heap_peak": 58404,
+      "stack_high_water": 23468,
+      "service_gap_us": 649641,
+      "performance_sha256": "3f7dbdc2176c73e1a26c7bc2dab8c252d06640718e947e3cbbeec82549b79b9f"
+    },
+    {
+      "label": "CLOCK280",
+      "status": "HOLD",
+      "cdc_closed": true,
+      "reaped": true,
+      "exit_code": 1,
+      "receipt_sha256": "cf64c5ff12c95b17ad2f7047445452b211033b5670773602ea0af0d769dc4b46",
+      "error": "RuntimeError: unexpected reboot/fault; stop clock chain"
+    },
+    {
+      "label": "CLOCK288",
+      "status": "NOT_RUN"
+    },
+    {
+      "label": "CLOCK292",
+      "status": "NOT_RUN"
+    },
+    {
+      "label": "CLOCK300",
+      "status": "NOT_RUN"
+    }
+  ],
+  "fault_diagnosis": {
+    "exception": "HardFault",
+    "build": "33180483",
+    "crc": "A012D2BF",
+    "target_mhz": 280,
+    "trace_stage": 9,
+    "trace_meaning": "USB-ready was reached after PLL verification; this does not prove the later crash cause",
+    "pc": "10006F2E",
+    "symbol": "picocalc::io_worker::(anonymous namespace)::drain_uart()",
+    "source_line": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/clock-sweep-v6/source/ports/picocalc/io_worker.cpp:170",
+    "instruction": "mov r8,r5",
+    "inference": "An instruction location alone cannot distinguish silicon timing, XIP fetch, or software/concurrency causes;280 is failed in this image, not a proven chip maximum",
+    "reboot_native_hz": 125000000,
+    "crash_preserved": true,
+    "no_higher_steps": true,
+    "no_manual_reset_or_restore": true
+  },
+  "closure": {
+    "holders": [],
+    "cdc_closed": true,
+    "sweep_process_exit": 1,
+    "first_failed_phase": "CLOCK280",
+    "no_further_device_io_planned": true,
+    "FLASH-001": {
+      "pid": 17750,
+      "reaped": true,
+      "phase_sha256": "c91aa4f70ec195430fb428fcd64aa140a987d3a8682ddcf7d4b88c2346231800",
+      "exit_code": 0
+    },
+    "QUALIFY125": {
+      "pid": 17851,
+      "reaped": true,
+      "phase_sha256": "59aa33859563edda792be6679b16398527fb2ed200ffd7a4092ece4d5893c392",
+      "exit_code": 0
+    },
+    "CLOCK250": {
+      "pid": 17983,
+      "reaped": true,
+      "phase_sha256": "4e77642942a709df1b781bdf5935f35c959d85a98018bfd0335d64cf28faab3d",
+      "exit_code": 0
+    },
+    "CLOCK260": {
+      "pid": 18417,
+      "reaped": true,
+      "phase_sha256": "8419f976f7f9bd95b52ed131675f1a14a002c379ff0d619f6fe3c1dad2e5b76b",
+      "exit_code": 0
+    },
+    "CLOCK270": {
+      "pid": 21010,
+      "reaped": true,
+      "phase_sha256": "1b0f99f2e56e50963e9019deffe49736678863111524f70171bae7b9f69ef7f9",
+      "exit_code": 0
+    },
+    "CLOCK280": {
+      "pid": 22721,
+      "reaped": true,
+      "phase_sha256": "c504bb24a912691ca5c6e0df0fc5bf72fcea6ad6eb619d15701c1140998ced2e",
+      "exit_code": 1
+    }
+  },
+  "fault_read_only_session": {
+    "status": "PASS",
+    "cdc_closed": true,
+    "read_only": true,
+    "save_or_restore": false,
+    "before": [
+      "RESET_REASON=00010001 BOOTS=8 CRASH=AVAILABLE BUILD=33180483",
+      "WATCHDOG=ON TIMEOUT_MS=8000 RELOADS=5495 MAX_GAP_MS=777 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=51085 PREVIOUS_GAP_MS=777",
+      "FIRMWARE_CRC=valid REQUIRED=1 IMAGE=1538304 FOOTER=948068 EXPECTED=A012D2BF ACTUAL=A012D2BF CHECK_US=1126801",
+      "SERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]",
+      "POWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF",
+      "RUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0",
+      "AI_CLOCK_TRACE=9 TRACE_TARGET=280 TRACE_VALID=1 MEASURED_KHZ=125001 VREG_RAW=000010B1 TEMP_RAW=865 TEMP_MC=32288 TEMP_VALID=1"
+    ],
+    "after": [
+      "RESET_REASON=00010001 BOOTS=8 CRASH=AVAILABLE BUILD=33180483",
+      "WATCHDOG=ON TIMEOUT_MS=8000 RELOADS=5497 MAX_GAP_MS=777 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=51085 PREVIOUS_GAP_MS=777",
+      "FIRMWARE_CRC=valid REQUIRED=1 IMAGE=1538304 FOOTER=948068 EXPECTED=A012D2BF ACTUAL=A012D2BF CHECK_US=1126801",
+      "SERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]",
+      "POWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=48000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF",
+      "RUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0",
+      "AI_CLOCK_TRACE=9 TRACE_TARGET=280 TRACE_VALID=1 MEASURED_KHZ=125001 VREG_RAW=000010B1 TEMP_RAW=865 TEMP_MC=32288 TEMP_VALID=1"
+    ]
+  },
+  "fault_read_only_supervisor": {
+    "reaped": true,
+    "exit_code": 0
+  }
+}

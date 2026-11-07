@@ -1,0 +1,31 @@
+{
+  "effective_trainable_elements": 1050624,
+  "inherited_elements_frozen": 10577920,
+  "optimizer_parameter_elements": 5253120,
+  "old_width": 1024,
+  "new_width": 1280,
+  "policy": "Gradient masks, exact restoration of inherited slices after each update, and checkpoint guards",
+  "steps": 12,
+  "weight_decay_deliberately_enabled": 0.01,
+  "checkpoint_mid_training_verified": true,
+  "frozen_packed_payload_bytes_identical": 6022240,
+  "changed_active_segments": 2064,
+  "losses": [
+    2.640733242034912,
+    2.636070966720581,
+    2.6267361640930176,
+    2.612769365310669,
+    2.598818778991699,
+    2.5779378414154053,
+    2.5501785278320312,
+    2.515631914138794,
+    2.4812121391296387,
+    2.440882921218872,
+    2.399296283721924,
+    2.349363088607788
+  ],
+  "source_sha256": "f91c78b13c7e7820a2746416e626526ccafe787c955ec152e1e030bde33d8316",
+  "packed_sha256": "057fe411d93dd9d62a1f5f52a65ba836edb671db27c05f102d41479be9248258",
+  "quality_improvement_measured": false,
+  "native_runtime_measured": false
+}

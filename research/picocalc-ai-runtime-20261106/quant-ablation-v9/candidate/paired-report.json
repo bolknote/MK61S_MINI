@@ -1,0 +1,22 @@
+{
+  "int16": {
+    "lost": [],
+    "gained": [],
+    "baseline_passed": 1101,
+    "passed": 1101,
+    "total": 1175,
+    "baseline_false_done": 19,
+    "false_done": 19,
+    "gate_passed": true
+  },
+  "a16-head-fp32": {
+    "lost": [],
+    "gained": [],
+    "baseline_passed": 1101,
+    "passed": 1101,
+    "total": 1175,
+    "baseline_false_done": 19,
+    "false_done": 19,
+    "gate_passed": true
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "model": "TheREZOR/TinyTalk",
+  "revision": "61c79ad139344cdd344a687b35fa8f1c52326154",
+  "files": {
+    "config.json": {
+      "bytes": 1054,
+      "sha256": "08e9e9012b7051a291a53a034422facc8d3b762b57ce0c11cd1b47dfb5abfe70"
+    },
+    "generation_config.json": {
+      "bytes": 140,
+      "sha256": "b76cbcd00dd8ff4aa105fdf77f5685c13c061af99c930b8a469f1339c40371fb"
+    },
+    "model.safetensors": {
+      "bytes": 33124616,
+      "sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77"
+    },
+    "tokenizer.json": {
+      "bytes": 3557680,
+      "sha256": "1fe93b6152957cf9cfd6d89002467f789ce8b3f3e000b3a2edf27c808ddd0b9e"
+    },
+    "tokenizer_config.json": {
+      "bytes": 314,
+      "sha256": "6959fa789244fb0db075863e5167414ae2bae8c6b28e343935b0b1479fcc1f2c"
+    },
+    "vocab.json": {
+      "bytes": 798156,
+      "sha256": "3ba3c3109ff33976c4bd966589c11ee14fcaa1f4c9e5e154c2ed7f99d80709e7"
+    },
+    "merges.txt": {
+      "bytes": 456318,
+      "sha256": "1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5"
+    }
+  },
+  "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "2.4.0"
+  },
+  "settings": {
+    "profile": "tinytalk",
+    "download_only": false,
+    "smoke": false,
+    "prompt": null,
+    "model_dir": "/Users/bolk/Projects/MK61S_MINI/.build/tinytalk-chat-20261105/model",
+    "json": "research/tinytalk-chat-20261105/dialogue.json",
+    "temperature": 0.7,
+    "seed": 2026,
+    "context": 256,
+    "max_new_tokens": 80,
+    "threads": 2
+  },
+  "parameter_count": 8278400,
+  "chat_template": null,
+  "prompt_format": "User: message, newline, Bot: reply; EOS between exchanges; final Bot: generation marker",
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! I have a cat named Luna. Do you like cats?"
+        }
+      ],
+      "rendered_prompt": "User: Hi! I have a cat named Luna. Do you like cats?\nBot:",
+      "prompt_tokens": 19,
+      "generated_tokens": 16,
+      "reply": "Yes, I do! They're so cute! Thank you so much.",
+      "raw_reply": " Yes, I do! They're so cute! Thank you so much.<|endoftext|>",
+      "seconds": 0.0765565829933621,
+      "tokens_per_second": 208.99574372836486,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! I have a cat named Luna. Do you like cats?"
+        },
+        {
+          "role": "assistant",
+          "content": "Yes, I do! They're so cute! Thank you so much."
+        },
+        {
+          "role": "user",
+          "content": "She keeps sleeping on my books. What should I do?"
+        }
+      ],
+      "rendered_prompt": "User: Hi! I have a cat named Luna. Do you like cats?\nBot: Yes, I do! They're so cute! Thank you so much.<|endoftext|>\nUser: She keeps sleeping on my books. What should I do?\nBot:",
+      "prompt_tokens": 53,
+      "generated_tokens": 13,
+      "reply": "You've been sleeping all day and you need a break.",
+      "raw_reply": " You've been sleeping all day and you need a break.<|endoftext|>",
+      "seconds": 0.0618560409930069,
+      "tokens_per_second": 210.16540650362197,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! I have a cat named Luna. Do you like cats?"
+        },
+        {
+          "role": "assistant",
+          "content": "Yes, I do! They're so cute! Thank you so much."
+        },
+        {
+          "role": "user",
+          "content": "She keeps sleeping on my books. What should I do?"
+        },
+        {
+          "role": "assistant",
+          "content": "You've been sleeping all day and you need a break."
+        },
+        {
+          "role": "user",
+          "content": "What is my cat's name?"
+        }
+      ],
+      "rendered_prompt": "User: Hi! I have a cat named Luna. Do you like cats?\nBot: Yes, I do! They're so cute! Thank you so much.<|endoftext|>\nUser: She keeps sleeping on my books. What should I do?\nBot: You've been sleeping all day and you need a break.<|endoftext|>\nUser: What is my cat's name?\nBot:",
+      "prompt_tokens": 79,
+      "generated_tokens": 11,
+      "reply": "Her name is Luna. She's very cute.",
+      "raw_reply": " Her name is Luna. She's very cute.<|endoftext|>",
+      "seconds": 0.052743750013178214,
+      "tokens_per_second": 208.55551600429644,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    }
+  ]
+}

@@ -1,0 +1,1344 @@
+{
+  "objective": "Continue improving TinyTalk ordinary English conversation after Q4; do not stop at a small relative pilot win.",
+  "target": {
+    "acceptable_direct_replies": 0.8,
+    "contextual_replies": 0.72,
+    "three_turn_conversation_replies": 0.78
+  },
+  "status": "training_learned_answer_keywords",
+  "remote_directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq",
+  "modes": {
+    "sft": {
+      "steps": 8000,
+      "initial_checkpoint": "previous conversation QAT step1500"
+    },
+    "dpo": {
+      "steps": 6000,
+      "preferences": "acceptable teacher correction vs current Q4 student failed reply"
+    }
+  },
+  "fresh_test_opened": true,
+  "next_action": "Monitor round20 actual Q4 reply quality through 12,000 steps. Do not confuse its untrained new-format baseline or supervision audit with conversation gains. Only qualify after unchanged full partition gates pass twice, then full FP16-KV validation and one closed audit3.",
+  "recovery": "Strict vLLM JSON schema; calibration plus 16-case batch stress check before restart",
+  "schema_calibration": "6 unambiguous cases plus 16-case batched good/bad stress check passed",
+  "controller_pid": 21375,
+  "round2_remote_directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round2",
+  "round2": {
+    "controller_pid": 23804,
+    "teacher_requests": 2912,
+    "planned_teacher_examples": 34944,
+    "arms": [
+      "8278400 parameters",
+      "10383744 parameters"
+    ],
+    "training": {
+      "steps": 12000,
+      "batch_size": 32,
+      "qat_start": 6001
+    },
+    "reason": "First targeted corpus and DPO do not generalize sufficiently; enlarge data and test extra FFN capacity.",
+    "corpus_normalization": "Strip accidental speaker prefixes before rendering; recover cached batches rather than discarding multi-turn examples.",
+    "generation_workers": 16,
+    "embedding_lr_scale": 0.15,
+    "teacher_audit": {
+      "final_pass_rate": 0.95,
+      "earlier_context_pass_rate": 0.79,
+      "sample_per_group": 100,
+      "earlier_context_replies_supervised": false
+    },
+    "data": {
+      "teacher_unique_before_curation": 31413,
+      "teacher_after_curation": 31177,
+      "training_rows_total": 51138,
+      "training_replay_rows": 22516,
+      "training_replay_sampling_probability": 0.05,
+      "train_sha256": "4605b8d7c01639ef091b0466ef4e5d719ecc5cd5da87be78379f68166a32c9fe"
+    },
+    "completed": true,
+    "target_met": false
+  },
+  "round1_result": {
+    "sft_best_step": 1000,
+    "dpo_best_step": 5000,
+    "selected_direct_acceptable": 0.42,
+    "selected_context_acceptable": 0.48,
+    "selected_three_turn_acceptable": 0.4444444444444444,
+    "target_met": false
+  },
+  "parallel_diagnostic": {
+    "directory": "round2/probe-frozen-embedding",
+    "pid": 24375,
+    "embedding_lr_scale": 0,
+    "steps": 4000,
+    "finished": true,
+    "target_met": false
+  },
+  "round1_verification": {
+    "packed_reload_max_abs_error": 0.0,
+    "cpu_matches_b200": 32,
+    "compared": 32
+  },
+  "wide_full_qat": {
+    "pid": 26718,
+    "directory": "round2/wide-qat-long",
+    "steps": 20000,
+    "qat_start": 1,
+    "lr": 6e-05,
+    "embedding_lr_scale": 0.15,
+    "reason": "Compare QAT throughout with staged FP32/QAT on the larger corpus.",
+    "completed": true,
+    "target_met": false,
+    "peak_direct_pass_rate": 0.58
+  },
+  "round3": {
+    "controller_pid": 27671,
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round3",
+    "parameters": 10573312,
+    "transformer_core_parameters": 6311936,
+    "vocab": 16388,
+    "hidden": 256,
+    "context": 128,
+    "steps": 20000,
+    "batch_size": 64,
+    "qat_start": 1,
+    "psram_design_bytes": 7635641,
+    "native_runtime_measured": false
+  },
+  "annotation": {
+    "pid": 28210,
+    "complete": true,
+    "input_rows": 28622,
+    "accepted": 27489,
+    "rejected": 1133,
+    "labels_sha256": "f5549f607043d4aa676c177d92199799c272e0920abb6181c64bac4392c63068"
+  },
+  "vocabulary_refinement": {
+    "retained_fraction": 0.9999503103678793,
+    "old_prefix_fraction": 0.8997127028678561,
+    "data_used": "training only",
+    "native_context": 128
+  },
+  "round4": {
+    "local_model": ".build/tinytalk-quality-20261105/tagged-init",
+    "local_data": ".build/tinytalk-quality-20261105/tagged-data",
+    "parameters": 10577664,
+    "kind_sampling": "uniform 20 conversational acts",
+    "intent_prefix_loss_weight": 4,
+    "teacher_targets_vetted": true,
+    "controller_pid": 28780,
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round4",
+    "steps": 20000,
+    "batch_size": 64,
+    "lr": 4e-05,
+    "qat_start": 1,
+    "cpu_preflight_passed": true,
+    "psram_design_bytes": 7645563,
+    "native_runtime_measured": false,
+    "gpu_preflight_passed": true,
+    "compact_tokenizer_bytes": 297483,
+    "packed_initial_bytes": 6037360
+  },
+  "round5": {
+    "controller_pid": 30594,
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round5",
+    "phase": "prepare100m_and_language_pretrain",
+    "target_language_tokens": 100000000,
+    "dataset": "roneneldan/TinyStories",
+    "revision": "f54c09fd23315a6f9c86f9dc80f725de7d8f9c64",
+    "batch_size_initial": 128,
+    "context": 128,
+    "qat_start": 1,
+    "requires_subsequent_conversation_training": true,
+    "complete": true,
+    "token_exposures": 100007936,
+    "baseline_language_nll": 3.3340855836868286,
+    "final_language_nll": 1.8207123801112175
+  },
+  "round6": {
+    "controller_pid": 32182,
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round6",
+    "steps": 12000,
+    "batch_size": 64,
+    "arms": [
+      "grounded top4",
+      "grounded-all 8"
+    ],
+    "freeze_normal_word_embeddings": true,
+    "new_curriculum_rows": 33000,
+    "intent_tags": 21,
+    "source_dataset_sha256": "2e7bde68c1e524d40c81fc15cb92bd52ee57b9df8bda492456bead6bfddff72a",
+    "recovery": "Compatible complete special-token list instead of removed tokenizer keyword; no weight updates before retry.",
+    "complete": true,
+    "target_met": false,
+    "best_step": 4000,
+    "best_direct": 0.69,
+    "best_context": 0.88,
+    "best_multi_turn": 0.7222222222222222,
+    "peak_direct": 0.72,
+    "verification": {
+      "packed_reload_max_abs_error": 0,
+      "matching_cpu_b200_replies": 16,
+      "compared": 16,
+      "native_measured": false
+    }
+  },
+  "round7": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round7",
+    "controller_pid": 35018,
+    "phase": "prepare_and_audit_consistent_teacher_inputs",
+    "steps": 10000,
+    "batch_size": 64,
+    "lr": 1e-05,
+    "arms": [
+      "frozen words, upper4",
+      "frozen words, upper6"
+    ],
+    "goal_unchanged": true,
+    "data": {
+      "rows": 61996,
+      "consistent_rows": 10895,
+      "training_audit": 0.9764705882352941,
+      "sha256": "af3d2bd787db1921bf26fd44db46593b6bf360a8ee6ff53b2b6ffcd40f9574e2",
+      "reserved_audit_evaluated": false
+    },
+    "latest_promising": {
+      "arm": "consistent-top6",
+      "step": 3000,
+      "direct": 0.83,
+      "context": 0.8,
+      "multi_turn": 0.7222222222222222,
+      "goal_met": false
+    },
+    "first_goal": {
+      "step": 8000,
+      "arm": "consistent-top4",
+      "direct": 0.83,
+      "context": 0.8,
+      "multi_turn": 0.8333333333333334,
+      "goal_met": true,
+      "consecutive_checks_confirmed": false
+    },
+    "complete": true,
+    "target_met_on_development": true,
+    "selected_arm": "consistent-top4",
+    "selected_step": 8000,
+    "selected_metrics": {
+      "direct": 0.83,
+      "context": 0.8,
+      "multi_turn": 0.8333333333333334
+    },
+    "independent_audit": {
+      "direct": 0.7666666666666667,
+      "context": 0.8,
+      "multi_turn": 0.6666666666666666,
+      "malformed": 0,
+      "goal_met": false
+    }
+  },
+  "capacity_activation": {
+    "q4_function_max_abs_logit_error": 5.030632019042969e-05,
+    "argmax_unchanged_on_training_probe": true,
+    "new_key_and_output_directions_have_nonzero_gradients": true,
+    "quality_not_yet_measured": true
+  },
+  "round8": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round8",
+    "on_policy_data_pid": 36812,
+    "purpose": "Recovery from own incorrect context; prepared in parallel, no training started",
+    "source_sha256": "007eb10fc28ffc24c9ba54d57e1986815c516ff12e578e3e06b36b67ecefc62e",
+    "steps": 6000,
+    "batch_size": 64,
+    "arms": [
+      "capacity activation 8 layers",
+      "matched control 8 layers"
+    ],
+    "opened_old_audit_is_development": true,
+    "goal_requires_each_direct_partition_at_least": 0.8,
+    "goal_requires_each_conversation_partition_at_least": 0.78,
+    "training_data_sha256": "9ad17f8e09be4ead9f2a9c4ca4fe6bfcd1690b37894e32bb6a73033fd4c319be",
+    "controller_pid": 38581,
+    "training_started": true,
+    "reserved_audit2": {
+      "single_prompts": 100,
+      "three_turn_scenarios": 8,
+      "test_sha256": "8a16e713d13195b631685c60f2506adf9b92bd453a5b7863b80c0303cce70495",
+      "scenarios_sha256": "5f660585ae4a7489a9a21fa87d30a888e9c472dc6eab91d3f4174c128cc97153",
+      "opened": false
+    },
+    "latest_successful_check": {
+      "arm": "capacity",
+      "step": 2500,
+      "old_dev_direct": 0.82,
+      "opened_audit_direct": 0.8,
+      "context_rates": [
+        0.76,
+        1.0
+      ],
+      "conversation_counts": [
+        17,
+        15
+      ],
+      "conversation_totals": [
+        18,
+        18
+      ],
+      "two_consecutive_checks_confirmed": false
+    },
+    "complete": true,
+    "selected_arm": "control",
+    "selected_step": 4000,
+    "independent_audit2": {
+      "direct": 0.39,
+      "context": 0.36,
+      "conversation": 0.625,
+      "goal_met": false,
+      "baseline_direct": 0.18,
+      "baseline_conversation": 0.20833333333333334
+    },
+    "finding": "Strong fit to restricted development phrasing does not generalize to varied short multi-turn conversations.",
+    "batching_verification": {
+      "same_replies": 100,
+      "compared": 100,
+      "batch_sizes": [
+        1,
+        8
+      ],
+      "padding_did_not_explain_generalization_failures": true
+    }
+  },
+  "reserved_audit2_opened": true,
+  "round9": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round9",
+    "backbones_controller_pid": 44623,
+    "phase": "conversation_training",
+    "backbones": {
+      "plain": {
+        "repository": "roneneldan/TinyStories-8M",
+        "revision": "8612e3b15c66ffa94eaa6ee0de5c96edd2d630af",
+        "adaptation_nll": 1.6177087724208832
+      },
+      "instruct": {
+        "repository": "roneneldan/TinyStories-Instruct-8M",
+        "revision": "5c0ee6f7ff9a27423dba63d98fac17bf3239cb92",
+        "adaptation_nll": 1.5992142483592033
+      }
+    },
+    "parameters": 10577920,
+    "runtime_context": 128,
+    "vocabulary_pruning_retained_logit_error": 0,
+    "adaptation_token_exposures_per_backbone": 50003968,
+    "source_dialogues": "HuggingFaceTB/everyday-conversations-llama3.1-2k@14f543216b9ba42b6b951dc5bd199460d193b162",
+    "public_dialogue_sha256": "4750214d12b4b92d07fca953e0b5cc59e313c575282d08b605c639aa87531daa",
+    "goal_requires_all_three_observed_partitions": true,
+    "conversation_controller_pid": 53164,
+    "public_generation_pid": 52152,
+    "public_generation_recovery": "The ambiguous target field yielded role/topic labels. Those examples were never trained; archive everyday-label-attempt. Explicit literal answer field passed 32/32 probe before full regeneration.",
+    "public_probe_rows": 32,
+    "public_probe_pass_rate": 1.0,
+    "planned_semantic_tasks": [
+      "speaker identity",
+      "pet name vs color",
+      "object color vs location",
+      "changed preference across attribute types",
+      "yes/no grounded facts",
+      "missing information",
+      "factual color vs creative suggestion"
+    ],
+    "data": {
+      "rows": 144746,
+      "sha256": "24b776ea678a4f2f589207f24ab6d51f7f921f171e019eb93d9b2fb3f063b46e",
+      "unused_replay_rows": 22516,
+      "public_rows": 6169,
+      "public_qa_sample_pass_rate": 0.98,
+      "public_rows_sha256": "ca1e108ef65dc4f676b6a4e12b5c46c221a78217ec717c868e67fdcf97f36233",
+      "all_260_observed_contexts_excluded": true
+    },
+    "steps": 10000,
+    "batch_size": 64,
+    "lr": 2e-05,
+    "reserved_audit3": {
+      "rows": 100,
+      "scenarios": 8,
+      "seed": 557921,
+      "test_sha256": "3add12fa3e427355b720672942aa6a95e2ca2f6c3c348843d33854f29efaea0b",
+      "scenarios_sha256": "02cbed81c23a559f485b5c0c3017d5492d345184a7e1e0e5cd095c9f945a54e6",
+      "opened": false
+    },
+    "completed": true,
+    "goal_met": false
+  },
+  "reserved_audit3_opened": false,
+  "round10": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round10",
+    "purpose": "Matched ordinary text vs private act prefix; same instructed pretrained core and exact training contexts",
+    "parameters": 10572544,
+    "steps": 10000,
+    "batch_size": 64,
+    "lr": 2e-05,
+    "source_contexts_same_as_round9": true,
+    "uses_same_unopened_audit3": true,
+    "controller_pid": 62058,
+    "data_sha256": "d2c1a52c0da427a8bd4059dfca25d32130d9709d87bf663cc56195e12f891e2d",
+    "tokenizer_roundtrip_without_token_type_ids_verified": true,
+    "completed": true,
+    "goal_met": false,
+    "peak_broader_direct": 0.6
+  },
+  "round11": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round11",
+    "phase": "probe_then_mine_actual_training_errors",
+    "source": "round9 instructed backbone selected step5000",
+    "planned_contexts": 6000,
+    "arms": [
+      "DPO",
+      "hard-example SFT"
+    ],
+    "steps": 4000,
+    "lr": 8e-06,
+    "selection": "Worst normalized development partition first",
+    "fresh_audit3_unchanged_and_unopened": true,
+    "completed": true,
+    "goal_met": false,
+    "pairs": 2160,
+    "selected_step": 0,
+    "finding": "Neither DPO nor matched hard-example SFT improved the bottleneck over the saved parent checkpoint."
+  },
+  "round12": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round12",
+    "steps": 8000,
+    "batch_size": 64,
+    "lr": 1e-05,
+    "embedding_lr_scales": [
+      0.3,
+      1.0
+    ],
+    "all_weights_trainable": true,
+    "source": "round9 instructed best step5000",
+    "data_sha256": "24b776ea678a4f2f589207f24ab6d51f7f921f171e019eb93d9b2fb3f063b46e",
+    "recovery": "Absolute symlinks were inaccessible in Docker. Copied immutable inputs with hardlinks, then restarted; first attempts made no weight updates.",
+    "controller_pid": 68762,
+    "completed": true,
+    "goal_met": false,
+    "selected": "words10",
+    "best_step": 8000,
+    "broader_direct": 0.6,
+    "broader_context": 0.64,
+    "broader_conversation": 0.5833333333333334
+  },
+  "precision_control": {
+    "already_opened_broad_prompts": 100,
+    "selected_tiny_checkpoint": {
+      "fp32": 0.52,
+      "q4": 0.58
+    },
+    "smollm2_135m_instruct": {
+      "fp32": 0.38,
+      "q4": 0.39
+    },
+    "finding": "Q4 rounding does not explain the main broad-conversation errors at these checkpoints. Larger checkpoint was a capacity control, not an 8 MiB candidate."
+  },
+  "round13": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round13",
+    "phase": "training_complete_natural_dialogues",
+    "planned_dialogues": 24000,
+    "planned_training_turns": 72000,
+    "unopened_audit3_used_for_training": false,
+    "probe": {
+      "rows": 96,
+      "accepted": 89,
+      "rate": 0.9270833333333334
+    },
+    "all_targets_must_be_graded_before_training": true,
+    "data_controller_pid": 71103,
+    "training_controller_pid": 69950,
+    "arms": [
+      "continue_best_chat",
+      "restart_from_adapted_pretrained_core"
+    ],
+    "steps": 10000,
+    "natural_sampling_probability": 0.7,
+    "generated_raw_turns": 71995,
+    "unique_before_qa": 63930,
+    "full_qa_running": false,
+    "reference_sample_pass_rate": 0.8916666666666667,
+    "full_qa_workers": 24,
+    "qa_restart": "Only own data-preparation container restarted with larger concurrency. All generation and completed detailed judgments preserved; zero interrupted JSON files; rubric, batching and scores unchanged.",
+    "new_vetted_rows": 58777,
+    "rejected_targets": 5153,
+    "new_rows_sha256": "71c274761cca9d48e0428de65ac2d79b12e99fa7144d665ba7c3acc3e7a6f789",
+    "combined_rows": 203313,
+    "combined_sha256": "129136a56b01f5ae081e850a3c2ae3d54c26d3b965a85c6975c6644de0c38d09",
+    "unused_replay_rows": 22513,
+    "parent_vocabulary_selection": "words10 step8000",
+    "completed": true,
+    "goal_met": false,
+    "selected_mode": "continued",
+    "selected_step": 0,
+    "finding": "58,777 varied new dialogues did not improve the worst development partition over the preserved parent. Fresh-core arm peaked at 17/24 hard conversation replies but did not reach the full target."
+  },
+  "rubric_validity_check": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round13/rubric-audit",
+    "student_replies_seen": false,
+    "original_suites_or_scores_changed": false,
+    "reserved_audit3_seen": false
+  },
+  "fp16_kv_control": {
+    "compared": 100,
+    "identical_token_sequences": 100,
+    "execution": "Packed Q4 weights; FP16 KV storage; FP32 attention on CPU",
+    "native_runtime_measured": false
+  },
+  "score_only_screen": {
+    "status": "rejected_not_used",
+    "known_bad": 7,
+    "bad_rejected": 5,
+    "bad_wrongly_accepted": 2,
+    "actual_full_data_audit": "original detailed grade.py unchanged"
+  },
+  "babi": {
+    "source_sha256": "f7f0bee187efca0d81c3daac1b162cda4eb7f9505dee5ad6846eabbed3dbf92e",
+    "license": "CC BY 3.0",
+    "initial_diagnostic": {
+      "acceptable": 6,
+      "total": 104,
+      "window_variant": "Initial support-first window; not used for any training. Robust variant retains prior distractors and varies training entities."
+    },
+    "initial_support_first_variant_used_for_training": false,
+    "prepared_robust_variant": {
+      "train_rows": 123636,
+      "test_rows": 12250,
+      "train_sha256": "bc9b1645f785954f1c181f2b979fcf5957b835a4f76bda614833785b4a28729a",
+      "test_sha256": "5a82a557412c3ea6786bd7b97a235a07c522222401db9f749fe2b70a2c75bacd",
+      "context": "Longest fitting recent suffix; support position varies; all supplied supporting facts preserved",
+      "entities": "Gender-consistent bijections in training, original names in test"
+    },
+    "training_started": true
+  },
+  "round14": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round14",
+    "controller_pid": 71353,
+    "phase": "training_grounded_conversation",
+    "source": "Best conversational candidate from round13",
+    "babi_train_rows": 123636,
+    "babi_train_sha256": "bc9b1645f785954f1c181f2b979fcf5957b835a4f76bda614833785b4a28729a",
+    "steps": 12000,
+    "batch_size": 128,
+    "lr": 1.5e-05,
+    "all_weights_trainable": true,
+    "example_balanced_loss": true,
+    "mixtures": [
+      {
+        "grounded": 0.4,
+        "natural": 0.45,
+        "older_acts": 0.15
+      },
+      {
+        "grounded": 0.65,
+        "natural": 0.2,
+        "older_acts": 0.15
+      }
+    ],
+    "skip_if_parent_reaches_development_goal": true,
+    "new_chat_audit_still_closed": true,
+    "training_started": true,
+    "auxiliary_reading_baseline": {
+      "passed": 2,
+      "total": 104,
+      "suite": "Robust longer-context variant; do not compare directly with the earlier support-first 6/104 probe."
+    },
+    "completed": true,
+    "goal_met": false,
+    "selected_mode": "grounded40",
+    "best_step": 10000,
+    "selected_partitions": {
+      "direct": [
+        0.8,
+        0.9166666666666666,
+        0.61
+      ],
+      "context": [
+        0.92,
+        1,
+        0.6
+      ],
+      "multi_turn": [
+        1,
+        0.8888888888888888,
+        0.7083333333333334
+      ]
+    },
+    "scheduling": "Completed sequentially; all own paused jobs resumed",
+    "reading_transfer": {
+      "checkpoint": "grounded65/last",
+      "source_sha256": "5d9671f0744c08ac2f4537beb0909a1340c96c9255b03f53ee79063b79a301f3",
+      "strict_canonical_exact_match": 97,
+      "total": 104,
+      "parent_exact_match": 0,
+      "suite_sha256": "2975579746e8e8f705345a4618caeb6991894d8db4cbefd82b4e941a21b7bd64",
+      "conversation_gate": false
+    }
+  },
+  "active_round": 18,
+  "rollout_batching_verification": {
+    "cpu_identical_replies": 60,
+    "b200_identical_replies": 60,
+    "total": 60,
+    "all_case_contexts_and_histories_identical": true,
+    "b200_seconds": {
+      "sequential": 9.992832162999548,
+      "batched": 1.9481599269784056
+    },
+    "applied_to_rounds": [
+      13,
+      14
+    ],
+    "rubric_and_thresholds_unchanged": true,
+    "grading_workers": 12
+  },
+  "round15": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round15",
+    "controller_pid": 97851,
+    "purpose": "Transfer acquired reading skill to balanced conversational attributes; compare private prefix and plain text sequentially",
+    "source": "5d9671f0744c08ac2f4537beb0909a1340c96c9255b03f53ee79063b79a301f3",
+    "new_pairs": 19771,
+    "new_rows": 39542,
+    "new_data_sha256": "613c7359642a3a8789d21eb3fb6d5b4d3ffae841207038961521126480fd3394",
+    "reference_qa": {
+      "passed": 240,
+      "total": 240,
+      "original_detailed_rubric": true
+    },
+    "combined_rows": 366490,
+    "steps_per_arm": 8000,
+    "all_weights_trainable": true,
+    "example_balanced_loss": true,
+    "mixture": {
+      "contrastive": 0.5,
+      "natural": 0.35,
+      "babi": 0.05,
+      "earlier_acts": 0.1
+    },
+    "completed": true,
+    "tagged_completed": true,
+    "tagged_best": {
+      "step": 3000,
+      "direct": [
+        0.87,
+        0.85,
+        0.63
+      ],
+      "context": [
+        0.96,
+        0.9333333333333333,
+        0.64
+      ],
+      "multi_turn": [
+        0.8888888888888888,
+        0.9444444444444444,
+        0.6666666666666666
+      ],
+      "goal_met": false
+    },
+    "plain_running": false,
+    "reserved_audit3_opened": false,
+    "goal_met": false,
+    "selected_mode": "tagged",
+    "selected_step": 3000,
+    "plain_best": {
+      "step": 3000,
+      "direct": [
+        0.76,
+        0.8166666666666667,
+        0.63
+      ],
+      "context": [
+        0.72,
+        1,
+        0.6
+      ],
+      "multi_turn": [
+        0.7777777777777778,
+        0.8333333333333334,
+        0.625
+      ],
+      "goal_met": false
+    }
+  },
+  "round16": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round16",
+    "purpose": "Broader fictional conversational state, corrections, quantity, duration, flavor, weather and turn-taking",
+    "source_sha256": "7bbc14fe56f54f56bfae4161a8d8b6d994d767949408be0b16d6fcdcdd373ca1",
+    "source": "round15/tagged/best step3000",
+    "new_rows": 123589,
+    "new_data_sha256": "5abe8ba5c1c0b3535b56958d3be85a00fdb27afc618e56b4504fefe8b8ea91ab",
+    "corrected_rows": 42272,
+    "steps": 12000,
+    "batch_size": 128,
+    "lr": 1e-05,
+    "completed": true,
+    "data_repair": "First dataset had overlapping weather/temperature fields; repaired before student training. Original data, QA and prepared merge archived. No student weights updated on that version.",
+    "reserved_audit3_opened": false,
+    "controller_pid": 108375,
+    "reference_audit_pid": 108374,
+    "reference_qa": {
+      "passed": 505,
+      "total": 512,
+      "original_detailed_rubric": true
+    },
+    "training_started": true,
+    "latest_selected_development": {
+      "step": 6000,
+      "direct": [
+        0.86,
+        0.9,
+        0.72
+      ],
+      "context": [
+        1,
+        1,
+        0.64
+      ],
+      "multi_turn": [
+        0.8888888888888888,
+        1,
+        0.6666666666666666
+      ],
+      "goal_met": false
+    },
+    "goal_met": false,
+    "selected_step": 6000,
+    "final_selected_metrics": {
+      "step": 6000,
+      "direct": [
+        0.86,
+        0.9,
+        0.72
+      ],
+      "context": [
+        1,
+        1,
+        0.64
+      ],
+      "multi_turn": [
+        0.8888888888888888,
+        1,
+        0.6666666666666666
+      ],
+      "goal_met": false
+    },
+    "source_sha256_selected": "bc2731148309bffcceda6311ad55d47e9e544086176153141fab31c2740ff6ea",
+    "verification": {
+      "packed_reload_max_abs_error": 0,
+      "matching_cpu_b200_replies": 16,
+      "comparisons": 16,
+      "fp16_cache_identical_sequences": 99,
+      "fp16_cache_compared": 100,
+      "changed_case": "audit2:project:3; both variants omit the requested song title",
+      "native_runtime_measured": false
+    },
+    "local_candidate": ".build/tinytalk-quality-20261105/candidate-round16",
+    "fp16_development": {
+      "direct": [
+        0.86,
+        0.9,
+        0.72
+      ],
+      "context": [
+        1,
+        1,
+        0.6
+      ],
+      "multi_turn": [
+        0.8888888888888888,
+        1,
+        0.6666666666666666
+      ],
+      "goal_met": false,
+      "scope": "All 260 observed prompts and 60 actual conversation turns",
+      "report": "round17/precision-fixture/quality/validation.json"
+    }
+  },
+  "mlp_capacity_preflight": {
+    "parameters": 11628544,
+    "old_width": 1024,
+    "new_width": 1280,
+    "fp32_max_abs_logit_error": 0,
+    "q4_max_abs_logit_error": 0,
+    "identical_probe_replies": 10,
+    "total_probe_replies": 10,
+    "packed_reload_error": 0,
+    "total_design_bytes": 8243985,
+    "remaining_from_8mib": 144623,
+    "reserve_bytes": 262144,
+    "native_runtime_measured": false,
+    "trained": false,
+    "saved_initializer_untouched_by_gradient_diagnostic": true
+  },
+  "round17_preparation": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round17",
+    "new_approach": "Same prefix with four different final requests; every reference graded; at least three correct branches retained",
+    "probe1_pass_rate": 0.8629032258064516,
+    "probe1_rejected_for_broad_adult_topic_drift": true,
+    "probe2": "Narrowed to varied ordinary topics; unknown facts about the person, not general world questions",
+    "student_training_started": false,
+    "controller_pid": 110098,
+    "status": "generating_and_screening_alternative_requests",
+    "contexts_planned": 6000,
+    "new_branches_per_prefix": 4,
+    "probe2_pass_rate": 0.9354838709677419,
+    "probe2_retained_rows": 116,
+    "probe2_targets": 124,
+    "all_full_targets_will_be_graded": true,
+    "arms": [
+      "expanded MLP1280 then compact MLP1024 if needed"
+    ],
+    "steps_per_arm": 8000,
+    "mixture": {
+      "branched": 0.5,
+      "contrastive": 0.25,
+      "natural": 0.15,
+      "reading": 0.05,
+      "earlier_acts": 0.05
+    },
+    "conditional": "If parent meets all gates at two consecutive checks, skip preparation and do independent audit3",
+    "full_screen_snapshot": {
+      "graded": 8296,
+      "passed": 7657,
+      "goal_is_reference_correctness_not_student_score": true
+    }
+  },
+  "required_before_independent_audit": "After a checkpoint meets the unchanged FP32-cache development gates, evaluate every observed direct and rollout partition using actual FP16 KV storage as well. All gates must also pass there before audit3. Final audit must use planned FP16 KV storage.",
+  "fp16_shared_factory_preflight": {
+    "compared": 100,
+    "same_as_previous_verified_half_cache_implementation": 100,
+    "all_match": true
+  },
+  "round17": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round17",
+    "controller_pid": 118339,
+    "previous_controller_pid": 110098,
+    "source_sha256": "bc2731148309bffcceda6311ad55d47e9e544086176153141fab31c2740ff6ea",
+    "source": "round16/stateful/best step6000",
+    "new_rows": 21575,
+    "new_context_prefixes": 5696,
+    "minimum_accepted_branches_per_prefix": 3,
+    "new_data_sha256": "b93a132285c7d004a0f1bb2c5453f16ecca38a09ae08dbf7948010f3d49c4e66",
+    "all_new_targets_graded": true,
+    "reference_pass_rate": 0.9251180477205299,
+    "failed_targets_removed": 1792,
+    "arms": [
+      "expanded",
+      "compact if needed"
+    ],
+    "current_arm": "compact",
+    "steps_per_arm": 8000,
+    "parameters_expanded": 11628544,
+    "training_started": true,
+    "completed": true,
+    "reserved_audit3_opened": false,
+    "preparation_recovery": "Initial 5e-5 numerical logit tolerance rejected a 5.36e-5 accumulation difference on the new parent. Archived failure before student training; verified all 6,022,240 inherited packed payload bytes identical, 16,384 added output blocks zero, 10/10 probe tokens identical, packed reload exact. Numerical tolerance 1e-4; conversation quality gates unchanged. Cached full QA and merged data reused without regeneration.",
+    "expansion": {
+      "fp32_max_abs_logit_error": 4.935264587402344e-05,
+      "q4_max_abs_logit_error": 5.364418029785156e-05,
+      "inherited_packed_payload_bytes_identical": 6022240,
+      "tensors_checked": 108,
+      "new_zero_output_blocks": 16384,
+      "identical_probe_token_sequences": 10,
+      "packed_reload_error": 0,
+      "total_design_bytes": 8243985,
+      "remaining_from_8mib": 144623,
+      "reserve_bytes": 262144,
+      "native_runtime_measured": false
+    },
+    "first_check": {
+      "step": 1000,
+      "best_step": 0,
+      "direct": [
+        0.79,
+        0.85,
+        0.68
+      ],
+      "context": [
+        0.92,
+        1,
+        0.64
+      ],
+      "multi_turn": [
+        0.8888888888888888,
+        0.8888888888888888,
+        0.5833333333333334
+      ],
+      "goal_met": false
+    },
+    "encoded_training_rows": 510283,
+    "skipped_rows": 1342,
+    "expanded_baseline_direct": [
+      0.86,
+      0.9,
+      0.73
+    ],
+    "expanded_completed": true,
+    "expanded_best_step": 0,
+    "expanded_goal_met": false,
+    "compact_latest_observed_step": 4000,
+    "compact_latest_best_step": 0,
+    "compact_completed": true,
+    "compact_best_step": 0,
+    "goal_met": false,
+    "selected_mode": "expanded",
+    "selected_step": 0,
+    "comparison_finished": true,
+    "finding": "Neither full-weight arm improved over its preserved parent; the selected widened baseline has no learning updates. Its one-point broad-score difference is not evidence of a learned gain."
+  },
+  "local_candidate_fp16_mode": {
+    "default": true,
+    "interface_cache_hook_verified": true,
+    "manual_reply_comparisons": 10,
+    "identical_to_prior_fp32_manual_replies": 10,
+    "actual_kv_dtype": "torch.float16",
+    "manual_quality_target_met": false,
+    "native_runtime_measured": false
+  },
+  "round18_preparation": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round18",
+    "controller_pid": 129410,
+    "status": "completed_see_round18",
+    "conditional": "Skip if round17 qualifies at consecutive checks; otherwise screen both earlier replies per prefix and train only new MLP units",
+    "effective_trainable_elements": 1050624,
+    "inherited_elements_frozen": 10577920,
+    "optimizer_parameter_elements": 5253120,
+    "steps": 10000,
+    "lr": 3e-05,
+    "kl": 0.01,
+    "mixture": {
+      "branched": 0.3,
+      "prefix": 0.15,
+      "contrastive": 0.25,
+      "natural": 0.15,
+      "reading": 0.05,
+      "earlier_acts": 0.1
+    },
+    "prefix_policy": "Grade every earlier teacher reply with original detailed grader; remove whole prefix if either fails; label accepted replies separately with 21 learned acts; retain at least three previously accepted final branches",
+    "source_preflight": {
+      "effective_trainable_elements": 1050624,
+      "inherited_elements_frozen": 10577920,
+      "optimizer_parameter_elements": 5253120,
+      "old_width": 1024,
+      "new_width": 1280,
+      "policy": "Gradient masks, exact restoration of inherited slices after each update, and checkpoint guards",
+      "steps": 12,
+      "weight_decay_deliberately_enabled": 0.01,
+      "checkpoint_mid_training_verified": true,
+      "frozen_packed_payload_bytes_identical": 6022240,
+      "changed_active_segments": 2064,
+      "losses": [
+        2.640733242034912,
+        2.636070966720581,
+        2.6267361640930176,
+        2.612769365310669,
+        2.598818778991699,
+        2.5779378414154053,
+        2.5501785278320312,
+        2.515631914138794,
+        2.4812121391296387,
+        2.440882921218872,
+        2.399296283721924,
+        2.349363088607788
+      ],
+      "source_sha256": "f91c78b13c7e7820a2746416e626526ccafe787c955ec152e1e030bde33d8316",
+      "packed_sha256": "057fe411d93dd9d62a1f5f52a65ba836edb671db27c05f102d41479be9248258",
+      "quality_improvement_measured": false,
+      "native_runtime_measured": false
+    },
+    "student_training_started": false,
+    "reserved_audit3_opened": false
+  },
+  "round18": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round18",
+    "controller_pid": 129410,
+    "status": "complete_target_unmet",
+    "conditional": "Skip if round17 qualifies at consecutive checks; otherwise screen both earlier replies per prefix and train only new MLP units",
+    "effective_trainable_elements": 1050624,
+    "inherited_elements_frozen": 10577920,
+    "optimizer_parameter_elements": 5253120,
+    "steps": 10000,
+    "lr": 3e-05,
+    "kl": 0.01,
+    "mixture": {
+      "branched": 0.3,
+      "prefix": 0.15,
+      "contrastive": 0.25,
+      "natural": 0.15,
+      "reading": 0.05,
+      "earlier_acts": 0.1
+    },
+    "prefix_policy": "Grade every earlier teacher reply with original detailed grader; remove whole prefix if either fails; label accepted replies separately with 21 learned acts; retain at least three previously accepted final branches",
+    "source_preflight": {
+      "effective_trainable_elements": 1050624,
+      "inherited_elements_frozen": 10577920,
+      "optimizer_parameter_elements": 5253120,
+      "old_width": 1024,
+      "new_width": 1280,
+      "policy": "Gradient masks, exact restoration of inherited slices after each update, and checkpoint guards",
+      "steps": 12,
+      "weight_decay_deliberately_enabled": 0.01,
+      "checkpoint_mid_training_verified": true,
+      "frozen_packed_payload_bytes_identical": 6022240,
+      "changed_active_segments": 2064,
+      "losses": [
+        2.640733242034912,
+        2.636070966720581,
+        2.6267361640930176,
+        2.612769365310669,
+        2.598818778991699,
+        2.5779378414154053,
+        2.5501785278320312,
+        2.515631914138794,
+        2.4812121391296387,
+        2.440882921218872,
+        2.399296283721924,
+        2.349363088607788
+      ],
+      "source_sha256": "f91c78b13c7e7820a2746416e626526ccafe787c955ec152e1e030bde33d8316",
+      "packed_sha256": "057fe411d93dd9d62a1f5f52a65ba836edb671db27c05f102d41479be9248258",
+      "quality_improvement_measured": false,
+      "native_runtime_measured": false
+    },
+    "student_training_started": true,
+    "reserved_audit3_opened": false,
+    "prefix_candidate_rows": 11388,
+    "exact_overlap_prefixes_excluded": 2,
+    "best_step": 3000,
+    "best_raw_sha256": "eea9006904ac3678a1e183f2afa59cee306a7c0f305580299f9a368f498f6f1e",
+    "direct_rates": [
+      0.8,
+      0.8833333333333333,
+      0.73
+    ],
+    "context_rates": [
+      0.88,
+      1,
+      0.64
+    ],
+    "multi_turn_rates": [
+      0.8888888888888888,
+      0.8888888888888888,
+      0.7083333333333334
+    ],
+    "goal_met": false,
+    "prefix_accepted_rows": 9148,
+    "prefix_rejected_answers": 791,
+    "prefix_removed": 714,
+    "clean_branched_rows": 18909,
+    "prefix_data_sha256": "71ccc2c560ad2cf081aacd7c549067492789fd754532ff235319677a92ebbd8b",
+    "clean_branched_sha256": "09c624f364c7ed6e03ac616ad441025e3c83367949e91978d69d4373b96123b7",
+    "packed_inheritance": {
+      "all_inherited_packed_bytes_identical": true,
+      "payload_bytes_checked": 6022240,
+      "tensors_checked": 108,
+      "changed_active_segments": 2064,
+      "target_sha256": "b12e56c130a02755d02502ced0622e906c4e532c149dcb721bb65e06641751cd"
+    },
+    "total_design_bytes": 8244017,
+    "native_runtime_measured": false
+  },
+  "history_truncation_diagnostic": {
+    "source": "round16/stateful best step6000",
+    "direct_cases_trimmed": 0,
+    "direct_cases": 260,
+    "rollout_cases_trimmed": 0,
+    "rollout_cases": 60,
+    "finding": "These errors are not explained by the 128-token history trimming policy."
+  },
+  "round19": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round19",
+    "controller_pid": 145414,
+    "status": "complete_target_unmet",
+    "source_round18_best_sha256": "eea9006904ac3678a1e183f2afa59cee306a7c0f305580299f9a368f498f6f1e",
+    "typed_init_sha256": "56d03466f5aa1d900f6d9e487cf38694a27fb68291fed69bb902df2f8fe9c074",
+    "parameters": 11636224,
+    "effective_trainable_elements": 1058304,
+    "inherited_elements_frozen": 10577920,
+    "optimizer_parameter_elements": 9460736,
+    "new_type_embedding_elements": 7680,
+    "answer_types": 30,
+    "teacher_labeled_rows": 86824,
+    "labels_sha256": "a713c643d5197658d02c1101417e4c3c00e0b3023443992cdd178d7e92d6c27d",
+    "data_rows": 518080,
+    "data_sha256": "55920ea72e968b33bc4dfdd2bb81ee91ef73735e4e1a22fbfc323ec1d9e1061f",
+    "contexts_and_spoken_targets_unchanged": true,
+    "steps": 10000,
+    "lr": 3e-05,
+    "kl": 0.01,
+    "intent_and_type_loss_weight": 2,
+    "last_observed_step": 10000,
+    "best_step_so_far": 2000,
+    "best_direct_rates": [
+      0.79,
+      0.8333333333333334,
+      0.73
+    ],
+    "best_context_rates": [
+      0.92,
+      0.9333333333333333,
+      0.64
+    ],
+    "best_multi_turn_rates": [
+      0.8888888888888888,
+      0.9444444444444444,
+      0.75
+    ],
+    "goal_met": false,
+    "total_design_bytes": 8249269,
+    "remaining_from_8mib": 139339,
+    "reserve_bytes": 262144,
+    "native_runtime_measured": false,
+    "decoder": "Model chooses intent and answer-form tokens, then ordinary speech. Format masks and generated-body-only trigram prevention; no semantic answer rules.",
+    "reserved_audit3_opened": false,
+    "initial_format_baseline_is_not_a_quality_comparison": true,
+    "observed_partial_fixes": [
+      "Specific pothos plant",
+      "Vanilla recall",
+      "Travel wish"
+    ],
+    "observed_unresolved": [
+      "Latest cat-name correction",
+      "Changed shirt color",
+      "Invented song and book titles",
+      "Genre phrasing"
+    ],
+    "best_step": 8000,
+    "best_raw_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+    "inherited_parameters_verified": true,
+    "packed_inheritance": {
+      "source_packed_sha256": "24e69b1140aa9d7eaf09a793f97b039d0999cfec8f489408c0721919c4fcc248",
+      "trained_packed_sha256": "aa28dd907033795267fd81760fc85997c35589804d32574a703ac13e40ea8299",
+      "all_inherited_packed_bytes_identical": true,
+      "inherited_payload_bytes_checked": 6022240,
+      "tensors_checked": 108,
+      "changed_active_segments": 2065,
+      "inherited_mlp_width": 1024,
+      "quality_improvement_measured": false,
+      "native_runtime_measured": false
+    },
+    "memory_budget": {
+      "packed_bytes": 6640672,
+      "tokenizer_bytes": 297861,
+      "tokenizer_sha256": "438584a42aafcd3cfe978f46f058e751ec243cdb97c4a98f27d4feb65f13a870",
+      "fp16_kv_context128_bytes": 1048576,
+      "reserve_bytes": 262144,
+      "total_design_bytes": 8249253,
+      "remaining_from_8mib": 139355,
+      "native_runtime_measured": false
+    },
+    "manual_probe": "server-results/round19/manual-fp16-conversation.json",
+    "manual_failures": [
+      "Who is Pippa produces a false name Pippia",
+      "Corrected scarf color reverts to purple",
+      "Plant follow-up malformed",
+      "Good-luck wish awkward repetition"
+    ],
+    "cpu_b200_matching_replies": 16,
+    "packed_reload_max_abs_error": 0,
+    "manual_fp16_fp32_raw_token_matches": 10,
+    "interactive_cli_verification": {
+      "samples": 10,
+      "matching_replies": 10,
+      "actual_kv_storage_dtypes": [
+        "torch.float16"
+      ],
+      "private_tags_hidden_from_public_reply": true,
+      "quality_goal_met": false,
+      "provenance": "CompactChat (roneneldan/TinyStories-Instruct-8M)"
+    },
+    "experimental_runner": "research/tinytalk-quality-20261105/chat-round19.sh"
+  },
+  "round19b": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round19b",
+    "controller_pid": 148864,
+    "status": "complete_target_unmet",
+    "source_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+    "steps": 8000,
+    "lr": 3e-06,
+    "embedding_lr_scale": 0.1,
+    "kl": 0.05,
+    "all_weights_trainable": true,
+    "data_and_decoder_same_as_round19": true,
+    "target_unchanged": true,
+    "reserved_audit3_opened": false,
+    "best_step": 0,
+    "goal_met": false,
+    "selected": {
+      "mode": "gentle",
+      "step": 0,
+      "goal_met": false,
+      "score": 0.8038461538461539,
+      "bottleneck_ratio": 0.888888888888889,
+      "development_partitions": {
+        "previous_dev_direct": 0.78,
+        "opened_audit_direct": 0.8333333333333334,
+        "context_rates": [
+          0.92,
+          0.9333333333333333,
+          0.64
+        ],
+        "multi_turn_rates": [
+          0.8888888888888888,
+          0.9444444444444444,
+          0.75
+        ],
+        "new_reserved_audit_opened": false,
+        "opened_audit2_direct": 0.73
+      },
+      "two_consecutive_goal_checks": false
+    },
+    "parent_equality": {
+      "parent_raw_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+      "selected_raw_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+      "selected_step": 0,
+      "same_selected_raw_weights": true,
+      "same_direct_token_sequences": 260,
+      "direct_cases": 260,
+      "same_rollout_token_sequences": 60,
+      "rollout_cases": 60,
+      "goal_met": false
+    }
+  },
+  "round20": {
+    "directory": "/home/sad/tinytalk-quality-20261105-3abx1_sq/round20",
+    "controller_pid": 151215,
+    "status": "training_learned_answer_keywords",
+    "source_policy": "Use round19 frozen-core winner; skip if either parent comparison qualifies",
+    "label_controller_pid": 154650,
+    "paused_own_labeler_pid": null,
+    "label_resume_watchdog_pid": null,
+    "label_resume_max_pause_seconds": 1800,
+    "scheduling_reason": "Teacher labeling caused student step latency to rise; sequential student comparison first",
+    "teacher_untouched": true,
+    "probe_rows": 96,
+    "probe_original_answer_acceptability": 0.9791666666666666,
+    "probe_keyword_semantic_acceptability": 0.9791666666666666,
+    "full_teacher_annotation_rows": 208825,
+    "planned_steps": 12000,
+    "effective_trainable_elements": 1058560,
+    "inherited_elements_frozen": 10577920,
+    "parameters": 11636480,
+    "keyword_max_tokens": 10,
+    "total_generated_tokens_limit_unchanged": 40,
+    "focus_preflight": {
+      "effective_trainable_elements": 1058560,
+      "inherited_elements_frozen": 10577920,
+      "new_answer_type_embedding_elements": 7936,
+      "optimizer_parameter_elements": 9460992,
+      "old_width": 1024,
+      "new_width": 1280,
+      "policy": "Gradient masks, exact restoration of inherited slices after each update, and checkpoint guards",
+      "steps": 12,
+      "weight_decay_deliberately_enabled": 0.01,
+      "checkpoint_mid_training_verified": true,
+      "frozen_packed_payload_bytes_identical": 6022240,
+      "changed_active_segments": 2065,
+      "losses": [
+        6.470425605773926,
+        6.464951992034912,
+        6.453976631164551,
+        6.437552452087402,
+        6.421143054962158,
+        6.396543025970459,
+        6.363773822784424,
+        6.32289981842041,
+        6.282094955444336,
+        6.2344136238098145,
+        6.184516429901123,
+        6.124937057495117
+      ],
+      "source_sha256": "f226e60757e1599ba3cfe0e4d5504a9c94999ef6f0f06c4e06efc01963a6a290",
+      "typed_wire_format_check": {
+        "probes": 4,
+        "all_private_headers_valid": true,
+        "prompt_facts_remain_copyable": true,
+        "generated_trigram_loops_blocked": true,
+        "answer_keywords_excluded_from_public_reply": true,
+        "keyword_values_remain_copyable_in_speech": true,
+        "keyword_length_bound_enforced": true,
+        "no_eos_before_speech": true
+      },
+      "packed_sha256": "1ad0517661fe4f1b79cc1787db44c4fa4a3ae273989427d837edc432f76bcde8",
+      "quality_improvement_measured": false,
+      "native_runtime_measured": false
+    },
+    "preflight_memory": {
+      "source_sha256": "14370ba6c1f7603235eb811b001a76f04d9a82c8c19878c69378898a8ce1cd73",
+      "ordinary_embeddings_exact": true,
+      "old_vocab": 16436,
+      "new_vocab": 16437,
+      "parameters": 11636480,
+      "total_design_bytes": 8249451,
+      "remaining_from_8mib": 139157,
+      "reserve_bytes": 262144,
+      "native_runtime_measured": false
+    },
+    "preflight_quality_improvement_measured": false,
+    "reserved_audit3_opened": false,
+    "pending_if_selected": "Repeat actual trained-model CLI/manual and CPU/B200 checks; require two complete development passes, full FP16-KV validation and audit3 before final promotion",
+    "labeler_resumed": true,
+    "compact_wire_probe_semantic_pass_rate": 0.96875,
+    "compact_wire_probe_rows": 96,
+    "old_probe_completion_tokens": 2746,
+    "compact_probe_completion_tokens": 1216,
+    "invalid_compact_falls_back_to_explicit_fields": true,
+    "legacy_cached_responses_preserved": true,
+    "teacher_label_audit_passed": 753,
+    "teacher_label_audit_total": 768,
+    "teacher_label_audit_rate": 0.98046875,
+    "label_rows": 494941,
+    "label_sha256": "c267e9457ef3b42b8f55ded0910240500f5515a93383e245198e438856dd83b5",
+    "unlabelable_rows_excluded": 627,
+    "training_data_rows": 516981,
+    "training_data_sha256": "572736fb3d04e01667f777d70b6a17604c5913bd680fcf0aa8830e643e846f77",
+    "too_long_focus_rows_excluded": 450,
+    "too_long_generated_targets_excluded": 0,
+    "known_failed_supervision_rows_excluded": 22,
+    "actual_initializer_memory": {
+      "source_sha256": "3a69796105c1d27e2310a622f3d336695028f2849f5f5352281c966e241edb06",
+      "ordinary_embeddings_exact": true,
+      "old_vocab": 16436,
+      "new_vocab": 16437,
+      "parameters": 11636480,
+      "total_design_bytes": 8249483,
+      "remaining_from_8mib": 139125,
+      "reserve_bytes": 262144,
+      "native_runtime_measured": false
+    },
+    "focused_cli_format_preflight": {
+      "model_sha256": "c6ddc2d6890d3771914cef856b60510786be7f73490b3766f947ff3d137ce250",
+      "packed_sha256": "1ad0517661fe4f1b79cc1787db44c4fa4a3ae273989427d837edc432f76bcde8",
+      "cli_completed": true,
+      "actual_kv_storage_dtypes": [
+        "torch.float16"
+      ],
+      "one_private_boundary": true,
+      "public_reply": "to hear.",
+      "quality_improvement_measured": false,
+      "source_is_structural_preflight_only": true
+    }
+  },
+  "state_factorial_diagnostic": {
+    "version": 2,
+    "cases": 400,
+    "source": ".build/tinytalk-quality-20261105/state-factorial-probe-v2",
+    "weights": "round19 best step8000 Q4",
+    "cache": "actual FP16",
+    "graded_passed": 376,
+    "graded_total": 400,
+    "purpose": "Observed development diagnostic, not a new final quality gate",
+    "history_trimmed_cases": 0,
+    "matched_base_cases": 32,
+    "reverse_entity": {
+      "passed": 11,
+      "total": 16
+    },
+    "finding": "Echoing the old fact was not generally harmful. Pronoun updates and rare-name spelling still fail in some cases; reversed entity queries are weaker.",
+    "reserved_audit3_opened": false
+  }
+}

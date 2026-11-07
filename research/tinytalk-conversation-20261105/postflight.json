@@ -1,0 +1,18 @@
+{
+  "gpu": {
+    "exit": 0,
+    "out": "0, NVIDIA B200, 159356 MiB, 23276 MiB, 0 %\n1, NVIDIA B200, 159356 MiB, 23276 MiB, 0 %\n",
+    "err": ""
+  },
+  "containers": {
+    "exit": 0,
+    "out": "qwen38-fp8-b200 | Up 3 days\n",
+    "err": ""
+  },
+  "qwen": {
+    "exit": 0,
+    "out": "running=true restarts=0 oom=false\n",
+    "err": ""
+  },
+  "models_api_http_status": 200
+}

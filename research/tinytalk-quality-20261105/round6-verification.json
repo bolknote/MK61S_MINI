@@ -1,0 +1,111 @@
+{
+  "device": "cpu",
+  "models": {
+    "grounded": {
+      "parameters": 10577920,
+      "best_step": 4000,
+      "packed_bytes": 6037984,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "The whole time weighed.",
+          "b200": "The whole time weighed."
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "I am just code, but I am ready to chat.",
+          "b200": "I am just code, but I am ready to chat."
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "I am TinyTalk.",
+          "b200": "I am TinyTalk."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "I am always ready to chat.",
+          "b200": "I am always ready to chat."
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Try a short walk.",
+          "b200": "Try a short walk."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "You enjoy making paper animals.",
+          "b200": "You enjoy making paper animals."
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "Do you want to talk to me?",
+          "b200": "Do you want to talk to me?"
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try a short nap for a short walk.",
+          "b200": "Try a short nap for a short walk."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "Try a book or a book.",
+          "b200": "Try a book or a book."
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "Try a short paper boat.",
+          "b200": "Try a short paper boat."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That is a great start.",
+          "b200": "That is a great start."
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "That is a great way to enjoy the new leaf.",
+          "b200": "That is a great way to enjoy the new leaf."
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "Oh no.",
+          "b200": "Oh no."
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "I am sorry to hear that.",
+          "b200": "I am sorry to hear that."
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "That sounds very peaceful. Did you take a bath?",
+          "b200": "That sounds very peaceful. Did you take a bath?"
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "That sounds like a nice day.",
+          "b200": "That sounds like a nice day."
+        }
+      ]
+    }
+  },
+  "uses_reserved_test": false
+}

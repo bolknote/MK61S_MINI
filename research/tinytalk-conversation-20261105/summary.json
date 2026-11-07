@@ -1,0 +1,56 @@
+{
+  "outcome": "Moderate improvement in greedy conversation; sampling advantage not stable across three seeds",
+  "selected": {
+    "arm": "qat",
+    "step": 1500,
+    "dev_score": [
+      0.11250000000000002,
+      -5.8338666560050605
+    ]
+  },
+  "test_used_for_checkpoint_selection": false,
+  "default_temperature": 0,
+  "parameters": 8278400,
+  "packed_bytes": 4706696,
+  "packed_sha256": "25dc632057a394b3d4bf85198251f7f658aac3ea5c58bd00bf7bc3561df4b6ae",
+  "greedy_judge_counts": {
+    "candidate": 32,
+    "baseline": 15,
+    "tie": 13,
+    "error": 0
+  },
+  "sampling_judge_counts": {
+    "7731": {
+      "candidate": 28,
+      "baseline": 22,
+      "tie": 10,
+      "error": 0
+    },
+    "17331": {
+      "candidate": 28,
+      "baseline": 22,
+      "tie": 10,
+      "error": 0
+    },
+    "27731": {
+      "candidate": 24,
+      "baseline": 29,
+      "tie": 7,
+      "error": 0
+    }
+  },
+  "cpu_b200_greedy_matches": 32,
+  "cpu_b200_greedy_compared": 32,
+  "source_files": {
+    "teacher_dialogue.py": "cfd0db99f0bc1a09958b674bfbb7007927ad2b0573223a10e3ac750bd37ec9e5",
+    "prepare_data.py": "252dbf9375c1ba0856e62c8c8a076f8c20c511d1484805c09602a1dbecd5ac4d",
+    "evaluate_sampling.py": "cb9f0f89541914de6710909b83219b36d8be46b9662f2cc6f23148e0100c83a7",
+    "verify_artifacts.py": "8700357bba53306420cc7151fa081d7a0a5dbf3329f6babc98850b15f54ed4a7",
+    "make_suite.py": "64fbfedbd81ef11597ca9e366462b1b3976278369bc281d009dcc7946074e9e3",
+    "run_sampling.py": "19f1368c58a4bf1217ba438eec371d23eda4a868552cdf437a909429214c3831",
+    "train_chat.py": "f6e59994defae417f5fa0656d2027ca07660552721b5723177e076e15decdd46",
+    "judge.py": "113aac72ec14c9c22252e22ec40d36a61150cb8f79fbb2fcd0b46a62783b5938",
+    "evaluate_chat.py": "758d057694908f0db0447a96bfb622c4a7cd0c3bd0f23fa2a2fa0319adaaa6b9",
+    "run_remote.py": "31c906911fae272b634dcba78985f31ffe26b3070d46ac46f355807e37ff14f2"
+  }
+}

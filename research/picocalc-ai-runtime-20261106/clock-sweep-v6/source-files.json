@@ -1,0 +1,14 @@
+{
+  "code/mk61_ai_perf.hpp": "cda7b72d3e28117e646fc17a6f8837e97159503679baf135fa7b7cc09478c384",
+  "ports/picocalc/ai_clock.hpp": "3dd304c23918014fc18d48a5393187eb31055a2d810114ee0104d940abd17fcb",
+  "ports/picocalc/ai_clock.cpp": "9824a3d690eba91e127784b3a63deaa28e5d7ab247f4d6c6ed85e588017f5f04",
+  "ports/picocalc/ai_clock_transition.hpp": "e6fcf5428dca3c030c27a3583569a6c53f0550faf564ff80ae956a4954b1febd",
+  "ports/picocalc/cosmic_clock_plan.hpp": "35b0a600806e5a8285074b0c7cbbc50b802e45fa9621b3fd8cdae631ba3ce9b5",
+  "ports/picocalc/cosmic_clock.hpp": "a94c1ca9a4443def252fc1a46ec00e128a080049ddbc1dec5e8c78a96276987c",
+  "ports/picocalc/cosmic_clock.cpp": "3ae0d6b78d87d26f4c82b155947f473718d5e7a9ca7006d430d78d36b39f4148",
+  "ports/picocalc/CMakeLists.txt": "eda03e1b7104f48208ed16744c4dd480fef432cfd13f5118b788145ccd8c5c4c",
+  "ports/picocalc/ai_harness.cpp": "24ac74189f73653c4fee7c0e248c4c603162fafdc7fbd57d7d5cb227b6a93ffd",
+  "ports/picocalc/main.cpp": "d460bada6ad81376b97d459eefb62692eeb4af7493a4b1e63f9ff8263bcba7d1",
+  "tools/firmware/picocalc/build_picocalc.py": "687ce370eb3072262cc56c0bc156503cf65065152159a671f1b1386b5183dbab",
+  "tests/ai_clock_sweep_self_test.cpp": "05fd0cb35f04f53cdc4b58757489bdedbfa94c7a09f06f87de07e2b1153cb72b"
+}

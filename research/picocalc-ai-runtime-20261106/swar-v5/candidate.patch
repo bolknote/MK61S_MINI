@@ -1,0 +1,430 @@
+--- a/code/mk61_ai_model.hpp
++++ b/code/mk61_ai_model.hpp
+@@ -27,7 +27,7 @@
+   CANCELLED,
+   NUMERIC
+ };
+-enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32 };
++enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32, SWAR_INT8 };
+ enum class LinearKernel : std::uint8_t { REFERENCE, FLASH, SRAM };
+ struct ComputeExecution {
+   // submit publishes one bounded SRAM-only job; join completes it before any
+--- a/code/mk61_ai_model.cpp
++++ b/code/mk61_ai_model.cpp
+@@ -1,6 +1,7 @@
+ #include "mk61_ai_model.hpp"
+ #include "mk61_ai_kernels.h"
+ #include "mk61_ai_linear.hpp"
++#include "mk61_ai_swar.hpp"
+ #include <algorithm>
+ #include <cfloat>
+ #include <cmath>
+@@ -295,7 +296,8 @@
+       return false;
+     }
+     const bool integer =
+-        arithmetic == Arithmetic::INT8 || arithmetic == Arithmetic::LUT_INT8;
++        arithmetic == Arithmetic::INT8 || arithmetic == Arithmetic::LUT_INT8 ||
++        arithmetic == Arithmetic::SWAR_INT8;
+     const bool tables = arithmetic == Arithmetic::LUT_INT8 ||
+                         arithmetic == Arithmetic::LUT_FLOAT32;
+     if (integer) {
+@@ -313,6 +315,11 @@
+           quant[g * 32 + j] =
+               scale ? std::int8_t(std::round(input[g * 32 + j] / scale)) : 0;
+       }
++    }
++    if (arithmetic == Arithmetic::SWAR_INT8) {
++      for (unsigned g = 0; g < t.cols / 32; ++g)
++        input_sums[g] = float(swar::prepare32(quant + 32 * g,
++            reinterpret_cast<std::uint32_t *>(lookup) + 16 * g));
+     }
+     if (tables) {
+       for (unsigned g = 0; g < t.cols / 32; ++g) {
+--- a/code/mk61_ai_linear.cpp
++++ b/code/mk61_ai_linear.cpp
+@@ -1,5 +1,6 @@
+ #include "mk61_ai_linear.hpp"
+ #include "mk61_ai_kernels.h"
++#include "mk61_ai_swar.hpp"
+ #include <cmath>
+ #include <cstring>
+ #if defined(PICO_ON_DEVICE)
+@@ -105,6 +106,18 @@
+             2 * plane_integer(t, p + 4) + 4 * plane_integer(t, p + 8) +
+             8 * plane_integer(t, p + 12) - 8 * int(b.input_sums[g]);
+         value += float(sum) * scale * b.activation_scales[g];
++      } else if constexpr (Mode == Arithmetic::SWAR_INT8) {
++        alignas(4) std::uint8_t converted[16];
++        if (b.grid & 256) {
++          for (unsigned j = 0; j < 16; ++j)
++            converted[j] = std::uint8_t(unpack(p, 2*j, 4, true) |
++                (unpack(p, 2*j+1, 4, true) << 4));
++          p = converted;
++        }
++        const int sum = swar::dot32_aligned(p,
++            reinterpret_cast<const std::uint32_t *>(b.lookup) + 16*g,
++            int(b.input_sums[g]));
++        value += float(sum) * scale * b.activation_scales[g];
+       } else {
+         const auto *x = b.quant + 32 * g;
+         std::int32_t sum = 0;
+@@ -135,7 +148,8 @@
+ 
+ void generic(LinearBatch &b) {
+   const bool integer = b.arithmetic == Arithmetic::INT8 ||
+-                       b.arithmetic == Arithmetic::LUT_INT8;
++                       b.arithmetic == Arithmetic::LUT_INT8 ||
++                       b.arithmetic == Arithmetic::SWAR_INT8;
+   const bool tables = b.arithmetic == Arithmetic::LUT_INT8 ||
+                       b.arithmetic == Arithmetic::LUT_FLOAT32;
+   const bool planes = (b.grid & 256) != 0, symmetric = (b.grid & 1) != 0;
+@@ -209,6 +223,8 @@
+       return fast_q4<Arithmetic::LUT_INT8>(b);
+     if (b.arithmetic == Arithmetic::INT8)
+       return fast_q4<Arithmetic::INT8>(b);
++    if (b.arithmetic == Arithmetic::SWAR_INT8)
++      return fast_q4<Arithmetic::SWAR_INT8>(b);
+   }
+   generic(b);
+ }
+--- /dev/null
++++ b/code/mk61_ai_swar.hpp
+@@ -0,0 +1,65 @@
++#ifndef MK61_AI_SWAR_HPP
++#define MK61_AI_SWAR_HPP
++#include <cstdint>
++#include <cstring>
++#if defined(__GNUC__) || defined(__clang__)
++#define MK61_SWAR_INLINE inline __attribute__((always_inline))
++#else
++#define MK61_SWAR_INLINE inline
++#endif
++namespace mk61ai::swar {
++// XP is a polynomial modulo 2^32, not two independent unsigned halfwords:
++// negative low lanes must borrow into the high half. All MUL/ADD/SHL below
++// are unsigned so the discarded high product cannot cause signed C++ UB.
++MK61_SWAR_INLINE std::uint32_t pair(std::int8_t a, std::int8_t b) {
++  return std::uint32_t(std::int32_t(b)) +
++         (std::uint32_t(std::int32_t(a)) << 16);
++}
++MK61_SWAR_INLINE int prepare32(const std::int8_t *input, std::uint32_t *packed) {
++  int sum = 0;
++  for (unsigned word = 0; word < 4; ++word)
++    for (unsigned lane = 0; lane < 4; ++lane) {
++      const auto a = input[8 * word + lane], b = input[8 * word + lane + 4];
++      packed[4 * word + lane] = pair(a, b);sum += int(a) + int(b);
++    }
++  return sum;
++}
++MK61_SWAR_INLINE std::int32_t rounded_high(std::uint32_t value) {
++  value += 0x8000U;
++  std::int32_t signed_value;std::memcpy(&signed_value, &value, 4);
++  static_assert((-1 >> 1) == -1, "SWAR requires arithmetic signed right shift");
++  return signed_value >> 16;
++}
++MK61_SWAR_INLINE std::int32_t dot16(std::uint32_t a, std::uint32_t b,
++                                  const std::uint32_t *x) {
++  constexpr std::uint32_t mask = 0x000f000fU;
++  std::uint32_t sum = (a & mask) * x[0];
++  sum += ((a >> 4) & mask) * x[1];
++  sum += ((a >> 8) & mask) * x[2];
++  sum += ((a >> 12) & mask) * x[3];
++  sum += (b & mask) * x[4];
++  sum += ((b >> 4) & mask) * x[5];
++  sum += ((b >> 8) & mask) * x[6];
++  sum += ((b >> 12) & mask) * x[7];
++  // Eight products: low interference is in [-15360,15240], strictly
++  // inside +/-32768. Desired high sum is in [-30720,30480], fitting int16.
++  return rounded_high(sum);
++}
++MK61_SWAR_INLINE std::int32_t dot32(const std::uint8_t *weights,
++                                  const std::uint32_t *packed, int input_sum) {
++  std::uint32_t a, b, c, d;
++  std::memcpy(&a, weights, 4);std::memcpy(&b, weights + 4, 4);
++  std::memcpy(&c, weights + 8, 4);std::memcpy(&d, weights + 12, 4);
++  return dot16(a, b, packed) + dot16(c, d, packed + 8) - 8 * input_sum;
++}
++// Production tiles/rows are 4-byte aligned. Preserve that information for
++// Cortex-M0+, where an arbitrary byte pointer otherwise needs four LDRBs.
++MK61_SWAR_INLINE std::int32_t dot32_aligned(const std::uint8_t *weights,
++                                          const std::uint32_t *packed, int input_sum) {
++#if defined(__GNUC__) || defined(__clang__)
++  weights = static_cast<const std::uint8_t *>(__builtin_assume_aligned(weights, 4));
++#endif
++  return dot32(weights, packed, input_sum);
++}
++}
++#endif
+--- a/code/mk61_ai_perf.hpp
++++ b/code/mk61_ai_perf.hpp
+@@ -32,7 +32,7 @@
+     if(at<size) ++at;
+     values[key]=value;seen|=1U<<key;
+   }
+-  if(seen!=((1U<<fields)-1) || values[0]>2 || values[1]>3 || values[2]<1 || values[2]>2 ||
++  if(seen!=((1U<<fields)-1) || values[0]>2 || values[1]>4 || values[2]<1 || values[2]>2 ||
+      values[3]>1 || values[4]>1 || (values[5]!=125 && values[5]!=200 && values[5]!=250 && values[5]!=300) ||
+      values[6]<1 || values[6]>16 || values[7]<1 || values[7]>8 || values[6]+values[7]>24 ||
+      values[8]<1 || values[8]>4 || values[10]>1 || values[11]>1 || values[12]>1 ||
+--- a/tests/hil_mk61_ai_perf.py
++++ b/tests/hil_mk61_ai_perf.py
+@@ -97,7 +97,7 @@
+     if set(result) != fields:
+         raise ValueError("config fields mismatch")
+     c = result
+-    if (c["kernel"] not in range(3) or c["arithmetic"] not in range(4) or c["cores"] not in (1, 2) or
++    if (c["kernel"] not in range(3) or c["arithmetic"] not in range(5) or c["cores"] not in (1, 2) or
+             any(c[k] not in (0, 1) for k in ("freeze", "filter", "control", "constrained")) or
+             c["mhz"] not in (125, 200, 250, 300) or not 1 <= c["prefill"] <= 16 or
+             not 1 <= c["decode"] <= 8 or c["prefill"] + c["decode"] > 24 or
+--- /dev/null
++++ b/tests/mk61_ai_swar_self_test.cpp
+@@ -0,0 +1,44 @@
++#include "mk61_ai_swar.hpp"
++#include <cassert>
++#include <cstdio>
++#include <cstring>
++#include <initializer_list>
++using namespace mk61ai;
++namespace {
++int oracle(const std::uint8_t *w, const std::int8_t *x) {
++  int sum = 0;
++  for (unsigned i = 0; i < 32; ++i) sum += (int((w[i / 2] >> (4 * (i & 1))) & 15) - 8) * int(x[i]);
++  return sum;
++}
++std::uint32_t rng = 0x61b200U;
++std::uint32_t random_word() { rng ^= rng << 13;rng ^= rng >> 17;rng ^= rng << 5;return rng; }
++}
++int main() {
++  unsigned exhaustive = 0, groups = 0;
++  for (unsigned a = 0; a < 16; ++a)
++    for (unsigned b = 0; b < 16; ++b)
++      for (int x = -128; x <= 127; ++x)
++        for (int y = -128; y <= 127; ++y) {
++          const auto product = (a + (b << 16)) * swar::pair(std::int8_t(x), std::int8_t(y));
++          assert(swar::rounded_high(product) == int(a) * x + int(b) * y);++exhaustive;
++        }
++  std::uint8_t raw[17];std::int8_t input[32];std::uint32_t packed[16];
++  auto check = [&]() {
++    const int sum = swar::prepare32(input, packed);
++    assert(swar::dot32(raw + 1, packed, sum) == oracle(raw + 1, input));++groups;
++  };
++  for (int value : {-128, -127, -1, 0, 1, 126, 127})
++    for (unsigned byte : {0U, 0x0fU, 0xf0U, 0xffU, 0x88U, 0x7fU}) {
++      std::memset(raw, byte, sizeof(raw));
++      for (unsigned i = 0; i < 32; ++i) input[i] = std::int8_t(value);
++      check();
++      for (unsigned i = 0; i < 32; ++i) input[i] = std::int8_t(i & 1 ? value : -1);
++      check();
++    }
++  for (unsigned n = 0; n < 200000; ++n) {
++    for (auto &v : raw) v = std::uint8_t(random_word());
++    for (auto &v : input) v = std::int8_t(int(random_word() & 255) - 128);
++    check();
++  }
++  std::printf("SWAR PASS: %u exhaustive signed lane/weight combinations; %u full32 groups, carry boundaries, negative lanes, unaligned weights; exact scalar INT8 sums.\n", exhaustive, groups);
++}
+--- /dev/null
++++ b/tests/mk61_ai_swar_fixture.hpp
+@@ -0,0 +1,125 @@
++#pragma once
++#include "mk61_ai_model.hpp"
++#include "mk61_ai_worker_fixture.hpp"
++#include <algorithm>
++#include <cassert>
++#include <cstdio>
++#include <cstring>
++#include <fstream>
++#include <vector>
++using namespace mk61ai;
++namespace {
++struct Runtime {
++  Model model;
++  const std::vector<std::uint8_t> &package;
++  std::vector<std::uint64_t> workspace;
++  std::vector<std::uint8_t> cache;
++  TestAiWorker cpu, dma;
++  std::thread::id foreground = std::this_thread::get_id();
++  struct ReadJob {
++    Runtime *runtime;
++    block_io::ReadSpan spans[16];
++    unsigned count;
++    bool fail;
++  } job{};
++  bool pending = false, busy = false, refuse = false;
++  int cancel_after = -1, fail_finish_after = -1;
++  unsigned began = 0, finished = 0, overlapped = 0;
++  void owner() const { assert(std::this_thread::get_id() == foreground); }
++  static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
++    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
++    if (at > r.package.size() || n > r.package.size() - at) return false;
++    std::memcpy(out, r.package.data() + at, n);return true;
++  }
++  static bool read_kv(void *p, std::uint32_t at, void *out, unsigned n) {
++    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
++    if (at > r.cache.size() || n > r.cache.size() - at) return false;
++    std::memcpy(out, r.cache.data() + at, n);return true;
++  }
++  static bool write_kv(void *p, std::uint32_t at, const void *in, unsigned n) {
++    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
++    if (at > r.cache.size() || n > r.cache.size() - at) return false;
++    std::memcpy(r.cache.data() + at, in, n);return true;
++  }
++  static bool begin(void *p, const block_io::ReadSpan *spans, unsigned count) {
++    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
++    if (r.refuse) return false;
++    assert(count && count <= 16);
++    unsigned total = 0;
++    for (unsigned i = 0; i < count; ++i) {
++      assert(spans[i].offset <= r.package.size() && spans[i].bytes <= r.package.size() - spans[i].offset);
++      // Match the direct QPI backend's bounded, aligned destination contract.
++      if ((spans[i].offset & 15) || (spans[i].bytes & 15) ||
++          static_cast<std::uint8_t *>(spans[i].destination) !=
++              static_cast<std::uint8_t *>(spans[0].destination) + total) return false;
++      total += spans[i].bytes;
++    }
++    if (total > 2048) return false;
++    r.job.runtime = &r;r.job.count = count;r.job.fail = r.fail_finish_after == 0;
++    if (r.fail_finish_after > 0) --r.fail_finish_after;
++    std::copy(spans, spans + count, r.job.spans);
++    r.pending = true;++r.began;
++    assert(r.dma.submit([](void *raw) {
++      auto &j = *static_cast<ReadJob *>(raw);
++      for (unsigned i = 0; i < j.count; ++i) {
++        // A failed transfer may have overwritten a prefix, but must be
++        // joined before the caller retries or destroys the workspace.
++        if (j.fail && i) break;
++        const auto &s = j.spans[i];
++        std::memcpy(s.destination, j.runtime->package.data() + s.offset, s.bytes);
++        std::this_thread::yield();
++      }
++    }, &r.job));
++    return true;
++  }
++  static bool finish(void *p) {
++    auto &r = *static_cast<Runtime *>(p);r.owner();assert(r.pending);
++    r.dma.join();r.pending = false;++r.finished;return !r.job.fail;
++  }
++  explicit Runtime(const std::vector<std::uint8_t> &p) : package(p) {
++    assert(model.open({this, unsigned(p.size()), read, nullptr, begin, finish}) == ModelStatus::OK);
++    workspace.resize((model.workspace_bytes() + 7) / 8 + 8);
++    std::fill(workspace.end() - 8, workspace.end(), UINT64_C(0xb00f61a1b00f61a1));
++    cache.resize(model.cache_bytes());
++    assert(model.bind(workspace.data(), model.workspace_bytes(),
++                      {this, unsigned(cache.size()), read_kv, write_kv}) == ModelStatus::OK);
++    configure(true);
++  }
++  void configure(bool prefetch, bool filter = false) {
++    ComputeExecution e{};e.context = this;e.kernel = LinearKernel::SRAM;
++    e.prefetch = prefetch;e.filter_head = filter;
++    e.busy = [](void *p, bool active) {
++      auto &r = *static_cast<Runtime *>(p);r.owner();
++      assert(r.busy != active && !r.pending && r.began == r.finished);
++      assert(r.cpu.submitted == r.cpu.joined && r.dma.submitted == r.dma.joined);
++      r.busy = active;
++    };
++    e.submit = [](void *p, void (*fn)(void *), void *job) {
++      auto &r = *static_cast<Runtime *>(p);r.owner();
++      if (r.pending) ++r.overlapped;
++      return r.cpu.submit(fn, job);
++    };
++    e.join = [](void *p) { static_cast<Runtime *>(p)->cpu.join(); };
++    model.execution(e);
++  }
++  ModelStatus forward(std::uint16_t token, Arithmetic arithmetic, std::uint16_t &best,
++                      float *logits = nullptr, bool output = true,
++                      bool (*allowed)(void *, std::uint16_t) = nullptr) {
++    const auto result = model.forward(token, output, best, [](void *p) {
++      auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && r.busy);
++      return r.cancel_after < 0 || r.cancel_after-- > 0;
++    }, this, arithmetic, logits, allowed, this);
++    assert(!busy && !pending && began == finished && cpu.submitted == cpu.joined);
++    for (unsigned i = 0; i < 8; ++i)
++      assert(workspace[workspace.size() - 8 + i] == UINT64_C(0xb00f61a1b00f61a1));
++    return result;
++  }
++};
++[[maybe_unused]] bool sparse(void *p, std::uint16_t id) {
++  // A real vocabulary policy may decode tokens through PSRAM. Doing this
++  // while a prefetch holds the bus would self-deadlock on the MCU.
++  auto &r = *static_cast<Runtime *>(p);char text[2049];unsigned used = 0;
++  assert(r.model.decode(id, text, sizeof(text), used) == ModelStatus::OK);
++  return id % 37 == 0;
++}
++}
+--- /dev/null
++++ b/tests/mk61_ai_swar_model_test.cpp
+@@ -0,0 +1,26 @@
++#include "mk61_ai_swar_fixture.hpp"
++int main(int argc,char** argv) {
++  assert(argc==3);unsigned comparisons=0;
++  for(unsigned layout=1;layout<3;++layout) {
++    std::ifstream file(argv[layout],std::ios::binary);
++    const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(file)),{});
++    Runtime control(bytes),candidate(bytes);control.configure(false);candidate.configure(true);
++    std::uint16_t tokens[64];unsigned count=0;
++    assert(control.model.encode("Задача: сложи R0 и R1, затем проверь результат.",tokens,64,count)==ModelStatus::OK && count>3);
++    std::vector<float> a(control.model.config().vocab),b(a.size());
++    std::uint16_t left=0,right=0;
++    for(auto kernel : {LinearKernel::FLASH,LinearKernel::SRAM}) {
++      auto e=control.model.execution();e.kernel=kernel;control.model.execution(e);
++      e=candidate.model.execution();e.kernel=kernel;candidate.model.execution(e);
++      control.model.reset();candidate.model.reset();
++      for(unsigned p=0;p<16;++p) {
++        bool output=p<2 || p==15;
++        assert(control.forward(tokens[p%count],Arithmetic::INT8,left,output?a.data():nullptr,output)==ModelStatus::OK);
++        assert(candidate.forward(tokens[p%count],Arithmetic::SWAR_INT8,right,output?b.data():nullptr,output)==ModelStatus::OK);
++        assert(control.model.compute_metrics().checksum==candidate.model.compute_metrics().checksum && control.cache==candidate.cache);
++        if(output) { assert(left==right && !std::memcmp(a.data(),b.data(),a.size()*sizeof(float)));++comparisons; }
++      }
++    }
++  }
++  std::printf("SWAR model PASS: %u exact full-logit comparisons vs INT8; both Q4 layouts, FLASH/SRAM,2cores,prefetch,16-position KV exact.\n",comparisons);
++}
+--- /dev/null
++++ b/tests/run_mk61_ai_swar_tests.sh
+@@ -0,0 +1,17 @@
++#!/usr/bin/env bash
++set -euo pipefail
++root="$(cd "$(dirname "$0")/.." && pwd)"
++if [[ $# != 1 || ! -f "$1" ]]; then echo 'usage: run_mk61_ai_swar_tests.sh MODEL.MKA' >&2; exit 2; fi
++model="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
++build="${MK61_AI_SWAR_TEST_BUILD_DIR:-$root/.build/mk61ai-swar-tests}"
++mkdir -p "$build"
++sanitizers=()
++if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then sanitizers=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
++flags=(-pthread -std=c++17 -O2 -ffp-contract=off -Wall -Wextra -Werror -I"$root/code")
++clang++ "${flags[@]}" "${sanitizers[@]}" "$root/tests/mk61_ai_swar_self_test.cpp" -o "$build/arithmetic"
++"$build/arithmetic"
++python3 "$root/tools/apps/mk61ai/repack_q4.py" "$model" "$build/MODEL-NIBBLE.MKA" > "$build/repack.json"
++clang -std=c11 -O2 "${sanitizers[@]}" -c "$root/code/mk61_ai_kernels.c" -o "$build/kernels.o"
++clang++ "${flags[@]}" "${sanitizers[@]}" "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" \
++    "$root/code/mk61_ai_tokenizer.cpp" "$build/kernels.o" "$root/tests/mk61_ai_swar_model_test.cpp" -o "$build/model"
++"$build/model" "$model" "$build/MODEL-NIBBLE.MKA"
+--- /dev/null
++++ b/tools/apps/mk61ai/repack_q4.py
+@@ -0,0 +1,23 @@
++"""Losslessly change Q4 bitplanes to paired-nibble layout; no requantization."""
++from pathlib import Path
++import hashlib,json,struct,sys,zlib
++source=Path(sys.argv[1]);destination=Path(sys.argv[2]);data=bytearray(source.read_bytes())
++h=list(struct.unpack_from('<32I',data));assert data[:8]==b'M61AI01\0'
++assert zlib.crc32(data[:124])==h[31] and zlib.crc32(data[128:])==h[29]
++groups=tensors=0
++for i in range(2+11*h[4]):
++    at=h[15]+32*i;rows,cols,bits,grid,offset,scale,count,scales=struct.unpack_from('<8I',data,at)
++    if bits!=4 or not grid&256:continue
++    assert count%16==0
++    for start in range(offset,offset+count,16):
++        p=data[start:start+16];out=bytearray(16)
++        for j in range(32):
++            quartet,lane=divmod(j,4);value=0
++            for bit in range(4):value|=((p[4*bit+quartet//2]>>(4*(quartet%2)+lane))&1)<<bit
++            out[j//2]|=value<<(4*(j%2))
++        data[start:start+16]=out;groups+=1
++    struct.pack_into('<I',data,at+12,grid&~256);tensors+=1
++struct.pack_into('<I',data,29*4,zlib.crc32(data[128:]))
++struct.pack_into('<I',data,31*4,zlib.crc32(data[:124]))
++destination.write_bytes(data)
++print(json.dumps(dict(lossless_repack=True,tensors=tensors,groups32=groups,bytes=len(data),source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),sha256=hashlib.sha256(data).hexdigest())))

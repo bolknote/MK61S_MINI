@@ -1,0 +1,605 @@
+diff --git a/code/mk61_ai_perf.hpp b/code/mk61_ai_perf.hpp
+--- a/code/mk61_ai_perf.hpp
++++ b/code/mk61_ai_perf.hpp
+@@ -33,7 +33,7 @@
+     values[key]=value;seen|=1U<<key;
+   }
+   if(seen!=((1U<<fields)-1) || values[0]>2 || values[1]>4 || values[2]<1 || values[2]>2 ||
+-     values[3]>1 || values[4]>1 || (values[5]!=125 && values[5]!=200 && values[5]!=250 && values[5]!=300) ||
++     values[3]>1 || values[4]>1 || (values[5]!=125 && values[5]!=200 && values[5]!=250 && values[5]!=260 && values[5]!=270 && values[5]!=280 && values[5]!=288 && values[5]!=292 && values[5]!=300) ||
+      values[6]<1 || values[6]>16 || values[7]<1 || values[7]>8 || values[6]+values[7]>24 ||
+      values[8]<1 || values[8]>4 || values[10]>1 || values[11]>1 || values[12]>1 ||
+      (!values[0] && (values[2]!=1 || values[4] || values[12])) || (values[4] && !values[11])) return false;
+diff --git a/ports/picocalc/ai_clock.hpp b/ports/picocalc/ai_clock.hpp
+--- a/ports/picocalc/ai_clock.hpp
++++ b/ports/picocalc/ai_clock.hpp
+@@ -2,15 +2,18 @@
+ #define MK61_PICOCALC_AI_CLOCK_HPP
+ #include "rust_types.h"
+ namespace picocalc::ai_clock {
+-// Diagnostic build only. The normal firmware rejects a changed frequency.
+-// USB disconnects deliberately while SYS traverses PLL_USB at 48 MHz; E16
+-// forbids leaving the 48 MHz USB controller clock active during that interval.
+ struct State {
+   u32 sys=0,peri=0,peri_ctrl=0,peri_div=0,spi0_hz=0,spi1_hz=0;
+   bool changed=false,restore_attempted=false;
+ };
++struct Report {
++  u32 stage=0,target_mhz=0,measured_khz=0,vreg_raw=0,adc_raw=0;
++  i32 temperature_mc=0;
++  bool diagnostic=false,temperature_valid=false,trace_valid=false;
++};
+ u32 hz();
+ bool begin(unsigned mhz,State& state);
+ bool restore(State& state);
++Report sample();
+ }
+ #endif
+diff --git a/ports/picocalc/ai_clock.cpp b/ports/picocalc/ai_clock.cpp
+--- a/ports/picocalc/ai_clock.cpp
++++ b/ports/picocalc/ai_clock.cpp
+@@ -1,19 +1,26 @@
+ #include "ai_clock.hpp"
+ #if defined(PICO_ON_DEVICE)
++#include "pico/stdlib.h"
++#include "hardware/clocks.h"
++#endif
++#ifndef MK61_PICOCALC_AI_OVERCLOCK
++#define MK61_PICOCALC_AI_OVERCLOCK 0
++#endif
++#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+ #include "io_worker.hpp"
+ #include "psram.hpp"
+ #include "audio_stream.hpp"
+-#include "hardware/clocks.h"
++#include "cosmic_clock_plan.hpp"
++#include "ai_clock_transition.hpp"
++#include "hardware/adc.h"
+ #include "hardware/i2c.h"
+-#include "hardware/irq.h"
+-#include "hardware/spi.h"
++#include "hardware/pll.h"
++#include "hardware/resets.h"
+ #include "hardware/structs/ssi.h"
+-#include "hardware/uart.h"
+-#include "pico/stdlib.h"
++#include "hardware/structs/vreg_and_chip_reset.h"
++#include "hardware/vreg.h"
++#include "pico/flash.h"
+ #include "tusb.h"
+-#endif
+-#ifndef MK61_PICOCALC_AI_OVERCLOCK
+-#define MK61_PICOCALC_AI_OVERCLOCK 0
+ #endif
+ namespace picocalc::ai_clock {
+ u32 hz() {
+@@ -25,75 +32,110 @@
+ }
+ #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+ namespace {
+-void retune(u32 spi0_hz,u32 spi1_hz) {
+-  if(spi0_hz) spi_set_baudrate(spi0,spi0_hz);
+-  if(spi1_hz) spi_set_baudrate(spi1,spi1_hz);
+-  i2c_set_baudrate(i2c1,10000);
+-#if LIB_PICO_STDIO_UART && defined(PICO_DEFAULT_UART_BAUD_RATE)
+-  uart_set_baudrate(uart_default,PICO_DEFAULT_UART_BAUD_RATE);
+-#endif
+-  psram::clock_changed();
++constexpr u32 MAGIC=0xA1C10607;
++struct Retained { u32 magic,stage,target; };
++Retained trace __attribute__((section(".uninitialized_data.picocalc_ai_clock")));
++u32 measured_khz=0;
++bool adc_ready=false;
++void mark(u32 stage,u32 target) { trace.magic=0;trace.stage=stage;trace.target=target;__dmb();trace.magic=MAGIC;__dmb(); }
++u32 measure() {
++  const u64 end=time_us_64()+50000;
++  while(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_RUNNING_BITS) if(time_us_64()>=end)return 0;
++  clocks_hw->fc0.ref_khz=clock_get_hz(clk_ref)/1000;
++  clocks_hw->fc0.interval=10;clocks_hw->fc0.min_khz=0;clocks_hw->fc0.max_khz=UINT32_MAX;
++  clocks_hw->fc0.src=CLOCKS_FC0_SRC_VALUE_CLK_SYS;
++  while(!(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_DONE_BITS)) if(time_us_64()>=end)return 0;
++  return clocks_hw->fc0.result>>CLOCKS_FC0_RESULT_KHZ_LSB;
+ }
+-bool transition(u32 sys,State& s,bool restoring) {
+-  // This image boots with Flash SCK / 6, hence <= 50 MHz at every allowed
+-  // rate. No live SSI reconfiguration, voltage increase or RTC changes.
+-  io_worker::drain();stdio_flush();
+-  const bool usb_irq=irq_is_enabled(USBCTRL_IRQ);
+-  tud_disconnect();irq_set_enabled(USBCTRL_IRQ,false);
+-  const u32 usb_ctrl=clocks_hw->clk[clk_usb].ctrl,usb_div=clocks_hw->clk[clk_usb].div;
+-  const u32 usb_hz=clock_get_hz(clk_usb);
+-  clock_stop(clk_usb);
+-  busy_wait_us(1); // Allow the USB clock gate to settle before lowering SYS.
+-  // Keep SPI/UART's parent independent of PLL_SYS while it is reconfigured.
+-  clock_configure_undivided(clk_peri,0,CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,48000000);
+-  const bool ok=set_sys_clock_khz(unsigned(sys/1000),false);
+-  if(restoring) {
+-    clocks_hw->clk[clk_peri].div=s.peri_div;
+-    clocks_hw->clk[clk_peri].ctrl=s.peri_ctrl;
+-    clock_set_reported_hz(clk_peri,s.peri);
+-  } else {
+-    clock_configure_undivided(clk_peri,0,CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,48000000);
++void __no_inline_not_in_flash_func(write_clock)(void* raw) {
++  const auto& plan=*static_cast<const cosmic_clock::Plan*>(raw);
++  mark(5,plan.mhz);
++  set_sys_clock_pll(plan.vco_hz,plan.postdiv1,plan.postdiv2);
++  // PERI already comes from PLL_USB48. Do not reconfigure it after changing
++  // SYS: the old300MHz failure was in that redundant post-PLL operation.
++  mark(6,plan.mhz);
++}
++bool stock_voltage() {
++  return (vreg_and_chip_reset_hw->vreg&VREG_AND_CHIP_RESET_VREG_VSEL_BITS)==
++      (u32(VREG_VOLTAGE_1_10)<<VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
++}
++struct Hardware {
++  bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==6 &&
++      clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000;}
++  void prepare(){audio_stream::stop_key_click();io_worker::drain();stdio_flush();}
++  void mark(u32 stage,u32 target){ai_clock::mark(stage,target);}
++  bool pio(u32 div){return psram::diagnostic_clock_divider(div);}
++  void disconnect(){tud_disconnect();}
++  bool deinit(){return tud_deinit(0);}
++  void reset(){reset_block(RESETS_RESET_USBCTRL_BITS);}
++  void detach_delay(){sleep_ms(200);}
++  bool pll(const cosmic_clock::Plan& plan){return flash_safe_execute(write_clock,const_cast<cosmic_clock::Plan*>(&plan),50)==PICO_OK;}
++  void retune_i2c(){i2c_set_baudrate(i2c1,10000);}
++  bool verify(const cosmic_clock::Plan& plan){
++    measured_khz=measure();const u32 sys=plan.mhz*1000000;
++    return hz()==sys && measured_khz+100>=sys/1000 && measured_khz<=sys/1000+100 &&
++        clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000 && stock_voltage() &&
++        ssi_hw->baudr==6 && psram::diagnostic_clock_divider256()==plan.pio_div256;
+   }
+-  retune(s.spi0_hz,s.spi1_hz);
+-  clocks_hw->clk[clk_usb].div=usb_div;clocks_hw->clk[clk_usb].ctrl=usb_ctrl;
+-  clock_set_reported_hz(clk_usb,usb_hz);
+-  irq_set_enabled(USBCTRL_IRQ,usb_irq);tud_connect();
+-  return ok && clock_get_hz(clk_sys)==sys;
++  void unreset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
++  bool init(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
++  void connect(){tud_connect();}
++};
++bool transition(u32 sys) {
++  const auto* before=cosmic_clock::find(hz()/1000000);
++  const auto* after=cosmic_clock::find(sys/1000000);
++  if(!before || !after)return false;
++  Hardware hardware;return change(hardware,*before,*after);
+ }
+ }
+ #endif
+ bool begin(unsigned mhz,State& s) {
+-  if(s.changed || s.restore_attempted || (mhz!=125 && mhz!=200 && mhz!=250 && mhz!=300)) return false;
++  const bool allowed=mhz==125 || mhz==200 || mhz==250 || mhz==260 || mhz==270 || mhz==280 || mhz==288 || mhz==292 || mhz==300;
++  if(s.changed || s.restore_attempted || !allowed)return false;
+   s.sys=hz();
+-  if(mhz==125 && (!s.sys || s.sys==125000000)) return true;
++  if(mhz==125 && (!s.sys || s.sys==125000000))return true;
+ #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+-  if(s.sys!=125000000) return false;
+-  if(audio_stream::active()) return false;
+-  if(ssi_hw->baudr!=6) return false;
+-  // Reject malformed/unsupported PLL requests before disconnecting USB.
+-  unsigned vco=0,post1=0,post2=0;
+-  if(!check_sys_clock_khz(mhz*1000,&vco,&post1,&post2)) return false;
+-  io_worker::drain();
+-  s.peri=clock_get_hz(clk_peri);s.peri_ctrl=clocks_hw->clk[clk_peri].ctrl;
+-  s.peri_div=clocks_hw->clk[clk_peri].div;
+-  s.spi0_hz=spi_get_baudrate(spi0);s.spi1_hz=spi_get_baudrate(spi1);
+-  s.changed=true;
+-  if(transition(mhz*1000000U,s,false)) return true;
+-  (void)restore(s);return false;
++  if(s.sys!=125000000)return false;
++  const auto* plan=cosmic_clock::find(mhz);unsigned vco=0,post1=0,post2=0;
++  if(!plan || !check_sys_clock_khz(mhz*1000,&vco,&post1,&post2) ||
++     vco!=plan->vco_hz || post1!=plan->postdiv1 || post2!=plan->postdiv2)return false;
++  s.peri=clock_get_hz(clk_peri);s.changed=true;
++  return transition(mhz*1000000U);
+ #else
+   return false;
+ #endif
+ }
+ bool restore(State& s) {
+-  if(!s.changed) return true;
+-  if(s.restore_attempted) return false;
++  if(!s.changed)return true;
++  if(s.restore_attempted)return false;
+   s.restore_attempted=true;
+ #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+-  const bool ok=transition(s.sys,s,true);
+-  if(ok) s.changed=false;
+-  return ok;
++  const bool ok=transition(s.sys);if(ok)s.changed=false;return ok;
+ #else
+   return false;
+ #endif
+ }
++Report sample() {
++  Report out{};
++#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
++  out.diagnostic=true;out.trace_valid=trace.magic==MAGIC && trace.stage<=9;
++  if(out.trace_valid){out.stage=trace.stage;out.target_mhz=trace.target;}
++  if(!measured_khz)measured_khz=measure();out.measured_khz=measured_khz;
++  out.vreg_raw=vreg_and_chip_reset_hw->vreg;
++  if(!adc_ready){adc_init();adc_set_temp_sensor_enabled(true);adc_select_input(4);adc_ready=true;}
++  u32 sum=0;
++  for(unsigned i=0;i<16;++i) {
++    hw_set_bits(&adc_hw->cs,ADC_CS_START_ONCE_BITS);const u64 end=time_us_64()+1000;
++    while(!(adc_hw->cs&ADC_CS_READY_BITS))if(time_us_64()>=end)return out;
++    sum+=adc_hw->result;
++  }
++  out.adc_raw=(sum+8)/16;
++  if(out.adc_raw>=500 && out.adc_raw<=1200) {
++    const i32 uv=i32(u64(out.adc_raw)*3300000/4096);
++    out.temperature_mc=27000-i32((int64_t(uv)-706000)*1000/1721);
++    out.temperature_valid=true;
++  }
++#endif
++  return out;
+ }
++}
+diff --git a/ports/picocalc/ai_clock_transition.hpp b/ports/picocalc/ai_clock_transition.hpp
+--- /dev/null
++++ b/ports/picocalc/ai_clock_transition.hpp
+@@ -0,0 +1,24 @@
++#ifndef MK61_AI_CLOCK_TRANSITION_HPP
++#define MK61_AI_CLOCK_TRANSITION_HPP
++#include "cosmic_clock_plan.hpp"
++namespace picocalc::ai_clock {
++// Hardware and HOST fault-injection share this ordering. No voltage or PERI
++// reconfiguration is part of a rate transition. USB stays reset across PLL.
++template<class Bus> bool change(Bus& bus,const cosmic_clock::Plan& before,const cosmic_clock::Plan& after) {
++  if(!bus.allowed())return false;
++  bus.prepare();bus.mark(1,after.mhz);
++  if(after.mhz>before.mhz && !bus.pio(after.pio_div256))return false;
++  bus.mark(2,after.mhz);bus.disconnect();
++  if(!bus.deinit())return false;
++  bus.mark(3,after.mhz);bus.reset();bus.detach_delay();bus.mark(4,after.mhz);
++  bool ok=bus.pll(after);
++  if(after.mhz<=before.mhz)ok=bus.pio(after.pio_div256)&&ok;
++  bus.retune_i2c();bus.mark(7,after.mhz);
++  ok=bus.verify(after)&&ok;
++  bus.mark(8,after.mhz);bus.unreset();
++  const bool usb=bus.init();if(usb)bus.connect();
++  if(ok && usb)bus.mark(9,after.mhz);
++  return ok && usb;
++}
++}
++#endif
+diff --git a/ports/picocalc/cosmic_clock_plan.hpp b/ports/picocalc/cosmic_clock_plan.hpp
+--- a/ports/picocalc/cosmic_clock_plan.hpp
++++ b/ports/picocalc/cosmic_clock_plan.hpp
+@@ -7,7 +7,12 @@
+ struct Plan { uint32_t mhz,vco_hz,postdiv1,postdiv2,pio_div256,pwm_div16; };
+ constexpr Plan step(uint32_t mhz) {return {mhz,mhz*6000000,6,1,(mhz*64+24)/25,(mhz*4+24)/25};}
+ constexpr Plan plans[]={{125,1500000000,6,2,320,20},step(130),step(140),step(150),step(160),step(170),
+-    step(180),step(190),step(200),step(210),step(220),step(230),step(240),step(250)};
++    step(180),step(190),step(200),step(210),step(220),step(230),step(240),step(250)
++#if defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK
++    ,step(260),{270,1080000000,4,1,692,44},{280,840000000,3,1,717,45},
++    {288,1440000000,5,1,738,47},{292,876000000,3,1,748,47},{300,1500000000,5,1,768,48}
++#endif
++};
+ constexpr const Plan* find(uint32_t mhz) {
+     for(const auto& p:plans)if(p.mhz==mhz)return &p;
+     return nullptr;
+diff --git a/ports/picocalc/cosmic_clock.hpp b/ports/picocalc/cosmic_clock.hpp
+--- a/ports/picocalc/cosmic_clock.hpp
++++ b/ports/picocalc/cosmic_clock.hpp
+@@ -2,7 +2,8 @@
+ #define MK61_COSMIC_CLOCK_HPP
+ #include <cstdint>
+ #if (defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG) || \
+-    (defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK)
++    (defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK) || \
++    (defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK)
+ #define MK61_PICOCALC_MANAGED_CLOCK 1
+ #else
+ #define MK61_PICOCALC_MANAGED_CLOCK 0
+@@ -19,7 +20,8 @@
+ inline void idle_check(bool(*)()){}
+ #endif
+ #if defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK && \
+-    !(defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG)
++    !(defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG) && \
++    !(defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK)
+ #define MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK 1
+ bool audio_begin(); // Core 0, before installing a core-1 synth callback.
+ void audio_end();   // After that callback has stopped; idempotent.
+diff --git a/ports/picocalc/cosmic_clock.cpp b/ports/picocalc/cosmic_clock.cpp
+--- a/ports/picocalc/cosmic_clock.cpp
++++ b/ports/picocalc/cosmic_clock.cpp
+@@ -157,7 +157,7 @@
+     if(!write)return false;
+     args=terminal_core::skip_spaces(args);
+     if(!std::strncmp(args,"echo ",5))return usb_probe(args+5,write,context);
+-#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
++#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK || (defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK)
+     // Production clock ownership belongs to the audio stream. A diagnostic
+     // lease must never reset an interactive game after105 seconds.
+     if(std::strcmp(args,"status"))return false;
+diff --git a/ports/picocalc/CMakeLists.txt b/ports/picocalc/CMakeLists.txt
+--- a/ports/picocalc/CMakeLists.txt
++++ b/ports/picocalc/CMakeLists.txt
+@@ -13,13 +13,16 @@
+ endif()
+ include("${PICO_SDK_PATH}/pico_sdk_init.cmake")
+ project(mk61s_picocalc C CXX ASM)
++option(MK61_PICOCALC_AI_OVERCLOCK "AI-only125..300MHz diagnostic at stock voltage" OFF)
+ option(MK61_PICOCALC_COSMIC_CLOCK_DIAG "Temporary125/200/250MHz Cosmic diagnostic" OFF)
+ option(MK61_PICOCALC_AUDIO_CLOCK "Use 200MHz for real-time APP synthesis" ON)
+ option(MK61_PICOCALC_AUDIO_DMA "Use experimental block DMA for APP synthesis" OFF)
+ if(MK61_PICOCALC_AUDIO_DMA)
+     add_compile_definitions(MK61_PICOCALC_AUDIO_DMA=1)
+ endif()
+-if(MK61_PICOCALC_COSMIC_CLOCK_DIAG)
++if(MK61_PICOCALC_AI_OVERCLOCK)
++    add_compile_definitions(MK61_PICOCALC_AI_OVERCLOCK=1 MK61_PICOCALC_AUDIO_CLOCK=1 PICO_FLASH_SPI_CLKDIV=6 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0)
++elseif(MK61_PICOCALC_COSMIC_CLOCK_DIAG)
+     add_compile_definitions(MK61_PICOCALC_COSMIC_CLOCK_DIAG=1 PICO_FLASH_SPI_CLKDIV=4 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0)
+ elseif(MK61_PICOCALC_AUDIO_CLOCK)
+     add_compile_definitions(MK61_PICOCALC_AUDIO_CLOCK=1 PICO_FLASH_SPI_CLKDIV=4 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0)
+@@ -74,7 +77,7 @@
+     "${MK61_ROOT}/code/explorer_autoexec.cpp" "${MK61_ROOT}/code/explorer_view.cpp")
+ target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/usb_screen_surface.cpp" "${MK61_ROOT}/code/ui_text_renderer.cpp")
+ target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/crash_dump_format.cpp")
+-if(MK61_PICOCALC_COSMIC_CLOCK_DIAG OR MK61_PICOCALC_AUDIO_CLOCK)
++if(MK61_PICOCALC_COSMIC_CLOCK_DIAG OR MK61_PICOCALC_AUDIO_CLOCK OR MK61_PICOCALC_AI_OVERCLOCK)
+     target_sources(mk61s-picocalc-pico-h PRIVATE cosmic_clock.cpp)
+     target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_vreg pico_flash)
+ endif()
+@@ -131,7 +134,7 @@
+ set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0_cr.cpp"
+     PROPERTIES COMPILE_OPTIONS "-Os;-ffp-contract=off;-fno-lto")
+ target_link_libraries(mk61s-picocalc-pico-h PRIVATE
+-    pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
++    pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_adc hardware_i2c hardware_watchdog hardware_pwm hardware_pll
+     hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
+ pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_spi.pio")
+ pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_qpi.pio")
+diff --git a/ports/picocalc/ai_harness.cpp b/ports/picocalc/ai_harness.cpp
+--- a/ports/picocalc/ai_harness.cpp
++++ b/ports/picocalc/ai_harness.cpp
+@@ -23,6 +23,7 @@
+ #include <new>
+ #if defined(PICO_ON_DEVICE)
+ #include "hardware/sync.h"
++#include "pico/stdlib.h"
+ #include <malloc.h>
+ extern "C" {
+ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
+@@ -2015,6 +2016,21 @@
+   std::unique_ptr<Result[]> results(new(std::nothrow) Result[5]);
+   if(!results) return 3;
+   bool matching_tokens=true,matching_checksums=true,valid_prefix=true;
++  bool thermal_stop=false,clock_samples_valid=true;
++  i32 min_temperature=INT32_MAX,max_temperature=INT32_MIN;
++  u32 vreg_before=0,vreg_target=0,target_measured_khz=0,last_temperature_sample=0;
++  auto sample_clock=[&]() {
++    const auto report=ai_clock::sample();
++    if(!report.diagnostic)return true;
++    clock_samples_valid=clock_samples_valid && report.temperature_valid;
++    if(report.temperature_valid) {
++      min_temperature=std::min(min_temperature,report.temperature_mc);
++      max_temperature=std::max(max_temperature,report.temperature_mc);
++      thermal_stop=thermal_stop || report.temperature_mc>=80000;
++    }
++    return clock_samples_valid && !thermal_stop;
++  };
++  {const auto report=ai_clock::sample();vreg_before=report.vreg_raw;}
+   ModelStatus status=ModelStatus::OK;
+   struct Policy { UI *ui;ToolGrammar grammar; } policy{this,{}};
+   auto allowed=[](void *raw,std::uint16_t id) {
+@@ -2035,7 +2051,7 @@
+     filter_head=!original && config.filter;
+     // The control is the current synchronous two-core kernel at stock clocks.
+     // Only target passes enable prefetch; all arithmetic/settings are shared.
+-    double_buffer=pass>0 && config.prefetch;
++    double_buffer=config.prefetch && (pass>0 || config.mhz!=125);
+     configure_execution();model.reset();policy.grammar.reset(false,false,false);
+     for(unsigned i=0;i<steps;++i) {
+       std::snprintf(s.feedback,sizeof(s.feedback),"Perf pass %u step %u/%u; Esc: stop",pass,i+1,steps);
+@@ -2081,11 +2097,11 @@
+             policy.grammar.accept(piece,n);
+       }
+       sample_memory();
+-      if(!matching_tokens || !matching_checksums || !valid_prefix) return false;
++      if(!sample_clock() || !matching_tokens || !matching_checksums || !valid_prefix) return false;
+     }
+     return true;
+   };
+-  bool ok=run(0);
++  bool ok=sample_clock() && run(0);
+   // Stress only an owned external allocation. Never run the device-wide
+   // PSRAM self-test while the model/KV or another cache is resident.
+   shared_memory::Buffer scratch;
+@@ -2124,12 +2140,15 @@
+     char marker[96];const int n=std::snprintf(marker,sizeof(marker),"AI_CLOCK requested=%u begin\r\n",config.mhz);
+     call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
+     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
++    const auto report=ai_clock::sample();vreg_target=report.vreg_raw;target_measured_khz=report.measured_khz;
++    ok=ok && sample_clock();
+   }
+   for(unsigned pass=1;ok && pass<=config.repeat;++pass) {
+     ok=run(pass);++passes;
+     if(!ok || !config.stress_ms || pass>1) continue;
+     // Direct diagnostic matmuls use the same presentation boundary as a
+     // model forward, retaining input service throughout the stress loop.
++    std::snprintf(s.feedback,sizeof(s.feedback),"CPU %u MHz: load %us; Esc: stop",config.mhz,config.stress_ms/1000);dirty=true;
+     const auto stress_execution=model.execution();
+     if(stress_execution.busy) stress_execution.busy(stress_execution.context,true);
+ #if defined(PICO_ON_DEVICE)
+@@ -2143,6 +2162,11 @@
+     std::uint8_t expected[256],actual[256];
+     while(ok && host.api->millis_ms()-started<config.stress_ms) {
+       if(!pump()) { cancel=true;ok=false;break; }
++      if(host.api->millis_ms()-last_temperature_sample>=1000) {
++        last_temperature_sample=host.api->millis_ms();if(!sample_clock()){ok=false;break;}
++        char marker[128];const int n=std::snprintf(marker,sizeof(marker),"AI_STRESS mhz=%u elapsed_ms=%lu total_ms=%u temp_mc=%ld\r\n",config.mhz,(unsigned long)(last_temperature_sample-started),config.stress_ms,(long)max_temperature);
++        call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
++      }
+       LinearBatch local=stress,remote=stress;
+       bool submitted=false;
+ #if defined(PICO_ON_DEVICE)
+@@ -2169,6 +2193,20 @@
+     }
+     if(stress_execution.busy) stress_execution.busy(stress_execution.context,false);
+   }
++  bool cancel_probe_ok=true;unsigned cancel_probe_status=0;
++#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
++  if(ok && config.mhz!=125) {
++    const char* marker="AI_CANCEL_PROBE begin\r\n";
++    call(MK61_SERVICE_DEBUG_WRITE,unsigned(std::strlen(marker)),0,0,(void*)marker);
++    const unsigned before_position=model.position();std::uint16_t probe_next=0;
++    const auto probe=model.forward(ids[0],false,probe_next,service,this,Arithmetic(config.arithmetic));
++    cancel_probe_status=unsigned(probe);
++    cancel_probe_ok=probe==ModelStatus::CANCELLED && cancel && model.position()==before_position && cancel_observed;
++    if(cancel_probe_ok) {cancel_return_us=call(MK61_SERVICE_MICROS)-cancel_observed;cancel=false;}
++    stdio_flush();sleep_ms(100); // Deliver acknowledgement before USB detaches.
++    ok=ok && cancel_probe_ok;
++  }
++#endif
+   const bool clocks_restored=ai_clock::restore(frequency);
+   const auto restored_hz=ai_clock::hz();
+   // All exits after begin converge here, before SD writes, teardown or return.
+@@ -2187,7 +2225,7 @@
+   bool used_worker=!device || config.cores==1;
+   for(unsigned i=1;i<=passes;++i) used_worker=used_worker || results[i].jobs>0;
+   ok=ok && !cancel && matching_tokens && matching_checksums && valid_prefix && clocks_restored &&
+-      !freeze_violations && freeze_count==thaw_count && used_worker && !i2c_errors;
++      !freeze_violations && freeze_count==thaw_count && used_worker && !i2c_errors && clock_samples_valid && !thermal_stop;
+   std::unique_ptr<char[]> json(new(std::nothrow) char[8192]);
+   if(!json) return 3;
+   sample_memory();
+@@ -2233,6 +2271,11 @@
+       worker_jobs,worker_max_us,i2c_errors,stress_iterations,control_probe_calls,(unsigned long)heap_capacity,(unsigned long)heap_peak,
+       (unsigned long)stack_peak,(unsigned long)service_gap,(unsigned long)cancel_return_us,(unsigned long)model_load_us,
+       (unsigned long long)(psram_reads-reads_before),(unsigned long long)(psram_writes-writes_before));
++  if(used && json[used-1]=='}')--used;
++  append(",\"thermal_stop\":%s,\"clock_samples_valid\":%s,\"temperature_min_mc\":%ld,\"temperature_max_mc\":%ld,"
++      "\"vreg_before\":%lu,\"vreg_target\":%lu,\"target_measured_khz\":%lu,\"cancel_probe_ok\":%s,\"cancel_probe_status\":%u}",
++      thermal_stop?"true":"false",clock_samples_valid?"true":"false",(long)min_temperature,(long)max_temperature,
++      (unsigned long)vreg_before,(unsigned long)vreg_target,(unsigned long)target_measured_khz,cancel_probe_ok?"true":"false",cancel_probe_status);
+   char path[128];std::snprintf(path,sizeof(path),"%s/PERF.JSON",directory);
+   const bool saved=fits && files::write(path,reinterpret_cast<const u8*>(json.get()),used);
+   return ok && saved?0:3;
+diff --git a/ports/picocalc/main.cpp b/ports/picocalc/main.cpp
+--- a/ports/picocalc/main.cpp
++++ b/ports/picocalc/main.cpp
+@@ -13,6 +13,7 @@
+ #include "clock.hpp"
+ #include "power.hpp"
+ #include "cosmic_clock.hpp"
++#include "ai_clock.hpp"
+ #include "buffers.hpp"
+ #include "usb_screen.hpp"
+ #include "terminal.hpp"
+@@ -272,6 +273,12 @@
+         picocalc::clock::configured(),picocalc::clock::calibration());
+     char script_row[65]; picocalc::script::text_row(0, script_row, sizeof(script_row));
+     std::printf("M61_ACTIVE=%u SUSPENDED=%u DISPLAY=%u COLS=%u ROWS=%u FONT=%u TEXT=[%s]\n", m61_text::active(), m61_text::calculator_suspended(), m61_text::display_owned(), picocalc::script::columns(), picocalc::script::rows(), picocalc::script::font_active(), script_row);
++#if defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK
++    const auto ai=picocalc::ai_clock::sample();
++    std::printf("AI_CLOCK_TRACE=%lu TRACE_TARGET=%lu TRACE_VALID=%u MEASURED_KHZ=%lu VREG_RAW=%08lX TEMP_RAW=%lu TEMP_MC=%ld TEMP_VALID=%u\n",
++        (unsigned long)ai.stage,(unsigned long)ai.target_mhz,ai.trace_valid,(unsigned long)ai.measured_khz,
++        (unsigned long)ai.vreg_raw,(unsigned long)ai.adc_raw,(long)ai.temperature_mc,ai.temperature_valid);
++#endif
+     std::printf("MSC_SD_READ_US=%llu COMMANDS=%lu MAX_READ_US=%lu MAX_READ_BYTES=%lu MAX_READ_LBA=%lu ACTIVE_BYTES=%lu ACTIVE_LBA=%lu\n",
+         (unsigned long long)usb.sd_read_us, (unsigned long)usb.read_commands, (unsigned long)usb.max_read_us,
+         (unsigned long)usb.max_read_bytes, (unsigned long)usb.max_read_lba,
+diff --git a/tools/firmware/picocalc/build_picocalc.py b/tools/firmware/picocalc/build_picocalc.py
+--- a/tools/firmware/picocalc/build_picocalc.py
++++ b/tools/firmware/picocalc/build_picocalc.py
+@@ -98,12 +98,15 @@
+                         help="Control build using GCC arithmetic instead of the owned M0 runtime")
+     parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
+     parser.add_argument("--psram-spi", action="store_true", help="Control build without four-bit PSRAM")
++    parser.add_argument("--ai-overclock-diagnostic", action="store_true", help="AI125..300MHz sweep, stock VREG, flash/6")
+     parser.add_argument("--cosmic-clock-diagnostic", action="store_true", help="Prepare temporary125/200/250MHz diagnostic image")
+     parser.add_argument("--audio-clock", action=argparse.BooleanOptionalAction, default=True,
+                         help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
+     parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
+                         help="Build block-DMA synthesis candidate for hardware qualification")
+     args = parser.parse_args()
++    if args.ai_overclock_diagnostic and args.cosmic_clock_diagnostic:
++        parser.error("choose one diagnostic clock owner")
+     if args.jobs < 1:
+         parser.error("--jobs must be positive")
+     try:
+@@ -130,8 +133,9 @@
+             source_hash.update(b'picocalc-compiler-runtime=1\0')
+         if args.psram_spi:
+             source_hash.update(b'picocalc-psram-qpi=0\0')
++        if args.ai_overclock_diagnostic: source_hash.update(b"ai-clock-sweep=1\0")
+         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
+-        if args.audio_clock and not args.cosmic_clock_diagnostic: source_hash.update(b"audio-clock=200\0")
++        if args.audio_clock and not args.cosmic_clock_diagnostic and not args.ai_overclock_diagnostic: source_hash.update(b"audio-clock=200\0")
+         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
+         source_digest = source_hash.hexdigest()
+         build_digest = hashlib.sha256((source_digest + '\0' + (
+@@ -145,6 +149,7 @@
+              f"-DMK61_PICOCALC_PSRAM_QPI={'OFF' if args.psram_spi else 'ON'}",
+              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
+              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
++             f"-DMK61_PICOCALC_AI_OVERCLOCK={'ON' if args.ai_overclock_diagnostic else 'OFF'}",
+              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
+              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
+              f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
+@@ -194,7 +199,8 @@
+             "profile": args.profile, "prototype_version": re.search(r'VERSION\[\]\s*=\s*"(\d+\.\d+\.\d+)"',
+                 (ROOT / 'ports/picocalc/version.hpp').read_text())[1], "mcu": "RP2040",
+             "sampling_profile": args.sampling_profile,
+-            "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic else None,
++            "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic and not args.ai_overclock_diagnostic else None,
++            "ai_overclock_diagnostic": args.ai_overclock_diagnostic,
+             "block_audio_dma": args.audio_dma,
+             "psram_bus": "spi" if args.psram_spi else "qpi-with-spi-fallback",
+             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
+diff --git a/tests/ai_clock_sweep_self_test.cpp b/tests/ai_clock_sweep_self_test.cpp
+--- /dev/null
++++ b/tests/ai_clock_sweep_self_test.cpp
+@@ -0,0 +1,46 @@
++#define MK61_PICOCALC_AI_OVERCLOCK 1
++#include "ai_clock_transition.hpp"
++#include "mk61_ai_perf.hpp"
++#include <cassert>
++#include <cstdio>
++#include <string>
++#include <vector>
++using namespace picocalc;
++struct Bus {
++  std::vector<std::string> calls;
++  std::string failure;
++  bool reset_held=false;
++  bool call(const char* name){calls.push_back(name);return failure!=name;}
++  bool allowed(){return call("allowed");}
++  void prepare(){call("drain");}
++  void mark(unsigned,unsigned){}
++  bool pio(unsigned){return call("pio");}
++  void disconnect(){call("disconnect");}
++  bool deinit(){return call("deinit");}
++  void reset(){call("reset");reset_held=true;}
++  void detach_delay(){assert(reset_held);call("detach-delay");}
++  bool pll(const cosmic_clock::Plan&){assert(reset_held);return call("pll");}
++  void retune_i2c(){assert(reset_held);call("i2c10k");}
++  bool verify(const cosmic_clock::Plan&){assert(reset_held);return call("verify");}
++  void unreset(){assert(reset_held);reset_held=false;call("unreset");}
++  bool init(){assert(!reset_held);return call("init");}
++  void connect(){assert(!reset_held);call("connect");}
++};
++int main(){
++  const auto& base=*cosmic_clock::find(125);
++  assert(!cosmic_clock::find(290));
++  for(unsigned mhz : {250U,260U,270U,280U,288U,292U,300U}) {
++    const auto* p=cosmic_clock::find(mhz);assert(p && cosmic_clock::valid(*p));
++    Bus up;assert(ai_clock::change(up,base,*p));
++    assert(up.calls[2]=="pio");
++    Bus down;assert(ai_clock::change(down,*p,base));
++    assert(down.calls[2]=="disconnect");
++    for(auto fail : {"allowed","pio","deinit","pll","verify","init"}) {
++      Bus bad;bad.failure=fail;assert(!ai_clock::change(bad,base,*p));
++      if(bad.failure=="allowed")assert(bad.calls.size()==1);
++    }
++    char text[300];int n=std::snprintf(text,sizeof(text),"AIPERF2\nkernel=2\narithmetic=1\ncores=2\nfreeze=1\nfilter=0\nmhz=%u\nprefill=2\ndecode=2\nrepeat=2\nstress_ms=120000\ncontrol=1\nconstrained=0\nprefetch=1\n",mhz);
++    mk61ai::PerfConfig config;assert(mk61ai::parse_perf_config(text,unsigned(n),config) && config.mhz==mhz);
++  }
++  std::puts("Clock sweep plans/USB reset ordering/up-down PIO/I2C retune/fault paths/strict configs PASS");
++}

@@ -1,0 +1,7 @@
+{
+  "architecture": "ARMv6-M Cortex-M0+",
+  "muls_per_32_MAC": 16,
+  "helper_calls": 0,
+  "float_operations_in_dot": 0,
+  "hardware_cycles_measured": false
+}

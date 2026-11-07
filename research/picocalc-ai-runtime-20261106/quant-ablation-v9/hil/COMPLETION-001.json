@@ -1,0 +1,34 @@
+{
+  "controller_sha256": "e01051bd99542d18f25ed8c1a3a24b2fe336a0b26181fea3f07a4b01ff054246",
+  "pins": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/run_kernel.py",
+      "sha256": "ec54bbd5ec26fbd2047ce1114ebe5b14a853e857d1b0fc284036fcf8dc61eaeb"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/native_transport.py",
+      "sha256": "6fc6f4173f0f0deaf3d08660332a31dcabcef09a38637838171dc5d0b70dbac5"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-lcd-app-20261107/release.json",
+      "sha256": "9ce39e5893b84dc83b6f7245983a65f173ab563c3aa2c02361db02d0a13071a8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/QKERNEL-001.result/receipt.json",
+      "sha256": "675f9d792a11308e37d2ad5c73108ece512c62dac69003eec12bc45ee43a7d04"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/QKERNEL-001.supervisor.json",
+      "sha256": "127218d655dcc477da3e1aa5b6134898d4ee0cb659eff53d339ceac41f2b1496"
+    }
+  ],
+  "start_before": 1794036899.868393,
+  "deadline_seconds": 30,
+  "operation": "one_C5_only",
+  "release": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-lcd-app-20261107/release.json",
+  "output": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/quant-ablation-v9/hil/COMPLETION-001.result",
+  "owned_foregrounds": [
+    "/Apps/QK-BD020C976EEC",
+    "/Apps/QK-BD020C976EEC/QKERNEL.APP"
+  ]
+}

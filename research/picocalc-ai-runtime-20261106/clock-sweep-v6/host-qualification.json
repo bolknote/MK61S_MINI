@@ -1,0 +1,19 @@
+{
+  "status": "HOST_AND_CROSS_BUILD_PASS_NOT_RUN",
+  "image": "33180483",
+  "crc": "A012D2BF",
+  "source_sha256": "8eab7b19141acc5c6cdeed70557077bc6104c42a015df61cd67b6ed824f7f945",
+  "uf2_sha256": "91c3ca1129a44b7b638cc641261713b8aaa92eefe468aa7909d0f2949927892d",
+  "heap": {
+    "minimum_heap_bytes": 108544,
+    "heap_capacity_bytes": 110012
+  },
+  "checks": [
+    "ASan/UBSan native real-model UI",
+    "PLL plan/USB reset ordering/failure injection",
+    "5 controller scope/ownership/epoch tests"
+  ],
+  "voltage": "VSEL1.10V unchanged after boot, not an analogue voltage measurement",
+  "temperature": "RP2040 internal ADC sensor, approximate at assumed3.3V; stop at80C",
+  "scope": "125 qualification then250/260/270/280/288/292/300;120s load each;live Esc;stop after first fault;no backup or baseline flash"
+}

@@ -1,0 +1,64 @@
+{
+  "q4_coefficients": 3018752,
+  "q4_codes_bytes": 1509376,
+  "histogram": [
+    0,
+    62314,
+    56370,
+    97499,
+    157762,
+    235047,
+    315292,
+    376786,
+    399330,
+    375287,
+    313306,
+    236061,
+    161171,
+    101821,
+    60968,
+    69738
+  ],
+  "entropy_bits_per_code": 3.6237645355967976,
+  "ideal_zero_order_code_saving_bytes": 141970.19507976202,
+  "ideal_whole_file_saving_fraction": 0.06570090514118572,
+  "warning": "ideal entropy bound, excludes coding tables, alignment and decodeCPU; not a measured compressor",
+  "weights": {
+    "lns": {
+      "relative_l2_squared": 0.027799169308931802,
+      "rmse": 0.010591959407394411,
+      "max_abs_weight_delta": 0.1324462890625,
+      "parameters": 3018752,
+      "levels": [
+        0.0,
+        1.0,
+        2.0,
+        4.0,
+        8.0,
+        16.0,
+        32.0,
+        64.0
+      ],
+      "effective_signed_levels": 15,
+      "model_sha256": "751d1b3e7c5d68f8c2e965dc36237c75ec283ce89dae8a32b3ffe175a159035e"
+    },
+    "apot": {
+      "relative_l2_squared": 0.00716842101406614,
+      "rmse": 0.005378635953310948,
+      "max_abs_weight_delta": 0.0528564453125,
+      "parameters": 3018752,
+      "levels": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        6.0,
+        8.0,
+        10.0
+      ],
+      "effective_signed_levels": 15,
+      "model_sha256": "18c43fa5e3856509ad646ef80f44ab2d93cbd627f607c521756577a0ebcc251b"
+    }
+  }
+}

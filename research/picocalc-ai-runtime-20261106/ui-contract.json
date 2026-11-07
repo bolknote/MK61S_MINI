@@ -1,0 +1,269 @@
+{
+  "schema": "mk61ai-ui-design-v1",
+  "status": "native v1 implemented and cross-compiled; host tests passed; device validation pending",
+  "product_name": "Помощник МК-61",
+  "display": {
+    "width": 320,
+    "height": 320,
+    "regions": [
+      "task title and activity",
+      "four tabs",
+      "current view",
+      "contextual key hints"
+    ],
+    "text": "native readable Cyrillic; wrap prose; align addresses and numbers; scroll long content",
+    "status_not_color_only": true,
+    "no_speculative_percent_or_eta": true
+  },
+  "entry": {
+    "launch": "MK61AI.APP from Explorer; a calculator-menu shortcut may pass a copied program",
+    "home_actions": [
+      "Продолжить задачу",
+      "Новая задача",
+      "Открыть программу"
+    ],
+    "new_task": "free Russian/English text; tests and starting program are optional",
+    "modes": [
+      "Написать программу",
+      "Исправить программу",
+      "Объяснить программу"
+    ],
+    "explain_mode": "inspect the selected program and execute isolated examples or traces; publish replacement code only after switching to correction mode",
+    "attachments": [
+      "copy of current calculator program",
+      "selected library program",
+      "bounded reference excerpt"
+    ]
+  },
+  "views": [
+    {
+      "id": "dialog",
+      "label": "Диалог",
+      "key": "F1",
+      "content": [
+        "task and constraints",
+        "short assistant responses and questions",
+        "text composer"
+      ],
+      "submit_while_running": "request pause, then append the new instruction and restart from a consistent task revision",
+      "long_input": "retain full text on SD; if mandatory details do not fit model context, request a shorter task or selected excerpt; never silently discard"
+    },
+    {
+      "id": "code",
+      "label": "Код",
+      "key": "F2",
+      "content": [
+        "version and program capacity",
+        "address, mnemonic and optional byte",
+        "changes from preceding version",
+        "test status for exactly this version"
+      ],
+      "actions": [
+        "Открыть команду",
+        "Править вручную",
+        "История версий",
+        "Сохранить программу",
+        "В калькулятор"
+      ],
+      "manual_edit": "pause first; create a new immutable version; mark its test results stale",
+      "code_visibility": "publish only complete validated write_program output; incomplete generated text stays in generation state"
+    },
+    {
+      "id": "tests",
+      "label": "Тесты",
+      "key": "F3",
+      "content": [
+        "case inputs and expected output",
+        "actual output for a specific program version",
+        "pass, mismatch, execution error or limit"
+      ],
+      "case_fields": [
+        "name",
+        "initial registers and stack",
+        "expected X or observe-only",
+        "angle unit",
+        "comparison tolerance",
+        "execution limit"
+      ],
+      "actions": [
+        "Добавить пример",
+        "Изменить пример",
+        "Выполнить тесты",
+        "Открыть результат",
+        "Трасса"
+      ],
+      "truth_sources": [
+        "user-specified expected output",
+        "identified trusted reference"
+      ],
+      "model_proposed_case": "draft until user supplies or confirms expected output; confirmation is recorded, not mathematical proof",
+      "observe_only": "show actual result and stop reason; never count as passed",
+      "interactive_programs": "allow staged inputs and pauses as a future case type; manually inspect games in the calculator first"
+    },
+    {
+      "id": "activity",
+      "label": "Ход",
+      "key": "F4",
+      "content": [
+        "current stage",
+        "completed tool events",
+        "attempt and test counts",
+        "elapsed time",
+        "optional short generated plan"
+      ],
+      "actions": [
+        "Открыть событие",
+        "Показать трассу",
+        "Продолжить с последней версии"
+      ],
+      "reasoning": "short plan and observable actions; do not fabricate a detailed thought transcript",
+      "advanced_only": [
+        "generated tokens",
+        "context occupancy",
+        "model hash and quantization",
+        "SRAM/PSRAM peak",
+        "kernel timings"
+      ]
+    }
+  ],
+  "keyboard": {
+    "F1-F4": "switch views without changing input focus semantics",
+    "F5": "start or resume solving; while running, pause; when an answer is required, focus input instead of bypassing the question",
+    "F6": "focus dialog input",
+    "F8": "switch RU/EN text layout",
+    "Tab": "open contextual actions; never insert a tab into ordinary task text",
+    "Enter": "send the composer text, select a menu item or open the selected object",
+    "Up/Down": "scroll or select a list row",
+    "Left/Right": "move text cursor or change a field; never switch tabs while editing",
+    "Esc": "cancel local edit or close a menu first; otherwise request pause while running; from an idle root view return to sessions",
+    "no_implicit_send": "changing tabs or leaving an editor preserves the draft"
+  },
+  "run_states": {
+    "draft": {
+      "label": "Готов к запуску",
+      "events": {
+        "start": "running"
+      }
+    },
+    "running": {
+      "label": "Пишу / проверяю / исправляю",
+      "events": {
+        "question": "needs_input",
+        "pause": "pausing",
+        "finish": "finished",
+        "budget": "budget_reached",
+        "failure": "error"
+      }
+    },
+    "needs_input": {
+      "label": "Нужен ответ",
+      "events": {
+        "answer": "running",
+        "pause": "paused"
+      }
+    },
+    "pausing": {
+      "label": "Останавливаюсь",
+      "events": {
+        "safe_boundary": "paused"
+      }
+    },
+    "paused": {
+      "label": "Пауза",
+      "events": {
+        "resume": "running",
+        "edit": "draft"
+      }
+    },
+    "finished": {
+      "label": "Попытка завершена",
+      "events": {
+        "continue": "running",
+        "edit": "draft"
+      }
+    },
+    "budget_reached": {
+      "label": "Достигнут лимит попыток",
+      "events": {
+        "continue": "running",
+        "edit": "draft"
+      }
+    },
+    "error": {
+      "label": "Не удалось продолжить",
+      "events": {
+        "retry": "running",
+        "edit": "draft"
+      }
+    }
+  },
+  "verification_states": [
+    "Нет тестов",
+    "Тесты ещё не запускались",
+    "Нужен новый прогон",
+    "Есть расхождения",
+    "Примеры пройдены",
+    "Ошибка исполнения",
+    "Превышен лимит исполнения"
+  ],
+  "result": {
+    "summary": [
+      "program version and command count",
+      "which examples passed",
+      "input/output register convention",
+      "how to run",
+      "remaining mismatches or absent tests"
+    ],
+    "actions": [
+      "В калькулятор",
+      "Сохранить программу",
+      "Продолжить улучшение"
+    ],
+    "apply": "explicit user action; snapshot the current calculator; load the selected program version",
+    "registers": "keep live registers by default; loading an example's input values is a separate explicit action",
+    "no_per_tool_confirmation": true,
+    "tests_do_not_imply_general_proof": true
+  },
+  "persistence": {
+    "unit": "one task session",
+    "stored": [
+      "task and all user messages",
+      "model identity",
+      "all complete program versions",
+      "public tests and their provenance",
+      "versioned test results",
+      "tool events",
+      "draft input",
+      "last view and selected version"
+    ],
+    "checkpoint": "after each complete tool result or user edit; atomic commit or recoverable journal",
+    "resume": "open the last committed state; rebuild model context and KV as needed; do not promise cached inference survives power loss",
+    "eviction": "discard old KV/cache rather than task content; archived traces may stay on SD",
+    "exit": "pause and checkpoint before releasing inference resources"
+  },
+  "controller_rules": [
+    "One foreground job; every generated action carries a task/program revision.",
+    "Ignore stale tool replies after user edits or changes the active version.",
+    "Run generated programs in an isolated calculator snapshot with command/time limits.",
+    "Limit attempts, generation and tool execution independently; offer a concrete continuation after stopping.",
+    "Only fully parsed, allowed tool actions execute; malformed calls produce bounded feedback.",
+    "Tool protocol is versioned with the trained model; UI tabs do not change model protocol.",
+    "Manual code edits and test edits invalidate affected verification results; changing the language model restarts generation but preserves independent results for unchanged calculator code and tests.",
+    "A model done tag ends an attempt; verification state comes from actual executions."
+  ],
+  "prototype": {
+    "scenario": "arithmetic mean of R0 and R1, result in X",
+    "ui_is_simulated": true,
+    "model_is_not_connected": true,
+    "emulator_examples": "both displayed program versions were checked against the production host core",
+    "native_font_and_hardware_latency_not_verified": true
+  },
+  "implementation": {
+    "readme": "examples/portable-apps/MK61AI/README.md",
+    "service": "code/loadable_ai_service.h",
+    "controller": "code/mk61_ai_agent.cpp",
+    "native_ui": "ports/picocalc/ai_harness.cpp",
+    "hardware_verified": false,
+    "stm32_and_spectrum": "Applications run in turn. No simultaneous audio load is assumed. UART/STM32 firmware changes are owned by the Spectrum work."
+  }
+}

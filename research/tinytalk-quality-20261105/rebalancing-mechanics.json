@@ -1,0 +1,12 @@
+{
+  "parameters": 10573312,
+  "vocab": 16388,
+  "eos_token_id": 16387,
+  "qat_loss": 4.687473297119141,
+  "actual_q4_loss": 4.687473297119141,
+  "paired_feature_gradient_difference": 2.7719183890440036e-06,
+  "parameter_identity_preserved": true,
+  "rows": 8,
+  "skipped": 0,
+  "runtime_context": 128
+}

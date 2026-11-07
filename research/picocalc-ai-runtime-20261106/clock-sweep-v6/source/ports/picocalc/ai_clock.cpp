@@ -1,0 +1,141 @@
+#include "ai_clock.hpp"
+#if defined(PICO_ON_DEVICE)
+#include "pico/stdlib.h"
+#include "hardware/clocks.h"
+#endif
+#ifndef MK61_PICOCALC_AI_OVERCLOCK
+#define MK61_PICOCALC_AI_OVERCLOCK 0
+#endif
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+#include "io_worker.hpp"
+#include "psram.hpp"
+#include "audio_stream.hpp"
+#include "cosmic_clock_plan.hpp"
+#include "ai_clock_transition.hpp"
+#include "hardware/adc.h"
+#include "hardware/i2c.h"
+#include "hardware/pll.h"
+#include "hardware/resets.h"
+#include "hardware/structs/ssi.h"
+#include "hardware/structs/vreg_and_chip_reset.h"
+#include "hardware/vreg.h"
+#include "pico/flash.h"
+#include "tusb.h"
+#endif
+namespace picocalc::ai_clock {
+u32 hz() {
+#if defined(PICO_ON_DEVICE)
+  return clock_get_hz(clk_sys);
+#else
+  return 0;
+#endif
+}
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+namespace {
+constexpr u32 MAGIC=0xA1C10607;
+struct Retained { u32 magic,stage,target; };
+Retained trace __attribute__((section(".uninitialized_data.picocalc_ai_clock")));
+u32 measured_khz=0;
+bool adc_ready=false;
+void mark(u32 stage,u32 target) { trace.magic=0;trace.stage=stage;trace.target=target;__dmb();trace.magic=MAGIC;__dmb(); }
+u32 measure() {
+  const u64 end=time_us_64()+50000;
+  while(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_RUNNING_BITS) if(time_us_64()>=end)return 0;
+  clocks_hw->fc0.ref_khz=clock_get_hz(clk_ref)/1000;
+  clocks_hw->fc0.interval=10;clocks_hw->fc0.min_khz=0;clocks_hw->fc0.max_khz=UINT32_MAX;
+  clocks_hw->fc0.src=CLOCKS_FC0_SRC_VALUE_CLK_SYS;
+  while(!(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_DONE_BITS)) if(time_us_64()>=end)return 0;
+  return clocks_hw->fc0.result>>CLOCKS_FC0_RESULT_KHZ_LSB;
+}
+void __no_inline_not_in_flash_func(write_clock)(void* raw) {
+  const auto& plan=*static_cast<const cosmic_clock::Plan*>(raw);
+  mark(5,plan.mhz);
+  set_sys_clock_pll(plan.vco_hz,plan.postdiv1,plan.postdiv2);
+  // PERI already comes from PLL_USB48. Do not reconfigure it after changing
+  // SYS: the old300MHz failure was in that redundant post-PLL operation.
+  mark(6,plan.mhz);
+}
+bool stock_voltage() {
+  return (vreg_and_chip_reset_hw->vreg&VREG_AND_CHIP_RESET_VREG_VSEL_BITS)==
+      (u32(VREG_VOLTAGE_1_10)<<VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
+}
+struct Hardware {
+  bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==6 &&
+      clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000;}
+  void prepare(){audio_stream::stop_key_click();io_worker::drain();stdio_flush();}
+  void mark(u32 stage,u32 target){ai_clock::mark(stage,target);}
+  bool pio(u32 div){return psram::diagnostic_clock_divider(div);}
+  void disconnect(){tud_disconnect();}
+  bool deinit(){return tud_deinit(0);}
+  void reset(){reset_block(RESETS_RESET_USBCTRL_BITS);}
+  void detach_delay(){sleep_ms(200);}
+  bool pll(const cosmic_clock::Plan& plan){return flash_safe_execute(write_clock,const_cast<cosmic_clock::Plan*>(&plan),50)==PICO_OK;}
+  void retune_i2c(){i2c_set_baudrate(i2c1,10000);}
+  bool verify(const cosmic_clock::Plan& plan){
+    measured_khz=measure();const u32 sys=plan.mhz*1000000;
+    return hz()==sys && measured_khz+100>=sys/1000 && measured_khz<=sys/1000+100 &&
+        clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000 && stock_voltage() &&
+        ssi_hw->baudr==6 && psram::diagnostic_clock_divider256()==plan.pio_div256;
+  }
+  void unreset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
+  bool init(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
+  void connect(){tud_connect();}
+};
+bool transition(u32 sys) {
+  const auto* before=cosmic_clock::find(hz()/1000000);
+  const auto* after=cosmic_clock::find(sys/1000000);
+  if(!before || !after)return false;
+  Hardware hardware;return change(hardware,*before,*after);
+}
+}
+#endif
+bool begin(unsigned mhz,State& s) {
+  const bool allowed=mhz==125 || mhz==200 || mhz==250 || mhz==260 || mhz==270 || mhz==280 || mhz==288 || mhz==292 || mhz==300;
+  if(s.changed || s.restore_attempted || !allowed)return false;
+  s.sys=hz();
+  if(mhz==125 && (!s.sys || s.sys==125000000))return true;
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+  if(s.sys!=125000000)return false;
+  const auto* plan=cosmic_clock::find(mhz);unsigned vco=0,post1=0,post2=0;
+  if(!plan || !check_sys_clock_khz(mhz*1000,&vco,&post1,&post2) ||
+     vco!=plan->vco_hz || post1!=plan->postdiv1 || post2!=plan->postdiv2)return false;
+  s.peri=clock_get_hz(clk_peri);s.changed=true;
+  return transition(mhz*1000000U);
+#else
+  return false;
+#endif
+}
+bool restore(State& s) {
+  if(!s.changed)return true;
+  if(s.restore_attempted)return false;
+  s.restore_attempted=true;
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+  const bool ok=transition(s.sys);if(ok)s.changed=false;return ok;
+#else
+  return false;
+#endif
+}
+Report sample() {
+  Report out{};
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+  out.diagnostic=true;out.trace_valid=trace.magic==MAGIC && trace.stage<=9;
+  if(out.trace_valid){out.stage=trace.stage;out.target_mhz=trace.target;}
+  if(!measured_khz)measured_khz=measure();out.measured_khz=measured_khz;
+  out.vreg_raw=vreg_and_chip_reset_hw->vreg;
+  if(!adc_ready){adc_init();adc_set_temp_sensor_enabled(true);adc_select_input(4);adc_ready=true;}
+  u32 sum=0;
+  for(unsigned i=0;i<16;++i) {
+    hw_set_bits(&adc_hw->cs,ADC_CS_START_ONCE_BITS);const u64 end=time_us_64()+1000;
+    while(!(adc_hw->cs&ADC_CS_READY_BITS))if(time_us_64()>=end)return out;
+    sum+=adc_hw->result;
+  }
+  out.adc_raw=(sum+8)/16;
+  if(out.adc_raw>=500 && out.adc_raw<=1200) {
+    const i32 uv=i32(u64(out.adc_raw)*3300000/4096);
+    out.temperature_mc=27000-i32((int64_t(uv)-706000)*1000/1721);
+    out.temperature_valid=true;
+  }
+#endif
+  return out;
+}
+}

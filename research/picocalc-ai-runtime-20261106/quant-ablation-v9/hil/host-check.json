@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "oracle_records": 18,
+  "reject_bad_checksum": true,
+  "reject_incomplete": true,
+  "reject_bad_done": true,
+  "device_io": false
+}

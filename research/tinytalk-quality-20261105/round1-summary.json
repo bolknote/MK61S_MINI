@@ -1,0 +1,29 @@
+{
+  "candidates": [
+    {
+      "mode": "sft",
+      "step": 1000,
+      "direct": 0.38,
+      "context": 0.64,
+      "multi_turn": 0.5,
+      "bad": 1,
+      "goal_met": false,
+      "source_unchanged": true,
+      "seconds": 853.435834716016
+    },
+    {
+      "mode": "dpo",
+      "step": 5000,
+      "direct": 0.42,
+      "context": 0.48,
+      "multi_turn": 0.4444444444444444,
+      "bad": 1,
+      "goal_met": false,
+      "source_unchanged": true,
+      "seconds": 920.7043200120097
+    }
+  ],
+  "test_opened": false,
+  "target_met": false,
+  "next_iteration": "Larger varied teacher corpus, widened FFN comparison, reduced embedding updates."
+}

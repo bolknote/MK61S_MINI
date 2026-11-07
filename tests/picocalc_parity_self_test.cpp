@@ -6,8 +6,10 @@
 #include "script.hpp"
 #include "terminal_file_transfer.hpp"
 #include "diagnostics.hpp"
+#include "storage_journal.hpp"
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <string>
@@ -175,6 +177,56 @@ void picocalc_parity_test() {
   assert(terminal.execute("fsget /Parity/data.bin") &&
          output.find("@MKC:DATA 0 00FF3D2A0D0A") != std::string::npos);
   assert(!terminal.execute("fsget /Parity/data.bin m8") && !terminal.execute("fsput begin /Parity/data.bin 1 0 m8"));
+  // Binary assets cross the editor's 64-KiB limit using bounded transfer
+  // chunks and 32-bit offsets. Text decoding keeps its existing limit.
+  std::vector<u8> large_binary(70001);
+  for(unsigned i=0;i<large_binary.size();++i) large_binary[i]=u8(i*31);
+  const auto large_crc=terminal_file_transfer::checksum(large_binary.data(),large_binary.size());
+  std::snprintf(request,sizeof(request),"fsput begin /Parity/large.bin %u %lu",(unsigned)large_binary.size(),(unsigned long)large_crc);
+  assert(terminal.execute(request));
+  for(unsigned at=0;at<large_binary.size();at+=96) {
+    const unsigned n=std::min(96U,(unsigned)large_binary.size()-at);
+    const auto head=std::snprintf(request,sizeof(request),"fsput data %u ",at);
+    for(unsigned i=0;i<n;++i) std::snprintf(request+head+2*i,3,"%02X",large_binary[at+i]);
+    assert(terminal.execute(request));
+  }
+  assert(terminal.execute("fsput end"));
+  std::vector<u8> large_copy(large_binary.size());unsigned large_used=0;
+  assert(files::read("/Parity/large.bin",large_copy.data(),large_copy.size(),large_used) && large_copy==large_binary && large_used==large_copy.size());
+  output.clear();assert(terminal.execute("fsget /Parity/large.bin"));
+  assert(output.find("@MKC:GET 70001 ")!=std::string::npos && output.find("@MKC:DATA 69984 ")!=std::string::npos);
+  assert(!terminal.execute("fsput begin /Parity/large.txt 70001 0 m8"));
+  // Exact model length: the 512-sector recovery journal still bounds one
+  // physical write transaction. A raw 32-bit length must fail atomically at
+  // that boundary, rather than corrupting/replacing the destination.
+  std::vector<u8> model_asset(2093896);
+  for(unsigned i=0;i<model_asset.size();++i) model_asset[i]=u8(i*31);
+  std::snprintf(request,sizeof(request),"fsput begin /Parity/large.bin %u %lu",(unsigned)model_asset.size(),
+      (unsigned long)terminal_file_transfer::checksum(model_asset.data(),model_asset.size()));
+  assert(terminal.execute(request));
+  unsigned failed_at=0;
+  for(unsigned at=0;at<model_asset.size();at+=96) {
+    const auto head=std::snprintf(request,sizeof(request),"fsput data %u ",at);
+    for(unsigned i=0;i<96;++i) std::snprintf(request+head+2*i,3,"%02X",model_asset[at+i]);
+    output.clear();command(terminal,request);
+    if(output.find("ERROR")!=std::string::npos) { failed_at=at;break; }
+    char ack[64];std::snprintf(ack,sizeof(ack),"@MKC:ACK %u\r\n",at+96);
+    assert(output.find(ack)!=std::string::npos);
+  }
+  assert(failed_at>=250000 && failed_at<=262144 && !storage_journal::active());
+  const char* diagnostic_dir=std::getenv("MK61_AI_SD_DIAGNOSTIC_DIR");
+  if(diagnostic_dir) {
+    std::ofstream report(std::string(diagnostic_dir)+"/large-c5-boundary.json");
+    report<<"{\"model_length\":2093896,\"first_failed_offset\":"<<failed_at
+          <<",\"journal_capacity_sectors\":512,\"journal_error\":\""<<storage_journal::error()<<"\"}\n";
+    std::ofstream raw(std::string(diagnostic_dir)+"/large-c5-boundary-replies.txt");
+    raw<<output;
+    for(unsigned next=failed_at+96;next<=failed_at+288;next+=96) {
+      std::snprintf(request,sizeof(request),"fsput data %u 00",next);output.clear();command(terminal,request);raw<<output;
+      assert(output.find("ERROR")!=std::string::npos && output.find("@MKC:ACK")==std::string::npos);
+    }
+  }
+  assert(files::read("/Parity/large.bin",large_copy.data(),large_copy.size(),large_used) && large_copy==large_binary);
   const std::string russian(65534,(char)0xC6); // Ж: two UTF-8 bytes per logical M8 byte.
   const u32 text_crc=terminal_file_transfer::checksum((const u8*)russian.data(),russian.size());
   std::snprintf(request,sizeof(request),"fsput begin /Parity/maximum.txt %u %lu m8",(unsigned)russian.size(),(unsigned long)text_crc);

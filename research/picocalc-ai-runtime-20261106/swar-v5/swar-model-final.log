@@ -1,0 +1,1 @@
+SWAR model PASS: 12 exact full-logit comparisons vs INT8; both Q4 layouts, FLASH/SRAM,2cores,prefetch,16-position KV exact.

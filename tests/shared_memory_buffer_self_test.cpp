@@ -12,6 +12,9 @@ using namespace shared_memory;
 namespace {
 std::vector<u8> memory(8U*1024*1024, 0xA5);
 bool online = true, allowed = true, fail_read = false, fail_write = false;
+std::vector<block_io::ReadSpan> pending;
+u32 pending_base=0;
+bool async_refuse=false, async_fail=false;
 bool ready() { return online; }
 bool foreground() { return allowed; }
 bool read(u32 at, void* bytes, usize count) {
@@ -23,6 +26,16 @@ bool write(u32 at, const void* bytes, usize count) {
   assert(at <= memory.size() && count <= memory.size()-at);
   if(fail_write) return false;
   std::memcpy(memory.data()+at, bytes, count); return true;
+}
+bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count) {
+  if(async_refuse || !pending.empty()) return false;
+  pending.assign(spans,spans+count);pending_base=base;return true;
+}
+bool read_finish() {
+  assert(!pending.empty());
+  for(const auto& span:pending)
+    assert(read(pending_base+span.offset,span.destination,span.bytes));
+  pending.clear();return !async_fail;
 }
 Buffer* cache = nullptr;
 bool reject_eviction = false;
@@ -123,6 +136,33 @@ int main() {
     { BufferWindow window; assert(window.acquire(direct,0,16,true)); window.data()[0]=9; assert(window.writeback()); }
     assert(direct.data()[0]==9);
     { BufferWindow window; assert(window.acquire(direct,0,16)); assert(!window.writeback()); }
+  }
+  clean();
+  // Source bounds and a pin protect the lease until DMA has stopped, even
+  // when completion reports an error. A refused begin owns no destination.
+  assert(!configure_buffer_backend({(usize)memory.size(),ready,read,write,foreground,read_begin,nullptr}));
+  assert(configure_buffer_backend({(usize)memory.size(),ready,read,write,foreground,read_begin,read_finish}));
+  {
+    Buffer leading,source;
+    assert(leading.acquire(Owner::APPLICATION,97,BufferAccess::EXTERNAL_ONLY));
+    assert(leading.fill(0x12));
+    assert(source.acquire(Owner::APPLICATION,512,BufferAccess::EXTERNAL_ONLY));
+    assert(source.fill(0x61));
+    u8 output[64]{};
+    block_io::ReadSpan spans[]={{16,output,32},{128,output+32,32}};
+    auto invalid=spans[0];invalid.offset=500;
+    assert(!source.read_begin(&invalid,1) && pending.empty());
+    async_refuse=true;assert(!source.read_begin(spans,2));async_refuse=false;
+    assert(buffer_statistics().pinned==0 && source.read(0,output,1));output[0]=0;
+    assert(source.read_begin(spans,2));
+    assert(output[0]==0 && !source.reset() && buffer_statistics().pinned==1);
+    assert(!source.read_begin(spans,2) && !source.read(0,output,1) && !source.write(0,output,1));
+    assert(validate_buffer_invariants() && source.read_finish());
+    for(auto v:output) assert(v==0x61);
+    assert(buffer_statistics().pinned==0 && !source.read_finish());
+    assert(source.read_begin(spans,2));async_fail=true;
+    assert(!source.read_finish());async_fail=false;
+    assert(buffer_statistics().pinned==0 && source.reset());
   }
   clean();
   assert(configure_buffer_backend({}));

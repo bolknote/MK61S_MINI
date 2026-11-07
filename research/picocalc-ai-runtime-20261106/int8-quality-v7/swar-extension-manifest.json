@@ -1,0 +1,11 @@
+{
+  "scope": "User requested SWAR+INT8 quality extension after original gate failed; no tuning or selection",
+  "executable_sha256": "69ea64901629e47358f8c4c00708a28c71e64539cb4cae6f7b3286f3bafedd82",
+  "base_executable_sha256": "3045a001be755ba04b97f36a4be04bc38499016cec08ee0b793174816b7b3341",
+  "source_change": "CLI parser only: allow arithmetic=swar-int8",
+  "datasets": {
+    "regression20": "12455ff79e40c09d908fc33f2cf870370019ffc0da539c2f1a4218a63a39c315",
+    "fresh64": "d5e450cbc3e03c1c610e41453903a89cac298fe233a4ac07d8c34b4eb4550768"
+  },
+  "expected": "same exact functional results as INT8; all84 rows count"
+}

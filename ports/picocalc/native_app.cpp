@@ -17,6 +17,8 @@
 #include "mk8_codec.hpp"
 #include "mk_math.hpp"
 #include "native_runtime.hpp"
+#include "ai_harness.hpp"
+#include "loadable_ai_service.h"
 #include "language_cache.hpp"
 #include "number_format.hpp"
 #include "script.hpp"
@@ -42,6 +44,7 @@
 #include "audio_stream.hpp"
 #include "hardware/sync.h"
 #include "pico/stdlib.h"
+#include "io_worker.hpp"
 #endif
 
 namespace picocalc {
@@ -81,7 +84,9 @@ public:
     display.color_sink(s.color_display_,s.color_context_,[](void* raw) { ((NativeHost*)raw)->pump(); },this);
   }
   ~NativeHost() {
+    s.presentation_suspended_=false;
 #if defined(PICO_ON_DEVICE)
+    io_worker::suspend_frames(false);
     audio_stream::close();
 #endif
     if(s.color_display_) s.color_display_(s.color_context_,MK61_COLOR_END,nullptr);
@@ -114,11 +119,12 @@ public:
   bool graphics = false;
   unsigned font_sessions = 0;
   bool preview = false;
+  bool ai_frozen = false;
   Settings settings() const { return s.ui_ ? s.ui_->settings() : Settings{}; }
   u32 setup(u32 op, u32 a, u32 b, void *payload);
   u32 resource(u32 op, u32 inode, void *payload);
   void pump() {
-    display.settings(settings());display.flush();
+    if(!ai_frozen) { display.settings(settings());display.flush(); }
     input_received=false;
     u8 key = 0;
     if(s.pump_ && s.pump_(s.pump_context_,key) && !input_received) controls::pulse(key,millis());
@@ -205,7 +211,65 @@ public:
     return current->display.bitmap_present(data,n);
   }
   static void graph_end() { current->display.bitmap_end();current->graphics = false; }
+  static int ai_key() {
+    auto& host=*current;KeyEvent event{};
+    for(unsigned scan=0;scan<2;++scan){
+      while(host.keyboard.text_event(event)) {
+        if(event.state==2 && ((event.code>=0x81 && event.code<=0x8C) || event.code=='\r' || event.code=='\n' || event.code==0x1B || event.code==0xB1 || event.code=='\t'))continue;
+        if(event.code=='\r'||event.code=='\n'||event.code==0x1B||event.code==0xB1||event.code=='\t')host.keyboard.handoff(controls::native_key(event),millis());
+        return event.code;
+      }
+      if(!scan)host.pump();
+    }
+    return -1;
+  }
+  static u32 ai_run(u32 file) {
+    if(file!=MK61_SERVICE_INVALID_ID && file>UINT16_MAX)return 1;
+    auto& active=ai_busy();if(active)return 3;active=true;
+    const u32 result=ai::run({&api,&common,ai_key,file==MK61_SERVICE_INVALID_ID?nullptr:script::file_path((u16)file),nullptr,ai_render,ai_revision});
+    active=false;return result;
+  }
+  static bool& ai_busy(){static bool busy=false;return busy;}
+  static void ai_render(bool enabled) {
+    auto& host=*current;
+    if(!enabled) {
+      host.display.flush();
+#if defined(PICO_ON_DEVICE)
+      // NativeDisplay has published a logical frame, but service_pump owns
+      // the physical LCD and can still be inside its 80ms frame interval.
+      // Let that owner submit the new status before the presentation gate
+      // closes. Otherwise consecutive forwards can hold the last loading
+      // frame indefinitely. Pumping keeps input and watchdog service live.
+      const u32 before=io_worker::statistics().display_frames;
+      const u64 deadline=time_us_64()+100000;
+      do { host.pump(); }
+      while(io_worker::statistics().display_frames==before && time_us_64()<deadline);
+      io_worker::suspend_frames(true);
+#endif
+    }
+    host.ai_frozen=!enabled;
+    host.s.presentation_suspended_=!enabled;
+#if defined(PICO_ON_DEVICE)
+    if(enabled) io_worker::suspend_frames(false);
+#endif
+  }
+  static u32 ai_revision() {
+#if defined(PICO_ON_DEVICE)
+    return io_worker::statistics().display_frames;
+#else
+    return current->display.revision();
+#endif
+  }
+  static u32 ai_benchmark(const char* directory){
+    if(!directory)return 1;const auto length=strnlen(directory,80);if(length<5||length>=80||std::strncmp(directory,"/AI/",4))return 1;
+    for(unsigned i=4;i<length;++i)if(!((directory[i]>='A'&&directory[i]<='Z')||(directory[i]>='a'&&directory[i]<='z')||(directory[i]>='0'&&directory[i]<='9')||directory[i]=='-'||directory[i]=='_'))return 1;
+    auto& busy=ai_busy();if(busy)return 3;busy=true;const auto result=ai::benchmark({&api,&common,ai_key,nullptr,directory,ai_render,ai_revision});busy=false;return result;
+  }
   static const void *query(u32 id, u32 version) {
+    static const mk61_ai_service assistant={MK61_AI_SERVICE_MAGIC,MK61_AI_SERVICE_VERSION,sizeof(mk61_ai_service),ai_run};
+    static const mk61_ai_diagnostic_service diagnostic={MK61_AI_SERVICE_MAGIC,MK61_AI_DIAGNOSTIC_VERSION,sizeof(mk61_ai_diagnostic_service),ai_run,ai_benchmark};
+    if(id==MK61_APP_SERVICE_AI && version==MK61_AI_SERVICE_VERSION)return &assistant;
+    if(id==MK61_APP_SERVICE_AI && version==MK61_AI_DIAGNOSTIC_VERSION)return &diagnostic;
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION
                ? &common
                : nullptr;

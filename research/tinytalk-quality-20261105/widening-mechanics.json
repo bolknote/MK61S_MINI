@@ -1,0 +1,12 @@
+{
+  "widened_parameters": 10383744,
+  "qat_loss": 3.468858003616333,
+  "actual_q4_loss": 3.468858003616333,
+  "extra_mlp_output_columns_gradient_absolute_sum": 8961.94140625,
+  "optimizer_parameter_identity_preserved": true,
+  "input_output_embedding_tied": true,
+  "initial_fp32_function_max_abs_error": 0.0,
+  "initial_q4_function_max_abs_error": 0.0,
+  "device": "cpu",
+  "purpose": "Ensure widened units can learn, QAT matches stored quantizer, and validation does not detach optimizer parameters."
+}

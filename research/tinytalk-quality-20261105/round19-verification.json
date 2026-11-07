@@ -1,0 +1,111 @@
+{
+  "device": "cpu",
+  "models": {
+    "typed": {
+      "parameters": 11636224,
+      "best_step": 8000,
+      "packed_bytes": 6640672,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "Hello! I would love to chat with you.",
+          "b200": "Hello! I would love to chat with you."
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "I am doing well, thanks! How are you?",
+          "b200": "I am doing well, thanks! How are you?"
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "I am TinyTalk, a small friendly chat bot.",
+          "b200": "I am TinyTalk, a small friendly chat bot."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "I do not know you feelings.",
+          "b200": "I do not know you feelings."
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Try painting small rocks with watercolors.",
+          "b200": "Try painting small rocks with watercolors."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "What do you like to fold?",
+          "b200": "What do you like to fold?"
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "You too is year long. We can do a quick walk.",
+          "b200": "You too is year long. We can do a quick walk."
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try reading one short poem.",
+          "b200": "Try reading one short poem."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "Try reading a book together.",
+          "b200": "Try reading a book together."
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "You could write a tiny story instead.",
+          "b200": "You could write a tiny story instead."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That sounds like a lovely book. What was the book about?",
+          "b200": "That sounds like a lovely book. What was the book about?"
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "That is wonderful news for your plant.",
+          "b200": "That is wonderful news for your plant."
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "Oh no, that is such a bummer.",
+          "b200": "Oh no, that is such a bummer."
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "That is annoying. Where did you last use it?",
+          "b200": "That is annoying. Where did you last use it?"
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "That sounds cute, did it stay dry?",
+          "b200": "That sounds cute, did it stay dry?"
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "That sounds like a lovely little moment.",
+          "b200": "That sounds like a lovely little moment."
+        }
+      ]
+    }
+  },
+  "uses_reserved_test": false
+}

@@ -1,0 +1,66 @@
+{
+  "transformer.h.0.attn.attention.q_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.0.attn.attention.k_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.0.attn.attention.v_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.0.attn.attention.out_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.3.attn.attention.q_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.3.attn.attention.k_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.3.attn.attention.v_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.3.attn.attention.out_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.4.attn.attention.q_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.4.attn.attention.k_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.4.attn.attention.v_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.4.attn.attention.out_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.7.attn.attention.q_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.7.attn.attention.k_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.7.attn.attention.v_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  },
+  "transformer.h.7.attn.attention.out_proj.weight": {
+    "pair_delta_norm_ratio": 0.0,
+    "max_pair_abs_difference": 0.0
+  }
+}

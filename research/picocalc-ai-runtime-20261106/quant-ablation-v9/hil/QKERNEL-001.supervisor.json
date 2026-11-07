@@ -1,0 +1,8 @@
+{
+  "pid": 86913,
+  "exit_code": 1,
+  "worker_reaped": true,
+  "timed_out": false,
+  "elapsed_seconds": 7.033757925033569,
+  "phase_sha256": "ba70e23776207a20e8db938a60c6b6f3268d95f054f911845ccf85d2a3f90e75"
+}

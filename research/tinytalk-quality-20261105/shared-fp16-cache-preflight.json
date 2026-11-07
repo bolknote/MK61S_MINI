@@ -1,0 +1,7 @@
+{
+  "model_sha256": "bc2731148309bffcceda6311ad55d47e9e544086176153141fab31c2740ff6ea",
+  "compared": 100,
+  "identical_to_previous_verified_fp16_implementation": 100,
+  "all_match": true,
+  "native_runtime_measured": false
+}

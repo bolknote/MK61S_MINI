@@ -43,7 +43,7 @@ option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
 option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing control" ON)
 add_executable(mk61s-picocalc-pico-h
-    main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
+    main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
     dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
@@ -85,6 +85,16 @@ if(MK61_PICOCALC_COSMIC_CLOCK_DIAG OR MK61_PICOCALC_AUDIO_CLOCK)
     target_sources(mk61s-picocalc-pico-h PRIVATE cosmic_clock.cpp)
     target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_vreg pico_flash)
 endif()
+target_sources(mk61s-picocalc-pico-h PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/ai_harness.cpp" "${CMAKE_CURRENT_LIST_DIR}/ai_clock.cpp"
+    "${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" "${MK61_ROOT}/code/mk61_ai_tokenizer.cpp"
+    "${MK61_ROOT}/code/mk61_ai_kernels.c" "${MK61_ROOT}/code/mk61_ai_harness.cpp"
+    "${MK61_ROOT}/code/mk61_ai_tools.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp"
+    "${MK61_ROOT}/code/mk61_ai_grammar.cpp")
+set_source_files_properties("${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" PROPERTIES COMPILE_OPTIONS "-O3;-ffp-contract=off")
+# The chat and SD journal are cold UI paths. Keep them inside the main flash
+# region without changing inference kernels or the emulator's optimization.
+set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
 if(DEFINED MK61_PICOCALC_BUILD_ID)
     target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_BUILD_ID=${MK61_PICOCALC_BUILD_ID})
 endif()

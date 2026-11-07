@@ -1,0 +1,20 @@
+AI_QKERNEL mode=0 cols=128 rows=8 loops=128 repeat=0 us=233 checksum=7162D280 correct=1
+AI_QKERNEL mode=1 cols=128 rows=8 loops=128 repeat=0 us=250 checksum=F71AA500 correct=1
+AI_QKERNEL mode=2 cols=128 rows=8 loops=128 repeat=0 us=272 checksum=9B277780 correct=1
+AI_QKERNEL mode=1 cols=128 rows=8 loops=128 repeat=1 us=250 checksum=67894A00 correct=1
+AI_QKERNEL mode=2 cols=128 rows=8 loops=128 repeat=1 us=272 checksum=66401C80 correct=1
+AI_QKERNEL mode=0 cols=128 rows=8 loops=128 repeat=1 us=232 checksum=A14BEF00 correct=1
+AI_QKERNEL mode=2 cols=128 rows=8 loops=128 repeat=2 us=271 checksum=22ACC180 correct=1
+AI_QKERNEL mode=0 cols=128 rows=8 loops=128 repeat=2 us=234 checksum=F4629400 correct=1
+AI_QKERNEL mode=1 cols=128 rows=8 loops=128 repeat=2 us=244 checksum=206D6680 correct=1
+AI_QKERNEL mode=0 cols=384 rows=8 loops=128 repeat=0 us=634 checksum=C5B33900 correct=1
+AI_QKERNEL mode=1 cols=384 rows=8 loops=128 repeat=0 us=680 checksum=E54E0B80 correct=1
+AI_QKERNEL mode=2 cols=384 rows=8 loops=128 repeat=0 us=744 checksum=893DDE00 correct=1
+AI_QKERNEL mode=1 cols=384 rows=8 loops=128 repeat=1 us=681 checksum=BB82B080 correct=1
+AI_QKERNEL mode=2 cols=384 rows=8 loops=128 repeat=1 us=742 checksum=861C8300 correct=1
+AI_QKERNEL mode=0 cols=384 rows=8 loops=128 repeat=1 us=643 checksum=F30B5580 correct=1
+AI_QKERNEL mode=2 cols=384 rows=8 loops=128 repeat=2 us=742 checksum=0C4F2800 correct=1
+AI_QKERNEL mode=0 cols=384 rows=8 loops=128 repeat=2 us=633 checksum=DBE7FA80 correct=1
+AI_QKERNEL mode=1 cols=384 rows=8 loops=128 repeat=2 us=652 checksum=6BD5CD00 correct=1
+AI_QKERNEL DONE correct=1
+HOST benchmark protocol/18records/all numerical checks PASS

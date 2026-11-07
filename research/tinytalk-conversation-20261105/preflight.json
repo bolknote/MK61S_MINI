@@ -1,0 +1,28 @@
+{
+  "cpu_quantized_validation_restores_raw_weights_max_abs_error": 0.0,
+  "optimizer_parameter_ids_preserved": true,
+  "cpu_qat_and_reference_kl_backward_finite": true,
+  "masked_projection_implementation": "Reuses previously verified GPTNeo assistant-only loss",
+  "source_data": {
+    "repository": "allenai/soda",
+    "main_revision": "fdc848ab0183208ea7808206c91c724414d0a071",
+    "parquet_revision": "3c7e0de64127497b4423f46697d2cfc21fb46b24",
+    "url": "https://huggingface.co/datasets/allenai/soda/resolve/3c7e0de64127497b4423f46697d2cfc21fb46b24/default/train/0000.parquet",
+    "bytes": 263013619,
+    "sha256": "06b88a34de6da8d5a236e1b5cb2bf7c3b91734edb198dccbe6d1b7a1843d53ed",
+    "seconds": 70.73794787499355
+  },
+  "authored_suite": {
+    "policy": "Frozen authored prompts; development variants 0-1, reserved test variants 2-4; not used as training examples",
+    "files": {
+      "dev": {
+        "rows": 40,
+        "sha256": "f94178d1b5dfbf285bda2cea56b8dcef854b07f2513104115f91ce62cb40ee31"
+      },
+      "test": {
+        "rows": 60,
+        "sha256": "a4b214fd7c0c546469b228b28bbfd6a4e42e09ffbd5699a58e7c3501ceacf9cb"
+      }
+    }
+  }
+}

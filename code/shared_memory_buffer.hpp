@@ -1,6 +1,7 @@
 #ifndef MK61_SHARED_MEMORY_BUFFER_HPP
 #define MK61_SHARED_MEMORY_BUFFER_HPP
 #include "shared_memory.hpp"
+#include "block_read.hpp"
 
 namespace shared_memory {
 // DIRECT preserves the ordinary SRAM pointer contract. BLOCK may use an
@@ -13,6 +14,8 @@ struct BufferBackend {
   bool (*read)(u32 address, void* bytes, usize count) = nullptr;
   bool (*write)(u32 address, const void* bytes, usize count) = nullptr;
   bool (*foreground)() = nullptr;
+  bool (*read_begin)(u32 base, const block_io::ReadSpan*, unsigned) = nullptr;
+  bool (*read_finish)() = nullptr;
 };
 struct BufferStatistics {
   usize internal_used, external_used, external_capacity, external_largest;
@@ -46,6 +49,11 @@ class [[nodiscard]] Buffer {
   BufferStorage storage() const { return storage_; }
   u32 generation() const { return generation_; }
   bool read(usize offset, void* bytes, usize count) const;
+  // Optional foreground-only prefetch. A refusal leaves no pending operation;
+  // a success pins this allocation and every destination until read_finish().
+  // Do not issue other backend I/O between begin and finish.
+  bool read_begin(const block_io::ReadSpan* spans, unsigned count);
+  bool read_finish();
   bool write(usize offset, const void* bytes, usize count);
   bool fill(u8 value = 0);
  private:
@@ -55,6 +63,7 @@ class [[nodiscard]] Buffer {
   usize size_ = 0, reserved_ = 0;
   u32 address_ = 0, generation_ = 0;
   unsigned pins_ = 0;
+  bool read_pending_ = false;
   Owner owner_ = Owner::NONE;
   BufferStorage storage_ = BufferStorage::NONE;
   bool acquire_impl(Owner, usize, BufferAccess, EvictionPrepare);

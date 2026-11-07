@@ -1,0 +1,13 @@
+{
+  "id": "demo-addition",
+  "kind": "demo",
+  "task": "Составь программу МК-61. К числу из R0 прибавь число из R1. Покажи результат в X и остановись.",
+  "public_tests": [
+    {"registers": {"R0": 7, "R1": 5}, "expected_X": "12"},
+    {"registers": {"R0": 3, "R1": -2}, "expected_X": "1"}
+  ],
+  "hidden_tests": [
+    {"registers": {"R0": 0, "R1": 9}, "expected_X": "9"},
+    {"registers": {"R0": 2, "R1": -8}, "expected_X": "-6"}
+  ]
+}

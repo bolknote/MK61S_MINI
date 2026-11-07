@@ -1,0 +1,1031 @@
+{
+  "model": "xaskasdf/brandon-tiny-10m-instruct",
+  "revision": "ca6329de991a1cfc17b2a7a1aaae2cc38c08577a",
+  "parameter_count": 10706776,
+  "source": {
+    "repository": "https://github.com/xaskasdf/brandon-tiny",
+    "revision": "cd56eb1093b4b1da986cefc11c0ad79c9d358099",
+    "files": {
+      "src/model.py": {
+        "bytes": 40547,
+        "sha256": "86fb8676f2c449d4f4003d0cf66b548c7a55accdfdcbfd9d5eb6a976a1c8cfb5"
+      },
+      "src/tokenizer.py": {
+        "bytes": 8760,
+        "sha256": "322b60b7e703b6b9f7da7a82c8877ce55e3cfd59ea61ade3b098ca63527a19ec"
+      }
+    }
+  },
+  "model_sha256": "2ff727cc8921d21e5e7b153babd288efc5524b166e9417e1b439ac8c11fe44cf",
+  "tokenizer_sha256": "c6808ff86d9b1422aa1ef5d0adb3cde5d993e870a4387fcd2a16a119083caae0",
+  "packages": {
+    "torch": "2.15.0",
+    "safetensors": "0.8.0",
+    "sentencepiece": "0.2.1"
+  },
+  "settings": {
+    "smoke": true,
+    "prompt": null,
+    "json": "research/brandon-chat-20261105/smoke-q4.json",
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repetition_penalty": 1.2,
+    "no_repeat_ngram_size": 3,
+    "context": 256,
+    "max_new_tokens": 80,
+    "seed": 42,
+    "q4": true
+  },
+  "prompt_format": "Whole ChatML string encoded as in author's inference example; no system/BOS",
+  "stop_tokens": [
+    5,
+    3
+  ],
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! What is your name?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nHi! What is your name?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 18,
+      "generated_tokens": 80,
+      "reply": "I'm Brandon Tiny, a wonderful and friendly language model built to help you by reading, research, and learning. I am eager to make my dream life! I look forward to discovering the world around you when we start in the future. I can also search for online resources and websites where you are looking at books, articles and blogs",
+      "raw_reply": "I'm Brandon Tiny, a wonderful and friendly language model built to help you by reading, research, and learning. I am eager to make my dream life! I look forward to discovering the world around you when we start in the future. I can also search for online resources and websites where you are looking at books, articles and blogs",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.45179920899681747,
+      "tokens_per_second": 177.06980978924983
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What do you like to do?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhat do you like to do?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 17,
+      "generated_tokens": 80,
+      "reply": "- Make a list of your words and use them to create a positive statement. - Do you need something useful to help in the day or when it's time to take yourself. - I love writing about things that you are about to share. - Set up a workspace for friends and family to have any questions. - Write stories, write, or talk about",
+      "raw_reply": "- Make a list of your words and use them to create a positive statement. - Do you need something useful to help in the day or when it's time to take yourself. - I love writing about things that you are about to share. - Set up a workspace for friends and family to have any questions. - Write stories, write, or talk about",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.38492733298335224,
+      "tokens_per_second": 207.83143503987006
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm tired today. Can you suggest something simple?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nI'm tired today. Can you suggest something simple?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 23,
+      "generated_tokens": 80,
+      "reply": "1. Fill up your own coating and let it be a dinner with some fresh ingredients: - Place the spices in a bowl for 30 minutes, then pour the mixture on the pan to add the desired flavor of sauce and oil. 2. Use the hot butter for a few days. 3. Enjoy the favorite",
+      "raw_reply": "1. Fill up your own coating and let it be a dinner with some fresh ingredients: - Place the spices in a bowl for 30 minutes, then pour the mixture on the pan to add the desired flavor of sauce and oil. 2. Use the hot butter for a few days. 3. Enjoy the favorite",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.392336457996862,
+      "tokens_per_second": 203.9066173163032
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does it snow in winter?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhy does it snow in winter?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 19,
+      "generated_tokens": 80,
+      "reply": "The wind is very dry, making it difficult to warm. In the spring, a cold sunlight can screor up and reach high, while a cold summer in winter might wish to get heat or light. There are many different types of weather that can be used to create the weather. Here's a way you can use this sketching skill: 1. Wear S",
+      "raw_reply": "The wind is very dry, making it difficult to warm. In the spring, a cold sunlight can screor up and reach high, while a cold summer in winter might wish to get heat or light. There are many different types of weather that can be used to create the weather. Here's a way you can use this sketching skill: 1. Wear S",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.39256779200513847,
+      "tokens_per_second": 203.7864583627198
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is two plus two?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhat is two plus two?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 17,
+      "generated_tokens": 80,
+      "reply": "The two pluses are two. Here are three plus one: 1. Plus two (PP): A) PP is the first slus of a pump that is equal to its right side, which is $(10)$ and $(5) = $16 ⁇ 2$. 2. Plof: Aq = 3/2. 2)",
+      "raw_reply": "The two pluses are two. Here are three plus one: 1. Plus two (PP): A) PP is the first slus of a pump that is equal to its right side, which is $(10)$ and $(5) = $16 ⁇ 2$. 2. Plof: Aq = 3/2. 2)",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.3839651249872986,
+      "tokens_per_second": 208.35225595722102
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nMy name is Boris. How are you?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 20,
+      "generated_tokens": 80,
+      "reply": "It's a great way to make your day easier! I am visiting the local park and get in the library at one of the best places. Swaying with all new things you have heard, and never take off for a few days. The sun is always bright, it's very cool. That’s an excellent idea! It has some great wonder",
+      "raw_reply": "It's a great way to make your day easier! I am visiting the local park and get in the library at one of the best places. Swaying with all new things you have heard, and never take off for a few days. The sun is always bright, it's very cool. That’s an excellent idea! It has some great wonder",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.3894630410068203,
+      "tokens_per_second": 205.41101870202633
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        },
+        {
+          "role": "assistant",
+          "content": "It's a great way to make your day easier! I am visiting the local park and get in the library at one of the best places. Swaying with all new things you have heard, and never take off for a few days. The sun is always bright, it's very cool. That’s an excellent idea! It has some great wonder"
+        },
+        {
+          "role": "user",
+          "content": "What is my name?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nMy name is Boris. How are you?<|im_end|>\n<|im_start|>assistant\nIt's a great way to make your day easier! I am visiting the local park and get in the library at one of the best places. Swaying with all new things you have heard, and never take off for a few days. The sun is always bright, it's very cool. That’s an excellent idea! It has some great wonder<|im_end|>\n<|im_start|>user\nWhat is my name?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 116,
+      "generated_tokens": 80,
+      "reply": "The name is \"Alabar\". It comes from the English 'Demadia' used in the American word 'fow' to refer to the world or the country. Alabari is also famous as the first American businesser to sell a lot of money. It is often known as the Fobf Wire or the Led Wire in New York City",
+      "raw_reply": "The name is \"Alabar\". It comes from the English 'Demadia' used in the American word 'fow' to refer to the world or the country. Alabari is also famous as the first American businesser to sell a lot of money. It is often known as the Fobf Wire or the Led Wire in New York City",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.4953751659777481,
+      "tokens_per_second": 161.49376370553372
+    }
+  ],
+  "quantization": {
+    "format": "row-padded Q4, 32 weights + FP16 scale, other parameters FP32",
+    "packed_weight_bytes": 6077792,
+    "matrices": [
+      {
+        "name": "tok_embeddings.weight",
+        "shape": [
+          8192,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 1179648,
+        "rmse": 0.00481940433382988
+      },
+      {
+        "name": "layers.0.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.005490859504789114
+      },
+      {
+        "name": "layers.0.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.006551515311002731
+      },
+      {
+        "name": "layers.0.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.002024272922426462
+      },
+      {
+        "name": "layers.0.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.0016142786480486393
+      },
+      {
+        "name": "layers.0.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004450890701264143
+      },
+      {
+        "name": "layers.0.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004309492185711861
+      },
+      {
+        "name": "layers.0.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004422414116561413
+      },
+      {
+        "name": "layers.2.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004928262904286385
+      },
+      {
+        "name": "layers.2.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005181584507226944
+      },
+      {
+        "name": "layers.2.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.0035668802447617054
+      },
+      {
+        "name": "layers.2.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.003934840671718121
+      },
+      {
+        "name": "layers.2.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.00446614995598793
+      },
+      {
+        "name": "layers.2.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004374541807919741
+      },
+      {
+        "name": "layers.2.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.0045440588146448135
+      },
+      {
+        "name": "layers.4.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004981340374797583
+      },
+      {
+        "name": "layers.4.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005304418038576841
+      },
+      {
+        "name": "layers.4.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.003427646355703473
+      },
+      {
+        "name": "layers.4.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.00388884823769331
+      },
+      {
+        "name": "layers.4.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004627990536391735
+      },
+      {
+        "name": "layers.4.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004282438661903143
+      },
+      {
+        "name": "layers.4.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004474703222513199
+      },
+      {
+        "name": "layers.6.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004759376402944326
+      },
+      {
+        "name": "layers.6.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004824464209377766
+      },
+      {
+        "name": "layers.6.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.0041345153003931046
+      },
+      {
+        "name": "layers.6.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.003944996744394302
+      },
+      {
+        "name": "layers.6.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004665819462388754
+      },
+      {
+        "name": "layers.6.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.0043214051984250546
+      },
+      {
+        "name": "layers.6.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004498069640249014
+      },
+      {
+        "name": "layers.8.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004542331676930189
+      },
+      {
+        "name": "layers.8.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.0045999628491699696
+      },
+      {
+        "name": "layers.8.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.003841954516246915
+      },
+      {
+        "name": "layers.8.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.0036947098560631275
+      },
+      {
+        "name": "layers.8.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.00460027065128088
+      },
+      {
+        "name": "layers.8.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004226882476359606
+      },
+      {
+        "name": "layers.8.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004402680788189173
+      },
+      {
+        "name": "layers.10.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004794813226908445
+      },
+      {
+        "name": "layers.10.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005087887402623892
+      },
+      {
+        "name": "layers.10.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004433677066117525
+      },
+      {
+        "name": "layers.10.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.003830822417512536
+      },
+      {
+        "name": "layers.10.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004564190283417702
+      },
+      {
+        "name": "layers.10.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004329602234065533
+      },
+      {
+        "name": "layers.10.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004601253662258387
+      },
+      {
+        "name": "layers.12.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004463008604943752
+      },
+      {
+        "name": "layers.12.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004320037085562944
+      },
+      {
+        "name": "layers.12.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005051922984421253
+      },
+      {
+        "name": "layers.12.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.00359749305061996
+      },
+      {
+        "name": "layers.12.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004435563459992409
+      },
+      {
+        "name": "layers.12.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004281256347894669
+      },
+      {
+        "name": "layers.12.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004572678357362747
+      },
+      {
+        "name": "layers.14.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004159825388342142
+      },
+      {
+        "name": "layers.14.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.0039420719258487225
+      },
+      {
+        "name": "layers.14.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005510264076292515
+      },
+      {
+        "name": "layers.14.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.003726604161784053
+      },
+      {
+        "name": "layers.14.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004299893043935299
+      },
+      {
+        "name": "layers.14.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.0041352855041623116
+      },
+      {
+        "name": "layers.14.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004437978379428387
+      },
+      {
+        "name": "layers.16.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.0042034233920276165
+      },
+      {
+        "name": "layers.16.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.003937769215553999
+      },
+      {
+        "name": "layers.16.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004762161057442427
+      },
+      {
+        "name": "layers.16.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.0037489195819944143
+      },
+      {
+        "name": "layers.16.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004263548646122217
+      },
+      {
+        "name": "layers.16.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004152089357376099
+      },
+      {
+        "name": "layers.16.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004450795240700245
+      },
+      {
+        "name": "layers.18.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004851211328059435
+      },
+      {
+        "name": "layers.18.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.005274710711091757
+      },
+      {
+        "name": "layers.18.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.001400659792125225
+      },
+      {
+        "name": "layers.18.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.005619421601295471
+      },
+      {
+        "name": "layers.18.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004218980669975281
+      },
+      {
+        "name": "layers.18.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.0036918208934366703
+      },
+      {
+        "name": "layers.18.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.003856190713122487
+      },
+      {
+        "name": "layers.20.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004314954858273268
+      },
+      {
+        "name": "layers.20.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004052626900374889
+      },
+      {
+        "name": "layers.20.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004786956124007702
+      },
+      {
+        "name": "layers.20.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.003421301255002618
+      },
+      {
+        "name": "layers.20.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004068408627063036
+      },
+      {
+        "name": "layers.20.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004172934219241142
+      },
+      {
+        "name": "layers.20.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.0044046854600310326
+      },
+      {
+        "name": "layers.22.attention.wq.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.004562669433653355
+      },
+      {
+        "name": "layers.22.attention.wk.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.004611881449818611
+      },
+      {
+        "name": "layers.22.attention.wv.weight",
+        "shape": [
+          64,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 9216,
+        "rmse": 0.0040387799963355064
+      },
+      {
+        "name": "layers.22.attention.wo.weight",
+        "shape": [
+          256,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 36864,
+        "rmse": 0.0037400799337774515
+      },
+      {
+        "name": "layers.22.feed_forward.w1.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.0035795902367681265
+      },
+      {
+        "name": "layers.22.feed_forward.w2.weight",
+        "shape": [
+          256,
+          720
+        ],
+        "padded_columns": 736,
+        "bytes": 105984,
+        "rmse": 0.004303900059312582
+      },
+      {
+        "name": "layers.22.feed_forward.w3.weight",
+        "shape": [
+          720,
+          256
+        ],
+        "padded_columns": 256,
+        "bytes": 103680,
+        "rmse": 0.004439892712980509
+      }
+    ],
+    "execution": "quantize/dequantize simulation; FP32 host arithmetic; no packed file or device runtime"
+  }
+}

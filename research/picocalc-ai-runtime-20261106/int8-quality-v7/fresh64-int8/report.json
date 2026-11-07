@@ -1,0 +1,11 @@
+{
+  "rows": 64,
+  "passed": 4,
+  "passed_examples": 44,
+  "total_examples": 384,
+  "valid_replies": 183,
+  "replies": 183,
+  "context_failures": 0,
+  "source_pins_verified": true,
+  "exit_code": 0
+}

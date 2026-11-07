@@ -1,0 +1,21 @@
+{
+  "parameters": 10573312,
+  "core_parameters": 6311936,
+  "vocab": 16388,
+  "hidden_size": 256,
+  "intermediate_size": 1024,
+  "layers": 8,
+  "fp32_before_noise_max_abs_error": 4.863739013671875e-05,
+  "fp32_after_noise_max_abs_error": 0.0058078765869140625,
+  "retained_vocab_argmax_agreement": [
+    40,
+    40
+  ],
+  "packed_reload_max_abs_error": 0.0,
+  "psram_design_bytes_context128": 7635641,
+  "psram_remaining_design_bytes": 752967,
+  "native_runtime_measured": false,
+  "packed_weights_bytes": 6034192,
+  "compact_tokenizer_bytes": 290729,
+  "source_q4_rounded": true
+}

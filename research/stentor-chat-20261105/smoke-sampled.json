@@ -1,0 +1,188 @@
+{
+  "model": "StentorLabs/Stentor-12M-Instruct",
+  "revision": "6d44a6ffc689a021365eb97ea66d795929a1b646",
+  "files": {
+    "config.json": {
+      "bytes": 717,
+      "sha256": "678c6b59ca34c0ad022c86b6d547c5b10aaa333e61ed05a03e13a363be2c96c1"
+    },
+    "generation_config.json": {
+      "bytes": 131,
+      "sha256": "e950dd7dc1248635e123e36d152f7f8d69e17a255541ae3875998b6b5efdbc88"
+    },
+    "model.safetensors": {
+      "bytes": 24106056,
+      "sha256": "f282b552e0f6f804f53145df6693636ee06fd3d4dffc116bddfc7ce0c16eb80f"
+    },
+    "tokenizer.json": {
+      "bytes": 3672065,
+      "sha256": "9beea45ed4b7c145ddd1adc169d09feb1496328492884a0982abad7e4d90b4ce"
+    },
+    "tokenizer_config.json": {
+      "bytes": 405,
+      "sha256": "9edad6cf0fea99aedefa36b0643695f92b4d51b7be024a1500c988ac63a79f72"
+    },
+    "chat_template.jinja": {
+      "bytes": 3959,
+      "sha256": "e16746b40344d6c5b5265988e0328a0bf7277be86f1c335156eae07e29c82826"
+    }
+  },
+  "python": "3.13.18 (main, Oct 25 2026, 18:31:23) [Clang 21.0.0 (clang-2100.3.34.2)]",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.15.0",
+    "transformers": "5.22.1",
+    "tokenizers": "0.23.3",
+    "safetensors": "0.8.0",
+    "huggingface-hub": "2.4.0"
+  },
+  "settings": {
+    "profile": "stentor",
+    "download_only": false,
+    "smoke": true,
+    "prompt": null,
+    "model_dir": "/Users/bolk/Projects/MK61S_MINI/.build/stentor-chat-20261105/model",
+    "json": "research/stentor-chat-20261105/smoke-sampled.json",
+    "temperature": 1.1,
+    "top_p": 0.6,
+    "top_k": 50,
+    "repetition_penalty": 1.3,
+    "system_prompt": null,
+    "seed": 42,
+    "context": 128,
+    "max_new_tokens": 48,
+    "threads": 2
+  },
+  "parameter_count": 12047040,
+  "chat_template": "{%- if messages[0][\"role\"] == \"system\" %}\n    {%- set system_message = messages[0][\"content\"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n{%- set user_messages = loop_messages | selectattr(\"role\", \"equalto\", \"user\") | list %}\n\n{#- This block checks for alternating user/assistant messages, skipping tool calling messages #}\n{%- set ns = namespace() %}\n{%- set ns.index = 0 %}\n{%- for message in loop_messages %}\n    {%- if not (message.role == \"tool\" or message.role == \"tool_results\" or (message.tool_calls is defined and message.tool_calls is not none)) %}\n        {%- if (message[\"role\"] == \"user\") != (ns.index % 2 == 0) %}\n            {{- raise_exception(\"After the optional system message, conversation roles must alternate user/assistant/user/assistant/...\") }}\n        {%- endif %}\n        {%- set ns.index = ns.index + 1 %}\n    {%- endif %}\n{%- endfor %}\n\n{{- bos_token }}\n{%- for message in loop_messages %}\n    {%- if message[\"role\"] == \"user\" %}\n        {%- if tools is not none and (message == user_messages[-1]) %}\n            {{- \"[AVAILABLE_TOOLS] [\" }}\n            {%- for tool in tools %}\n                {%- set tool = tool.function %}\n                {{- '{\"type\": \"function\", \"function\": {' }}\n                {%- for key, val in tool.items() if key != \"return\" %}\n                    {%- if val is string %}\n                        {{- '\"' + key + '\": \"' + val + '\"' }}\n                    {%- else %}\n                        {{- '\"' + key + '\": ' + val|tojson }}\n                    {%- endif %}\n                    {%- if not loop.last %}\n                        {{- \", \" }}\n                    {%- endif %}\n                {%- endfor %}\n                {{- \"}}\" }}\n                {%- if not loop.last %}\n                    {{- \", \" }}\n                {%- else %}\n                    {{- \"]\" }}\n                {%- endif %}\n            {%- endfor %}\n            {{- \"[/AVAILABLE_TOOLS]\" }}\n            {%- endif %}\n        {%- if loop.last and system_message is defined %}\n            {{- \"[INST] \" + system_message + \"\\n\\n\" + message[\"content\"] + \"[/INST]\" }}\n        {%- else %}\n            {{- \"[INST] \" + message[\"content\"] + \"[/INST]\" }}\n        {%- endif %}\n    {%- elif message.tool_calls is defined and message.tool_calls is not none %}\n        {{- \"[TOOL_CALLS] [\" }}\n        {%- for tool_call in message.tool_calls %}\n            {%- set out = tool_call.function|tojson %}\n            {{- out[:-1] }}\n            {%- if not tool_call.id is defined or tool_call.id|length != 9 %}\n                {{- raise_exception(\"Tool call IDs should be alphanumeric strings with length 9!\") }}\n            {%- endif %}\n            {{- ', \"id\": \"' + tool_call.id + '\"}' }}\n            {%- if not loop.last %}\n                {{- \", \" }}\n            {%- else %}\n                {{- \"]\" + eos_token }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif message[\"role\"] == \"assistant\" %}\n        {{- \" \" + message[\"content\"]|trim + eos_token}}\n    {%- elif message[\"role\"] == \"tool_results\" or message[\"role\"] == \"tool\" %}\n        {%- if message.content is defined and message.content.content is defined %}\n            {%- set content = message.content.content %}\n        {%- else %}\n            {%- set content = message.content %}\n        {%- endif %}\n        {{- '[TOOL_RESULTS] {\"content\": ' + content|string + \", \" }}\n        {%- if not message.tool_call_id is defined or message.tool_call_id|length != 9 %}\n            {{- raise_exception(\"Tool call IDs should be alphanumeric strings with length 9!\") }}\n        {%- endif %}\n        {{- '\"call_id\": \"' + message.tool_call_id + '\"}[/TOOL_RESULTS]' }}\n    {%- else %}\n        {{- raise_exception(\"Only user and assistant roles are supported, with the exception of an initial optional system message!\") }}\n    {%- endif %}\n{%- endfor %}\n",
+  "prompt_format": "Published tokenizer chat template with the author's quick-start system prompt",
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! What is your name?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nHi! What is your name?[/INST]",
+      "prompt_tokens": 18,
+      "generated_tokens": 1,
+      "reply": "",
+      "raw_reply": "</s>",
+      "seconds": 0.013564665976446122,
+      "tokens_per_second": 73.7209454133566,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What do you like to do?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nWhat do you like to do?[/INST]",
+      "prompt_tokens": 18,
+      "generated_tokens": 1,
+      "reply": "",
+      "raw_reply": "</s>",
+      "seconds": 0.00603824999416247,
+      "tokens_per_second": 165.6108973571413,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm tired today. Can you suggest something simple?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nI'm tired today. Can you suggest something simple?[/INST]",
+      "prompt_tokens": 23,
+      "generated_tokens": 18,
+      "reply": "I can't help with permission, learn more about information processing and storage sources.",
+      "raw_reply": "I can't help with permission, learn more about information processing and storage sources.</s>",
+      "seconds": 0.07587745800265111,
+      "tokens_per_second": 237.22460495936872,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does it snow in winter?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nWhy does it snow in winter?[/INST]",
+      "prompt_tokens": 18,
+      "generated_tokens": 48,
+      "reply": "I can't help with your question, see: If you need a visit for more than one-half of your day and get rid of them all about watering, I may have an effective understanding that some people have experienced other problems",
+      "raw_reply": "I can't help with your question, see: If you need a visit for more than one-half of your day and get rid of them all about watering, I may have an effective understanding that some people have experienced other problems",
+      "seconds": 0.1955614170001354,
+      "tokens_per_second": 245.4471885932733,
+      "hit_token_limit": true,
+      "ended_with_eos": false
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is two plus two?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nWhat is two plus two?[/INST]",
+      "prompt_tokens": 17,
+      "generated_tokens": 25,
+      "reply": "I can't help with the number of persons, or you may want to be read about them as they can.",
+      "raw_reply": "I can't help with the number of persons, or you may want to be read about them as they can.</s>",
+      "seconds": 0.10302358301123604,
+      "tokens_per_second": 242.6628861983322,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] You are a helpful assistant.\n\nMy name is Boris. How are you?[/INST]",
+      "prompt_tokens": 21,
+      "generated_tokens": 1,
+      "reply": "",
+      "raw_reply": "</s>",
+      "seconds": 0.005586250015767291,
+      "tokens_per_second": 179.01096391630915,
+      "hit_token_limit": false,
+      "ended_with_eos": true
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "user",
+          "content": "What is my name?"
+        }
+      ],
+      "rendered_prompt": "<s>[INST] My name is Boris. How are you?[/INST] </s>[INST] You are a helpful assistant.\n\nWhat is my name?[/INST]",
+      "prompt_tokens": 30,
+      "generated_tokens": 48,
+      "reply": "I can't help with decisions about your source, such as: Have you been asked about the information and their questions that would cause harm to your property, whether or not you want of what it was happening. If you have any other",
+      "raw_reply": "I can't help with decisions about your source, such as: Have you been asked about the information and their questions that would cause harm to your property, whether or not you want of what it was happening. If you have any other",
+      "seconds": 0.19303879200015217,
+      "tokens_per_second": 248.65468490893872,
+      "hit_token_limit": true,
+      "ended_with_eos": false
+    }
+  ]
+}

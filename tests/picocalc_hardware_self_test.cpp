@@ -29,6 +29,39 @@ int main() {
     assert(!psram::read(psram::CAPACITY,output.data(),1));
     assert(!psram::write(0xFFFFFFFF,input.data(),2));
     assert(!psram::write(0,nullptr,1));
+    {
+        // Gather across a page boundary and the end of PSRAM into guarded
+        // SRAM. The same descriptors drive production QPI/DMA on the board.
+        alignas(4) u8 staged[1120],oracle[1088];
+        std::memset(staged,0xC7,sizeof(staged));
+        block_io::ReadSpan spans[]={{1008,staged+16,1024},
+                                   {psram::CAPACITY-96,staged+1040,64}};
+        std::memcpy(oracle,ram.data()+32+1008,1024);
+        std::memcpy(oracle+1024,ram.data()+psram::CAPACITY-64,64);
+        const auto before=psram::statistics().read_bytes;
+        assert(psram::read_begin(32,spans,2));
+        assert(staged[16]==0xC7 && !psram::init());
+        assert(!psram::read_begin(32,spans,2) && !psram::read(0,output.data(),16));
+        assert(!psram::write(0,input.data(),16));
+        assert(psram::read_finish() && !psram::read_finish());
+        assert(!std::memcmp(staged+16,oracle,sizeof(oracle)));
+        for(unsigned i=0;i<16;++i) assert(staged[i]==0xC7 && staged[1104+i]==0xC7);
+        assert(psram::statistics().read_bytes-before==sizeof(oracle));
+        for(auto span : {block_io::ReadSpan{1,staged,16},
+                        block_io::ReadSpan{0,staged,15},
+                        block_io::ReadSpan{0,staged+1,16},
+                        block_io::ReadSpan{0,staged,2064},
+                        block_io::ReadSpan{psram::CAPACITY,staged,16}})
+            assert(!psram::read_begin(0,&span,1));
+        spans[1].destination=staged+1044;assert(!psram::read_begin(32,spans,2));
+        assert(!psram::read_begin(0,nullptr,1) && !psram::read_begin(UINT32_MAX,spans,2));
+        assert(psram::read(0,output.data(),16));
+        u32 maximum[514];std::fill(std::begin(maximum),std::end(maximum),0xCCCCCCCCU);
+        block_io::ReadSpan full{psram::CAPACITY-2048,maximum+1,2048};
+        assert(psram::read_begin(0,&full,1) && psram::read_finish());
+        assert(!std::memcmp(maximum+1,ram.data()+full.offset,2048));
+        assert(maximum[0]==0xCCCCCCCCU && maximum[513]==0xCCCCCCCCU);
+    }
     assert(external_cache::init());
     std::array<u8,512> sector{},read{};
     for(unsigned i=0;i<sector.size();++i) sector[i]=(u8)(i^0x69);

@@ -179,6 +179,7 @@ void Panel::sleep(bool enabled) {
     else { command(0x11);sleep_ms(120);command(0x29);valid_=false; }
 }
 bool Panel::flush(const Screen& screen) {
+    if(io_worker::frames_suspended()) return false;
     if(color_active_) return false;
     if(io_worker::frame_pending()) return false;
     if(failed_.exchange(false,std::memory_order_acquire)) valid_=false;
@@ -236,6 +237,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(operation!=MK61_COLOR_PRESENT || !payload) return 0;
     const auto* frame=(const mk61_service_color_frame*)payload;
     if(!lcd::valid_color(*frame)) return 0;
+    if(io_worker::frames_suspended()) return 2;
     if(io_worker::frame_pending()) return 2;
     const bool failed=failed_.exchange(false,std::memory_order_acquire);
     const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);

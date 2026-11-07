@@ -1,0 +1,18 @@
+{
+  "device": "cpu",
+  "parameters": 10577664,
+  "vocab": 16405,
+  "intent_tags": 20,
+  "all_tags_hidden_by_decoder": true,
+  "train_rows": 8,
+  "skipped": 0,
+  "weighted_qat_loss": 7.809215545654297,
+  "actual_q4_loss": 7.809215545654297,
+  "intent_embedding_gradient_norm": 171.69659423828125,
+  "packed_reload_max_abs_error": 0.0,
+  "packed_bytes": 6037360,
+  "tokenizer_table_bytes": 297483,
+  "total_psram_design_bytes_context128": 7645563,
+  "remaining_from_8mib": 743045,
+  "native_runtime_measured": false
+}

@@ -1,0 +1,174 @@
+{
+  "model": "xaskasdf/brandon-tiny-10m-instruct",
+  "revision": "ca6329de991a1cfc17b2a7a1aaae2cc38c08577a",
+  "parameter_count": 10706776,
+  "source": {
+    "repository": "https://github.com/xaskasdf/brandon-tiny",
+    "revision": "cd56eb1093b4b1da986cefc11c0ad79c9d358099",
+    "files": {
+      "src/model.py": {
+        "bytes": 40547,
+        "sha256": "86fb8676f2c449d4f4003d0cf66b548c7a55accdfdcbfd9d5eb6a976a1c8cfb5"
+      },
+      "src/tokenizer.py": {
+        "bytes": 8760,
+        "sha256": "322b60b7e703b6b9f7da7a82c8877ce55e3cfd59ea61ade3b098ca63527a19ec"
+      }
+    }
+  },
+  "model_sha256": "2ff727cc8921d21e5e7b153babd288efc5524b166e9417e1b439ac8c11fe44cf",
+  "tokenizer_sha256": "c6808ff86d9b1422aa1ef5d0adb3cde5d993e870a4387fcd2a16a119083caae0",
+  "packages": {
+    "torch": "2.15.0",
+    "safetensors": "0.8.0",
+    "sentencepiece": "0.2.1"
+  },
+  "settings": {
+    "smoke": true,
+    "prompt": null,
+    "json": "research/brandon-chat-20261105/smoke-sampled.json",
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 40,
+    "repetition_penalty": 1.2,
+    "no_repeat_ngram_size": 3,
+    "context": 256,
+    "max_new_tokens": 80,
+    "seed": 42,
+    "q4": false
+  },
+  "prompt_format": "Whole ChatML string encoded as in author's inference example; no system/BOS",
+  "stop_tokens": [
+    5,
+    3
+  ],
+  "samples": [
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Hi! What is your name?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nHi! What is your name?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 18,
+      "generated_tokens": 80,
+      "reply": "I'm Brandon Tiny, a small language model with all the features and types of languages that you use to work on. It has been used for centuries in many industries, including healthcare, engineering, agriculture, and medicine. I recently read out from the text \"Brandon Theory for Funding\" by George Start and Amy.",
+      "raw_reply": "I'm Brandon Tiny, a small language model with all the features and types of languages that you use to work on. It has been used for centuries in many industries, including healthcare, engineering, agriculture, and medicine. I recently read out from the text \"Brandon Theory for Funding\" by George Start and Amy.",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.45329074998153374,
+      "tokens_per_second": 176.487166356823
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What do you like to do?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhat do you like to do?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 17,
+      "generated_tokens": 80,
+      "reply": "To get a good life, try reading a variety of genres and how they influence your attitude and behavior. Read widely and have a deep understanding of different perspectives or experiences that can help you improve your life. For example, if you are looking for a friend, write down what you love and what interests you want. Additionally, consider reading a book or TV featuring yourself",
+      "raw_reply": "To get a good life, try reading a variety of genres and how they influence your attitude and behavior. Read widely and have a deep understanding of different perspectives or experiences that can help you improve your life. For example, if you are looking for a friend, write down what you love and what interests you want. Additionally, consider reading a book or TV featuring yourself",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.38714108397834934,
+      "tokens_per_second": 206.6430128724699
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "I'm tired today. Can you suggest something simple?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nI'm tired today. Can you suggest something simple?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 23,
+      "generated_tokens": 80,
+      "reply": "You can take a look at the world around us and see how it is connected with all different cultures!  ⁇ noinput: -Melac: A vector in the direction -Customation: The world where you are connected -Rour: A comprehensive explanation of what means to be connected -Light: A device that allows",
+      "raw_reply": "You can take a look at the world around us and see how it is connected with all different cultures!  ⁇ noinput: -Melac: A vector in the direction -Customation: The world where you are connected -Rour: A comprehensive explanation of what means to be connected -Light: A device that allows",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.392624457977945,
+      "tokens_per_second": 203.75704664963553
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "Why does it snow in winter?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhy does it snow in winter?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 19,
+      "generated_tokens": 80,
+      "reply": "The wind is very dry, making it difficult to maintain warmth and cooliness. It can also be overwhelming with weather conditions like high temperatures, extreme heat, and cold nights. This could result in a severe rain when the sun is hot and can cause significant damage. Additionally, temperature drops can lead to a decrease in temperatures. When the ice increases, the water",
+      "raw_reply": "The wind is very dry, making it difficult to maintain warmth and cooliness. It can also be overwhelming with weather conditions like high temperatures, extreme heat, and cold nights. This could result in a severe rain when the sun is hot and can cause significant damage. Additionally, temperature drops can lead to a decrease in temperatures. When the ice increases, the water",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.3918608329840936,
+      "tokens_per_second": 204.15411101636525
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is two plus two?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nWhat is two plus two?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 17,
+      "generated_tokens": 80,
+      "reply": "Two plus three are: 1. Break the equation (x ⁇ n) and 2. For each x-intercept, we need to get $x$. 3. Multiply both sides by 2: - 4 + 2 = 7. Thus, the second term in the original equation is y ⁇ 2 + 5(15), which gives us",
+      "raw_reply": "Two plus three are: 1. Break the equation (x ⁇ n) and 2. For each x-intercept, we need to get $x$. 3. Multiply both sides by 2: - 4 + 2 = 7. Thus, the second term in the original equation is y ⁇ 2 + 5(15), which gives us",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.38366941700223833,
+      "tokens_per_second": 208.51284062480613
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nMy name is Boris. How are you?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 20,
+      "generated_tokens": 80,
+      "reply": "It's a great way to learn about the world around you and make friends with it. Experiment with different languages, languages, and ways of communication. You can also try something interesting in your favorite tuks and enjoy exploring new places. Finally, don’t hesitate to help others!  ⁇ not anything/where’s how to do",
+      "raw_reply": "It's a great way to learn about the world around you and make friends with it. Experiment with different languages, languages, and ways of communication. You can also try something interesting in your favorite tuks and enjoy exploring new places. Finally, don’t hesitate to help others!  ⁇ not anything/where’s how to do",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.39195337498676963,
+      "tokens_per_second": 204.1059092875534
+    },
+    {
+      "messages": [
+        {
+          "role": "user",
+          "content": "My name is Boris. How are you?"
+        },
+        {
+          "role": "assistant",
+          "content": "It's a great way to learn about the world around you and make friends with it. Experiment with different languages, languages, and ways of communication. You can also try something interesting in your favorite tuks and enjoy exploring new places. Finally, don’t hesitate to help others!  ⁇ not anything/where’s how to do"
+        },
+        {
+          "role": "user",
+          "content": "What is my name?"
+        }
+      ],
+      "rendered_prompt": "<|im_start|>user\nMy name is Boris. How are you?<|im_end|>\n<|im_start|>assistant\nIt's a great way to learn about the world around you and make friends with it. Experiment with different languages, languages, and ways of communication. You can also try something interesting in your favorite tuks and enjoy exploring new places. Finally, don’t hesitate to help others!  ⁇ not anything/where’s how to do<|im_end|>\n<|im_start|>user\nWhat is my name?<|im_end|>\n<|im_start|>assistant\n",
+      "prompt_tokens": 115,
+      "generated_tokens": 80,
+      "reply": "I'm Brandon Tiny, an arbitrary language model developed by John. He was one of the most popular machine algorithms for his career. He is known for being a master-forded algithm with its ability to generate patterns and predict future changes. His pudding, the \"Ben\", is widely used",
+      "raw_reply": "I'm Brandon Tiny, an arbitrary language model developed by John. He was one of the most popular machine algorithms for his career. He is known for being a master-forded algithm with its ability to generate patterns and predict future changes. His pudding, the \"Ben\", is widely used",
+      "ended_with_eos": false,
+      "hit_token_limit": true,
+      "seconds": 0.4988856670097448,
+      "tokens_per_second": 160.35738304431453
+    }
+  ]
+}

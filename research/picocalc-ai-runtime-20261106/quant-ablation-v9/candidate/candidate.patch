@@ -1,0 +1,308 @@
+--- a/code/mk61_ai_model.hpp
++++ b/code/mk61_ai_model.hpp
+@@ -27,7 +27,13 @@
+   CANCELLED,
+   NUMERIC
+ };
+-enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32, SWAR_INT8 };
++enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32, SWAR_INT8, INT16 };
++struct Quantization {
++  Arithmetic mode = Arithmetic::LUT_FLOAT32;
++  unsigned group = 32;
++  std::uint32_t seed = 0;
++  bool stochastic = false;
++};
+ enum class LinearKernel : std::uint8_t { REFERENCE, FLASH, SRAM };
+ struct ComputeExecution {
+   // submit publishes one bounded SRAM-only job; join completes it before any
+@@ -38,7 +44,10 @@
+   void (*busy)(void *, bool) = nullptr;
+   LinearKernel kernel = LinearKernel::REFERENCE;
+   bool filter_head = false;
++  bool filter_logits = false;
++  unsigned quant_bytes = 2, minimum_activation_group = 8, lookup_columns = ~0U;
+   bool prefetch = true;
++  Quantization (*precision)(void *, unsigned tensor, unsigned position, Arithmetic fallback) = nullptr;
+   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
+ };
+ struct ComputeMetrics {
+--- a/code/mk61_ai_model.cpp
++++ b/code/mk61_ai_model.cpp
+@@ -186,17 +186,21 @@
+   const auto &c = config_;
+   const unsigned columns =
+       std::max(std::max(c.hidden, c.intermediate), c.heads * c.head_dim);
++  const unsigned min_group=execution_.minimum_activation_group;
++  if((min_group!=8 && min_group!=16 && min_group!=32) || execution_.quant_bytes<1 || execution_.quant_bytes>2)return 0;
++  const unsigned lookup_columns=std::min(columns,execution_.lookup_columns);
+   const unsigned floats = 3 * c.hidden + 2 * c.heads * c.head_dim +
+                           2 * c.kv_heads * c.head_dim + 2 * c.intermediate +
+                           c.context;
+   const unsigned raw =
+       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
+   const unsigned needed =
+-      4 * floats + raw + columns + 8 * (columns / 32) + 16 * columns +
++      4 * floats + raw + execution_.quant_bytes * columns + 4 * (columns / min_group + columns / 32) + 16 * lookup_columns +
+       16 * (columns * 9 / 16) + 8 * sizeof(float) + 16;
+   return std::max(needed, 6U * MAX_TEXT);
+ }
+ ModelStatus Model::bind(void *workspace, std::size_t n, Memory cache) {
++  if(!workspace_bytes())return ModelStatus::FORMAT;
+   if (!workspace || reinterpret_cast<std::uintptr_t>(workspace) % 4 ||
+       n < workspace_bytes() || cache.size < cache_bytes() || !cache.read ||
+       !cache.write)
+@@ -212,7 +216,7 @@
+                            void *context, Arithmetic arithmetic, float *logits,
+                            bool (*allowed)(void *, std::uint16_t),
+                            void *policy) {
+-  if (!workspace_)
++  if (!workspace_ || !workspace_bytes() || bound_ < workspace_bytes())
+     return ModelStatus::MEMORY;
+   if (token >= config_.vocab)
+     return ModelStatus::FORMAT;
+@@ -248,12 +252,13 @@
+   const unsigned raw_bytes =
+       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
+   auto *quant = reinterpret_cast<std::int8_t *>(raw + raw_bytes);
++  auto *quant16 = reinterpret_cast<std::int16_t *>(quant);
+   auto *activation_scales = reinterpret_cast<float *>(
+-      (reinterpret_cast<std::uintptr_t>(quant + columns) + 3) &
++      (reinterpret_cast<std::uintptr_t>(quant + execution_.quant_bytes * columns) + 3) &
+       ~std::uintptr_t(3));
+-  auto *input_sums = activation_scales + columns / 32;
++  auto *input_sums = activation_scales + columns / execution_.minimum_activation_group;
+   auto *lookup = input_sums + columns / 32;
+-  auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * columns);
++  auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * std::min(columns,execution_.lookup_columns));
+   const unsigned tile_bytes = 8 * columns * 9 / 16;
+   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
+   ModelStatus status = ModelStatus::OK;
+@@ -295,28 +300,48 @@
+       status = ModelStatus::IO;
+       return false;
+     }
++    const Quantization settings=execution_.precision?execution_.precision(execution_.context,index,position_,arithmetic):Quantization{arithmetic};
++    const Arithmetic mode=settings.mode;
++    const unsigned activation_group=settings.group;
++    if((activation_group!=8 && activation_group!=16 && activation_group!=32) ||
++       ((mode==Arithmetic::LUT_FLOAT32 || mode==Arithmetic::LUT_INT8 || mode==Arithmetic::SWAR_INT8) && activation_group!=32)) {
++      status=ModelStatus::FORMAT;return false;
++    }
++    const unsigned lookup_bytes=16*std::min(columns,execution_.lookup_columns);
++    if(activation_group<execution_.minimum_activation_group ||
++       (mode==Arithmetic::INT16 && 2*t.cols>execution_.quant_bytes*columns) ||
++       ((mode==Arithmetic::LUT_FLOAT32 || mode==Arithmetic::LUT_INT8) && 16*t.cols>lookup_bytes) ||
++       (mode==Arithmetic::SWAR_INT8 && 2*t.cols>lookup_bytes)) {status=ModelStatus::MEMORY;return false;}
+     const bool integer =
+-        arithmetic == Arithmetic::INT8 || arithmetic == Arithmetic::LUT_INT8 ||
+-        arithmetic == Arithmetic::SWAR_INT8;
+-    const bool tables = arithmetic == Arithmetic::LUT_INT8 ||
+-                        arithmetic == Arithmetic::LUT_FLOAT32;
+-    if (integer) {
+-      for (unsigned g = 0; g < t.cols / 32; ++g) {
+-        float maximum = 0;
+-        for (unsigned j = 0; j < 32; ++j)
+-          maximum = std::max(maximum, std::fabs(input[g * 32 + j]));
+-        if (!std::isfinite(maximum)) {
+-          status = ModelStatus::NUMERIC;
+-          return false;
+-        }
+-        const float scale = maximum / 127.0f;
+-        activation_scales[g] = scale;
+-        for (unsigned j = 0; j < 32; ++j)
+-          quant[g * 32 + j] =
+-              scale ? std::int8_t(std::round(input[g * 32 + j] / scale)) : 0;
+-      }
+-    }
+-    if (arithmetic == Arithmetic::SWAR_INT8) {
++        mode == Arithmetic::INT8 || mode == Arithmetic::LUT_INT8 ||
++        mode == Arithmetic::SWAR_INT8 || mode == Arithmetic::INT16;
++    const bool tables = mode == Arithmetic::LUT_INT8 ||
++                        mode == Arithmetic::LUT_FLOAT32;
++    if(integer) {
++      const int limit=mode==Arithmetic::INT16?32767:127;
++      std::uint32_t rng=settings.seed^(0x9e3779b9U*(index+1))^(0x85ebca6bU*(position_+1));if(!rng)rng=1;
++      for(unsigned at=0;at<t.cols;at+=activation_group) {
++        float maximum=0;
++        for(unsigned j=0;j<activation_group;++j)maximum=std::max(maximum,std::fabs(input[at+j]));
++        if(!std::isfinite(maximum)){status=ModelStatus::NUMERIC;return false;}
++        const float scale=maximum/float(limit);activation_scales[at/activation_group]=scale;
++        for(unsigned j=0;j<activation_group;++j) {
++          int q=0;
++          if(scale) {
++            const float value=input[at+j]/scale;
++            if(settings.stochastic) {
++              const float magnitude=std::fabs(value);q=int(magnitude);
++              rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;
++              if(float(rng>>8)*0x1p-24f<magnitude-float(q))++q;
++              if(value<0)q=-q;
++            } else q=int(std::round(value));
++            q=std::max(-limit,std::min(limit,q));
++          }
++          if(mode==Arithmetic::INT16)quant16[at+j]=std::int16_t(q);else quant[at+j]=std::int8_t(q);
++        }
++      }
++    }
++    if (mode == Arithmetic::SWAR_INT8) {
+       for (unsigned g = 0; g < t.cols / 32; ++g)
+         input_sums[g] = float(swar::prepare32(quant + 32 * g,
+             reinterpret_cast<std::uint32_t *>(lookup) + 16 * g));
+@@ -347,6 +372,7 @@
+         input_sums[g] = total;
+       }
+     }
++    if(head && logits && execution_.filter_logits)std::fill(logits,logits+c.vocab,-FLT_MAX);
+     float maximum = -FLT_MAX;
+     best = 0;
+     if (execution_.kernel != LinearKernel::REFERENCE) {
+@@ -379,7 +405,7 @@
+         if (r == t.rows) return true;
+         if (!alive()) return false;
+         for (; r < t.rows && target.count < TILE; ++r) {
+-          if (head && execution_.filter_head && allowed && !logits &&
++          if (head && execution_.filter_head && allowed && (!logits || execution_.filter_logits) &&
+               !allowed(policy, std::uint16_t(r))) {
+             ++compute_metrics_.skipped_rows;
+             // A completely masked vocabulary still services Esc/USB.
+@@ -448,7 +474,7 @@
+         const unsigned count = active.count;
+         const auto matmul_started = stamp();
+         LinearBatch first{};
+-        first.arithmetic = arithmetic;
++        first.arithmetic = mode;first.quant16=quant16;first.activation_group=activation_group;
+         first.columns = t.cols;first.bits = t.bits;first.grid = t.grid;
+         first.rows = count;first.input = input;first.quant = quant;
+         first.activation_scales = activation_scales;
+@@ -516,7 +542,7 @@
+         return false;
+       ++compute_metrics_.rows;
+       float value = 0;
+-      if (arithmetic == Arithmetic::FLOAT32)
++      if (mode == Arithmetic::FLOAT32)
+         for (unsigned g = 0; g < t.cols / 32; ++g) {
+           const unsigned at = t.cols * t.bits / 8 + 2 * g;
+           const float scale =
+@@ -531,22 +557,23 @@
+             value += input[g * 32 + j] * (coefficient * scale);
+           }
+         }
+-      else if (!tables)
+-        for (unsigned g = 0; g < t.cols / 32; ++g) {
+-          std::int32_t sum = 0;
+-          for (unsigned j = 0; j < 32; ++j) {
+-            const int u =
+-                int(tensor_code(raw, g * 32 + j, t.bits, (t.grid & 256) != 0));
+-            sum += ((t.grid & 1) ? 2 * u - int((1U << t.bits) - 1) : u - 8) *
+-                   int(quant[g * 32 + j]);
+-          }
+-          const unsigned at = t.cols * t.bits / 8 + 2 * g;
+-          float scale =
+-              half(std::uint16_t(raw[at]) | (std::uint16_t(raw[at + 1]) << 8));
+-          if (t.grid & 1)
+-            scale /= float((1U << t.bits) - 1);
+-          value += float(sum) * scale * activation_scales[g];
+-        }
++      else if (!tables) {
++        for(unsigned g=0;g<t.cols/32;++g) {
++          const unsigned at=t.cols*t.bits/8+2*g;
++          float scale=half(std::uint16_t(raw[at])|(std::uint16_t(raw[at+1])<<8));
++          if(t.grid&1)scale/=float((1U<<t.bits)-1);
++          for(unsigned part=0;part<32;part+=activation_group) {
++            std::int32_t sum=0;
++            for(unsigned j=0;j<activation_group;++j) {
++              const unsigned col=32*g+part+j;
++              const int u=int(tensor_code(raw,col,t.bits,(t.grid&256)!=0));
++              const int weight=(t.grid&1)?2*u-int((1U<<t.bits)-1):u-8;
++              sum+=weight*(mode==Arithmetic::INT16?int(quant16[col]):int(quant[col]));
++            }
++            value+=float(sum)*scale*activation_scales[(32*g+part)/activation_group];
++          }
++        }
++      }
+       else
+         for (unsigned g = 0; g < t.cols / 32; ++g) {
+           std::uint8_t converted[16];
+--- a/code/mk61_ai_linear.hpp
++++ b/code/mk61_ai_linear.hpp
+@@ -12,6 +12,8 @@
+   const float *input = nullptr, *activation_scales = nullptr;
+   const float *input_sums = nullptr, *lookup = nullptr;
+   const std::int8_t *quant = nullptr;
++  const std::int16_t *quant16 = nullptr;
++  unsigned activation_group = 32;
+   const std::uint8_t *weights = nullptr, *scales = nullptr;
+   float *output = nullptr;
+   ModelStatus status = ModelStatus::OK;
+--- a/code/mk61_ai_linear.cpp
++++ b/code/mk61_ai_linear.cpp
+@@ -67,8 +67,9 @@
+          t[64 + (p[2] & 15)] + t[80 + (p[2] >> 4)] +
+          t[96 + (p[3] & 15)] + t[112 + (p[3] >> 4)];
+ }
++template<typename Activation>
+ MK61_AI_INLINE std::int32_t nibble_dot(const std::uint8_t *p,
+-                                      const std::int8_t *x) {
++                                      const Activation *x) {
+   std::int32_t sum = 0;
+   for (unsigned i = 0; i < 16; i += 4) {
+     sum += (int(p[i] & 15) - 8) * int(x[2 * i]);
+@@ -106,6 +107,11 @@
+             2 * plane_integer(t, p + 4) + 4 * plane_integer(t, p + 8) +
+             8 * plane_integer(t, p + 12) - 8 * int(b.input_sums[g]);
+         value += float(sum) * scale * b.activation_scales[g];
++      } else if constexpr (Mode == Arithmetic::INT16) {
++        const auto* x=b.quant16+32*g;std::int32_t sum=0;
++        if(!(b.grid&256))sum=nibble_dot(p,x);
++        else for(unsigned j=0;j<32;++j)sum+=(int(unpack(p,j,4,true))-8)*int(x[j]);
++        value+=float(sum)*scale*b.activation_scales[g];
+       } else if constexpr (Mode == Arithmetic::SWAR_INT8) {
+         alignas(4) std::uint8_t converted[16];
+         if (b.grid & 256) {
+@@ -214,8 +220,38 @@
+     b.output[r] = value;
+   }
+ }
++
++// INT16 uses the ordinary32-bit MULS. At group32 the maximum exact sum is
++// 32*8*32767=8388352, below both INT32_MAX and the FP32 integer precision limit.
++MK61_AI_INLINE void integer_grouped(LinearBatch &b) {
++  const unsigned group=b.activation_group;
++  if((group!=8 && group!=16 && group!=32) || b.bits!=4 || (b.grid&1) ||
++     (b.arithmetic==Arithmetic::INT16 && !b.quant16)) { b.status=ModelStatus::FORMAT;return; }
++  for(unsigned r=0;r<b.rows;++r) {
++    const auto* weights=b.weights+r*b.columns/2;
++    const auto* scales=b.scales+r*b.columns/16;
++    float value=0;
++    for(unsigned g=0;g<b.columns/32;++g) {
++      const float scale=half(std::uint16_t(scales[2*g])|(std::uint16_t(scales[2*g+1])<<8));
++      for(unsigned part=0;part<32;part+=group) {
++        std::int32_t sum=0;
++        for(unsigned j=0;j<group;++j) {
++          const int weight=int(unpack(weights+16*g,part+j,4,(b.grid&256)!=0))-8;
++          const unsigned at=32*g+part+j;
++          const int x=b.arithmetic==Arithmetic::INT16?int(b.quant16[at]):int(b.quant[at]);
++          sum+=weight*x;
++        }
++        value+=float(sum)*scale*b.activation_scales[(32*g+part)/group];
++      }
++    }
++    if(!std::isfinite(value)){b.status=ModelStatus::NUMERIC;return;}
++    b.output[r]=value;
++  }
++}
+ MK61_AI_INLINE void dispatch(LinearBatch &b) {
+   b.status = ModelStatus::OK;
++  if(b.arithmetic==Arithmetic::INT16 && b.activation_group==32 && b.bits==4 && !(b.grid&1))return fast_q4<Arithmetic::INT16>(b);
++  if(b.arithmetic==Arithmetic::INT16 || (b.arithmetic==Arithmetic::INT8 && b.activation_group!=32))return integer_grouped(b);
+   if (b.bits == 4 && !(b.grid & 1)) {
+     if (b.arithmetic == Arithmetic::LUT_FLOAT32 && (b.grid & 256))
+       return fast_q4<Arithmetic::LUT_FLOAT32>(b);
+@@ -232,3 +268,8 @@
+ void linear_batch_flash(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
+ void MK61_AI_RAM(linear_batch_sram)(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
+ } // namespace mk61ai
++
++namespace mk61ai {
++extern "C" __attribute__((noinline)) std::int32_t mk61ai_q4_a16_dot32(const std::uint8_t*w,const std::int16_t*x){return nibble_dot(w,x);}
++extern "C" __attribute__((noinline)) std::int32_t mk61ai_q4_a8_dot32(const std::uint8_t*w,const std::int8_t*x){return nibble_dot(w,x);}
++}

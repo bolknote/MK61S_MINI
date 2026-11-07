@@ -1,0 +1,215 @@
+{
+  "sft": {
+    "packed_sha256": "106866adef0129b6f026fc31f9be3f3deb54c979619106ae3f4ea8f659c19dd9",
+    "packed_bytes": 4706696,
+    "reload_max_abs_error": 0.0,
+    "cpu_matches_b200": 16,
+    "checks": [
+      {
+        "question": "Which name did I tell you?",
+        "matches_remote": true,
+        "local_reply": "Your name is Agnes.",
+        "remote_reply": "Your name is Agnes."
+      },
+      {
+        "question": "Which food did I say was my favorite?",
+        "matches_remote": true,
+        "local_reply": "Your favorite food is por.",
+        "remote_reply": "Your favorite food is por."
+      },
+      {
+        "question": "Which name belongs to my dog?",
+        "matches_remote": true,
+        "local_reply": "Your dog's name is Dexter.",
+        "remote_reply": "Your dog's name is Dexter."
+      },
+      {
+        "question": "Should I bring my own plates?",
+        "matches_remote": true,
+        "local_reply": "A plate of plates are very organized.",
+        "remote_reply": "A plate of plates are very organized."
+      },
+      {
+        "question": "How can I remember new vocabulary better?",
+        "matches_remote": true,
+        "local_reply": "Try deep breathing and low breathing more slowly.",
+        "remote_reply": "Try deep breathing and low breathing more slowly."
+      },
+      {
+        "question": "How do I find a remote control in the dark?",
+        "matches_remote": true,
+        "local_reply": "Look for remote control or into washing water with water and washing soap.",
+        "remote_reply": "Look for remote control or into washing water with water and washing soap."
+      },
+      {
+        "question": "I lost my favorite hat during a trip.",
+        "matches_remote": true,
+        "local_reply": "Have you checked online?",
+        "remote_reply": "Have you checked online?"
+      },
+      {
+        "question": "Which city did I say I live in?",
+        "matches_remote": true,
+        "local_reply": "You live in Verears.",
+        "remote_reply": "You live in Verears."
+      },
+      {
+        "question": "Which city did I say I live in?",
+        "matches_remote": true,
+        "local_reply": "You live in air.",
+        "remote_reply": "You live in air."
+      },
+      {
+        "question": "Which food did I say was my favorite?",
+        "matches_remote": true,
+        "local_reply": "Your favorite food is broccoli.",
+        "remote_reply": "Your favorite food is broccoli."
+      },
+      {
+        "question": "Hi! What is your name?",
+        "matches_remote": true,
+        "local_reply": "Hello! My name is John.",
+        "remote_reply": "Hello! My name is John."
+      },
+      {
+        "question": "What do you like to do?",
+        "matches_remote": true,
+        "local_reply": "Wear warm clothes and hatches well.",
+        "remote_reply": "Wear warm clothes and hatches well."
+      },
+      {
+        "question": "I'm tired today. Can you suggest something simple?",
+        "matches_remote": true,
+        "local_reply": "Try reading a book or reading a book.",
+        "remote_reply": "Try reading a book or reading a book."
+      },
+      {
+        "question": "Why does it snow in winter?",
+        "matches_remote": true,
+        "local_reply": "Winter is icy and cold, so it is cold and cold.",
+        "remote_reply": "Winter is icy and cold, so it is cold and cold."
+      },
+      {
+        "question": "What is two plus two?",
+        "matches_remote": true,
+        "local_reply": "Two.",
+        "remote_reply": "Two."
+      },
+      {
+        "question": "What is my name?",
+        "matches_remote": true,
+        "local_reply": "Your name is Boris.",
+        "remote_reply": "Your name is Boris."
+      }
+    ],
+    "parameter_count": 8278400
+  },
+  "qat": {
+    "packed_sha256": "4fe02f9569e3c66f924e673f94e8925cc26647243795216f3ddfad872aecafd1",
+    "packed_bytes": 4706696,
+    "reload_max_abs_error": 0.0,
+    "cpu_matches_b200": 16,
+    "checks": [
+      {
+        "question": "Which name did I tell you?",
+        "matches_remote": true,
+        "local_reply": "Your name is Agnes.",
+        "remote_reply": "Your name is Agnes."
+      },
+      {
+        "question": "Which food did I say was my favorite?",
+        "matches_remote": true,
+        "local_reply": "Your favorite food is porcup.",
+        "remote_reply": "Your favorite food is porcup."
+      },
+      {
+        "question": "Which name belongs to my dog?",
+        "matches_remote": true,
+        "local_reply": "Your dog's name is Dexter.",
+        "remote_reply": "Your dog's name is Dexter."
+      },
+      {
+        "question": "Should I bring my own plates?",
+        "matches_remote": true,
+        "local_reply": "No, only ais for a living room for a living.",
+        "remote_reply": "No, only ais for a living room for a living."
+      },
+      {
+        "question": "How can I remember new vocabulary better?",
+        "matches_remote": true,
+        "local_reply": "Try deep breathing and low notes.",
+        "remote_reply": "Try deep breathing and low notes."
+      },
+      {
+        "question": "How do I find a remote control in the dark?",
+        "matches_remote": true,
+        "local_reply": "Look for action to make it easier to find out.",
+        "remote_reply": "Look for action to make it easier to find out."
+      },
+      {
+        "question": "I lost my favorite hat during a trip.",
+        "matches_remote": true,
+        "local_reply": "Where did you lose it?",
+        "remote_reply": "Where did you lose it?"
+      },
+      {
+        "question": "Which city did I say I live in?",
+        "matches_remote": true,
+        "local_reply": "You live inVer.",
+        "remote_reply": "You live inVer."
+      },
+      {
+        "question": "Which city did I say I live in?",
+        "matches_remote": true,
+        "local_reply": "You live in enough air.",
+        "remote_reply": "You live in enough air."
+      },
+      {
+        "question": "Which food did I say was my favorite?",
+        "matches_remote": true,
+        "local_reply": "Your favorite food is broccoli.",
+        "remote_reply": "Your favorite food is broccoli."
+      },
+      {
+        "question": "Hi! What is your name?",
+        "matches_remote": true,
+        "local_reply": "Your name is Jane.",
+        "remote_reply": "Your name is Jane."
+      },
+      {
+        "question": "What do you like to do?",
+        "matches_remote": true,
+        "local_reply": "You live in a well, well, but you also have to wait for your turn.",
+        "remote_reply": "You live in a well, well, but you also have to wait for your turn."
+      },
+      {
+        "question": "I'm tired today. Can you suggest something simple?",
+        "matches_remote": true,
+        "local_reply": "Try reading a book or reading a book about time.",
+        "remote_reply": "Try reading a book or reading a book about time."
+      },
+      {
+        "question": "Why does it snow in winter?",
+        "matches_remote": true,
+        "local_reply": "It is icy and cold.",
+        "remote_reply": "It is icy and cold."
+      },
+      {
+        "question": "What is two plus two?",
+        "matches_remote": true,
+        "local_reply": "Two two.",
+        "remote_reply": "Two two."
+      },
+      {
+        "question": "What is my name?",
+        "matches_remote": true,
+        "local_reply": "Your name is Boris.",
+        "remote_reply": "Your name is Boris."
+      }
+    ],
+    "parameter_count": 8278400
+  },
+  "original_sha256": "d7510ceac1d4f2a7d00b6f2da92cdce38706faa60a96c60884819d00ef58af77",
+  "masked_loss_reference_max_abs_error": 0.0,
+  "qat_cpu_backward_and_checkpoint_smoke_passed": true
+}

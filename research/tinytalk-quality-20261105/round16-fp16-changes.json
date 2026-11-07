@@ -1,0 +1,22 @@
+[
+  {
+    "id": "audit2:project:3",
+    "messages": [
+      {
+        "role": "user",
+        "content": "I play the guitar."
+      },
+      {
+        "role": "assistant",
+        "content": "Cool!"
+      },
+      {
+        "role": "user",
+        "content": "What is a good first song?"
+      }
+    ],
+    "intent": "Name one easy song title.",
+    "fp32": "Try playing one short tune.",
+    "fp16": "Try learning the tune."
+  }
+]

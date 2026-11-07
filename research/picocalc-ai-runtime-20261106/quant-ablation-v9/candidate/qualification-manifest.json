@@ -1,0 +1,36 @@
+{
+  "status": "FROZEN_BEFORE_FUNCTIONAL_AUDIT",
+  "profiles": [
+    "lut-fp32",
+    "int16",
+    "a16-head-fp32"
+  ],
+  "selection": "A16 best integer KL; A16+FP32-head predeclared conservative comparison",
+  "cases": 1175,
+  "source_pins": {
+    "source/mk61_ai_linear.hpp": "79ac7e9c0e246da1dad33a797db124b656ad8ae1353e653c6299b05abdf1a471",
+    "source/codec_native_bridge.hpp": "0f6d3026b40bdf749d38a31818cc53a612925aa1fdd9cef6e536a16030633184",
+    "source/probe.cpp": "f163ce5198d7759821c47c0922b47d593730c4579df6fdf59da36a34a0354f09",
+    "source/mk61_ai_swar.hpp": "27a7ab76f0b678384c573e901f17404d9029a0096d1312a8369d6848bc48920e",
+    "source/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+    "source/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+    "source/mk61_ai_model.hpp": "bc032935a3564955d8926be04cf568909c67f974cbb985923fcc77dba9f0068b",
+    "source/block_read.hpp": "689ffb8695978197812dadef158911bae7a2c9d2632ad38d22c65769ae929184",
+    "source/mk61_ai_model.cpp": "9aacc2e6b939c106ee81ee141eb946f89e4738e6809ec2e060ec8537a74ef137",
+    "source/mk61_ai_linear.cpp": "7d4b0b18e3eceeb4405135065c1eb50a5c1f3b2786a16f6560441b1a949b5aa2",
+    "source/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "runtime/tasks.py": "3ca17c7f0edb28a0a6e55418233f9c779248058a1d7e7f68ae0f198dec7a64f4",
+    "runtime/hf_runtime.py": "d4833495614792fbc7efa69bef59c49f410d9dff5f6738561cc0edf19e7f265b",
+    "runtime/emulator.py": "89d46b818e1d8fc9e80b17287cd90470627262ff8b381978b2c8e6fadce6a91f",
+    "runtime/ha_runtime.py": "568e50733098842aeb9cf8a821d7ba5e230f8235d336438dfa3d5317d59d9d8f",
+    "runtime/ha_protocol.py": "69ab80671928721387c37c88051d2d008e2b63b4b32aaee9e1702a7549c89a5e",
+    "runtime/full_isa_bridge.cpp": "0a71ccd7c8180c93eeb1f4ffb31f4caf445b4b31926cca0456afe540bd1d2424",
+    "runtime/full_isa_math.py": "807fcc8a0d9b26f5d115c5049d471f935887aea87ef6e04d4fee59faf59bd7c7",
+    "runtime/full_isa_protocol.py": "fc9dce88ababa25de447533e69935b87121040767b926431e8e71a4da852a2a6",
+    "runtime/full_isa_vm.py": "7db7025ef2ba11ce5c658aba622701230247ba96ce4bf0dd62019d2967a330e9",
+    "runtime/core_bridge.cpp": "a5536b95f536a17c2a8c12348954f046ca281ca81ed15051f9ca7acb40eb614a"
+  },
+  "library_sha256": "8dfa9ef78f2a578713187112144b984fdce677b7730469d7bc69637b713c2f8b",
+  "default_changed": false,
+  "hardware_io": 0
+}

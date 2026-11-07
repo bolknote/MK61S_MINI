@@ -1,0 +1,4 @@
+{"id": "dev-sum", "family": "sum", "task": "X = R0 + R1.", "cases": ["R0=8 R1=3 => X=11", "R0=-5 R1=2 => X=-3", "R0=1 R1=-9 => X=-8 PUBLIC=0"]}
+{"id": "dev-square", "family": "power", "task": "Возведи значение R0 в квадрат и выведи в X.", "cases": ["R0=3 => X=9", "R0=-4 => X=16", "R0=0.5 => X=0.25 PUBLIC=0"]}
+{"id": "dev-absolute", "family": "absolute", "task": "Вычисли абсолютную величину R0 в X.", "cases": ["R0=-8 => X=8", "R0=2 => X=2", "R0=0 => X=0 PUBLIC=0"]}
+{"id": "dev-reverse", "family": "difference", "task": "Из числа R1 вычти число R0. Результат нужен в X.", "cases": ["R0=2 R1=9 => X=7", "R0=4 R1=1 => X=-3", "R0=-2 R1=-5 => X=-3 PUBLIC=0"]}

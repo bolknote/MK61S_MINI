@@ -1,0 +1,73 @@
+{
+  "status": "HARDWARE_MEASURED_SWAR_NO_SPEEDUP",
+  "rows": [
+    {
+      "phase": "A-LUT",
+      "overall_status": "PASS",
+      "numeric_ok": true,
+      "arithmetic": 3,
+      "control_seconds_per_token": 8.913302,
+      "prefetch_seconds_per_token": 8.3331505,
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "cdc_closed": true
+    },
+    {
+      "phase": "B-INT8",
+      "overall_status": "PASS",
+      "numeric_ok": true,
+      "arithmetic": 1,
+      "control_seconds_per_token": 3.464394,
+      "prefetch_seconds_per_token": 2.7979895,
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "cdc_closed": true
+    },
+    {
+      "phase": "C-SWAR-PLANES",
+      "overall_status": "PASS",
+      "numeric_ok": true,
+      "arithmetic": 4,
+      "control_seconds_per_token": 3.844861,
+      "prefetch_seconds_per_token": 3.117453,
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "cdc_closed": true
+    },
+    {
+      "phase": "D-SWAR-NIBBLES",
+      "overall_status": "HOLD",
+      "numeric_ok": true,
+      "arithmetic": 4,
+      "control_seconds_per_token": 3.090497,
+      "prefetch_seconds_per_token": 2.561812,
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "cdc_closed": true
+    },
+    {
+      "phase": "E-RESUME",
+      "overall_status": "PASS",
+      "numeric_ok": true,
+      "arithmetic": 1,
+      "control_seconds_per_token": 3.0922035,
+      "prefetch_seconds_per_token": 2.548193,
+      "matching_tokens": true,
+      "matching_checksums": true,
+      "cdc_closed": true
+    }
+  ],
+  "clock_mhz": 125,
+  "decode_context_positions": [
+    2,
+    4
+  ],
+  "model_vocab": 8192,
+  "precision_comparison": "SWAR exact to INT8; INT8 vs LUT_FLOAT32 quality not evaluated",
+  "conclusion": "Use INT8 nibbles for frequency experiment; ordinary UI default unchanged",
+  "historical_holds_preserved": [
+    "D cleanup/MSC",
+    "E initial MSC"
+  ],
+  "raw_results": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/swar-v5/hil"
+}

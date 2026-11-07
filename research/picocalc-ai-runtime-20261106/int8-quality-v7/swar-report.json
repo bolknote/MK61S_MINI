@@ -1,0 +1,32 @@
+{
+  "regression20": {
+    "status": "PASS_EXACT_FUNCTIONAL_MATCH",
+    "total": 20,
+    "passed": 5,
+    "passed_examples": 33,
+    "total_examples": 98,
+    "valid_replies": 43,
+    "replies": 43,
+    "identical_functional_rows": 20,
+    "mismatches": [],
+    "excluded_fields": [
+      "elapsed_us",
+      "arithmetic"
+    ]
+  },
+  "fresh64": {
+    "status": "PASS_EXACT_FUNCTIONAL_MATCH",
+    "total": 64,
+    "passed": 4,
+    "passed_examples": 44,
+    "total_examples": 384,
+    "valid_replies": 183,
+    "replies": 183,
+    "identical_functional_rows": 64,
+    "mismatches": [],
+    "excluded_fields": [
+      "elapsed_us",
+      "arithmetic"
+    ]
+  }
+}

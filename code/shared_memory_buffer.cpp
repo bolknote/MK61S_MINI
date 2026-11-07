@@ -31,7 +31,8 @@ bool range(usize capacity, usize offset, const void* bytes, usize count) {
 bool configure_buffer_backend(const BufferBackend& value) {
   if(!foreground() || transitioning || internal || external ||
      (value.foreground && !value.foreground()) ||
-     value.capacity > UINT32_MAX || (value.capacity && (!value.available || !value.read || !value.write))) return false;
+     value.capacity > UINT32_MAX || (bool(value.read_begin) != bool(value.read_finish)) ||
+     (value.capacity && (!value.available || !value.read || !value.write))) return false;
   backend = value;
   return true;
 }
@@ -123,15 +124,33 @@ bool Buffer::reset() {
 }
 Buffer::~Buffer() { if(!reset()) __builtin_trap(); }
 bool Buffer::read(usize offset, void* bytes, usize count) const {
-  if(!foreground() || transitioning || !ok() || !range(size_, offset, bytes, count)) return false;
+  if(!foreground() || transitioning || read_pending_ || !ok() || !range(size_, offset, bytes, count)) return false;
   if(!count) return true;
   if(data()) { std::memmove(bytes, data() + offset, count); return true; }
   const bool result = backend.read(address_ + (u32)offset, bytes, count);
   if(!result) increment(counters.io_errors);
   return result;
 }
+bool Buffer::read_begin(const block_io::ReadSpan* spans, unsigned count) {
+  if(!foreground() || transitioning || read_pending_ || !ok() ||
+     storage_ != BufferStorage::EXTERNAL_DEVICE || !backend.read_begin ||
+     !spans || !count || pins_ == UINT32_MAX) return false;
+  for(unsigned i=0;i<count;++i)
+    if(!spans[i].bytes || !range(size_, spans[i].offset, spans[i].destination, spans[i].bytes)) return false;
+  if(!backend.read_begin(address_, spans, count)) return false;
+  read_pending_ = true; ++pins_; ++counters.pinned;
+  return true;
+}
+bool Buffer::read_finish() {
+  if(!foreground() || transitioning || !read_pending_) return false;
+  const bool result = backend.read_finish();
+  // Even a failed transfer has stopped writing before the backend returns.
+  read_pending_ = false; --pins_; --counters.pinned;
+  if(!result) increment(counters.io_errors);
+  return result;
+}
 bool Buffer::write(usize offset, const void* bytes, usize count) {
-  if(!foreground() || transitioning || !ok() || !range(size_, offset, bytes, count)) return false;
+  if(!foreground() || transitioning || read_pending_ || !ok() || !range(size_, offset, bytes, count)) return false;
   if(!count) return true;
   if(data()) { std::memmove(data() + offset, bytes, count); return true; }
   const bool result = backend.write(address_ + (u32)offset, bytes, count);

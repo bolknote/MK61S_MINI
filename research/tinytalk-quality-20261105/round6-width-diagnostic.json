@@ -1,0 +1,47 @@
+{
+  "transformer.wte.weight": {
+    "shape": [
+      16406,
+      256
+    ],
+    "alternating_difference_relative_norm": 0.1745239794254303,
+    "bottom_half_energy_fraction": 0.0027268591802567244,
+    "effective_rank": 60.11876678466797
+  },
+  "transformer.wpe.weight": {
+    "shape": [
+      256,
+      256
+    ],
+    "alternating_difference_relative_norm": 0.02214333415031433,
+    "bottom_half_energy_fraction": 8.918376261135563e-05,
+    "effective_rank": 3.9156572818756104
+  },
+  "transformer.h.0.attn.attention.q_proj.weight": {
+    "shape": [
+      256,
+      256
+    ],
+    "alternating_difference_relative_norm": 0.0382579080760479,
+    "bottom_half_energy_fraction": 2.0513513732112187e-07,
+    "effective_rank": 33.50242614746094
+  },
+  "transformer.h.4.attn.attention.q_proj.weight": {
+    "shape": [
+      256,
+      256
+    ],
+    "alternating_difference_relative_norm": 0.059350378811359406,
+    "bottom_half_energy_fraction": 1.746265070323716e-07,
+    "effective_rank": 47.62535095214844
+  },
+  "transformer.h.7.mlp.c_fc.weight": {
+    "shape": [
+      1024,
+      256
+    ],
+    "alternating_difference_relative_norm": 0.0823587104678154,
+    "bottom_half_energy_fraction": 0.002307887189090252,
+    "effective_rank": 96.27872467041016
+  }
+}

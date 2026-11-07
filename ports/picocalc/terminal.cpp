@@ -224,7 +224,7 @@ bool Terminal::get(const char *args) {
   args=terminal_core::skip_spaces(args);
   const bool m8=!std::strncmp(args,"m8",2) && terminal_core::at_end(args+2);
   if ((!terminal_core::at_end(args) && !m8) ||
-      !files::stat(name, entry) || entry.directory || (!m8 && entry.size > 65534))
+      !files::stat(name, entry) || entry.directory)
     return false;
   program_store::Entry logical{};
   if(m8 && (!program_store::text_content(script::file_type(name)) || !script::register_file(name,logical))) return false;
@@ -285,12 +285,14 @@ bool Terminal::put(const char *args) {
     char name[files::PATH_SIZE];
     usize size = 0, crc = 0;
     if (!path(args, name) ||
-        !terminal_core::parse_unsigned(args, 10, 65534, size) ||
+        !terminal_core::parse_unsigned(args, 10, UINT32_MAX, size) ||
         !terminal_core::parse_unsigned(args, 10, UINT32_MAX, crc) || files::usb_active())
       return false;
     args=terminal_core::skip_spaces(args);
     const bool m8=!std::strncmp(args,"m8",2) && terminal_core::at_end(args+2);
-    if((!terminal_core::at_end(args) && !m8) ||
+    // Raw SD assets (models, images, archives) use physical 32-bit lengths.
+    // Only decoded M8 editor text retains the 16-bit logical size limit.
+    if((!terminal_core::at_end(args) && !m8) || (m8 && size>65534) ||
        (m8 && !program_store::text_content(script::file_type(name)))) return false;
     cancel_upload();
     upload_ = files::begin_write(name,m8);
@@ -313,7 +315,7 @@ bool Terminal::put(const char *args) {
     usize offset = 0, n = 0;
     char hex[193];
     u8 data[96];
-    if (!terminal_core::parse_unsigned(args, 10, 65534, offset) ||
+    if (!terminal_core::parse_unsigned(args, 10, UINT32_MAX, offset) ||
         !terminal_core::parse_token(args, hex, sizeof(hex)) ||
         !terminal_core::at_end(args) ||
         !terminal_file_transfer::decode_hex(hex, data, sizeof(data), n) || !n ||

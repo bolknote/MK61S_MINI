@@ -113,6 +113,7 @@ Scope::~Scope() { (void)point_;(void)start_;(void)generation_; }
 }
 namespace io_worker {
 bool frame_pending() { return controller.pending; }
+bool frames_suspended() { return false; }
 bool submit_frame(void* context,void (*transfer)(void*)) {
     require(!controller.pending,"single in-flight frame");
     controller.context=context;controller.transfer=transfer;controller.pending=true;return true;

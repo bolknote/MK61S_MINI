@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "CURRENT_125MHZ_FIXES_VERIFIED",
+  "physical_io": true,
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "package": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/integration-v3-host.zip",
+    "sha256": "2abf528ede0978839c866caf9648993a8b2f6bdc928f4c80d4211cc733df6270",
+    "bytes": 40091133,
+    "members": 561,
+    "verified": true,
+    "physical_io": false
+  },
+  "review": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/REVIEW.md",
+  "validation": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/validation.json",
+  "patch": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/native-harness-v3.patch",
+  "patch_sha256": "839574cc96b05a8027562d4803d879771a4009c1abb67b37ce4e6d07be313f4f",
+  "phase_plan": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/v3/hil-ready/PLAN.json",
+  "ordinary_build": "8F230610",
+  "ordinary_crc": "B50733D1",
+  "diagnostic_build": "F64DE93C",
+  "diagnostic_crc": "A4F76302",
+  "base": "d54a2a34b2749b27ba43df7b7f22a5c098d4608f plus existing V2 AI overlay",
+  "scope": "34-file scoped overlay; main/audio/settings/script_runtime/ui unchanged. Apply only the patch after before-SHA checks. Full source tar is for reproduction, not a blanket overwrite.",
+  "host_validation": "ASan/UBSan; TSAN two real threads;68 exact full-logit comparisons;942505 worker jobs;512 positions/all2621440KV bytes exact;full Pico HOST suite;native Esc/F5/global LCD freeze;2600 tokenizer cases;94208 Q4 groups;7 HIL guard tests.",
+  "pending": "125MHz installation and short paired bench done under newer direct human authorization. No ROOT review claimed. Old unissued flash entry bindings are obsolete; do not reset/reflash or close user UI without a new applicable instruction.",
+  "notification": {
+    "delivered": false,
+    "attempted_tool": "codex_app.send_message_to_thread",
+    "error": "Cannot steer conversation without an active turn id",
+    "gui_fallback": "CUA refused access to com.openai.codex; no alternate UI automation attempted"
+  },
+  "cleanup": "No live V3 processes, ports, mounts, grants or device state to release. Primary Git index/HEAD untouched.",
+  "policy": "No calculator/firmware/settings/RTC saved or restored. First unexpected hardware fault HOLD, no reset/replay/next frequency.",
+  "current_device_report": "/Users/bolk/Projects/MK61S_MINI/research/picocalc-ai-runtime-20261106/v3-latest-validation.json",
+  "current_device_build": "69071668",
+  "current_device_crc": "AE0062FE",
+  "current_device_owner": "released: calculator idle,125MHz, all CDC closed, HIL children reaped; prior crash record from300MHz retained",
+  "clock_result": "200/250MHz PASS120s at configured1.1V;300MHz HardFault in ai_clock transition then watchdog125, not repeated",
+  "integration": "Primary sources advanced independently during this turn. Apply V3 overlay plus ui-v4/status-and-empty-result.patch by SHA after review; do not replace primary from full isolated snapshot."
+}

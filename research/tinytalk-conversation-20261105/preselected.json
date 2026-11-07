@@ -1,0 +1,29 @@
+{
+  "selected": {
+    "arm": "qat",
+    "step": 1500,
+    "dev_score": [
+      0.11250000000000002,
+      -5.8338666560050605
+    ]
+  },
+  "candidates": [
+    {
+      "arm": "qat",
+      "step": 1500,
+      "dev_score": [
+        0.11250000000000002,
+        -5.8338666560050605
+      ]
+    },
+    {
+      "arm": "staged",
+      "step": 1500,
+      "dev_score": [
+        0.0125,
+        -5.925093475696473
+      ]
+    }
+  ],
+  "test_used_for_selection": false
+}

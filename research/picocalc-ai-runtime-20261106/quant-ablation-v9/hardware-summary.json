@@ -1,0 +1,162 @@
+{
+  "numeric_status": "PASS",
+  "records": 18,
+  "exact_host_checksums": true,
+  "app_result": 0,
+  "lifecycle_status": "HOLD_AFTER_UI_RETURN_FS_ERROR",
+  "completion_status": "OBSERVED_STOP",
+  "final": {
+    "BUILD": "CDB70C8F",
+    "ACTUAL": "7ED9C260",
+    "EXPECTED": "7ED9C260",
+    "IMAGE": "1538304",
+    "FIRMWARE_CRC": "valid",
+    "BOOTS": "4",
+    "CRASH": "NONE",
+    "SERVICE": "CLOSED",
+    "RUNTIME": "NONE",
+    "UI": "CALCULATOR",
+    "RUN": "0",
+    "BUSY": "0",
+    "USB_DISK": "0",
+    "SYS_HZ": "125000000",
+    "PERI_HZ": "48000000",
+    "PHYSICAL_KEYS": "0",
+    "SETTINGS_WRITES": "0",
+    "RTC_SET": "0",
+    "error_counters": {
+      "ERRORS": 0,
+      "QPI_FALLBACKS": 0,
+      "TAIL_TIMEOUTS": 0,
+      "CRC_ERRORS": 0,
+      "DMA_TIMEOUTS": 0,
+      "LCD_ERRORS": 0,
+      "SD_SPEED_FALLBACKS": 0,
+      "SD_PROBE_FAILURES": 0,
+      "I2C_TIMEOUTS": 0,
+      "I2C_ABORTS": 0,
+      "SCREEN_ERRORS": 0
+    },
+    "fs_error": "File or directory not found (4)",
+    "lcd_spi_hz": 12000000
+  },
+  "final_foreground": "/Apps/QK-BD020C976EEC/QKERNEL.APP",
+  "cdc_closed": true,
+  "holders": [],
+  "all_workers_reaped": true,
+  "results": [
+    {
+      "cols": 128,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 0,
+      "microseconds": [
+        243624,
+        156192,
+        156213
+      ],
+      "median_us": 156213,
+      "min_us": 156192,
+      "max_us": 243624,
+      "median_us_per_matrix": 1220.4140625,
+      "speedup_vs_lut": 1.0,
+      "ratio_vs_a8": 5.468494013862634
+    },
+    {
+      "cols": 128,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 1,
+      "microseconds": [
+        28394,
+        28566,
+        28756
+      ],
+      "median_us": 28566,
+      "min_us": 28394,
+      "max_us": 28756,
+      "median_us_per_matrix": 223.171875,
+      "speedup_vs_lut": 5.468494013862634,
+      "ratio_vs_a8": 1.0
+    },
+    {
+      "cols": 128,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 2,
+      "microseconds": [
+        28295,
+        28290,
+        28345
+      ],
+      "median_us": 28295,
+      "min_us": 28290,
+      "max_us": 28345,
+      "median_us_per_matrix": 221.0546875,
+      "speedup_vs_lut": 5.520869411556812,
+      "ratio_vs_a8": 0.9905131975075264
+    },
+    {
+      "cols": 384,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 0,
+      "microseconds": [
+        470670,
+        470563,
+        470026
+      ],
+      "median_us": 470563,
+      "min_us": 470026,
+      "max_us": 470670,
+      "median_us_per_matrix": 3676.2734375,
+      "speedup_vs_lut": 1.0,
+      "ratio_vs_a8": 5.911595477386935
+    },
+    {
+      "cols": 384,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 1,
+      "microseconds": [
+        79600,
+        79845,
+        79600
+      ],
+      "median_us": 79600,
+      "min_us": 79600,
+      "max_us": 79845,
+      "median_us_per_matrix": 621.875,
+      "speedup_vs_lut": 5.911595477386935,
+      "ratio_vs_a8": 1.0
+    },
+    {
+      "cols": 384,
+      "rows": 8,
+      "matrix_calls": 128,
+      "mode": 2,
+      "microseconds": [
+        78243,
+        78155,
+        78022
+      ],
+      "median_us": 78155,
+      "min_us": 78022,
+      "max_us": 78243,
+      "median_us_per_matrix": 610.5859375,
+      "speedup_vs_lut": 6.020894376559402,
+      "ratio_vs_a8": 0.9818467336683417
+    }
+  ],
+  "limitations": [
+    "single core, 125MHz, SRAM matrices",
+    "timing excludes activation quantization and LUT setup",
+    "common service/key polling inside timing every eight calls",
+    "not full-model tokens/s, no PSRAM/DMA/prefill/multicore timing",
+    "three repeats; first LUT128 record slower, all records retained"
+  ],
+  "flash_writes": 0,
+  "model_writes": 0,
+  "clock_writes": 0,
+  "raw_sha256": "663c56ac89fe3794e209b637fc406e1d3cc334373218c09f8ddc0e32fd74db6f"
+}

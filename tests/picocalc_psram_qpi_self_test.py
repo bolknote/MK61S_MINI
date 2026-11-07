@@ -95,7 +95,7 @@ class QpiTests(unittest.TestCase):
                 self.assertLessEqual(low*10,8000)
     def test_read_batches_with_stalled_tx_and_rx(self):
         p=programs()['mk61_psram_qpi_read'];rng=random.Random(0x4542)
-        for batch in (1,2,19,64):
+        for batch in (1,2,19,64,108,128):
             for base in (0,1008,0x7FFFF0-(batch-1)*16):
                 headers=[bytes([0xEB])+(base+i*16).to_bytes(3,'big') for i in range(batch)]
                 replies=[bytes(rng.randrange(256) for _ in range(16)) for _ in range(batch)]

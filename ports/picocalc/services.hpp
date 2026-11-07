@@ -47,7 +47,7 @@ public:
         const unsigned row=console_frame_open_?front_console_row_:console_row_;
         return !markdown_ && row>=visible?row+1-visible:0;
     }
-    bool display_deferred() const { return page_==ServicePage::CONSOLE && console_frame_open_ && !graph_visible_; }
+    bool display_deferred() const { return presentation_suspended_ || (page_==ServicePage::CONSOLE && console_frame_open_ && !graph_visible_); }
     const char* footer() const;
     const char* page_name() const;
     void row(unsigned index, char out[COLS + 1]) const;
@@ -162,6 +162,7 @@ private:
     bool browser_load_program_ = false;
     bool running_ = false, stopped_ = false, waiting_ = false, graph_visible_ = false;
     bool serial_output_ = false;
+    bool presentation_suspended_ = false;
     bool viewing_ = false;
     bool input_russian_ = false;
     bool image_viewing_ = false;

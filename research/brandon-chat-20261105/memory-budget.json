@@ -1,0 +1,765 @@
+{
+  "unique_parameters": 10706776,
+  "identical_serialized_aliases_checked": 217,
+  "q4_32_bytes": 6077792,
+  "q4_64_bytes": 5794144,
+  "matrices": [
+    {
+      "name": "_unique_layers.0.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.0.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.0.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.0.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.0.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.0.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.0.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.1.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.1.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.1.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.1.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.1.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.1.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.1.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.10.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.10.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.10.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.10.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.10.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.10.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.10.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.11.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.11.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.11.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.11.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.11.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.11.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.11.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.2.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.2.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.2.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.2.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.2.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.2.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.2.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.3.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.3.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.3.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.3.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.3.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.3.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.3.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.4.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.4.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.4.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.4.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.4.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.4.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.4.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.5.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.5.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.5.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.5.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.5.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.5.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.5.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.6.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.6.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.6.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.6.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.6.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.6.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.6.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.7.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.7.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.7.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.7.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.7.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.7.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.7.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.8.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.8.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.8.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.8.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.8.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.8.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.8.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.9.attention.wk.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.9.attention.wo.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.9.attention.wq.weight",
+      "parameters": 65536,
+      "q4_32_bytes": 36864,
+      "q4_64_bytes": 34816
+    },
+    {
+      "name": "_unique_layers.9.attention.wv.weight",
+      "parameters": 16384,
+      "q4_32_bytes": 9216,
+      "q4_64_bytes": 8704
+    },
+    {
+      "name": "_unique_layers.9.feed_forward.w1.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "_unique_layers.9.feed_forward.w2.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 105984,
+      "q4_64_bytes": 104448
+    },
+    {
+      "name": "_unique_layers.9.feed_forward.w3.weight",
+      "parameters": 184320,
+      "q4_32_bytes": 103680,
+      "q4_64_bytes": 97920
+    },
+    {
+      "name": "tok_embeddings.weight",
+      "parameters": 2097152,
+      "q4_32_bytes": 1179648,
+      "q4_64_bytes": 1114112
+    }
+  ],
+  "small_fp32_parameters": [
+    {
+      "name": "_unique_layers.0.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.0.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.1.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.1.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.10.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.10.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.11.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.11.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.2.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.2.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.3.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.3.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.4.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.4.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.5.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.5.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.6.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.6.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.7.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.7.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.8.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.8.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.9.attention_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "_unique_layers.9.ffn_norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "dwa_weights",
+      "parameters": 600,
+      "fp32_bytes": 2400
+    },
+    {
+      "name": "norm.weight",
+      "parameters": 256,
+      "fp32_bytes": 1024
+    },
+    {
+      "name": "register_tokens",
+      "parameters": 1024,
+      "fp32_bytes": 4096
+    }
+  ],
+  "checkpoint_sha256": "2ff727cc8921d21e5e7b153babd288efc5524b166e9417e1b439ac8c11fe44cf",
+  "tokenizer_design": {
+    "utf8_piece_pool_bytes": 58030,
+    "uint32_offsets_bytes": 32772,
+    "uint16_sorted_piece_index_bytes": 16384,
+    "fp32_scores_bytes": 32768,
+    "uint8_types_bytes": 8192,
+    "normalization_table_bytes": 237561,
+    "metadata_bytes": 256,
+    "lookup": "Binary search by piece bytes using a uint16 sorted index; scores/ranks remain indexed by token ID; scratch in reserve",
+    "implemented": false
+  },
+  "scenarios_q4_32": [
+    {
+      "total_text_context_tokens": 64,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 417792,
+      "weights_bytes": 6077792,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 7143691,
+      "remaining_bytes": 1244917,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 128,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 811008,
+      "weights_bytes": 6077792,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 7536907,
+      "remaining_bytes": 851701,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 192,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 1204224,
+      "weights_bytes": 6077792,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 7930123,
+      "remaining_bytes": 458485,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 256,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 1597440,
+      "weights_bytes": 6077792,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 8323339,
+      "remaining_bytes": 65269,
+      "fits_arithmetically": true
+    }
+  ],
+  "scenarios_q4_64": [
+    {
+      "total_text_context_tokens": 64,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 417792,
+      "weights_bytes": 5794144,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 6860043,
+      "remaining_bytes": 1528565,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 128,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 811008,
+      "weights_bytes": 5794144,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 7253259,
+      "remaining_bytes": 1135349,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 192,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 1204224,
+      "weights_bytes": 5794144,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 7646475,
+      "remaining_bytes": 742133,
+      "fits_arithmetically": true
+    },
+    {
+      "total_text_context_tokens": 256,
+      "register_tokens": 4,
+      "fp16_kv_bytes": 1597440,
+      "weights_bytes": 5794144,
+      "tokenizer_bytes": 385963,
+      "runtime_reserve_bytes": 262144,
+      "total_bytes": 8039691,
+      "remaining_bytes": 348917,
+      "fits_arithmetically": true
+    }
+  ],
+  "kv_note": "24 logical layers need separate KV caches even though only 12 weight blocks are unique",
+  "psram_capacity_bytes": 8388608,
+  "status": "Design estimate; neither packed native runtime nor device performance verified",
+  "reserve": "PSRAM allowance for layer activations, DenseFormer current-token states, tokenization scratch, logits, headers and IO windows; not a measured runtime allocation",
+  "sram_note": "Firmware static SRAM, stack and heap are separate; native kernel SRAM usage must be measured",
+  "context_note": "Text context is the total prompt, previous turns and generated answer; registers add KV positions"
+}

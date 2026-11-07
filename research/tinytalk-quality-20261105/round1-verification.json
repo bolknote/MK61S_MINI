@@ -1,0 +1,216 @@
+{
+  "device": "cpu",
+  "models": {
+    "sft": {
+      "parameters": 8278400,
+      "best_step": 1000,
+      "packed_bytes": 4706696,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "That sounds great. I'm glad you're enjoying it.",
+          "b200": "That sounds great. I'm glad you're enjoying it."
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "Not too bad. Just hanging out at home.",
+          "b200": "Not too bad. Just hanging out at home."
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "Your name is John.",
+          "b200": "Your name is John."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "I don't know, I just felt a little down.",
+          "b200": "I don't know, I just felt a little down."
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Write down three simple moments in a simple drawer.",
+          "b200": "Write down three simple moments in a simple drawer."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "That is a fun hobby.",
+          "b200": "That is a fun hobby."
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "That sounds really stressful. Do you want to talk about it?",
+          "b200": "That sounds really stressful. Do you want to talk about it?"
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try a calm pretz or a nap plan.",
+          "b200": "Try a calm pretz or a nap plan."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "Try changing blankets and thinking about some personal stuff.",
+          "b200": "Try changing blankets and thinking about some personal stuff."
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "Write down three simple ideas.",
+          "b200": "Write down three simple ideas."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That is a big piece. Did you enjoy it?",
+          "b200": "That is a big piece. Did you enjoy it?"
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "That is awesome! What kind of plant is it?",
+          "b200": "That is awesome! What kind of plant is it?"
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "That is annoying. Did you enjoy it?",
+          "b200": "That is annoying. Did you enjoy it?"
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "That is frustrating. Did you find the last piece?",
+          "b200": "That is frustrating. Did you find the last piece?"
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "That sounds like a fun idea.",
+          "b200": "That sounds like a fun idea."
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "Did you follow any new steps today?",
+          "b200": "Did you follow any new steps today?"
+        }
+      ]
+    },
+    "dpo": {
+      "parameters": 8278400,
+      "best_step": 5000,
+      "packed_bytes": 4706696,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "Hi! I'm glad you could help. What did you like to talk about?",
+          "b200": "Hi! I'm glad you could help. What did you like to talk about?"
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "I'm doing well, thank you. How about you?",
+          "b200": "I'm doing well, thank you. How about you?"
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "I'm named you.",
+          "b200": "I'm named you."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "No, I haven't told you yet.",
+          "b200": "No, I haven't told you yet."
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Try drawing a drawing.",
+          "b200": "Try drawing a drawing."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "Do you use paper to fold paper animals?",
+          "b200": "Do you use paper to fold paper animals?"
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "That sounds really tough. I'm sure it will.",
+          "b200": "That sounds really tough. I'm sure it will."
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try a calm pretends trick.",
+          "b200": "Try a calm pretends trick."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "Try a short short twist or a riddle.",
+          "b200": "Try a short short twist or a riddle."
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "Try drawing a picture on it.",
+          "b200": "Try drawing a picture on it."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That is a big smile. Did you enjoy it?",
+          "b200": "That is a big smile. Did you enjoy it?"
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "That is awesome! What kind of plant is it?",
+          "b200": "That is awesome! What kind of plant is it?"
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "Oh no. Did you clean it up?",
+          "b200": "Oh no. Did you clean it up?"
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "That is frustrating. Do you have a list?",
+          "b200": "That is frustrating. Do you have a list?"
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "That is so annoying. I bet it is.",
+          "b200": "That is so annoying. I bet it is."
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "Did you hear any birds singing?",
+          "b200": "Did you hear any birds singing?"
+        }
+      ]
+    }
+  },
+  "uses_reserved_test": false
+}

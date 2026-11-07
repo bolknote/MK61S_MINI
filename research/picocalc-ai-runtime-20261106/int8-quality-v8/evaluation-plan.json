@@ -1,0 +1,13 @@
+{
+  "status": "FROZEN_BEFORE_SCORES",
+  "modes": [
+    "lut-fp32",
+    "int8",
+    "swar-int8"
+  ],
+  "rows_per_mode": 1175,
+  "strict_nonregression": true,
+  "max_worker_seconds": 1800,
+  "source": "harness-debug-v3/selected-budget",
+  "actual_model_sha256": "7355022789e1ea8632901d25b957cd0d4b9bda67ea65505d50b3c920c90bf3f0"
+}

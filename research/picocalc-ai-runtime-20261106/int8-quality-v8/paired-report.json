@@ -1,0 +1,168 @@
+{
+  "status": "FAIL_NONREGRESSION_GATE",
+  "model": "Flourish3M/harness-debug-v3/selected-budget",
+  "model_sha256": "7355022789e1ea8632901d25b957cd0d4b9bda67ea65505d50b3c920c90bf3f0",
+  "source_model_packet_sha256": "1b53d0e26f8156141f47a877393d2a617e13014fbe36d7d8cf1ca907a6d1647c",
+  "total_per_mode": 1175,
+  "lost": [
+    [
+      "fresh282",
+      "hf-fresh:93"
+    ],
+    [
+      "fresh282",
+      "hf-fresh:230"
+    ]
+  ],
+  "gained": [
+    [
+      "fresh282",
+      "hf-fresh:182"
+    ],
+    [
+      "fresh282",
+      "hf-fresh:206"
+    ]
+  ],
+  "baseline_false_done": 19,
+  "int8_false_done": 19,
+  "swar_exact_functional_matches": 1175,
+  "swar_mismatches": [],
+  "default_switch_allowed": false,
+  "hardware_io": 0,
+  "training": 0,
+  "suites": {
+    "lut-fp32": {
+      "fresh282": {
+        "total": 282,
+        "passed": 256,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 282
+      },
+      "documented648": {
+        "total": 648,
+        "passed": 648,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 648
+      },
+      "legacy98": {
+        "total": 98,
+        "passed": 69,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 98
+      },
+      "user27": {
+        "total": 27,
+        "passed": 27,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 27
+      },
+      "tools72": {
+        "total": 72,
+        "passed": 55,
+        "false_done": 17,
+        "model_errors": 0,
+        "valid": 72
+      },
+      "scratch48": {
+        "total": 48,
+        "passed": 46,
+        "false_done": 2,
+        "model_errors": 0,
+        "valid": 48
+      }
+    },
+    "int8": {
+      "fresh282": {
+        "total": 282,
+        "passed": 256,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 281
+      },
+      "documented648": {
+        "total": 648,
+        "passed": 648,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 648
+      },
+      "legacy98": {
+        "total": 98,
+        "passed": 69,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 98
+      },
+      "user27": {
+        "total": 27,
+        "passed": 27,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 27
+      },
+      "tools72": {
+        "total": 72,
+        "passed": 55,
+        "false_done": 17,
+        "model_errors": 0,
+        "valid": 72
+      },
+      "scratch48": {
+        "total": 48,
+        "passed": 46,
+        "false_done": 2,
+        "model_errors": 0,
+        "valid": 48
+      }
+    },
+    "swar-int8": {
+      "fresh282": {
+        "total": 282,
+        "passed": 256,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 281
+      },
+      "documented648": {
+        "total": 648,
+        "passed": 648,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 648
+      },
+      "legacy98": {
+        "total": 98,
+        "passed": 69,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 98
+      },
+      "user27": {
+        "total": 27,
+        "passed": 27,
+        "false_done": 0,
+        "model_errors": 0,
+        "valid": 27
+      },
+      "tools72": {
+        "total": 72,
+        "passed": 55,
+        "false_done": 17,
+        "model_errors": 0,
+        "valid": 72
+      },
+      "scratch48": {
+        "total": 48,
+        "passed": 46,
+        "false_done": 2,
+        "model_errors": 0,
+        "valid": 48
+      }
+    }
+  }
+}

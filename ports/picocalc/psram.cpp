@@ -5,6 +5,7 @@
 #include "dma_support.hpp"
 #include "diagnostics.hpp"
 #include <cstring>
+#include <atomic>
 #if defined(PICO_ON_DEVICE)
 #include "psram_spi.pio.h"
 #include "psram_qpi.pio.h"
@@ -12,12 +13,22 @@
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
+#include "hardware/regs/addressmap.h"
 #include "pico/mutex.h"
 #include "pico/stdlib.h"
 #endif
 namespace picocalc::psram {
 namespace {
 Statistics state{};
+constexpr unsigned PREFETCH_BLOCK=16,PREFETCH_PACKETS=128;
+struct PendingRead {
+    u32 commands[PREFETCH_PACKETS];
+    unsigned bytes=0;
+    std::atomic<int> owner{-1};
+#if !defined(PICO_ON_DEVICE)
+    u8* target=nullptr;
+#endif
+} pending;
 #if defined(PICO_ON_DEVICE)
 constexpr unsigned CS=20,SCK=21,MOSI=2,MISO=3;
 PIO bus=pio1;
@@ -107,10 +118,7 @@ bool quad_write(const u8* bytes,unsigned count) {
     for(unsigned i=0;i<count;++i) sent[i/4]|=u32(bytes[i])<<(24-8*(i%4));
     return quad_packets(sent,count,1);
 }
-bool quad_read(u32 address,u8* bytes,unsigned count) {
-    if(!count || clock_get_hz(clk_sys)<100000000) return false;
-    constexpr unsigned BLOCK=16,BATCH=64;
-    u32 commands[BATCH],received[BATCH*BLOCK/4];
+void configure_quad_read(void* destination) {
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
 #if MK61_PICOCALC_MANAGED_CLOCK
@@ -128,7 +136,13 @@ bool quad_read(u32 address,u8* bytes,unsigned count) {
     channel_config_set_dreq(&receive,pio_get_dreq(bus,(unsigned)sm,false));
     channel_config_set_read_increment(&receive,false);channel_config_set_write_increment(&receive,true);
     channel_config_set_bswap(&receive,true);
-    dma_channel_configure((unsigned)rx,&receive,received,&bus->rxf[sm],0,false);
+    dma_channel_configure((unsigned)rx,&receive,destination,&bus->rxf[sm],0,false);
+}
+bool quad_read(u32 address,u8* bytes,unsigned count) {
+    if(!count || clock_get_hz(clk_sys)<100000000) return false;
+    constexpr unsigned BLOCK=16,BATCH=64;
+    u32 commands[BATCH],received[BATCH*BLOCK/4];
+    configure_quad_read(received);
     while(count) {
         const unsigned skip=address&(BLOCK-1);
         const unsigned n=count<BLOCK*BATCH-skip?count:BLOCK*BATCH-skip;
@@ -240,6 +254,7 @@ bool bounds(u32 address,const void* bytes,unsigned count) {
 bool ready() { return state.ready; }
 void prepare_reset() {
 #if defined(PICO_ON_DEVICE)
+    if(pending.owner==(int)get_core_num()) read_finish();
     if(sm<0 || !state.qpi) return;
     mutex_enter_blocking(&bus_mutex);
     const u8 exit_quad=0xF5;
@@ -248,6 +263,7 @@ void prepare_reset() {
 #endif
 }
 bool init() {
+    if(pending.owner>=0) return false;
     state={};
 #if defined(PICO_ON_DEVICE)
     if(sm<0) {
@@ -365,23 +381,87 @@ bool read(u32 address,void* bytes,unsigned count) {
     if(!bounds(address,bytes,count)) return false;
     if(!count) return true;
 #if defined(PICO_ON_DEVICE)
+    if(pending.owner==(int)get_core_num()) return false;
     mutex_enter_blocking(&bus_mutex);
     const bool ok=access(address,bytes,count,false);
     mutex_exit(&bus_mutex);
 #else
+    if(pending.owner>=0) return false;
     const bool ok=true;if(count) std::memcpy(bytes,memory+address,count);
 #endif
     if(ok) state.read_bytes+=count;else { ++state.errors;state.ready=false; }
     return ok;
 }
+bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count) {
+    if(!state.ready || pending.owner>=0 || !spans || !count || count>16 || base>CAPACITY) return false;
+#if defined(PICO_ON_DEVICE)
+    if(!state.qpi || clock_get_hz(clk_sys)<100000000) return false;
+#endif
+    const auto first=reinterpret_cast<uintptr_t>(spans[0].destination);
+    if(!first || (first&3)) return false;
+    unsigned total=0;
+    for(unsigned i=0;i<count;++i) {
+        const auto& s=spans[i];
+        if(s.offset>CAPACITY-base || s.bytes>CAPACITY-base-s.offset ||
+           ((base+s.offset)&15) || !s.bytes || (s.bytes&15) ||
+           s.bytes>PREFETCH_BLOCK*PREFETCH_PACKETS-total ||
+           reinterpret_cast<uintptr_t>(s.destination)!=first+total) return false;
+        total+=s.bytes;
+    }
+#if defined(PICO_ON_DEVICE)
+    if(first<SRAM_BASE || first>=SRAM_END || total>SRAM_END-first) return false;
+    // Keeping this lock until finish excludes other PSRAM clients and clock
+    // changes while DMA reads the persistent command array and writes SRAM.
+    if(!mutex_try_enter(&bus_mutex,nullptr)) return false;
+#endif
+    unsigned packets=0;
+    for(unsigned i=0;i<count;++i)
+        for(unsigned at=0;at<spans[i].bytes;at+=PREFETCH_BLOCK)
+            pending.commands[packets++]=0xEB000000U|(base+spans[i].offset+at);
+    pending.bytes=total;
+#if defined(PICO_ON_DEVICE)
+    pending.owner=(int)get_core_num();
+    configure_quad_read(spans[0].destination);
+    dma_channel_set_read_addr((unsigned)tx,pending.commands,false);
+    dma_channel_set_trans_count((unsigned)tx,packets,false);
+    dma_channel_set_trans_count((unsigned)rx,total/4,false);
+    dma_start_channel_mask((1U<<tx)|(1U<<rx));
+    pio_sm_set_enabled(bus,(unsigned)sm,true);++state.read_batches;
+#else
+    pending.owner=0;pending.target=static_cast<u8*>(spans[0].destination);
+#endif
+    return true;
+}
+bool read_finish() {
+#if defined(PICO_ON_DEVICE)
+    if(pending.owner!=(int)get_core_num()) return false;
+    const bool ok=dma_support::wait((unsigned)rx,tx) && finish_stream(qpi_read_offset);
+    if(!ok) {
+        pio_sm_set_enabled(bus,(unsigned)sm,false);
+        dma_channel_abort((unsigned)tx);dma_channel_abort((unsigned)rx);
+        pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    }
+    pending.owner=-1;mutex_exit(&bus_mutex);
+#else
+    if(pending.owner<0) return false;
+    // Deliberately defer the host copy until finish, exposing premature use.
+    for(unsigned i=0;i<pending.bytes/PREFETCH_BLOCK;++i)
+        std::memcpy(pending.target+i*PREFETCH_BLOCK,memory+(pending.commands[i]&0xFFFFFFU),PREFETCH_BLOCK);
+    const bool ok=true;pending.owner=-1;pending.target=nullptr;
+#endif
+    if(ok) state.read_bytes+=pending.bytes;else { ++state.errors;state.ready=false; }
+    pending.bytes=0;diagnostics::feed_watchdog();return ok;
+}
 bool write(u32 address,const void* bytes,unsigned count) {
     if(!bounds(address,bytes,count)) return false;
     if(!count) return true;
 #if defined(PICO_ON_DEVICE)
+    if(pending.owner==(int)get_core_num()) return false;
     mutex_enter_blocking(&bus_mutex);
     const bool ok=access(address,const_cast<void*>(bytes),count,true);
     mutex_exit(&bus_mutex);
 #else
+    if(pending.owner>=0) return false;
     const bool ok=true;if(count) std::memcpy(memory+address,bytes,count);
 #endif
     if(ok) state.write_bytes+=count;else { ++state.errors;state.ready=false; }

@@ -1,0 +1,111 @@
+{
+  "device": "cpu",
+  "models": {
+    "stateful": {
+      "parameters": 10577920,
+      "best_step": 6000,
+      "packed_bytes": 6037504,
+      "packed_reload_max_abs_error": 0.0,
+      "matching_replies": 16,
+      "comparisons": [
+        {
+          "id": "regression:greeting:0",
+          "matches": true,
+          "cpu": "Hi! How has your day been?",
+          "b200": "Hi! How has your day been?"
+        },
+        {
+          "id": "regression:greeting:1",
+          "matches": true,
+          "cpu": "I am doing well, thanks!",
+          "b200": "I am doing well, thanks!"
+        },
+        {
+          "id": "regression:identity:0",
+          "matches": true,
+          "cpu": "You did not mention that.",
+          "b200": "You did not mention that."
+        },
+        {
+          "id": "regression:identity:1",
+          "matches": true,
+          "cpu": "I do not have feelings, but I can listen.",
+          "b200": "I do not have feelings, but I can listen."
+        },
+        {
+          "id": "regression:hobby:0",
+          "matches": true,
+          "cpu": "Try reading a book about a forest.",
+          "b200": "Try reading a book about a forest."
+        },
+        {
+          "id": "regression:hobby:1",
+          "matches": true,
+          "cpu": "You could try folding a little paper animal.",
+          "b200": "You could try folding a little paper animal."
+        },
+        {
+          "id": "regression:mild_tiredness:0",
+          "matches": true,
+          "cpu": "I am sorry. Did you enjoy it after?",
+          "b200": "I am sorry. Did you enjoy it after?"
+        },
+        {
+          "id": "regression:mild_tiredness:1",
+          "matches": true,
+          "cpu": "Try reading one short poem.",
+          "b200": "Try reading one short poem."
+        },
+        {
+          "id": "regression:boredom:0",
+          "matches": true,
+          "cpu": "How about a puzzle game?",
+          "b200": "How about a puzzle game?"
+        },
+        {
+          "id": "regression:boredom:1",
+          "matches": true,
+          "cpu": "Funny stories can be a cheerful choice.",
+          "b200": "Funny stories can be a cheerful choice."
+        },
+        {
+          "id": "regression:good_news:0",
+          "matches": true,
+          "cpu": "That sounds like a lovely book. What did you like about it?",
+          "b200": "That sounds like a lovely book. What did you like about it?"
+        },
+        {
+          "id": "regression:good_news:1",
+          "matches": true,
+          "cpu": "That is wonderful news for your plant.",
+          "b200": "That is wonderful news for your plant."
+        },
+        {
+          "id": "regression:mild_frustration:0",
+          "matches": true,
+          "cpu": "Oh no. That sounds frustrating.",
+          "b200": "Oh no. That sounds frustrating."
+        },
+        {
+          "id": "regression:mild_frustration:1",
+          "matches": true,
+          "cpu": "Oh no, that is frustrating.",
+          "b200": "Oh no, that is frustrating."
+        },
+        {
+          "id": "regression:sharing:0",
+          "matches": true,
+          "cpu": "Poor little bird. Did it get wet and get wet?",
+          "b200": "Poor little bird. Did it get wet and get wet?"
+        },
+        {
+          "id": "regression:sharing:1",
+          "matches": true,
+          "cpu": "What color was the cat?",
+          "b200": "What color was the cat?"
+        }
+      ]
+    }
+  },
+  "uses_reserved_test": false
+}
