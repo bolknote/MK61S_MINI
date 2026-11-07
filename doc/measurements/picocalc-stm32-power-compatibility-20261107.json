@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-07",
+  "pico_power_commit": "6d1cc132a37ff6808c28e7bced0c5a692998bce8",
+  "shared_source_base": "963d53420",
+  "purpose": "Keep unused Pico AI implementations out of STM32 resident and its stack analysis; unchanged stack/Flash/RAM limits",
+  "build_command": "python3 tools/firmware/stm32/build-standalone.py --release-case CASE --source-root SOURCE --toolchain GNU_ARM_BIN --build-path BUILD --jobs 2",
+  "compiler": "xPack GNU Arm Embedded GCC 14.2.1-1.1",
+  "source_filter_sha256": "6df245662af3ab57a4f066b24daa5256b6acfe88b08438d0f2fb388f5b458d38",
+  "independent_baseline_fixes": {
+    "code/tools.cpp": "EXTERNAL_BINARY explicitly rejected by OpenStoredEntry (Spectrum-owned fix)",
+    "code/mk61_ai_model.hpp": "FLASH_CODE enum rename was present in snapshot, but AI units are excluded from final STM32 build"
+  },
+  "math_sources_changed": false,
+  "limits_relaxed": false,
+  "firmware_sealed": false,
+  "physical_io": false,
+  "results": {
+    "f401": {
+      "release_case": "f401-product-a00",
+      "status": "BUILD_PASS",
+      "image_bytes": 222228,
+      "global_ram_bytes": 25924,
+      "max_stack_frame_bytes": 1312,
+      "stack_frame_limit_bytes": 2048,
+      "elf_sha256": "f20a6020be1e41516349003b35c0f42398571f51a127be39e5cd639de29869bb",
+      "log": ".build/picocalc-bios-power-20261107/stm32-f401-filter-trial.log",
+      "log_sha256": "135cf0c402275c87512f4dd583b398c0a2824568dd039620d90f1b9adfc0717f"
+    },
+    "f411": {
+      "release_case": "f411-classic-v3",
+      "status": "BUILD_PASS",
+      "image_bytes": 383804,
+      "global_ram_bytes": 21736,
+      "max_stack_frame_bytes": 1928,
+      "stack_frame_limit_bytes": 5120,
+      "elf_sha256": "4530a259fe3d4d97b03de930be82e984676bae71000588f2dfeefc04d18d6557",
+      "log": ".build/picocalc-bios-power-20261107/stm32-f411-filter-trial.log",
+      "log_sha256": "afeab63eda3b4ffeeaea1c146e1a5fc48ac1bb9bcb6f92391a287dbad3ed4f13"
+    }
+  }
+}

@@ -213,6 +213,8 @@ endforeach()
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"
   "${MK61_PROJECT_ROOT}/code/*.cpp")
+# Pico-only inference/harness units are not STM32 resident services.
+list(FILTER _mk61_project_sources EXCLUDE REGEX "/mk61_ai_.*\\.(c|cpp)$")
 # Native UC1609 renders through our framebuffer, never the generic graphics base.
 list(FILTER _mk61_project_sources EXCLUDE REGEX "/ERM19264_graphics\\.cpp$")
 configure_file(
