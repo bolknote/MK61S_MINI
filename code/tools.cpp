@@ -105,6 +105,7 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
              loadable_module::FileOpenResult::OK;
     case program_store::ProgramType::URQ_DATA:
     case program_store::ProgramType::URQ_SAVE:
+    case program_store::ProgramType::EXTERNAL_BINARY:
       return false;
     case program_store::ProgramType::FONT:
       return program_store_apply_font(entry);
