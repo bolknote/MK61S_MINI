@@ -1,0 +1,208 @@
+{
+  "schema": 1,
+  "status": "BUILT_NOT_INSTALLED",
+  "target": "PicoCalc STM32F103R8",
+  "flash_start": "0x08000000",
+  "boot_bytes": 3248,
+  "boot_reserved": 8192,
+  "boot_ram_bytes": 620,
+  "app_start": "0x8002000",
+  "app_limit": 54272,
+  "app_bytes": 29484,
+  "app_global_ram_bytes": 10472,
+  "app_stack_bytes": 4096,
+  "metadata_start": "0x800f400",
+  "settings_start": "0x800f800",
+  "erase_pages": 62,
+  "option_byte_writes": false,
+  "physical_io": false,
+  "files": {
+    "boot.bin": {
+      "bytes": 3248,
+      "sha256": "5440fa62bfd40fd2ea7e66205f4692510e3a92ec7ca8c07ed4bb54f6d179b175"
+    },
+    "bios.bin": {
+      "bytes": 29484,
+      "sha256": "9e9a382530a8c60001c6985689707e15dc44343a782a2c0cedd03bc486e88183"
+    },
+    "BIOS.M3U": {
+      "bytes": 29516,
+      "sha256": "33354e01d456b55744212afc5cd50caf84a9105ca5a1df2315a22f51d9e9bcb5"
+    },
+    "bootstrap.bin": {
+      "bytes": 62500,
+      "sha256": "3f706cf70dc37f1f39de06816297b055ad6623d97323d64cebc634922fce1e8b"
+    },
+    "source.zip": {
+      "bytes": 104980,
+      "sha256": "a4937a9ab884d652df8908513a0984425ea76a813917b88029686ecc063fb134"
+    },
+    "BIOSUPD.APP": {
+      "bytes": 3845,
+      "sha256": "e0757e572f0fcafbfbe6cc19b82938c3ead93e16d4872f38e173a891ea7394b2"
+    }
+  },
+  "updater": {
+    "name": "BIOSUPD",
+    "target": "picocalc-pico-h",
+    "abi": 6,
+    "load_address": 536870912,
+    "native_display": true,
+    "graphics_width": 320,
+    "graphics_height": 320,
+    "relocations": 76,
+    "relocation_bytes": 84,
+    "entry_offset": 0,
+    "image_bytes": 4320,
+    "bss_bytes": 5024,
+    "memory_bytes": 9344,
+    "app_bytes": 3845,
+    "compression": "ZX0+BCJ",
+    "zx0_parser": "greedy",
+    "resident_imports": 0,
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "base": {
+    "status": "COMPILED_NOT_DEPLOYED",
+    "target": "STM32F103R8",
+    "async_pmu": true,
+    "stm3_start_result_input": true,
+    "clock_hz": 72000000,
+    "uart_baud": 2250000,
+    "base_image_sha256": "3b313836c5fa260851c4a8cc6dc4bca8b3c98b7270cc9e484932cd7f268e7282",
+    "bin": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-m3-boot-final-20261108/base/source/build/picocalc_BIOS_jcs.bin",
+    "elf": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-m3-boot-final-20261108/base/source/build/picocalc_BIOS_jcs.elf",
+    "bin_sha256": "ccbfc200c416a8ebf443f3cae9366ae7c8bfc1acfe694b25c3affea12366f7b1",
+    "image_bytes": 29244,
+    "global_ram_bytes": 10464,
+    "stack_reserved_bytes": 4096,
+    "ram_unallocated_bytes": 5920,
+    "pmu_power_protocol": 1,
+    "delta": {
+      "legacy_read_sites": 19,
+      "legacy_write_sites": 13,
+      "legacy_publishers": 6,
+      "start_result_input": true,
+      "maximum_inline_input_bytes": 240
+    },
+    "source_archive_sha256": "0c0a3910c340ac52625d73c7c477c636b8f4725d17beff58d22ef0acbcedd12c",
+    "staged_sources_sha256": "fa2ae1e0cafba76bd727ce38b9b4b30ad3120fd88807cee4e6c40dfb28d40e1b",
+    "physical_io": false,
+    "option_byte_programming": false,
+    "upstream": {
+      ".": "1b649c826b213b460bca7172f696ec7619d93be0",
+      "Drivers/CMSIS": "f37cfcee997e714b0fad374a328c41df64f99acb",
+      "Drivers/CMSIS_Device_ST_STM32F1xx": "c8e9a4a4f16b6d2cb2a2083cbe5161025280fb22",
+      "Drivers/STM32F1xx_HAL_Driver": "06d3b0c169557f49aa14c14d8ed4d920bbd3078e"
+    },
+    "i2c2_irq_vectors_verified": true,
+    "toolchain": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+    "diagnostic_symbols": {
+      "hi2c2": {
+        "address": "0x200003b8",
+        "bytes": 84
+      },
+      "regs": {
+        "address": "0x2000022e",
+        "bytes": 24
+      },
+      "statistics": {
+        "address": "0x20000378",
+        "bytes": 48
+      },
+      "pmu_irq": {
+        "address": "0x2000085f",
+        "bytes": 1
+      },
+      "pmu_online": {
+        "address": "0x20000878",
+        "bytes": 1
+      },
+      "io_active": {
+        "address": "0x2000024f",
+        "bytes": 1
+      },
+      "recovering": {
+        "address": "0x200003b0",
+        "bytes": 1
+      }
+    }
+  },
+  "source_pins": {
+    "ports/picocalc/bios/boot/protocol.h": "e3d8e361d8f926a52cfd78b1303beded9a36f39858b6042752549ca5b7744396",
+    "ports/picocalc/bios/boot/wire.h": "b5d46159b65a13fe1c1523b4e81255edd077cf91329e7844256fa178999791f5",
+    "ports/picocalc/bios/boot/boot.ld": "da7b1cc5fc7298f18f862744635e239325ffef32b2d90630636773d15b78feab",
+    "ports/picocalc/bios/boot/hardware.c": "b6e7e5c88e58b9593a27a3788b34fe0c4c8573cce13aabc4b0ea032ac9e99380",
+    "ports/picocalc/bios/boot/update.c": "8a50f5fcc0374cda87e9126f842e23e156b01cab5da2817780170577477e91e2",
+    "ports/picocalc/bios/boot/start.S": "d60da2552be9f1b4437c45eb3bb8a035b7450513b6ea6e4fe1995d8232deab69",
+    "ports/picocalc/bios/boot/entry.h": "75bfb68e014e1f5d768f0eaff401a7429961603e0c2428b82dc85b673bd66bc8",
+    "ports/picocalc/bios/boot/README.md": "489570436a1f91970e9c998d096959488326a3f91976f206e2280d6076a984f6",
+    "ports/picocalc/bios/boot/wire.c": "33f1b9fafccdbf1d3596eead5a4f943e3ec767fa2ed0396ffa38dff69fe88c5c",
+    "ports/picocalc/bios/boot/entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
+    "ports/picocalc/bios/boot/update.h": "a8725ef9baf8a8064f881e56d1538fcecddadc2c7a926a8de9470db01f774c3a",
+    "tools/firmware/picocalc/build_boot_bios.py": "3330fb2be58823b3481e6dc093d38a8db1be21ea511676f99cc491f8bf636908",
+    "tools/firmware/picocalc/bios_boot.py": "56cb9cc8cf9b6f1c6dfe0a0df8390c5110e3311289c5919abc4d10b8b96ee52f",
+    "examples/portable-apps/BIOSUPD/main.c": "2d016f07c6faaba97845f070cb49f68c0a83360f982309103f1137db761eb469",
+    "sdk/coproc/pico_uart1.c": "21ace812d861500c10c9566da8b5e1e3e028d61bef0901b2af2748f08495231b"
+  },
+  "source_archive_entries": {
+    "source/Core/Inc/axp2101.h": "a8aa363b746cd077d7c6eb90a38c2c8e9f1b4351209d30f656fc82a68e4dc504",
+    "source/Core/Inc/backlight.h": "bce9d2258414e614689bfc5f3cea805e0d4aec044942dd062700cbf5a137d559",
+    "source/Core/Inc/batt.h": "49d7b0cd9fdf92d98730648d8587c77149dde6757ec26fcd9b1610bb6275c1d5",
+    "source/Core/Inc/coproc_hal.h": "61911d2a9418fdf032ea97b18c81bd7d4d21ff3dc43f01611039b2c77e7f2ab6",
+    "source/Core/Inc/eeprom.h": "1771da8b81abe5236f2b8a690acc0b9a624b0dad9844894b06c4df04b0b587e3",
+    "source/Core/Inc/fifo.h": "1879800a6af7001a399ebbd639578e5fefc88cbb5a8f8271bf5a83999734201f",
+    "source/Core/Inc/hal_interface.h": "5080a7f3010f47214cf50234fb7715b47853873585bd311938f66cdc3d3509b7",
+    "source/Core/Inc/i2cs.h": "977e97a6ab89fd93e595c54579b931a7c95c1df13c6b4bc5c5facb7bfe2792a8",
+    "source/Core/Inc/i2cs_recovery.h": "4859f4ff41d8dc84f02e6cf770ad613a70e91edf4c4768b31c9848e26ad1149a",
+    "source/Core/Inc/keyboard.h": "eaccb81ca59d2e965063fc7bb7da1b9e204bd630c0f479ad7721d75e16335c6e",
+    "source/Core/Inc/m3b_entry.h": "75bfb68e014e1f5d768f0eaff401a7429961603e0c2428b82dc85b673bd66bc8",
+    "source/Core/Inc/pmu_async.h": "bdea53e49c268ce8383b16298c632beb272fbe09a186da422eb325ceaf611340",
+    "source/Core/Inc/power_status.h": "c43bc2d854d6800baf4427c28f70eea6b64470168ca148bbcb1d4d37c5966878",
+    "source/Core/Inc/protocol.h": "e3d8e361d8f926a52cfd78b1303beded9a36f39858b6042752549ca5b7744396",
+    "source/Core/Inc/regs.h": "f6716853f3db50efb709e169192727bd87501190f7f2cb4b51f43d2470871819",
+    "source/Core/Inc/rtc.h": "55790257e9eebe565475ebee1a74f5ebc6600ab321fbf36437e664d8dbcbdb0b",
+    "source/Core/Inc/stm32f1xx_hal_conf.h": "693dcf6d74754c58f23a130fae53dbed25f933a987063fd2c396b405c1f3bcd7",
+    "source/Core/Inc/stm32f1xx_it.h": "0beccf859f738288f5b78a9ec82282d8c44e1d457eafb8638b73c9de6193c3ff",
+    "source/Core/Inc/stm3_module.h": "1a2d6eca83aeb50010c2c8fca8d627440a965fd8d0bd8c6f956d0b1eaafd71d7",
+    "source/Core/Inc/stm3_runtime.h": "84cfe8d724eb14e29eff60c513991ebadeb158fc53f8f0c8453b8c78d63c6bc3",
+    "source/Core/Inc/stm3_uart_dma.h": "2836220bb389670ed9baa305443b1fcf64fc0c1239097f29d0d8032359a555d1",
+    "source/Core/Inc/version.h": "d085552ea1b7aea4adf36e5429089c711fb4c1fbc888c6b83693f8ea49042506",
+    "source/Core/Src/axp2101.c": "485e64fd497143453727ced689b29c1fbda2740bf9ac6283a14387ac669f1c94",
+    "source/Core/Src/backlight.c": "98fd6225303fcf771725336a2f0ca5bbbfbcf2370048c49422b0a330b00e0b66",
+    "source/Core/Src/batt.c": "718796456d90d98d81bf11af50448ec8d5ae58a4d73a3fb9f1639d4220969265",
+    "source/Core/Src/clock72.c": "6aafb1480de5298d05216919bc4c03329e8dcdf70f5e1e42836a1b3b3e1702e0",
+    "source/Core/Src/coproc_hal.c": "358e1f78651b79c0839c7ff6852b7e877bd02aa42eaee2a81ae1b18afcd36165",
+    "source/Core/Src/eeprom.c": "455788331a446e0e14fef26cb48987603af2070bc7314521cfc15976bdb6b6a0",
+    "source/Core/Src/fifo.c": "3fdcc2a85ed52a731fb8e075e92ee4f7e84e23a593d14698f52c792f2bea41ba",
+    "source/Core/Src/hal_interface.c": "cae0f1eb02e829d6a4d9450f58ec37ea04b7934460c307ff50295e2828d7cbe5",
+    "source/Core/Src/i2cs.c": "88fcdfe43a83240afaa972069a17615d7c575af8dd37fc219a61037b6e9b118b",
+    "source/Core/Src/keyboard.c": "7625b6ca934d9d413ba9f1f2a0b03de80fed61c665fc75659ff0605e309207ae",
+    "source/Core/Src/m3b_entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
+    "source/Core/Src/main.c": "e0c35d1d8ab7789fe90a1e8d728f374c85fc030c40f2c179a79615395ff7fcac",
+    "source/Core/Src/power_status.c": "764890612017dd3cc7af31f4bc15c0d6d4556ed6844a07c67de852b2c7ac3fdc",
+    "source/Core/Src/regs.c": "5ddcad682076de73040f2cfec8ac5ae60de4c498b4ac61986f015772411846fb",
+    "source/Core/Src/rtc.c": "9d3a7ed52c6c6ba151ac02159c157657fe92d7230e559d312d9907fb4ab8c3c1",
+    "source/Core/Src/stm32f1xx_it.c": "12dd069e29c94e4746229e67b068f50901e5fcda8d85a9a72e2aea7a15267954",
+    "source/Core/Src/stm3_runtime.c": "c1afa499bae17a22bf776bcfbbc1fe58042f340091f3cbfdd4ff0e6746f3dbb5",
+    "source/Core/Src/stm3_uart_dma.c": "3a6ed732838420dc4b9c3b6ebb5ce5e05053df92b851eb82a1be8179a0d8f5bc",
+    "source/Core/Src/system_stm32f1xx.c": "066a4c59a0a6697a31d9fa7722413655808493e4436a4c0b1ecbb765ffa3a604",
+    "source/Makefile": "c94d4ddf809b325404354ce524765e9165189380f29fa4b3a41a43b57f3afc7a",
+    "source/STM32F103XX_FLASH.ld": "068d777d43120c4723b2808e2638ce72b33f66b3bb2cace1e3195d9cc53f4c13",
+    "source/startup_stm32f103xb.s": "a9a5fc7ed5ff617527dd98b3092830f4d17ed4bf57c99eac2c53bdb514ce138c",
+    "source/LICENSE": "feaa84fb75c878ad3fab6b6debda9667f04b0b7e02b82b00ff092c2d79044e7b",
+    "boot/README.md": "489570436a1f91970e9c998d096959488326a3f91976f206e2280d6076a984f6",
+    "boot/boot.ld": "da7b1cc5fc7298f18f862744635e239325ffef32b2d90630636773d15b78feab",
+    "boot/entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
+    "boot/entry.h": "75bfb68e014e1f5d768f0eaff401a7429961603e0c2428b82dc85b673bd66bc8",
+    "boot/hardware.c": "b6e7e5c88e58b9593a27a3788b34fe0c4c8573cce13aabc4b0ea032ac9e99380",
+    "boot/protocol.h": "e3d8e361d8f926a52cfd78b1303beded9a36f39858b6042752549ca5b7744396",
+    "boot/start.S": "d60da2552be9f1b4437c45eb3bb8a035b7450513b6ea6e4fe1995d8232deab69",
+    "boot/update.c": "8a50f5fcc0374cda87e9126f842e23e156b01cab5da2817780170577477e91e2",
+    "boot/update.h": "a8725ef9baf8a8064f881e56d1538fcecddadc2c7a926a8de9470db01f774c3a",
+    "boot/wire.c": "33f1b9fafccdbf1d3596eead5a4f943e3ec767fa2ed0396ffa38dff69fe88c5c",
+    "boot/wire.h": "b5d46159b65a13fe1c1523b4e81255edd077cf91329e7844256fa178999791f5",
+    "rebuild.py": "7178bf08cb8fa2561e8bb3215572533382e8660d0f2def9ffe1e02f32ef33b8f",
+    "expected.json": "334e806c7afd9b93e76c934ea053281de0624f678f5f9bd08112527a209cc0cd"
+  }
+}

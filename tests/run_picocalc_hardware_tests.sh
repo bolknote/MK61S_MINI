@@ -3,6 +3,7 @@ set -euo pipefail
 python3 "$(dirname "$0")/picocalc_status_fields_self_test.py"
 python3 "$(dirname "$0")/picocalc_bios_power_self_test.py"
 python3 "$(dirname "$0")/picocalc_pmu_async_self_test.py"
+python3 "$(dirname "$0")/picocalc_m3_boot_self_test.py"
 python3 "$(dirname "$0")/picocalc_battery_poll_self_test.py"
 python3 "$(dirname "$0")/picocalc_stm32_sources_self_test.py"
 python3 "$(dirname "$0")/picocalc_audio_dma_self_test.py"
