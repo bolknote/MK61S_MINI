@@ -4,7 +4,7 @@ from pathlib import Path
 import copy,math,sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'research/m0-libc-batch-2026-11-07'))
-from analyze import weighted,decision,LABELS
+from analyze import weighted,decision,regression_map,LABELS
 def main():
     logical=[dict(length=0,work=0,physical_index=0),dict(length=9,work=9,physical_index=1),dict(length=9,work=9,physical_index=1)]
     rows={0:dict(raw=[[20]*7]*9,repeats=10),1:dict(raw=[[80]*7]*9,repeats=10)}
@@ -25,5 +25,13 @@ def main():
     v=decision(routes,'strlen','SRAM','public-SDK')[0]
     assert v['route_indexes']==[0] and v['geomean_ratio_to_baseline']==1
     assert decision(routes,'strcmp','SRAM','public-SDK')[0]['route_indexes']==[0,2]
-    print('inverse/equal workload, duplicate mapping, known20percent ranking and runtime/SDK alias trap PASS; synthetic only')
+    # Native and SDK can have different costs on the same measured row.
+    # Keeping a native-only map would conceal an SDK-specific regression.
+    c=dict(length=9,banks='SRAM',alignment=[0,0],mode='equal',count=9,seed_hex='')
+    cases=[c,dict(c,alignment=[1,0])];data={0:dict(raw=[[20]*7]*6+[[10]*7,[40]*7]),1:dict(raw=[[60]*7]*6+[[10]*7,[40]*7])}
+    native=regression_map(cases,data,3,7);sdk=regression_map(cases,data,3,6)
+    assert [v['median_ratio_to_baseline'] for v in native]==[.5,1.5]
+    assert [v['median_ratio_to_baseline'] for v in sdk]==[2.,6.]
+    assert all(v['baseline']=='public-SDK' for v in sdk) and len(sdk)==2
+    print('workload, duplicate mapping, ranking, runtime/SDK alias trap and separate SDK/native regression maps PASS; synthetic only')
 if __name__=='__main__':main()

@@ -30,20 +30,24 @@ def weighted(rows,cases,logical,target,kind):
             values=sorted(raw);terms.append(w*values[3]/n);floors.append(w/n);spreads.append(w*(values[5]-values[1])/n);normal+=w
     need(normal>0,'empty workload')
     return dict(us_per_checked_iteration=sum(terms)/normal,quantization_bound_us=sum(floors)/normal,seven_group_spread_us=sum(spreads)/normal,logical_rows=len(logical))
+def regression_map(cases,rows,target,baseline):
+    groups=collections.defaultdict(list)
+    for index,row in rows.items():
+        c=cases[index];ratio=statistics.median(row['raw'][target])/statistics.median(row['raw'][baseline])
+        groups[(c['length'],c['banks'],tuple(c['alignment']),c['mode'],c['count'],len(bytes.fromhex(c['seed_hex'])))].append((index,ratio))
+    return [dict(length=key[0],banks=key[1],alignment=list(key[2]),mode=key[3],count=key[4],seed_length=key[5],cases=[v[0] for v in values],baseline=LABELS[baseline],median_ratio_to_baseline=statistics.median(v[1] for v in values),worst_ratio_to_baseline=max(v[1] for v in values)) for key,values in groups.items()]
 def summarize_route(t,route,rows):
     functions={}
     for function in FUNCTIONS:
         logical=[r for r in t['logical_map'] if r['function']==function];subset={i:r for i,r in rows.items() if r['function']==function}
         need(len(subset)==sum(c['function']==function for c in t['cases']),'per-function coverage gap')
         weights={kind:{LABELS[f]:weighted(subset,t['cases'],logical,f,kind) for f in range(9 if function in t['runtime_slots'] else 8)} for kind in ('inverse-length','equal-length','inverse-work','ternary')}
-        regressions={}
+        regressions={};SDK_regressions={}
         for f in range(6):
-            groups=collections.defaultdict(list)
-            for index,row in subset.items():
-                c=t['cases'][index];base=statistics.median(row['raw'][7]);candidate=statistics.median(row['raw'][f]);ratio=candidate/base
-                groups[(c['length'],c['banks'],tuple(c['alignment']),c['mode'],c['count'],len(bytes.fromhex(c['seed_hex'])))].append((index,ratio,candidate,row['repeats']))
-            regressions[LABELS[f]]=[dict(length=key[0],banks=key[1],alignment=list(key[2]),mode=key[3],count=key[4],seed_length=key[5],cases=[v[0] for v in values],median_ratio_to_current_native=statistics.median(v[1] for v in values),worst_ratio_to_current_native=max(v[1] for v in values)) for key,values in groups.items()]
-        functions[function]=dict(weighted=weights,regressions=regressions)
+            native=regression_map(t['cases'],subset,f,7)
+            regressions[LABELS[f]]=[dict(v,median_ratio_to_current_native=v['median_ratio_to_baseline'],worst_ratio_to_current_native=v['worst_ratio_to_baseline']) for v in native]
+            SDK_regressions[LABELS[f]]=regression_map(t['cases'],subset,f,6)
+        functions[function]=dict(weighted=weights,regressions=regressions,SDK_regressions=SDK_regressions)
     return dict(route=route,functions=functions,physical_rows=len(rows))
 def decision(routes,function,place,baseline):
     indexes=[0,2] if place=='SRAM' else [1,3]
