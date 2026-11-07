@@ -28,7 +28,7 @@ public:
 private:
     bool online_ = false, pending_ = false, idle_ = false;
     u8 io_phase_ = 0;
-    u64 due_ = 0,battery_due_ = 0;
+    u64 due_ = 0,battery_due_ = 0,power_due_ = 0;
     BatteryStatus battery_;
     u32 battery_errors_=0;
     u32 errors_ = 0;

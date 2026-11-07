@@ -78,6 +78,10 @@ void render_changes_test() {
         require(!std::memcmp(cached.data(),reference.data(),Screen::BYTES),"cached battery raster differs");
     };
     battery_check(true);battery_check(false);battery.percent=69;battery_check(true);battery_check(false);
+    for(const uint8_t state:{0xB1,0xB7,0xBB,0xB3,0xA0}) {
+        require(battery.decode_power(BIOS_POWER_REG,state),"power telemetry decode");
+        battery_check(true);battery_check(false); // Same percent; power alone invalidates the frame.
+    }
     check(true); // Removing the battery reading changes both title and clock placement.
     core_61::bcd_value value{};core_61::get_stack_register(X1,value);
     value.mantissa=0x23456789;core_61::set_stack_register(X1,&value);check(true);check(false);

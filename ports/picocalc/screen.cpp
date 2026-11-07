@@ -388,7 +388,7 @@ bool Screen::RenderKey::same(const RenderKey& other) const {
 Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const Services* services,BatteryStatus battery) const {
     RenderKey out;
     u8 settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,settings);out.data(settings,sizeof(settings));
-    out.number((u32)battery.percent);out.number(battery.available);
+    out.number((u32)battery.percent);out.number(battery.available);out.number(battery.power_status);
     out.number(fonts::revision());out.number(files::revision());out.number(keyboard);
     out.number((u32)ui.page());out.number((u32)ui.view());out.number(ui.offset());out.number(ui.selected());
     const bool active=services && services->active();out.number(active);

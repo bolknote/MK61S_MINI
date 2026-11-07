@@ -180,6 +180,27 @@ void battery_test() {
     status.bios_flag7=true;
     picocalc::battery_icon(status,[&](unsigned x,unsigned y){flagged[y*320+x]=true;});
     assert(plain==flagged); // Raw BIOS flag cannot imply charging in the HUD.
+    assert(!status.decode_power(0,0) && !status.power_supported());
+    assert(!status.decode_power(BIOS_POWER_REG,0xFF) && !status.power_valid());
+    for(const unsigned value:{0xB1,0xB2,0xB3,0xB7,0xBB}) {
+        assert(status.decode_power(BIOS_POWER_REG,(uint8_t)value));
+        assert(status.power_supported() && status.power_valid());
+        assert(status.charging()==(value==0xB7));
+        assert(status.charge_complete()==(value==0xBB));
+        assert(status.external_power()==(value!=0xB1));
+        assert(status.battery_present()==(value!=0xB2));
+        flagged.fill(false);
+        picocalc::battery_icon(status,[&](unsigned x,unsigned y){
+            assert(x>=280 && x<312 && y>=11 && y<=22);flagged[y*320+x]=true;
+        });
+        if(value==0xB7 || value==0xBB) assert(flagged!=plain);
+        assert(flagged[15*320+280]==status.external_power());
+    }
+    assert(!status.decode_power(BIOS_POWER_REG,0xBF)); // Charging and DONE cannot both hold.
+    assert(status.power_supported() && !status.power_valid() && !status.external_power());
+    assert(status.decode_power(BIOS_POWER_REG,BIOS_POWER_TAG) && !status.power_valid());
+    assert(status.decode_power(BIOS_POWER_REG,0xB7));
+    status.clear_power();assert(status.power_supported() && !status.power_valid());
     std::puts("Pico battery: register/percent/raw BIOS flag validation and native bounded icon PASS");
 }
 void console_text_test() {

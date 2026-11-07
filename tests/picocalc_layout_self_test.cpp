@@ -333,6 +333,26 @@ void clock_during_input() {
     require(clock::set(saved),"restore HOST clock fixture");
     std::puts("PicoCalc clock during real manual press/release: native/logical surfaces, busy minute rollover and RUN/PRG policy PASS");
 }
+void power_indicator() {
+    const auto saved=clock::get();require(clock::set({2026,11,7,12,34,0}),"power clock fixture");
+    Calculator calc;fixture(calc);Settings settings;settings.russian=1;Ui ui;ui.init(settings);
+    Screen screen;BatteryStatus battery;battery.decode(0x0B,73);
+    require(battery.decode_power(BIOS_POWER_REG,0xB1),"battery power fixture");
+    screen.render(calc.snapshot(),true,&ui,nullptr,battery);
+    const Screen baseline=screen;
+    const unsigned states[]={0xB7,0xBB,0xB3,0xB1,0xA0};
+    const char* names[]={"-power-charging","-power-complete","-power-external","-power-battery","-power-unknown"};
+    for(unsigned i=0;i<5;++i) {
+        require(battery.decode_power(BIOS_POWER_REG,(u8)states[i]),"power state fixture");
+        require(screen.render(calc.snapshot(),true,&ui,nullptr,battery),"power state updates without a percent change");
+        require(!screen.render(calc.snapshot(),true,&ui,nullptr,battery),"stable power status does not repaint");
+        for(unsigned y=0;y<33;++y) for(unsigned x=0;x<278;++x)
+            require(screen.pixel(x,y)==baseline.pixel(x,y),"power badge stays clear of title and clock");
+        require(screen.pixel(280,15)==battery.external_power(),"external power plug is independent of charge state");
+        preview(screen,names[i]);
+    }
+    require(clock::set(saved),"restore power clock fixture");
+}
 void explorer_hints(Calculator& calc) {
     require(files::mkdir("/ExplorerHints"),"Explorer hint fixture");
     for(unsigned i=0;i<9;++i) {
@@ -387,7 +407,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
-    clock_during_input();published_x2();explorer_hints(calc);
+    clock_during_input();published_x2();power_indicator();explorer_hints(calc);
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)
