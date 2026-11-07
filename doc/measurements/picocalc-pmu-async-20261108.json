@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "date": "2026-11-08",
+  "status": "HOST_AND_ARM_PASS_HARDWARE_PENDING",
+  "target": "PicoCalc STM32F103 BIOS",
+  "physical_io": false,
+  "baseline_bios_sha256": "3b313836c5fa260851c4a8cc6dc4bca8b3c98b7270cc9e484932cd7f268e7282",
+  "baseline_archive_sha256": "0c0a3910c340ac52625d73c7c477c636b8f4725d17beff58d22ef0acbcedd12c",
+  "baseline_observation": {
+    "receipt": ".build/mk61ai/southbridge-combined-20261107/health/physical-v4/receipt.json",
+    "snapshots": 15,
+    "power_status": "A0",
+    "legacy_percent": 0,
+    "pmu_online": true,
+    "hal_error": "TIMEOUT (0x20)",
+    "meaning": "Battery charge is unknown; zero is not a valid measured percentage"
+  },
+  "candidate": {
+    "bin_sha256": "640d7621ed47547f09a6df1312e99d1c95e06cce28aaca1cfeb252396b9b16d8",
+    "image_bytes": 29156,
+    "global_ram_bytes": 10464,
+    "stack_reserved_bytes": 4096,
+    "ram_unallocated_bytes": 5920,
+    "i2c2_irq_vectors_verified": true,
+    "diagnostic_symbols": {
+      "hi2c2": {
+        "address": "0x200003b8",
+        "bytes": 84
+      },
+      "regs": {
+        "address": "0x2000022e",
+        "bytes": 24
+      },
+      "statistics": {
+        "address": "0x20000378",
+        "bytes": 48
+      },
+      "pmu_irq": {
+        "address": "0x2000085f",
+        "bytes": 1
+      },
+      "pmu_online": {
+        "address": "0x20000884",
+        "bytes": 1
+      },
+      "io_active": {
+        "address": "0x2000024f",
+        "bytes": 1
+      },
+      "recovering": {
+        "address": "0x200003b0",
+        "bytes": 1
+      }
+    },
+    "toolchain": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "candidate_directory": ".build/picocalc-bios-power-20261107/async-candidate",
+  "host": {
+    "status": "ASAN_UBSAN_PASS",
+    "cases": [
+      "normal",
+      "wrap",
+      "offline"
+    ],
+    "real_legacy_axp_irq_buttons": true,
+    "normal_runtime_blocking_hal_calls": 0
+  },
+  "arm": {
+    "status": "ARM_PMU_MODEL_PASS",
+    "instruction_counts": {
+      "normal": 2323878,
+      "wrap": 2328878,
+      "offline": 7738
+    },
+    "target": "Cortex-M3 Thumb",
+    "hal_model": true,
+    "physical_timing": false
+  },
+  "source_sha256": {
+    "ports/picocalc/bios/pmu_async.c": "764890612017dd3cc7af31f4bc15c0d6d4556ed6844a07c67de852b2c7ac3fdc",
+    "ports/picocalc/bios/pmu_async.h": "bdea53e49c268ce8383b16298c632beb272fbe09a186da422eb325ceaf611340",
+    "tools/firmware/picocalc/bios_pmu_async.py": "9e719e32d3f6519104283bfee19d3e998ce199c75f6971ec406ca75a68f2c665",
+    "tools/firmware/picocalc/build_async_bios.py": "1dbc6ad43b611c422fa6bba18b34b491ad82ba96ad3a5d997c24cb07cdbce5dd",
+    "tests/picocalc_pmu_async_self_test.c": "1610225036354232f4e330ff953f1bb33c6f3e222961c38493b50be90dcb6833",
+    "tests/picocalc_pmu_async_self_test.py": "46ca7a8970f71284c1deb7e0827bcbb59d77069c918d54d76c8fa8c9dfeb22db",
+    "tests/picocalc_pmu_async_arm_self_test.py": "e6a54acb027910558f1bd15e56cee9113bde166dd41067b49632131bd21691e5",
+    "tests/fixtures/picocalc_pmu_async_hal/arm_test.ld": "693fa9fed3bd0f48af0a346e2b8ac35d66ef6076a09f5c70a617bc36b9d4957c",
+    "tests/fixtures/picocalc_pmu_async_hal/arm_test_support.c": "f043192b73f35a66b7522478f33088739e4febed556420f78b9da53781965009",
+    "tests/fixtures/picocalc_pmu_async_hal/arm_test_support.h": "0aae372a26c0b665ce837c64e25be345b0ee28d8bdbdb2880e2b881779c1f365",
+    "tests/fixtures/picocalc_pmu_async_hal/hal_interface.h": "728b98eda5848a8503fdcba6eff92aa3e9cde5351454ef0285952a388a05da6d",
+    "tests/fixtures/picocalc_pmu_async_hal/stm32f1xx_hal.h": "fe90a319a4a99314cf4b7e79d434644307536e7029125481d051cf7c53191733"
+  },
+  "stm32": {
+    "f401": "PASS",
+    "f411": "PASS",
+    "evidence": "doc/measurements/picocalc-stm32-power-compatibility-20261107.json",
+    "note": "The async candidate changes only the separate F103 BIOS recipe; F401/F411 and mathematical code are unchanged."
+  },
+  "deployment": {
+    "installed": false,
+    "original_image_modified": false,
+    "requires_f103_bios_update": true,
+    "pico_h_update_required_for_power_icons": true,
+    "device_access": "Reserved for Harness INT8; no USB access from Battery chat."
+  }
+}
