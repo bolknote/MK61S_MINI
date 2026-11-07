@@ -14,11 +14,29 @@ HERE=Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
 E=HERE/'evidence/m0-20261107'
 def read(name):return json.loads(gzip.decompress((E/name).read_bytes()))
+def source_bytes(ref):
+    """Verify the source used in this historical measurement campaign.
+
+    Later independent libc work may change the surrounding source file while
+    retaining the measured strchr instructions. The old SHA is never updated:
+    a byte-exact archived source is required when the current source differs.
+    This does not certify the current production build or its hardware time.
+    """
+    def matches(data):return len(data)==ref['bytes'] and hashlib.sha256(data).hexdigest()==ref['sha256']
+    path=ROOT/ref['path']
+    if path.is_file():
+        data=path.read_bytes()
+        if matches(data):return data,False
+    archive=E/'source'/(ref['path']+'.gz')
+    assert archive.is_file(),ref['path']
+    data=gzip.decompress(archive.read_bytes());assert matches(data),ref['path']
+    return data,True
 def main():
     summary=json.loads((HERE/'M0-RESULTS-2026-11-07.json').read_text())
-    for ref in summary['evidence_files']+summary['production_sources']:
+    for ref in summary['evidence_files']:
         data=(ROOT/ref['path']).read_bytes()
         assert len(data)==ref['bytes'] and hashlib.sha256(data).hexdigest()==ref['sha256'],ref['path']
+    archived=[ref['path'] for ref in summary['production_sources'] if source_bytes(ref)[1]]
     meta=read('metadata.json.gz');analysis=read('analysis.json.gz');plan=read('plan.json.gz')
     raw=gzip.decompress((E/'raw-timing.bin.gz').read_bytes());qual=gzip.decompress((E/'qualifications.bin.gz').read_bytes())
     size=meta['report_bytes'];assert size==3024 and len(raw)==464*size and len(qual)==4*size
@@ -95,4 +113,5 @@ def main():
     assert final['correctness_calls']==6912 and final['independent_CLOSED'] and closure['independent_CLOSED']
     assert closure['all_reaped'] and closure['FD_unchanged'] and closure['CDC_closed'] and closure['lease_released']
     print('M0 saved physical evidence: 464 APPs, 4608 rows, all 290304 raw intervals, weights/regressions and final 6912 checks PASS')
+    if archived:print('Historical source SHA pins verified from immutable snapshots: '+', '.join(archived))
 if __name__=='__main__':main()
