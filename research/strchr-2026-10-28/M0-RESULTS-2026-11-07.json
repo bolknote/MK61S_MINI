@@ -1,0 +1,123 @@
+{
+  "status": "M0_PHYSICAL_WINNER_IMPLEMENTED_FINAL_HARDWARE_CLOSED",
+  "selection": "byte4",
+  "body_bytes": 58,
+  "body_sha256": "cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec",
+  "primary_weight": "equal align/mode cases within each input length, total frequency inversely proportional to length+1",
+  "all_raw_retained": true,
+  "hardware_timed_APP_runs": 464,
+  "physical_raw_intervals": 290304,
+  "firmware": {
+    "build": "B22DBAC8",
+    "crc": "1FDC87DA",
+    "bytes": 1538304,
+    "bin_sha256": "010976820f50f79c955d2bb9d83f568fde40adff16b7429b70746b75c7e51126"
+  },
+  "final_hardware": {
+    "independent_CLOSED": true,
+    "correctness_calls": 6912,
+    "APP_runs": 2,
+    "timing_runs": 0,
+    "nonce": "0x202611071f1a0001",
+    "runtime_table": 269424868,
+    "native_entry": 269337985,
+    "routes": [
+      {
+        "mode": "standalone",
+        "raw_sha256": "ca71fd02c41ab9244ff920eeeb8c9cbd2ca9f50eb267e1c9377a8ac6b295a96e",
+        "public_entry": 536996245,
+        "public_crc32": 2860432503,
+        "APP_image_crc32": 677913161,
+        "public_sha256": "cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec",
+        "actual_APP_base": "0x2001e2a0"
+      },
+      {
+        "mode": "shared",
+        "raw_sha256": "1943ab96a8bb825240ccbbe4a3bf022f1598746a37510945eb0fe69c1d7105a1",
+        "public_entry": 536998605,
+        "public_crc32": 3522619913,
+        "APP_image_crc32": 651984907,
+        "public_sha256": "d8eb34c92fde28b1d04456e89bbb0f46b8302e650b13181f44619a16bd01c58d",
+        "actual_APP_base": "0x2001ec48"
+      }
+    ]
+  },
+  "limitations": [
+    "assumed short-string-weighted workload",
+    "equal frequency per length selects oldnewlib",
+    "all short and long regressions retained",
+    "warm XIP only",
+    "shared veneer overhead retained",
+    "not application-wide speedup",
+    "HOST emulation is not hardware timing"
+  ],
+  "production_sources": [
+    {
+      "path": "code/memory_strchr_arm.h",
+      "bytes": 1701,
+      "sha256": "2196917ed57ffdd177e6107d7b5ac00f77987ecd32a7d56ac54a55a95bad3cf8"
+    },
+    {
+      "path": "code/strchr_m0.inc",
+      "bytes": 510,
+      "sha256": "cfee0f9bdf0da4e81aaeaa5dd3c58c6d80bf7db4064a7ef118cad3e39d5d38ff"
+    },
+    {
+      "path": "ports/picocalc/memory.c",
+      "bytes": 1765,
+      "sha256": "6e274b3bf1846c4701ad0a8d0ce349efb2acf48ed285dd876551e08fd2d91f77"
+    },
+    {
+      "path": "tests/strchr_arm_self_test.py",
+      "bytes": 20251,
+      "sha256": "48bbf7e370063af18c95e77bcd9639d6df47119db0962a4dcfa244f06bfdd222"
+    },
+    {
+      "path": "tests/picocalc_memory_arm_self_test.py",
+      "bytes": 6669,
+      "sha256": "8caf109a767c62a91addf3dc129973bfa00e24f6e215b39d75b1bdd4bfec20ca"
+    },
+    {
+      "path": "research/strchr-2026-10-28/verify_m0_evidence.py",
+      "bytes": 6645,
+      "sha256": "52beada33f13e4e610dd742b167fa4405b6f6edde58320075da0b3bb170dab2f"
+    }
+  ],
+  "evidence_files": [
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/analysis.json.gz",
+      "bytes": 135716,
+      "sha256": "7e0ef726278b7579f3856ba46597f6d77ab1d332162c54a4702356a42e1dbee2"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/closure.json.gz",
+      "bytes": 1282,
+      "sha256": "bb20862aeb77a62e4b24f02b88cf8957fc2db6193e0e80c56882c4d27b1479be"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/final-checks.bin.gz",
+      "bytes": 172,
+      "sha256": "7c7ace8ab76b8569846232398457ab451177a880cd0210c203a2ce4c6a762900"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/metadata.json.gz",
+      "bytes": 27150,
+      "sha256": "056fce934714f27600694b5764688677aa0fc76daa406d3dfc45879bc239f81e"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/plan.json.gz",
+      "bytes": 12353,
+      "sha256": "7eee435dfd0068a15a3dd901c471cca367cdbe079debe5cf5fd8242a710ae742"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/qualifications.bin.gz",
+      "bytes": 431,
+      "sha256": "254f3e29ac5bb13494f8b011d29582f79f5c02a3c3831fd65336363136ae15ee"
+    },
+    {
+      "path": "research/strchr-2026-10-28/evidence/m0-20261107/raw-timing.bin.gz",
+      "bytes": 202104,
+      "sha256": "4d26b7dd174ad4db77ebd5697beb330b85316c3673d0e9de3137eb05f790adc4"
+    }
+  ]
+}
