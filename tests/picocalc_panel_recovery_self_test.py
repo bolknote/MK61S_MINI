@@ -25,6 +25,7 @@ def run(args, build):
     extracted=build/'picocalc_panel_production.inc'
     extracted.write_text(flush+'\n'+body)
     command=[os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',
+             '-DMK61_PICOCALC_LCD_COLOR_CHAIN=1','-DMK61_PICOCALC_LCD_SPI_HZ=12500000',
              '-I'+str(build),'-I'+str(args.source_root.resolve()/'ports/picocalc'),
              '-I'+str(args.source_root.resolve()/'code')]
     if os.environ.get('MK61_TEST_SANITIZERS')=='1':

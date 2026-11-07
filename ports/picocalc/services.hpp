@@ -25,7 +25,7 @@ public:
     SourceDocument::Statistics source_memory_statistics() const { return source_.statistics(); }
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
     using Pump = bool (*)(void*, u8&);
-    using ColorDisplay = u32 (*)(void*,u32,const mk61_service_color_frame*);
+    using ColorDisplay = u32 (*)(void*,u32,const void*);
     Services();
     ~Services();
     void set_pump(Pump callback, void* context) { pump_ = callback; pump_context_ = context; }

@@ -70,6 +70,7 @@ pub const COLOR_AVAILABLE: u32 = 0;
 pub const COLOR_PRESENT: u32 = 1;
 pub const COLOR_END: u32 = 2;
 pub const COLOR_PALETTE64: u32 = 3;
+pub const COLOR_SPI_HZ: u32 = 4;
 pub const COLOR_INDEX4: u16 = 0;
 pub const COLOR_TILE1: u16 = 1;
 pub const COLOR_TILE8: u16 = 2;

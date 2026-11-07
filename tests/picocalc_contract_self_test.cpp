@@ -24,7 +24,7 @@ namespace {
 }
 #define CHECK(test) ((test)?(void)0:failed(#test,__LINE__))
 using namespace picocalc;
-struct ColorCalls { unsigned frames=0,ends=0; };
+struct ColorCalls { unsigned frames=0,ends=0,clocks=0;u32 hz=12000000; };
 void color_file_contract(void* context,const mk61_app_api&,const mk61_app_services& s) {
     auto& calls=*(ColorCalls*)context;
     const auto caps=s.call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr);
@@ -36,6 +36,12 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PRESENT,1,sizeof(f),&f));
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_END,0,sizeof(f),&f));
     CHECK(calls.frames==1 && !calls.ends);
+    u32 hz=24000000;
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,1,sizeof(hz),&hz));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz)-1,&hz));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),nullptr));
+    CHECK(!calls.clocks);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),&hz)==24000000 && calls.clocks==1);
     std::vector<u8> raw(70000);for(unsigned i=0;i<raw.size();++i) raw[i]=(u8)(i*37);
     CHECK(files::write("/Contract/raw.rom",raw.data(),raw.size()));
     mk61_service_file_info info{};mk61_service_file_bytes r{"raw.rom",&info,0,sizeof(info)};
@@ -349,7 +355,8 @@ void colored_text_contract() {
     } capture;
     Settings settings{};settings.ui_font_family=1;settings.ui_font_size=12;
     NativeDisplay display(settings,true);
-    display.color_sink([](void* raw,u32 operation,const mk61_service_color_frame* f)->u32 {
+    display.color_sink([](void* raw,u32 operation,const void* payload)->u32 {
+        const auto* f=(const mk61_service_color_frame*)payload;
         auto& c=*(Capture*)raw;
         if(operation==MK61_COLOR_END) { ++c.ends;return 1; }
         CHECK(operation==MK61_COLOR_PRESENT && f);
@@ -501,14 +508,15 @@ void picocalc_contract_test() {
     }
     CHECK(script::text_profile({8,5,8,0}));s.test_native_contract(native_contract,&ui);
     ColorCalls color_calls;
-    s.set_color_display([](void* raw,u32 operation,const mk61_service_color_frame*) -> u32 {
+    s.set_color_display([](void* raw,u32 operation,const void* payload) -> u32 {
         auto& c=*(ColorCalls*)raw;
+        if(operation==MK61_COLOR_SPI_HZ) { std::memcpy(&c.hz,payload,sizeof(c.hz));++c.clocks;return c.hz; }
         if(operation==MK61_COLOR_PRESENT) { ++c.frames;return 2; }
-        if(operation==MK61_COLOR_END) ++c.ends;
+        if(operation==MK61_COLOR_END) { ++c.ends;c.hz=12000000; }
         return 1;
     },&color_calls);
     s.test_native_contract(color_file_contract,&color_calls,true);
-    CHECK(color_calls.ends==1);s.set_color_display(nullptr,nullptr);
+    CHECK(color_calls.ends==1 && color_calls.clocks==1 && color_calls.hz==12000000);s.set_color_display(nullptr,nullptr);
     const auto active_buffers=shared_memory::buffer_statistics().active;u32 stale_buffer=0;
     s.test_native_contract(buffers_contract,&stale_buffer,true);s.test_native_contract(buffers_contract,&stale_buffer,true);
     CHECK(shared_memory::buffer_statistics().active==active_buffers && !shared_memory::buffer_statistics().pinned);

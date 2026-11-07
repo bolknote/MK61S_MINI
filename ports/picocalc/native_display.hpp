@@ -23,7 +23,7 @@ public:
     bool bitmap_present(const u8* frame,unsigned size);
     void bitmap_end();
     u32 revision() const { return revision_; }
-    using ColorSink=u32(*)(void*,u32,const mk61_service_color_frame*);
+    using ColorSink=u32(*)(void*,u32,const void*);
     void color_sink(ColorSink sink,void* context,void(*wait)(void*),void* wait_context) {
         color_sink_=sink;color_context_=context;color_wait_=wait;color_wait_context_=wait_context;
     }

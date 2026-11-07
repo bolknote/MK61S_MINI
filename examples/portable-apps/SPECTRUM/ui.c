@@ -39,6 +39,7 @@ bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectru
     for(unsigned i=0;i<16;++i) u->frame.palette[i]=spectrum_color(i);
     u->frame.background=spectrum_color(7);fill(u,0,0,256,256,7,0);
     if(running) spectrum_video(s,buffer.pixels+1024,buffer.pixels+8192+128);
+    spectrum_display_fast(api);
     return true;
 }
 void spectrum_ui_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,

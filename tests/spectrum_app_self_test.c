@@ -30,6 +30,9 @@ static const uint8_t* app_rom_cache_find(unsigned id,uint32_t* crc) {
 static char ui[600];
 static uint32_t micros_now,frames_shown,session_frames,calls,audio_opens,audio_closes;
 static unsigned palette_calls;
+static unsigned lcd_clock_requests;
+static uint32_t lcd_clock=12000000;
+static bool legacy_lcd;
 static uint8_t canvas[12800],*psram;
 static uint8_t* direct_sram[3];
 static unsigned psram_bytes,action;
@@ -57,7 +60,7 @@ static const action_item script[]={
 /* The menu renderer is exercised on the physical RGB panel; this fixture
  * supplies its titles to the scripted input while testing the real APP. */
 bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectrum* s,bool running) {
-    (void)s;(void)running;u->api=api;return true;
+    (void)s;(void)running;u->api=api;spectrum_display_fast(api);return true;
 }
 void spectrum_ui_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,
                         const char* const* labels,unsigned count,unsigned selected) {
@@ -139,10 +142,16 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(false);
     }
     if(op==MK61_SERVICE_COLOR_DISPLAY) {
-        if(a==MK61_COLOR_END) return 1;
+        if(a==MK61_COLOR_SPI_HZ) {
+            assert(!b && c==sizeof(uint32_t) && payload && *(uint32_t*)payload==24000000);
+            ++lcd_clock_requests;if(legacy_lcd) return 0;
+            return lcd_clock=24000000;
+        }
+        if(a==MK61_COLOR_END) { lcd_clock=12000000;return 1; }
         if(a==MK61_COLOR_PALETTE64) { assert(c==128 && payload);return ++palette_calls%5?1:2; }
         assert(a==MK61_COLOR_PRESENT);mk61_service_color_frame* f=payload;
         assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
+        assert(lcd_clock==(legacy_lcd?12000000:24000000));
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
         assert(mapped_roms==expect_mapped);
         assert(!machine.memory->window && machine.memory->page_count==(expect_mapped?16:2));
@@ -183,6 +192,7 @@ static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_V
 const mk61_app_api* mk61_api=&api;
 int main(int argc,char** argv) {
     assert(argc==2 || argc==3);asset_dir=argv[1];
+    legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
     if(argc==3) {
         cache_mismatch=!strcmp(argv[2],"mismatch");expect_mapped=!cache_mismatch;
         char filename[1024];path(filename,"ROMCACHE.bin");FILE* f=fopen(filename,"rb");assert(f);
@@ -195,6 +205,7 @@ int main(int argc,char** argv) {
     assert(action==sizeof(script)/sizeof(*script) && !psram && !generator.sample);
     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
     assert(audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
+    assert(lcd_clock_requests>=audio_opens && lcd_clock==12000000);
     if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
     printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",
         expect_mapped?"Flash ROM / retained RAM pages":cache_mismatch?"custom ROM fallback":"SD ROM / small pages");return 0;

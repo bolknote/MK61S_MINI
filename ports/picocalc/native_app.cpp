@@ -587,13 +587,17 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   case MK61_SERVICE_DISPLAY:
     return host.display.call(a,b,c,payload);
   case MK61_SERVICE_COLOR_DISPLAY:
+    if(a==MK61_COLOR_SPI_HZ) {
+      if(!s.color_display_ || b || c!=sizeof(u32) || !payload) return 0;
+      return s.color_display_(s.color_context_,a,payload);
+    }
     if(a==MK61_COLOR_PALETTE64) {
       if(!s.color_display_ || b || c!=128 || !payload) return 0;
-      return s.color_display_(s.color_context_,a,(const mk61_service_color_frame*)payload);
+      return s.color_display_(s.color_context_,a,payload);
     }
     if(!s.color_display_ || b ||
        (a==MK61_COLOR_PRESENT ? c!=sizeof(mk61_service_color_frame) || !payload : c || payload)) return 0;
-    return s.color_display_(s.color_context_,a,(const mk61_service_color_frame*)payload);
+    return s.color_display_(s.color_context_,a,payload);
   case MK61_SERVICE_AUDIO_STREAM:
 #if defined(PICO_ON_DEVICE)
     if(a==MK61_AUDIO_SYNTH_OPEN) {

@@ -384,6 +384,7 @@ static void emulate(void) {
     if(!spectrum_disk_cache_begin(&machine,scratch.pixels+7680)) {
         message("PSRAM I/O error\n\nPress any key");return;
     }
+    spectrum_display_fast(services);
     mk61_service_color_frame frame={0};
     frame.pixels=scratch.pixels;frame.tiles=scratch.pixels+SPECTRUM_BITMAP_BYTES;
     frame.pixel_bytes=SPECTRUM_BITMAP_BYTES;frame.tile_bytes=SPECTRUM_ATTRIBUTE_BYTES*2;

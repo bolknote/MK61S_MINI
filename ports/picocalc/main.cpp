@@ -387,8 +387,8 @@ int main() {
     picocalc::clock::calibrate(settings.rtc_ppm);
     picocalc::clock::restore_alarms(settings.alarm_epoch,settings.alarm_flags);
     services.set_pump(service_pump, nullptr);
-    services.set_color_display([](void* context,u32 operation,const mk61_service_color_frame* frame) {
-        return ((picocalc::Panel*)context)->color(operation,frame);
+    services.set_color_display([](void* context,u32 operation,const void* payload) {
+        return ((picocalc::Panel*)context)->color(operation,payload);
     },&panel);
     terminal.init({nullptr,
         [](void*,const char* text,unsigned n) { picocalc::console::write(text,n); },

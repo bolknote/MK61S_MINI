@@ -118,7 +118,7 @@ enum mk61_service_operation {
    * Existing pointer-based MEMORY operations retain their original ABI. */
   MK61_SERVICE_BUFFER,
   /* Optional paletted LCD presentation. a=mk61_color_operation, b=0,
-   * c=sizeof(mk61_service_color_frame) for PRESENT, otherwise zero.
+   * c/payload depend on the color operation (below).
    * PRESENT copies the source before returning: 1=accepted, 2=busy,
    * 0=invalid/unsupported. END drains transfers and restores normal output.
    * The host also ends the session automatically on APP return. */
@@ -196,7 +196,13 @@ typedef struct mk61_service_file_info {
 enum mk61_color_operation { MK61_COLOR_AVAILABLE, MK61_COLOR_PRESENT, MK61_COLOR_END,
   /* c=128,payload=64 native RGB565 words. Copy while LCD idle; 1/2/0.
    * TILE8 uses this palette. The original frame descriptor is unchanged. */
-  MK61_COLOR_PALETTE64
+  MK61_COLOR_PALETTE64,
+  /* Optional LCD SPI clock: b=0,c=4,payload=uint32_t requested Hz.
+   * Pico accepts 12000000,24000000 or 0 (firmware default). Returns actual
+   * Hz after draining the LCD, or 0 if unsupported/invalid. END and APP
+   * return restore the firmware default, including before the first frame.
+   * Older hosts return 0; the APP may keep their original clock. */
+  MK61_COLOR_SPI_HZ
 };
 enum mk61_color_format {
   /* Horizontal, high nibble first; each row occupies ceil(width/2) bytes. */

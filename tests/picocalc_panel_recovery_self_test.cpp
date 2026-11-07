@@ -91,6 +91,12 @@ struct Controller {
 constexpr unsigned DC=0,CS=1;
 constexpr int SPI_CPOL_0=0,SPI_CPHA_0=0,SPI_MSB_FIRST=0;
 int spi1=1;
+u32 hardware_spi_hz=12000000,clock_changes=0;
+u32 spi_set_baudrate(int,u32 requested) {
+    require(!controller.pending,"SPI clock changes only after the queued LCD transfer finishes");
+    ++clock_changes;hardware_spi_hz=requested>=24000000?24000000:12000000;
+    return hardware_spi_hz;
+}
 u16 scanlines[lcd::STRIP_ROWS*lcd::WIDTH]{};
 u64 time_us_64() { static u64 now=0;return ++now; }
 void busy_wait_us(unsigned) {}
@@ -124,8 +130,25 @@ bool Panel::finish_scanline() {
     if(controller.fail_completion) { controller.fail_completion=false;return false; }
     return true;
 }
-bool Panel::transfer_chain(const lcd::Rect&,u32&) {
-    require(false,"this host fixture uses the ordinary scanline completion boundary");return false;
+bool Panel::transfer_chain(const lcd::Rect& rect,u32&,bool color) {
+    stream_.reset(rect);
+    for(unsigned i=0;i<stream_.count;++i) {
+        const auto block=lcd::Stream::prepare(rect,i,scanlines,[&](unsigned row,u16* out) {
+            if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+            else lcd::scanline(previous_,rect,row,(u8*)out);
+        });
+        controller.pixels(scanlines,block.count);
+        if(!finish_scanline()) return false;
+    }
+    return true;
+}
+bool Panel::transfer_fill(u16 color,unsigned width,unsigned height) {
+    for(unsigned x=0;x<width;++x) scanlines[x]=color;
+    for(unsigned y=0;y<height;++y) {
+        controller.pixels(scanlines,width);
+        if(!finish_scanline()) return false;
+    }
+    return true;
 }
 
 #include "picocalc_panel_production.inc"
@@ -238,10 +261,11 @@ void changed_view_before_retry(lcd::Region initial,lcd::Region failed,bool ordin
     std::printf("Panel changed-view retry: initial=%u/%u failed=%u/%u target=%u/%u actual_definition origin fixed_pixels PASS\n",
                 initial.top,initial.height,failed.top,failed.height,expected.top,expected.height);
 }
-void color_session() {
+void color_session(bool chain) {
     controller=Controller{};Panel panel;Screen mono;
     mono.region={40,240};for(auto& value:mono.pixels) value=byte();
     panel.flush(mono);controller.run();mono=shifted(mono,16);panel.flush(mono);controller.run();
+    if(chain) { panel.dma_tx_=0;panel.dma_rx_=1;panel.dma_control_=2; }
     std::array<u8,6144> bits{};std::array<u8,768> tiles{};tiles.fill(0x12);
     mk61_service_color_frame f{};f.pixels=bits.data();f.tiles=tiles.data();f.pixel_bytes=bits.size();f.tile_bytes=tiles.size();
     f.width=256;f.height=192;f.x=32;f.y=64;f.format=MK61_COLOR_TILE1;f.background=0x1234;
@@ -275,7 +299,34 @@ void color_session() {
     require(panel.color(MK61_COLOR_END)==1 && !controller.pending && !panel.color_active(),"end drains transfer before APP buffer release");
     mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
     require(controller.visible(mono),"complete mono snapshot restored after color");
-    std::puts("Panel color session: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS");
+    std::printf("Panel color session chain=%u: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS\n",chain);
+}
+void color_clock_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    panel.spi_hz_=hardware_spi_hz=12000000;clock_changes=0;
+    const auto clock=[&](u32 hz) {
+        // Native services allow an unaligned request; the driver must copy it.
+        u8 bytes[8]{};std::memcpy(bytes+1,&hz,sizeof(hz));
+        return panel.color(MK61_COLOR_SPI_HZ,bytes+1);
+    };
+    require(!panel.color(MK61_COLOR_SPI_HZ),"null clock request rejected");
+    require(!clock(32000000) && !clock(1) && !clock(UINT32_MAX) && !clock_changes,"unsupported rates leave SPI untouched");
+    require(panel.flush(mono) && controller.pending,"ordinary frame queued before clock switch");
+    require(clock(24000000)==24000000 && !controller.pending && panel.frames()==1 && hardware_spi_hz==24000000,"12 -> 24 MHz drains actual old frame");
+    mono.pixels[0]^=1;require(panel.flush(mono) && controller.pending,"next frame queued");
+    require(clock(24000000)==24000000 && controller.pending && clock_changes==1,"repeated request does not stall queued frame");
+    require(!clock(32000000) && controller.pending && clock_changes==1,"invalid request cannot drain or retune an active frame");
+    require(panel.color(MK61_COLOR_END)==1 && !controller.pending && panel.spi_hz()==12000000 && !panel.color_spi_request_,"END restores default even before first color frame");
+    require(clock(12000000)==12000000 && clock(0)==12000000 && !panel.color_spi_request_,"explicit normal/default rates accepted");
+    require(clock(24000000)==24000000,"second accelerated session");
+    std::array<u8,32> bits{};std::array<u8,4> tiles{};
+    mk61_service_color_frame f{};f.pixels=bits.data();f.tiles=tiles.data();f.pixel_bytes=bits.size();f.tile_bytes=tiles.size();
+    f.width=f.height=16;f.format=MK61_COLOR_TILE1;
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1 && controller.pending,"color frame queued at 24 MHz");
+    require(panel.color(MK61_COLOR_END)==1 && !controller.pending && !panel.color_active() && hardware_spi_hz==12000000,"END drains color and restores default");
+    const auto changes=clock_changes;
+    require(panel.color(MK61_COLOR_END)==1 && clock_changes==changes,"repeated END is harmless");
+    std::puts("Panel actual color clock: in-flight drain, repeated/invalid/unaligned request, 12/24/default and early/normal END restore PASS");
 }
 }
 int main() {
@@ -297,6 +348,9 @@ int main() {
             }
         }
     }
-    try { color_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
+    for(bool chain:{false,true}) {
+        try { color_session(chain); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
+    }
+    try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
     return failed?1:0;
 }

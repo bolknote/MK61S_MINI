@@ -3,6 +3,7 @@
 #include "event_wait.hpp"
 #include "lcd_update.hpp"
 #include "lcd_chain.hpp"
+#include "lcd_color.hpp"
 #include "psram_stream.hpp"
 #include "sleep_clock_lease.hpp"
 #include <array>
@@ -141,8 +142,52 @@ void qpi_completion(){
  assert(!stream_idle(ready,ready,true,true,false));
  assert(!stream_idle(ready,ready+1,true,true,false));
 }
+void color_strips() {
+ using namespace picocalc::lcd;
+ unsigned cases=0;
+ for(unsigned format:{MK61_COLOR_TILE1,MK61_COLOR_TILE8,MK61_COLOR_INDEX4})
+  for(unsigned width:{8U,24U,127U,256U,319U,320U})
+   for(unsigned height:{8U,16U,79U,192U}) {
+    if(format!=MK61_COLOR_INDEX4 && ((width|height)&7U))continue;
+    const unsigned pixel_bytes=format==MK61_COLOR_INDEX4?(width+1)/2*height:width*height/8;
+    const unsigned tile_bytes=format==MK61_COLOR_INDEX4?0:width*height/64*(format==MK61_COLOR_TILE8?2:1);
+    if(pixel_bytes+tile_bytes>MK61_COLOR_SNAPSHOT_BYTES)continue;
+    std::vector<u8> bits(pixel_bytes),tiles(tile_bytes);
+    for(unsigned i=0;i<bits.size();++i)bits[i]=(u8)(i*73+i/11);
+    for(unsigned i=0;i<tiles.size();++i)tiles[i]=(u8)((i*31+i/7)%(format==MK61_COLOR_TILE8?64:256));
+    mk61_service_color_frame f{};f.pixels=bits.data();f.tiles=tile_bytes?tiles.data():nullptr;
+    f.pixel_bytes=pixel_bytes;f.tile_bytes=tile_bytes;f.x=(320-width)/2;f.y=(320-height)/2;
+    f.width=width;f.height=height;f.format=format;
+    std::array<u16,64> palette;for(unsigned i=0;i<64;++i)palette[i]=(u16)(i*971+0x1234);
+    for(unsigned i=0;i<16;++i)f.palette[i]=palette[i];
+    assert(valid_color(f));
+    for(unsigned trim:{0U,1U,3U}) {
+     Rect r{(u16)(f.x+trim),(u16)(f.y+trim),(u16)(width-trim),(u16)(height-trim)};
+     Stream stream;stream.reset(r);std::array<u16,STRIP_ROWS*WIDTH+2> block;block.fill(0xA77A);
+     unsigned sent=0;
+     for(unsigned i=0;i<stream.count;++i) {
+      const auto segment=Stream::prepare(r,i,block.data()+1,[&](unsigned row,u16* out){color_scanline(f,r,row,out,palette.data());});
+      const auto* source=(const u16*)segment.source;
+      for(unsigned n=0;n<segment.count;++n) {
+       const unsigned x=trim+(sent+n)%r.width,y=trim+(sent+n)/r.width;
+       unsigned index=0;
+       if(format==MK61_COLOR_INDEX4)index=(bits[y*((width+1)/2)+x/2]>>((x&1)?0:4))&15;
+       else {
+        const bool ink=bits[y*(width/8)+x/8]&(128U>>(x&7));
+        const unsigned tile=(y/8)*(width/8)+x/8;
+        index=format==MK61_COLOR_TILE8?tiles[tile*2+ink]:(tiles[tile]>>(ink?0:4))&15;
+       }
+       assert(source[n]==palette[index]);
+      }
+      sent+=segment.count;assert(block.front()==0xA77A && block.back()==0xA77A);
+     }
+     assert(sent==r.width*r.height && !stream.segments[stream.count].source);++cases;
+    }
+   }
+ std::printf("LCD color strips: %u TILE1/TILE8/odd INDEX4 cases, offset windows, short tails and guard words PASS\n",cases);
 }
-int main(){sd_test();events();pixels();qpi_completion();sleep_clocks();
+}
+int main(){sd_test();events();pixels();qpi_completion();sleep_clocks();color_strips();
  using namespace picocalc::lcd;
  std::array<uint8_t,BYTES> frame{};
  for(unsigned i=0;i<BYTES;++i)frame[i]=(uint8_t)(i*73+i/11);

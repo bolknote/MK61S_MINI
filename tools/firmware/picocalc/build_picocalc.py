@@ -103,9 +103,15 @@ def main():
                         help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
     parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
                         help="Build block-DMA synthesis candidate for hardware qualification")
+    parser.add_argument("--lcd-color-chain", action=argparse.BooleanOptionalAction, default=True,
+                        help="Use strip DMA and constant RGB565 fills; disable for a control build")
+    parser.add_argument("--lcd-spi-hz", type=int, default=12500000,
+                        help="Requested LCD SPI clock, rounded down by SDK (24MHz is experimental)")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
+    if not 1 <= args.lcd_spi_hz <= 62500000:
+        parser.error("--lcd-spi-hz must be from 1 to 62500000")
     try:
         sdk = args.sdk.expanduser().resolve()
         sdk_revision = prepare_sdk(sdk, args.fetch_sdk)
@@ -133,6 +139,7 @@ def main():
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
         if args.audio_clock and not args.cosmic_clock_diagnostic: source_hash.update(b"audio-clock=200\0")
         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
+        source_hash.update(f"lcd-color-chain={int(args.lcd_color_chain)}\0lcd-spi-request={args.lcd_spi_hz}\0".encode())
         source_digest = source_hash.hexdigest()
         build_digest = hashlib.sha256((source_digest + '\0' + (
             'gcc' if args.compiler_runtime else 'owned-m0')).encode()).hexdigest()
@@ -147,6 +154,8 @@ def main():
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
+             f"-DMK61_PICOCALC_LCD_COLOR_CHAIN={'ON' if args.lcd_color_chain else 'OFF'}",
+             f"-DMK61_PICOCALC_LCD_SPI_HZ={args.lcd_spi_hz}",
              f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
@@ -196,6 +205,8 @@ def main():
             "sampling_profile": args.sampling_profile,
             "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic else None,
             "block_audio_dma": args.audio_dma,
+            "lcd_color_chain": args.lcd_color_chain,
+            "lcd_spi_requested_hz": args.lcd_spi_hz,
             "psram_bus": "spi" if args.psram_spi else "qpi-with-spi-fallback",
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + " + (

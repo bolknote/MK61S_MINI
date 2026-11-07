@@ -16,12 +16,18 @@ struct Stream {
         count=(rect.height+STRIP_ROWS-1)/STRIP_ROWS;
         for(unsigned i=0;i<=count;++i) segments[i]={0,0};
     }
-    static Segment prepare(const uint8_t* frame,const Rect& rect,unsigned index,uint16_t* output) {
+    template<class Render>
+    static Segment prepare(const Rect& rect,unsigned index,uint16_t* output,const Render& render) {
         const unsigned first=index*STRIP_ROWS;
         const unsigned rows=rect.height-first<STRIP_ROWS?rect.height-first:STRIP_ROWS;
         for(unsigned row=0;row<rows;++row)
-            scanline(frame,rect,first+row,(uint8_t*)(output+row*rect.width));
+            render(first+row,output+row*rect.width);
         return {rows*rect.width,(uintptr_t)output};
+    }
+    static Segment prepare(const uint8_t* frame,const Rect& rect,unsigned index,uint16_t* output) {
+        return prepare(rect,index,output,[&](unsigned row,uint16_t* out) {
+            scanline(frame,rect,row,(uint8_t*)out);
+        });
     }
     // Called only after SPI and its RX FIFO are drained. A stalled control
     // descriptor may be retried from this wire position, never from a guessed

@@ -6,6 +6,10 @@ trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 python3 "$root/tests/spectrum_rom_cache_self_test.py"
+clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/sdk/portable/include" -I"$root/code" \
+    "$root/tests/spectrum_display_self_test.c" -o "$build/display"
+"$build/display" "$root/third_party/spectrum-rom/48.rom"
 for test in spectrum_self_test spectrum_ldir_self_test spectrum_batch_self_test spectrum_audio_timeline_self_test; do
 clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
     "$root/tests/$test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \
@@ -81,6 +85,7 @@ PY
     "$build/app" "$build/app-assets"
     "$build/app" "$build/app-assets" xip
     "$build/app" "$build/app-assets" mismatch
+    SPECTRUM_LEGACY_LCD=1 "$build/app" "$build/app-assets" xip
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \

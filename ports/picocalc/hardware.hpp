@@ -39,7 +39,7 @@ class Panel {
 public:
     void init();
     bool flush(const Screen& screen);
-    u32 color(u32 operation,const mk61_service_color_frame* frame=nullptr);
+    u32 color(u32 operation,const void* payload=nullptr);
     u32 color_palette(const u16* colors);
     bool color_active() const { return color_active_; }
     bool needs_refresh() const { return !valid_ || failed_.load(std::memory_order_acquire); }
@@ -63,6 +63,7 @@ private:
     u8 previous_[Screen::BYTES] = {};
     bool valid_ = false;
     u32 spi_hz_ = 0;
+    u32 color_spi_request_ = 0;
     std::atomic<u32> frames_{0},frame_crc_{0};
     std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
     std::atomic<u32> errors_{0};
@@ -82,14 +83,16 @@ private:
     int dma_tx_=-1,dma_rx_=-1,dma_control_=-1;
     std::atomic<u32> last_strips_{0},last_pauses_{0};
     void configure_dma(bool chain=true);
+    u32 color_clock(u32 hz);
     lcd::Stream stream_;
-    bool transfer_chain(const lcd::Rect& rect,u32& pauses);
+    bool transfer_chain(const lcd::Rect& rect,u32& pauses,bool color=false);
+    bool transfer_fill(u16 color,unsigned width,unsigned height);
     void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline();
     void transfer();
     void transfer_color();
-    bool transfer_color_rect(const lcd::Rect& rect,bool background);
+    bool transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses);
 };
 
 } // namespace picocalc

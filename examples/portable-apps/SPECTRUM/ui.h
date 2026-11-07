@@ -7,6 +7,12 @@ typedef struct {
     const uint8_t* font;
     mk61_service_color_frame frame;
 } spectrum_ui;
+static inline void spectrum_display_fast(const mk61_app_services* api) {
+    uint32_t hz=24000000;
+    /* Optional on older firmware; the display remains usable at its default.
+     * The host restores its clock on COLOR_END or any APP return. */
+    (void)api->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),&hz);
+}
 bool spectrum_ui_begin(spectrum_ui*,const mk61_app_services*,const spectrum*,bool running);
 void spectrum_ui_window(spectrum_ui*,unsigned x,unsigned y,unsigned width,const char* title,
                         const char* const* labels,unsigned count,unsigned selected);

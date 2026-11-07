@@ -9,6 +9,9 @@
 #include "hardware/sync.h"
 #include "pico/stdlib.h"
 #include <cstring>
+#ifndef MK61_PICOCALC_LCD_COLOR_CHAIN
+#define MK61_PICOCALC_LCD_COLOR_CHAIN 1
+#endif
 
 namespace picocalc {
 namespace {
@@ -144,6 +147,7 @@ void Panel::init() {
     // ST7365P specifies >=66 ns per write clock (<=15.15 MHz).
     // 12.5 MHz has an 80 ns cycle at the stock 125 MHz system clock.
     spi_hz_ = spi_init(spi1, MK61_PICOCALC_LCD_SPI_HZ);
+    color_spi_request_ = 0;
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
@@ -204,16 +208,34 @@ u32 Panel::color_palette(const u16* colors) {
     }
     return 1;
 }
-u32 Panel::color(u32 operation,const mk61_service_color_frame* frame) {
-    if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)frame);
+u32 Panel::color_clock(u32 hz) {
+    if(hz && hz!=12000000 && hz!=24000000) return 0;
+    if(hz==color_spi_request_) return spi_hz_;
+    // The previous frame belongs to core 1. Finish it before changing SPI;
+    // the request never changes the shared peripheral or CPU clock.
+    io_worker::drain();
+    spi_hz_=spi_set_baudrate(spi1,hz?hz:MK61_PICOCALC_LCD_SPI_HZ);
+    color_spi_request_=hz;
+    return spi_hz_;
+}
+u32 Panel::color(u32 operation,const void* payload) {
+    if(operation==MK61_COLOR_SPI_HZ) {
+        if(!payload) return 0;
+        u32 hz;std::memcpy(&hz,payload,sizeof(hz));
+        return color_clock(hz);
+    }
+    if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)payload);
     if(operation==MK61_COLOR_AVAILABLE) return 1;
     if(operation==MK61_COLOR_END) {
         if(color_active_) {
             io_worker::drain();color_active_=false;valid_=false;color_frame_={};
         }
+        if(color_spi_request_) (void)color_clock(0);
         return 1;
     }
-    if(operation!=MK61_COLOR_PRESENT || !frame || !lcd::valid_color(*frame)) return 0;
+    if(operation!=MK61_COLOR_PRESENT || !payload) return 0;
+    const auto* frame=(const mk61_service_color_frame*)payload;
+    if(!lcd::valid_color(*frame)) return 0;
     if(io_worker::frame_pending()) return 2;
     const bool failed=failed_.exchange(false,std::memory_order_acquire);
     const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);
@@ -276,12 +298,15 @@ void Panel::abort_dma() {
     dma_channel_abort((unsigned)dma_tx_);dma_channel_abort((unsigned)dma_rx_);
     dma_irq_ready_=false;
 }
-bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses) {
+bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
     configure_dma();stream_.reset(rect);
     const auto descriptor=[&](unsigned index) {
-        const auto next=lcd::Stream::prepare(previous_,rect,index,
-            index&1?chained_scanlines:scanlines);
+        const auto next=lcd::Stream::prepare(rect,index,index&1?chained_scanlines:scanlines,
+            [&](unsigned row,u16* out) {
+                if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+                else lcd::scanline(previous_,rect,row,(u8*)out);
+            });
         // Count first, trigger address last; a DMA race can only cause a
         // harmless null/zero-count stop, subsequently resumed at the wire cursor.
         stream_.segments[index].count=next.count;__dmb();
@@ -346,6 +371,33 @@ bool Panel::finish_scanline() {
     if(!dma_support::wait((unsigned)dma_tx_,dma_rx_)) return false;
     while(spi_is_busy(spi1)) tight_loop_contents();
     return true;
+}
+bool Panel::transfer_fill(u16 color,unsigned width,unsigned height) {
+    if(!dma()) {
+        for(unsigned x=0;x<width;++x) scanlines[x]=color;
+        for(unsigned row=0;row<height;++row) {
+            start_scanline(scanlines,width);io_worker::service();
+        }
+        return true;
+    }
+    configure_dma(false);
+    auto tx=dma_channel_get_default_config((unsigned)dma_tx_);
+    channel_config_set_transfer_data_size(&tx,DMA_SIZE_16);
+    channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
+    channel_config_set_read_increment(&tx,false);
+    channel_config_set_write_increment(&tx,false);
+    // The constant remains alive until both DMA channels and SPI drain.
+    // Invalidate cached configuration: the next image must increment reads.
+    dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,&color,width*height,false);
+    dma_irq_ready_=false;
+    dma_channel_set_trans_count((unsigned)dma_rx_,width*height,false);
+    dma_start_channel_mask((1U<<dma_tx_) | (1U<<dma_rx_));
+    const u64 limit=time_us_64()+1000000;
+    while(dma_channel_is_busy((unsigned)dma_tx_) || dma_channel_is_busy((unsigned)dma_rx_)) {
+        if(time_us_64()>=limit) { abort_dma();return false; }
+        io_worker::service();best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+    }
+    return finish_scanline();
 }
 void Panel::transfer() {
     const u64 start=time_us_64();
@@ -424,7 +476,7 @@ void Panel::transfer() {
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 
-bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background) {
+bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses) {
     const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
     const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
     const u8 rows[]={(u8)(rect.y>>8),(u8)rect.y,(u8)(bottom>>8),(u8)bottom};
@@ -438,12 +490,21 @@ bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background) {
         if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
         else lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
     };
-    bool ok=true;prepare(0);start_scanline(scanlines,rect.width);
-    for(unsigned row=1;row<=rect.height;++row) {
-        if(row<rect.height) prepare(row);
-        if(!finish_scanline()) { ok=false;break; }
-        if(row<rect.height) start_scanline(scanlines+(row&1U)*Screen::WIDTH,rect.width);
-        io_worker::service();
+    bool ok=true;
+    if(MK61_PICOCALC_LCD_COLOR_CHAIN && background) {
+        ok=transfer_fill(color_frame_.background,rect.width,rect.height);
+        strips+=dma()?1:rect.height;
+    } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && chained_dma()) {
+        ok=transfer_chain(rect,pauses,true);strips+=stream_.count;
+    } else {
+        prepare(0);start_scanline(scanlines,rect.width);
+        for(unsigned row=1;row<=rect.height;++row) {
+            if(row<rect.height) prepare(row);
+            if(!finish_scanline()) { ok=false;break; }
+            if(row<rect.height) start_scanline(scanlines+(row&1U)*Screen::WIDTH,rect.width);
+            io_worker::service();
+        }
+        strips+=rect.height;
     }
     busy_wait_us(1);gpio_put(CS,1);busy_wait_us(1);
     spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
@@ -459,7 +520,7 @@ void Panel::transfer_color() {
         scroll_configured_=false;
     }
     scroll_={};pending_scroll_rows_=0;
-    bool ok=true;unsigned border_bytes=0,border_windows=0;
+    bool ok=true;unsigned border_bytes=0,border_windows=0;u32 strips=0,pauses=0;
     if(color_clear_) {
         const auto& f=color_frame_;
         const lcd::Rect borders[]={
@@ -468,15 +529,15 @@ void Panel::transfer_color() {
             {0,f.y,f.x,f.height},
             {(u16)(f.x+f.width),f.y,(u16)(Screen::WIDTH-f.x-f.width),f.height}};
         for(const auto& r:borders) if(r.width && r.height && ok) {
-            ok=transfer_color_rect(r,true);border_bytes+=r.width*r.height*2;++border_windows;
+            ok=transfer_color_rect(r,true,strips,pauses);border_bytes+=r.width*r.height*2;++border_windows;
         }
     }
-    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false);
+    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false,strips,pauses);
     if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);
     last_rectangles_.store(update_.count+border_windows,std::memory_order_relaxed);
-    last_strips_.store(0,std::memory_order_relaxed);last_pauses_.store(0,std::memory_order_relaxed);
+    last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
     frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
