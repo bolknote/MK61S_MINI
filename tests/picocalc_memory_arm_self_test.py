@@ -57,6 +57,30 @@ def verify(elf, rom):
         assert image.symbols[alias] == move, alias
     assert struct.unpack('<I', machine.mem_read(runtime + 24 * 4, 4))[0] == move
 
+    search = image.symbols['strchr']
+    assert 0x10000000 <= (search & ~1) < 0x10200000 and (search & ~1) % 16 == 0
+    assert image.sizes['strchr'] == 58
+    assert hashlib.sha256(machine.mem_read(search & ~1, 58)).hexdigest() == \
+        'cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec'
+    assert struct.unpack('<I', machine.mem_read(runtime + 18 * 4, 4))[0] == search
+    search_cases = 0
+    for length in (0, 1, 2, 3, 4, 7, 8, 15, 16, 31, 32, 63, 64, 127, 128, 255, 512):
+        for alignment in range(4):
+            for position in (-1, 0, length // 2, length - 1):
+                data = bytearray(b'\x81' * length)
+                if 0 <= position < length: data[position] = 0xff
+                data += b'\0'
+                for bank in (0x101e0000, 0x200c0000):
+                    pointer = bank + 64 + alignment
+                    machine.mem_write(bank, b'\xa5' * 640)
+                    machine.mem_write(pointer, bytes(data))
+                    for character in (0, 0x52, 255, 256, 0x1ff, 0xffffffff):
+                        offset = data.find(bytes([character & 255]))
+                        expected_pointer = pointer + offset if offset >= 0 else 0
+                        assert call('strchr', (pointer, character)) == expected_pointer
+                        assert bytes(machine.mem_read(pointer, len(data))) == data
+                        search_cases += 1
+
     table = image.symbols['aeabi_mem_funcs']
     assert image.symbols['aeabi_mem_funcs_end'] - table == 16
     assert struct.unpack('<4I', machine.mem_read(table, 16)) == (0x534d, 0x434d, 0x3453, 0x3443)
@@ -84,7 +108,8 @@ def verify(elf, rom):
                 bootrom_sha256=hashlib.sha256(rom.read_bytes()).hexdigest(),
                 memcpy_address=hex(copy), memcpy_bytes=image.sizes['__wrap_memcpy'],
                 memmove_address=hex(move), memmove_bytes=image.sizes['__wrap_memmove'],
-                runtime_slots='memcpy=22, memset=23, memmove=24', rom_mem_funcs=[hex(value) for value in expected],
+                strchr_address=hex(search), strchr_bytes=58, strchr_cases=search_cases,
+                runtime_slots='strchr=18, memcpy=22, memset=23, memmove=24', rom_mem_funcs=[hex(value) for value in expected],
                 results=results)
 
 

@@ -18,4 +18,11 @@ void* __wrap___aeabi_memmove8(void*,const void*,size_t) __attribute__((alias("__
 #define MK61_MEMCHR_NAME __wrap_memchr
 #define MK61_MEMCHR_ATTRIBUTES __attribute__((section(".time_critical.memchr")))
 #include "memory_search_arm.h"
+/* Warm XIP matched or slightly beat SRAM for measured byte4 strchr. Keep
+ * the 58-byte native body in Flash, aligned like the tested Flash leaves;
+ * the standalone SDK gets the same instructions in its APP SRAM image.
+ * A strong ISO symbol also binds native runtime slot18 without a trampoline.
+ */
+#define MK61_STRCHR_ATTRIBUTES __attribute__((aligned(16)))
+#include "memory_strchr_arm.h"
 #endif

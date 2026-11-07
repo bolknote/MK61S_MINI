@@ -60,8 +60,7 @@ def build(tc, out, arches=None, public_only=False):
                          ['-DMK61_STRING_TEST_BUILD=1', '-DMK61_STRCHR_M4_COMPACT=1',
                           '-Dstrchr=native_compact_strchr'])]
         else:
-            # Pico presently supplies no strchr override: future native baseline
-            # must be rebound to the toolchain/body of the actually installed FW.
+            # Retain the actual Pico strong ISO symbol, also used by slot18.
             sources += [('pico', ROOT / 'ports/picocalc/memory.c', ['-DPICO_ON_DEVICE=1'])]
         for name, source, defines in sources:
             obj = out / f'{arch}-{name}.o'
@@ -76,7 +75,9 @@ def build(tc, out, arches=None, public_only=False):
                 objects.append(obj)
             else:
                 names = command([tc / 'arm-none-eabi-nm', '--defined-only', obj], logs)
-                assert not any(x.split()[-1] in ('strchr', '__wrap_strchr') for x in names.splitlines())
+                assert any(x.split()[-1] == 'strchr' for x in names.splitlines())
+                command([tc / 'arm-none-eabi-objcopy', '--keep-global-symbol=strchr', obj], logs)
+                objects.append(obj)
         names = [] if public_only else [v + '_strchr' for v in VARIANTS[:6 if arch == 'm4' else 4]]
         names += ['sdk_strchr', 'strchr'] + (['native_strchr', 'native_compact_strchr'] if arch == 'm4' else [])
         names_by_arch[arch] = names
@@ -97,6 +98,9 @@ def build(tc, out, arches=None, public_only=False):
                 bodies[name] = dict(bytes=size, sha256=hashlib.sha256(body).hexdigest(), address=addr)
                 if arch == 'm4' and name in M4_SELECTED_BODIES:
                     assert (size, bodies[name]['sha256']) == M4_SELECTED_BODIES[name], (name, 'selected body drift')
+                if arch == 'm0' and name in ['sdk_strchr', 'strchr']:
+                    assert (size, bodies[name]['sha256']) == (58,
+                        'cf9c04a95af5355a969542b4cdeb8fc58415d686cab2e712a30b6c2b0f84efec'), (name, 'measured M0 byte4 drift')
             dis = command([tc / 'arm-none-eabi-objdump', '-d', elf], logs)
             (out / f'{arch}-{placement}.dis').write_text(dis)
             products.append(dict(arch=arch, placement=placement, elf=pin(elf), bodies=bodies))
@@ -117,7 +121,7 @@ def build(tc, out, arches=None, public_only=False):
                   source_pins=[pin(ROOT / x) for x in ['code/system_strings.c', 'sdk/portable/memory.c',
                       'ports/picocalc/memory.c', 'sdk/portable/system/runtime.S',
                       'code/loadable_system_runtime.def', 'research/strchr-2026-10-28/candidates.S',
-                      'code/memory_strchr_arm.h', 'code/strchr_m4.inc', 'tests/strchr_arm_self_test.py']])
+                      'code/memory_strchr_arm.h', 'code/strchr_m4.inc', 'code/strchr_m0.inc', 'tests/strchr_arm_self_test.py']])
     (out / 'build.json').write_text(json.dumps(result, indent=2) + '\n')
     return result
 
@@ -247,7 +251,7 @@ def run(build_result, out, random_cases):
                 expected = pointer + found if found >= 0 else 0
                 for name in names:
                     byte = (name.startswith('byte') or name == 'native_compact_strchr' or
-                            (arch == 'm0' and name == 'sdk_strchr'))
+                            (arch == 'm0' and name in ['sdk_strchr', 'strchr']))
                     # Newlib has its own word-search implementation. Enforce
                     # the same no-prefix, containing-word ceiling here.
                     decisive_end = pointer + (found + 1 if found >= 0 else len(blob))
