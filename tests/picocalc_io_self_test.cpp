@@ -199,6 +199,15 @@ void battery_test() {
     assert(!status.decode_power(BIOS_POWER_REG,0xBF)); // Charging and DONE cannot both hold.
     assert(status.power_supported() && !status.power_valid() && !status.external_power());
     assert(status.decode_power(BIOS_POWER_REG,BIOS_POWER_TAG) && !status.power_valid());
+    std::array<bool,320*320> unknown_zero{},unknown_full{},empty{};
+    status.percent=0;
+    picocalc::battery_icon(status,[&](unsigned x,unsigned y){unknown_zero[y*320+x]=true;});
+    status.percent=100;
+    picocalc::battery_icon(status,[&](unsigned x,unsigned y){unknown_full[y*320+x]=true;});
+    assert(unknown_zero==unknown_full); // Unknown PMU state must hide even an old zero or stale 100%.
+    status.percent=0;assert(status.decode_power(BIOS_POWER_REG,0xB1));
+    picocalc::battery_icon(status,[&](unsigned x,unsigned y){empty[y*320+x]=true;});
+    assert(unknown_zero!=empty); // Real zero and unavailable telemetry have visibly different icons.
     assert(status.decode_power(BIOS_POWER_REG,0xB7));
     status.clear_power();assert(status.power_supported() && !status.power_valid());
     std::puts("Pico battery: register/percent/raw BIOS flag validation and native bounded icon PASS");

@@ -46,8 +46,12 @@ template<class Pixel> void battery_icon(const BatteryStatus& state,Pixel pixel) 
         for(unsigned x=282;x<286;++x) pixel(x,top+8);
         pixel(283,top+9);pixel(283,top+10);
     }
-    if(state.percent<0 && !state.charging() && !state.charge_complete()) {
-        for(unsigned x=7;x<13;++x) pixel(left+x,top+5);
+    if((state.power_supported() && !state.power_valid()) ||
+       (state.percent<0 && !state.charging() && !state.charge_complete())) {
+        // An uninitialized legacy zero is not evidence of an empty battery.
+        constexpr uint8_t question[8]={0x0E,0x11,0x01,0x02,0x04,0,0x04,0};
+        for(unsigned y=0;y<8;++y) for(unsigned x=0;x<5;++x)
+            if(question[y]&(0x10>>x)) pixel(left+7+x,top+2+y);
     } else {
         const unsigned fill=state.percent<=0?0:state.percent>=100?16:(unsigned)state.percent*16/100;
         constexpr uint8_t bolt[8]={0x08,0x18,0x30,0x7E,0x0C,0x18,0x30,0x20};
