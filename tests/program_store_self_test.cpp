@@ -4806,6 +4806,23 @@ static void test_streamed_language_sources() {
   puts("Streamed source storage: BASIC/FOCAL 16/64 KiB, ranges, remount, limit and torn replacement PASS");
 }
 
+static void test_external_media_not_persisted() {
+  fresh(512U*1024U);
+  const auto external=ProgramType::EXTERNAL_BINARY;
+  assert(!program_store::text_content(external));
+  assert(!program_store::transparent_compression_enabled(external));
+  assert(program_store::type_magic(external)==program_store::TYPE_MAGIC_NONE);
+  ProgramType type=ProgramType::TEXT;
+  assert(!program_store::type_from_magic(program_store::TYPE_MAGIC_NONE,type));
+  const u8 source[]={0,255,128,13,10};u16 id=program_store::INVALID_ID;
+  assert(!program_store::write_file(program_store::ROOT_ID,id,external,"RAW",source,sizeof(source),&id));
+  assert(id==program_store::INVALID_ID);
+  const u8 keep[]={'o','k'};
+  assert(program_store::write_file(program_store::ROOT_ID,id,ProgramType::TEXT,"KEEP",keep,sizeof(keep),&id));
+  assert(!program_store::write_file(program_store::ROOT_ID,id,external,"KEEP",source,1));
+  expect_text(id,keep,sizeof(keep));
+  puts("External binary marker: no C6/C9 magic, allocation or replacement; existing stored file intact PASS");
+}
 static void test_urq_binary_types() {
   const char* extensions[]={"urq","uqd","urs"};
   const char* magics[]={"C2","R1","S2"};
@@ -4884,6 +4901,7 @@ int main(int argc, char** argv) {
 #endif
   test_catalog_only_child_lookup();
   test_streamed_language_sources();
+  test_external_media_not_persisted();
   test_urq_binary_types();
   test_source_draft_banks_on_small_flash();
   test_catalog_sector_reference_checks_full_width();

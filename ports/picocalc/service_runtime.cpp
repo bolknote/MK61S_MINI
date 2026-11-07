@@ -13,6 +13,7 @@
 #include "markdown_document.hpp"
 #include "markdown.hpp"
 #include "native_assets.hpp"
+#include "file_associations.hpp"
 #include <memory>
 #include "wbmp.hpp"
 #include "explorer_autoexec.hpp"
@@ -502,6 +503,10 @@ u8 Services::run_external(const char* path) {
     case Type::APP: return run_native(path);
     case Type::MARKDOWN: return view_markdown(path);
     case Type::SHEET: return run_handled(path, program_store::TYPE_MAGIC_SHEET);
+    case Type::EXTERNAL_BINARY: {
+        const auto magic=file_associations::handler(path);
+        return magic?run_handled(path,magic):2;
+    }
     case Type::URQ: return run_handled(path, program_store::TYPE_MAGIC_URQ);
     case Type::URQ_DATA:
     case Type::URQ_SAVE: return 2;

@@ -142,6 +142,11 @@ void picocalc_software_test(const char* preview_path) {
     assert(script::file_type("/book.sheet")==program_store::ProgramType::SHEET);
     assert(script::file_type("/image.wbm")==program_store::ProgramType::IMAGE1);
     assert(script::file_type("/snapshot.state.txt")==program_store::ProgramType::MK61_STATE);
+    for(const char* path:{"/game.z80","/game.SNA","/game.TrD","/game.sCl"})
+        assert(script::file_type(path)==program_store::ProgramType::EXTERNAL_BINARY);
+    for(const char* path:{"/game.z80.txt","/game.sna/notes","/game.img","/game.tap"})
+        assert(script::file_type(path)==program_store::ProgramType::TEXT);
+    assert(!program_store::text_content(program_store::ProgramType::EXTERNAL_BINARY));
     assert(files::mkdir("/Software/auto"));
     text("/Software/auto/autoexec.m61","poke X 61\n");
     text("/Software/auto/autoexec.tbi","10 .X=17\n20 END\n");

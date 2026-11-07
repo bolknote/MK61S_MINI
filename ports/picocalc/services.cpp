@@ -177,7 +177,7 @@ bool Services::load_document(const char* path,bool edit) {
     if((type == Type::MARKDOWN && !edit) || type == Type::SHEET || type == Type::URQ ||
        type == Type::URQ_DATA || type == Type::URQ_SAVE ||
        type == Type::APP || type == Type::CHIP8 || type == Type::IMAGE1 ||
-       type == Type::FONT || type == Type::MK61_BINARY) {
+       type == Type::FONT || type == Type::MK61_BINARY || type == Type::EXTERNAL_BINARY) {
         const u8 result = run_external(path);
         if(result == 2) message("Cannot open file", ServicePage::BROWSER);
         else if(page_ == ServicePage::CLOSED) { page_ = ServicePage::BROWSER; refresh(); }

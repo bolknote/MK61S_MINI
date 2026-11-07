@@ -1,5 +1,6 @@
 #include "services.hpp"
 #include "native_display.hpp"
+#include "loadable_module_abi.hpp"
 #include "canvas.hpp"
 #include "screen.hpp"
 #include "ui_font.hpp"
@@ -49,6 +50,24 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     CHECK(io(MK61_FILE_BYTES_STAT) && info.size==raw.size() && !info.directory);
     u8 bytes[512]{};r.data=bytes;r.offset=65534;r.size=sizeof(bytes);
     CHECK(io(MK61_FILE_BYTES_READ) && !std::memcmp(bytes,raw.data()+65534,sizeof(bytes)));
+    CHECK(files::mkdir("/Contract/Игры"));
+    CHECK(files::write("/Contract/Игры/Игра.Z80",raw.data(),raw.size()));
+    program_store::Entry media{};CHECK(script::register_file("/Contract/Игры/Игра.Z80",media));
+    CHECK(media.type==program_store::ProgramType::EXTERNAL_BINARY && media.data_len==65534);
+    char selected[384];std::memset(selected,'!',sizeof(selected));
+    mk61_service_file_bytes resolved{nullptr,selected,media.id,sizeof(selected)};
+    const auto path_call=[&] { return s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(resolved),&resolved); };
+    CHECK(path_call() && !std::strcmp(selected,M8("/Contract/Игры/Игра.Z80")));
+    const auto actions=s.call(MK61_SERVICE_FILE_ACTIONS,media.id,0,0,nullptr);
+    CHECK((actions&loadable_module::EXPLORER_CAN_RUN) && !(actions&loadable_module::EXPLORER_CAN_EDIT));
+    mk61_service_file_bytes physical{selected,bytes,65534,sizeof(bytes)};
+    CHECK(s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(physical),&physical));
+    CHECK(!std::memcmp(bytes,raw.data()+65534,sizeof(bytes)));
+    resolved.size=4;std::memset(selected,'!',sizeof(selected));
+    CHECK(!path_call());for(char ch:selected) CHECK(ch=='!');
+    resolved.size=sizeof(selected);resolved.offset=0x10000;CHECK(!path_call());
+    resolved.offset=media.id;resolved.path="ignored";CHECK(!path_call());
+    CHECK(files::remove("/Contract/Игры/Игра.Z80"));CHECK(files::remove("/Contract/Игры"));
     r.offset=69999;CHECK(!io(MK61_FILE_BYTES_READ));
     r.size=4097;CHECK(!io(MK61_FILE_BYTES_READ));
     CHECK(!s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,1,sizeof(r),&r));

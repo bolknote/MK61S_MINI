@@ -71,6 +71,13 @@ for index in range(blocks):
 assert len(payload)==record['written_bytes']<=CAPACITY
 assert FLASH_OFFSET+len(payload)<2*1024*1024-8192
 (target/'ROMCACHE.bin').write_bytes(payload)
+# Original fixtures for FILE_OPEN; external paths intentionally differ
+# from the APP/ROM directory. Disk images remain read-only during tests.
+snapshot=(target/'DEMO.sna').read_bytes();header=bytearray(30)
+struct.pack_into('<HH',header,6,0x8000,0xFFFE);header[27]=header[28]=header[29]=1
+(target/'OPEN.Z80').write_bytes(header+snapshot[27:])
+empty_scl=b'SINCLAIR\x00';(target/'OPEN.SCL').write_bytes(empty_scl+struct.pack('<I',sum(empty_scl)))
+(target/'BROKEN.z80').write_bytes(b'\xFF\x00\x80')
 PY
     clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
         "$root/tests/spectrum_rom_cache_self_test.c" "$root/examples/portable-apps/SPECTRUM/rom_cache.c" -o "$build/rom-cache"
@@ -86,6 +93,12 @@ PY
     "$build/app" "$build/app-assets" xip
     "$build/app" "$build/app-assets" mismatch
     SPECTRUM_LEGACY_LCD=1 "$build/app" "$build/app-assets" xip
+    for selected in DEMO.sna DEMO128.sna OPEN.Z80 BLANK.trd OPEN.SCL; do
+        SPECTRUM_OPEN_FILE="$selected" "$build/app" "$build/app-assets" xip
+    done
+    for selected in missing unsupported.tap BROKEN.z80; do
+        SPECTRUM_OPEN_FILE="$selected" SPECTRUM_OPEN_ERROR=1 "$build/app" "$build/app-assets" xip
+    done
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \

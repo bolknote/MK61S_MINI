@@ -236,6 +236,7 @@ static bool select_model(unsigned model) {
 /* A fixed-checkpoint timing probe needs no image mounting or SCL unpacker.
  * Its CPU, renderer and audio paths remain the ordinary APP paths. */
 static void mount_media(unsigned mode) { (void)mode;message("Snapshot timing probe\n\nPress any key"); }
+static bool mount_selected_media(unsigned mode) { (void)mode;return false; }
 #else
 static bool media_read(void* raw,uint32_t at,uint8_t* out,uint32_t n) {
     const mounted_media* m=raw;
@@ -261,31 +262,35 @@ static bool disk_rom(unsigned mode) {
         if(!read_source((void*)path,at,bytes,sizeof(bytes)) || !external_write(NULL,target+at,bytes,sizeof(bytes))) return false;
     return true;
 }
-static void mount_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return; }
-    if(!choose_file(mode==SPECTRUM_DISK_BETA?1:2)) return;
+static bool mount_selected_media(unsigned mode) {
+    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return false; }
     mk61_service_file_info info;
-    if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return;
+    if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     const bool scl=suffix(snapshot_path,".scl");
     if(mode==SPECTRUM_DISK_DIVMMC && (info.size<1024*1024 || info.size%512)) {
-        message("SD image must be sector aligned\nand at least 1 MiB\n\nPress any key");return;
+        message("SD image must be sector aligned\nand at least 1 MiB\n\nPress any key");return false;
     }
     if(mode==SPECTRUM_DISK_BETA && !scl && (info.size<4096 || info.size>SPECTRUM_TRD_BYTES || info.size%256)) {
-        message("Invalid TRD size\n\nPress any key");return;
+        message("Invalid TRD size\n\nPress any key");return false;
     }
-    if(!disk_rom(mode)) return;
+    if(!disk_rom(mode)) return false;
     if(scl) {
         const spectrum_source source={snapshot_path,info.size,read_source};
         const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
         if(spectrum_scl_unpack(&source,&io,SPECTRUM_EXTERNAL_BYTES)!=SPECTRUM_OK) {
-            message("Invalid SCL / checksum / SD error\n\nPress any key");return;
+            message("Invalid SCL / checksum / SD error\n\nPress any key");return false;
         }
     }
     mounted_media* m=mode==SPECTRUM_DISK_BETA?&floppy:&sd_card;
     memcpy(m->path,snapshot_path,strlen(snapshot_path)+1);m->scl=scl;
     spectrum_disk_io* io=mode==SPECTRUM_DISK_BETA?&machine.disk.fdc.io:&machine.disk.spi.io;
     *io=(spectrum_disk_io){m,scl?SPECTRUM_TRD_BYTES:info.size,media_read,media_write,true,80,2};
-    (void)spectrum_disk_mode(&machine,mode);spectrum_reset(&machine);started=false;
+    if(!spectrum_disk_mode(&machine,mode)) return false;
+    spectrum_reset(&machine);started=false;return true;
+}
+static void mount_media(unsigned mode) {
+    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return; }
+    if(choose_file(mode==SPECTRUM_DISK_BETA?1:2)) (void)mount_selected_media(mode);
 }
 #endif
 static void settings(void) {
@@ -442,7 +447,7 @@ done:
     color(MK61_COLOR_END,NULL);
     if(error) message(error);
 }
-static int app_run(void) {
+static int app_run(uint32_t file_id) {
     /* These paths live for the complete foreground APP session. Keep them
      * in the resident stack reservation instead of enlarging the heap image
      * alongside the 32K/16K guest-memory leases. No I/O outlives main(). */
@@ -497,6 +502,24 @@ static int app_run(void) {
     if(!select_model(true)) {
         if(!select_model(false)) return 0;
     }
+    if(file_id!=MK61_SERVICE_INVALID_ID) {
+        mk61_service_file_bytes request={NULL,snapshot_path,file_id,256};
+        if(!services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(request),&request)) {
+            message("Cannot get selected file path\nUpdate PicoCalc firmware\n\nPress any key");
+        } else {
+            memcpy(directory,snapshot_path,strlen(snapshot_path)+1);parent_directory();
+            const bool snapshot=suffix(snapshot_path,".z80") || suffix(snapshot_path,".sna");
+            const bool disk=suffix(snapshot_path,".trd") || suffix(snapshot_path,".scl");
+            if((snapshot && load_snapshot()) || (disk && mount_selected_media(SPECTRUM_DISK_BETA))) {
+                // The Explorer's opening Enter/F-key may still be held.
+                // Seed the normal guest-key blocker before starting the CPU.
+                const int key=scan_keys();
+                if(escape(key) || key==0x90) goto done;
+                started=true;emulate();
+                if(!started) goto done;
+            } else if(!snapshot && !disk) message("Unsupported Spectrum file\n\nPress any key");
+        }
+    }
     for(;;) {
         const char* labels[]={started?"Resume":"Start machine","Snapshot...","Beta Disk...","DivMMC...",
             "Machine...","Options...",machine.disk.mode==SPECTRUM_DISK_DIVMMC?"NMI browser":"TR-DOS","Reset","Help","Exit"};
@@ -534,6 +557,7 @@ static int app_run(void) {
         emulate();
         if(!started) break;
     }
+done:
     color(MK61_COLOR_END,NULL);mk61_api->graphics_end();
     if(rom.data) services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,0,&rom);
     if(banked_buffers) {
@@ -543,10 +567,14 @@ static int app_run(void) {
     if(external.handle) mk61_app_buffer_release(services,external.handle);
     return 0;
 }
-int main(void) {
+static int run_app(uint32_t file_id) {
     /* The complete machine lives until audio and display have stopped. Keep
      * it in the resident 32K stack instead of splitting the APP/guest heap. */
     spectrum state={0};uint8_t tails[2][SPECTRUM_CACHE_PAGE_BYTES];active_machine=&state;
     for(unsigned i=0;i<2;++i)bank_tails[i]=tails[i];
-    const int result=app_run();active_machine=NULL;return result;
+    const int result=app_run(file_id);active_machine=NULL;return result;
+}
+int main(void) { return run_app(MK61_SERVICE_INVALID_ID); }
+uint32_t mk61_app_open_file(uint32_t file_id) {
+    return file_id>=MK61_SERVICE_INVALID_ID?MK61_APP_INVALID_FILE:(uint32_t)run_app(file_id);
 }

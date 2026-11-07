@@ -68,6 +68,39 @@ bool join(const char *directory, const char *leaf, char out[files::PATH_SIZE]) {
                               !std::strcmp(directory, "/") ? "" : "/", leaf);
   return n > 0 && n < (int)files::PATH_SIZE;
 }
+__attribute__((noinline)) bool find_handler(const char* directory,u16 magic,unsigned depth,unsigned& budget,
+                  char out[files::PATH_SIZE]) {
+  // Return the path before entering APP code: no directory buffers or
+  // recursive search frames remain on the APP's small resident stack.
+  for(unsigned pass=0;pass<(depth?2U:1U);++pass) {
+    for(unsigned skip=0;budget;) {
+      files::Entry entries[4];unsigned used=0;bool more=false;
+      if(!files::list(directory,skip,entries,4,used,more) || !used) break;
+      for(unsigned i=0;i<used;++i) {
+        if(!budget) return false;
+        --budget;diagnostics::feed_watchdog();
+        const auto& e=entries[i];char candidate[files::PATH_SIZE];
+        if(!join(directory,e.name,candidate)) continue;
+        if(pass==1) {
+          if(e.directory && find_handler(candidate,magic,depth-1,budget,out)) return true;
+          continue;
+        }
+        const char* ext=std::strrchr(e.name,'.');
+        if(e.directory || !ext || std::strlen(ext)!=4 ||
+           (ext[1]|32)!='a' || (ext[2]|32)!='p' || (ext[3]|32)!='p') continue;
+        u8 bytes[64];unsigned count=0;loadable_module::Header header{};
+        if(files::read_range(candidate,0,bytes,sizeof(bytes),count) && count==sizeof(bytes) &&
+           loadable_module::decode_header(bytes,loadable_module::MAX_CONTAINER_SIZE,header)==loadable_module::HeaderStatus::OK &&
+           header.handled_type_magic==magic) {
+          std::strcpy(out,candidate);return true;
+        }
+      }
+      if(!more) break;
+      skip+=used;
+    }
+  }
+  return false;
+}
 } // namespace
 
 // One foreground application owns this table at a time, just as on STM32.
@@ -547,9 +580,16 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   case MK61_SERVICE_RESOURCE_READ:
     return host.resource(a, b, payload);
   case MK61_SERVICE_FILE_BYTES: {
-    if(b || c!=sizeof(mk61_service_file_bytes) || !payload || a>MK61_FILE_BYTES_WRITE) return 0;
+    if(b || c!=sizeof(mk61_service_file_bytes) || !payload || a>MK61_FILE_BYTES_PATH) return 0;
     const auto& r=*(const mk61_service_file_bytes*)payload;
-    if(!r.path || !r.data || strnlen(r.path,256)>=256 ||
+    if(a==MK61_FILE_BYTES_PATH) {
+      if(r.path || !r.data || !r.size || r.size>files::PATH_SIZE || r.offset>0xFFFF) return 0;
+      const char* path=script::file_path((u16)r.offset);if(!path) return 0;
+      u8 encoded[files::PATH_SIZE];usize size=0;
+      if(!mk8::from_utf8((const u8*)path,std::strlen(path),encoded,sizeof(encoded)-1,size) || size>=r.size) return 0;
+      std::memcpy(r.data,encoded,size);((char*)r.data)[size]=0;return 1;
+    }
+    if(!r.path || !r.data || strnlen(r.path,files::PATH_SIZE)>=files::PATH_SIZE ||
        (a==MK61_FILE_BYTES_READ || a==MK61_FILE_BYTES_WRITE ? !r.size || r.size>4096 : r.size!=sizeof(mk61_service_file_info))) return 0;
     char name[files::PATH_SIZE],base[files::PATH_SIZE],path[files::PATH_SIZE];
     if(!utf8(r.path,name,sizeof(name))) return 0;
@@ -595,7 +635,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     if (e.type == T::MK61 || e.type == T::MK61_BINARY)
       mask |= loadable_module::EXPLORER_CAN_LOAD;
     if (e.type == T::MK61 || e.type == T::TINYBASIC || e.type == T::FOCAL ||
-        e.type == T::APP || e.type == T::CHIP8)
+        e.type == T::APP || e.type == T::CHIP8 || e.type == T::EXTERNAL_BINARY)
       mask |= loadable_module::EXPLORER_CAN_RUN;
     if (e.type == T::MK61 || e.type == T::TINYBASIC || e.type == T::FOCAL ||
         e.type == T::TEXT || e.type == T::MARKDOWN)
@@ -1329,7 +1369,7 @@ u8 Services::run_handled(const char *path, u16 magic) {
   program_store::Entry document;
   if (!script::register_file(path, document))
     return 4;
-  char parent[files::PATH_SIZE];
+  char parent[files::PATH_SIZE],candidate[files::PATH_SIZE];
   std::snprintf(parent, sizeof(parent), "%s", path);
   char *slash = std::strrchr(parent, '/');
   if (slash == parent)
@@ -1338,33 +1378,18 @@ u8 Services::run_handled(const char *path, u16 magic) {
     *slash = 0;
   else
     return 4;
-  const char *roots[] = {parent,          "/app",    "/Apps",
-                         "/Applications", "/System", "/"};
-  for (const char *root : roots)
-    for (unsigned skip = 0; skip < 1024; ++skip) {
-      files::Entry entry{};
-      unsigned used = 0;
-      bool more = false;
-      if (!files::list(root, skip, &entry, 1, used, more) || !used)
-        break;
-      char candidate[files::PATH_SIZE];
-      const char *ext = std::strrchr(entry.name, '.');
-      if (!entry.directory && ext &&
-          (!std::strcmp(ext, ".APP") || !std::strcmp(ext, ".app")) &&
-          join(root, entry.name, candidate)) {
-        u8 bytes[64];
-        loadable_module::Header header{};
-        if (files::read_range(candidate, 0, bytes, sizeof(bytes), used) &&
-            used == 64 &&
-            loadable_module::decode_header(
-                bytes, loadable_module::MAX_CONTAINER_SIZE, header) ==
-                loadable_module::HeaderStatus::OK &&
-            header.handled_type_magic == magic)
-          return run_native(candidate, document.id);
-      }
-      if (!more)
-        break;
-    }
+  unsigned budget=4096;
+  for(;;) {
+    if(find_handler(parent,magic,0,budget,candidate)) return run_native(candidate,document.id);
+    if(!std::strcmp(parent,"/")) break;
+    slash=std::strrchr(parent,'/');
+    if(!slash) break;
+    if(slash==parent) slash[1]=0;else *slash=0;
+  }
+  const char* roots[]={"/app","/Apps","/Applications","/System","/"};
+  for(const char* root:roots)
+    if(find_handler(root,magic,!std::strcmp(root,"/")?2:1,budget,candidate))
+      return run_native(candidate,document.id);
   message("Install a Pico H APP for this file type", ServicePage::BROWSER);
   return 1;
 }

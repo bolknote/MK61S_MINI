@@ -71,7 +71,9 @@ enum class ProgramType : u8 {
   SHEET = 12,
   URQ = 13,
   URQ_DATA = 14,
-  URQ_SAVE = 15
+  URQ_SAVE = 15,
+  // External filesystem media handled by an APP. Never stored as C6/C9.
+  EXTERNAL_BINARY = 254
 };
 
 constexpr bool text_content(ProgramType type) {
@@ -92,6 +94,7 @@ constexpr bool text_content(ProgramType type) {
     case ProgramType::URQ:
     case ProgramType::URQ_DATA:
     case ProgramType::URQ_SAVE:
+    case ProgramType::EXTERNAL_BINARY:
       return false;
   }
   return false;
@@ -117,6 +120,7 @@ constexpr bool transparent_compression_enabled(ProgramType type) {
     case ProgramType::URQ:
     case ProgramType::URQ_DATA:
     case ProgramType::URQ_SAVE:
+    case ProgramType::EXTERNAL_BINARY:
       return false;
   }
   return false;

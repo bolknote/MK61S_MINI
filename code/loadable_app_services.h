@@ -68,7 +68,9 @@ enum mk61_service_file_type {
   MK61_SERVICE_FILE_CHIP8 = 9, MK61_SERVICE_FILE_MARKDOWN = 10,
   MK61_SERVICE_FILE_MK61_BINARY = 11, MK61_SERVICE_FILE_SHEET = 12,
   MK61_SERVICE_FILE_URQ = 13, MK61_SERVICE_FILE_URQ_DATA = 14,
-  MK61_SERVICE_FILE_URQ_SAVE = 15
+  MK61_SERVICE_FILE_URQ_SAVE = 15,
+  /* Physical binary media with a file association; not a C6/C9 type. */
+  MK61_SERVICE_FILE_EXTERNAL_BINARY = 254
 };
 enum mk61_service_ref_kind {
   MK61_SERVICE_REF_X = 0, MK61_SERVICE_REF_Y, MK61_SERVICE_REF_Z,
@@ -182,7 +184,11 @@ typedef struct mk61_service_write_source {
 enum mk61_file_bytes_operation { MK61_FILE_BYTES_STAT, MK61_FILE_BYTES_READ, MK61_FILE_BYTES_CHILD,
   /* Bounded overwrite of an existing file, <=4096 bytes. Journaled on Pico;
    * never extends the file. Same request as READ; data is the source. */
-  MK61_FILE_BYTES_WRITE
+  MK61_FILE_BYTES_WRITE,
+  /* Resolve a physical file/directory ID to its absolute M8 path.
+   * path=NULL,data=char[capacity],offset=id,size=capacity incl NUL.
+   * Returns 1/0; on failure the output is unchanged. */
+  MK61_FILE_BYTES_PATH
 };
 typedef struct mk61_service_file_bytes {
   const char* path;

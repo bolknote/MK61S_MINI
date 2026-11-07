@@ -78,6 +78,7 @@ pub const FILE_BYTES_STAT: u32 = 0;
 pub const FILE_BYTES_READ: u32 = 1;
 pub const FILE_BYTES_CHILD: u32 = 2;
 pub const FILE_BYTES_WRITE: u32 = 3;
+pub const FILE_BYTES_PATH: u32 = 4;
 pub const AUDIO_OPEN: u32 = 0;
 pub const AUDIO_WRITE: u32 = 1;
 pub const AUDIO_STATUS: u32 = 2;
@@ -138,6 +139,7 @@ pub const TEXT_LAYOUT: u32 = 15;
 pub const SERVICE_FILE_URQ: u32 = 13;
 pub const SERVICE_FILE_URQ_DATA: u32 = 14;
 pub const SERVICE_FILE_URQ_SAVE: u32 = 15;
+pub const SERVICE_FILE_EXTERNAL_BINARY: u32 = 254;
 #[repr(C)]
 pub struct ServiceTextEvent {
     pub kind: u32, pub value: u32, pub layout: u32, pub reserved: u32,

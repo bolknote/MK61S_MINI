@@ -104,7 +104,7 @@ def main():
     parser.add_argument("--fetch-devices", action="store_true", help="fetch pinned ROMs and create disk images")
     args = parser.parse_args()
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
-               "--target", "picocalc-pico-h", "--shared-runtime", "--name", "SPECTRUM",
+               "--target", "picocalc-pico-h", "--shared-runtime", "--name", "SPECTRUM", "--handled-magic", "Z1",
                "--arm-toolchain-bin", str(compiler_bin(args.toolchain)),
                "--output-dir", str(args.build_dir)]
     for source in SOURCES:

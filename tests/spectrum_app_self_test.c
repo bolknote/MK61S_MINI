@@ -33,6 +33,9 @@ static unsigned palette_calls;
 static unsigned lcd_clock_requests;
 static uint32_t lcd_clock=12000000;
 static bool legacy_lcd;
+static const char* opened_name;
+static bool open_error;
+static unsigned open_keys,open_path_calls,selected_reads;
 static uint8_t canvas[12800],*psram;
 static uint8_t* direct_sram[3];
 static unsigned psram_bytes,action;
@@ -80,6 +83,8 @@ static void graphics_end(void) { assert(!generator.sample);++graphics_ends;memse
 static int format(char* out,uint32_t n,const char* f,va_list args) { return vsnprintf(out,n,f,args); }
 static void path(char out[1024],const char* name) {
     while(name[0]=='.' && name[1]=='/') name+=2;
+    const char* prefix="/External games/";
+    if(!strncmp(name,prefix,strlen(prefix))) name+=strlen(prefix);
     assert(snprintf(out,1024,"%s/%s",asset_dir,name)<1024);
 }
 static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
@@ -119,13 +124,22 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         return 1;
     }
     if(op==MK61_SERVICE_FILE_BYTES) {
-        mk61_service_file_bytes* r=payload;char filename[1024];path(filename,r->path);
+        mk61_service_file_bytes* r=payload;
+        if(a==MK61_FILE_BYTES_PATH) {
+            assert(opened_name && !r->path && r->offset==42 && r->size==256);++open_path_calls;
+            if(open_error && !strcmp(opened_name,"missing"))return 0;
+            assert(snprintf(r->data,r->size,"/External games/%s",opened_name)<(int)r->size);return 1;
+        }
+        char filename[1024];path(filename,r->path);
         if(a==MK61_FILE_BYTES_CHILD) {
             const char* names[]={"DEMO128.sna","BLANK.trd","ESXDOS.img"};
             if(r->offset>=3) return 0;
             mk61_service_file_info* info=r->data;memset(info,0,sizeof(*info));strcpy(info->name,names[r->offset]);return 1;
         }
         FILE* f=fopen(filename,a==MK61_FILE_BYTES_WRITE?"r+b":"rb");if(!f) return 0;
+        if(opened_name && !strncmp(r->path,"/External games/",16)) {
+            assert(a!=MK61_FILE_BYTES_WRITE);if(a==MK61_FILE_BYTES_READ)++selected_reads;
+        }
         fseek(f,0,SEEK_END);const long length=ftell(f);bool ok=true;
         if(a==MK61_FILE_BYTES_STAT) { mk61_service_file_info* info=r->data;memset(info,0,sizeof(*info));info->size=(uint32_t)length; }
         else {
@@ -173,6 +187,14 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     }
     if(op==MK61_SERVICE_KEYBOARD) {
         assert(a==MK61_SERVICE_KEY_BITMAP && b==32);memset(payload,0,32);pump();
+        if(opened_name) {
+            unsigned key=0;
+            if(open_error)key=open_keys++? 'q':' ';
+            else if(open_keys++<2)key=13;
+            else if(session_frames>=12)key=0x90;
+            if(key)((uint8_t*)payload)[key/8]|=1U<<(key&7);
+            return 1;
+        }
         if(!released) {
             if(held_scans) { ((uint8_t*)payload)[held_key/8]|=1U<<(held_key&7);--held_scans; }
             else released=true;
@@ -193,6 +215,7 @@ const mk61_app_api* mk61_api=&api;
 int main(int argc,char** argv) {
     assert(argc==2 || argc==3);asset_dir=argv[1];
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
+    opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
     if(argc==3) {
         cache_mismatch=!strcmp(argv[2],"mismatch");expect_mapped=!cache_mismatch;
         char filename[1024];path(filename,"ROMCACHE.bin");FILE* f=fopen(filename,"rb");assert(f);
@@ -201,12 +224,23 @@ int main(int argc,char** argv) {
         assert(fread(cache_image,1,cache_bytes,f)==cache_bytes);fclose(f);
         assert(spectrum_rom_cache_valid(cache_image,cache_bytes));
     }
-    assert(!spectrum_app_main());
-    assert(action==sizeof(script)/sizeof(*script) && !psram && !generator.sample);
+    assert(mk61_app_open_file(MK61_SERVICE_INVALID_ID)==MK61_APP_INVALID_FILE);
+    assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
+    assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
+    assert(!psram && !generator.sample);
     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
-    assert(audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
+    if(opened_name) {
+        assert(open_path_calls==1 && !action && graphics_ends==1);
+        if(open_error) assert(!audio_opens && !audio_closes);
+        else {
+            assert(audio_opens==1 && audio_closes==1 && frames_shown>=12);
+            if(suffix(opened_name,".sna") || suffix(opened_name,".z80") || suffix(opened_name,".scl"))assert(selected_reads);
+        }
+    } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
     assert(lcd_clock_requests>=audio_opens && lcd_clock==12000000);
     if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
-    printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",
-        expect_mapped?"Flash ROM / retained RAM pages":cache_mismatch?"custom ROM fallback":"SD ROM / small pages");return 0;
+    if(opened_name) printf("Actual FILE_OPEN %s: external path, %s, held Enter blocked, readonly media, complete cleanup PASS\n",opened_name,open_error?"error handled":"started and F10 exited");
+    else printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",
+        expect_mapped?"Flash ROM / retained RAM pages":cache_mismatch?"custom ROM fallback":"SD ROM / small pages");
+    return 0;
 }

@@ -7,6 +7,7 @@
 #include "terminal_core.hpp"
 #include "shared_memory_buffer.hpp"
 #include "buffers.hpp"
+#include "file_associations.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -68,6 +69,7 @@ bool ends(const char *text, const char *suffix) {
   return true;
 }
 Type type_of(const char *path) {
+  if(file_associations::handler(path)) return Type::EXTERNAL_BINARY;
   for (const auto &ext : extensions)
     if (ends(path, ext.suffix))
       return ext.type;

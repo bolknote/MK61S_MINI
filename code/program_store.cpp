@@ -725,6 +725,7 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::URQ: return "urq";
     case ProgramType::URQ_DATA: return "uqd";
     case ProgramType::URQ_SAVE: return "urs";
+    case ProgramType::EXTERNAL_BINARY: return "bin";
   }
   return "bin";
 }
@@ -746,6 +747,7 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::URQ: return "C2";
     case ProgramType::URQ_DATA: return "R1";
     case ProgramType::URQ_SAVE: return "S2";
+    case ProgramType::EXTERNAL_BINARY: return "??";
   }
   return "??";
 }
@@ -3299,6 +3301,7 @@ const char* file_extension(ProgramType type) {
 }
 
 TypeMagic type_magic(ProgramType type) {
+  if(type == ProgramType::EXTERNAL_BINARY) return TYPE_MAGIC_NONE;
   const char* text = magic_for_type(type);
   return make_type_magic(text[0], text[1]);
 }
