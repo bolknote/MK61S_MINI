@@ -40,6 +40,13 @@ endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
+set(MK61_PICOCALC_M0_LIBC_CANDIDATE "0" CACHE STRING "Diagnostic-only eight-function M0 libc batch; 0 keeps measured defaults")
+if(NOT MK61_PICOCALC_M0_LIBC_CANDIDATE MATCHES "^(0|1|2|4|8|16)$")
+    message(FATAL_ERROR "Unknown M0 libc candidate")
+endif()
+if(NOT MK61_PICOCALC_M0_LIBC_CANDIDATE STREQUAL "0")
+    add_compile_definitions(MK61_M0_LIBC_UNROLL=${MK61_PICOCALC_M0_LIBC_CANDIDATE})
+endif()
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
 option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing control" ON)
 add_executable(mk61s-picocalc-pico-h
@@ -140,6 +147,10 @@ set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
     PROPERTIES COMPILE_OPTIONS "-Os;-fno-lto")
 set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0_cr.cpp"
     PROPERTIES COMPILE_OPTIONS "-Os;-ffp-contract=off;-fno-lto")
+# Libc candidate bodies must match the independently qualified SDK/core
+# objects, including the early optimization of always-inline C helpers.
+set_source_files_properties(memory.c
+    PROPERTIES COMPILE_OPTIONS "-Os;-fno-builtin;-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)

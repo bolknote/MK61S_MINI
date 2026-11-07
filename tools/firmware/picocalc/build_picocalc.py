@@ -103,6 +103,8 @@ def main():
                         help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
     parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
                         help="Build block-DMA synthesis candidate for hardware qualification")
+    parser.add_argument("--m0-libc-candidate", type=int, choices=(0,1,2,4,8,16), default=0,
+                        help="Diagnostic eight-function libc candidate; no hardware winner is implied")
     parser.add_argument("--lcd-color-chain", action=argparse.BooleanOptionalAction, default=True,
                         help="Use strip DMA and constant RGB565 fills; disable for a control build")
     parser.add_argument("--lcd-spi-hz", type=int, default=12500000,
@@ -139,6 +141,7 @@ def main():
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
         if args.audio_clock and not args.cosmic_clock_diagnostic: source_hash.update(b"audio-clock=200\0")
         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
+        if args.m0_libc_candidate: source_hash.update(f"m0-libc-candidate={args.m0_libc_candidate}\0".encode())
         source_hash.update(f"lcd-color-chain={int(args.lcd_color_chain)}\0lcd-spi-request={args.lcd_spi_hz}\0".encode())
         source_digest = source_hash.hexdigest()
         build_digest = hashlib.sha256((source_digest + '\0' + (
@@ -154,6 +157,7 @@ def main():
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
+             f"-DMK61_PICOCALC_M0_LIBC_CANDIDATE={args.m0_libc_candidate}",
              f"-DMK61_PICOCALC_LCD_COLOR_CHAIN={'ON' if args.lcd_color_chain else 'OFF'}",
              f"-DMK61_PICOCALC_LCD_SPI_HZ={args.lcd_spi_hz}",
              f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
@@ -205,6 +209,7 @@ def main():
             "sampling_profile": args.sampling_profile,
             "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic else None,
             "block_audio_dma": args.audio_dma,
+            "m0_libc_candidate": args.m0_libc_candidate,
             "lcd_color_chain": args.lcd_color_chain,
             "lcd_spi_requested_hz": args.lcd_spi_hz,
             "psram_bus": "spi" if args.psram_spi else "qpi-with-spi-fallback",

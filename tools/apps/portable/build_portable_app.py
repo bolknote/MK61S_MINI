@@ -229,6 +229,9 @@ def build(args: argparse.Namespace) -> dict:
     if len(set(sources)) != len(sources):
         raise ValueError("duplicate source")
     pico_target = getattr(args,"target","stm32") == "picocalc-pico-h"
+    m0_libc_candidate = getattr(args,"m0_libc_candidate",0)
+    if m0_libc_candidate not in (0,1,2,4,8,16) or (m0_libc_candidate and not pico_target):
+        raise ValueError("M0 libc candidates require PicoCalc and a supported profile")
     if pico_target and args.system:
         raise ValueError("PicoCalc builds use resident system services; --system requires STM32")
     cpu_flags = (["-mcpu=cortex-m0plus","-mthumb","-mfloat-abi=soft"] if pico_target else
@@ -237,6 +240,8 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system or getattr(args, "optimize_size", False) else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if m0_libc_candidate:
+        flags.append("-DMK61_M0_LIBC_UNROLL="+str(m0_libc_candidate))
     if args.system in ("terminal", "terminal-clock"): flags.append("-DMK61_BUILD_TERMINAL_MODULE=1")
     if args.system == "terminal-clock": flags.append("-DMK61_TERMINAL_CLOCK_ONLY=1")
     if getattr(args,"linked_vm_poc",False):flags.append("-DMK61_LINKED_VM_POC=1")
@@ -452,6 +457,7 @@ def build(args: argparse.Namespace) -> dict:
         report["vm_integer_block"] = (
             not args.local_float_math if integer_block is None else integer_block)
     if getattr(args,"linked_vm_poc",False):report["linked_vm_poc"]=True
+    if m0_libc_candidate:report["m0_libc_candidate"]=m0_libc_candidate
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
     if rust_compiler is not None:
@@ -467,6 +473,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pico-legacy-display", action="store_true", help="retain the 192x64 APP contract")
     parser.add_argument("--target", choices=("stm32","picocalc-pico-h"), default="stm32")
+    parser.add_argument("--m0-libc-candidate",type=int,choices=(0,1,2,4,8,16),default=0,
+                        help="Diagnostic-only complete M0 libc candidate profile")
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)

@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "memory_word_ops.h"
+#include "memory_libc_m0.h"
 
 #ifndef MK61_APP_SHARED_RUNTIME
 #include "memory_copy_arm.h"

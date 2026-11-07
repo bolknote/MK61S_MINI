@@ -25,4 +25,5 @@ void* __wrap___aeabi_memmove8(void*,const void*,size_t) __attribute__((alias("__
  */
 #define MK61_STRCHR_ATTRIBUTES __attribute__((aligned(16)))
 #include "memory_strchr_arm.h"
+#include "memory_libc_m0.h"
 #endif
