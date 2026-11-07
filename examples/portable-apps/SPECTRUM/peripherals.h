@@ -15,6 +15,7 @@ typedef struct {
     uint32_t startup_samples;
     uint32_t time;
     uint8_t regs[2][16],selected,selected_reg[2],beeper,covox,specdrum;
+    uint8_t latest_dac[3];
     bool asynchronous;
     int32_t input,output;
     void (*yield)(void*);
@@ -25,6 +26,7 @@ void spectrum_sound_write(struct spectrum*,unsigned device,unsigned reg,unsigned
 void spectrum_sound_begin(struct spectrum*,void (*yield)(void*),void*);
 void spectrum_sound_clock(struct spectrum*,bool running);
 void spectrum_sound_end(struct spectrum*);
+void spectrum_sound_recover(void*);
 uint32_t spectrum_sound_render(void*);
 void spectrum_sound_publish(struct spectrum*);
 #endif

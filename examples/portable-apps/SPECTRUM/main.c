@@ -398,7 +398,17 @@ static void emulate(void) {
     mk61_service_audio_synth audio={spectrum_sound_render,&machine,25000,100};
     spectrum_sound_begin(&machine,sound_yield,NULL);
     spectrum_sound_clock(&machine,false);
-    if(!services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_SYNTH_OPEN,0,sizeof(audio),&audio)) {
+    spectrum_sound* sound=&machine.sound;
+    mk61_service_audio_psg psg={0};psg.local=audio;psg.module_path="AY.S3M";
+    psg.psg[0]=(uint8_t*)&machine.ay.reg;psg.psg[1]=(uint8_t*)&machine.ay2.reg;psg.psg_bytes=132;
+    psg.extensions=machine.extensions;psg.events=(const uint8_t*)sound->events;psg.event_capacity=SPECTRUM_SOUND_QUEUE_EVENTS;
+    psg.read=(volatile uint32_t*)&sound->read;psg.write=(const volatile uint32_t*)&sound->write;
+    psg.produced=(const volatile uint32_t*)&sound->produced;psg.time=&sound->time;
+    psg.running=(const volatile uint8_t*)&sound->clock_running;psg.dac=&sound->beeper;
+    psg.dc_input=&sound->input;psg.dc_output=&sound->output;psg.recover=spectrum_sound_recover;
+    uint32_t audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_PSG_OPEN,0,sizeof(psg),&psg);
+    if(!audio_mode)audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_SYNTH_OPEN,0,sizeof(audio),&audio);
+    if(!audio_mode) {
         spectrum_sound_end(&machine);(void)spectrum_disk_cache_end(&machine);
         message("Audio stream unavailable\n\nPress any key");return;
     }
@@ -439,6 +449,7 @@ paced:
 memory_error:
     started=false;error="PSRAM I/O error\n\nPress any key";
 done:
+    spectrum_sound_clock(&machine,false);
     services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_CLOSE,0,0,NULL);
     spectrum_sound_end(&machine);
     if(!spectrum_disk_cache_end(&machine)) { started=false;error="PSRAM I/O error\n\nPress any key"; }
@@ -520,6 +531,9 @@ static int app_run(uint32_t file_id) {
             } else if(!snapshot && !disk) message("Unsupported Spectrum file\n\nPress any key");
         }
     }
+#ifdef SPECTRUM_HIL_AFTER_FILE
+    SPECTRUM_HIL_AFTER_FILE();
+#endif
     for(;;) {
         const char* labels[]={started?"Resume":"Start machine","Snapshot...","Beta Disk...","DivMMC...",
             "Machine...","Options...",machine.disk.mode==SPECTRUM_DISK_DIVMMC?"NMI browser":"TR-DOS","Reset","Help","Exit"};

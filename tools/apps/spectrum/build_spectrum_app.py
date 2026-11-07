@@ -15,6 +15,7 @@ import sys
 from tools.apps.spectrum.fetch_spectrum_devices import prepare as prepare_devices
 from tools.apps.spectrum.spectrum_rom_cache import prepare as prepare_rom_cache
 from tools.apps.spectrum.build_spectrum_library import prepare as prepare_games
+from tools.apps.spectrum.build_spectrum_m3 import build as build_sound_module
 
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 from explorer_icons import copy_icon
@@ -111,6 +112,8 @@ def main():
         command += ["--source", str(ROOT / source)]
     subprocess.run(command, check=True)
     copy_assets(args.output_dir)
+    sound_module=build_sound_module(args.build_dir/'m3',toolchain=args.toolchain,optimization='-O2',fast_init=96)
+    shutil.copy2(sound_module['package'],args.output_dir/'AY.S3M')
     assets = args.device_assets
     if args.fetch_devices:
         assets = args.build_dir / "devices"
@@ -132,6 +135,7 @@ def main():
     report["source_sha256"] = {source: hashlib.sha256((ROOT / source).read_bytes()).hexdigest() for source in inputs}
     report["hardware_verified"] = False
     report["rom_cache"] = rom_cache
+    report["m3_sound_module"] = sound_module
     report["files"] = {str(p.relative_to(args.output_dir)): hashlib.sha256(p.read_bytes()).hexdigest()
                        for p in sorted(args.output_dir.rglob("*")) if p.is_file() and p.name != "manifest.json"}
     (args.output_dir / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")

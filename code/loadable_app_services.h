@@ -146,13 +146,42 @@ enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS
    * it must not call resident services, allocate, block or use core-0 state
    * without synchronization. Returns signed L/R packed in low/high 16 bits.
    * CLOSE waits until no callback can execute before APP memory is freed. */
-  MK61_AUDIO_SYNTH_OPEN
+  MK61_AUDIO_SYNTH_OPEN,
+  /* Optional AY/TurboSound coprocessor. c=sizeof(mk61_service_audio_psg).
+   * Result: 2=M3,1=local synth at its normal clock,0=unsupported/invalid.
+   * Pointers remain live until CLOSE; the resident stops consumers first.
+   * Old residents reject this operation; callers may use SYNTH_OPEN. */
+  MK61_AUDIO_PSG_OPEN,
+  /* Same request as PSG_OPEN, but requires the remote synth. Unavailable
+   * hardware returns0; a failed stream closes without local fallback or a
+   * CPU clock change. Older hosts reject this optional operation. */
+  MK61_AUDIO_PSG_ONLY_OPEN
 };
 typedef struct mk61_service_audio_synth {
   uint32_t (*sample)(void*);
   void* context;
   uint32_t rate,volume;
 } mk61_service_audio_synth;
+typedef struct mk61_service_audio_psg {
+  mk61_service_audio_synth local;
+  const char* module_path; /* M8 path, relative to the APP; normally AY.S3M. */
+  uint8_t* psg[2];        /* Pointer-free PSG bodies, exactly 132 bytes each. */
+  uint32_t psg_bytes,extensions;
+  /* SRAM ring records: LE uint32 time; uint8 device,reg,value,reserved.
+   * device0/1=AY,2=beeper,3=Covox,4=SpecDrum. Timings use 140 cycles/sample.
+   * Word cursors use acquire/release atomics; capacity is a power of two. */
+  const uint8_t* events;
+  uint32_t event_capacity;
+  volatile uint32_t* read;
+  const volatile uint32_t *write,*produced;
+  volatile uint32_t* time;
+  const volatile uint8_t* running;
+  uint8_t* dac; /* Consecutive consumer-owned beeper/Covox/SpecDrum bytes. */
+  int32_t *dc_input,*dc_output;
+  /* Core0, after all remote consumers stop. Restore a local synth on loss;
+   * context is local.context. Must not call resident services. */
+  void (*recover)(void*);
+} mk61_service_audio_psg;
 typedef struct mk61_service_audio {
   const int16_t* samples;
   uint32_t count,rate,volume,queued,underruns;

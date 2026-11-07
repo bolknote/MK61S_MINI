@@ -84,6 +84,8 @@ pub const AUDIO_WRITE: u32 = 1;
 pub const AUDIO_STATUS: u32 = 2;
 pub const AUDIO_CLOSE: u32 = 3;
 pub const AUDIO_SYNTH_OPEN: u32 = 4;
+pub const AUDIO_PSG_OPEN: u32 = 5;
+pub const AUDIO_PSG_ONLY_OPEN: u32 = 6;
 pub const KEY_BITMAP: u32 = 12;
 #[repr(C)]
 pub struct ServiceColorFrame {
@@ -108,6 +110,18 @@ pub struct ServiceAudio {
 pub struct ServiceAudioSynth {
     pub sample: Option<unsafe extern "C" fn(*mut c_void) -> u32>,
     pub context: *mut c_void, pub rate: u32, pub volume: u32,
+}
+#[repr(C)]
+pub struct ServiceAudioPsg {
+    pub local: ServiceAudioSynth,
+    pub module_path: *const u8,
+    pub psg: [*mut u8; 2],
+    pub psg_bytes: u32, pub extensions: u32,
+    pub events: *const u8, pub event_capacity: u32,
+    pub read: *mut u32, pub write: *const u32, pub produced: *const u32,
+    pub time: *mut u32, pub running: *const u8, pub dac: *mut u8,
+    pub dc_input: *mut i32, pub dc_output: *mut i32,
+    pub recover: Option<unsafe extern "C" fn(*mut c_void)>,
 }
 pub const SERVICE_CAP_TEXT_INPUT: u32 = 1 << 25;
 pub const SERVICE_CAP_FILE_WRITE_SOURCE: u32 = 1 << 26;

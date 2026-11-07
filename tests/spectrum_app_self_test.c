@@ -177,6 +177,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         return frames_shown%3?1:2;
     }
     if(op==MK61_SERVICE_AUDIO_STREAM) {
+        if(a==MK61_AUDIO_PSG_OPEN)return 0; // Older resident: use SYNTH_OPEN.
         if(a==MK61_AUDIO_SYNTH_OPEN) {
             generator=*(mk61_service_audio_synth*)payload;assert(generator.rate==25000);++audio_opens;
             // Exercise callbacks during a slow native open, before the CPU clock starts.

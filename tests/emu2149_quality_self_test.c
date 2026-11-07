@@ -17,6 +17,16 @@ static void equal_sample(PSG* a,PSG* b,unsigned scenario,unsigned sample) {
     ++comparisons;
 }
 int main(void) {
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+    /* Independent serial LFSR reference, every 17-bit state, all bulk sizes. */
+    for(uint32_t seed=0;seed<(1u<<17);++seed) {
+        uint32_t serial=seed;
+        for(unsigned steps=0;steps<=8;++steps) {
+            assert(advance_noise(seed,steps)==serial);
+            if(serial&1)serial^=0x24000;serial>>=1;
+        }
+    }
+#endif
     const unsigned rates[]={1000,8000,12500,25000,44100,48000};PSG a,b;
     for(unsigned scenario=0;scenario<96;++scenario) {
         init(&a,rates[scenario%6],scenario&1?1:2);b=a;
@@ -39,6 +49,14 @@ int main(void) {
         PSG_writeReg(&a,2,0xc2);PSG_writeReg(&a,3,4);PSG_writeReg(&a,6,11);PSG_writeReg(&a,8,16);
         PSG_writeReg(&a,9,5);PSG_writeReg(&a,11,70);PSG_writeReg(&a,13,shape);b=a;
         for(unsigned sample=0;sample<25000;++sample)equal_sample(&a,&b,96+shape,sample);
+    }
+    // Every short tone/noise period, both initial gate phases, all shapes
+    // and minimum envelope period. These hit the M3 mask fast paths.
+    for(unsigned period=0;period<32;++period)for(unsigned shape=0;shape<16;++shape) {
+        init(&a,25000,2);PSG_writeReg(&a,7,0);PSG_writeReg(&a,6,period);
+        for(unsigned i=0;i<3;++i){PSG_writeReg(&a,i*2,period);PSG_writeReg(&a,8+i,16);a.edge[i]=(uint8_t)(i&1);}
+        PSG_writeReg(&a,11,0);PSG_writeReg(&a,13,shape);a.noise_scaler=shape&1;b=a;
+        for(unsigned sample=0;sample<256;++sample)equal_sample(&a,&b,128+period*16+shape,sample);
     }
     // Signed filter rounding and long stable DAC spans, including >31 ticks.
     for(unsigned rate=0;rate<6;++rate) {

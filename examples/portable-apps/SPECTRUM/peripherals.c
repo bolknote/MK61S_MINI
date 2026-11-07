@@ -12,16 +12,19 @@ void spectrum_sound_reset(spectrum* s) {
     atomic_init(&s->sound.produced,0);atomic_init(&s->sound.starved,0);
     atomic_init(&s->sound.clock_running,true);
     s->sound.covox=s->sound.specdrum=128;
+    s->sound.latest_dac[1]=s->sound.latest_dac[2]=128;
 }
 void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned value) {
     spectrum_sound* q=&s->sound;
     if(device<2) {
         static const uint8_t masks[]={255,15,255,15,255,15,31,255,31,31,31,255,255,15,255,255};
         q->regs[device][reg&15]=(uint8_t)(value&masks[reg&15]);
-    }
+    } else if(device<=4)q->latest_dac[device-2]=(uint8_t)value;
     if(!q->asynchronous) { apply(s,device,reg,value);return; }
-    const uint32_t w=atomic_load_explicit(&q->write,memory_order_relaxed);
-    while(w-atomic_load_explicit(&q->read,memory_order_acquire)==SPECTRUM_SOUND_QUEUE_EVENTS) {
+    uint32_t w;
+    for(;;) {
+        w=atomic_load_explicit(&q->write,memory_order_relaxed);
+        if(w-atomic_load_explicit(&q->read,memory_order_acquire)<SPECTRUM_SOUND_QUEUE_EVENTS)break;
         atomic_store_explicit(&q->produced,(uint32_t)s->cpu.cyc,memory_order_release);
         if(q->yield) q->yield(q->yield_context);
     }
@@ -36,6 +39,7 @@ void spectrum_sound_begin(spectrum* s,void (*yield)(void*),void* context) {
     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
     atomic_store_explicit(&q->starved,0,memory_order_relaxed);
     q->time=(uint32_t)s->cpu.cyc;atomic_store_explicit(&q->produced,q->time,memory_order_release);
+    q->latest_dac[0]=q->beeper;q->latest_dac[1]=q->covox;q->latest_dac[2]=q->specdrum;
     for(unsigned chip=0;chip<2;++chip) memcpy(q->regs[chip],chip?s->ay2.reg:s->ay.reg,16);
     q->yield=yield;q->yield_context=context;q->asynchronous=true;
     q->startup_samples=0;
@@ -45,6 +49,21 @@ void spectrum_sound_clock(spectrum* s,bool running) {
     // Arm only while the device is gated (or after its callback has stopped).
     if(running) s->sound.startup_samples=SPECTRUM_SOUND_START_SAMPLES;
     atomic_store_explicit(&s->sound.clock_running,running,memory_order_release);
+}
+void spectrum_sound_recover(void* context) {
+    spectrum* s=context;spectrum_sound* q=&s->sound;
+    /* Called on core0 only after the remote consumer and PWM IRQ stop.
+     * A lost link cannot export oscillator phase; restart from the current
+     * producer registers, discard its stale queue, then resume locally. */
+    for(unsigned i=0;i<2;++i) {
+        PSG* p=i?&s->ay2:&s->ay;memset(p,0,sizeof(*p));p->quality=1;p->rate=25000;
+        PSG_setVolumeMode(p,2);PSG_setClock(p,1750000);PSG_reset(p);
+        for(unsigned reg=0;reg<16;++reg)PSG_writeReg(p,reg,q->regs[i][reg]);
+    }
+    q->beeper=q->latest_dac[0];q->covox=q->latest_dac[1];q->specdrum=q->latest_dac[2];
+    q->input=q->output=0;q->time=(uint32_t)s->cpu.cyc;q->startup_samples=SPECTRUM_SOUND_START_SAMPLES;
+    atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
+    atomic_store_explicit(&q->produced,q->time,memory_order_release);
 }
 void spectrum_sound_end(spectrum* s) {
     spectrum_sound* q=&s->sound;

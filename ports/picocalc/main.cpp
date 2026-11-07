@@ -20,6 +20,7 @@
 #include "version.hpp"
 #include "io_worker.hpp"
 #include "audio_stream.hpp"
+#include "m3_audio.hpp"
 #include "console.hpp"
 #include "diagnostics.hpp"
 #include "firmware.hpp"
@@ -134,6 +135,21 @@ void report(unsigned math_failures) {
     const auto synth=picocalc::audio_stream::synth_statistics();
     std::printf("SYNTH_DMA=%u SYNTH_BLOCKS=%lu SYNTH_UNDERRUNS=%lu\n",
         synth.dma,(unsigned long)synth.blocks,(unsigned long)synth.underruns);
+    const auto m3=picocalc::m3_audio::statistics();
+    std::printf("M3_AUDIO=%u M3_ERROR=%d M3_BLOCKS=%lu M3_SAMPLES=%lu M3_UNDERRUNS=%lu M3_MAX_SLICE_US=%lu M3_REQUESTS=%lu M3_UART_ERRORS=%lu M3_UNLOAD_FAILURES=%lu M3_FALLBACKS=%lu\n",
+        synth.coprocessor,m3.error,(unsigned long)m3.blocks,(unsigned long)m3.samples,
+        (unsigned long)m3.underruns,(unsigned long)m3.max_slice,(unsigned long)m3.requests,
+        (unsigned long)m3.uart_errors,(unsigned long)m3.unload_failures,(unsigned long)synth.fallbacks);
+    std::printf("M3_BLOCK_US=%lu M3_STARVE_STAGE=%lu M3_STARVE_REQUEST_US=%lu M3_STARVE_AHEAD=%ld\n",
+        (unsigned long)m3.max_render_us,(unsigned long)m3.starve_stage,
+        (unsigned long)m3.starve_request_us,(long)m3.starve_ahead);
+    std::printf("M3_PROFILE=%u M3_RENDER_SAMPLES=%lu M3_RENDER_JOBS=%lu M3_RENDER_SLICES=%lu M3_RENDER_US=%llu M3_RENDER_MAX_JOB_US=%lu M3_RENDER_MAX_SLICE_US=%lu\n",
+        m3.profile_valid,(unsigned long)m3.render_samples,(unsigned long)m3.render_jobs,
+        (unsigned long)m3.render_slices,(unsigned long long)m3.render_us,
+        (unsigned long)m3.max_job_us,(unsigned long)m3.render_max_slice_us);
+    std::printf("M3_BLOCK_MIN_US=%lu M3_BLOCK_TOTAL_US=%llu M3_LATE_BLOCKS=%lu M3_READY_POLLS=%lu M3_PRIME_US=%lu M3_MIN_QUEUED=%lu\n",
+        (unsigned long)m3.min_block_us,(unsigned long long)m3.block_us,(unsigned long)m3.late_blocks,
+        (unsigned long)m3.ready_polls,(unsigned long)m3.prime_us,(unsigned long)m3.min_queued);
     const auto settings_storage=picocalc::settings_storage_statistics();
     std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
         (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,

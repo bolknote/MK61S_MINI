@@ -67,8 +67,34 @@ static void startup_gate(void) {
     for(unsigned i=0;i<100;++i)assert(spectrum_sound_render(&lagging)==spectrum_sound_render(&reference));
     assert(lagging.sound.time==14000);spectrum_sound_end(&lagging);spectrum_sound_end(&reference);
 }
+static void recover_full(void* unused) {
+    (void)unused;++yields;spectrum_sound_recover(&lagging);
+}
+static void lost_coprocessor_recovers_inside_backpressure(void) {
+    configure(&lagging,ram[0]);spectrum_sound_begin(&lagging,recover_full,NULL);yields=0;
+    for(unsigned i=0;i<SPECTRUM_SOUND_QUEUE_EVENTS;++i){lagging.cpu.cyc+=12;spectrum_sound_write(&lagging,0,8,i&15);}
+    lagging.cpu.cyc+=12;spectrum_sound_write(&lagging,0,8,9);
+    assert(yields==1 && atomic_load(&lagging.sound.read)==0 && atomic_load(&lagging.sound.write)==1);
+    assert(lagging.sound.time==(uint32_t)lagging.cpu.cyc && lagging.ay.reg[8]==9);
+    assert(lagging.sound.events[0].value==9 && lagging.sound.events[0].time==(uint32_t)lagging.cpu.cyc);
+    lagging.cpu.cyc+=140;spectrum_sound_publish(&lagging);
+    for(unsigned i=0;i<SPECTRUM_SOUND_START_SAMPLES+1;++i)(void)spectrum_sound_render(&lagging);
+    assert(atomic_load(&lagging.sound.read)==1);spectrum_sound_end(&lagging);
+}
+static void stop_remote(void* unused) {
+    (void)unused;++yields;spectrum_sound_recover(&lagging);
+    lagging.sound.asynchronous=false;spectrum_sound_clock(&lagging,false);
+}
+static void strict_remote_stop_inside_backpressure(void) {
+    configure(&lagging,ram[0]);spectrum_sound_begin(&lagging,stop_remote,NULL);yields=0;
+    for(unsigned i=0;i<SPECTRUM_SOUND_QUEUE_EVENTS;++i){lagging.cpu.cyc+=12;spectrum_sound_write(&lagging,0,8,i&15);}
+    spectrum_sound_write(&lagging,0,8,9);
+    assert(yields==1 && !lagging.sound.asynchronous && !atomic_load(&lagging.sound.clock_running));
+    for(unsigned i=0;i<1024;++i)spectrum_sound_write(&lagging,0,8,i&15);
+    assert(yields==1 && lagging.ay.reg[8]==15);spectrum_sound_end(&lagging);
+}
 int main(int argc,char** argv) {
     if(argc==2 && !strcmp(argv[1],"late-full"))late_full_queue_can_drain();
-    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();}
+    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();lost_coprocessor_recovers_inside_backpressure();strict_remote_stop_inside_backpressure();}
     puts("Audio clock: AY phase continues through underrun, late full queue drains, unpublished events stay queued, timestamps wrap: PASS");
 }

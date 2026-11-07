@@ -32,8 +32,20 @@ uint32_t pwm_divider16() { return find(TEST_CLOCK_MHZ)->pwm_div16; }
 }
 #endif
 #define MK61_PICOCALC_SCRIPT_HPP
+#define MK61_TEST_M3_AUDIO_BACKEND 1
 namespace picocalc::script { void tone(unsigned,unsigned,unsigned=100);audio::Plan tone_status(); }
 #include "../ports/picocalc/audio_stream.cpp"
+namespace picocalc::m3_audio {
+static bool available=false,opened=false,broken=false;
+bool open(const mk61_service_audio_psg&,unsigned){assert(!core1);opened=available;broken=false;return opened;}
+void close(){assert(!core1);opened=false;broken=false;}
+bool failed(){return opened && broken;}
+void fault(int){broken=true;}
+uint32_t duty(void*){assert(core1 && opened);return 0x00800080u;}
+bool transport_active(){return opened;}
+void service(){}
+Statistics statistics(){return {};}
+}
 static std::mutex executor;
 static repeating_timer* alarm;
 static unsigned pools,cancels,left_level,right_level,disabled;
@@ -84,7 +96,7 @@ static bool sample() {
         if(!again) alarm->callback=nullptr;
     });irq.join();return again;
 }
-struct Synth { std::atomic<bool> entered{false},release{false};bool block=false;unsigned calls=0; };
+struct Synth { std::atomic<bool> entered{false},release{false};bool block=false;unsigned calls=0,recoveries=0; };
 static uint32_t render(void* raw) {
     auto& s=*(Synth*)raw;assert(core1);++s.calls;s.entered.store(true,std::memory_order_release);
     while(s.block && !s.release.load(std::memory_order_acquire)) std::this_thread::yield();
@@ -144,6 +156,36 @@ int main() {
     clock_failure=true;assert(!synth(request,10) && !active());
     assert(clock_mhz==125 && boosts==restores);
 #endif
-    puts("Core-1 PCM/synth ownership, finite key clicks, retrigger, priority, timer failure and APP unload: PASS");
+    // Strict remote playback never boosts or silently recovers into local
+    // audio. Ordinary remote playback retains its established local fallback.
+    uint8_t bodies[2][132]{},events[8]{},running=1,dac[3]{0,128,128};
+    uint32_t read=0,write=0,produced=0,time=0;int32_t dc_in=0,dc_out=0;
+    mk61_service_audio_psg psg_request{};psg_request.local=request;psg_request.module_path="AY.S3M";
+    psg_request.psg[0]=bodies[0];psg_request.psg[1]=bodies[1];psg_request.psg_bytes=132;
+    psg_request.events=events;psg_request.event_capacity=1;psg_request.read=&read;psg_request.write=&write;
+    psg_request.produced=&produced;psg_request.time=&time;psg_request.running=&running;psg_request.dac=dac;
+    psg_request.dc_input=&dc_in;psg_request.dc_output=&dc_out;
+    psg_request.recover=[](void* raw){assert(!core1 && !picocalc::m3_audio::opened);++((Synth*)raw)->recoveries;};
+    const auto old_fallbacks=synth_statistics().fallbacks;
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    clock_failure=false;const unsigned old_boosts=boosts;
+#endif
+    assert(!psg(psg_request,10,true) && !active());
+    picocalc::m3_audio::available=true;
+    assert(psg(psg_request,10,true)==2 && active());sample();
+    assert(left_level==128 && right_level==128);
+    picocalc::m3_audio::broken=true;poll();
+    assert(!active() && !picocalc::m3_audio::opened && state.recoveries==1);
+    assert(synth_statistics().fallbacks==old_fallbacks);
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(clock_mhz==125 && boosts==old_boosts);
+#endif
+    assert(psg(psg_request,10)==2 && active());picocalc::m3_audio::broken=true;poll();
+    assert(active() && state.recoveries==2 && synth_statistics().fallbacks==old_fallbacks+1);
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(clock_mhz==200 && boosts==old_boosts+1);
+#endif
+    close();assert(!active());
+    puts("Core-1 PCM/synth ownership, strict remote failure without boost/fallback, ordinary remote recovery, finite clicks and APP unload: PASS");
     return 0;
 }

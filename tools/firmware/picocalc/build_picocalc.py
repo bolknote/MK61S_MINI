@@ -126,7 +126,7 @@ def main():
         output = args.output_dir.expanduser().resolve()
         source_hash = hashlib.sha256()
         for source in sorted([ROOT / 'tools/firmware/picocalc/build_picocalc.py', ROOT / 'dev/lib/seal_picocalc.py',
-                              *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs', 'third_party/core_math')
+                              *(p for folder in ('code', 'ports/picocalc', 'sdk/coproc', 'third_party/fatfs', 'third_party/core_math')
                                 for p in (ROOT / folder).rglob('*')
                                 if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld', '.pio')
                                                     or p.name == 'CMakeLists.txt'))]):

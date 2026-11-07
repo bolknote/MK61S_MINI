@@ -52,7 +52,8 @@ option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing contro
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
-    dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp
+    dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp m3_audio.cpp
+    "${MK61_ROOT}/sdk/coproc/pico_uart1.c"
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
@@ -106,7 +107,7 @@ if(DEFINED MK61_PICOCALC_BUILD_ID)
     target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_BUILD_ID=${MK61_PICOCALC_BUILD_ID})
 endif()
 target_include_directories(mk61s-picocalc-pico-h PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}" "${MK61_ROOT}/code" "${MK61_ROOT}/third_party/fatfs")
+    "${CMAKE_CURRENT_LIST_DIR}" "${MK61_ROOT}/code" "${MK61_ROOT}/third_party/fatfs" "${MK61_ROOT}/sdk/coproc")
 target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_CORE_STANDALONE=1
     MK61_PICOCALC_SAMPLE_PROFILE=$<BOOL:${MK61_PICOCALC_SAMPLE_PROFILE}>

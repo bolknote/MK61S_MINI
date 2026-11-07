@@ -6,6 +6,7 @@
 #include "console_route.hpp"
 #include "i2c_transfer.hpp"
 #include "worker_job_slot.hpp"
+#include "m3_audio.hpp"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
@@ -249,7 +250,9 @@ void worker() {
            (uart_queue.empty() || uart_active.load(std::memory_order_acquire)) &&
            i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
             const u64 started=time_us_64();
-            if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_alarm<0)
+            if(m3_audio::transport_active())
+                best_effort_wfe_or_timeout(make_timeout_time_us(50));
+            else if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_alarm<0)
                 best_effort_wfe_or_timeout(make_timeout_time_us(1000));
             else __wfe();
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
@@ -310,6 +313,7 @@ void suspend_frames(bool suspended) {
 bool frames_suspended() { return display_suspended.load(std::memory_order_acquire); }
 void service(bool allow_i2c) {
     drain_uart();
+    m3_audio::service();
     (void)allow_i2c; // Starting the FIFO is bounded even for tiny LCD windows.
     const u32 interrupts=save_and_disable_interrupts();
     finish_i2c();

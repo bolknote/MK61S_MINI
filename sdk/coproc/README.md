@@ -3,9 +3,9 @@
 These are the stable production paths for the experimentally verified native
 module ABI and PicoCalc UART client. Production consumers can include or compile
 from `sdk/coproc` without importing a dated `research` directory. The files are
-byte-identical copies of the sources used for the physical module/DWT tests;
-`PROVENANCE.json` records the original paths and hashes. No code behavior was
-changed in establishing these paths.
+originally copied byte-for-byte from the physical module/DWT tests.
+`PROVENANCE.json` records the original hashes and the subsequently added
+optional START_RESULT completion command. The module ABI is unchanged.
 
 | File | Purpose |
 |---|---|
@@ -49,7 +49,7 @@ payload (polynomial0xEDB88320, initial/final XOR0xFFFFFFFF). Responses use
 at most252 useful bytes per frame. The encoded-frame buffer limit is272 bytes.
 
 Commands are HELLO1, LOAD_BEGIN2, LOAD_CHUNK3, LOAD_COMMIT4, WRITE5, START6,
-STATUS7, READ8, CANCEL9 and UNLOAD10. READ accepts finished jobs. There is one
+STATUS7, READ8, CANCEL9, UNLOAD10 and optional START_RESULT11. READ accepts finished jobs. There is one
 module and one job at a time. Identical sequence/command/CRC replay resends the
 cached reply without repeating START. The STM32 does not send unsolicited data.
 
@@ -57,6 +57,29 @@ The transport is stop-and-wait: the runtime's cached reply stays pinned through
 TX DMA, and it does not process the next request while DMA still owns that
 reply. A new sequence is for a new operation; retries reuse the original frame.
 An asynchronous backend must preserve these lifetimes and framing constraints.
+
+START_RESULT requires bit2 (`4`) in HELLO's transport flags. Its four input
+words are `module_id, input_bytes, deadline_ms, result_bytes`; the input buffer
+is filled with WRITE as before. The module starts once. On completion the
+STM32 sends the single pending response: status, job ID, maximum slice time
+in microseconds and the requested prefix of output (at most244 bytes).
+There is no initial acknowledgement and no STATUS/READ readiness polling.
+INIT/STEP/deadline failures return their original status instead of samples.
+The native2ms slice limit and keyboard processing between module calls remain.
+
+Only one request may be outstanding. An identical pending replay waits for
+the same job; a completed replay resends the exact cached bytes. A different
+request while completion is pending is ignored and counted as a sequence
+conflict. The requested job deadline bounds this interval. Clients must not
+issue CANCEL/HELLO with a new sequence before the pending reply/deadline;
+transport retries reuse the original frame. Long outputs can be read in
+further ordinary READ chunks after the completion response has arrived.
+Legacy commands retain their meanings; clients must mask known HELLO bits
+rather than requiring the complete flags word to equal3.
+
+The completion extension has passed host sanitizer and relocated Thumb-2
+tests. It has not yet been verified on physical hardware. Original physical
+evidence below describes the earlier resident, without this extension.
 
 ## RP2040 ownership
 

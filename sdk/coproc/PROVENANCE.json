@@ -29,7 +29,9 @@
     },
     "stm3_client.h": {
       "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.h",
-      "sha256": "d1270eabb51f5e5ba45ea49c3751e3b2c8676ceb72eeb5aceb5722481ab7af41"
+      "sha256": "8ad1ed3a71b6703f3b1600c24eaad140aa93acd15ef4224b75620576cb7f45d1",
+      "baseline_sha256": "d1270eabb51f5e5ba45ea49c3751e3b2c8676ceb72eeb5aceb5722481ab7af41",
+      "local_extension": "Optional START_RESULT11 and HELLO capability bit2; existing command values and module ABI unchanged"
     }
   },
   "hardware_evidence": {
@@ -37,8 +39,21 @@
     "installed_stm32_firmware_sha256": "f16f54f8eec954966a6a810be583a0dd61fb9cd16fb0a461529552dcf12b2069",
     "native_module_roundtrip": true,
     "uart_nominal_baud": 2250000,
-    "pico_divisor_actual_baud": 2258823
+    "pico_divisor_actual_baud": 2258823,
+    "scope": "Original resident before START_RESULT extension; extension physical verification is pending"
   },
-  "behavior_changes": false,
-  "resident_or_product_sources_edited": false
+  "behavior_changes": true,
+  "resident_or_product_sources_edited": true,
+  "compatibility_extensions": [
+    {
+      "command": "START_RESULT",
+      "opcode": 11,
+      "hello_capability_bit": 2,
+      "module_abi_changed": false,
+      "host_sanitizers_passed": true,
+      "relocated_arm_execution_passed": true,
+      "physical_hardware_verified": false,
+      "evidence": ".build/spectrum-m3-audio-20261107/push-v8/arm-result.json"
+    }
+  ]
 }

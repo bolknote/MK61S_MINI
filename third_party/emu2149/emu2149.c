@@ -386,6 +386,19 @@ static void advance_envelope(PSG* psg,unsigned ticks)
     }
   }
 }
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t seed,unsigned shifts)
+{
+  if(shifts<=8) {
+    /* During these shifts feedback cannot reach the consumed low bits.
+     * Advance both taps of x^17+x^14+1 together, including overlaps via XOR. */
+    const uint32_t feedback=seed&((1u<<shifts)-1);
+    return (seed>>shifts)^(feedback<<(17-shifts))^(feedback<<(14-shifts));
+  }
+  while(shifts--){if(seed&1)seed^=0x24000;seed>>=1;}
+  return seed;
+}
+#endif
 static void advance_state(PSG* psg,unsigned ticks)
 {
   for(unsigned i=0;i<3;++i) {
@@ -396,14 +409,25 @@ static void advance_state(PSG* psg,unsigned ticks)
   const unsigned edges=advance_counter(&count,psg->noise_freq,ticks);
   unsigned shifts=(edges+(psg->noise_scaler?0:1))/2;
   psg->noise_count=(uint8_t)count;psg->noise_scaler^=edges&1;
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  psg->noise_seed=advance_noise(psg->noise_seed,shifts);
+#else
   while(shifts--) { if(psg->noise_seed&1) psg->noise_seed^=0x24000;psg->noise_seed>>=1; }
+#endif
   advance_envelope(psg,ticks);
 }
 static unsigned output_ticks(PSG* psg)
 {
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  /* Cortex-M3 has UDIV: replace the internal-tick loop by its exact count. */
+  const unsigned ticks=psg->realstep>psg->psgtime?
+    (psg->realstep-psg->psgtime-1)/psg->psgstep+1:0;
+  psg->psgtime+=ticks*psg->psgstep;psg->psgtime-=psg->realstep;return ticks;
+#else
   unsigned ticks=0;
   while(psg->realstep>psg->psgtime) { psg->psgtime+=psg->psgstep;++ticks; }
   psg->psgtime-=psg->realstep;return ticks;
+#endif
 }
 static int16_t calc_silent(PSG* psg,unsigned ticks)
 {
@@ -419,14 +443,40 @@ static bool weighted_eligible(const PSG* psg,unsigned ticks)
 {
   if(!ticks || ticks>16 || psg->out < -32768 || psg->out>32767 ||
      (psg->voltbl!=voltbl[0] && psg->voltbl!=voltbl[1]))return false;
+#if !defined(EMU2149_M3_AUDIO) || !EMU2149_M3_AUDIO
   if(((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
      (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks))return false;
+#endif
   return psg->env_ptr<32;
 }
 static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
 {
   uint16_t count=psg->count[channel];const uint16_t period=psg->freq[channel];
   unsigned edge=psg->edge[channel];uint32_t bits=0;
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  if(!period) {
+    bits=0x5555u;if(edge)bits^=all;
+    psg->count[channel]=0;psg->edge[channel]=(uint8_t)(edge^(ticks&1));return bits&all;
+  }
+  if(count<period) {
+    if(period>=ticks) {
+      const unsigned remaining=period-count;
+      bits=edge?all:0;count=(uint16_t)(count+ticks);
+      if(remaining<=ticks){bits^=(all<<(remaining-1))&all;count=(uint16_t)(count-period);edge^=1;}
+    } else {
+      /* Internal tick i observes phase count+i+1. Short square waves fit
+       * in a32-bit word; M3 UDIV advances the final phase exactly. */
+      static const uint32_t waves[16]={0,0xaaaaaaaau,0xccccccccu,0x38e38e38u,
+        0xf0f0f0f0u,0x3e0f83e0u,0xc0fc0fc0u,0x0fe03f80u,0xff00ff00u,
+        0xf803fe00u,0xc00ffc00u,0x003ff800u,0x00fff000u,0x03ffe000u,
+        0x0fffc000u,0x3fff8000u};
+      bits=(waves[period]>>(count+1))&all;if(edge)bits^=all;
+      const unsigned total=count+ticks,edges=total/period;
+      count=(uint16_t)(total-edges*period);edge^=edges&1;
+    }
+    psg->count[channel]=count;psg->edge[channel]=(uint8_t)edge;return bits;
+  }
+#endif
   if(count<period && (unsigned)(period-count)>ticks) {
     count=(uint16_t)(count+ticks);bits=edge?all:0;
   } else for(unsigned i=0;i<ticks;++i) {
@@ -439,6 +489,21 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
 {
   uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
   unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  if(period<=1 && (!period || !count)) {
+    /* The next eight LFSR low bits precede any feedback bit. Spread them
+     * to two ticks each; no per-tick noise branches or output stores. */
+    uint32_t spread=(seed>>(scaler?0:1))&0x1ffu;
+    spread=(spread|(spread<<8))&0x00ff00ffu;
+    spread=(spread|(spread<<4))&0x0f0f0f0fu;
+    spread=(spread|(spread<<2))&0x33333333u;
+    spread=(spread|(spread<<1))&0x55555555u;
+    bits=spread|(spread<<1);if(scaler)bits>>=1;
+    unsigned shifts=(ticks+(scaler?0:1))/2;
+    seed=advance_noise(seed,shifts);
+    psg->noise_count=0;psg->noise_scaler=(uint8_t)(scaler^(ticks&1));psg->noise_seed=seed;return bits&all;
+  }
+#endif
   if(count<period && period-count>ticks) {count=(uint8_t)(count+ticks);bits=(seed&1)?all:0;}
   else for(unsigned i=0;i<ticks;++i) {
     ++count;if(count>=period) {
@@ -453,14 +518,51 @@ static int16_t calc_weighted(PSG* psg,unsigned ticks)
 {
   const uint32_t all=(1U<<ticks)-1,noise=noise_mask(psg,ticks,all);
   int32_t sum=psg->out;
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  const bool changing=((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
+    (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks);
+  uint32_t envelopes[3]={0,0,0};
+#endif
   for(unsigned i=0;i<3;++i) {
     uint32_t bits=tone_mask(psg,i,ticks,all);
     bits=(psg->tmask[i]?all:bits)&(psg->nmask[i]?all:noise);
     if((psg->mask&PSG_MASK_CH(i)) ||
        (psg->freq_limit && psg->freq[i]<=psg->freq_limit && psg->nmask[i] && !psg->tmask[i]))bits=0;
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+    if(changing && (psg->volume[i]&32)){envelopes[i]=bits;continue;}
+#endif
     const unsigned amplitude=psg->voltbl[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
     sum+=(int32_t)(amplitude*bits);psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
   }
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  if(changing) {
+    /* All envelope channels share one amplitude at a tick. Preserve the
+     * exact IIR weights while advancing the envelope once, rather than
+     * repeating all oscillator/mixer work for each internal tick. */
+    unsigned count=psg->env_count,ptr=psg->env_ptr,face=psg->env_face,pause=psg->env_pause;
+    const unsigned period=psg->env_freq;
+    for(unsigned tick=0;tick<ticks;++tick) {
+      if(++count>=period) {
+        count=period?count-period:0;
+        if(!pause) {
+          ptr=(ptr+(face?1:63))&63;
+          if(ptr&32) {
+            if(psg->env_continue) {
+              if(psg->env_alternate^psg->env_hold)face^=1;
+              if(psg->env_hold)pause=1;
+              ptr=face?0:31;
+            } else {pause=1;ptr=0;}
+          }
+        }
+      }
+      const unsigned gates=((envelopes[0]>>tick)&1)+((envelopes[1]>>tick)&1)+((envelopes[2]>>tick)&1);
+      sum+=(int32_t)((psg->voltbl[ptr]<<4)*(gates<<tick));
+    }
+    psg->env_count=count;psg->env_ptr=(uint8_t)ptr;psg->env_face=(uint8_t)face;psg->env_pause=(uint8_t)pause;
+    for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
+      psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(psg->voltbl[psg->env_ptr]<<4):0;
+  } else
+#endif
   advance_envelope(psg,ticks);
   psg->out=sum>>ticks;return (int16_t)psg->out;
 }
