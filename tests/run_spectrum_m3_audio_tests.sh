@@ -4,6 +4,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-spectrum-m3.XXXXXX")"
 trap 'rm -rf "$build"' EXIT
 python3 "$root/tests/spectrum_m3_runtime_fixture.py" --output "$build/runtime"
+python3 "$root/tests/spectrum_m3_game_probe_packaging_self_test.py"
 sound_flags=()
 if [[ "${SPECTRUM_M3_FAST_INIT:-0}" != 0 ]]; then
     sound_flags=(-DEMU2149_M3_AUDIO=1 "-DSPECTRUM_M3_FAST_INIT=$SPECTRUM_M3_FAST_INIT")

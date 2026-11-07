@@ -122,7 +122,8 @@ def prepare(args):
     run(out, 'build-dsp-probe', [PYTHON, 'tools/apps/spectrum/build_spectrum_m3_probe.py',
                                 '--build-dir', out, '--frames', '120', '--pwm8'])
     run(out, 'build-game-probes', [PYTHON, 'tools/apps/spectrum/build_spectrum_m3_game_probe.py',
-                                  '--build-dir', out, '--frames', '600', '--fixture-dir', args.fixture_dir])
+                                  '--build-dir', out, '--frames', '600', '--fixture-dir', args.fixture_dir,
+                                  '--runtime-dir', out / 'SPECTRUM'])
     verify_sources(inputs)
     module = json.loads((out / 'module/manifest.json').read_text())
     if sha(out / 'SPECTRUM/AY.S3M') != module['sha256']:
@@ -152,9 +153,16 @@ def prepare(args):
     artifacts += [southbridge_image, southbridge_out / 'manifest.json']
     artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
                                    'SPECTRUM/48.rom', 'SPECTRUM/128-0.rom', 'SPECTRUM/128-1.rom',
-                                   'remote/app/S3GAME.APP', 'local/app/S3GAME.APP')]
+                                   'remote/app/S3GAME.APP', 'remote/app/AY.S3M', 'remote/app/48.rom',
+                                   'remote/app/128-0.rom', 'remote/app/128-1.rom',
+                                   'local/app/S3GAME.APP', 'local/app/AY.S3M', 'local/app/48.rom',
+                                   'local/app/128-0.rom', 'local/app/128-1.rom')]
     game_runtime = {p.name: sha(p) for p in [out/'SPECTRUM/AY.S3M', out/'SPECTRUM/48.rom',
                     out/'SPECTRUM/128-0.rom', out/'SPECTRUM/128-1.rom']}
+    for mode in ('remote','local'):
+        staged={name:sha(out/mode/'app'/name) for name in game_runtime}
+        if staged!=game_runtime or apps[mode].get('runtime_files')!=game_runtime:
+            raise ValueError(mode+' game probe is missing its pinned runtime files')
     manifest = {
         'status': 'HOST_READY', 'hardware_verified': False, 'physical_io': 0,
         'created_utc': datetime.now(timezone.utc).isoformat(),
@@ -204,8 +212,8 @@ def prepare(args):
         'Neither probe changes the STM32 clock.\n\n'
         'Start only after the coordinator releases the Pico and approves the exact combined STM32 image. '
         'Use the exact artifacts and hashes in manifest.json; source/ contains their input snapshot. '
-        'When the game probe is staged in a temporary folder, put the pinned AY.S3M and all three ROMs '
-        'listed in game_runtime_files_next_to_app beside S3GAME.APP. '
+        'Both game-probe directories are self-contained: S3GAME.APP, AY.S3M and all three pinned ROMs '
+        'are already together under remote/app and local/app. Copy the complete selected directory. '
         'Keep old HOLD and failure receipts.\n\n'
         'The pinned Southbridge candidate combines the already tested async PMU owner with '
         'START_RESULT_INPUT at stock72MHz. The audio block is120 samples/4800us, with a '
