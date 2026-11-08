@@ -1,5 +1,6 @@
 #include "mk61_ai_linear.hpp"
 #include "mk61_ai_kernels.h"
+#include "mk61_ai_half_product.hpp"
 #include <cmath>
 #include <cstring>
 #if defined(PICO_ON_DEVICE)
@@ -70,14 +71,14 @@ MK61_AI_INLINE std::int32_t nibble_dot(const std::uint8_t *p,
                                       const std::int8_t *x) {
   std::int32_t sum = 0;
   for (unsigned i = 0; i < 16; i += 4) {
-    sum += (int(p[i] & 15) - 8) * int(x[2 * i]);
-    sum += (int(p[i] >> 4) - 8) * int(x[2 * i + 1]);
-    sum += (int(p[i + 1] & 15) - 8) * int(x[2 * i + 2]);
-    sum += (int(p[i + 1] >> 4) - 8) * int(x[2 * i + 3]);
-    sum += (int(p[i + 2] & 15) - 8) * int(x[2 * i + 4]);
-    sum += (int(p[i + 2] >> 4) - 8) * int(x[2 * i + 5]);
-    sum += (int(p[i + 3] & 15) - 8) * int(x[2 * i + 6]);
-    sum += (int(p[i + 3] >> 4) - 8) * int(x[2 * i + 7]);
+    sum += int(p[i] & 15) * int(x[2 * i]);
+    sum += int(p[i] >> 4) * int(x[2 * i + 1]);
+    sum += int(p[i + 1] & 15) * int(x[2 * i + 2]);
+    sum += int(p[i + 1] >> 4) * int(x[2 * i + 3]);
+    sum += int(p[i + 2] & 15) * int(x[2 * i + 4]);
+    sum += int(p[i + 2] >> 4) * int(x[2 * i + 5]);
+    sum += int(p[i + 3] & 15) * int(x[2 * i + 6]);
+    sum += int(p[i + 3] >> 4) * int(x[2 * i + 7]);
   }
   return sum;
 }
@@ -88,10 +89,11 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
     const auto *scales = b.scales + r * b.columns / 16;
     float value = 0;
     for (unsigned g = 0; g < b.columns / 32; ++g) {
-      const float scale = half(std::uint16_t(scales[2 * g]) |
-                               (std::uint16_t(scales[2 * g + 1]) << 8));
+      const auto scale_bits=std::uint16_t(std::uint16_t(scales[2*g]) |
+                               (std::uint16_t(scales[2*g+1])<<8));
       const auto *p = weights + 16 * g;
       if constexpr (Mode == Arithmetic::LUT_FLOAT32) {
+        const float scale=half(scale_bits);
         const float *t = b.lookup + g * 128;
         float weighted = 0;
         weighted += plane_float(t, p);
@@ -100,6 +102,7 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
         weighted += plane_float(t, p + 12) * 8.0f;
         value += (weighted - 8.0f * b.input_sums[g]) * scale;
       } else if constexpr (Mode == Arithmetic::LUT_INT8) {
+        const float scale=half(scale_bits);
         const auto *t = reinterpret_cast<const std::int16_t *>(b.lookup) + g * 128;
         const std::int32_t sum = plane_integer(t, p) +
             2 * plane_integer(t, p + 4) + 4 * plane_integer(t, p + 8) +
@@ -108,9 +111,15 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
       } else {
         const auto *x = b.quant + 32 * g;
         std::int32_t sum = 0;
-        if (!(b.grid & 256))
+        if (!(b.grid & 256)) {
           sum = nibble_dot(p, x);
-        else {
+          // sum((u-8)*x) = sum(u*x)-8*sum(x). The correction is
+          // shared by every output row and stays entirely in int32.
+          std::int32_t activation_sum=0;
+          if(b.quant_sums) activation_sum=b.quant_sums[g];
+          else for(unsigned j=0;j<32;++j) activation_sum+=x[j];
+          sum-=8*activation_sum;
+        } else {
           for (unsigned quartet = 0; quartet < 8; ++quartet) {
             const unsigned shift = (quartet & 1) * 4, i = quartet / 2;
             const unsigned a = p[i] >> shift, c = p[4 + i] >> shift;
@@ -122,7 +131,7 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
             }
           }
         }
-        value += float(sum) * scale * b.activation_scales[g];
+        value += half_scaled_q4_dot(sum,scale_bits) * b.activation_scales[g];
       }
     }
     if (!std::isfinite(value)) {

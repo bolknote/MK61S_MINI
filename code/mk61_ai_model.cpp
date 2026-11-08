@@ -330,9 +330,15 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         }
         const float scale = maximum / 127.0f;
         activation_scales[g] = scale;
-        for (unsigned j = 0; j < 32; ++j)
+        std::int32_t activation_sum=0;
+        for (unsigned j = 0; j < 32; ++j) {
           quant[g * 32 + j] =
               scale ? std::int8_t(std::round(input[g * 32 + j] / scale)) : 0;
+          activation_sum+=quant[g * 32 + j];
+        }
+        // INT8 does not need the LUT; reuse its existing storage for exact
+        // group sums. Table modes rebuild this storage below as usual.
+        reinterpret_cast<std::int32_t*>(lookup)[g]=activation_sum;
       }
     }
     if (tables) {
@@ -397,6 +403,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       shape.input = input; shape.quant = quant;
       shape.activation_scales = activation_scales;
       shape.input_sums = input_sums; shape.lookup = lookup;
+      shape.quant_sums = arithmetic==Arithmetic::INT8?
+          reinterpret_cast<const std::int32_t*>(lookup):nullptr;
       unsigned remote_capacity = 0;
       if (execution_.remote_prepare && execution_.remote_submit && execution_.remote_join) {
         const auto started = stamp();
@@ -483,6 +491,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         first.rows = count;first.input = input;first.quant = quant;
         first.activation_scales = activation_scales;
         first.input_sums = input_sums;first.lookup = lookup;
+        first.quant_sums = arithmetic==Arithmetic::INT8?
+            reinterpret_cast<const std::int32_t*>(lookup):nullptr;
         first.weights = active.data;first.scales = active.data + TILE * bytes;
         first.output = tile_output;
         LinearBatch third = first;

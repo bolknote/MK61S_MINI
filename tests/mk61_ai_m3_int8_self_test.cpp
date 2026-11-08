@@ -26,6 +26,12 @@ int main(){
   LinearBatch b{};b.arithmetic=Arithmetic::INT8;b.bits=4;b.grid=0;b.columns=cols;b.rows=rows;b.quant=(const int8_t*)vector;
   b.activation_scales=(const float*)(vector+cols);b.weights=weights;b.scales=scales;b.output=expected;
   linear_batch_flash(&b);assert(b.status==ModelStatus::OK);
+  int32_t sums[16]{};
+  for(unsigned g=0;g<cols/32;++g)for(unsigned j=0;j<32;++j)
+    sums[g]+=b.quant[g*32+j];
+  b.quant_sums=sums;b.output=actual;
+  linear_batch_sram(&b);assert(b.status==ModelStatus::OK);
+  assert(!std::memcmp(expected,actual,rows*4));
   put(input,AI_M3_INT8_MAGIC);put(input+4,AI_M3_PREPARE);put(input+8,cols);put(input+12,0);job.input_bytes=16;
   assert(module_entry(STM3_INIT,&api,&job)==STM3_DONE&&job.output_bytes==12);
   for(unsigned at=0;at<cols*9/8;){unsigned n=std::min(512U,cols*9/8-at);std::memcpy(input,vector+at,n);job.input_bytes=n;

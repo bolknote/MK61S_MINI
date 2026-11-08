@@ -1,0 +1,57 @@
+{
+  "status": "MEASUREMENT_PASS",
+  "physical_io": true,
+  "control_rerun": false,
+  "reference_seconds_per_token": 0.8931125,
+  "save_or_restore": false,
+  "cores": 2,
+  "requested_hz": 270000000,
+  "entry": {
+    "build": "49E9E634",
+    "crc": "CFCA7F0B",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 500
+  },
+  "model_reused": true,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "seconds_per_token": [
+    0.847044,
+    0.8472355
+  ],
+  "time_reduction_percent": [
+    5.158196755727862,
+    5.136754888102002
+  ],
+  "speedup": [
+    1.0543873753901805,
+    1.054149053008284
+  ],
+  "presentation_us_per_token": [
+    18227.5,
+    18237.0
+  ],
+  "final": {
+    "build": "E4716EC2",
+    "crc": "4ABC3825",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "apps_removed": true,
+  "cdc_closed": true,
+  "lease_closed": true
+}

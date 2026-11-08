@@ -11,6 +11,7 @@ struct LinearBatch {
   unsigned columns = 0, bits = 4, grid = 256, rows = 0;
   const float *input = nullptr, *activation_scales = nullptr;
   const float *input_sums = nullptr, *lookup = nullptr;
+  const std::int32_t *quant_sums = nullptr; // Optional sum of32 quantized activations.
   const std::int8_t *quant = nullptr;
   const std::uint8_t *weights = nullptr, *scales = nullptr;
   float *output = nullptr;

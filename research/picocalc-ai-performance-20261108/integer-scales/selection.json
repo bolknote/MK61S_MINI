@@ -1,0 +1,39 @@
+{
+  "reference_seconds_per_token": 0.8931125,
+  "control_rerun": false,
+  "variants": [
+    {
+      "name": "group-bias",
+      "build": "E4716EC2",
+      "crc": "4ABC3825",
+      "seconds_per_token": [
+        0.847044,
+        0.8472355
+      ],
+      "mean_seconds_per_token": 0.84713975
+    },
+    {
+      "name": "integer-scale",
+      "build": "6FC0B45F",
+      "crc": "F8D9891E",
+      "seconds_per_token": [
+        0.8017425,
+        0.8021775
+      ],
+      "mean_seconds_per_token": 0.80196
+    }
+  ],
+  "winner": "integer-scale",
+  "winner_build": "6FC0B45F",
+  "winner_crc": "F8D9891E",
+  "installed": true,
+  "source_main": "660645cf1",
+  "mean_time_reduction_percent": 10.20616103794314,
+  "quality": "full logits/KV HOST exact; hardware tokens/all-row checksums exact",
+  "freshness": "each PERF.JSON model_load_us matched its own AI_LOAD marker",
+  "final_hz": 125000000,
+  "cdc_closed": true,
+  "msc_closed": true,
+  "lease_closed": true,
+  "M3_BIOS_APP_AY_ROM_unchanged": true
+}
