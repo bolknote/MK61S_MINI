@@ -456,6 +456,13 @@ struct UI {
   static bool package_read_finish(void *p) {
     return static_cast<UI *>(p)->package.read_finish();
   }
+  static bool cache_read_begin(void *p,const block_io::ReadSpan *spans,unsigned count) {
+    auto &u=*static_cast<UI*>(p);
+    if(!u.cache.read_begin(spans,count)) return false;
+    for(unsigned i=0;i<count;++i) u.psram_reads+=spans[i].bytes;
+    return true;
+  }
+  static bool cache_read_finish(void *p) { return static_cast<UI*>(p)->cache.read_finish(); }
   static bool cache_write(void *p, std::uint32_t at, const void *out,
                           unsigned n) {
     auto &u = *static_cast<UI *>(p);
@@ -741,7 +748,7 @@ AI_COLD_CODE bool UI::ensure_model() {
     }
     if (ok) {
       status = model.bind(workspace.get(), model.workspace_bytes(),
-                          {this, u32(cache.size()), cache_read, cache_write});
+                          {this, u32(cache.size()), cache_read, cache_write,cache_read_begin,cache_read_finish});
       ok = status == ModelStatus::OK;
     }
   }

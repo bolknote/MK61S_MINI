@@ -1,4 +1,6 @@
 #include "mk61_ai_model.hpp"
+#include "mk61_ai_attention.hpp"
+#include "mk61_ai_kv_stream.hpp"
 #include "mk61_ai_kernels.h"
 #include "mk61_ai_linear.hpp"
 #include <algorithm>
@@ -772,6 +774,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           right = right * cosine + old * sine;
         }
     }
+    const auto attention_started=forward_stamp();
     const unsigned layer_offset = layer * c.context * kn * 8;
     if (!transfer(cache_, layer_offset + position_ * kn * 8, k, kn * 4, true) ||
         !transfer(cache_, layer_offset + position_ * kn * 8 + kn * 4, v, kn * 4,
@@ -780,6 +783,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     const float attention_scale = 1.0f / std::sqrt(float(c.head_dim));
     auto read_attention=[&](unsigned offset,float *out,unsigned bytes) {
       compute_metrics_.attention_read_bytes+=bytes;
+      ++compute_metrics_.attention_read_transactions;
       return transfer(cache_,offset,out,bytes);
     };
     if(!execution_.share_kv || c.heads==c.kv_heads) {
@@ -817,19 +821,27 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     }
     } else {
       const unsigned queries=c.heads/c.kv_heads;
+      KVStream stream{cache_,lookup,std::min<unsigned>(2048,columns*16),compute_metrics_,execution_.batch_kv};
       for(unsigned kh=0;kh<c.kv_heads;++kh) for(unsigned first=0;first<queries;first+=2) {
         const unsigned lanes=std::min<unsigned>(2,queries-first);
         float maximum[2]={-FLT_MAX,-FLT_MAX},sum[2]={0,0};
-        for(unsigned t=0;t<=position_;++t) {
-          if((t&31U)==0 && !alive()) return status;
-          if(!read_attention(layer_offset+t*kn*8+kh*c.head_dim*4,k,c.head_dim*4)) return ModelStatus::IO;
+        for(unsigned t=0;t<=position_;) {
+          if(!alive()) return status;
+          const unsigned offset=layer_offset+t*kn*8+kh*c.head_dim*4;
+          const auto io_started=forward_stamp();
+          const float *keys=stream.read(offset,c.head_dim*4,kn*8,position_+1-t);
+          compute_metrics_.attention_io_us+=forward_stamp()-io_started;
+          if(!keys) return ModelStatus::IO;
+          const unsigned rows=stream.chunk_count();
+          AttentionBatch jobs[2];
           for(unsigned lane=0;lane<lanes;++lane) {
             const unsigned h=kh*queries+first+lane;
-            float dot=0;
-            for(unsigned j=0;j<c.head_dim;++j) dot+=q[h*c.head_dim+j]*k[j];
-            const float score=dot*attention_scale;
-            scores[lane*c.context+t]=score;maximum[lane]=std::max(maximum[lane],score);
+            jobs[lane]={q+h*c.head_dim,keys,nullptr,scores+lane*c.context+t,rows,c.head_dim,attention_scale,0};
           }
+          attention_pair(jobs,lanes,execution_,compute_metrics_);
+          for(unsigned row=0;row<rows;++row) for(unsigned lane=0;lane<lanes;++lane)
+            maximum[lane]=std::max(maximum[lane],scores[lane*c.context+t+row]);
+          stream.consume_chunk(offset,rows);t+=rows;
         }
         for(unsigned lane=0;lane<lanes;++lane) {
           for(unsigned t=0;t<=position_;++t) {
@@ -840,16 +852,25 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           const unsigned h=kh*queries+first+lane;
           std::fill(a+h*c.head_dim,a+(h+1)*c.head_dim,0.0f);
         }
-        for(unsigned t=0;t<=position_;++t) {
-          if(!read_attention(layer_offset+t*kn*8+kn*4+kh*c.head_dim*4,v,c.head_dim*4)) return ModelStatus::IO;
+        for(unsigned t=0;t<=position_;) {
+          if(!alive()) return status;
+          const unsigned offset=layer_offset+t*kn*8+kn*4+kh*c.head_dim*4;
+          const auto io_started=forward_stamp();
+          const float *values=stream.read(offset,c.head_dim*4,kn*8,position_+1-t);
+          compute_metrics_.attention_io_us+=forward_stamp()-io_started;
+          if(!values) return ModelStatus::IO;
+          const unsigned rows=stream.chunk_count();
+          AttentionBatch jobs[2];
           for(unsigned lane=0;lane<lanes;++lane) {
             const unsigned h=kh*queries+first+lane;
-            const float factor=scores[lane*c.context+t]/sum[lane];
-            for(unsigned j=0;j<c.head_dim;++j) a[h*c.head_dim+j]+=factor*v[j];
+            jobs[lane]={nullptr,values,scores+lane*c.context+t,a+h*c.head_dim,rows,c.head_dim,0,sum[lane]};
           }
+          attention_pair(jobs,lanes,execution_,compute_metrics_);
+          stream.consume_chunk(offset,rows);t+=rows;
         }
       }
     }
+    compute_metrics_.attention_us+=forward_stamp()-attention_started;
     if (!linear(base + 6, a, o, false))
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)

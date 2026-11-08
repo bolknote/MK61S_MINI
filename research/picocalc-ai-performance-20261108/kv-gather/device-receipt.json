@@ -1,0 +1,60 @@
+{
+  "status": "MEASUREMENT_PASS",
+  "physical_io": true,
+  "control_rerun": false,
+  "reference_seconds_per_token": 0.717,
+  "save_or_restore": false,
+  "cores": 2,
+  "requested_hz": 270000000,
+  "entry": {
+    "build": "D1752771",
+    "crc": "AD0AD899",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "candidate_already_installed": true,
+  "firmware_flashed": false,
+  "model_reused": true,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "kv_transaction_counters_available": false,
+  "seconds_per_token": [
+    0.7140895,
+    0.7142315
+  ],
+  "time_reduction_percent": [
+    0.4059274755927378,
+    0.3861227336122708
+  ],
+  "speedup": [
+    1.0040758196276516,
+    1.00387619420314
+  ],
+  "presentation_us_per_token": [
+    162.0,
+    163.5
+  ],
+  "final": {
+    "build": "D1752771",
+    "crc": "AD0AD899",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "apps_removed": true,
+  "cdc_closed": true,
+  "lease_closed": true
+}

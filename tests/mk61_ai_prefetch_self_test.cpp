@@ -22,6 +22,8 @@ struct Runtime {
     bool fail;
   } job{};
   bool pending = false, busy = false, refuse = false;
+  bool cache_pending=false,refuse_cache=false,fail_cache=false;
+  block_io::ReadSpan cache_spans[16];unsigned cache_count=0,cache_batches=0;
   int cancel_after = -1, fail_finish_after = -1;
   unsigned began = 0, finished = 0, overlapped = 0;
   unsigned row_limit=8;
@@ -37,6 +39,29 @@ struct Runtime {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
     if (at > r.cache.size() || n > r.cache.size() - at) return false;
     std::memcpy(out, r.cache.data() + at, n);return true;
+  }
+  static bool begin_kv(void *p,const block_io::ReadSpan *spans,unsigned count) {
+    auto &r=*static_cast<Runtime*>(p);r.owner();assert(!r.pending && !r.cache_pending);
+    assert(r.cpu.submitted==r.cpu.joined);
+    if(r.refuse_cache)return false;
+    assert(count && count<=16);unsigned total=0;
+    for(unsigned i=0;i<count;++i) {
+      assert(spans[i].offset<=r.cache.size() && spans[i].bytes<=r.cache.size()-spans[i].offset);
+      assert(!(spans[i].offset&15) && !(spans[i].bytes&15));
+      assert(static_cast<unsigned char*>(spans[i].destination)==static_cast<unsigned char*>(spans[0].destination)+total);
+      total+=spans[i].bytes;
+    }
+    assert(total<=2048);std::copy(spans,spans+count,r.cache_spans);r.cache_count=count;
+    r.cache_pending=true;++r.cache_batches;return true;
+  }
+  static bool finish_kv(void *p) {
+    auto &r=*static_cast<Runtime*>(p);r.owner();assert(r.cache_pending);
+    for(unsigned i=0;i<r.cache_count;++i) {
+      const auto &span=r.cache_spans[i];
+      std::memcpy(span.destination,r.cache.data()+span.offset,span.bytes);
+      if(r.fail_cache)break;
+    }
+    r.cache_pending=false;return !r.fail_cache;
   }
   static bool write_kv(void *p, std::uint32_t at, const void *in, unsigned n) {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
@@ -87,13 +112,13 @@ struct Runtime {
     std::fill(workspace.end() - 8, workspace.end(), UINT64_C(0xb00f61a1b00f61a1));
     cache.resize(model.cache_bytes());
     assert(model.bind(workspace.data(), model.workspace_bytes(),
-                      {this, unsigned(cache.size()), read_kv, write_kv}) == ModelStatus::OK);
+                      {this, unsigned(cache.size()), read_kv, write_kv,begin_kv,finish_kv}) == ModelStatus::OK);
     configure(true);
   }
   void configure(bool prefetch, bool filter = false) {
     ComputeExecution e{};e.context = this;e.kernel = LinearKernel::SRAM;
     e.prefetch = prefetch;e.filter_head = filter;e.tile_rows=row_limit;
-    e.reuse_activations=optimized;e.share_kv=optimized;
+    e.reuse_activations=optimized;e.share_kv=optimized;e.batch_kv=optimized;
     e.busy = [](void *p, bool active) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       assert(r.busy != active && !r.pending && r.began == r.finished);
@@ -115,7 +140,7 @@ struct Runtime {
       auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && r.busy);
       return r.cancel_after < 0 || r.cancel_after-- > 0;
     }, this, arithmetic, logits, allowed, this);
-    assert(!busy && !pending && began == finished && cpu.submitted == cpu.joined);
+    assert(!busy && !pending && !cache_pending && began == finished && cpu.submitted == cpu.joined);
     for (unsigned i = 0; i < 8; ++i)
       assert(workspace[workspace.size() - 8 + i] == UINT64_C(0xb00f61a1b00f61a1));
     return result;
@@ -156,7 +181,17 @@ int main(int argc, char **argv) {
       const auto &old=control.model.compute_metrics(),&fast=candidate.model.compute_metrics();
       const auto &config=candidate.model.config();
       if(config.heads==2*config.kv_heads)
-        assert(fast.attention_read_bytes*2==old.attention_read_bytes);
+        {
+          assert(fast.attention_read_bytes*2==old.attention_read_bytes);
+          assert(fast.attention_read_transactions<=old.attention_read_transactions/2);
+          if(!candidate.refuse_cache) {
+            const unsigned columns=std::max(std::max(config.hidden,config.intermediate),config.heads*config.head_dim);
+            const unsigned block=std::min(16U,std::min(2048U,columns*16)/(config.head_dim*4));
+            assert(fast.attention_read_transactions==config.layers*config.kv_heads*2*((p+block)/block));
+          }
+          if(p>0 && !candidate.refuse_cache)assert(fast.attention_batches>0);
+          if(p>3 && !candidate.refuse_cache)assert(fast.attention_worker_jobs>0);
+        }
       if(mode!=Arithmetic::FLOAT32) {
         assert(fast.activation_preparations==4*config.layers+(output?1:0));
         assert(fast.activation_reuses==3*config.layers);
@@ -196,6 +231,13 @@ int main(int argc, char **argv) {
     assert(candidate.model.position() == 0);candidate.fail_finish_after = -1;
     compare(Arithmetic::LUT_FLOAT32, 1, true);
   }
+  candidate.refuse_cache=true;compare(Arithmetic::INT8,3,true);candidate.refuse_cache=false;
+  candidate.model.reset();
+  assert(candidate.forward(tokens[0],Arithmetic::INT8,right)==ModelStatus::OK);
+  candidate.fail_cache=true;
+  assert(candidate.forward(tokens[1],Arithmetic::INT8,right)==ModelStatus::IO);
+  assert(candidate.model.position()==1 && !candidate.cache_pending);candidate.fail_cache=false;
+  compare(Arithmetic::INT8,3,true);
   // Numeric failure with a next-tile DMA in flight still joins both owners.
   auto corrupted = bytes;Runtime bad(corrupted);
   auto word = [&](unsigned at) { std::uint32_t n;std::memcpy(&n, corrupted.data() + at, 4);return n; };
@@ -206,4 +248,5 @@ int main(int argc, char **argv) {
   assert(bad.began && bad.model.position() == 0);
   std::printf("prefetch: PASS; %u full-logit comparisons, %u-position KV exact, %u DMA requests, %u overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n",
               comparisons, context_checked,candidate.began, candidate.overlapped);
+  std::printf("KV gather: %u joined batches; bounded shared scratch, exact transactions/bytes, refusal and partial-write failure PASS\n",candidate.cache_batches);
 }

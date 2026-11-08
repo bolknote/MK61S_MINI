@@ -41,6 +41,8 @@ struct ComputeExecution {
   bool filter_head = false;
   bool prefetch = true;
   bool reuse_activations = true;
+  bool batch_kv = true; // Gather adjacent KV positions into bounded DMA reads.
+  bool parallel_attention = true; // Independent query heads use both cores.
   bool share_kv = true; // Process up to two query heads per cached KV read.
   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
   // Optional coprocessor. prepare stages the immutable vector before PSRAM
@@ -66,6 +68,9 @@ struct ComputeMetrics {
   std::uint32_t remote_prepare_us = 0, remote_submit_us = 0, remote_wait_us = 0;
   std::uint32_t activation_preparations = 0, activation_reuses = 0;
   std::uint32_t attention_read_bytes = 0;
+  std::uint32_t attention_read_transactions = 0, attention_batches = 0;
+  std::uint32_t attention_worker_jobs = 0;
+  std::uint32_t attention_us = 0, attention_io_us = 0;
 };
 struct ModelConfig {
   std::uint32_t layers, hidden, intermediate, heads, kv_heads, head_dim;

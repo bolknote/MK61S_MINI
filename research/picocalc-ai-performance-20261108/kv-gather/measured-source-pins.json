@@ -1,0 +1,26 @@
+{
+  "source": "/Users/bolk/Projects/MK61S_MINI/.build/harness-cold-20261108/source",
+  "image": "D1752771",
+  "upstream_pins": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/harness-cold-20261108/source-pins-combined.json",
+    "bytes": 256366,
+    "sha256": "1f704e400f6e7f410867d8f5b3e20c5ffc27ebd35ef981c2b5a51cfd520c9132"
+  },
+  "verified_files": {
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "code/mk61_ai_kv_stream.hpp": "f849f1b053786a813146e4b5380280f3777d6bd36711058703683c735a041070",
+    "code/mk61_ai_attention.hpp": "8b048e8e2ffe6e6da8a89460856fbab3dad59f08d18768f59c5a3c1a2459772e",
+    "code/mk61_ai_linear.cpp": "bea11ee516144cf5ede313a18a2695bc60ac2c1525369847667f1efc0c28ae6a",
+    "code/mk61_ai_linear.hpp": "b59a980cae20bc204a4e5e52e819d3da16169ea988625ee92a24b743e4991a6c",
+    "ports/picocalc/ai_harness.cpp": "5bfe94f81109484a8377f74490fb1368aa0864d5c0e2562e05cdf1303faaa3ae",
+    "ports/picocalc/ai_clock.cpp": "585a4a580613a236d1db127259a6f2d1ce009857321d31c6574c970108f35157",
+    "ports/picocalc/ai_clock.hpp": "aed6cc94bb54f797fc525a74afeef7787feaa8ac0ceead4b0d02b97fb21ec52a",
+    "ports/picocalc/m0_math_extension.ld": "9c22b19fe2899ea5b619d8efe67239f1d6020c2433ad9dac90dc960847053844",
+    "ports/picocalc/CMakeLists.txt": "4036b15f325a9b5292952690634db79068191f0c3c4757e044e3e8178b3ed559",
+    "ports/picocalc/m3_audio.cpp": "091046eb138d8a05ce76165c0d1adb6eb40a1d0140d359d9d65e9726875f2a12",
+    "ports/picocalc/m3_audio.hpp": "8a9bc8ce4a3bc75049491203005149eb3266d4350be4f1a6929985ae037f07fd",
+    "ports/picocalc/m3_wire.hpp": "fed02f41117063495740ea5d688ad5336045638c0500853cfba0cce3863edbe8",
+    "tools/firmware/picocalc/build_picocalc.py": "cd84326f6a6080575d062349e6cbec1cfc458f248698e1cfecbc53a66b22233d"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": "MEASUREMENT_PASS",
+  "build": "D1752771",
+  "crc": "AD0AD899",
+  "firmware_flashed": false,
+  "measured": true,
+  "physical_io": true,
+  "reference_seconds_per_token": 0.717,
+  "seconds_per_token": [
+    0.7140895,
+    0.7142315
+  ],
+  "comparison": "combined KV-gather and parallel attention; not isolated gather",
+  "cdc_closed": true,
+  "lease_closed": true,
+  "four_features_retained": true,
+  "matching_tokens": true,
+  "matching_checksums": true
+}

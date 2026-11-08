@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "sanitizers": [
+    "ASan",
+    "UBSan"
+  ],
+  "source_base": "d67e050fb8f3b5240172c98ec936bf842b33f7ba",
+  "selection": "HEAD plus seven isolated AI source/test files; no Spectrum/cold/clock WIP",
+  "source_sha256": {
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "code/mk61_ai_kv_stream.hpp": "f849f1b053786a813146e4b5380280f3777d6bd36711058703683c735a041070",
+    "code/mk61_ai_attention.hpp": "8b048e8e2ffe6e6da8a89460856fbab3dad59f08d18768f59c5a3c1a2459772e",
+    "ports/picocalc/m0_math_extension.ld": "9c22b19fe2899ea5b619d8efe67239f1d6020c2433ad9dac90dc960847053844",
+    "tests/mk61_ai_prefetch_self_test.cpp": "060d62600a0d564e6b441aa4edea6a4c2af4f1d7c34e12cf4d9fe5384132c59c",
+    "ports/picocalc/ai_harness.cpp": "595201a607b2f963a5870e0204381b23a11819034de54857185d7aec5a4c2d75"
+  },
+  "log_sha256": "7f45b2f529d7bd5a85c6b4a5e358220498d87a3b0e5795e8162e862dab14bb1e",
+  "parallel_full_logit_comparisons": 68,
+  "parallel_context": 512,
+  "gather_full_logit_comparisons": 23,
+  "gather_context": 256,
+  "gather_joined_batches": 92881,
+  "fp16_exact_cases": 3114112
+}
