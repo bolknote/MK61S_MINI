@@ -232,7 +232,7 @@ bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     if(ok) { ++generation;text_cache.valid=false; }
     return ok;
 }
-bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter) {
+static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter,bool include_hidden) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0; more = false;
     if(!available()) return false;
@@ -241,7 +241,8 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
     if(result != FR_OK) return fail(result);
     FILINFO info;
     while((result = f_readdir(&directory, &info)) == FR_OK && info.fname[0]) {
-        if(info.fname[0] == '.' || storage_journal::reserved(info.fname)) continue;
+        if(!std::strcmp(info.fname,".") || !std::strcmp(info.fname,"..") ||
+           (!include_hidden && info.fname[0] == '.') || storage_journal::reserved(info.fname)) continue;
         if(!contains(info.fname,filter)) continue;
         if(skip) { --skip; continue; }
         if(used == capacity) { more = true; break; }
@@ -252,6 +253,12 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
     }
     const FRESULT closed = f_closedir(&directory);
     return fail(result == FR_OK ? closed : result);
+}
+bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter) {
+    return list_impl(path,skip,out,capacity,used,more,filter,false);
+}
+bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more) {
+    return list_impl(path,skip,out,capacity,used,more,nullptr,true);
 }
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);

@@ -353,7 +353,7 @@ bool Terminal::remove_tree(const char *name, unsigned depth) {
       unsigned used = 0;
       bool more;
       files::Entry child;
-      if (!files::list(name, 0, &child, 1, used, more))
+      if (!files::list_all(name, 0, &child, 1, used, more))
         return false;
       if (!used)
         break;

@@ -256,6 +256,19 @@ void picocalc_parity_test() {
   assert(!terminal.execute("rm -r /"));
   assert(!terminal.execute("rmdir /Parity/docs"));
   assert(terminal.execute("rm -r /Parity/a") && !files::exists("/Parity/a"));
+  // Real FatFs: macOS metadata used to survive rm -r and prevent rmdir.
+  assert(files::mkdir("/Parity/macos") && files::mkdir("/Parity/macos/.hidden"));
+  assert(files::mkdir("/Parity/macos/.hidden/nested"));
+  write_text("/Parity/macos/.DS_Store", "metadata");
+  write_text("/Parity/macos/._visible.txt", "AppleDouble");
+  write_text("/Parity/macos/visible.txt", "visible");
+  write_text("/Parity/macos/.hidden/nested/._data", "metadata");
+  write_text("/Parity/.keep", "sibling");
+  files::Entry visible[4];unsigned visible_used=0;bool visible_more=false;
+  assert(files::list("/Parity/macos",0,visible,4,visible_used,visible_more) &&
+         visible_used==1 && !visible_more && !std::strcmp(visible[0].name,"visible.txt"));
+  assert(terminal.execute("rm -r /Parity/macos") && !files::exists("/Parity/macos"));
+  assert(files::exists("/Parity/.keep") && files::exists("/Parity/docs"));
   command(terminal, "mkdir /Parity/history");
   command(terminal, "pwd");
   terminal.receive(0x1B);
