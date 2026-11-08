@@ -1,5 +1,5 @@
 {
-  "status": "first_cold_query_running_after_qualified_USB_restore",
+  "status": "first_complete_pass_attention_candidate_host_validated",
   "query": "\u0421\u0438\u043d\u0443\u0441 22",
   "model_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
   "baseline": {
@@ -32,13 +32,25 @@
     "repair_status": "PASS",
     "repair_firmware": "2EE8A549/9DF1AC78",
     "romcache_payload_sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
-    "final_cold_measurement": "PENDING",
+    "final_cold_measurement": "PASS on F988EF2A; fastest candidate still awaiting measurement",
     "second_candidate": "48BAD39A/4B592E3A",
     "second_candidate_status": "FAILED; watchdog reset before PROMPT event, no latency result",
     "current_installed": "F988EF2A/B99E7E71; flash/readiness verified before first query",
     "third_candidate": "3354BE9C/92219614",
     "third_candidate_status": "FAILED; watchdog after saved clock-ready270MHz, before prompt/first forward; no cold latency",
-    "live_progress": "User confirmed Harness input counter is increasing"
+    "live_progress": "User confirmed Harness input counter is increasing",
+    "first_complete": {
+      "firmware": "F988EF2A/B99E7E71",
+      "elapsed_ms": 1256365,
+      "input": 493,
+      "reused": 0,
+      "output": 12,
+      "core_x": 0.3746066,
+      "attention_us": 927851375,
+      "prefill_us": 1121295782,
+      "decode_us": 47548141,
+      "relative_to_original": 1.5067325180182511
+    }
   },
   "expected_program_hex": "0E 0D 02 02 1C 50",
   "expected_core_x": 0.3746066,

@@ -1,0 +1,89 @@
+{
+  "authority": "direct human request: install latest selected model and fastest inference, commit without weights, flash and test FIRST cold query",
+  "uid": "E6657CD423721C35",
+  "passed": true,
+  "physical_io": true,
+  "baseline_ms": 1893006,
+  "model_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
+  "entry": {
+    "build": "3354BE9C",
+    "crc": "92219614",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_keys": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "sd_install": {
+    "backup": "/AI/RELEASE-3354BE9C-37085",
+    "model_bytes": 2160856,
+    "model_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
+    "native_hash_ms": 5818,
+    "verification": "on-device SHA256, small-file native readback",
+    "safe_eject": true,
+    "transport": "UID-bound exclusive MSC, safe eject, native SHA256 and small-file readback"
+  },
+  "boot": {
+    "build": "F988EF2A",
+    "crc": "B99E7E71",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_keys": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "result": {
+    "task": 9,
+    "program": 1,
+    "tokens": 12,
+    "elapsed_ms": 1256365,
+    "execution": 1,
+    "x": 0.3746066
+  },
+  "profile": {
+    "input": 493,
+    "reused": 0,
+    "prefill_us": 1121295782,
+    "decode_us": 47548141,
+    "tool_us": 159489,
+    "load_us": 10573567,
+    "prompt_us": 1285879,
+    "attention_us": 927851375,
+    "attention_io_us": 110291985,
+    "linear_read_us": 23145391,
+    "matmul_us": 60819286,
+    "wait_us": 11486331,
+    "workers": 323840,
+    "heap_peak": 90032,
+    "stack_peak": 26872,
+    "service_gap_us": 2999827
+  },
+  "host_seconds": 1257.88699525001,
+  "firmware_build": "F988EF2A",
+  "firmware_crc": "B99E7E71",
+  "time_reduction_percent": 33.631219341090315,
+  "speedup": 1.5067325180182511,
+  "session": {
+    "path": "/AI/SESSIONS/00000009.AIS",
+    "sha256": "28402d0e39fd7f32064795b2b84ea4c892a5703483b365f520a1bd3748508df1"
+  },
+  "final": {
+    "build": "F988EF2A",
+    "crc": "B99E7E71",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_keys": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "final_hz": 125000000,
+  "measurement_valid": true,
+  "ports_closed": true,
+  "lease_released": true
+}

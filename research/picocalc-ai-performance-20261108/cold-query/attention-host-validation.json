@@ -1,0 +1,17 @@
+{
+  "ASan_UBSan": "PASS",
+  "real_model_context": 1024,
+  "KV_bytes": 5242880,
+  "full_logits_and_KV_bit_exact": "PASS",
+  "natural_SPEC_cases": 8,
+  "exact_programs_tokens_core_results": "PASS",
+  "native_real_model_UI": "PASS",
+  "exact_FP32_operand_pairs": 8722880,
+  "ARM_attention_output_bits": "PASS",
+  "ARM_instruction_ratio_query_rows16": 2.33500966179669,
+  "ARM_instruction_ratio_value_rows16": 2.469565788825182,
+  "physical_full_request": "PENDING",
+  "candidate_build": "0ad0f67d",
+  "candidate_crc": "cf56fac7",
+  "weights_changed": false
+}

@@ -11,3 +11,9 @@ Firmware combines the physically qualified 048A0B3E fast inference source with t
 Three earlier physical candidates failed (SDK panic and two watchdog resets before the first forward). A saved 3354BE9C checkpoint confirmed that 270 MHz had been reached; leaving USB deinitialized for the query was removed. The retry uses the same USB lifecycle as the successful fast-inference benchmark, with separate preparation/prompt counters. The first candidate overlapped the ROM cache; that mistake was repaired and the complete ROM payload verified by SHA256 plus all five ROM CRCs. These failures are recorded in `measurement.json`; neither provides a successful cold timing.
 
 The release candidate is described by `release-firmware-manifest.json` and `release-source-pins.json`. Physical results are appended only after the complete keyboard-driven query finishes.
+
+## First complete physical result
+
+Firmware F988EF2A / B99E7E71 completed the identical cold request in **1,256,365 ms (20:56.365)** versus **1,893,006 ms (31:33.006)**: 33.63% less time, 1.507x speedup. Input 493, reused 0, output 12. The saved AIS contains model `MKA-A9980CAA-2160856`, program `0E 0D 02 02 1C 50`; actual core execution stopped with X=0.3746066. The controller then closed its own APP and verified 125 MHz / CLOSED / NONE. See `first-complete/`.
+
+Prefill took 1,121.296 s and decode 47.548 s. Attention accounted for 927.851 s, including 110.292 s of KV reads. This identifies a remaining long-context arithmetic cost. The next candidate applies the already validated exact FP32 multiply/add helpers to attention reductions, preserving order and rounding. The full model, KV, eight SPEC cases and ARM kernels match bit for bit; the compiled ARM attention kernels use 2.33–2.47x fewer instructions for 16-row batches. This is not a device latency result; a fresh complete cold query is required.

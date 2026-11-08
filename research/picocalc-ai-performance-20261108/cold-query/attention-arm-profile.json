@@ -1,0 +1,92 @@
+{
+  "status": "PASS",
+  "kind": "actual ARMv6-M attention kernel with SRAM operands; not physical cycle timings",
+  "all_output_bits_match": true,
+  "results": [
+    {
+      "kind": "query",
+      "rows": 1,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 18353
+        },
+        "candidate": {
+          "instructions": 7791
+        }
+      },
+      "instruction_ratio": 2.3556667950198946
+    },
+    {
+      "kind": "query",
+      "rows": 4,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 71341
+        },
+        "candidate": {
+          "instructions": 30726
+        }
+      },
+      "instruction_ratio": 2.3218446917919677
+    },
+    {
+      "kind": "query",
+      "rows": 16,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 288801
+        },
+        "candidate": {
+          "instructions": 123683
+        }
+      },
+      "instruction_ratio": 2.33500966179669
+    },
+    {
+      "kind": "value",
+      "rows": 1,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 19073
+        },
+        "candidate": {
+          "instructions": 7712
+        }
+      },
+      "instruction_ratio": 2.4731587136929463
+    },
+    {
+      "kind": "value",
+      "rows": 4,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 75680
+        },
+        "candidate": {
+          "instructions": 30605
+        }
+      },
+      "instruction_ratio": 2.472798562326417
+    },
+    {
+      "kind": "value",
+      "rows": 16,
+      "width": 32,
+      "variants": {
+        "baseline": {
+          "instructions": 300640
+        },
+        "candidate": {
+          "instructions": 121738
+        }
+      },
+      "instruction_ratio": 2.469565788825182
+    }
+  ],
+  "caveat": "ROM CLZ is functionally modelled; omitted ROM body and Flash/cache/two-core effects require physical measurement"
+}

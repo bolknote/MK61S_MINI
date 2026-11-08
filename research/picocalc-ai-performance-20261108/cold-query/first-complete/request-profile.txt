@@ -1,0 +1,2 @@
+AI_CHAT_RESULT task=9 program=1 tokens=12 elapsed_ms=1256365 execution=1 X=0.374606600
+AI_CHAT_PROFILE input=493 reused=0 prefill_us=1121295782 decode_us=47548141 tool_us=159489 load_us=10573567 prompt_us=1285879 attention_us=927851375 attention_io_us=110291985 linear_read_us=23145391 matmul_us=60819286 wait_us=11486331 workers=323840 heap_peak=90032 stack_peak=26872 service_gap_us=2999827

@@ -1,0 +1,90 @@
+Pico source fault recovery: partial bank writes/seek reads, retained unsaved edits, failed replacement, bounded SRAM and owner cleanup PASS
+Pico Explorer: 9 native tiles, zero SD reads on selection, revision/invalid icon fallback, paging, folder bypass and buffer lifetime PASS
+AI_CHAT_RESULT task=1 program=1 tokens=0 elapsed_ms=13 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=11000
+AI_CHAT_RESULT task=100 program=1 tokens=0 elapsed_ms=16 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=8000
+AI_CHAT_RESULT task=150 program=1 tokens=0 elapsed_ms=11 execution=1 X=0.3746066
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=3000
+Native dark chat: journal paging, real core sine, zero fabricated model tokens, F1/F7 expansion and calculator isolation PASS
+AI_CHAT_STAGE phase=load-start model_bytes=0 elapsed_ms=0 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=131072 elapsed_ms=3 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=262144 elapsed_ms=4 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=393216 elapsed_ms=6 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=524288 elapsed_ms=8 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=655360 elapsed_ms=10 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=786432 elapsed_ms=12 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=917504 elapsed_ms=14 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1048576 elapsed_ms=15 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1179648 elapsed_ms=17 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1310720 elapsed_ms=19 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1441792 elapsed_ms=21 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1572864 elapsed_ms=23 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1703936 elapsed_ms=25 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1835008 elapsed_ms=27 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1966080 elapsed_ms=28 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=2097152 elapsed_ms=30 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=2160856 elapsed_ms=32 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=model-open model_bytes=2160856 elapsed_ms=33 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=cache-allocate model_bytes=2160856 elapsed_ms=49 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=131072 elapsed_ms=51 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=262144 elapsed_ms=53 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=393216 elapsed_ms=55 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=524288 elapsed_ms=57 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=655360 elapsed_ms=59 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=786432 elapsed_ms=61 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=917504 elapsed_ms=63 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1048576 elapsed_ms=64 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1179648 elapsed_ms=66 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1310720 elapsed_ms=68 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1441792 elapsed_ms=70 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1572864 elapsed_ms=72 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1703936 elapsed_ms=74 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1835008 elapsed_ms=76 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1966080 elapsed_ms=78 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=2097152 elapsed_ms=80 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=2160856 elapsed_ms=82 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=workspace-allocate model_bytes=2160856 elapsed_ms=98 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=workspace-bind model_bytes=2160856 elapsed_ms=100 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=model-ready model_bytes=2160856 elapsed_ms=101 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-enter model_bytes=2160856 elapsed_ms=102 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-ready model_bytes=2160856 elapsed_ms=104 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_FAST hz=270000000 arithmetic=1 session=250
+AI_CHAT_STAGE phase=execution-configured model_bytes=2160856 elapsed_ms=105 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=prompt-start model_bytes=2160856 elapsed_ms=106 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=prompt-ready model_bytes=2160856 elapsed_ms=113 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_PROGRESS position=32 prompt=489 prefill_us=174000 decode_us=0 attention_us=25000 io_us=0
+AI_CHAT_PROGRESS position=64 prompt=489 prefill_us=395000 decode_us=0 attention_us=105000 io_us=4000
+AI_CHAT_PROGRESS position=96 prompt=489 prefill_us=664000 decode_us=0 attention_us=220000 io_us=11000
+AI_CHAT_PROGRESS position=128 prompt=489 prefill_us=976000 decode_us=0 attention_us=368000 io_us=18000
+AI_CHAT_PROGRESS position=160 prompt=489 prefill_us=1330000 decode_us=0 attention_us=570000 io_us=33000
+AI_CHAT_PROGRESS position=192 prompt=489 prefill_us=1729000 decode_us=0 attention_us=809000 io_us=48000
+AI_CHAT_PROGRESS position=224 prompt=489 prefill_us=2169000 decode_us=0 attention_us=1096000 io_us=60000
+AI_CHAT_PROGRESS position=256 prompt=489 prefill_us=2656000 decode_us=0 attention_us=1433000 io_us=76000
+AI_CHAT_PROGRESS position=288 prompt=489 prefill_us=3194000 decode_us=0 attention_us=1820000 io_us=102000
+AI_CHAT_PROGRESS position=320 prompt=489 prefill_us=3769000 decode_us=0 attention_us=2247000 io_us=139000
+AI_CHAT_PROGRESS position=352 prompt=489 prefill_us=4388000 decode_us=0 attention_us=2717000 io_us=166000
+AI_CHAT_PROGRESS position=384 prompt=489 prefill_us=5047000 decode_us=0 attention_us=3235000 io_us=193000
+AI_CHAT_PROGRESS position=416 prompt=489 prefill_us=5750000 decode_us=0 attention_us=3794000 io_us=233000
+AI_CHAT_PROGRESS position=448 prompt=489 prefill_us=6497000 decode_us=0 attention_us=4391000 io_us=270000
+AI_CHAT_PROGRESS position=480 prompt=489 prefill_us=7289000 decode_us=0 attention_us=5038000 io_us=306000
+AI_CHAT_STAGE phase=clock-restore model_bytes=2160856 elapsed_ms=8094 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-restored model_bytes=2160856 elapsed_ms=8095 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_CLOCK restored=125000000
+AI_CHAT_RESULT task=250 program=1 tokens=12 elapsed_ms=8097 execution=1 X=0.3746066
+AI_CHAT_PROFILE input=493 reused=0 prefill_us=7623000 decode_us=294000 tool_us=2000 load_us=101000 prompt_us=5000 attention_us=5551000 attention_io_us=341000 linear_read_us=68000 matmul_us=1919000 wait_us=156000 workers=0 heap_peak=0 stack_peak=0 service_gap_us=17000
+Native SPEC UI: real full-3M Q4, 8MiB PSRAM, emitted tokens/time, compiled program and MK-61 sine PASS
+PicoCalc native AI UI: real APP service, keyboard/forms, emulator tests, case edit invalidation, input angle, apply backup and session resume PASS
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+Firmware/ROMCACHE boundary: observed1836020-byte overlap rejected before packaging PASS
+AI Flash clock:125/div4 ->270/div6 ->125/div4; <=50MHz throughout100 cycles PASS
+Only270MHz qualified AI QPI-read profile changes; <=25MHz SCK PASS

@@ -8,5 +8,5 @@
   ],
   "resulting_frames_identical": true,
   "display_color_decoder": "production lcd::color_pixel",
-  "physical_panel_image_retention": "not yet tested; cold query still running"
+  "physical_panel_image_retention": "User reported the calculator ghost disappeared spontaneously while the same Harness query continued; solid-fill test not run"
 }
