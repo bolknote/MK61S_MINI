@@ -1,0 +1,1 @@
+Exact FP32 multiply/add vs production M0 EABI: 8722880 operand pairs, signed zero/subnormal/nonfinite/boundaries/ties/cancellation PASS

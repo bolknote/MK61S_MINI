@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "kind": "actual ARMv6-M instructions, not RP2040 cycle timings",
+  "pairs": 1536,
+  "arithmetic": {
+    "__aeabi_fmul": {
+      "baseline_mean_instructions": 284.9921875,
+      "candidate_mean_instructions": 111.546875,
+      "samples": 128,
+      "min_ratio": 2.526315789473684,
+      "max_ratio": 2.6018518518518516
+    },
+    "__aeabi_fadd": {
+      "baseline_mean_instructions": 264.03125,
+      "candidate_mean_instructions": 101.21875,
+      "samples": 128,
+      "min_ratio": 2.1145833333333335,
+      "max_ratio": 2.8095238095238093
+    }
+  },
+  "caveat": "CLZ ROM wrapper is functionally modelled; counts omit ROM body cost. Flash/cache contention and timings require hardware."
+}

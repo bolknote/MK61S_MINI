@@ -48,3 +48,7 @@ if [[ "${1:-}" != --explorer-native ]]; then "$build_dir/self-test" --explorer-n
 "$build_dir/self-test" "$@"
 python3 "$root/tests/picocalc_uf2_self_test.py"
 python3 "$root/tests/picocalc_seal_self_test.py"
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" \
+    "$root/tests/picocalc_ai_psram_read_clock_self_test.cpp" -o "$build_dir/ai-psram-read-clock"
+"$build_dir/ai-psram-read-clock"

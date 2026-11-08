@@ -9,6 +9,7 @@
 #include "mk61_ai_kernels.h"
 #if defined(PICO_ON_DEVICE)
 #include "io_worker.hpp"
+#include "psram.hpp"
 #include "pico/stdio_usb.h"
 #endif
 #include "mk61_ai_agent.hpp"
@@ -2681,6 +2682,11 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
     }
     if(stress_execution.busy) stress_execution.busy(stress_execution.context,false);
   }
+#if defined(PICO_ON_DEVICE)
+  const unsigned psram_read_div=psram::diagnostic_clock_divider256();
+#else
+  const unsigned psram_read_div=0;
+#endif
   const bool clocks_restored=ai_clock::restore(frequency);
   ai_m3::close();
   const auto restored_hz=ai_clock::hz();
@@ -2723,6 +2729,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
       config.decode,config.repeat,config.stress_ms,config.control,config.constrained);
   if(config.version==2) append(",\"prefetch\":%u",config.prefetch);
   append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:28);
+  append("\"psram_read_divider256\":%u,",psram_read_div);
   append(
       "\"actual_hz\":%lu,\"restored_hz\":%lu,\"clocks_restored\":%s,\"matching_tokens\":%s,"
       "\"matching_checksums\":%s,\"matching_kv\":%s,\"valid_tool_prefix\":%s,\"model_status\":%u,\"results\":[",

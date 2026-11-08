@@ -109,6 +109,19 @@ class QpiTests(unittest.TestCase):
                     self.assertGreater((end-edges[-1][0])*8,54)
                     self.assertLessEqual(duration*10,8000)
                 self.assertLessEqual(low*10,8000)
+    def test_ai_read_clock_packet_bounds(self):
+        p=programs()['mk61_psram_qpi_read']
+        headers=[bytes([0xEB])+(1008+i*16).to_bytes(3,'big') for i in range(128)]
+        replies=[bytes((i+j)&255 for j in range(16)) for i in range(128)]
+        frames,words,low=execute(p,headers,replies,stalls=True)
+        self.assertEqual(b''.join(x.to_bytes(4,'big') for x in words),b''.join(replies))
+        # CLK_SYS270MHz, PIO divider461/256: fewer than150MHz PIO,
+        # below25MHz SCK. Even extended-temperature4us CE# is respected.
+        self.assertLessEqual(270000000*256,150000000*461)
+        self.assertLess(low*461*1000000000/(270000000*256),4000)
+        for edges,duration,end in frames:
+            self.assertGreater((end-edges[-1][0])*461*1000000000/(270000000*256),3)
+
     def test_instruction_budget(self):
         count=sum(len(p['code']) for p in programs().values())
         spi=sum(bool(re.search(r' side [0-3]',x)) for x in (ROOT/'ports/picocalc/psram_spi.pio').read_text().splitlines())

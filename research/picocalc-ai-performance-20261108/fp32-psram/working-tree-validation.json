@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "production_files_match_measured_snapshot": {
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
+    "ports/picocalc/psram.cpp": "d86a5f34090c2eb1ffca964cd257ad43160eee783977d31380d3a09b606a1fd6",
+    "ports/picocalc/m0_math_extension.ld": "683ef9189183e7e1d3802d32914be1d053f251998d3968fecaae86334401f73c",
+    "tests/picocalc_psram_qpi_self_test.py": "04e92682c50931bbe88f737c64f4bd5935c120e35acf62dcda3128294c0776c9"
+  },
+  "test_log_sha256": "1693e7416247636d7408df575155a17cb407a800289e669ff2bf01ac596985d8",
+  "physical_final_build": "048A0B3E",
+  "physical_final_crc": "597DDC06",
+  "two_pass_seconds_per_token": [
+    0.606646,
+    0.605948
+  ],
+  "reference_seconds_per_token": 0.714,
+  "all_four_features_retained": true,
+  "archived_tokens_and_checksums_match": true,
+  "PSRAM_stress_iterations": 16346,
+  "static_SRAM_bytes": 120360,
+  "heap_capacity_bytes": 109016,
+  "board_released": true,
+  "source_scope": "Exact qualified arithmetic/read files; excludes other agents Spectrum/cold/clock WIP."
+}

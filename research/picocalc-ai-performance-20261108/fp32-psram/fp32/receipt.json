@@ -1,0 +1,59 @@
+{
+  "status": "MEASUREMENT_PASS",
+  "physical_io": true,
+  "control_rerun": false,
+  "reference_seconds_per_token": 0.714,
+  "save_or_restore": false,
+  "cores": 2,
+  "requested_hz": 270000000,
+  "entry": {
+    "build": "BB1B90AF",
+    "crc": "A43CED01",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "firmware_flashed": true,
+  "model_reused": true,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "kv_transaction_counters_available": false,
+  "seconds_per_token": [
+    0.7083255,
+    0.7083175
+  ],
+  "time_reduction_percent": [
+    0.7947478991596535,
+    0.7958683473389239
+  ],
+  "speedup": [
+    1.008011147417395,
+    1.0080225322683682
+  ],
+  "presentation_us_per_token": [
+    168.0,
+    174.0
+  ],
+  "final": {
+    "build": "6DA9F206",
+    "crc": "16D4224D",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "apps_removed": true,
+  "cdc_closed": true,
+  "lease_closed": true
+}

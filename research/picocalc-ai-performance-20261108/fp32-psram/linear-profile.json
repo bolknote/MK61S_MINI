@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "kind": "compiled full INT8 Q4 row kernel, real ARMv6-M instructions, synthetic SRAM operands; NOT device timings",
+  "results": [
+    {
+      "columns": 128,
+      "rows": 8,
+      "variants": {
+        "baseline": {
+          "instructions": 30971,
+          "instruction_ratio_vs_baseline": 1.0
+        },
+        "flash_sum": {
+          "instructions": 21328,
+          "instruction_ratio_vs_baseline": 1.452128657164291
+        },
+        "ram_sum": {
+          "instructions": 21248,
+          "instruction_ratio_vs_baseline": 1.4575960090361446
+        }
+      }
+    },
+    {
+      "columns": 384,
+      "rows": 8,
+      "variants": {
+        "baseline": {
+          "instructions": 94643,
+          "instruction_ratio_vs_baseline": 1.0
+        },
+        "flash_sum": {
+          "instructions": 61992,
+          "instruction_ratio_vs_baseline": 1.5266969931604077
+        },
+        "ram_sum": {
+          "instructions": 61802,
+          "instruction_ratio_vs_baseline": 1.5313905698844699
+        }
+      }
+    },
+    {
+      "columns": 128,
+      "rows": 28,
+      "variants": {
+        "baseline": {
+          "instructions": 108801,
+          "instruction_ratio_vs_baseline": 1.0
+        },
+        "flash_sum": {
+          "instructions": 74447,
+          "instruction_ratio_vs_baseline": 1.4614558007710183
+        },
+        "ram_sum": {
+          "instructions": 74232,
+          "instruction_ratio_vs_baseline": 1.4656886517943744
+        }
+      }
+    }
+  ],
+  "all_output_bits_match": true,
+  "caveat": "ROM CLZ/mem intrinsics are functional models. Flash/cache/DMA/two-core contention require physical measurement."
+}

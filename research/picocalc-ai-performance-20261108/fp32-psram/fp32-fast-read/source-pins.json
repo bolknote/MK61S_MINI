@@ -1,0 +1,26 @@
+{
+  "source_base": "BB1B90AF/A43CED01 frozen Spectrum early-prefetch source",
+  "source_snapshot": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-v28/source",
+  "files": {
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
+    "ports/picocalc/psram.cpp": "d86a5f34090c2eb1ffca964cd257ad43160eee783977d31380d3a09b606a1fd6",
+    "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d",
+    "ports/picocalc/ai_harness.cpp": "bc2bbc6e36ecef398d7233154f599c145d885644c86f061751908bd7822505a3",
+    "ports/picocalc/ai_clock.cpp": "585a4a580613a236d1db127259a6f2d1ce009857321d31c6574c970108f35157",
+    "ports/picocalc/ai_clock.hpp": "aed6cc94bb54f797fc525a74afeef7787feaa8ac0ceead4b0d02b97fb21ec52a",
+    "ports/picocalc/ai_clock_transition.hpp": "e6fcf5428dca3c030c27a3583569a6c53f0550faf564ff80ae956a4954b1febd",
+    "ports/picocalc/ai_flash_clock.hpp": "dbc895c42416c459a61212ff198218a767cf62346de9f53a68478d50c8dc72b1",
+    "ports/picocalc/m0_math_extension.ld": "683ef9189183e7e1d3802d32914be1d053f251998d3968fecaae86334401f73c",
+    "ports/picocalc/CMakeLists.txt": "4036b15f325a9b5292952690634db79068191f0c3c4757e044e3e8178b3ed559",
+    "ports/picocalc/m3_audio.cpp": "d0a17b1959963bd30e16f221bb0dc17c8a639250c3b22a94a361da07023b323a",
+    "ports/picocalc/m3_audio.hpp": "e6c864b568b2aa6b8aece4388180e17d5b6ca379d2c0a10881188f155549c547",
+    "ports/picocalc/m3_audio_engine.hpp": "ded5022f26b49215bb41b7ee438448ef6e5a8c0102b5023bbc3a018010e4afdc",
+    "ports/picocalc/m3_wire.hpp": "fed02f41117063495740ea5d688ad5336045638c0500853cfba0cce3863edbe8",
+    "ports/picocalc/main.cpp": "ebc9d9218cb55a71fe2847aba61f2d3ebb5784b510dcbe69c6e062c88c00bfa2",
+    "tools/firmware/picocalc/build_picocalc.py": "cd84326f6a6080575d062349e6cbec1cfc458f248698e1cfecbc53a66b22233d"
+  }
+}

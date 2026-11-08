@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "source_base": "922db56a6845d81cb98063130f0ef3df0d46a8f9",
+  "selection": "HEAD plus eleven isolated AI source/test files; excludes Spectrum/cold/clock WIP",
+  "sanitizers": [
+    "ASan",
+    "UBSan"
+  ],
+  "source_sha256": {
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
+    "ports/picocalc/psram.cpp": "d86a5f34090c2eb1ffca964cd257ad43160eee783977d31380d3a09b606a1fd6",
+    "ports/picocalc/m0_math_extension.ld": "683ef9189183e7e1d3802d32914be1d053f251998d3968fecaae86334401f73c",
+    "tests/mk61_ai_exact_fp32_self_test.cpp": "bc27811de1bc1e0bdc67cfe2f425f9508bc6f834c101bbba8c4ab2ad426d935d",
+    "tests/picocalc_ai_psram_read_clock_self_test.cpp": "ec5679357753f4518ca5103e3177dcce41989dc14ca84e38e33dba8ac4a6252d",
+    "tests/picocalc_psram_qpi_self_test.py": "04e92682c50931bbe88f737c64f4bd5935c120e35acf62dcda3128294c0776c9",
+    "tests/run_mk61_ai_tests.sh": "9ec4fe984b6438a559324c9e4947a74839f9df62861f51771b9437f744a27208",
+    "ports/picocalc/ai_harness.cpp": "a11d734c7eb67e11b3e1d92bc7645dcdda2055f17cd475935a8bb4b3e2d181e0",
+    "tests/run_picocalc_tests.sh": "21fb6160c7595f4401bfce854216cce87c83dca408ea958d93b68ce1a9105ab1"
+  },
+  "log_sha256": "63be7255a32d2f9961fc628b8408093c8e1ce8138339f072faec4d46a7467725",
+  "full_logits_comparisons": 68,
+  "parallel_context": 512,
+  "gather_context": 256,
+  "gather_joined_batches": 92881,
+  "scalar_M0_operand_pairs": 8722880,
+  "read_clock_exhaustive_profiles": true,
+  "PIO_stalled_DMA_tests": "PASS"
+}

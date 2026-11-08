@@ -1,0 +1,12 @@
+Exact FP32 multiply/add vs production M0 EABI: 8722880 operand pairs, signed zero/subnormal/nonfinite/boundaries/ties/cancellation PASS
+Only270MHz qualified AI QPI-read profile changes; <=25MHz SCK PASS
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.257s
+
+OK
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+OK

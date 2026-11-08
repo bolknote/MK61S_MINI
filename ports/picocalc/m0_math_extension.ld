@@ -139,8 +139,14 @@ SECTIONS {
     } > FLASH
     ASSERT(ADDR(.ai_inference_extension) + SIZEOF(.ai_inference_extension) <= ADDR(.ai_attention_extension),
            "AI model overlaps attention code")
-    ASSERT(SIZEOF(.ai_attention_extension) <= 0x2000,
-           "AI attention exceeds its8KiB slot")
+    ASSERT(SIZEOF(.ai_attention_extension) <= 0x1000,
+           "AI attention exceeds its4KiB slot")
+    .ai_fp32_extension 0x101b5000 : {
+        *(.ai_fp32_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.ai_fp32_extension) <= 0x1000,
+           "Exact FP32 helper exceeds its4KiB slot")
     ASSERT(__flash_binary_end <= 0x101c0000,
            "Firmware overlaps the persistent Spectrum ROM cache")
     ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ADDR(.m0_math_extension),

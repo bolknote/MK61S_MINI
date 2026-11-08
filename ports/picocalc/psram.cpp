@@ -1,6 +1,7 @@
 #include "psram.hpp"
 #include "cosmic_clock.hpp"
 #include "cosmic_clock_plan.hpp"
+#include "ai_psram_read_clock.hpp"
 #include "psram_stream.hpp"
 #include "dma_support.hpp"
 #include "diagnostics.hpp"
@@ -123,6 +124,10 @@ void configure_quad_read(void* destination) {
     auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
 #if MK61_PICOCALC_MANAGED_CLOCK
     configure_diagnostic_clock(config);
+#if defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK
+    const auto div=ai_psram_read_clock::divider256(clock_get_hz(clk_sys),diagnostic_divider256);
+    sm_config_set_clkdiv_int_frac(&config,div/256,div%256);
+#endif
 #endif
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_in_pins(&config,MOSI);
     sm_config_set_set_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
