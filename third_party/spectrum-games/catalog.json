@@ -4068,16 +4068,17 @@
     }
   ],
   "support_files": {
-    "README.md": "3cb5c746b7d058191123f2c4e56a84b52acc0a6f1a3d4883316a92f5a97a1bb1",
+    "README.md": "bc96970346f2d024dc2495b17d6f47f16e5c5031e74c49a8a6f5a82c78ba32a1",
     "ianna/LICENSE.txt": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
     "ianna/CREDITS.txt": "0400ce23f7900232eb78fa9c389f43a873a17db7e553c0c59b2a41649922629b",
     "ianna/upstream-README.txt": "c9f179538ded3aea292e184841da0327cf81c95e00f6acc70ebb0e49d45ef28a",
     "ulaplus/upstream-readme.txt": "603c64ca5fc37cf400ba8b4616d07b134f1b0b2f85512846fe0fc6888e341c11",
     "ulaplus/CC-BY-NC-SA-3.0.txt": "b92477d6e746b3891bc57fb5f6af6191ea194cc76cae714f9b386e22999e2740",
-    "LICENSE-AUDIT.md": "c03fe9b5fd6636377e8e31a7b68b3921e9e08cd56ffe7ea35b84947a701cf609",
+    "LICENSE-AUDIT.md": "ed637c1a06456ca7a9f1860c439ce2b71a9f2d23733554d1d25e2e6b39782389",
     "cosmic-payback/README.md": "bc9e5a4dc0630f35d53b8aeaa6e1688907cf140bfe27c38010e229995bbd5c90",
     "esxdos/README.TXT": "05e5b2bba8cbafdc58e3afb39aa91e99b88b6a22c993b7f1bb87b303ef26e177",
-    "esxdos/ESX089.NFO": "3a41384642cd53b9baf7e8bf88691044acede60b74a6c16fb2aa6fe034aa9077"
+    "esxdos/ESX089.NFO": "3a41384642cd53b9baf7e8bf88691044acede60b74a6c16fb2aa6fe034aa9077",
+    "cosmic-payback/LICENSE.TXT": "75015b0a903774e36e43e1c892b6935e4f743772fbd53c73926f6995d0ce2e89"
   },
   "license_audit": "LICENSE-AUDIT.md",
   "runtime_layout": "programs/spectrum/GAMES.img contains game media and esxDOS runtime only; notices are outside the device tree in redistribution archives.",

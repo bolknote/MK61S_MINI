@@ -1,0 +1,20 @@
+Cosmic Payback - original ZX Spectrum 48K/128K game
+Game author: John Connolly, PROSM Software, 2020.
+
+Author's redistribution permission, from the original game instructions:
+(C) PROSM Software 2020. This program is freeware, please redistribute!
+
+Permission source: https://yrgb.ru/downloads/110/
+Game source: https://yrgb.ru/downloads/109/
+Author's website: https://www.connosoft.com/prosm/
+Original instructions SHA-256:
+ceb7a16a7840101c39f18c9d784d1f63297047c28447e39be9928ddad062e05f
+
+This is the author's freeware redistribution permission. No MIT or Apache
+license is assigned by MK61S. Original game bytes and embedded credits are
+unchanged. MK61S added only this permission/source notice and archive wrapper.
+
+Acknowledged by the game's author: psndcj (Triebkraft AY player), Sergey
+Bulba (Vortex Tracker II and PT3 playback), Einar Saukas (ZX7), Dave Hughes
+(128K tests), Jonathan Cauldwell (programming tutorial), Claus Jahn (graphics
+tools), Julian Albo (Pasmo).

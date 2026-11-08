@@ -21,3 +21,9 @@ __pycache__/
 
 # Служебные файлы Finder не относятся к исходникам проекта
 .DS_Store
+
+# Spectrum games are downloaded locally, never committed.
+/third_party/spectrum-games/**/*.zip
+/third_party/spectrum-games/**/*.zip.tmp
+/third_party/spectrum-games/runtime.json
+/programs/spectrum/GAMES.img
