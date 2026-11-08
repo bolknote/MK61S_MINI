@@ -2,7 +2,8 @@
 #define MK61_COSMIC_CLOCK_HPP
 #include <cstdint>
 #if (defined(MK61_PICOCALC_COSMIC_CLOCK_DIAG) && MK61_PICOCALC_COSMIC_CLOCK_DIAG) || \
-    (defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK)
+    (defined(MK61_PICOCALC_AUDIO_CLOCK) && MK61_PICOCALC_AUDIO_CLOCK) || \
+    (defined(MK61_PICOCALC_COMPUTE_CLOCK) && MK61_PICOCALC_COMPUTE_CLOCK)
 #define MK61_PICOCALC_MANAGED_CLOCK 1
 #else
 #define MK61_PICOCALC_MANAGED_CLOCK 0
@@ -14,6 +15,7 @@ void bootstrap(); // Main's first statement, before TinyUSB/stdio/peripheral ini
 void idle_check(bool(*predicate)());
 bool command(const char* args,Writer writer,void* context);
 uint32_t pwm_divider16();
+bool restore_compute_clock(uint32_t hz); // Battery sleep, USB still stopped.
 #else
 inline void bootstrap(){}
 inline void idle_check(bool(*)()){}

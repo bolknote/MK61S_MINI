@@ -18,7 +18,7 @@ u32 get32(const u8 *p) {
 }
 } // namespace
 bool valid_settings(const Settings &s) {
-  return s.key_sound <= 1 && s.classic_speed <= 1 &&
+  return s.compute_profile <= 2 && s.key_sound <= 1 && s.classic_speed <= 1 &&
          s.memory <= 2 && s.random <= 1 && s.russian <= 1 &&
          s.calculator_font <= 1 &&
          (((s.ui_font_family==0 || s.ui_font_family==1 || (s.ui_font_family==3 && s.ui_font_key!=0)) &&
@@ -55,6 +55,7 @@ void encode_settings(const Settings &s, u32 sequence,
   put32(out + 30, s.alarm_epoch[1]);
   out[34]=s.text_rows;out[35]=s.text_width;out[36]=s.text_height;out[37]=s.text_gap;
   out[38]=s.ui_font_family;put32(out+40,s.ui_font_key);
+  out[39]=s.compute_profile;
   put32(out + 64, checksum(out, 64));
 }
 bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
@@ -72,6 +73,8 @@ bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
   next.alarm_epoch[1] = get32(page + 30);
   next.text_rows=page[34];next.text_width=page[35];next.text_height=page[36];next.text_gap=page[37];
   next.ui_font_family=page[38];next.ui_font_key=get32(page+40);
+  // Erased in every older v6 page; the default remains stock125MHz.
+  next.compute_profile=page[39]==0xFF?0:page[39];
   if (!valid_settings(next))
     return false;
   value = next;

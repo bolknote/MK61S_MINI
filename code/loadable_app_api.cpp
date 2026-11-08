@@ -18,6 +18,7 @@
 #include "tools.hpp"
 
 #include <string.h>
+#include "compute_clock.hpp"
 
 extern void idle_main_process(void);
 
@@ -38,6 +39,7 @@ static void api_delay(u32 duration_ms) {
     return;
   }
   const u32 started_at = millis();
+  compute_clock::Wait waiting;
   do {
     idle_main_process();
     delay(1);
@@ -121,6 +123,7 @@ static i32 api_key_poll(void) {
 }
 
 static i32 api_key_wait(void) {
+  compute_clock::Wait waiting;
   for(;;) {
     const i32 key = api_key_poll();
     if(key != KEY_NONE) return key;

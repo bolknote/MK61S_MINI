@@ -244,6 +244,11 @@ class Machine:
         self.live_ui = True
         self.legacy_rows = 4
         self.setup_rows, self.setup_views = {}, []
+        self.settings_values = [10, 1, 0, 2, 0, 0, 0]
+        self.settings_features = 15
+        self.settings_writes = []
+        self.compute_profile = self.compute_active = 0
+        self.compute_platform = 1
         self.revision = 1
         self.drop_live_ui_on_wait = False
         self.ui_ends = 0
@@ -349,7 +354,7 @@ class Machine:
                     result = 4
                 else:
                     result = 5 if self.ui_font[1] == 12 else (3 if self.ui_font[1] == 16 else 4)
-            elif name == 'display_clear': self.lines = []; result = 1
+            elif name == 'display_clear': self.lines = []; self.setup_rows = {}; result = 1
             elif name == 'display_write_m8':
                 self.lines.append(bytes(uc.mem_read(c,d)).decode('cp1251')); result = 1
             elif name in ('key_poll','key_wait'):
@@ -392,6 +397,12 @@ class Machine:
             if a == 2: self.lines.append(chr(b))
             if a == 10: self.viewport_ends += 1
             if a == 15: self.ui_ends += 1; self.ui_text = False
+            if a == 18: self.ui_text = self.graphics and self.live_ui
+            if a == 19: return self.ui_text
+            if a == 20:
+                line = chr(c & 255) + self.string(p)
+                self.setup_rows[b] = line; self.lines.append(line)
+                return 1
             width,height = self.graphics_dimensions if self.graphics else (0,0)
             return {6:1,11:self.graphics,12:width,13:height,14:self.graphics}.get(a,0)
         if op == 2:
@@ -401,7 +412,7 @@ class Machine:
             if a in (3,4): return self.chip_exit and self.services > 20 and b == self.mapping[39]
             if a == 11: return -1
             return 0
-        if op == 3: return {0:0,1:50,2:11,3:1}[a]
+        if op == 3: return {0:self.settings_values[5],1:50,2:11,3:1}[a]
         if op == 4: return 0x31415926
         if op == 5: self.clock += 2; return self.clock*1000
         if op == 6: return sum(x[0] == a for x in self.files.values())
@@ -517,6 +528,22 @@ class Machine:
                 assert crc == binascii.crc_hqx(data[:18] + b'\0\0' + data[20:], 0xffff)
                 self.installed_font = data
                 return 1
+            if a == 27:
+                count = 5 if self.compute_platform == 1 else 3
+                if b == 1:
+                    assert c < count
+                    self.compute_profile = c; return 1
+                assert not b and not c and not p
+                return (self.compute_profile | self.compute_active << 8 |
+                        self.compute_platform << 16 | count << 24)
+            if a == 28:
+                self.uc.mem_write(p, bytes(self.settings_values + [self.settings_features]))
+                return 1
+            if a == 29:
+                assert 0 <= b < 7 and 0 <= c <= (10,1,1,2,1,1,3)[b]
+                assert b != 6 or self.settings_features & 4
+                self.settings_values[b] = c; self.settings_writes.append((b,c))
+                return 1
         if op == 37:
             if a == 0: return self.resource_revision
             if a == 4: return getattr(self,"catalog_revision",self.resource_revision)
@@ -558,6 +585,7 @@ class Machine:
         self.uc.mem_write(self.base,self.image)
         self.uc.ctl_remove_cache(self.pool_begin, self.pool_end)
         kinds = {'focal': 1, 'tinybasic': 2, 'wbmp-viewer': 3,
+                 'app': 4,
                  'chip8': 5, 'markdown-viewer': 6,
                  'markdown-text': 6, 'setup': 7}
         result = self.call(0,self.api,self.crc,kinds[self.kind])
@@ -689,6 +717,54 @@ def check_setup(m, package):
         m.binary_stream_supported = False
         assert m.call(0, m.api, m.crc, 7) == 1, 'missing binary font source service must refuse UI SETUP'
         m.binary_stream_supported = True
+    # The actual relocated APP owns all menu navigation and edits. Ordinary
+    # arrows must never write settings; optional fields must keep their order.
+    left, right, ok, esc, shg_left, shg_right = m.mapping[36:42]
+    for features in (0, 15):
+        m.load(package); m.settings_features = features
+        m.settings_values = [10,1,0,2,0,0,0]; m.settings_writes = []
+        count = 11 if features else 6
+        m.keys = [right] * count + [left] * count + [esc]
+        assert m.call(0x408) == 0 and not m.settings_writes
+        assert not m.keys and not m.ui_text
+        # Volume uses bounded shifted edits and wraps only on OK.
+        m.keys = [shg_right, ok, shg_left, shg_right, esc]
+        assert m.call(0x408) == 0 and m.settings_values[0] == 1
+        assert m.settings_writes == [(0,10),(0,0),(0,0),(0,1)]
+        # Memory is still changed by the same action after inserting compute.
+        m.keys = [right] * (4 if features else 3) + [ok, esc]
+        assert m.call(0x408) == 0 and m.settings_values[3] == 0
+    # Editing the inline frequency changes the saved request, never active Hz.
+    for platform in (0,1,2):
+        m.compute_platform = platform; m.compute_profile = m.compute_active = 0
+        m.keys = [right] * 3 + [ok, esc]
+        assert m.call(0x408) == 0 and m.compute_profile == 1
+        assert m.compute_active == 0 and not m.keys and not m.ui_text
+        m.lines = []; m.keys = [esc]
+        assert m.call(0x407) == 0 and 'After restart' in ''.join(m.lines)
+        assert (str((96,108,200)[platform]) + ' MHz') in ''.join(m.lines)
+    m.compute_platform=1; m.compute_profile=m.compute_active=0
+    for presses,expected,mhz in ((3,3,132),(1,4,138),(1,0,96)):
+        m.lines=[];m.keys=[right]*3+[ok]*presses+[esc]
+        assert m.call(0x408)==0 and m.compute_profile==expected
+        assert m.compute_active==0 and not m.keys
+        lines=''.join(m.lines)
+        assert str(mhz) in lines
+        if expected>=3:assert 'USB' in lines,lines
+    if m.graphics:
+        # Reproduce the physical four-row menu -> two-line dialog transition.
+        # Lower rows must be erased on entry and on subsequent redraws.
+        old_fonts, old_ui = m.ui_fonts, m.ui_text
+        m.ui_fonts = m.ui_text = True
+        m.compute_profile = m.compute_active = 0
+        for keys in ([esc], [right, esc]):
+            m.setup_rows = {row: 'STALE MENU ROW' for row in range(6)}
+            m.keys = list(keys)
+            assert m.call(0x407) == 0
+            assert set(m.setup_rows) == {0, 1}, m.setup_rows
+            assert not any('STALE' in text for text in m.setup_rows.values())
+        m.ui_fonts, m.ui_text = old_fonts, old_ui
+    m.settings_values = [10,1,0,2,0,0,0]
     m.load(package); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]
     assert m.call(0x400)==0
     assert 'STM32F401' in ''.join(m.lines),m.lines

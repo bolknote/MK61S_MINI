@@ -2,6 +2,7 @@
 #if MK61_USB_DIRECT_SUPPORTED && defined(MK61_USB_BUILD_BRIDGE)
 #include <stm32f4xx_ll_usb.h>
 #include <cstring>
+#include "compute_clock.hpp"
 extern "C" {
 #include <usbd_core.h>
 #include <usbd_if.h>
@@ -112,6 +113,9 @@ void ungate_phy() {
 }
 } // namespace stm32f4_usb_device
 extern "C" USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef* pdev) {
+  // Shared admission for CDC and MSC, including restarts after STOP. An
+  // offline PLL never enables the PHY/IRQ or exposes an invalid USB clock.
+  if(!compute_clock::usb_available(compute_clock::platform(),compute_clock::active_profile())) return USBD_FAIL;
   NVIC_DisableIRQ(OTG_FS_IRQn);
   gpio_prepare();
   RCC->AHB2ENR |= RCC_AHB2ENR_OTGFSEN; (void)RCC->AHB2ENR;
@@ -141,8 +145,8 @@ extern "C" USBD_StatusTypeDef USBD_LL_DeInit(USBD_HandleTypeDef*) {
   RCC->AHB2ENR &= ~RCC_AHB2ENR_OTGFSEN;
   return USBD_OK;
 }
-extern "C" USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef*) { InterruptGuard lock; stm32f4_usb_device::ungate_phy(); USB_EnableGlobalInt(USB_OTG_FS); return status(USB_DevConnect(USB_OTG_FS)); }
-extern "C" USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef*) { InterruptGuard lock; stm32f4_usb_device::ungate_phy(); USB_DisableGlobalInt(USB_OTG_FS); USB_StopDevice(USB_OTG_FS); return status(USB_DevDisconnect(USB_OTG_FS)); }
+extern "C" USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef*) { if(!initialized)return USBD_FAIL; InterruptGuard lock; stm32f4_usb_device::ungate_phy(); USB_EnableGlobalInt(USB_OTG_FS); return status(USB_DevConnect(USB_OTG_FS)); }
+extern "C" USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef*) { if(!initialized)return USBD_OK; InterruptGuard lock; stm32f4_usb_device::ungate_phy(); USB_DisableGlobalInt(USB_OTG_FS); USB_StopDevice(USB_OTG_FS); return status(USB_DevDisconnect(USB_OTG_FS)); }
 extern "C" USBD_StatusTypeDef USBD_LL_OpenEP(USBD_HandleTypeDef*, uint8_t address, uint8_t type, uint16_t mps) {
   InterruptGuard lock; Endpoint* ep = endpoint(address); if(!ep || mps == 0 || mps > 64 || type == EP_TYPE_ISOC) return USBD_FAIL;
   *ep = {}; ep->type = type; ep->maxpacket = mps;

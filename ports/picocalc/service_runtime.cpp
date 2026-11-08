@@ -1,4 +1,5 @@
 #include "services.hpp"
+#include "compute_clock.hpp"
 #include "canvas.hpp"
 #include "mk61_ref.hpp"
 #include "mk_math.hpp"
@@ -177,6 +178,7 @@ bool Services::service() {
     return true;
 }
 bool Services::wait_key(u8& key) {
+    compute_clock::Wait wait;
     if(print_[0] && !flush_print(false)) return false;
     publish_console();
     if(deferred_count_) {
@@ -342,6 +344,7 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
     }
 }
 void Services::run_document(const language_vm::View* prepared) {
+    compute_clock::Scope compute;
     if(prepared || document_==Document::BASIC || document_==Document::FOCAL) bind_cache();
     else release_cache();
     diagnostics::Scope measure(diagnostics::Point::LANGUAGE);

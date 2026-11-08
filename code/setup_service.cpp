@@ -10,6 +10,7 @@
 #include "development.hpp"
 #include "prepared_font.hpp"
 #include "shared_memory.hpp"
+#include "compute_clock.hpp"
 #include <string.h>
 
 namespace setup_ui {
@@ -36,6 +37,22 @@ static u32 apply_font_profile(void* payload) {
 u32 service(u32 operation, u32 a, u32 b, void* payload) {
   switch(operation) {
     case MK61_SETUP_VERSION: return MK61_SETUP_API_VERSION;
+    case MK61_SETUP_SETTINGS_READ:
+      if(!payload)return 0;
+      library_mk61::read_settings_snapshot(*(mk61_setup_settings*)payload);return 1;
+    case MK61_SETUP_SETTING_WRITE:return library_mk61::apply_setting(a,b);
+    case MK61_SETUP_COMPUTE_CLOCK:
+#if MK61_COMPUTE_CLOCK_SUPPORTED
+      if(a == 1)return b < compute_clock::profile_count(compute_clock::platform()) &&
+          library_mk61::set_compute_clock_profile((u8)b);
+      if(a != 0 || b || payload)return 0;
+      return library_mk61::compute_clock_profile() |
+          (u32(compute_clock::active_profile())<<8) |
+          (u32(compute_clock::platform())<<16) |
+          (u32(compute_clock::profile_count(compute_clock::platform()))<<24);
+#else
+      return 0;
+#endif
     case MK61_SETUP_FEATURES:
       return MK61_SETUP_FEATURE_RTC_VALUE | (MK61_HAS_GRAPHICAL_TEXT_SETTINGS
                  ? (u32) MK61_SETUP_FEATURE_TEXT_PROFILE : 0U) |

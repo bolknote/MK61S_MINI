@@ -27,7 +27,7 @@ SYSTEM_MODULES = {
     "vm-file-cache": ("VMSTORE", "VM_FILE_CACHE", ["language_vm_file_cache_entry.cpp",
         "language_vm_file_cache.cpp", "language_compiler_flow.cpp", "language_vm.cpp",
         "language_bytecode.cpp"], None),
-    "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp",
+    "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_settings_ui.cpp", "setup_module_entry.cpp",
         "setup_font_compiler.cpp", "fmk_font.cpp", "fmk_prepare.cpp",
         "prepared_font.cpp"], None),
     "focal": ("FOCAL", "FOCAL", ["focal.cpp", "focal_module_entry.cpp"], None),
@@ -53,9 +53,10 @@ SYSTEM_MODULES = {
 SYSTEM_SIZE_BUDGETS = {
     "terminal": {"app_bytes": 12_500, "memory_bytes": 18_432},
     "terminal-clock": {"app_bytes": 5_000, "memory_bytes": 6_144},
-    # SETUP owns all FMK validation and compilation.  Keep enough headroom in
-    # the 20-KiB APP arena for that decoder plus its full 8-KiB source buffer.
-    "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
+    # SETUP owns the full settings UI and FMK compiler. Its workspace is a
+    # separate lease. The authorized stored-file ceiling is now 20 KiB;
+    # the existing 20-KiB limit for the loaded image plus BSS is unchanged.
+    "setup": {"app_bytes": 20_480, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.

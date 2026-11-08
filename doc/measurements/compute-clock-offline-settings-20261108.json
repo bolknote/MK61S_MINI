@@ -1,0 +1,370 @@
+{
+  "board": "AEB505B6E0067623",
+  "usb": "2068336B4731",
+  "working_build": "076CC619",
+  "diagnostic_build": "209CC822",
+  "profile_frequencies_mhz": [
+    96,
+    108,
+    120,
+    132,
+    138
+  ],
+  "offline_profiles": [
+    3,
+    4
+  ],
+  "working_flash_bytes": 402764,
+  "flash_delta_vs_CFD23EE8": 464,
+  "static_ram_bytes": 21848,
+  "static_ram_delta": 0,
+  "limits": {
+    "f411_flash_headroom": 16384,
+    "f411_static_frame": 5120,
+    "f401_flash_headroom": 4096,
+    "f401_static_frame": 2048,
+    "setup_file": 20480,
+    "setup_memory": 20480
+  },
+  "status": "COMPLETE",
+  "files": {
+    "working/resident.bin": {
+      "bytes": 402764,
+      "sha256": "9b8a3b918cfc1bfba82adaebdf59024cbd9573daa49085fa1d1024787725ee80"
+    },
+    "working/resident.elf": {
+      "bytes": 668860,
+      "sha256": "f2323aab7952ab71aff6e0c32c6d1534084ae6cc257553d658ba7a383031b7a2"
+    },
+    "diagnostic/resident.bin": {
+      "bytes": 403092,
+      "sha256": "73ead73b3878c85b92e032c2d0c22f48e9102c954ae353e4d433fc517ce13b6e"
+    },
+    "diagnostic/resident.elf": {
+      "bytes": 673220,
+      "sha256": "666f75fb105fead8afb3fdec296cb5041f5c5f8de2a83ba21234ecb617039cca"
+    },
+    "setup/SETUP.APP": {
+      "bytes": 11806,
+      "sha256": "81cbd1ab852194bbfe7c4bd96dc35c7bf41780febab6073ee542f1a7f43b81ab"
+    },
+    "selector/CLKSET.APP": {
+      "bytes": 901,
+      "sha256": "719d72e03b8ca0a744617b3ac01273b94cefcd9d4740da1ea641cebb5b928ea5"
+    },
+    "diagnostic-v2/resident.bin": {
+      "bytes": 403128,
+      "sha256": "f82b0341f2c936c4f193da4dc455f48efeb02eb8b832ebe5e73f88d9d0574e13"
+    },
+    "diagnostic-v2/resident.elf": {
+      "bytes": 673120,
+      "sha256": "43feb9249dcb7fd0f8d58a3132a2a6af51032d52bb2dc87645b9beaad9fd3d26"
+    }
+  },
+  "hardware_profiles": [
+    {
+      "stage": 0,
+      "profile": 0,
+      "mhz": 96,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 519667,
+        "US1": 515390,
+        "US2": 515398,
+        "GAP0": 1583,
+        "GAP1": 208,
+        "GAP2": 208,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": null,
+      "transport": {
+        "pongs": 73,
+        "pong_max_s": 0.0676652499823831
+      }
+    },
+    {
+      "stage": 1,
+      "profile": 1,
+      "mhz": 108,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 54000000,
+        "HZ1": 108000000,
+        "HZ2": 54000000,
+        "US0": 991976,
+        "US1": 490372,
+        "US2": 983858,
+        "GAP0": 2871,
+        "GAP1": 207,
+        "GAP2": 424,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": null,
+      "transport": {
+        "pongs": 113,
+        "pong_max_s": 0.2985391659894958
+      }
+    },
+    {
+      "stage": 2,
+      "profile": 2,
+      "mhz": 120,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 60000000,
+        "HZ1": 120000000,
+        "HZ2": 60000000,
+        "US0": 888540,
+        "US1": 441592,
+        "US2": 884621,
+        "GAP0": 2563,
+        "GAP1": 185,
+        "GAP2": 381,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": null,
+      "transport": {
+        "pongs": 104,
+        "pong_max_s": 0.1260150410234928
+      }
+    },
+    {
+      "stage": 3,
+      "profile": 3,
+      "mhz": 132,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 66000000,
+        "HZ1": 132000000,
+        "HZ2": 66000000,
+        "US0": 775733,
+        "US1": 388779,
+        "US2": 776045,
+        "GAP0": 407,
+        "GAP1": 96,
+        "GAP2": 191,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": {
+        "PROFILE": 3,
+        "HZ": 66000000,
+        "GATE0": 0,
+        "IRQ0": 0,
+        "GATE1": 0,
+        "IRQ1": 0,
+        "OPEN": 1
+      },
+      "transport": null
+    },
+    {
+      "stage": 4,
+      "profile": 4,
+      "mhz": 138,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 69000000,
+        "HZ1": 138000000,
+        "HZ2": 69000000,
+        "US0": 742348,
+        "US1": 371802,
+        "US2": 741959,
+        "GAP0": 389,
+        "GAP1": 92,
+        "GAP2": 183,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": {
+        "PROFILE": 4,
+        "HZ": 69000000,
+        "GATE0": 0,
+        "IRQ0": 0,
+        "GATE1": 0,
+        "IRQ1": 0,
+        "OPEN": 1
+      },
+      "transport": null
+    },
+    {
+      "stage": 5,
+      "profile": 3,
+      "mhz": 132,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 66000000,
+        "HZ1": 132000000,
+        "HZ2": 66000000,
+        "US0": 775919,
+        "US1": 388779,
+        "US2": 776044,
+        "GAP0": 407,
+        "GAP1": 96,
+        "GAP2": 191,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": {
+        "PROFILE": 3,
+        "HZ": 66000000,
+        "GATE0": 0,
+        "IRQ0": 0,
+        "GATE1": 0,
+        "IRQ1": 0,
+        "OPEN": 1
+      },
+      "transport": null
+    },
+    {
+      "stage": 6,
+      "profile": 4,
+      "mhz": 138,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 69000000,
+        "HZ1": 138000000,
+        "HZ2": 69000000,
+        "US0": 742422,
+        "US1": 371839,
+        "US2": 742063,
+        "GAP0": 390,
+        "GAP1": 92,
+        "GAP2": 183,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": {
+        "PROFILE": 4,
+        "HZ": 69000000,
+        "GATE0": 0,
+        "IRQ0": 0,
+        "GATE1": 0,
+        "IRQ1": 0,
+        "OPEN": 1
+      },
+      "transport": null
+    },
+    {
+      "stage": 7,
+      "profile": 0,
+      "mhz": 96,
+      "result": {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 519673,
+        "US1": 515389,
+        "US2": 515398,
+        "GAP0": 1583,
+        "GAP1": 207,
+        "GAP2": 207,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1
+      },
+      "usb_gating": null,
+      "transport": {
+        "pongs": 73,
+        "pong_max_s": 0.06551820796448737
+      }
+    }
+  ],
+  "setup": {
+    "name": "SETUP",
+    "target": "stm32",
+    "abi": 6,
+    "load_address": 536870912,
+    "native_display": false,
+    "graphics_width": 192,
+    "graphics_height": 64,
+    "relocations": 206,
+    "relocation_bytes": 225,
+    "entry_offset": 0,
+    "image_bytes": 16043,
+    "bss_bytes": 29,
+    "memory_bytes": 16072,
+    "app_bytes": 11806,
+    "compression": "ZX0+BCJ",
+    "zx0_parser": "optimal",
+    "resident_imports": 0,
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "f401": {
+    "flash_bytes": 256980,
+    "headroom": 5164,
+    "static_ram_bytes": 29180,
+    "max_static_frame": 1312
+  },
+  "menu": {
+    "shots": [
+      {
+        "mhz": 96,
+        "sha256": "85d0816d20abc8468fdc9bda095fb4e8229576320959d415a90b959798ce2cea"
+      },
+      {
+        "mhz": 108,
+        "sha256": "c91c364f39c7cafe7eae052633e845a7690c41cb0358198bee6c3689fe0ac7ec"
+      },
+      {
+        "mhz": 120,
+        "sha256": "85230a99e005a86db6dfd9e425c4ddee6e2b03de9b6479bedb8177753230dd1b"
+      },
+      {
+        "mhz": 132,
+        "sha256": "24579504e33a04015285af738135a795a4e10a96f23401f98ddc3ecfb4dca270"
+      },
+      {
+        "mhz": 138,
+        "sha256": "4db2e6f22aa2a32e69b0e6455bb819abfb59ec496dd6b8476128357d6b57f38a"
+      },
+      {
+        "mhz": 96,
+        "sha256": "85d0816d20abc8468fdc9bda095fb4e8229576320959d415a90b959798ce2cea"
+      }
+    ],
+    "pongs": 269,
+    "pong_max_s": 0.009073167049791664
+  },
+  "final": {
+    "build": "076CC619",
+    "cpu_mhz": 96,
+    "profile": 0,
+    "full_flash_readback": true,
+    "firmware_crc": "valid",
+    "original_files_sha256_verified": 57,
+    "crash": "none",
+    "mpu": "layout=ok",
+    "calculator_ip": 0,
+    "temporary_diagnostic_files_removed": true
+  }
+}

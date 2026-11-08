@@ -58,7 +58,8 @@ struct SettingsFlags {
     struct {
       u8 language_ru : 1;
       u8 program_memory_mode : 2;
-      u8 speed_mode : 2;
+      u8 speed_mode : 1;
+      u8 compute_profile_high : 1;
       u8 random_mode_mk61s : 1;
       u8 idle_signal_off : 1;
       u8 display_rows_8 : 1;
@@ -72,25 +73,9 @@ struct SettingsFlags {
 static_assert(sizeof(SettingsFlags) == 1, "SettingsFlags must fit one EEPROM byte");
 
 namespace speed_mode_storage {
-  // These values are persisted in SettingsFlags and therefore form a storage
-  // contract. Value 2 used to mean TURBO; both former fast modes now migrate
-  // to the single, fastest MAXIMUM mode.
   static constexpr u8 CLASSIC = 0;
   static constexpr u8 MAXIMUM = 1;
-  static constexpr u8 LEGACY_TURBO = 2;
-
-  constexpr u8 normalize(u8 stored) {
-    return stored == CLASSIC ? CLASSIC : MAXIMUM;
-  }
-
-  static_assert(normalize(CLASSIC) == CLASSIC,
-                "CLASSIC settings must remain CLASSIC");
-  static_assert(normalize(MAXIMUM) == MAXIMUM,
-                "MAXIMUM settings must remain MAXIMUM");
-  static_assert(normalize(LEGACY_TURBO) == MAXIMUM,
-                "legacy TURBO settings must migrate to MAXIMUM");
-  static_assert(normalize(3) == MAXIMUM,
-                "invalid fast settings must fail safe to MAXIMUM");
+  constexpr u8 normalize(u8 stored) {return stored==CLASSIC?CLASSIC:MAXIMUM;}
 }
 
 struct SoundSettings {
@@ -99,7 +84,7 @@ struct SoundSettings {
     struct {
       u8 volume : 4;
       u8 display_rows_mode : 2;
-      u8 reserved : 2;
+      u8 compute_profile : 2;
     } bits;
   };
 
@@ -108,6 +93,15 @@ struct SoundSettings {
 };
 
 static_assert(sizeof(SoundSettings) == 1, "SoundSettings must fit one EEPROM byte");
+
+inline u8 stored_compute_clock_profile(SettingsFlags flags,SoundSettings sound) {
+  return sound.bits.compute_profile | (flags.bits.compute_profile_high << 2);
+}
+inline void set_stored_compute_clock_profile(SettingsFlags& flags,SoundSettings& sound,u8 profile) {
+  flags.bits.compute_profile_high = profile >> 2;
+  sound.bits.compute_profile = profile & 3;
+}
+
 
 namespace library_mk61 {
   extern  u8    sound_volume(void);
@@ -233,11 +227,11 @@ void store_settings_flags(SettingsFlags flags);
 inline SoundSettings normalize_sound_settings(u8 raw_settings) {
   SoundSettings settings((raw_settings == 0xFF) ? 0 : raw_settings);
   if(raw_settings == 0xFF || settings.bits.volume > 10) settings.bits.volume = 10;
-  settings.bits.reserved = 0;
   return settings;
 }
 
 SoundSettings read_sound_settings(void);
+u8 read_compute_clock_profile(void);
 void store_sound_settings(SoundSettings settings);
 OledSettings read_oled_settings(void);
 void store_oled_settings(OledSettings settings);

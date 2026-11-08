@@ -13,6 +13,7 @@
 #include "prepared_font.hpp"
 #include "setup_font_compiler.hpp"
 #include "setup_service.hpp"
+#include "compute_clock_plan.hpp"
 #if defined(MK61_BUILD_PORTABLE_SYSTEM)
 #include "setup_compat.hpp"
 #endif
@@ -48,6 +49,10 @@ static constexpr usize HARDWARE_LINE_SIZE = 32;
 static void printSetupLines(const char* first, const char* second) {
 #if MK61_SETUP_UI_FONT_CHOOSER
   if(service(MK61_SETUP_FEATURES) & MK61_SETUP_FEATURE_UI_FONT) {
+    // A two-line dialog replaces the complete settings window, including
+    // any additional rows of a graphical UI font.
+    MK61DisplayUpdate update(main_lcd());
+    main_lcd().clear();
     service(MK61_SETUP_TEXT, 0, 0, (void*) first);
     service(MK61_SETUP_TEXT, 1, 0, (void*) second);
     return;
@@ -252,6 +257,30 @@ static void drawRtcCalibrationEditor(
   main_lcd().setCursor(
     (u8) rtc_settings::active_text_position(editor), 1);
   if(main_lcd().supportsCursor()) main_lcd().cursorOn();
+}
+
+bool compute_frequency() {
+  for(;;) {
+    const u32 value=service(MK61_SETUP_COMPUTE_CLOCK);
+    if(!(value>>24))return action::MENU_BACK;
+    const auto platform=(compute_clock::Platform)((value>>16)&0xFF);
+    const u8 profile=(u8)value;
+    const bool pending=profile!=(u8)(value>>8);
+    char line[32];
+    snprintf(line,sizeof(line),"%u MHz%s",unsigned(compute_clock::high_mhz(platform,profile)),
+        compute_clock::usb_available(platform,profile)?"":" USB-");
+    printSetupLines(library_mk61::language_is_ru()
+        ? (pending?M8("После рестарта"):(main_lcd().uiTextActive()
+            ? M8("Частота процессора"):M8("Частота CPU")))
+        : (pending?"After restart":"CPU frequency"),line);
+    const i32 key=wait_key_or_display_change(main_lcd().displayModeRevision());
+    if(key==KEY_ESC_PRESS || key==KEY_OK_PRESS)return action::MENU_BACK;
+    if(key==KEY_LEFT_PRESS || key==KEY_SHG_LEFT_PRESS ||
+       key==KEY_RIGHT_PRESS || key==KEY_SHG_RIGHT_PRESS) {
+      const int direction=(key==KEY_LEFT_PRESS || key==KEY_SHG_LEFT_PRESS)?-1:1;
+      service(MK61_SETUP_COMPUTE_CLOCK,1,compute_clock::step(platform,profile,direction));
+    }
+  }
 }
 
 bool calibration(void) {

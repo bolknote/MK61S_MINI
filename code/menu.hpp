@@ -4,13 +4,14 @@
 #include  "keyboard.h"
 #include  "tools.hpp"
 #include  "lcd_ru.hpp"
+#include "loadable_app_services.h"
 
 namespace action {
   static constexpr bool MENU_EXIT = true;
   static constexpr bool MENU_BACK = false;
 }
 
-typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню 
+typedef bool (*menu_action)(void);  // возвращает необходимость покинуть главное меню
 
 enum class ProgramMemoryMode : u8 {
   CLASSIC_105,
@@ -35,11 +36,6 @@ struct  t_punct {
 };
 
 extern bool settings_select(void);
-extern bool TurnSoundVolume(void);
-extern bool TurnSpeed(void);
-extern bool TurnLanguage(void);
-extern bool TurnProgramMemory(void);
-extern bool TurnRandomMode(void);
 extern bool UsbDiskMode(void);
 // The terminal/HIL entry uses the same lifecycle as the menu action, but an
 // initialization error must return to CDC instead of waiting for a physical
@@ -50,14 +46,6 @@ extern bool UsbDiskModeUnattended(void);
 // the destroyed terminal generation.
 extern u32 usb_terminal_generation(void);
 extern bool UsbScreenMode(void);
-extern bool TurnIdleSignal(void);
-#if defined(MK61_OLED1602_WS0010)
-extern bool TurnOledProtection(void);
-#endif
-extern bool TurnDisplayRows(void);
-extern bool SetDateTime(void);
-extern bool SetRtcCalibration(void);
-extern bool FontSetup(void);
 extern bool ResetDevice(void);
 extern bool system_select(void);
 
@@ -104,6 +92,10 @@ namespace library_mk61 {
   extern  void  poll_settings_state_save(void);
   extern  void  load_settings_state(void);
   extern  SpeedMode speed_mode(void);
+  extern  u8    compute_clock_profile(void);
+  extern  bool  set_compute_clock_profile(u8 profile);
+  extern  void  read_settings_snapshot(mk61_setup_settings& out);
+  extern  bool  apply_setting(u32 setting,u32 value);
   extern  bool  speed_is_classic(void);
   extern  bool  speed_is_max(void);
 
@@ -147,7 +139,6 @@ class class_menu {
 
     void draw(void);
     i32 wait_key(void);
-    bool handle_settings_adjustment(i32 key);
 
   public:
     constexpr class_menu(t_punct** punts_of_menu, int count_of_puncts)

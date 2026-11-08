@@ -1,0 +1,37 @@
+--- a/code/stm32f4_runtime.cpp
++++ b/code/stm32f4_runtime.cpp
+@@ -216,5 +216,6 @@
+ extern "C" void __cxa_pure_virtual(void) { fail(); }
+ extern "C" void _init(void) {}
+ extern "C" void _fini(void) {}
+-int main() { setup();for(;;) loop(); }
++extern void offline_profile_boot_probe();
++int main() { setup();offline_profile_boot_probe();for(;;) loop(); }
+ #endif
+--- a/code/mk61s-M.ino
++++ b/code/mk61s-M.ino
+@@ -1461,3 +1461,24 @@
+         break;
+   }
+ }
++
++// HIL source copy only: boot the actual persisted offline profile, run the
++// same finite portable COMPUTE probe, then return to profile0 and reset so
++// the host can verify its report without ever starting USB on the bad PLL48.
++void offline_profile_boot_probe() {
++  if(compute_clock::usb_available(compute_clock::platform(),compute_clock::active_profile()))return;
++  const u32 profile=compute_clock::active_profile(),hz=SystemCoreClock;
++  const u32 gate0=RCC->AHB2ENR & RCC_AHB2ENR_OTGFSEN;
++  const u32 irq0=NVIC_GetEnableIRQ(OTG_FS_IRQn);
++  const bool opened=OpenStoredFile("/ClockBench1108/CLKTEST.APP");
++  char proof[128];
++  const int length=snprintf(proof,sizeof(proof),"OFFLINE PROFILE=%lu HZ=%lu GATE0=%lu IRQ0=%lu GATE1=%lu IRQ1=%lu OPEN=%lu\n",
++      (unsigned long)profile,(unsigned long)hz,(unsigned long)gate0,(unsigned long)irq0,
++      (unsigned long)(RCC->AHB2ENR & RCC_AHB2ENR_OTGFSEN),(unsigned long)NVIC_GetEnableIRQ(OTG_FS_IRQn),(unsigned long)opened);
++  u16 parent;
++  if(length>0 && length<(int)sizeof(proof) && program_store::find_child(program_store::ROOT_ID,true,program_store::ProgramType::MK61,"ClockBench1108",parent))
++    program_store::write_file(parent,program_store::INVALID_ID,program_store::ProgramType::TEXT,"offline",(const u8*)proof,length);
++  library_mk61::set_compute_clock_profile(0);
++  library_mk61::flush_settings_state();
++  NVIC_SystemReset();
++}

@@ -1,4 +1,5 @@
 #include "loadable_module_runtime.hpp"
+#include "compute_clock.hpp"
 
 #include "Arduino.h"
 #include "loadable_app_api.hpp"
@@ -42,6 +43,8 @@ static __attribute__((noinline)) u32 call_entry(u32 command, u32 argument0,
                                                u32 argument1, u32 argument2,
                                                u32 argument3) {
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::app_point((u8)g_active_kind, true));
+  compute_clock::Owner owner(command==MK61_APP_FLOW_STEP);
+  compute_clock::Scope compute(g_active_kind==Kind::TINYBASIC || g_active_kind==Kind::FOCAL);
   ++g_call_depth;
   const u32 result = g_active_entry(command, argument0, argument1,
                                      argument2, argument3);
@@ -415,11 +418,13 @@ app_flow::Status flow_invoke(void* backend, const app_flow::Target& target,
 
 RuntimeStatus run_flow(app_flow::Target first, void* context, u32 size,
                        u32& result, FlowHost host) {
+  compute_clock::Owner owner;
   FlowBinding hooks = {host, nullptr, nullptr};
   return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &hooks);
 }
 RuntimeStatus run_flow_service(app_flow::Target first, void* context, u32 size,
                                u32& result, FlowService service, void* binding) {
+  compute_clock::Owner owner;
   FlowBinding hooks = {nullptr, service, binding};
   return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &hooks);
 }

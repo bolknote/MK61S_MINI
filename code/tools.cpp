@@ -656,7 +656,7 @@ static bool write_persistent_settings(void) {
   data.grade = persistent_settings.grade;
   data.counter = persistent_settings.counter;
   data.flags = persistent_settings.flags;
-  data.sound = persistent_settings.sound;
+  data.sound = normalize_sound_settings(persistent_settings.sound).raw;
 #if defined(MK61_OLED1602_WS0010)
   data.oled = normalize_oled_settings(persistent_settings.oled).raw;
   data.oled_stored = true;
@@ -723,6 +723,10 @@ void store_settings_flags(SettingsFlags flags) {
 SoundSettings read_sound_settings(void) {
   load_persistent_settings();
   return normalize_sound_settings(persistent_settings.sound);
+}
+
+u8 read_compute_clock_profile(void) {
+  return stored_compute_clock_profile(read_settings_flags(),read_sound_settings());
 }
 
 void store_sound_settings(SoundSettings settings) {

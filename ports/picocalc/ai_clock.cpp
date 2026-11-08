@@ -1,4 +1,5 @@
 #include "ai_clock.hpp"
+#include "compute_clock.hpp"
 #if defined(PICO_ON_DEVICE)
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
@@ -91,7 +92,8 @@ bool begin(unsigned mhz,State& s) {
   const bool allowed=mhz==125 || mhz==270;
   if(s.changed || s.restore_attempted || !allowed)return false;
   s.sys=hz();
-  if(mhz==125 && (!s.sys || s.sys==125000000))return true;
+  if(compute_clock::active_profile())return mhz==125;
+  if(mhz==125 && (!s.sys || s.sys==125000000)) return true;
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
   if(s.sys!=125000000)return false;
   const auto* plan=cosmic_clock::find(mhz);unsigned vco=0,post1=0,post2=0;

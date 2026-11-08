@@ -1,4 +1,5 @@
 #include "app_flow.hpp"
+#include "compute_clock.hpp"
 #include "menu_source.hpp"
 #include "basic_native_io.hpp"
 #include "builtin_font.hpp"
@@ -182,6 +183,7 @@ public:
     controls::service(millis());
   }
   int take(bool wait = false) {
+    compute_clock::Wait blocking(wait);
     do {
       pump();
       const int key=keyboard.press();if(key>=0) return key;
@@ -189,11 +191,14 @@ public:
     return -1;
   }
   int raw_key(int state,bool wait) {
+    compute_clock::Wait blocking(wait);
     do { pump();const int key=keyboard.raw(state);if(key>=0) return key; } while(wait);
     return -1;
   }
   static void service() { current->pump(); }
   static void delay(u32 ms) {
+    if(!ms)return;
+    compute_clock::Wait wait;
     const u32 start = millis();
     while ((u32)(millis() - start) < ms)
       current->pump();
@@ -547,6 +552,8 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     return millis()*1000;
 #endif
   }
+  if(op==MK61_SERVICE_COMPUTE)
+    return !c && !payload ? compute_clock::service(a,b) : 0;
   auto &host = *current;
   host.display.settings(host.settings());
   auto &s = host.s;
@@ -1429,6 +1436,7 @@ u8 Services::run_handled(const char *path, u16 magic) {
   return 1;
 }
 u8 Services::run_native(const char *path, u16 file) {
+  compute_clock::Owner clock_owner;
   if (NativeHost::current || running_ || files::usb_active())
     return 3;
   release_cache();
@@ -1491,6 +1499,7 @@ u8 Services::run_native(const char *path, u16 file) {
   return result < 256 ? (u8)result : 5;
 }
 u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
+  compute_clock::Owner clock_owner(true);
   diagnostics::Scope measure(diagnostics::Point::APP);
   diagnostics::context(diagnostics::State::APP,file);
   if (NativeHost::current || running_ || files::usb_active())

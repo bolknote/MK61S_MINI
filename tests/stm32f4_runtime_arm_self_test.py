@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('elf', type=Path)
 parser.add_argument('--mcu', choices=['f401', 'f411'], required=True)
 parser.add_argument('--no-stop', action='store_true', help='profile deliberately omits STOP support')
+parser.add_argument('--compute-profiles', action='store_true', help='qualify every compute PLL and live divider profile')
 args = parser.parse_args()
 e = Elf(args.elf)
 u = Uc(UC_ARCH_ARM, UC_MODE_THUMB | UC_MODE_MCLASS)
@@ -72,10 +73,12 @@ reads = {'icsr': [], 'val': []}
 advancing_tick = False
 advancing_cycles = False
 pending_writes = {}
+clock_writes = []
 wfi_count = 0
 
 
 def memory(uc, access, address, size, value, _):
+    if access == 17 and address in (RCC,RCC+4):clock_writes.append((address,value))
     if access == 16:
         if address == RCC:
             cr = get(address)
@@ -186,6 +189,10 @@ for mask in (0, 1):
         'USB resume on an already running PLL must preserve the time counter'
 
 # Counter reload, pending interrupt, rollover during sampling, uint32 wrap.
+# Each case below is an independent stock-clock fixture. A preceding STOP
+# reconfiguration may now retain a fractional millisecond in SRAM.
+offset_names=[name for name in e.symbols if 'tick_offset_us' in name]
+if offset_names:u.mem_write(symbol(offset_names[0]),b'\0\0')
 reload = frequency // 1000 - 1
 for ms, before, after, counters, expected in [
     (0, 0, 0, [0], 0),
@@ -207,6 +214,63 @@ for ms, before, after, counters, expected in [
 put(uw, 0xFFFFFFFF)
 call('SysTick_Handler')
 assert get(uw) == 0
+if args.compute_profiles:
+    def named(fragment):
+        matches=[name for name in e.symbols if fragment in name]
+        assert len(matches)==1,(fragment,matches)
+        return symbol(matches[0])
+    profile_addr=named('13clock_profileE')
+    fast_addr=named('10clock_fastE')
+    demand_addr=named('6demandE')
+    compute_profile=named('compute_clock12_GLOBAL__N_17profileE')
+    compute_fast=named('compute_clock12_GLOBAL__N_14fastE')
+    apply_name=[name for name in e.symbols if 'compute_clock12_GLOBAL__N_15applyE' in name]
+    assert len(apply_name)==1,apply_name
+    maximums=[96,108] if args.mcu=='f401' else [108,120,132,138]
+    for index,mhz in enumerate(maximums,1):
+        u.mem_write(profile_addr,bytes([index]));u.mem_write(fast_addr,b'\0')
+        u.mem_write(compute_profile,bytes([index]));u.mem_write(compute_fast,b'\0')
+        u.mem_write(demand_addr,b'\0'*12)
+        put(ICSR,0);call('SystemClock_Config')
+        if 'SystemCoreClockUpdate' in e.symbols:call('SystemCoreClockUpdate')
+        assert get(core_clock)==mhz*500000
+        pll=get(RCC+4);m=pll&63;n=(pll>>6)&511;q=(pll>>24)&15
+        if args.mcu=='f411' and index>=3:
+            assert q==6 and 25000000//m*n//q!=48000000
+        else:assert 25000000//m*n//q==48000000
+        buses=lambda:tuple(get(core_clock)>>(max(0,((get(RCC+8)>>shift)&7)-3)) for shift in (10,13))
+        before_buses=buses();assert before_buses==(mhz*250000,mhz*250000)
+        for mask in (0,1):
+            put(uw,100);u.mem_write(symbol(offset_names[0]),b'\0\0');put(ICSR,0)
+            put(SYSTICK+8,(get(SYSTICK+4)+1)//2)
+            before=call('micros')
+            u.reg_write(UC_ARM_REG_PRIMASK,mask)
+            u.mem_write(demand_addr,struct.pack('<HH',1,0));clock_writes.clear()
+            call(apply_name[0],100)
+            assert not clock_writes,'COMPUTE must leave the selected PLL running'
+            assert get(core_clock)==mhz*1000000 and buses()==before_buses
+            assert get(RCC+4)==pll and u.reg_read(UC_ARM_REG_PRIMASK)==mask
+            assert call('micros')==before,'divider transition lost the SysTick phase'
+            # Half a high-speed millisecond, then a wait lowers SYS again.
+            put(SYSTICK+8,(get(SYSTICK+4)+1)//2)
+            mid=call('micros');assert mid>=before+499
+            u.mem_write(demand_addr,struct.pack('<HH',1,1));clock_writes.clear()
+            call(apply_name[0],101)
+            assert not clock_writes and get(core_clock)==mhz*500000 and buses()==before_buses
+            assert call('micros')==mid and call('millis')==mid//1000
+            assert u.reg_read(UC_ARM_REG_PRIMASK)==mask
+            put(SYSTICK+8,(get(SYSTICK+4)+1)//2)
+            later=call('micros');assert later>=mid+499
+            # The same clock tree must return after STOP, including HPRE.
+            put(RCC,1);put(RCC+8,0);call('SystemClock_Config')
+            if 'SystemCoreClockUpdate' in e.symbols:call('SystemCoreClockUpdate')
+            assert get(core_clock)==mhz*500000 and get(RCC+4)==pll
+            assert call('micros')==later and u.reg_read(UC_ARM_REG_PRIMASK)==mask
+    u.mem_write(profile_addr,b'\0');u.mem_write(fast_addr,b'\0')
+    u.mem_write(compute_profile,b'\0');u.mem_write(compute_fast,b'\0')
+    u.mem_write(demand_addr,b'\0'*12);call('SystemClock_Config')
+    put(uw,0);u.mem_write(symbol(offset_names[0]),b'\0\0');put(SYSTICK+8,0);put(ICSR,0)
+    print('Compute profiles: USB48/offline PLL, stable APB/timers, monotonic time, IRQ masks and STOP restore PASS')
 # DWT delay must work through its counter wrap, without relying on SysTick IRQs.
 advancing_cycles = True
 for mask in (0, 1):

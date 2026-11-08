@@ -17,11 +17,18 @@
 #include "tools.hpp"
 
 #include <string.h>
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+#include <stdio.h>
+#endif
 
 extern void idle_main_process(void);
 
 namespace chip8_runner {
 namespace {
+
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+u32 benchmark_duration_ms=MK61_CHIP8_FPS_BENCH_MS;
+#endif
 
 static constexpr u16 DISPLAY_WIDTH = 192;
 static constexpr u16 DISPLAY_HEIGHT = 64;
@@ -178,6 +185,10 @@ static loadable_module::FileOpenResult run(
   u32 cpu_accumulator = 0;
   u32 timer_accumulator = 0;
   FramePacer frame_pacer;
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+  const u32 started_us=last_us;
+  u32 instructions=0,draws=0,frames=0,ticks=0,render_us=0,max_gap=0,backlog=0,clamped=0,paused_us=0;
+#endif
   bool paused = false;
   bool previous_run = false;
   FileOpenResult result = FileOpenResult::OK;
@@ -207,6 +218,12 @@ static loadable_module::FileOpenResult run(
 
     const u32 now = micros();
     u32 elapsed = (u32) (now - last_us);
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+    if(elapsed>max_gap)max_gap=elapsed;
+    if(elapsed>100000U)clamped+=elapsed-100000U;
+    if(paused)paused_us+=elapsed;
+    if(u32(now-started_us)>=benchmark_duration_ms*1000U)break;
+#endif
     last_us = now;
     if(elapsed > 100000U) elapsed = 100000U;
     if(!paused) {
@@ -222,7 +239,13 @@ static loadable_module::FileOpenResult run(
           entropy_pool::Domain::CHIP8);
       const chip8::StepResult step =
           chip8::step(workspace.machine, random_byte);
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+      ++instructions;
+#endif
       if(step == chip8::StepResult::DRAW) {
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+        ++draws;
+#endif
         frame_pacer.markDirty();
       } else if(step == chip8::StepResult::WAITING_KEY) {
         cpu_accumulator = 0;
@@ -233,10 +256,17 @@ static loadable_module::FileOpenResult run(
       }
     }
 
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+    if(cpu_accumulator>backlog)backlog=cpu_accumulator;
+#endif
+
     while(!paused && timer_accumulator >= TIMER_PERIOD_US) {
       timer_accumulator -= TIMER_PERIOD_US;
       const bool sounding = workspace.machine.sound_timer != 0;
       chip8::tick_timers(workspace.machine);
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+      ++ticks;
+#endif
       if(sounding) {
         sound_scaled(PIN_BUZZER, BEEP_FREQUENCY_HZ, BEEP_DURATION_MS,
                      library_mk61::sound_volume(), BEEP_VOLUME_PERCENT);
@@ -248,18 +278,38 @@ static loadable_module::FileOpenResult run(
     // CHIP-8 changes its XOR framebuffer immediately, but the real display
     // observes at most one combined result per 60 Hz frame. Publishing every
     // DXYN/CLS exposes intermediate erase/redraw states as heavy flicker.
-    if(frame_pacer.advance(elapsed) &&
-       !render(display, workspace.machine, workspace.display)) {
-      result = FileOpenResult::UNSUPPORTED_DISPLAY;
-      break;
+    if(frame_pacer.advance(elapsed)) {
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+      const u32 began=micros();
+#endif
+      const bool shown=render(display, workspace.machine, workspace.display);
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+      render_us+=u32(micros()-began);if(shown)++frames;
+#endif
+      if(!shown){result=FileOpenResult::UNSUPPORTED_DISPLAY;break;}
     }
     delay(1);
   }
 
 finished:
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+  const u32 wall_us=u32(micros()-started_us);
+#endif
   sound_stop();
   if(fullscreen) display.endFullscreenBitmap();
   kbd::clear_hold_key();
+#if defined(MK61_CHIP8_FPS_BENCH_MS) && MK61_CHIP8_FPS_BENCH_MS > 0
+  char report[256];
+  const int bytes=snprintf(report,sizeof(report),
+      "CHIP8_FPS V=1 US=%lu CPU=%lu DRAW=%lu FRAME=%lu TICK=%lu RENDER_US=%lu POLL_MAX=%lu BACKLOG_US=%lu CLAMP_US=%lu PAUSE_US=%lu RESULT=%u\n",
+      (unsigned long)wall_us,(unsigned long)instructions,(unsigned long)draws,(unsigned long)frames,
+      (unsigned long)ticks,(unsigned long)render_us,(unsigned long)max_gap,(unsigned long)backlog,
+      (unsigned long)clamped,(unsigned long)paused_us,unsigned(result));
+  if(bytes<=0 || bytes>=int(sizeof(report)) ||
+     !program_store::write_file(entry.parent_id,program_store::INVALID_ID,
+        program_store::ProgramType::TEXT,"result",(const u8*)report,u16(bytes),nullptr))
+    return FileOpenResult::IO_ERROR;
+#endif
   return result;
 }
 

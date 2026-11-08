@@ -1,0 +1,3171 @@
+{
+  "date": "2026-11-08",
+  "branch": "feature/compute-clock-20261107",
+  "base": "cb31f8758f8236e6b36ce7df29f0c6f71ab82175",
+  "status": "CLASSIC_HIL_COMPLETE_NO_CHESS_SPEEDUP",
+  "setup_file_limit_user_authorized": 20480,
+  "setup_loaded_memory_limit_unchanged": 20480,
+  "setup": {
+    "baseline": {
+      "name": "SETUP",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 149,
+      "relocation_bytes": 166,
+      "entry_offset": 0,
+      "image_bytes": 13223,
+      "bss_bytes": 25,
+      "memory_bytes": 13248,
+      "app_bytes": 9974,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+    },
+    "candidate": {
+      "name": "SETUP",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 202,
+      "relocation_bytes": 222,
+      "entry_offset": 0,
+      "image_bytes": 15625,
+      "bss_bytes": 31,
+      "memory_bytes": 15656,
+      "app_bytes": 11608,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+    },
+    "greedy": {
+      "name": "SETUP",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 202,
+      "relocation_bytes": 222,
+      "entry_offset": 0,
+      "image_bytes": 15625,
+      "bss_bytes": 31,
+      "memory_bytes": 15656,
+      "app_bytes": 13131,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+    },
+    "without_ui_fonts": {
+      "name": "SETUP",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 173,
+      "relocation_bytes": 189,
+      "entry_offset": 0,
+      "image_bytes": 12973,
+      "bss_bytes": 27,
+      "memory_bytes": 13000,
+      "app_bytes": 9696,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+    }
+  },
+  "resident": {
+    "base-f401": {
+      "flash_bytes": 256996,
+      "flash_capacity": 262144,
+      "flash_free": 5148,
+      "minimum_flash_headroom": 4096,
+      "global_ram_bytes": 29364,
+      "physical_ram_bytes": 65536,
+      "max_stack_frame": 1312,
+      "stack_frame_limit": 2048
+    },
+    "f401": {
+      "flash_bytes": 256756,
+      "flash_capacity": 262144,
+      "flash_free": 5388,
+      "minimum_flash_headroom": 4096,
+      "global_ram_bytes": 29180,
+      "physical_ram_bytes": 65536,
+      "max_stack_frame": 1312,
+      "stack_frame_limit": 2048
+    },
+    "base-f411": {
+      "flash_bytes": 400508,
+      "flash_capacity": 524288,
+      "flash_free": 123780,
+      "minimum_flash_headroom": 16384,
+      "global_ram_bytes": 22024,
+      "physical_ram_bytes": 131072,
+      "max_stack_frame": 1928,
+      "stack_frame_limit": 5120
+    },
+    "f411": {
+      "flash_bytes": 402432,
+      "flash_capacity": 524288,
+      "flash_free": 121856,
+      "minimum_flash_headroom": 16384,
+      "global_ram_bytes": 21848,
+      "physical_ram_bytes": 131072,
+      "max_stack_frame": 1928,
+      "stack_frame_limit": 5120
+    },
+    "product-f401": {
+      "flash_bytes": 222184,
+      "flash_capacity": 262144,
+      "flash_free": 39960,
+      "minimum_flash_headroom": 4096,
+      "global_ram_bytes": 25836,
+      "physical_ram_bytes": 65536,
+      "max_stack_frame": 1312,
+      "stack_frame_limit": 2048
+    }
+  },
+  "picocalc": {
+    "flash_bytes": 1538304,
+    "flash_capacity": 2097152,
+    "static_ram_bytes": 118300,
+    "hardware_tested": false
+  },
+  "stock_chip8": {
+    "phase_id": "C8FPS-001",
+    "phase_sha256": "2c4bee8f17ea4555c74501fd241775fd5a382b69f5b01c3d61e7036a2507e312",
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "firmware": "13A2194A",
+    "clock_hz": 96000000,
+    "screen": true,
+    "restoration": "PASS",
+    "general_latency_verdict": "NOT_PASS_unexplained_751001us_gap",
+    "echo8": "title_screen_awaiting_input_not_gameplay",
+    "samples": [
+      {
+        "V": 1,
+        "US": 10000904,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2013098,
+        "POLL_MAX": 6085,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89458552946814,
+        "ips": 699.6367528375434,
+        "workload": "stress.ch8",
+        "repeat": 1,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000755,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2013463,
+        "POLL_MAX": 6080,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.8954778914192,
+        "ips": 699.6471766381638,
+        "workload": "stress.ch8",
+        "repeat": 2,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000219,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2013247,
+        "POLL_MAX": 6085,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89868821872801,
+        "ips": 699.6846769055758,
+        "workload": "stress.ch8",
+        "repeat": 3,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000094,
+        "CPU": 5071,
+        "DRAW": 14,
+        "FRAME": 14,
+        "TICK": 599,
+        "RENDER_US": 9918,
+        "POLL_MAX": 3121,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 1.3999868401237028,
+        "ips": 507.0952333048069,
+        "workload": "echo8.ch8",
+        "repeat": 1,
+        "usb_frames": 16
+      },
+      {
+        "V": 1,
+        "US": 10000783,
+        "CPU": 4696,
+        "DRAW": 14,
+        "FRAME": 14,
+        "TICK": 560,
+        "RENDER_US": 9923,
+        "POLL_MAX": 751001,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 651001,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 1.399890388582574,
+        "ips": 469.5632331988405,
+        "workload": "echo8.ch8",
+        "repeat": 2,
+        "usb_frames": 17
+      },
+      {
+        "V": 1,
+        "US": 10000605,
+        "CPU": 5071,
+        "DRAW": 14,
+        "FRAME": 14,
+        "TICK": 599,
+        "RENDER_US": 9888,
+        "POLL_MAX": 3121,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 1.39991530512404,
+        "ips": 507.0693223060005,
+        "workload": "echo8.ch8",
+        "repeat": 3,
+        "usb_frames": 16
+      }
+    ]
+  },
+  "clock_probe": {
+    "name": "CLKTEST",
+    "target": "stm32",
+    "abi": 6,
+    "load_address": 536870912,
+    "native_display": false,
+    "graphics_width": 192,
+    "graphics_height": 64,
+    "relocations": 12,
+    "relocation_bytes": 13,
+    "entry_offset": 0,
+    "image_bytes": 1287,
+    "bss_bytes": 9,
+    "memory_bytes": 1296,
+    "app_bytes": 1154,
+    "compression": "ZX0+BCJ",
+    "zx0_parser": "optimal",
+    "resident_imports": 0,
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "evidence": {
+    "compute-host.log": {
+      "bytes": 773,
+      "sha256": "4b374feb305adec4052f05d4c4aece6b54eeb50a77347ead4b2cef19a08c5680"
+    },
+    "vm-host.log": {
+      "bytes": 6165,
+      "sha256": "a81a79fab9966a202bbeef2c69e4e0ca3a6867f37e2f2af4552343b4fe08f22a"
+    },
+    "pico-host.log": {
+      "bytes": 29084,
+      "sha256": "1cffa3c30acc75ad980f9eeab204c27b0a7951d0a68a5061caa98c89a3e7539b"
+    },
+    "portable-host.log": {
+      "bytes": 3680,
+      "sha256": "6864737b99dea315640e5f7cbd14ad07b27db51990541ea48430d08e7b29ac5b"
+    },
+    "settings-host.log": {
+      "bytes": 31,
+      "sha256": "7fe118a41e4f13597f0a82d4389ad9253835e085c5b968daf4f3974b137287e1"
+    },
+    "ui-contract.log": {
+      "bytes": 576,
+      "sha256": "25c2a9858a144ea80728a431ae04e786e1cd37ebdd862a84c14b1fa22bd34ac4"
+    },
+    "system-app-tools.log": {
+      "bytes": 27,
+      "sha256": "39f97fc92fb13ca41c7f24ee87815ac7dfb213813b5fd764351243e6ee97160b"
+    },
+    "setup-arm.log": {
+      "bytes": 839,
+      "sha256": "b523efec8ead97f3e7b9c714825fc5f670fbec8b433da4dd62a170188ba7807a"
+    },
+    "f401-arm-clock.log": {
+      "bytes": 244,
+      "sha256": "e46fc9c8a25ff361edc0a405932a7c70844d22797f4fca55d9e4f4adfa673372"
+    },
+    "f411-arm-clock.log": {
+      "bytes": 228,
+      "sha256": "bf731105093ef02a895b4b3183045efec87c608bd69f4fb85450f42d4f8896e3"
+    },
+    "clock-probe-arm.log": {
+      "bytes": 188,
+      "sha256": "2d92f1890f2f045d6538ec67723e5312cf941f66ec98a9a98b4033c9154e1474"
+    },
+    "clock-select-arm.log": {
+      "bytes": 85,
+      "sha256": "44c3a14a572f76151b0c52c6b5ae09729f7c8c773a146371351fcb87cca6f3bf"
+    },
+    "gap-host.log": {
+      "bytes": 99,
+      "sha256": "00775898cd0fb7ce8e997e4689868f1a15cf4a51fca550aec2c477f208831191"
+    },
+    "system-arm-flash.log": {
+      "bytes": 1019,
+      "sha256": "afab5f820976e9ad915e69865d109714bc9669c06f7dab9d78a954cfd7390eb6"
+    }
+  },
+  "host_prototype_not_installed": {
+    "id": "COMPUTE-HOST-001",
+    "status": "HOST_ONLY_NOT_A_HARDWARE_GRANT",
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "source_base": "cb31f8758f8236e6b36ce7df29f0c6f71ab82175",
+    "artifacts": {
+      "stock": {
+        "bin": "stock.bin",
+        "elf": "stock.elf",
+        "bytes": 402320,
+        "sha256": "920b3cca55498ded40511d0a1e81f6cb683fe01bf7cd9c7bcb1f31bbdc6f2337",
+        "build": "3DD4932E",
+        "elf_sha256": "e631b881f188438c824c3a18c913cbbc09b47a49c63e0b90741575ea1e50ce19"
+      },
+      "compute108": {
+        "bin": "compute108.bin",
+        "elf": "compute108.elf",
+        "bytes": 402316,
+        "sha256": "f8ffd0a087d0655de68036c1306d9cc59a9edbbd30350bbe0bf53d607d41e171",
+        "build": "F6AA16C5",
+        "elf_sha256": "612ed0024677d2ffdea9507e9d17a9d04bb163240ff6741701fd7157ae7fe825"
+      },
+      "original": {
+        "bin": "original.bin",
+        "bytes": 400460,
+        "sha256": "6b7dbbfeb7ea877e438a419976aec17800b7012ab7662a78dec40a6598329d8b",
+        "build": "13A2194A"
+      },
+      "CLKTEST.APP": {
+        "bytes": 1141,
+        "sha256": "f01937405d983f8be6b593d71483721305c42d6730589566eb00dae2fcd3dd67"
+      },
+      "C8FPS.APP": {
+        "bytes": 3483,
+        "sha256": "259335c6b94fef3e3b27735ae820665a6d20ff19eb3c9b977f0da32ed00f6116"
+      },
+      "stress.ch8": {
+        "bytes": 40,
+        "sha256": "1d95e34d331f2bbd728a851b86c185026c00b03994c1639613b9dcfb3832ad61"
+      }
+    },
+    "settings_writes": false,
+    "system_app_replacement": false,
+    "boot_override": "compute108 forces configure(1) only in temporary source snapshot; stock reads persisted setting",
+    "planned_order": [
+      "stock",
+      "compute108",
+      "stock",
+      "original"
+    ],
+    "required_before_write": [
+      "coordinator phase grant",
+      "idle-state confirmation",
+      "fresh complete internal readback matching pinned original prefix",
+      "preserve freshly read internal tail if any erase overlaps it"
+    ],
+    "not_yet_implemented": [
+      "finite flashing/recovery phase driver",
+      "physical keyboard matrix gap sampling at variable HCLK",
+      "96/108 hardware and PONG/CHIP8 measurements"
+    ]
+  },
+  "classic_hil": {
+    "resident_build": "F406C241",
+    "clock108_including_low54_verified": true,
+    "firmware_restoration_cancelled_by_user": true,
+    "cpu_chip8_aba": [
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 520510,
+        "US1": 516138,
+        "US2": 516137,
+        "GAP0": 1596,
+        "GAP1": 207,
+        "GAP2": 207,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 0,
+        "pongs": 75,
+        "pong_max_s": 0.05240050004795194,
+        "host_poll_max_s": 0.006305374961812049,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 518785,
+        "US1": 516237,
+        "US2": 516236,
+        "GAP0": 1583,
+        "GAP1": 219,
+        "GAP2": 218,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 1,
+        "pongs": 76,
+        "pong_max_s": 0.035839958989527076,
+        "host_poll_max_s": 0.006316457991488278,
+        "usb_frames": 3
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 520635,
+        "US1": 516236,
+        "US2": 516238,
+        "GAP0": 1583,
+        "GAP1": 208,
+        "GAP2": 208,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 2,
+        "pongs": 76,
+        "pong_max_s": 0.17477375001180917,
+        "host_poll_max_s": 0.006283916998654604,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "US": 10000445,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2015155,
+        "POLL_MAX": 6085,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.8973345686117,
+        "ips": 699.6688647355193,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 0,
+        "pongs": 440,
+        "pong_max_s": 0.05342933302745223,
+        "host_poll_max_s": 0.006351500051096082,
+        "usb_frames": 185
+      },
+      {
+        "V": 1,
+        "US": 10000722,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2014511,
+        "POLL_MAX": 6099,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.895675532226576,
+        "ips": 699.6494853071608,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 1,
+        "pongs": 441,
+        "pong_max_s": 0.046456541982479393,
+        "host_poll_max_s": 0.011043541016988456,
+        "usb_frames": 185
+      },
+      {
+        "V": 1,
+        "US": 10000606,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2014899,
+        "POLL_MAX": 6086,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89637027996103,
+        "ips": 699.6576007493945,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 2,
+        "pongs": 439,
+        "pong_max_s": 0.038308249961119145,
+        "host_poll_max_s": 0.0067295419867150486,
+        "usb_frames": 185
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 54000000,
+        "HZ1": 108000000,
+        "HZ2": 54000000,
+        "US0": 995240,
+        "US1": 492540,
+        "US2": 987939,
+        "GAP0": 2846,
+        "GAP1": 196,
+        "GAP2": 424,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "CLKTEST.APP",
+        "repeat": 0,
+        "pongs": 118,
+        "pong_max_s": 0.10438270901795477,
+        "host_poll_max_s": 0.007594749971758574,
+        "usb_frames": 5
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 54000000,
+        "HZ1": 108000000,
+        "HZ2": 54000000,
+        "US0": 995914,
+        "US1": 492736,
+        "US2": 987916,
+        "GAP0": 2871,
+        "GAP1": 207,
+        "GAP2": 424,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "CLKTEST.APP",
+        "repeat": 1,
+        "pongs": 118,
+        "pong_max_s": 0.1118587909732014,
+        "host_poll_max_s": 0.0066452500177547336,
+        "usb_frames": 3
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 54000000,
+        "HZ1": 108000000,
+        "HZ2": 54000000,
+        "US0": 995877,
+        "US1": 492643,
+        "US2": 987745,
+        "GAP0": 2847,
+        "GAP1": 207,
+        "GAP2": 424,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "CLKTEST.APP",
+        "repeat": 2,
+        "pongs": 117,
+        "pong_max_s": 0.264238000032492,
+        "host_poll_max_s": 0.010285167023539543,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "US": 10000654,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 3586456,
+        "POLL_MAX": 10160,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89608279618513,
+        "ips": 699.6542426125332,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "C8FPS.APP",
+        "repeat": 0,
+        "pongs": 416,
+        "pong_max_s": 0.10716041701380163,
+        "host_poll_max_s": 0.006997207994572818,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000568,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 3586401,
+        "POLL_MAX": 10160,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.8965978732408,
+        "ips": 699.6602592972719,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "C8FPS.APP",
+        "repeat": 1,
+        "pongs": 418,
+        "pong_max_s": 0.10125904099550098,
+        "host_poll_max_s": 0.006386208988260478,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000957,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 3586430,
+        "POLL_MAX": 10155,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.894268118541056,
+        "ips": 699.6330451175822,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "C8FPS.APP",
+        "repeat": 2,
+        "pongs": 416,
+        "pong_max_s": 0.0986207079840824,
+        "host_poll_max_s": 0.00683062500320375,
+        "usb_frames": 185
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 520510,
+        "US1": 516236,
+        "US2": 516150,
+        "GAP0": 1582,
+        "GAP1": 207,
+        "GAP2": 208,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 0,
+        "pongs": 76,
+        "pong_max_s": 0.05276795901590958,
+        "host_poll_max_s": 0.006310291995760053,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 520667,
+        "US1": 516234,
+        "US2": 516235,
+        "GAP0": 1601,
+        "GAP1": 207,
+        "GAP2": 208,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 1,
+        "pongs": 76,
+        "pong_max_s": 0.04446529201231897,
+        "host_poll_max_s": 0.0063842079835012555,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "N": 4194304,
+        "HASH": 3289793925,
+        "HZ0": 96000000,
+        "HZ1": 96000000,
+        "HZ2": 96000000,
+        "US0": 520622,
+        "US1": 516238,
+        "US2": 516236,
+        "GAP0": 1583,
+        "GAP1": 207,
+        "GAP2": 208,
+        "END": 1,
+        "DUP": 1,
+        "MATCH": 1,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "CLKTEST.APP",
+        "repeat": 2,
+        "pongs": 76,
+        "pong_max_s": 0.2126507920329459,
+        "host_poll_max_s": 0.006307709030807018,
+        "usb_frames": 4
+      },
+      {
+        "V": 1,
+        "US": 10000552,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2014818,
+        "POLL_MAX": 6087,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89669370250762,
+        "ips": 699.6613786918962,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 0,
+        "pongs": 442,
+        "pong_max_s": 0.044645125046372414,
+        "host_poll_max_s": 0.006330790987703949,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000160,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2014955,
+        "POLL_MAX": 6086,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.899041615334156,
+        "ips": 699.6888049791203,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 1,
+        "pongs": 439,
+        "pong_max_s": 0.05183579196454957,
+        "host_poll_max_s": 0.007104458985850215,
+        "usb_frames": 186
+      },
+      {
+        "V": 1,
+        "US": 10000795,
+        "CPU": 6997,
+        "DRAW": 3194,
+        "FRAME": 599,
+        "TICK": 599,
+        "RENDER_US": 2014762,
+        "POLL_MAX": 6086,
+        "BACKLOG_US": 1428,
+        "CLAMP_US": 0,
+        "PAUSE_US": 0,
+        "RESULT": 0,
+        "fps": 59.89523832855288,
+        "ips": 699.6443782719274,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "repeat": 2,
+        "pongs": 440,
+        "pong_max_s": 0.037775208009406924,
+        "host_poll_max_s": 0.007043917023111135,
+        "usb_frames": 186
+      }
+    ],
+    "actual_keyboard_usb_aba": [
+      {
+        "V": 1,
+        "M0": 1699,
+        "N0": 4095,
+        "M1": 2547,
+        "N1": 684,
+        "M2": 6986,
+        "N2": 136,
+        "M3": 7080,
+        "N3": 136,
+        "M4": 7085,
+        "N4": 136,
+        "M5": 6669,
+        "N5": 136,
+        "M6": 6943,
+        "N6": 136,
+        "M7": 1629,
+        "N7": 8191,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "low0",
+        "pongs": 102,
+        "pong_max_s": 0.0497925000381656,
+        "host_poll_max_s": 0.00940862501738593
+      },
+      {
+        "V": 1,
+        "M0": 1698,
+        "N0": 4095,
+        "M1": 2401,
+        "N1": 706,
+        "M2": 6826,
+        "N2": 141,
+        "M3": 6822,
+        "N3": 141,
+        "M4": 7266,
+        "N4": 140,
+        "M5": 7475,
+        "N5": 140,
+        "M6": 7064,
+        "N6": 140,
+        "M7": 1641,
+        "N7": 8255,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "high",
+        "pongs": 102,
+        "pong_max_s": 0.0497925000381656,
+        "host_poll_max_s": 0.00940862501738593
+      },
+      {
+        "V": 1,
+        "M0": 1687,
+        "N0": 4095,
+        "M1": 2548,
+        "N1": 683,
+        "M2": 7086,
+        "N2": 136,
+        "M3": 6774,
+        "N3": 135,
+        "M4": 6980,
+        "N4": 136,
+        "M5": 7085,
+        "N5": 136,
+        "M6": 7086,
+        "N6": 136,
+        "M7": 1630,
+        "N7": 8191,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "low1",
+        "pongs": 102,
+        "pong_max_s": 0.0497925000381656,
+        "host_poll_max_s": 0.00940862501738593
+      },
+      {
+        "V": 1,
+        "M0": 6069,
+        "N0": 8019,
+        "M1": 7068,
+        "N1": 4216,
+        "M2": 15068,
+        "N2": 843,
+        "M3": 15067,
+        "N3": 842,
+        "M4": 15068,
+        "N4": 842,
+        "M5": 15067,
+        "N5": 842,
+        "M6": 15079,
+        "N6": 843,
+        "M7": 3911,
+        "N7": 16038,
+        "stage": "A96",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "section": "chipgap",
+        "pongs": 437,
+        "pong_max_s": 0.10694095899816602,
+        "host_poll_max_s": 0.012406209018081427
+      },
+      {
+        "V": 1,
+        "M0": 3066,
+        "N0": 4095,
+        "M1": 3781,
+        "N1": 1367,
+        "M2": 8123,
+        "N2": 272,
+        "M3": 8262,
+        "N3": 272,
+        "M4": 8262,
+        "N4": 273,
+        "M5": 8260,
+        "N5": 273,
+        "M6": 7903,
+        "N6": 273,
+        "M7": 2923,
+        "N7": 8191,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "GAPTEST.APP",
+        "section": "low0",
+        "pongs": 165,
+        "pong_max_s": 0.2527895420207642,
+        "host_poll_max_s": 0.007552209019195288
+      },
+      {
+        "V": 1,
+        "M0": 1512,
+        "N0": 4095,
+        "M1": 2197,
+        "N1": 704,
+        "M2": 6553,
+        "N2": 140,
+        "M3": 6553,
+        "N3": 140,
+        "M4": 6480,
+        "N4": 140,
+        "M5": 6499,
+        "N5": 140,
+        "M6": 6552,
+        "N6": 140,
+        "M7": 1472,
+        "N7": 8255,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "GAPTEST.APP",
+        "section": "high",
+        "pongs": 165,
+        "pong_max_s": 0.2527895420207642,
+        "host_poll_max_s": 0.007552209019195288
+      },
+      {
+        "V": 1,
+        "M0": 3047,
+        "N0": 4095,
+        "M1": 3745,
+        "N1": 1366,
+        "M2": 8405,
+        "N2": 273,
+        "M3": 8035,
+        "N3": 273,
+        "M4": 8297,
+        "N4": 272,
+        "M5": 8493,
+        "N5": 272,
+        "M6": 8563,
+        "N6": 272,
+        "M7": 2949,
+        "N7": 8191,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "GAPTEST.APP",
+        "section": "low1",
+        "pongs": 165,
+        "pong_max_s": 0.2527895420207642,
+        "host_poll_max_s": 0.007552209019195288
+      },
+      {
+        "V": 1,
+        "M0": 10133,
+        "N0": 6087,
+        "M1": 11133,
+        "N1": 3279,
+        "M2": 26609,
+        "N2": 655,
+        "M3": 27103,
+        "N3": 655,
+        "M4": 28133,
+        "N4": 655,
+        "M5": 28103,
+        "N5": 655,
+        "M6": 26104,
+        "N6": 655,
+        "M7": 6964,
+        "N7": 12174,
+        "stage": "B108",
+        "profile": 1,
+        "workload": "C8FPS.APP",
+        "section": "chipgap",
+        "pongs": 407,
+        "pong_max_s": 0.13454762496985495,
+        "host_poll_max_s": 0.007636499998625368
+      },
+      {
+        "V": 1,
+        "M0": 1686,
+        "N0": 4095,
+        "M1": 1871,
+        "N1": 685,
+        "M2": 6058,
+        "N2": 137,
+        "M3": 6068,
+        "N3": 136,
+        "M4": 6067,
+        "N4": 136,
+        "M5": 6068,
+        "N5": 136,
+        "M6": 6059,
+        "N6": 136,
+        "M7": 1629,
+        "N7": 8191,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "low0",
+        "pongs": 103,
+        "pong_max_s": 0.13618470804067329,
+        "host_poll_max_s": 0.00759212498087436
+      },
+      {
+        "V": 1,
+        "M0": 1679,
+        "N0": 4095,
+        "M1": 2371,
+        "N1": 706,
+        "M2": 7333,
+        "N2": 140,
+        "M3": 7375,
+        "N3": 141,
+        "M4": 7375,
+        "N4": 141,
+        "M5": 7134,
+        "N5": 140,
+        "M6": 7373,
+        "N6": 140,
+        "M7": 1654,
+        "N7": 8255,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "high",
+        "pongs": 103,
+        "pong_max_s": 0.13618470804067329,
+        "host_poll_max_s": 0.00759212498087436
+      },
+      {
+        "V": 1,
+        "M0": 1701,
+        "N0": 4095,
+        "M1": 2160,
+        "N1": 684,
+        "M2": 6571,
+        "N2": 136,
+        "M3": 6569,
+        "N3": 136,
+        "M4": 6372,
+        "N4": 136,
+        "M5": 6606,
+        "N5": 136,
+        "M6": 6572,
+        "N6": 136,
+        "M7": 1629,
+        "N7": 8191,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "GAPTEST.APP",
+        "section": "low1",
+        "pongs": 103,
+        "pong_max_s": 0.13618470804067329,
+        "host_poll_max_s": 0.00759212498087436
+      },
+      {
+        "V": 1,
+        "M0": 6069,
+        "N0": 8024,
+        "M1": 7067,
+        "N1": 4209,
+        "M2": 15067,
+        "N2": 841,
+        "M3": 15067,
+        "N3": 841,
+        "M4": 15067,
+        "N4": 841,
+        "M5": 15050,
+        "N5": 841,
+        "M6": 15050,
+        "N6": 841,
+        "M7": 3898,
+        "N7": 16048,
+        "stage": "A96-control",
+        "profile": 0,
+        "workload": "C8FPS.APP",
+        "section": "chipgap",
+        "pongs": 432,
+        "pong_max_s": 0.060894375026691705,
+        "host_poll_max_s": 0.008501750009600073
+      }
+    ],
+    "final_clock_before_chess": "COMPUTE V=1 N=4194304 HASH=3289793925 HZ0=54000000 HZ1=108000000 HZ2=54000000 US0=934871 US1=467833 US2=934622 GAP0=451 GAP1=115 GAP2=230 END=1 DUP=1 MATCH=1\n",
+    "system_apps": {
+      "BASIC.APP": {
+        "sha256": "8c5adf2009afb41891720cd0b86e88fee7e36226e096e26338fb6ff00764cbd0",
+        "bytes": 14478,
+        "verified": true
+      },
+      "FOCAL.APP": {
+        "sha256": "680ff392874db688cedf46119388a53bf90747488eb8cbb17253c17f81947860",
+        "bytes": 13211,
+        "verified": true
+      },
+      "LANGVM.APP": {
+        "sha256": "0db9a07e90b8d0116949733f3013122e125961f5c4ac313740e31cfaec498dca",
+        "bytes": 13614,
+        "verified": true
+      },
+      "LANGIN.APP": {
+        "sha256": "baf5e5b19710b60154fa07e466c033f03270dee73f875017037bd815ea3c3106",
+        "bytes": 14478,
+        "verified": true
+      },
+      "SRCEDIT.APP": {
+        "sha256": "c0fa9b50a1b3a4e860e28a036f95c30a9fd8cea6065ecb9cd884fcfa2c6da68c",
+        "bytes": 12557,
+        "verified": true
+      },
+      "HELP0.TXT": {
+        "sha256": "628d660ef3840b4b6ef95ea9f34ba814e175fb1867da2480d2f2a57c905e98d9",
+        "bytes": 1523,
+        "verified": true
+      },
+      "HELP1.TXT": {
+        "sha256": "589eae8159516af704c01de110b8cda56058697a27e4fc44dcb25ec982b1009b",
+        "bytes": 1405,
+        "verified": true
+      }
+    },
+    "old_unused_vmstore_retired_bytes": 8937,
+    "retired_owned_sb4": {
+      "/SB4-INTEG/CHECK.app": {
+        "bytes": 1929,
+        "sha256": "00295d5d3ad38864aa2ba4594e27cbe8acdf6dea0ce35012a618ff1328c59e7c"
+      },
+      "/SB4-INTEG/INPUT.bin": {
+        "bytes": 64,
+        "sha256": "365c419f11d449a363125c35d51344665311c38f4df4248cc3f5f6ccbe4def65"
+      },
+      "/SB4-INTEG/RESULT.bin": {
+        "bytes": 512,
+        "sha256": "176508a0c9b754e5131704d0ecc9a32c59bb917768fc3233db150ce458724d86"
+      },
+      "/SB4-0611/F0.app": {
+        "bytes": 4803,
+        "sha256": "abdb3566eb4610e0d0ce2d6f50ab7b5cc15ce58ff6b7305815c5040b3d76a3e9"
+      },
+      "/SB4-0611/F1.app": {
+        "bytes": 4813,
+        "sha256": "a725320ae06255ea0e7da6ef650172081666aabd43a36a04046f09c92e3ad1de"
+      },
+      "/SB4-0611/INPUT.bin": {
+        "bytes": 64,
+        "sha256": "f935c90401b853a9ba149e82b006e65c09fb6be7d33faaaf98a546976a20a851"
+      },
+      "/SB4-0611/RESULT0.bin": {
+        "bytes": 4096,
+        "sha256": "843eb38e1d6470b1aba8111c7e428823e7b266280389d94de5cc4743fe354630"
+      },
+      "/SB4-0611/RESULT1.bin": {
+        "bytes": 2816,
+        "sha256": "9b44eb0c6245877ee6127ccc6007351e5740f22bdedc47797ae26cf0b706c648"
+      },
+      "/SB4-0611/S0.app": {
+        "bytes": 4760,
+        "sha256": "a847eb367d351d9c633afecedc344f1f140130ffcbbe90f7f234f708f09b6ddf"
+      },
+      "/SB4-0611/S1.app": {
+        "bytes": 4753,
+        "sha256": "f8001771529418f98475e5d61c26ed56760dc581b50af717bbc18dc77eb50902"
+      }
+    },
+    "stock_profile_before_vmstore_retirement": "prof stop\nVMFLASH budget=32768 payload=29696 used=2048 lookups=698 hits=415 misses=283 invalidations=133 loan_hits=471 loan_misses=28\nPROF state=stopped clock=96000000 overhead=1\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=65535 releases=65535 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=41681 bytes=11762431 wfi=45934 fallback=226903 init_errors=0 errors=0 timeouts=0\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\nKBD overflow=0\nSLEEP backend=WFI enabled=1 attempts=884 entries=0 total_us=0 min_us=0 avg_us=0 max_us=0 last_blockers=0x102\nSLEEP reject foreground=0 calculator=884 msc=0 uscreen=19 terminal=0 sound=0 keyboard=3 classic=0 scheduled=884 wake=0 irq=0\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\nANALOG us/n=435/18 raw(v/t/b)=1492/951/1018 val(mV/dC/mV)=3331/323/3312 bat=unknown/no-detector\nPROF core.step n=0 min=0 avg=0 max=0 total=0\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\nPROF idle.main n=22768 min=1616 avg=3839 max=187057 total=87426838\nPROF display.update n=0 min=0 avg=0 max=0 total=0\nPROF usb.service n=22769 min=292 avg=2415 max=143020 total=54990237\nPROF flash.read n=240061 min=2076 avg=4224 max=50904 total=1014234193\nPROF flash.write n=12115 min=6285 avg=22918 max=93734 total=277663583\nPROF flash.verify n=12115 min=2029 avg=5727 max=27143 total=69387268\nPROF flash.erase n=451 min=3063877 avg=3388696 max=4782801 total=1528302191\nPROF zx0.decode n=102 min=70946 avg=2182355 max=5943014 total=222600256\n/> ",
+    "clock_dialog_image": "compute-clock-frequency-20261108.png",
+    "clock_dialog_lower32px_blank": true,
+    "chess_aba": [
+      {
+        "stage": "A96",
+        "profile": 0,
+        "runs": [
+          {
+            "repeat": 0,
+            "temperature": "cold",
+            "seconds": 72.6730126250186,
+            "nodes": 420,
+            "nodes_per_second": 5.779311808182969,
+            "move": "e2e3",
+            "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 7.708019790996332
+              },
+              {
+                "nodes": 21,
+                "seconds": 38.79426275001606
+              },
+              {
+                "nodes": 42,
+                "seconds": 40.01687575003598
+              },
+              {
+                "nodes": 63,
+                "seconds": 41.21877700003097
+              },
+              {
+                "nodes": 84,
+                "seconds": 42.3912344580167
+              },
+              {
+                "nodes": 105,
+                "seconds": 43.49379445798695
+              },
+              {
+                "nodes": 126,
+                "seconds": 44.61481270799413
+              },
+              {
+                "nodes": 147,
+                "seconds": 45.78843916603364
+              },
+              {
+                "nodes": 168,
+                "seconds": 46.96959337498993
+              },
+              {
+                "nodes": 189,
+                "seconds": 48.12779583298834
+              },
+              {
+                "nodes": 210,
+                "seconds": 49.31274237501202
+              },
+              {
+                "nodes": 231,
+                "seconds": 50.573035790992435
+              },
+              {
+                "nodes": 252,
+                "seconds": 51.81222645798698
+              },
+              {
+                "nodes": 273,
+                "seconds": 53.08081883302657
+              },
+              {
+                "nodes": 294,
+                "seconds": 54.3601126249996
+              },
+              {
+                "nodes": 315,
+                "seconds": 55.52546808304032
+              },
+              {
+                "nodes": 336,
+                "seconds": 56.71132991602644
+              },
+              {
+                "nodes": 357,
+                "seconds": 57.87784037500387
+              },
+              {
+                "nodes": 378,
+                "seconds": 59.056183415988926
+              },
+              {
+                "nodes": 399,
+                "seconds": 60.20694945799187
+              },
+              {
+                "nodes": 420,
+                "seconds": 61.38344500004314
+              }
+            ],
+            "profile": null,
+            "pongs": 3143,
+            "pong_max_s": 0.011743000010028481,
+            "host_poll_max_s": 0.025388500012923032
+          },
+          {
+            "repeat": 1,
+            "temperature": "repeat",
+            "seconds": 75.47151025000494,
+            "nodes": 420,
+            "nodes_per_second": 5.565013852362554,
+            "move": "e2e3",
+            "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.13229366700397804
+              },
+              {
+                "nodes": 21,
+                "seconds": 32.055095084011555
+              },
+              {
+                "nodes": 42,
+                "seconds": 47.49103475001175
+              },
+              {
+                "nodes": 63,
+                "seconds": 48.66239016701002
+              },
+              {
+                "nodes": 84,
+                "seconds": 49.796820750052575
+              },
+              {
+                "nodes": 105,
+                "seconds": 50.88740837504156
+              },
+              {
+                "nodes": 126,
+                "seconds": 51.97216570901219
+              },
+              {
+                "nodes": 147,
+                "seconds": 53.120455334021244
+              },
+              {
+                "nodes": 168,
+                "seconds": 54.26878400001442
+              },
+              {
+                "nodes": 189,
+                "seconds": 55.4265144590172
+              },
+              {
+                "nodes": 210,
+                "seconds": 56.576463959005196
+              },
+              {
+                "nodes": 231,
+                "seconds": 57.79397333401721
+              },
+              {
+                "nodes": 252,
+                "seconds": 59.02714408404427
+              },
+              {
+                "nodes": 273,
+                "seconds": 60.26160525000887
+              },
+              {
+                "nodes": 294,
+                "seconds": 61.50465566699859
+              },
+              {
+                "nodes": 315,
+                "seconds": 62.655576542019844
+              },
+              {
+                "nodes": 336,
+                "seconds": 63.800853417022154
+              },
+              {
+                "nodes": 357,
+                "seconds": 64.94857029203558
+              },
+              {
+                "nodes": 378,
+                "seconds": 66.09602616704069
+              },
+              {
+                "nodes": 399,
+                "seconds": 67.22865037503652
+              },
+              {
+                "nodes": 420,
+                "seconds": 68.3680578750209
+              }
+            ],
+            "profile": null,
+            "pongs": 3452,
+            "pong_max_s": 0.013989250001031905,
+            "host_poll_max_s": 0.028496042010374367
+          },
+          {
+            "repeat": 2,
+            "temperature": "repeat",
+            "seconds": 67.43356333300471,
+            "nodes": 420,
+            "nodes_per_second": 6.228352458936944,
+            "move": "e2e3",
+            "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.13103895797394216
+              },
+              {
+                "nodes": 21,
+                "seconds": 33.87273295799969
+              },
+              {
+                "nodes": 42,
+                "seconds": 38.592689333017915
+              },
+              {
+                "nodes": 63,
+                "seconds": 39.79925899999216
+              },
+              {
+                "nodes": 84,
+                "seconds": 40.947279207990505
+              },
+              {
+                "nodes": 105,
+                "seconds": 42.054056332970504
+              },
+              {
+                "nodes": 126,
+                "seconds": 43.180609875009395
+              },
+              {
+                "nodes": 147,
+                "seconds": 44.35403087496525
+              },
+              {
+                "nodes": 168,
+                "seconds": 45.526108791993465
+              },
+              {
+                "nodes": 189,
+                "seconds": 46.70490716700442
+              },
+              {
+                "nodes": 210,
+                "seconds": 47.87875095801428
+              },
+              {
+                "nodes": 231,
+                "seconds": 49.126998832973186
+              },
+              {
+                "nodes": 252,
+                "seconds": 50.3767717499868
+              },
+              {
+                "nodes": 273,
+                "seconds": 51.649789625022095
+              },
+              {
+                "nodes": 294,
+                "seconds": 52.94083008298185
+              },
+              {
+                "nodes": 315,
+                "seconds": 54.0940414579818
+              },
+              {
+                "nodes": 336,
+                "seconds": 55.28165416698903
+              },
+              {
+                "nodes": 357,
+                "seconds": 56.439673624990974
+              },
+              {
+                "nodes": 378,
+                "seconds": 57.62338441697648
+              },
+              {
+                "nodes": 399,
+                "seconds": 58.767021125007886
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.93301091698231
+              }
+            ],
+            "profile": null,
+            "pongs": 3052,
+            "pong_max_s": 0.016347333032172173,
+            "host_poll_max_s": 0.021469624945893884
+          }
+        ],
+        "warm_median_s": 71.45253679150483
+      },
+      {
+        "stage": "B108",
+        "profile": 1,
+        "runs": [
+          {
+            "repeat": 0,
+            "temperature": "cold",
+            "seconds": 70.48941658297554,
+            "nodes": 420,
+            "nodes_per_second": 5.958341271070153,
+            "move": "e2e3",
+            "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.1335690409759991
+              },
+              {
+                "nodes": 21,
+                "seconds": 36.50223016599193
+              },
+              {
+                "nodes": 42,
+                "seconds": 40.47242000000551
+              },
+              {
+                "nodes": 63,
+                "seconds": 41.66393162502209
+              },
+              {
+                "nodes": 84,
+                "seconds": 42.81936320802197
+              },
+              {
+                "nodes": 105,
+                "seconds": 43.92925066599855
+              },
+              {
+                "nodes": 126,
+                "seconds": 45.05185608298052
+              },
+              {
+                "nodes": 147,
+                "seconds": 46.2214115409879
+              },
+              {
+                "nodes": 168,
+                "seconds": 47.38907774997642
+              },
+              {
+                "nodes": 189,
+                "seconds": 48.566900332982186
+              },
+              {
+                "nodes": 210,
+                "seconds": 49.74359024997102
+              },
+              {
+                "nodes": 231,
+                "seconds": 50.987357416015584
+              },
+              {
+                "nodes": 252,
+                "seconds": 52.23992812499637
+              },
+              {
+                "nodes": 273,
+                "seconds": 53.50871529098367
+              },
+              {
+                "nodes": 294,
+                "seconds": 54.779340957989916
+              },
+              {
+                "nodes": 315,
+                "seconds": 55.94652870798018
+              },
+              {
+                "nodes": 336,
+                "seconds": 57.119626833009534
+              },
+              {
+                "nodes": 357,
+                "seconds": 58.28948716598097
+              },
+              {
+                "nodes": 378,
+                "seconds": 59.4615196249797
+              },
+              {
+                "nodes": 399,
+                "seconds": 60.612532957980875
+              },
+              {
+                "nodes": 420,
+                "seconds": 61.78284108301159
+              }
+            ],
+            "profile": null,
+            "pongs": 3188,
+            "pong_max_s": 0.012563332973513752,
+            "host_poll_max_s": 0.03222937497776002
+          },
+          {
+            "repeat": 1,
+            "temperature": "repeat",
+            "seconds": 79.0155028750305,
+            "nodes": 420,
+            "nodes_per_second": 5.31541260534992,
+            "move": "e2e3",
+            "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 6.884990582999308
+              },
+              {
+                "nodes": 21,
+                "seconds": 37.80671212502057
+              },
+              {
+                "nodes": 42,
+                "seconds": 43.15037400001893
+              },
+              {
+                "nodes": 63,
+                "seconds": 44.321902208030224
+              },
+              {
+                "nodes": 84,
+                "seconds": 45.46824470802676
+              },
+              {
+                "nodes": 105,
+                "seconds": 46.54194845800521
+              },
+              {
+                "nodes": 126,
+                "seconds": 47.64163962501334
+              },
+              {
+                "nodes": 147,
+                "seconds": 48.78974541602656
+              },
+              {
+                "nodes": 168,
+                "seconds": 49.951148833031766
+              },
+              {
+                "nodes": 189,
+                "seconds": 51.09804812504444
+              },
+              {
+                "nodes": 210,
+                "seconds": 52.26613104104763
+              },
+              {
+                "nodes": 231,
+                "seconds": 53.48010812501889
+              },
+              {
+                "nodes": 252,
+                "seconds": 54.708603666047566
+              },
+              {
+                "nodes": 273,
+                "seconds": 55.95695733302273
+              },
+              {
+                "nodes": 294,
+                "seconds": 57.21959950000746
+              },
+              {
+                "nodes": 315,
+                "seconds": 58.35240662499564
+              },
+              {
+                "nodes": 336,
+                "seconds": 59.50484333303757
+              },
+              {
+                "nodes": 357,
+                "seconds": 60.651423375005834
+              },
+              {
+                "nodes": 378,
+                "seconds": 61.80318508303026
+              },
+              {
+                "nodes": 399,
+                "seconds": 62.93519158300478
+              },
+              {
+                "nodes": 420,
+                "seconds": 64.08325279102428
+              }
+            ],
+            "profile": null,
+            "pongs": 3529,
+            "pong_max_s": 0.020118249987717718,
+            "host_poll_max_s": 0.029628915945068002
+          },
+          {
+            "repeat": 2,
+            "temperature": "repeat",
+            "seconds": 71.05269429198233,
+            "nodes": 420,
+            "nodes_per_second": 5.911105893804132,
+            "move": "e2e3",
+            "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.12990945897763595
+              },
+              {
+                "nodes": 21,
+                "seconds": 30.349918209016323
+              },
+              {
+                "nodes": 42,
+                "seconds": 34.66996616701363
+              },
+              {
+                "nodes": 63,
+                "seconds": 35.86559854197549
+              },
+              {
+                "nodes": 84,
+                "seconds": 37.02390483400086
+              },
+              {
+                "nodes": 105,
+                "seconds": 38.139331125013996
+              },
+              {
+                "nodes": 126,
+                "seconds": 39.2497880840092
+              },
+              {
+                "nodes": 147,
+                "seconds": 40.43152504198952
+              },
+              {
+                "nodes": 168,
+                "seconds": 41.59754799999064
+              },
+              {
+                "nodes": 189,
+                "seconds": 42.76981158397393
+              },
+              {
+                "nodes": 210,
+                "seconds": 43.95141841698205
+              },
+              {
+                "nodes": 231,
+                "seconds": 45.19756858400069
+              },
+              {
+                "nodes": 252,
+                "seconds": 46.45445270900382
+              },
+              {
+                "nodes": 273,
+                "seconds": 47.729204041999765
+              },
+              {
+                "nodes": 294,
+                "seconds": 49.00640104198828
+              },
+              {
+                "nodes": 315,
+                "seconds": 50.17472358403029
+              },
+              {
+                "nodes": 336,
+                "seconds": 51.35489125002641
+              },
+              {
+                "nodes": 357,
+                "seconds": 52.51570799999172
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.68669979198603
+              },
+              {
+                "nodes": 399,
+                "seconds": 54.83912216697354
+              },
+              {
+                "nodes": 420,
+                "seconds": 56.02275870897574
+              }
+            ],
+            "profile": null,
+            "pongs": 3216,
+            "pong_max_s": 0.015692542016040534,
+            "host_poll_max_s": 0.028014499985147268
+          }
+        ],
+        "warm_median_s": 75.03409858350642
+      },
+      {
+        "stage": "A96-control",
+        "profile": 0,
+        "runs": [
+          {
+            "repeat": 0,
+            "temperature": "cold",
+            "seconds": 67.80642620800063,
+            "nodes": 420,
+            "nodes_per_second": 6.194103177059098,
+            "move": "e2e3",
+            "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.12995883298572153
+              },
+              {
+                "nodes": 21,
+                "seconds": 28.416821957973298
+              },
+              {
+                "nodes": 42,
+                "seconds": 39.96032033296069
+              },
+              {
+                "nodes": 63,
+                "seconds": 41.15902479196666
+              },
+              {
+                "nodes": 84,
+                "seconds": 42.33389554196037
+              },
+              {
+                "nodes": 105,
+                "seconds": 43.438862500013784
+              },
+              {
+                "nodes": 126,
+                "seconds": 44.548422916966956
+              },
+              {
+                "nodes": 147,
+                "seconds": 45.721772374992725
+              },
+              {
+                "nodes": 168,
+                "seconds": 46.89549841696862
+              },
+              {
+                "nodes": 189,
+                "seconds": 48.06943037500605
+              },
+              {
+                "nodes": 210,
+                "seconds": 49.25194979197113
+              },
+              {
+                "nodes": 231,
+                "seconds": 50.50042212498374
+              },
+              {
+                "nodes": 252,
+                "seconds": 51.75821516697761
+              },
+              {
+                "nodes": 273,
+                "seconds": 53.03354616696015
+              },
+              {
+                "nodes": 294,
+                "seconds": 54.311844582960475
+              },
+              {
+                "nodes": 315,
+                "seconds": 55.47846737498185
+              },
+              {
+                "nodes": 336,
+                "seconds": 56.65750016696984
+              },
+              {
+                "nodes": 357,
+                "seconds": 57.82971666700905
+              },
+              {
+                "nodes": 378,
+                "seconds": 58.99733024998568
+              },
+              {
+                "nodes": 399,
+                "seconds": 60.15033379197121
+              },
+              {
+                "nodes": 420,
+                "seconds": 61.3357781249797
+              }
+            ],
+            "profile": null,
+            "pongs": 3111,
+            "pong_max_s": 0.010570332990027964,
+            "host_poll_max_s": 0.029847499972674996
+          },
+          {
+            "repeat": 1,
+            "temperature": "repeat",
+            "seconds": 67.53600495902356,
+            "nodes": 420,
+            "nodes_per_second": 6.218905015995966,
+            "move": "e2e3",
+            "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.3162984999944456
+              },
+              {
+                "nodes": 21,
+                "seconds": 35.954997916996945
+              },
+              {
+                "nodes": 42,
+                "seconds": 40.5329430840211
+              },
+              {
+                "nodes": 63,
+                "seconds": 41.690841750008985
+              },
+              {
+                "nodes": 84,
+                "seconds": 42.82664670899976
+              },
+              {
+                "nodes": 105,
+                "seconds": 43.9067537090159
+              },
+              {
+                "nodes": 126,
+                "seconds": 45.0069137919927
+              },
+              {
+                "nodes": 147,
+                "seconds": 46.16464283398818
+              },
+              {
+                "nodes": 168,
+                "seconds": 47.30818479199661
+              },
+              {
+                "nodes": 189,
+                "seconds": 48.45638450002298
+              },
+              {
+                "nodes": 210,
+                "seconds": 49.61212391703157
+              },
+              {
+                "nodes": 231,
+                "seconds": 50.83346283400897
+              },
+              {
+                "nodes": 252,
+                "seconds": 52.05960137501825
+              },
+              {
+                "nodes": 273,
+                "seconds": 53.30475454201223
+              },
+              {
+                "nodes": 294,
+                "seconds": 54.55645545903826
+              },
+              {
+                "nodes": 315,
+                "seconds": 55.69867391703883
+              },
+              {
+                "nodes": 336,
+                "seconds": 56.84416224999586
+              },
+              {
+                "nodes": 357,
+                "seconds": 57.992424459022004
+              },
+              {
+                "nodes": 378,
+                "seconds": 59.146837584034074
+              },
+              {
+                "nodes": 399,
+                "seconds": 60.261634542024694
+              },
+              {
+                "nodes": 420,
+                "seconds": 61.40842425002484
+              }
+            ],
+            "profile": null,
+            "pongs": 3016,
+            "pong_max_s": 0.01445170899387449,
+            "host_poll_max_s": 0.026870707981288433
+          },
+          {
+            "repeat": 2,
+            "temperature": "repeat",
+            "seconds": 71.25278033397626,
+            "nodes": 420,
+            "nodes_per_second": 5.894506825296847,
+            "move": "e2e3",
+            "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.1277083749882877
+              },
+              {
+                "nodes": 21,
+                "seconds": 36.44431875000009
+              },
+              {
+                "nodes": 42,
+                "seconds": 41.09628783399239
+              },
+              {
+                "nodes": 63,
+                "seconds": 42.29172724997625
+              },
+              {
+                "nodes": 84,
+                "seconds": 43.46176483400632
+              },
+              {
+                "nodes": 105,
+                "seconds": 44.554156208992936
+              },
+              {
+                "nodes": 126,
+                "seconds": 45.67765345895896
+              },
+              {
+                "nodes": 147,
+                "seconds": 46.84764841699507
+              },
+              {
+                "nodes": 168,
+                "seconds": 48.03069537499687
+              },
+              {
+                "nodes": 189,
+                "seconds": 49.19926979200682
+              },
+              {
+                "nodes": 210,
+                "seconds": 50.380830083973706
+              },
+              {
+                "nodes": 231,
+                "seconds": 51.63579512498109
+              },
+              {
+                "nodes": 252,
+                "seconds": 52.88315845897887
+              },
+              {
+                "nodes": 273,
+                "seconds": 54.15717316698283
+              },
+              {
+                "nodes": 294,
+                "seconds": 55.445354166964535
+              },
+              {
+                "nodes": 315,
+                "seconds": 56.60008183401078
+              },
+              {
+                "nodes": 336,
+                "seconds": 57.78335891698953
+              },
+              {
+                "nodes": 357,
+                "seconds": 58.94563116697827
+              },
+              {
+                "nodes": 378,
+                "seconds": 60.11992341699079
+              },
+              {
+                "nodes": 399,
+                "seconds": 61.26917349995347
+              },
+              {
+                "nodes": 420,
+                "seconds": 62.45673049998004
+              }
+            ],
+            "profile": null,
+            "pongs": 3225,
+            "pong_max_s": 0.010546417033765465,
+            "host_poll_max_s": 0.03089070797432214
+          }
+        ],
+        "warm_median_s": 69.39439264649991
+      }
+    ],
+    "final_receipt": {
+      "status": "PASS_CLOCK_UI_CHIP8_KEYBOARD_USB_CHESS_ABA_NO_CHESS_SPEEDUP",
+      "public": "AEB505B6E0067623",
+      "usb": "2068336B4731",
+      "build": "F406C241",
+      "profile": "classic-v3-uc1609",
+      "clock_setting": 0,
+      "idle_and_compute_hz": 96000000,
+      "bin": "/Users/bolk/Projects/MK61S_MINI/.build/compute-clock-20261107/fixed-ui/resident.bin",
+      "bin_bytes": 402432,
+      "bin_sha256": "75d529595ee1f476f4cc22635bb4da1d83b06330e658864c2097d1b03370500d",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/compute-clock-20261107/fixed-ui/resident.elf",
+      "elf_sha256": "0b609f172b74317d078f0e6c1634b912673da5948e5b8a4c615b860341714f8d",
+      "system_verification": "/Users/bolk/Projects/MK61S_MINI/.build/compute-clock-20261107/hil-20261108-001/system-update.json",
+      "temporary_diagnostics_removed": true,
+      "cdc_closed": true,
+      "old_firmware_restoration_cancelled_by_user": true,
+      "chess": [
+        {
+          "stage": "A96",
+          "profile": 0,
+          "runs": [
+            {
+              "repeat": 0,
+              "temperature": "cold",
+              "seconds": 72.6730126250186,
+              "nodes": 420,
+              "nodes_per_second": 5.779311808182969,
+              "move": "e2e3",
+              "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 7.708019790996332
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 38.79426275001606
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 40.01687575003598
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 41.21877700003097
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 42.3912344580167
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 43.49379445798695
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 44.61481270799413
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 45.78843916603364
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 46.96959337498993
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 48.12779583298834
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 49.31274237501202
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 50.573035790992435
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 51.81222645798698
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 53.08081883302657
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 54.3601126249996
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 55.52546808304032
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 56.71132991602644
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 57.87784037500387
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 59.056183415988926
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 60.20694945799187
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 61.38344500004314
+                }
+              ],
+              "profile": null,
+              "pongs": 3143,
+              "pong_max_s": 0.011743000010028481,
+              "host_poll_max_s": 0.025388500012923032
+            },
+            {
+              "repeat": 1,
+              "temperature": "repeat",
+              "seconds": 75.47151025000494,
+              "nodes": 420,
+              "nodes_per_second": 5.565013852362554,
+              "move": "e2e3",
+              "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.13229366700397804
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 32.055095084011555
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 47.49103475001175
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 48.66239016701002
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 49.796820750052575
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 50.88740837504156
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 51.97216570901219
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 53.120455334021244
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 54.26878400001442
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 55.4265144590172
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 56.576463959005196
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 57.79397333401721
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 59.02714408404427
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 60.26160525000887
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 61.50465566699859
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 62.655576542019844
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 63.800853417022154
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 64.94857029203558
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 66.09602616704069
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 67.22865037503652
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 68.3680578750209
+                }
+              ],
+              "profile": null,
+              "pongs": 3452,
+              "pong_max_s": 0.013989250001031905,
+              "host_poll_max_s": 0.028496042010374367
+            },
+            {
+              "repeat": 2,
+              "temperature": "repeat",
+              "seconds": 67.43356333300471,
+              "nodes": 420,
+              "nodes_per_second": 6.228352458936944,
+              "move": "e2e3",
+              "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.13103895797394216
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 33.87273295799969
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 38.592689333017915
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 39.79925899999216
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 40.947279207990505
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 42.054056332970504
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 43.180609875009395
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 44.35403087496525
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 45.526108791993465
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 46.70490716700442
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 47.87875095801428
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 49.126998832973186
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 50.3767717499868
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 51.649789625022095
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 52.94083008298185
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 54.0940414579818
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 55.28165416698903
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 56.439673624990974
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 57.62338441697648
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 58.767021125007886
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 59.93301091698231
+                }
+              ],
+              "profile": null,
+              "pongs": 3052,
+              "pong_max_s": 0.016347333032172173,
+              "host_poll_max_s": 0.021469624945893884
+            }
+          ],
+          "warm_median_s": 71.45253679150483
+        },
+        {
+          "stage": "B108",
+          "profile": 1,
+          "runs": [
+            {
+              "repeat": 0,
+              "temperature": "cold",
+              "seconds": 70.48941658297554,
+              "nodes": 420,
+              "nodes_per_second": 5.958341271070153,
+              "move": "e2e3",
+              "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.1335690409759991
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 36.50223016599193
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 40.47242000000551
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 41.66393162502209
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 42.81936320802197
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 43.92925066599855
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 45.05185608298052
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 46.2214115409879
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 47.38907774997642
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 48.566900332982186
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 49.74359024997102
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 50.987357416015584
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 52.23992812499637
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 53.50871529098367
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 54.779340957989916
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 55.94652870798018
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 57.119626833009534
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 58.28948716598097
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 59.4615196249797
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 60.612532957980875
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 61.78284108301159
+                }
+              ],
+              "profile": null,
+              "pongs": 3188,
+              "pong_max_s": 0.012563332973513752,
+              "host_poll_max_s": 0.03222937497776002
+            },
+            {
+              "repeat": 1,
+              "temperature": "repeat",
+              "seconds": 79.0155028750305,
+              "nodes": 420,
+              "nodes_per_second": 5.31541260534992,
+              "move": "e2e3",
+              "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 6.884990582999308
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 37.80671212502057
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 43.15037400001893
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 44.321902208030224
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 45.46824470802676
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 46.54194845800521
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 47.64163962501334
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 48.78974541602656
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 49.951148833031766
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 51.09804812504444
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 52.26613104104763
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 53.48010812501889
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 54.708603666047566
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 55.95695733302273
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 57.21959950000746
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 58.35240662499564
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 59.50484333303757
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 60.651423375005834
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 61.80318508303026
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 62.93519158300478
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 64.08325279102428
+                }
+              ],
+              "profile": null,
+              "pongs": 3529,
+              "pong_max_s": 0.020118249987717718,
+              "host_poll_max_s": 0.029628915945068002
+            },
+            {
+              "repeat": 2,
+              "temperature": "repeat",
+              "seconds": 71.05269429198233,
+              "nodes": 420,
+              "nodes_per_second": 5.911105893804132,
+              "move": "e2e3",
+              "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.12990945897763595
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 30.349918209016323
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 34.66996616701363
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 35.86559854197549
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 37.02390483400086
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 38.139331125013996
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 39.2497880840092
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 40.43152504198952
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 41.59754799999064
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 42.76981158397393
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 43.95141841698205
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 45.19756858400069
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 46.45445270900382
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 47.729204041999765
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 49.00640104198828
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 50.17472358403029
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 51.35489125002641
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 52.51570799999172
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 53.68669979198603
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 54.83912216697354
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 56.02275870897574
+                }
+              ],
+              "profile": null,
+              "pongs": 3216,
+              "pong_max_s": 0.015692542016040534,
+              "host_poll_max_s": 0.028014499985147268
+            }
+          ],
+          "warm_median_s": 75.03409858350642
+        },
+        {
+          "stage": "A96-control",
+          "profile": 0,
+          "runs": [
+            {
+              "repeat": 0,
+              "temperature": "cold",
+              "seconds": 67.80642620800063,
+              "nodes": 420,
+              "nodes_per_second": 6.194103177059098,
+              "move": "e2e3",
+              "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.12995883298572153
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 28.416821957973298
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 39.96032033296069
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 41.15902479196666
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 42.33389554196037
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 43.438862500013784
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 44.548422916966956
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 45.721772374992725
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 46.89549841696862
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 48.06943037500605
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 49.25194979197113
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 50.50042212498374
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 51.75821516697761
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 53.03354616696015
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 54.311844582960475
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 55.47846737498185
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 56.65750016696984
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 57.82971666700905
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 58.99733024998568
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 60.15033379197121
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 61.3357781249797
+                }
+              ],
+              "profile": null,
+              "pongs": 3111,
+              "pong_max_s": 0.010570332990027964,
+              "host_poll_max_s": 0.029847499972674996
+            },
+            {
+              "repeat": 1,
+              "temperature": "repeat",
+              "seconds": 67.53600495902356,
+              "nodes": 420,
+              "nodes_per_second": 6.218905015995966,
+              "move": "e2e3",
+              "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.3162984999944456
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 35.954997916996945
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 40.5329430840211
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 41.690841750008985
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 42.82664670899976
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 43.9067537090159
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 45.0069137919927
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 46.16464283398818
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 47.30818479199661
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 48.45638450002298
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 49.61212391703157
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 50.83346283400897
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 52.05960137501825
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 53.30475454201223
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 54.55645545903826
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 55.69867391703883
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 56.84416224999586
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 57.992424459022004
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 59.146837584034074
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 60.261634542024694
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 61.40842425002484
+                }
+              ],
+              "profile": null,
+              "pongs": 3016,
+              "pong_max_s": 0.01445170899387449,
+              "host_poll_max_s": 0.026870707981288433
+            },
+            {
+              "repeat": 2,
+              "temperature": "repeat",
+              "seconds": 71.25278033397626,
+              "nodes": 420,
+              "nodes_per_second": 5.894506825296847,
+              "move": "e2e3",
+              "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+              "complete_eight_rank_board": true,
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "progress": [
+                {
+                  "nodes": 0,
+                  "seconds": 0.1277083749882877
+                },
+                {
+                  "nodes": 21,
+                  "seconds": 36.44431875000009
+                },
+                {
+                  "nodes": 42,
+                  "seconds": 41.09628783399239
+                },
+                {
+                  "nodes": 63,
+                  "seconds": 42.29172724997625
+                },
+                {
+                  "nodes": 84,
+                  "seconds": 43.46176483400632
+                },
+                {
+                  "nodes": 105,
+                  "seconds": 44.554156208992936
+                },
+                {
+                  "nodes": 126,
+                  "seconds": 45.67765345895896
+                },
+                {
+                  "nodes": 147,
+                  "seconds": 46.84764841699507
+                },
+                {
+                  "nodes": 168,
+                  "seconds": 48.03069537499687
+                },
+                {
+                  "nodes": 189,
+                  "seconds": 49.19926979200682
+                },
+                {
+                  "nodes": 210,
+                  "seconds": 50.380830083973706
+                },
+                {
+                  "nodes": 231,
+                  "seconds": 51.63579512498109
+                },
+                {
+                  "nodes": 252,
+                  "seconds": 52.88315845897887
+                },
+                {
+                  "nodes": 273,
+                  "seconds": 54.15717316698283
+                },
+                {
+                  "nodes": 294,
+                  "seconds": 55.445354166964535
+                },
+                {
+                  "nodes": 315,
+                  "seconds": 56.60008183401078
+                },
+                {
+                  "nodes": 336,
+                  "seconds": 57.78335891698953
+                },
+                {
+                  "nodes": 357,
+                  "seconds": 58.94563116697827
+                },
+                {
+                  "nodes": 378,
+                  "seconds": 60.11992341699079
+                },
+                {
+                  "nodes": 399,
+                  "seconds": 61.26917349995347
+                },
+                {
+                  "nodes": 420,
+                  "seconds": 62.45673049998004
+                }
+              ],
+              "profile": null,
+              "pongs": 3225,
+              "pong_max_s": 0.010546417033765465,
+              "host_poll_max_s": 0.03089070797432214
+            }
+          ],
+          "warm_median_s": 69.39439264649991
+        }
+      ],
+      "health": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=F406C241 profile=classic-v3-uc1609\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 167 used, 857 free, 1024 total\r\nVisible: 117 files, 50 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=444/18 raw(v/t/b)=1492/951/1020 val(mV/dC/mV)=3331/323/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=402432 footer=400920 expected=0xF406C241 build=0xF406C241 actual=0xF406C241 backend=hardware cycles=1185096\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005558 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC68 observed_low=0x2001FC68 sampled_remaining=15464 watermark=1 watermark_remaining=11216 observed_remaining=11216 sram_xn=1\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> ",
+        "ls": "ls\r\nd\tGames/\r\nd\tURQ/\r\nd\tApps/\r\nd\tSystem/\r\n4 entries.\r\n/> "
+      }
+    },
+    "chess_conclusion": "No confirmed acceleration at108MHz; stock96MHz retained.",
+    "partial_chess_before_retiring_vmstore": {
+      "timeout_s": 180,
+      "progress": [
+        0,
+        21,
+        42,
+        63,
+        84
+      ],
+      "not_a_speed_measurement": true
+    },
+    "final_profile": 0,
+    "final_clock_hz": 96000000,
+    "final_clock_report": "COMPUTE V=1 N=4194304 HASH=3289793925 HZ0=96000000 HZ1=96000000 HZ2=96000000 US0=495718 US1=495538 US2=495537 GAP0=261 GAP1=123 GAP2=122 END=1 DUP=1 MATCH=1\n"
+  }
+}

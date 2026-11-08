@@ -1,0 +1,116 @@
+{
+  "sequence": 106,
+  "device_raw": "4d530222006a00040005008aebc58f",
+  "host_raw": "4d530222006a00040005008eebc58f",
+  "device_crc_valid": true,
+  "host_crc_valid": false,
+  "differences": [
+    {
+      "offset": 11,
+      "device": 138,
+      "host": 142,
+      "xor": 4
+    }
+  ],
+  "status": "LOCALIZED_AFTER_ENCODER_NOT_FIXED",
+  "new_working_build": "CFD23EE8",
+  "new_working_size": 402300,
+  "previous_working_size": 402432,
+  "flash_delta": -132,
+  "ram_delta": 0,
+  "tests": {
+    "stock_text_96_144_96": [
+      {
+        "profile": 0,
+        "stack_outputs": 40,
+        "pongs": 21,
+        "pong_max_s": 0.002204666961915791
+      },
+      {
+        "profile": 3,
+        "stack_outputs": 40,
+        "pongs": 20,
+        "pong_max_s": 0.012191166984848678
+      },
+      {
+        "profile": 0,
+        "stack_outputs": 40,
+        "pongs": 21,
+        "pong_max_s": 0.002314333978574723
+      }
+    ],
+    "diagnostic_packet_validation": "Two144MHz runs passed;2613 packets validated, no raw/encoded/queue-copy failures. Instrumentation changes timing and layout.",
+    "packet_trace_144": "Failed; device sequence106 packet has validCRC, host differs at byte11 by0x04.",
+    "fifo_word_trace_144": "Passed; cannot compare a failing FIFO word. Instrumentation changes timing/layout.",
+    "fifo_dsb_144": "Failed; DSB did not fix CRC, discarded.",
+    "host_protocol": "PASS",
+    "host_compute_settings": "PASS"
+  },
+  "final_frequency_mhz": 96,
+  "limitations": [
+    "No proof yet whether the post-encoder corruption is CDC/USB driver or overclock instability.",
+    "No fixed144MHz acceptance claimed.",
+    "No speculative USB code changes included in working image."
+  ],
+  "final_health": {
+    "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=CFD23EE8 profile=classic-v3-uc1609\r\n/> ",
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 67 used, 957 free, 1024 total\r\nVisible: 57 files, 10 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=435/18 raw(v/t/b)=1492/958/1019 val(mV/dC/mV)=3331/346/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=402300 footer=400788 expected=0xCFD23EE8 build=0xCFD23EE8 actual=0xCFD23EE8 backend=hardware cycles=1184789\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005558 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC68 observed_low=0x2001FC68 sampled_remaining=15464 watermark=1 watermark_remaining=14524 observed_remaining=14524 sram_xn=1\r\n/> ",
+    "ls": "ls\r\nd\tGames/\r\nd\tURQ/\r\nd\tApps/\r\nd\tSystem/\r\n4 entries.\r\n/> "
+  },
+  "final_control": [
+    {
+      "V": 1,
+      "N": 4194304,
+      "HASH": 3289793925,
+      "HZ0": 96000000,
+      "HZ1": 96000000,
+      "HZ2": 96000000,
+      "US0": 521213,
+      "US1": 516933,
+      "US2": 516931,
+      "GAP0": 1583,
+      "GAP1": 208,
+      "GAP2": 208,
+      "END": 1,
+      "DUP": 1,
+      "MATCH": 1,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "CLKTEST.APP",
+      "repeat": 0,
+      "pongs": 76,
+      "pong_max_s": 0.051266124995891005,
+      "host_poll_max_s": 0.006743708974681795,
+      "usb_frames": 4
+    },
+    {
+      "V": 1,
+      "US": 10000721,
+      "CPU": 6997,
+      "DRAW": 3194,
+      "FRAME": 599,
+      "TICK": 599,
+      "RENDER_US": 2015033,
+      "POLL_MAX": 6087,
+      "BACKLOG_US": 1428,
+      "CLAMP_US": 0,
+      "PAUSE_US": 0,
+      "RESULT": 0,
+      "fps": 59.89568152136231,
+      "ips": 699.6495552670652,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "C8FPS.APP",
+      "repeat": 0,
+      "pongs": 440,
+      "pong_max_s": 0.03650124999694526,
+      "host_poll_max_s": 0.007080957992002368,
+      "usb_frames": 185
+    }
+  ],
+  "ui_round_trip": "Actual screen96→108→96 in Settings; exact original frame restored; no submenu.",
+  "follow_up_report": "compute-clock-crc-isolation-20261108.md",
+  "follow_up_conclusion": "144MHz data-processing failure reproduced with USB disabled and all IRQ masked;96/108/120 controls passed."
+}

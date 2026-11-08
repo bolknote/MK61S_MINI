@@ -56,6 +56,8 @@ enum class Command : u32 {
   SETUP_HARDWARE = 0x400,
   SETUP_DATE_TIME, SETUP_CALIBRATION, SETUP_FONT, SETUP_PREVIEW,
   SETUP_FONT_STEP, SETUP_FONT_COMPILE,
+  SETUP_COMPUTE_CLOCK,
+  SETUP_SETTINGS,
 
   // USBDISK.APP is pinned for the complete MSC session. Pointer-bearing
   // commands are issued only by usb_mass_storage::service(), never an IRQ.

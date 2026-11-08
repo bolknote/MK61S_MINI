@@ -3,9 +3,11 @@
 #include "rust_types.h"
 #include "loadable_app_services.h"
 namespace setup_ui {
+bool settings();
 bool hardware();
 bool date_time();
 bool calibration();
+bool compute_frequency();
 bool font();
 void step_font(i8 delta);
 // The caller retains the source buffer until preview returns.
