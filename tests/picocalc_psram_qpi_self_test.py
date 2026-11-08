@@ -4,9 +4,9 @@ from pathlib import Path
 import collections, random, re, unittest
 ROOT=Path(__file__).resolve().parents[1]
 
-def programs():
+def programs(source="psram_qpi.pio"):
     result={};current=None
-    for line in (ROOT/'ports/picocalc/psram_qpi.pio').read_text().splitlines():
+    for line in (ROOT/'ports/picocalc'/source).read_text().splitlines():
         line=line.split(';',1)[0].strip()
         if line.startswith('.program '):
             current={'code':[],'labels':{}};result[line.split()[1]]=current
@@ -17,7 +17,7 @@ def programs():
             current['code'].append((m[1],int(m[2]),1+int(m[3] or 0)))
     return result
 
-def execute(program,packets,reply=(),stalls=False):
+def execute(program,packets,reply=(),stalls=False,sample_trace=None):
     reading=bool(reply);size=len(packets[0]);word_count=(size+3)//4
     sent=[int.from_bytes(p[i:i+4].ljust(4,b'\0'),'big') for p in packets for i in range(0,len(p),4)]
     source=[n for packet in reply for byte in packet for n in (byte>>4,byte&15)]
@@ -59,6 +59,7 @@ def execute(program,packets,reply=(),stalls=False):
             assert out_bits<32
             value=(osr>>28)&15;osr=(osr<<4)&0xFFFFFFFF;out_bits+=4
         elif op=='in pins, 4':
+            if sample_trace is not None:sample_trace.append((elapsed,read_at))
             assert dirs==0 and read_at<len(source)
             isr=((isr<<4)|source[read_at])&0xFFFFFFFF;read_at+=1;in_bits+=4
             if in_bits==32:
@@ -115,15 +116,46 @@ class QpiTests(unittest.TestCase):
         replies=[bytes((i+j)&255 for j in range(16)) for i in range(128)]
         frames,words,low=execute(p,headers,replies,stalls=True)
         self.assertEqual(b''.join(x.to_bytes(4,'big') for x in words),b''.join(replies))
-        # CLK_SYS270MHz, PIO divider461/256: fewer than150MHz PIO,
-        # below25MHz SCK. Even extended-temperature4us CE# is respected.
-        self.assertLessEqual(270000000*256,150000000*461)
-        self.assertLess(low*461*1000000000/(270000000*256),4000)
-        for edges,duration,end in frames:
-            self.assertGreater((end-edges[-1][0])*461*1000000000/(270000000*256),3)
+        # Fractional PIO phase can move an edge by one SYS tick. Bound that
+        # uncertainty for25/33.3/45MHz read candidates, not just mean clocks.
+        for div in (461,346,256):
+            def earliest_ns(cycles):return (cycles*div//256)*1000000000/270000000
+            def latest_ns(cycles):return ((cycles*div+255)//256)*1000000000/270000000
+            self.assertLess(latest_ns(low),4000)  # Stricter extended grade CE#.
+            previous_end=None
+            for edges,duration,end in frames:
+                self.assertGreaterEqual(earliest_ns(end-edges[-1][0]),3)
+                if previous_end is not None:
+                    self.assertGreaterEqual(earliest_ns(end-duration-previous_end),18)
+                previous_end=end
+            self.assertGreaterEqual(earliest_ns(1),2.5)  # Header CE# setup.
+            self.assertGreaterEqual(earliest_ns(3),0.45*11.9)  # High/low width.
+
+    def test_late_sample_preserves_clock_waveform(self):
+        new=programs('psram_qpi_late.pio')['mk61_psram_qpi_read']
+        old=programs()['mk61_psram_qpi_read']
+        self.assertEqual(programs()['mk61_psram_qpi_write'],programs('psram_qpi_late.pio')['mk61_psram_qpi_write'])
+        at=new['labels']['read_nibble']
+        self.assertEqual(new['code'][at:at+3],[('nop',2,3),('in pins, 4',0,1),('jmp x-- read_nibble',0,2)])
+        self.assertEqual(old['code'][at:at+3],[('nop',2,2),('in pins, 4',2,1),('jmp x-- read_nibble',0,3)])
+        headers=[bytes([0xEB])+(1008+i*16).to_bytes(3,'big') for i in range(128)]
+        replies=[bytes((i*37+j*13)&255 for j in range(16)) for i in range(128)]
+        for stalled in (False,True):
+            before=[];after=[]
+            a,aw,al=execute(old,headers,replies,stalls=stalled,sample_trace=before)
+            b,bw,bl=execute(new,headers,replies,stalls=stalled,sample_trace=after)
+            self.assertEqual(aw,bw);self.assertEqual(al,bl)
+            for i,((ae,ad,az),(be,bd,bz)) in enumerate(zip(a,b)):
+                ast=az-ad;bst=bz-bd
+                self.assertEqual(ad,bd)
+                self.assertEqual([(t-ast,d,v) for t,d,v in ae],[(t-bst,d,v) for t,d,v in be])
+                for j in range(32):
+                    self.assertEqual(after[i*32+j][0]-bst,before[i*32+j][0]-ast+1)
+            if not stalled:self.assertEqual(a,b)
 
     def test_instruction_budget(self):
-        count=sum(len(p['code']) for p in programs().values())
         spi=sum(bool(re.search(r' side [0-3]',x)) for x in (ROOT/'ports/picocalc/psram_spi.pio').read_text().splitlines())
-        self.assertLessEqual(count+spi,32)
+        for source in ('psram_qpi.pio','psram_qpi_late.pio'):
+            count=sum(len(p['code']) for p in programs(source).values())
+            self.assertLessEqual(count+spi,32)
 if __name__=='__main__':unittest.main()

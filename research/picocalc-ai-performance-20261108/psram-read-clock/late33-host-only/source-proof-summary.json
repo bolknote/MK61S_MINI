@@ -1,0 +1,27 @@
+{
+  "parent_build": "99C74E63",
+  "parent_crc": "B43FBBD7",
+  "parent_source": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-v32/source",
+  "production_changes": [
+    "ports/picocalc/psram_qpi.pio"
+  ],
+  "changed": [
+    "ports/picocalc/psram_qpi.pio",
+    "tests/picocalc_psram_qpi_self_test.py"
+  ],
+  "read_divider256": 346,
+  "CPU_hz": 270000000,
+  "read_sample_shift_PIO_cycles": 1,
+  "SCK_cycles": 6,
+  "synchronizer_bypass": false,
+  "original_full_source_proof_sha256": "055c50fe5cf7a5d197574e4484c9ab047f0f77911c3b08364b2e2008f94098f0",
+  "relevant_file_pins": {
+    "tests/picocalc_psram_qpi_self_test.py": "a6d1893091355f19fcca32537c9a13a5e0386de89562b87fdce2577fea592e1b",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "ports/picocalc/ai_psram_read_clock.hpp": "4e80e5aca84d0298908409fca00c8bdaa08902638071e759b0a4eeb84ffd77ad",
+    "ports/picocalc/ai_harness.cpp": "3af43342391402f197e09f8f4ff87ab11e36b032a15e665e8c00d8a01eeb4438",
+    "ports/picocalc/psram_qpi.pio": "6f8eb662c3971da707c9e806faacc52f5190030b11fd823b7aea40d335f24752"
+  }
+}

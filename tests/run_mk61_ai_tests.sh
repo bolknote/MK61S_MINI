@@ -15,6 +15,9 @@ fi
 ai_flags=(-pthread -std=c++17 -O2 -ffp-contract=off -Wall -Wextra -Werror
     -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function
     -DMK61_CORE_STANDALONE=1 -DMK61_CORE_HOT_TABLES_IN_SRAM=0 -I"$root/code")
+clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" -I"$root/ports/picocalc" \
+    "$root/tests/mk61_ai_stress_self_test.cpp" -o "$ai_build/stress-test"
+"$ai_build/stress-test"
 clang -std=c11 -O2 -Wall -Wextra -Werror "${ai_sanitizers[@]}" \
     -c "$root/code/mk61_ai_kernels.c" -o "$ai_build/kernels.o"
 clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" \

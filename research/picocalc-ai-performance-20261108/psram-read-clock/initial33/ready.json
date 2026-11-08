@@ -1,0 +1,29 @@
+{
+  "status": "HOST_ARM_NATIVE_PASS_WAIT_GO",
+  "physical_io": false,
+  "build": "C4E0CF46",
+  "crc": "A5A7307E",
+  "uf2_sha256": "2deb0ccc28b6c6cd3cbf6a4d5071e23e5862745cdedd9fbae578a402bab6414d",
+  "manifest_sha256": "aecfe39c953b19cea1ccabcf68c64ee461c056cf96545822ad2a9c7ae23856f4",
+  "parent": "87321134/E7B6428E",
+  "ROMCACHE_start": "0x101C0000",
+  "uf2_end_exclusive": "0x101b5200",
+  "margin": 44544,
+  "flash_bytes": 1790272,
+  "static_SRAM": 120368,
+  "heap": {
+    "minimum_heap_bytes": 108544,
+    "heap_capacity_bytes": 109008
+  },
+  "stress_before_both_timed_passes": true,
+  "production_changes": [
+    "ports/picocalc/ai_psram_read_clock.hpp",
+    "ports/picocalc/ai_harness.cpp"
+  ],
+  "native_log": {
+    "path": "/tmp/mk61ai-psram-read-v29b-native-model.log",
+    "bytes": 9359,
+    "sha256": "810903677e73d1469087155acbc499bb6a7eeade2201087fc4a08cbe77b2b1bd"
+  },
+  "GPIO_data_and_PIO_program_unchanged": true
+}

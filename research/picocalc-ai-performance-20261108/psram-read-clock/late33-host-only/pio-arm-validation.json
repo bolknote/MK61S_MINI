@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "read_instruction_words": 18,
+  "changed_indices": [
+    13,
+    14,
+    15
+  ],
+  "quad_write_words_unchanged": true,
+  "compiled_opcode_changes": [
+    {
+      "index": 13,
+      "before": "0xb142",
+      "after": "0xb242"
+    },
+    {
+      "index": 14,
+      "before": "0x5004",
+      "after": "0x4004"
+    },
+    {
+      "index": 15,
+      "before": "0x24d",
+      "after": "0x14d"
+    }
+  ],
+  "meaning": "same HIGH3/LOW3 clock edges and unchanged packet timing; IN one PIO cycle later"
+}

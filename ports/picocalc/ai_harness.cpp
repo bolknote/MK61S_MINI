@@ -7,6 +7,7 @@
 #include "mk61_ai_long_bench.hpp"
 #include "mk61_ai_linear.hpp"
 #include "mk61_ai_kernels.h"
+#include "mk61_ai_stress.hpp"
 #if defined(PICO_ON_DEVICE)
 #include "io_worker.hpp"
 #include "psram.hpp"
@@ -2720,6 +2721,9 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   linear_batch_flash(&stress);
   stress.output=stress_output;
   ai_clock::State frequency;
+  unsigned stress_elapsed_ms=0;bool stress_before_decode=false;
+  diagnostic::StressDiagnostics stress_diagnostic;
+  std::uint8_t expected[256]{},actual[256]{};
   unsigned passes=0,stress_iterations=0,control_probe_calls=0;std::uint32_t actual_hz=ai_clock::hz();
   const auto reads_before=psram_reads,writes_before=psram_writes;
 #if defined(PICO_ON_DEVICE)
@@ -2731,24 +2735,47 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
     call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
   }
-  for(unsigned pass=1;ok && pass<=config.repeat;++pass) {
-    ok=run(pass);++passes;
-    if(!ok || !config.stress_ms || pass>1) continue;
+  // Validate an experimental read clock before any timed candidate pass.
+  // pass0 is only the private-buffer stress; archived controls stay external.
+  for(unsigned pass=0;ok && pass<=config.repeat;++pass) {
+    if(pass) { ok=run(pass);++passes;continue; }
+    if(!config.stress_ms) continue;
+    {
+      char marker[96];const int n=std::snprintf(marker,sizeof(marker),
+        "AI_PSRAM_STRESS begin ms=%u hz=%lu\r\n",config.stress_ms,(unsigned long)ai_clock::hz());
+      call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
+    }
     // Direct diagnostic matmuls use the same presentation boundary as a
     // model forward, retaining input service throughout the stress loop.
+    // A legacy control pass may have disabled LCD deferral; stress belongs
+    // to the candidate profile even when it runs before its first pass.
+    linear_kernel=LinearKernel(config.kernel);arithmetic=Arithmetic(config.arithmetic);
+    dual_core=config.cores>=2;m3_core=false;filter_head=config.filter;
+    double_buffer=config.prefetch;freeze_screen=config.freeze;
+    configure_execution();
     const auto stress_execution=model.execution();
+    const unsigned freeze_before=freeze_count;
     if(stress_execution.busy) stress_execution.busy(stress_execution.context,true);
+    stress_diagnostic.busy_entered=stress_execution.busy && computing &&
+        (!freeze_screen || freeze_count==freeze_before+1);
+    if(!stress_diagnostic.busy_entered) {
+      stress_diagnostic.failure=diagnostic::StressFailure::EXECUTION;ok=false;
+    }
 #if defined(PICO_ON_DEVICE)
     // Exercise the same core-1 control path used by the key-click timer,
     // without playing a sound. It must remain callable while LCD is held.
     bool invoked=false;
     io_worker::invoke(&invoked,[](void *p) { *static_cast<bool*>(p)=true; });
+    if(!invoked)stress_diagnostic.failure=diagnostic::StressFailure::CONTROL;
     ok=ok && invoked;if(invoked) ++control_probe_calls;
 #endif
     const auto started=host.api->millis_ms();
-    std::uint8_t expected[256],actual[256];
+
     while(ok && host.api->millis_ms()-started<config.stress_ms) {
-      if(!pump()) { cancel=true;ok=false;break; }
+      if(!pump()) {
+        cancel=true;ok=false;stress_diagnostic.failure=diagnostic::StressFailure::CANCEL;break;
+      }
+      stress_diagnostic.iteration=stress_iterations;
       LinearBatch local=stress,remote=stress;
       bool submitted=false;
 #if defined(PICO_ON_DEVICE)
@@ -2764,16 +2791,20 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
 #else
       (void)submitted;
 #endif
-      ok=local.status==ModelStatus::OK && (!submitted || remote.status==ModelStatus::OK) &&
-          !std::memcmp(stress_reference,stress_output,sizeof(stress_output));
-      for(unsigned j=0;j<sizeof(expected);++j)
-        expected[j]=std::uint8_t((j*37U)^(stress_iterations*13U)^(j>>3));
-      const unsigned address=(stress_iterations*4093U)&(65536-256);
-      ok=ok && scratch.write(address,expected,sizeof(expected)) &&
-          scratch.read(address,actual,sizeof(actual)) && !std::memcmp(expected,actual,sizeof(expected));
+      ok=stress_diagnostic.math(unsigned(local.status),unsigned(remote.status),submitted,
+          stress_reference,stress_output,sizeof(stress_output));
+      if(ok)ok=stress_diagnostic.memory(scratch,stress_iterations,expected,actual);
       ++stress_iterations;
     }
+    stress_elapsed_ms=host.api->millis_ms()-started;
+    stress_before_decode=ok && !passes && stress_elapsed_ms>=config.stress_ms;
     if(stress_execution.busy) stress_execution.busy(stress_execution.context,false);
+    stress_diagnostic.busy_exited=stress_diagnostic.busy_entered && !computing && freeze_count==thaw_count;
+    {
+      char marker[96];const int n=std::snprintf(marker,sizeof(marker),
+        "AI_PSRAM_STRESS end ok=%u iterations=%u\r\n",unsigned(ok),stress_iterations);
+      call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
+    }
   }
 #if defined(PICO_ON_DEVICE)
   const unsigned psram_read_div=psram::diagnostic_clock_divider256();
@@ -2781,6 +2812,16 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   const unsigned psram_read_div=0;
 #endif
   const bool clocks_restored=ai_clock::restore(frequency);
+  // After a failed fast read, re-read only the same owned private block at
+  // the restored clock, without rewriting it or touching model/KV memory.
+  if(stress_diagnostic.write==1 && stress_diagnostic.read &&
+     stress_diagnostic.failure!=diagnostic::StressFailure::NONE && ai_clock::hz()==125000000) {
+    stress_diagnostic.stable_read=scratch.read(stress_diagnostic.address,actual,sizeof(actual));
+    if(stress_diagnostic.stable_read) {
+      stress_diagnostic.stable_crc=diagnostic::StressDiagnostics::crc(actual,sizeof(actual));
+      stress_diagnostic.stable_match=!std::memcmp(expected,actual,sizeof(actual));
+    }
+  }
   ai_m3::close();
   const auto restored_hz=ai_clock::hz();
   // All exits after begin converge here, before SD writes, teardown or return.
@@ -2796,7 +2837,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
 #else
   const unsigned worker_jobs=0,worker_max_us=0,i2c_errors=0;const bool device=false;
 #endif
-  bool used_worker=!device || config.cores==1;
+  bool used_worker=!device || config.cores==1 || (!config.repeat && worker_jobs>0);
   for(unsigned i=1;i<=passes;++i) used_worker=used_worker || results[i].jobs>0;
   if(config.cores==3) for(unsigned i=1;i<=passes;++i)
     ok=ok && results[i].remote_jobs && !results[i].remote_fallbacks &&
@@ -2823,6 +2864,24 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   if(config.version==2) append(",\"prefetch\":%u",config.prefetch);
   append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:28);
   append("\"psram_read_divider256\":%u,",psram_read_div);
+  append("\"stress_only\":%s,",config.repeat?"false":"true");
+  append("\"stress_before_decode\":%s,\"stress_elapsed_ms\":%u,",
+      stress_before_decode?"true":"false",stress_elapsed_ms);
+  append("\"stress_diagnostic\":{\"reason\":\"%s\",\"iteration\":%u,\"address\":%u,"
+      "\"first_bad_byte\":%u,\"expected_byte\":%u,\"actual_byte\":%u,"
+      "\"write_status\":%u,\"read_status\":%u,\"expected_crc\":%lu,\"actual_crc\":%lu,"
+      "\"crc_match\":%s,\"local_status\":%u,\"remote_status\":%u,"
+      "\"math_bad_byte\":%u,\"math_expected\":%u,\"math_actual\":%u,"
+      "\"busy_entered\":%s,\"busy_exited\":%s,\"stable_read\":%s,\"stable_match\":%s,\"stable_crc\":%lu},",
+      diagnostic::stress_failure_name(stress_diagnostic.failure),stress_diagnostic.iteration,
+      stress_diagnostic.address,stress_diagnostic.first_bad,stress_diagnostic.expected,stress_diagnostic.actual,
+      stress_diagnostic.write,stress_diagnostic.read,(unsigned long)stress_diagnostic.expected_crc,
+      (unsigned long)stress_diagnostic.actual_crc,stress_diagnostic.crc_match?"true":"false",
+      stress_diagnostic.local_status,stress_diagnostic.remote_status,stress_diagnostic.math_byte,
+      stress_diagnostic.math_expected,stress_diagnostic.math_actual,
+      stress_diagnostic.busy_entered?"true":"false",stress_diagnostic.busy_exited?"true":"false",
+      stress_diagnostic.stable_read?"true":"false",stress_diagnostic.stable_match?"true":"false",
+      (unsigned long)stress_diagnostic.stable_crc);
   append(
       "\"actual_hz\":%lu,\"restored_hz\":%lu,\"clocks_restored\":%s,\"matching_tokens\":%s,"
       "\"matching_checksums\":%s,\"matching_kv\":%s,\"valid_tool_prefix\":%s,\"model_status\":%u,\"results\":[",

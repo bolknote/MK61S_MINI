@@ -57,3 +57,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" \
     "$root/tests/picocalc_ai_psram_read_clock_self_test.cpp" -o "$build_dir/ai-psram-read-clock"
 "$build_dir/ai-psram-read-clock"
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -DMK61_PICOCALC_AI_PSRAM_LATE_READ=1 -I"$root/ports/picocalc" \
+    "$root/tests/picocalc_ai_psram_read_clock_self_test.cpp" -o "$build_dir/ai-psram-late-read-clock"
+"$build_dir/ai-psram-late-read-clock"

@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "physical_io": false,
+  "base_commit": "266576e78a042853d322038e99fb51278b8bf34d",
+  "scope": "isolated git HEAD plus selected AI changes; no unrelated working-tree files",
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "tests": [
+    "PIO original/late waveform equivalence and finite-FIFO/DMA stalls:5 PASS",
+    "SPI PIO:1 PASS",
+    "default and experimental selector profiles:PASS",
+    "stress diagnostic fault injection with ASan/UBSan:PASS",
+    "native PicoCalc AI with real model, ASan/UBSan:PASS",
+    "default ARMv6-M build:PASS",
+    "experimental ARMv6-M build:PASS",
+    "Flash/ROMCACHE boundary:PASS"
+  ],
+  "pio_opcode_changes": [
+    {
+      "index": 13,
+      "before": "b142",
+      "after": "b242"
+    },
+    {
+      "index": 14,
+      "before": "5004",
+      "after": "4004"
+    },
+    {
+      "index": 15,
+      "before": "024d",
+      "after": "014d"
+    }
+  ],
+  "new_performance_or_hardware_quality_claim": false,
+  "default": {
+    "build_id": "b369db33",
+    "ai_psram_late_read": false,
+    "uf2_sha256": "2394e88105e7f5ab579aebb7599a5f4e020de9a5ce1084e6b8691911433cbc11",
+    "flash_bytes": 1790272,
+    "static_ram_bytes": 120344,
+    "hardware_verified": false
+  },
+  "experimental": {
+    "build_id": "cb7238cc",
+    "ai_psram_late_read": true,
+    "uf2_sha256": "b3028f96715c60c4584ad5ba41e98243adff18932b8911a171fc1a7352201c30",
+    "flash_bytes": 1790272,
+    "static_ram_bytes": 120344,
+    "hardware_verified": false
+  },
+  "native_log": {
+    "original_sha256": "1c1859b44198da905d9dd3bf422f762f4de6ee07a32e5e304cf8f8d8fdf3c282",
+    "archived_sha256": "ce1abc90e7dd6beebb4614d58853357ba08d858748de4ca4d29770e404059f0b",
+    "transformation": "CRLF normalized to LF; messages unchanged"
+  }
+}

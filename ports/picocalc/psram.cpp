@@ -9,7 +9,11 @@
 #include <atomic>
 #if defined(PICO_ON_DEVICE)
 #include "psram_spi.pio.h"
+#if MK61_PICOCALC_AI_PSRAM_LATE_READ
+#include "psram_qpi_late.pio.h"
+#else
 #include "psram_qpi.pio.h"
+#endif
 #include "hardware/dma.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"

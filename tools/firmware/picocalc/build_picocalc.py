@@ -109,6 +109,8 @@ def main():
     parser.add_argument("--ai-overclock-diagnostic", action="store_true", help="AI diagnostic at qualified270MHz; stock voltage")
     parser.add_argument("--ai-fast-clock", action=argparse.BooleanOptionalAction, default=True,
                         help="Enable qualified270MHz during ordinary AI generation")
+    parser.add_argument("--ai-psram-late-read", action="store_true",
+                        help="Experimental33.3MHz PSRAM reads with later PIO sampling; not hardware qualified")
     parser.add_argument("--audio-clock", action=argparse.BooleanOptionalAction, default=True,
                         help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
     parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
@@ -124,6 +126,8 @@ def main():
         parser.error("--jobs must be positive")
     if not 1 <= args.lcd_spi_hz <= 62500000:
         parser.error("--lcd-spi-hz must be from 1 to 62500000")
+    if args.ai_psram_late_read and (args.psram_spi or not (args.ai_fast_clock or args.ai_overclock_diagnostic)):
+        parser.error("--ai-psram-late-read requires QPI and AI270MHz support")
     try:
         sdk = args.sdk.expanduser().resolve()
         sdk_revision = prepare_sdk(sdk, args.fetch_sdk)
@@ -151,6 +155,7 @@ def main():
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
         ai_clock_support=args.ai_fast_clock or args.ai_overclock_diagnostic
         if ai_clock_support: source_hash.update(b"ai-clock270=1\0")
+        if args.ai_psram_late_read: source_hash.update(b"ai-psram-late-read=1\0")
         if args.audio_clock and not args.cosmic_clock_diagnostic and not ai_clock_support: source_hash.update(b"audio-clock=200\0")
         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
         if args.m0_libc_candidate: source_hash.update(f"m0-libc-candidate={args.m0_libc_candidate}\0".encode())
@@ -168,6 +173,7 @@ def main():
              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_AI_OVERCLOCK={'ON' if ai_clock_support else 'OFF'}",
+             f"-DMK61_PICOCALC_AI_PSRAM_LATE_READ={'ON' if args.ai_psram_late_read else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
              f"-DMK61_PICOCALC_M0_LIBC_CANDIDATE={args.m0_libc_candidate}",
@@ -222,6 +228,7 @@ def main():
             "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic and not ai_clock_support else None,
             "ai_overclock_diagnostic": args.ai_overclock_diagnostic,
             "ai_fast_clock": ai_clock_support,
+            "ai_psram_late_read": args.ai_psram_late_read,
             "block_audio_dma": args.audio_dma,
             "m0_libc_candidate": args.m0_libc_candidate,
             "lcd_color_chain": args.lcd_color_chain,

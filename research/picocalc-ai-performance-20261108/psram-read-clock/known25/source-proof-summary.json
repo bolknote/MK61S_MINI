@@ -1,0 +1,37 @@
+{
+  "parent_build": "87321134",
+  "parent_crc": "E7B6428E",
+  "parent_source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-stereo-20261108/final-harness-sram-source",
+  "parent_source_sha256": "229f37680b7f2e9c399305ffdea4069af348c4d5cfa7e14060e450cae152fbea",
+  "physical_parent": "C4E0CF46/A5A7307E",
+  "read_divider256": 461,
+  "changed": [
+    "code/mk61_ai_perf.hpp",
+    "code/mk61_ai_stress.hpp",
+    "ports/picocalc/ai_harness.cpp",
+    "tests/mk61_ai_stress_self_test.cpp",
+    "tests/picocalc_ai_self_test.cpp",
+    "tests/picocalc_psram_qpi_self_test.py"
+  ],
+  "production_changes": [
+    "code/mk61_ai_perf.hpp",
+    "code/mk61_ai_stress.hpp",
+    "ports/picocalc/ai_harness.cpp"
+  ],
+  "frozen_Spectrum_AI_UI_retained": true,
+  "root_WIP_imported": false,
+  "original_full_source_proof_sha256": "d24aa93835290e4fff5ecaad6b37e70e1ef7041f3823a5dacbd9ad9374b7dbea",
+  "relevant_file_pins": {
+    "tests/picocalc_psram_qpi_self_test.py": "62e33916f046b2d374ce3e844be768ecdb9fc08269d7b9638ccccba2a45064cf",
+    "tests/picocalc_ai_self_test.cpp": "4bb8ffa063e10c33fc84564cf7a0aa88e13f4405d5d1381424efa7b5419bd51a",
+    "tests/mk61_ai_stress_self_test.cpp": "3ae0237560043c544d371cf6e8e7ed0d6d6ec6da18b15f9c10dd61e97ae8c6aa",
+    "code/mk61_ai_stress.hpp": "08309bb2aeeb8bd78e92032a3ad3046559d9d50b8cc620b6801940020b07ba3e",
+    "code/mk61_ai_perf.hpp": "8609e5358fe36f1872a46c0b7c86c36c93429afa1792608eadb1f9987c787e0b",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
+    "ports/picocalc/ai_harness.cpp": "3af43342391402f197e09f8f4ff87ab11e36b032a15e665e8c00d8a01eeb4438",
+    "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d"
+  }
+}

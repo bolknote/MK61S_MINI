@@ -1,0 +1,57 @@
+{
+  "status": "STRESS_ONLY_HOST_ARM_PASS_WAIT_GO",
+  "physical_io": false,
+  "build": "41F73A0E",
+  "crc": "B61C493F",
+  "uf2_sha256": "8e9de7f50c35f1f44f221fc07db8d27e6a54923b4b58d402a6fbbf834a216688",
+  "manifest_sha256": "c2ee87620f0ee557d1d69afc54e4078b4f924cbf0621b76847b35a4bd0fee33d",
+  "source_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-v31-diagnostic/source-proof.json",
+    "bytes": 262078,
+    "sha256": "d24aa93835290e4fff5ecaad6b37e70e1ef7041f3823a5dacbd9ad9374b7dbea"
+  },
+  "physical_parent": "C4E0CF46/A5A7307E",
+  "base_parent": "87321134/E7B6428E",
+  "read_divider256": 461,
+  "CPU_hz": 270000000,
+  "decode_not_run": true,
+  "config": {
+    "kernel": 2,
+    "arithmetic": 1,
+    "cores": 2,
+    "freeze": 1,
+    "filter": 0,
+    "mhz": 270,
+    "prefill": 2,
+    "decode": 2,
+    "repeat": 0,
+    "stress_ms": 5000,
+    "control": 2,
+    "constrained": 0,
+    "prefetch": 1
+  },
+  "ROMCACHE_end": "0x101b5200",
+  "ROMCACHE_start": "0x101C0000",
+  "margin": 44544,
+  "flash_bytes": 1790272,
+  "static_ram_bytes": 120368,
+  "heap": {
+    "minimum_heap_bytes": 108544,
+    "heap_capacity_bytes": 109008
+  },
+  "native_log": {
+    "path": "/tmp/mk61ai-psram-read-v31-native.log",
+    "bytes": 9645,
+    "sha256": "e76c0f80010d60255fad570b012f6492a303f3689cfdebe1ce995a4e8b6a460f"
+  },
+  "fault_log": {
+    "path": "/tmp/mk61ai-psram-read-v31-stress.log",
+    "bytes": 278,
+    "sha256": "cb6c1e32b9b529e6b6fd5b25d0f67b56860613fe68cf3501d8b3c8e7a097f3e6"
+  },
+  "ARM": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-v31-diagnostic/arm-validation.json",
+    "bytes": 239,
+    "sha256": "f9e894e805f8d75a515222f86e39a5d066f16d0b85a4aa9d01fce9a3482db906"
+  }
+}

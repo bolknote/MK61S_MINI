@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "architecture": "ARMv6-M Cortex-M0",
+  "cases": 4,
+  "coverage": "actual compiled CRC/private-memory reason/write/read/first-byte logic; success/write refusal/read refusal/data corruption",
+  "physical_io": false
+}

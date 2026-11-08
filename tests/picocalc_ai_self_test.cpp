@@ -434,6 +434,7 @@ void picocalc_ai_test() {
       assert(std::strstr(result,"\"schema\":3") && std::strstr(result,"\"ok\":true") &&
              std::strstr(result,"\"matching_checksums\":true") && std::strstr(result,"\"matching_tokens\":true") &&
              std::strstr(result,"\"clocks_restored\":true") && std::strstr(result,"\"freeze_violations\":0") &&
+             std::strstr(result,"\"stress_before_decode\":true") &&
              std::strstr(result,prefetch?"\"freeze_count\":13":"\"freeze_count\":9") &&
              std::strstr(result,prefetch?"\"thaw_count\":13":"\"thaw_count\":9"));
       if(prefetch) {
@@ -463,17 +464,33 @@ void picocalc_ai_test() {
           assert(*end=='\"');checksums=end+2;
         }
         assert(files::write("/AI/HOSTBENCH/PERF.REF",reference.data(),unsigned(reference.size())));
-        const char archived[]="AIPERF2\nkernel=2\narithmetic=3\ncores=2\nfreeze=1\nfilter=0\nmhz=125\nprefill=2\ndecode=2\nrepeat=1\nstress_ms=0\ncontrol=2\nconstrained=0\nprefetch=1\n";
+        const char archived[]="AIPERF2\nkernel=2\narithmetic=3\ncores=2\nfreeze=1\nfilter=0\nmhz=125\nprefill=2\ndecode=2\nrepeat=1\nstress_ms=20\ncontrol=2\nconstrained=0\nprefetch=1\n";
         assert(files::write_text("/AI/HOSTBENCH/PERF.CFG",archived,sizeof(archived)-1));
         services.test_native_contract(launch_benchmark,nullptr,true);
         assert(files::read_text("/AI/HOSTBENCH/PERF.JSON",result,sizeof(result)-1,used));result[used]=0;
         assert(std::strstr(result,"\"ok\":true") &&
                std::strstr(result,"\"reference_external\":true") &&
+               std::strstr(result,"\"stress_before_decode\":true") &&
+               std::strstr(result,"\"busy_entered\":true") && std::strstr(result,"\"busy_exited\":true") &&
+               std::strstr(result,"\"freeze_count\":5") && std::strstr(result,"\"thaw_count\":5") &&
                std::strstr(result,"\"matching_tokens\":true") &&
                std::strstr(result,"\"matching_checksums\":true") &&
                std::strstr(result,"\"matching_kv\":null") &&
                std::strstr(result,"\"pass\":1") && !std::strstr(result,"\"pass\":0") &&
                !std::strstr(result,"\"pass\":2"));
+        std::string stress_only=archived;
+        const auto repeat_at=stress_only.find("repeat=1");assert(repeat_at!=std::string::npos);
+        stress_only[repeat_at+7]='0';
+        assert(files::write_text("/AI/HOSTBENCH/PERF.CFG",stress_only.c_str(),unsigned(stress_only.size())));
+        services.test_native_contract(launch_benchmark,nullptr,true);
+        assert(files::read_text("/AI/HOSTBENCH/PERF.JSON",result,sizeof(result)-1,used));result[used]=0;
+        assert(std::strstr(result,"\"ok\":true") && std::strstr(result,"\"stress_only\":true") &&
+               std::strstr(result,"\"results\":[]") && !std::strstr(result,"\"pass\":") &&
+               std::strstr(result,"\"stress_before_decode\":true") &&
+               std::strstr(result,"\"busy_entered\":true") && std::strstr(result,"\"busy_exited\":true") &&
+               std::strstr(result,"\"freeze_count\":1") && std::strstr(result,"\"thaw_count\":1"));
+        assert(files::write_text("/AI/HOSTBENCH/PERF.CFG",archived,sizeof(archived)-1));
+        std::puts("Native private stress-only: no model pass, busy and LCD freeze balanced PASS");
         assert(files::remove("/AI/HOSTBENCH/PERF.JSON"));
         reference[0]^=1;
         assert(files::write("/AI/HOSTBENCH/PERF.REF",reference.data(),unsigned(reference.size())));

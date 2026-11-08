@@ -1,0 +1,175 @@
+Pico source fault recovery: partial bank writes/seek reads, retained unsaved edits, failed replacement, bounded SRAM and owner cleanup PASS
+Pico Explorer: 9 native tiles, zero SD reads on selection, revision/invalid icon fallback, paging, folder bypass and buffer lifetime PASS
+Opaque harness: all102400 pixels replaced exactly once; identical RGB565 over magenta/green previous frames PASS
+AI_CHAT_RESULT task=1 program=1 tokens=0 elapsed_ms=12 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=1000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=12000
+AI_CHAT_RESULT task=100 program=1 tokens=0 elapsed_ms=16 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=7000
+AI_CHAT_RESULT task=150 program=1 tokens=0 elapsed_ms=10 execution=1 X=0.3746066
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=3000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=3000
+Native dark chat: journal paging, real core sine, zero fabricated model tokens, F1/F7 expansion and calculator isolation PASS
+AI_LOAD bytes=2093896 us=13000 ok=1
+AI_BENCH mode=0 step=0 begin
+AI_BENCH mode=0 step=1 begin
+AI_BENCH mode=0 step=2 begin
+AI_BENCH mode=0 step=3 begin
+AI_BENCH mode=0 step=4 begin
+AI_BENCH mode=0 step=5 begin
+AI_BENCH mode=0 step=6 begin
+AI_BENCH mode=0 step=7 begin
+AI_BENCH mode=0 step=8 begin
+AI_BENCH mode=0 step=9 begin
+AI_BENCH mode=0 step=10 begin
+AI_BENCH mode=0 step=11 begin
+AI_BENCH mode=1 step=0 begin
+AI_BENCH mode=1 step=1 begin
+AI_BENCH mode=1 step=2 begin
+AI_BENCH mode=1 step=3 begin
+AI_BENCH mode=1 step=4 begin
+AI_BENCH mode=1 step=5 begin
+AI_BENCH mode=1 step=6 begin
+AI_BENCH mode=1 step=7 begin
+AI_BENCH mode=1 step=8 begin
+AI_BENCH mode=1 step=9 begin
+AI_BENCH mode=1 step=10 begin
+AI_BENCH mode=1 step=11 begin
+AI_BENCH mode=2 step=0 begin
+AI_BENCH mode=2 step=1 begin
+AI_BENCH mode=2 step=2 begin
+AI_BENCH mode=2 step=3 begin
+AI_BENCH mode=2 step=4 begin
+AI_BENCH mode=2 step=5 begin
+AI_BENCH mode=2 step=6 begin
+AI_BENCH mode=2 step=7 begin
+AI_BENCH mode=2 step=8 begin
+AI_BENCH mode=2 step=9 begin
+AI_BENCH mode=2 step=10 begin
+AI_BENCH mode=2 step=11 begin
+Native diagnostic service: real model, all36 steps, worst-session transaction/codec and cleanup PASS (host, not device speed)
+AI_LOAD bytes=2093896 us=12000 ok=1
+AI_PERF pass=0 step=0 begin hz=0
+AI_PERF pass=0 step=1 begin hz=0
+AI_PERF pass=0 step=2 begin hz=0
+AI_PERF pass=0 step=3 begin hz=0
+AI_CLOCK requested=125 begin
+AI_PSRAM_STRESS begin ms=20 hz=0
+AI_PSRAM_STRESS end ok=1 iterations=4878
+AI_PERF pass=1 step=0 begin hz=0
+AI_PERF pass=1 step=1 begin hz=0
+AI_PERF pass=1 step=2 begin hz=0
+AI_PERF pass=1 step=3 begin hz=0
+AI_PERF pass=2 step=0 begin hz=0
+AI_PERF pass=2 step=1 begin hz=0
+AI_PERF pass=2 step=2 begin hz=0
+AI_PERF pass=2 step=3 begin hz=0
+AI_LOAD bytes=2093896 us=13000 ok=1
+AI_PERF pass=0 step=0 begin hz=0
+AI_PERF pass=0 step=1 begin hz=0
+AI_PERF pass=0 step=2 begin hz=0
+AI_PERF pass=0 step=3 begin hz=0
+AI_CLOCK requested=125 begin
+AI_PSRAM_STRESS begin ms=20 hz=0
+AI_PSRAM_STRESS end ok=1 iterations=4882
+AI_PERF pass=1 step=0 begin hz=0
+AI_PERF pass=1 step=1 begin hz=0
+AI_PERF pass=1 step=2 begin hz=0
+AI_PERF pass=1 step=3 begin hz=0
+AI_PERF pass=2 step=0 begin hz=0
+AI_PERF pass=2 step=1 begin hz=0
+AI_PERF pass=2 step=2 begin hz=0
+AI_PERF pass=2 step=3 begin hz=0
+AI_LOAD bytes=2093896 us=13000 ok=1
+AI_PERF pass=0 step=0 begin hz=0
+AI_PERF pass=0 step=1 begin hz=0
+AI_PERF pass=0 step=2 begin hz=0
+AI_PERF pass=0 step=3 begin hz=0
+AI_CLOCK requested=125 begin
+AI_PSRAM_STRESS begin ms=20 hz=0
+AI_PSRAM_STRESS end ok=1 iterations=4880
+AI_PERF pass=1 step=0 begin hz=0
+AI_PERF pass=1 step=1 begin hz=0
+AI_PERF pass=1 step=2 begin hz=0
+AI_PERF pass=1 step=3 begin hz=0
+AI_PERF pass=2 step=0 begin hz=0
+AI_PERF pass=2 step=1 begin hz=0
+AI_PERF pass=2 step=2 begin hz=0
+AI_PERF pass=2 step=3 begin hz=0
+AI_LOAD bytes=2093896 us=13000 ok=1
+AI_CLOCK requested=125 begin
+AI_PSRAM_STRESS begin ms=20 hz=0
+AI_PSRAM_STRESS end ok=1 iterations=5061
+AI_PERF pass=1 step=0 begin hz=0
+AI_PERF pass=1 step=1 begin hz=0
+AI_PERF pass=1 step=2 begin hz=0
+AI_PERF pass=1 step=3 begin hz=0
+AI_LOAD bytes=2093896 us=12000 ok=1
+AI_CLOCK requested=125 begin
+AI_PSRAM_STRESS begin ms=20 hz=0
+AI_PSRAM_STRESS end ok=1 iterations=4911
+Native private stress-only: no model pass, busy and LCD freeze balanced PASS
+AI_LOAD bytes=2093896 us=13000 ok=1
+Native archived performance: only candidate pass, exact oracle tokens/checksums, malformed reference rejected PASS (host)
+Native performance service: frame freeze/thaw, full-model checksums, constrained sparse head, owned PSRAM stress and clock guard PASS (host only)
+AI_LOAD bytes=2093896 us=12000 ok=1
+AI_PERF pass=0 step=0 begin hz=0
+AI_PERF pass=0 step=1 begin hz=0
+AI_PERF pass=0 step=2 begin hz=0
+AI_PERF pass=0 step=3 begin hz=0
+AI_CLOCK requested=125 begin
+AI_PERF pass=1 step=0 begin hz=0
+AI_PERF pass=1 step=1 begin hz=0
+AI_PERF pass=1 step=2 begin hz=0
+AI_CANCEL
+AI_CHAT_STAGE phase=load-start model_bytes=0 elapsed_ms=0 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=131072 elapsed_ms=2 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=262144 elapsed_ms=4 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=393216 elapsed_ms=5 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=524288 elapsed_ms=7 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=655360 elapsed_ms=8 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=786432 elapsed_ms=9 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=917504 elapsed_ms=11 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1048576 elapsed_ms=12 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1179648 elapsed_ms=13 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1310720 elapsed_ms=15 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1441792 elapsed_ms=16 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1572864 elapsed_ms=17 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1703936 elapsed_ms=19 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1835008 elapsed_ms=20 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=1966080 elapsed_ms=22 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=load-data model_bytes=2093896 elapsed_ms=23 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=model-open model_bytes=2093896 elapsed_ms=24 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=cache-allocate model_bytes=2093896 elapsed_ms=36 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=workspace-allocate model_bytes=2093896 elapsed_ms=37 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=workspace-bind model_bytes=2093896 elapsed_ms=39 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=model-ready model_bytes=2093896 elapsed_ms=40 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-enter model_bytes=2093896 elapsed_ms=42 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-ready model_bytes=2093896 elapsed_ms=43 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_FAST hz=270000000 arithmetic=1 session=200
+AI_CHAT_STAGE phase=execution-configured model_bytes=2093896 elapsed_ms=44 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=prompt-start model_bytes=2093896 elapsed_ms=46 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=prompt-ready model_bytes=2093896 elapsed_ms=50 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-restore model_bytes=2093896 elapsed_ms=103 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-restored model_bytes=2093896 elapsed_ms=104 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_CLOCK restored=125000000
+AI_CHAT_STAGE phase=clock-enter model_bytes=2093896 elapsed_ms=105 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-ready model_bytes=2093896 elapsed_ms=105 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_FAST hz=270000000 arithmetic=1 session=200
+AI_CHAT_STAGE phase=clock-restore model_bytes=2093896 elapsed_ms=154 hz=270000000 heap_peak=0 stack_peak=0
+AI_CHAT_STAGE phase=clock-restored model_bytes=2093896 elapsed_ms=156 hz=125000000 heap_peak=0 stack_peak=0
+AI_CHAT_CLOCK restored=125000000
+Native frozen display: global raster held, Esc interrupts forward, F5 pauses/resumes real model, exit thaws PASS (host)
+PicoCalc native AI UI: real APP service, keyboard/forms, emulator tests, case edit invalidation, input angle, apply backup and session resume PASS
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+OK
+Firmware/ROMCACHE boundary: observed1836020-byte overlap rejected before packaging PASS
+AI Flash clock:125/div4 ->270/div6 ->125/div4; <=50MHz throughout100 cycles PASS
+Only270MHz AI QPI-read profile changes; divider461, PIO <=150000000Hz PASS
+Only270MHz AI QPI-read profile changes; divider346, PIO <=200000000Hz PASS

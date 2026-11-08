@@ -1,0 +1,36 @@
+{
+  "parent_build": "87321134",
+  "parent_crc": "E7B6428E",
+  "parent_source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-stereo-20261108/final-harness-sram-source",
+  "parent_source_fingerprint_verified": true,
+  "parent_source_sha256": "229f37680b7f2e9c399305ffdea4069af348c4d5cfa7e14060e450cae152fbea",
+  "changed": [
+    "ports/picocalc/ai_harness.cpp",
+    "ports/picocalc/ai_psram_read_clock.hpp",
+    "tests/picocalc_ai_psram_read_clock_self_test.cpp",
+    "tests/picocalc_ai_self_test.cpp",
+    "tests/picocalc_psram_qpi_self_test.py"
+  ],
+  "production_changes": [
+    "ports/picocalc/ai_psram_read_clock.hpp",
+    "ports/picocalc/ai_harness.cpp"
+  ],
+  "head_at_preparation": "266576e78",
+  "root_WIP_imported": false,
+  "read_divider256": 346,
+  "read_sck_hz": 33294797.68786127,
+  "CPU_hz": 270000000,
+  "benchmark_stress_order": "private5seconds at270 before first timed candidate pass",
+  "original_full_source_proof_sha256": "6fa0c97fa8ac60421c7f3f7c2d0566f6735b7b3e84fa7f36d34822079eb0429f",
+  "relevant_file_pins": {
+    "tests/picocalc_ai_psram_read_clock_self_test.cpp": "ed61a4c6630168c65c091c9d44b2b1de421738d685da281b0b6568ef25d50d98",
+    "tests/picocalc_psram_qpi_self_test.py": "62e33916f046b2d374ce3e844be768ecdb9fc08269d7b9638ccccba2a45064cf",
+    "tests/picocalc_ai_self_test.cpp": "85cc21d421c77531079163f30bff1ce3aa3bae56b4509eb3b87a865f5e54053f",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "ports/picocalc/ai_psram_read_clock.hpp": "4e80e5aca84d0298908409fca00c8bdaa08902638071e759b0a4eeb84ffd77ad",
+    "ports/picocalc/ai_harness.cpp": "f6b3b96d07602bc661538185897bb37ef73f6e709218864708ee05d2bd0eeac6",
+    "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d"
+  }
+}

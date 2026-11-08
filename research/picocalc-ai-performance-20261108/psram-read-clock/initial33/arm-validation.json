@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "architecture": "ARMv6-M Cortex-M0",
+  "calls": 2412,
+  "change_only_sys_hz": 270000000,
+  "change_only_normal_divider256": 692,
+  "selected_read_divider256": 346,
+  "SPI_and_writes": "unchanged production functions; source fingerprint exact",
+  "physical_io": false
+}
