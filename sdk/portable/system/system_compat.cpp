@@ -181,6 +181,7 @@ const char* file_extension(ProgramType type) {
     case ProgramType::URQ: return "urq";
     case ProgramType::URQ_DATA: return "uqd";
     case ProgramType::URQ_SAVE: return "urs";
+    case ProgramType::EXTERNAL_BINARY: return "bin";
   }
   return "bin";
 }

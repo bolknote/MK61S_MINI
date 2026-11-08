@@ -3,6 +3,7 @@
 #include "setup_ui.hpp"
 #include "setup_service.hpp"
 #include "prepared_font.hpp"
+#include "loadable_module_abi.hpp"
 
 #include <array>
 #include <cassert>
@@ -13,11 +14,14 @@
 #include <vector>
 
 extern "C" u32 mk61_app_initialize(const mk61_app_api*, u32, u32);
+extern "C" u32 mk61_app_command(u32, u32, u32, u32, u32);
 namespace {
 std::vector<u8> source;
 std::array<u8, 8192> workspace{}, installed{};
 u32 revision = 1;
 unsigned streams = 0, installs = 0;
+unsigned settings_calls = 0, frequency_calls = 0;
+bool settings_result = false, frequency_result = false;
 bool supported = false, late_failure = false, stale = false;
 
 u32 dispatch(u32 operation, u32 a, u32, u32, void* payload) {
@@ -56,9 +60,11 @@ Lease::~Lease() { reset(); }
 void Lease::reset() { lease_.data = nullptr; }
 }
 namespace setup_ui {
+bool settings() { ++settings_calls; return settings_result; }
 bool hardware() { return true; }
 bool date_time() { return true; }
 bool calibration() { return true; }
+bool compute_frequency() { ++frequency_calls; return frequency_result; }
 bool font() { return true; }
 void step_font(i8) {}
 void preview(const char*, const u8*, u16) {}
@@ -80,6 +86,17 @@ int main(int argc, char** argv) {
   source = std::vector<u8>(std::istreambuf_iterator<char>(input),
                           std::istreambuf_iterator<char>());
   services.call = dispatch; app_api.file_size = size;
+  // Exercise both new entry points, including cancellation, independently
+  // of the optional font stream support below.
+  for(u32 result = 0; result <= 1; ++result) {
+    settings_result = result != 0; frequency_result = result == 0;
+    assert(mk61_app_command((u32) loadable_module::Command::SETUP_SETTINGS,
+                            0, 0, 0, 0) == result);
+    assert(settings_calls == result + 1 && frequency_calls == result);
+    assert(mk61_app_command((u32) loadable_module::Command::SETUP_COMPUTE_CLOCK,
+                            0, 0, 0, 0) == 1 - result);
+    assert(settings_calls == result + 1 && frequency_calls == result + 1);
+  }
 #if MK61_UI_FONT_CLIENT
   assert(mk61_app_initialize(&app_api, 0, MK61_APP_KIND_SETUP) == 1);
   supported = true;
