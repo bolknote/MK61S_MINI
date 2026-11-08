@@ -108,8 +108,13 @@ __attribute__((noinline)) bool find_handler(const char* directory,u16 magic,unsi
 // No APP pointers or leases survive return, media export or a subsequent load.
 class NativeHost {
 public:
-  explicit NativeHost(Services &service,bool native=false) : s(service), display(settings(),native) {
-    s.graph_.reset();
+  static Services& prepare(Services& service) {
+    // Image loading pumps the resident UI. An Explorer page can rebuild
+    // its catalog after load_document released it, so drop it again before
+    // the APP/font/guest allocations begin.
+    service.release_browser();service.graph_.reset();return service;
+  }
+  explicit NativeHost(Services &service,bool native=false) : s(prepare(service)), display(settings(),native) {
     s.graph_width_=display.width();s.graph_height_=display.height();
     current = this;
     controls::set_listener([](void* raw,KeyEvent event) {
@@ -855,8 +860,10 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
       return 0;
     auto &lease = *(mk61_service_lease *)payload;
     auto *data = (u8 *)std::calloc(1, c);
-    if (!data)
+    if (!data) {
+      std::printf("APP_SRAM_FAIL=LEASE SLOT=%lu BYTES=%lu\n",(unsigned long)a,(unsigned long)c);
       return 0;
+    }
     host.leases[a] = {data, c};
     lease = {};
     lease.data = data;

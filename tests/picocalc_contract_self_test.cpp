@@ -426,6 +426,22 @@ void colored_text_contract() {
 void picocalc_contract_test() {
     colored_text_contract();
     {
+        Calculator calculator;calculator.init();Services service;
+        const auto baseline=shared_memory::buffer_statistics();
+        service.open(Action::EXPLORER,false,calculator);
+        CHECK(service.browser_count() && shared_memory::buffer_statistics().internal_used>=
+            baseline.internal_used+Services::BROWSER_PAGE_SIZE*sizeof(files::Entry));
+        struct State { Services* service;usize used; } state{&service,baseline.internal_used};
+        service.test_native_contract([](void* raw,const mk61_app_api&,const mk61_app_services&) {
+            auto& state=*(State*)raw;
+            CHECK(!state.service->browser_count());
+            CHECK(shared_memory::buffer_statistics().internal_used==state.used);
+        },&state,true);
+        // Returning to the Explorer can rebuild its catalog normally.
+        service.tick();CHECK(service.browser_count());CHECK(service.input(0x1B));service.tick();
+        CHECK(shared_memory::buffer_statistics().internal_used==baseline.internal_used);
+    }
+    {
         Settings settings{};settings.ui_font_family=1;settings.ui_font_size=16;
         CHECK(script::text_profile({8,5,8,0}));
         NativeDisplay display(settings,true);
