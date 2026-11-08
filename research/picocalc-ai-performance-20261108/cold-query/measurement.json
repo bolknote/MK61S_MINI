@@ -1,5 +1,5 @@
 {
-  "status": "release_host_validated_waiting_for_device_install",
+  "status": "first_cold_query_running_after_qualified_USB_restore",
   "query": "\u0421\u0438\u043d\u0443\u0441 22",
   "model_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
   "baseline": {
@@ -35,20 +35,23 @@
     "final_cold_measurement": "PENDING",
     "second_candidate": "48BAD39A/4B592E3A",
     "second_candidate_status": "FAILED; watchdog reset before PROMPT event, no latency result",
-    "current_installed": "048A0B3E/597DDC06 per latest inference receipt; awaiting fresh identity check"
+    "current_installed": "F988EF2A/B99E7E71; flash/readiness verified before first query",
+    "third_candidate": "3354BE9C/92219614",
+    "third_candidate_status": "FAILED; watchdog after saved clock-ready270MHz, before prompt/first forward; no cold latency",
+    "live_progress": "User confirmed Harness input counter is increasing"
   },
   "expected_program_hex": "0E 0D 02 02 1C 50",
   "expected_core_x": 0.3746066,
   "evidence_directory": "/Users/bolk/Projects/MK61S_MINI/.build/harness-cold-20261108",
   "candidate": {
-    "build": "d436ecc8",
-    "crc": "4c93505b",
-    "written_to_device": false,
+    "build": "f988ef2a",
+    "crc": "b99e7e71",
+    "written_to_device": true,
     "firmware_flash_bytes": 1790272,
     "romcache_boundary": 1835008,
-    "uf2_sha256": "4ba32aef0a43387e9d5b8dcc48a54d9133ab01ccdd2f2221f426b7b17fd15edc",
-    "platform_parent": "048A0B3E/597DDC06",
-    "heap_capacity": 109016,
+    "uf2_sha256": "2f0ec65d9b0d8abae3f8cd7fdf5672f302832636b239137e44449e02208bffc4",
+    "platform_parent": "F73B20D0/8EA8C660",
+    "heap_capacity": 109008,
     "latest_inference_commit": "59e40583b"
   }
 }

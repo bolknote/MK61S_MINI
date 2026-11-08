@@ -72,7 +72,6 @@ bool stock_voltage() {
       (u32(VREG_VOLTAGE_1_10)<<VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
 }
 struct Hardware {
-  bool quiet_usb=false;
   bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==flash_divider(hz()/1000000) &&
       clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000;}
   void prepare(){audio_stream::stop_key_click();io_worker::drain();stdio_flush();}
@@ -91,18 +90,18 @@ struct Hardware {
         ssi_hw->baudr==flash_divider(plan.mhz) && psram::diagnostic_clock_divider256()==plan.pio_div256;
   }
   void unreset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
-  bool init(){if(quiet_usb)return true;const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
-  void connect(){if(!quiet_usb)tud_connect();}
+  bool init(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
+  void connect(){tud_connect();}
 };
-bool transition(u32 sys,bool quiet_usb=false) {
+bool transition(u32 sys) {
   const auto* before=cosmic_clock::find(hz()/1000000);
   const auto* after=cosmic_clock::find(sys/1000000);
   if(!before || !after)return false;
-  Hardware hardware{quiet_usb};return change(hardware,*before,*after);
+  Hardware hardware;return change(hardware,*before,*after);
 }
 }
 #endif
-bool begin(unsigned mhz,State& s,bool quiet_usb) {
+bool begin(unsigned mhz,State& s) {
   const bool allowed=mhz==125 || mhz==270;
   if(s.changed || s.restore_attempted || !allowed)return false;
   s.sys=hz();
@@ -119,7 +118,7 @@ bool begin(unsigned mhz,State& s,bool quiet_usb) {
   if(!plan || !check_sys_clock_khz(mhz*1000,&vco,&post1,&post2) ||
      vco!=plan->vco_hz || post1!=plan->postdiv1 || post2!=plan->postdiv2)return false;
   s.peri=clock_get_hz(clk_peri);s.changed=true;
-  return transition(mhz*1000000U,quiet_usb);
+  return transition(mhz*1000000U);
 #else
   return false;
 #endif

@@ -1,0 +1,12 @@
+{
+  "ASan_UBSan": "PASS",
+  "full_frame_pixels": 102400,
+  "writes_per_pixel": 1,
+  "previous_RGB565_frames": [
+    "F81F",
+    "07E0"
+  ],
+  "resulting_frames_identical": true,
+  "display_color_decoder": "production lcd::color_pixel",
+  "physical_panel_image_retention": "not yet tested; cold query still running"
+}

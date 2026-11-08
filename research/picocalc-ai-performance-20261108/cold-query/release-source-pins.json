@@ -1,7 +1,7 @@
 {
-  "source_snapshot": "/Users/bolk/Projects/MK61S_MINI/.build/harness-release-20261108/source",
+  "source_snapshot": "/Users/bolk/Projects/MK61S_MINI/.build/harness-release-20261108/source-usb",
   "runtime_commit": "59e40583ba07c5a05832ffc0bb6709e54790c7ec",
-  "platform_parent": "048A0B3E/597DDC06",
+  "platform_parent": "F73B20D0/8EA8C660 with exact59e40583b AI/PSRAM/linker retained",
   "files": {
     "code/mk61_ai_agent.cpp": "df3247ded3895ac792599a1aba3c08647ef01ad7a323274a5ab9ed67581c923c",
     "code/mk61_ai_agent.hpp": "83fd84c03f7f16137ada8feb6b49cf9c0f12e4e53d8259c1ca096b7a88132e39",
@@ -11,19 +11,19 @@
     "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
     "code/mk61_ai_attention.hpp": "8b048e8e2ffe6e6da8a89460856fbab3dad59f08d18768f59c5a3c1a2459772e",
     "code/mk61_ai_kv_stream.hpp": "f849f1b053786a813146e4b5380280f3777d6bd36711058703683c735a041070",
-    "ports/picocalc/ai_harness.cpp": "3f4c7f9322ae93f6fc9136d20ad8cab33585d8e3cfe74c2bbfed81bcb919c8db",
-    "ports/picocalc/ai_clock.cpp": "585a4a580613a236d1db127259a6f2d1ce009857321d31c6574c970108f35157",
+    "ports/picocalc/ai_harness.cpp": "6a65669f049f4599bcd431f8beb98324c47fc86fea8ee6fdbae6075d8f30dca5",
+    "ports/picocalc/ai_clock.cpp": "93db8c08316602b10b7733df887588b8ad8b381e45cc2f8ed9643c7e6c98e207",
     "ports/picocalc/ai_flash_clock.hpp": "dbc895c42416c459a61212ff198218a767cf62346de9f53a68478d50c8dc72b1",
     "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
     "ports/picocalc/psram.cpp": "d86a5f34090c2eb1ffca964cd257ad43160eee783977d31380d3a09b606a1fd6",
     "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d",
     "ports/picocalc/m0_math_extension.ld": "683ef9189183e7e1d3802d32914be1d053f251998d3968fecaae86334401f73c",
     "ports/picocalc/CMakeLists.txt": "4036b15f325a9b5292952690634db79068191f0c3c4757e044e3e8178b3ed559",
-    "ports/picocalc/m3_audio.cpp": "d0a17b1959963bd30e16f221bb0dc17c8a639250c3b22a94a361da07023b323a",
-    "ports/picocalc/m3_audio.hpp": "e6c864b568b2aa6b8aece4388180e17d5b6ca379d2c0a10881188f155549c547",
-    "ports/picocalc/m3_audio_engine.hpp": "ded5022f26b49215bb41b7ee438448ef6e5a8c0102b5023bbc3a018010e4afdc",
+    "ports/picocalc/m3_audio.cpp": "23ca0d1fb991061f2b5ff208c79ff6697ba77d96f3ade7189f5a56775f3876da",
+    "ports/picocalc/m3_audio.hpp": "fa0cec6e3c8a43efa0a3e0596abea4a15b7cac6d52150431201fe7220f48bf00",
+    "ports/picocalc/m3_audio_engine.hpp": "4b3107fe2ff214f65ae5a70c8ec3f640b9c326aaf3b5c46542c8f8f63674e1d5",
     "ports/picocalc/m3_wire.hpp": "fed02f41117063495740ea5d688ad5336045638c0500853cfba0cce3863edbe8",
-    "ports/picocalc/main.cpp": "ebc9d9218cb55a71fe2847aba61f2d3ebb5784b510dcbe69c6e062c88c00bfa2",
+    "ports/picocalc/main.cpp": "cd2a79f73aadf8505ead386fccc7bf8fe1f94e7bc7139709b5418d21d927aa3b",
     "tools/firmware/picocalc/build_picocalc.py": "293a3e53325657fb5a66ecf7d27274898201c3763bfd524aab965bd6c437ac02"
   }
 }

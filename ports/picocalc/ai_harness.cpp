@@ -227,6 +227,7 @@ struct UI {
   char pending_result[768]{};
   void profile_stage(const char *phase) {
     if(benchmarking || !s.id)return;
+    time_request(request_running);
     sample_memory();
     char path[64],line[192];
     std::snprintf(path,sizeof(path),"/AI/SESSIONS/%08lu.PRF",(unsigned long)s.id);
@@ -263,10 +264,7 @@ struct UI {
 #endif
     fast_clock={};
     profile_stage("clock-enter");
-    // Long requests retain input on the PicoCalc keyboard and save their
-    // complete profiler to SD. Re-enumerate CDC after returning to125MHz,
-    // rather than exposing a fresh USB controller during the long compute.
-    if(ai_clock::begin(270,fast_clock,true)) {
+    if(ai_clock::begin(270,fast_clock)) {
       profile_stage("clock-ready");
       char text[96];const int n=std::snprintf(text,sizeof(text),
           "AI_CHAT_FAST hz=%lu arithmetic=%u session=%lu\r\n",
@@ -294,6 +292,7 @@ struct UI {
   std::uint64_t profile_attention_us=0,profile_attention_io_us=0,profile_attention_jobs=0;
   std::uint64_t profile_read_us=0,profile_matmul_us=0,profile_wait_us=0;
   unsigned profile_steps=0;
+  std::uint32_t profile_prompt_us=0;
   std::uint32_t request_stamp = 0;
   bool request_measured = false, request_running = false, chat_graphics = false;
   void time_request(bool running) {
@@ -306,7 +305,7 @@ struct UI {
     metric_baseline = agent.metrics();
     request_ms = 0;
     profile_attention_us=profile_attention_io_us=profile_attention_jobs=0;
-    profile_read_us=profile_matmul_us=profile_wait_us=0;profile_steps=0;
+    profile_read_us=profile_matmul_us=profile_wait_us=0;profile_steps=0;profile_prompt_us=0;
     request_measured = true;
     request_running = false;
     time_request(true);
@@ -893,8 +892,13 @@ void UI::start() {
   started = host.api->millis_ms();
   if(!enter_fast_clock()) { time_request(false);return; }
   configure_execution();
+  profile_stage("execution-configured");
   agent.arithmetic(arithmetic);
+  profile_stage("prompt-start");
+  const auto prompt_started=call(MK61_SERVICE_MICROS);
   agent.start(prefix[0] ? prefix : nullptr);
+  profile_prompt_us=call(MK61_SERVICE_MICROS)-prompt_started;
+  profile_stage(agent.active()?"prompt-ready":"prompt-failed");
   if(!agent.active()) leave_fast_clock();
   time_request(agent.active());
   screen = Screen::SESSION;
@@ -2122,12 +2126,12 @@ void UI::tick() {
         const auto &a=agent.metrics();
         if(n>0 && unsigned(n)<sizeof(pending_result)) {
           const int extra=std::snprintf(pending_result+n,sizeof(pending_result)-unsigned(n),
-            "AI_CHAT_PROFILE input=%lu reused=%lu prefill_us=%llu decode_us=%llu tool_us=%llu load_us=%lu attention_us=%llu attention_io_us=%llu linear_read_us=%llu matmul_us=%llu wait_us=%llu workers=%llu heap_peak=%lu stack_peak=%lu service_gap_us=%lu\r\n",
+            "AI_CHAT_PROFILE input=%lu reused=%lu prefill_us=%llu decode_us=%llu tool_us=%llu load_us=%lu prompt_us=%lu attention_us=%llu attention_io_us=%llu linear_read_us=%llu matmul_us=%llu wait_us=%llu workers=%llu heap_peak=%lu stack_peak=%lu service_gap_us=%lu\r\n",
             (unsigned long)(a.prefill_tokens-metric_baseline.prefill_tokens),
             (unsigned long)(a.reused_tokens-metric_baseline.reused_tokens),
             (unsigned long long)(a.prefill_us-metric_baseline.prefill_us),
             (unsigned long long)(a.decode_us-metric_baseline.decode_us),
-            (unsigned long long)(a.tool_us-metric_baseline.tool_us),(unsigned long)model_load_us,
+            (unsigned long long)(a.tool_us-metric_baseline.tool_us),(unsigned long)model_load_us,(unsigned long)profile_prompt_us,
             (unsigned long long)profile_attention_us,(unsigned long long)profile_attention_io_us,
             (unsigned long long)profile_read_us,(unsigned long long)profile_matmul_us,
             (unsigned long long)profile_wait_us,(unsigned long long)profile_attention_jobs,

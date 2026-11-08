@@ -1,6 +1,9 @@
 #include "ai_chat.hpp"
 #include "mk61emu_core.h"
 #include "services.hpp"
+#include "lcd_color.hpp"
+#include <array>
+#include <cstdio>
 #include <cassert>
 #include <cstring>
 #include <map>
@@ -10,6 +13,22 @@
 namespace {
 using namespace mk61ai;
 using namespace picocalc::ai::chat;
+std::array<std::uint16_t,320*320> opaque_pixels;
+std::array<unsigned,320*320> opaque_writes;
+unsigned opaque_frames=0;
+std::uint32_t opaque_call(std::uint32_t service,std::uint32_t operation,std::uint32_t,std::uint32_t,void* payload) {
+ assert(service==MK61_SERVICE_COLOR_DISPLAY);
+ if(operation==MK61_COLOR_AVAILABLE)return 1;
+ assert(operation==MK61_COLOR_PRESENT && payload);
+ const auto &f=*static_cast<const mk61_service_color_frame*>(payload);
+ assert(picocalc::lcd::valid_color(f));
+ for(unsigned y=0;y<f.height;++y)for(unsigned x=0;x<f.width;++x) {
+  unsigned at=(f.y+y)*320+f.x+x;
+  opaque_pixels[at]=picocalc::lcd::color_pixel(f,x,y);
+  ++opaque_writes[at];
+ }
+ ++opaque_frames;return 1;
+}
 struct Journal {
   std::map<std::string, std::vector<std::uint8_t>> data;
   Store store() {
@@ -129,6 +148,22 @@ void picocalc_ai_chat_test() {
   assert(pages >= 2 && resumed.count() == History::CAPACITY);
   assert(resumed[resumed.count() - 1].has_result &&
          resumed[resumed.count() - 1].result.x == later.x);
+  // Render over two unrelated previous frames. Every LCD pixel must be
+  // replaced, and the resulting RGB565 image must not depend on either.
+  mk61_app_api api{};api.service=[]{};
+  mk61_app_services services{};services.call=opaque_call;
+  View view{};view.history=&resumed;view.active=true;
+  Renderer renderer;
+  opaque_pixels.fill(0xF81F);opaque_writes.fill(0);opaque_frames=0;
+  renderer.paint(api,services,view,[](std::uint8_t,char *out){std::strcpy(out,"OP");});
+  assert(opaque_frames==40);
+  for(auto n:opaque_writes)assert(n==1);
+  const auto first=opaque_pixels;
+  opaque_pixels.fill(0x07E0);opaque_writes.fill(0);opaque_frames=0;
+  renderer.paint(api,services,view,[](std::uint8_t,char *out){std::strcpy(out,"OP");});
+  assert(opaque_frames==40&&opaque_pixels==first);
+  for(auto n:opaque_writes)assert(n==1);
+  std::puts("Opaque harness: all102400 pixels replaced exactly once; identical RGB565 over magenta/green previous frames PASS");
   char time[32];
   duration(125820, time, sizeof(time));
   assert(!std::strcmp(time, "2:05"));
