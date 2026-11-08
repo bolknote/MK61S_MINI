@@ -1,0 +1,28 @@
+{
+  "base_commit": "170fc9514d38d546d25dc491d0dd9054509f1aa2",
+  "overlays": {
+    "code/mk61_ai_model.cpp": "7f82c97c09814d80aadaf2ba0c7d0865ef3bb403bf69c4212d110c3307c00b00",
+    "code/mk61_ai_model.hpp": "7b8522b582f967180075edb49ed148a82f37969cab30e07f2345a47c0fa05ac1",
+    "code/mk61_ai_long_bench.hpp": "1f1c1c2f803289cfdb080e364d13d814f3a0320f06a95ffcf40ecd2bd119391a",
+    "code/mk61_ai_agent.cpp": "76a08674ca08c6686d4bb4584c9b8ddcc4987d1c3e814efe7a46623b8ba81e1a",
+    "code/mk61_ai_agent.hpp": "828a4ec4b0868dbc3b5e8149f2c80bbed21262af9180a25eabe31e778be21d30",
+    "code/mk61_ai_spec.cpp": "b0f4553a30ae6850d01dcdfb950f090eefc7b1d537e4e47584293afdb202e03b",
+    "code/mk61_ai_spec.hpp": "b6efde0f0fe052284d562f69ef9e081a3370949bd22c3213ab0043d3d4cf4942",
+    "ports/picocalc/CMakeLists.txt": "b553c06de917ccc3edcec30a6ce318f43f8d9462a8b0a24126e7f66b5f05912f",
+    "ports/picocalc/ai_harness.cpp": "f40c642f737ad7fb0625783fc89404627cce39827a45ba196b09ac04643e2708",
+    "ports/picocalc/ai_clock.cpp": "de459afa710518be52d9ea0bcb058c3a530e66155e703caac734744a9560f621",
+    "ports/picocalc/ai_clock.hpp": "148f5390cf8702e530da3bf4cd0fc26c9b0475696aadf963c8fd87927d2ce627",
+    "ports/picocalc/ai_chat.cpp": "a1fd23c5ec8931e6cfb771f11633b31ed3ce1942de2c08073f65e39edc6ef337",
+    "ports/picocalc/m0_math_extension.ld": "cfa1fe30c3abaeae3b8eaa699005408cc6a27f46a9e141ba589a6b9c5f6eecbe",
+    "tools/firmware/picocalc/build_picocalc.py": "9580982ed057fd98ffb922e7c30f2f3125c2c9d2d8081c6f385e9e47d647860d",
+    "tests/mk61_ai_prefetch_self_test.cpp": "c5352af72935c9730a1e846a641336faa37a869c78d36603ffeda320a9ab46dc",
+    "tests/mk61_ai_long_oracle.cpp": "0eb3af1dbf639a35103f0a26a652acd183dc7e86b9a91514cbf36bdf29eebac4",
+    "tests/run_mk61_ai_long_tests.sh": "5871f018cecc438b955c60cfc207d38ba919f6dd1970a4a8d5b4c8cff1406e3b",
+    "tests/picocalc_ai_self_test.cpp": "ee73c3baba69aac5010299c1c1be2ce6272caa719662d4c4b2e4dc3cd09f9db2",
+    "tests/run_picocalc_tests.sh": "7f99b1b48cf56bb9ccf884bfa725b1804cdf8cf6d5eb750ae1bb1c45196cefa0",
+    "tests/mk61_ai_spec_self_test.cpp": "84367fd73990842b1be188a58def8b628bedde2f861b3f2ab0181482f4da9e7b",
+    "tests/run_mk61_ai_spec_tests.sh": "558e9f0ae72acfcb5a2b145ae120c648420dd959d2984539519d8924b73b075b",
+    "tests/data/mk61_ai_spec_native.tsv": "0324bb0aea8cf8879aea89a28321491d94e67ef9fabc428d82dba04d872940f0"
+  },
+  "spectrum_audio_wip": false
+}

@@ -3,6 +3,7 @@
 #include "mk61_ai_grammar.hpp"
 #include "mk61_ai_harness.hpp"
 #include "mk61_ai_model.hpp"
+#include "mk61_ai_spec.hpp"
 namespace mk61ai {
 struct Executor {
   void *context = nullptr;
@@ -46,6 +47,7 @@ struct Inference {
 Inference local_inference(Model &model);
 class Agent {
 public:
+  static constexpr unsigned PROMPT_BYTES = 4096;
   struct Metrics {
     std::uint64_t prefill_us = 0, decode_us = 0, tool_us = 0;
     std::uint32_t max_tick_us = 0, prefill_tokens = 0, decode_tokens = 0,
@@ -57,7 +59,8 @@ public:
     DECODE,
     ADVANCE,
     TESTS,
-    TRACE
+    TRACE,
+    HEADER
   };
   Agent(Session &session, Store store, Model &model,
         Executor executor = local_executor());
@@ -98,6 +101,10 @@ public:
   const Result &last_result() const { return last_result_; }
   unsigned last_angle() const { return last_angle_; }
   void default_angle(unsigned angle) { if (angle < 3) default_angle_ = angle; }
+  void spec_protocol(bool enabled) {
+    if (spec_enabled_ != enabled) { reset(); cached_count_ = 0; model_.reset(); }
+    spec_enabled_ = enabled;
+  }
   // One token or one bounded emulator request. service() remains active
   // inside both operations; a pause leaves only completed results visible.
   void tick(bool (*service)(void *) = nullptr, void *context = nullptr);
@@ -111,13 +118,16 @@ private:
   bool pause_ = false, auto_continue_ = false;
   Arithmetic arithmetic_ = Arithmetic::LUT_FLOAT32;
   const char *prefix_ = nullptr;
-  char prompt_[Model::MAX_TEXT + 1]{};
+  char prompt_[PROMPT_BYTES + 1]{};
   std::uint16_t tokens_[2048]{}, next_ = 0;
   unsigned prompt_count_ = 0, prefilled_ = 0, generated_ = 0, test_ = 0;
   unsigned generation_limit_ = 0, reused_prefix_ = 0, cached_count_ = 0;
   std::uint16_t cached_prefix_[256]{};
   std::uint32_t pending_reply_ = 0;
   ToolGrammar grammar_;
+  SpecProtocol spec_;
+  bool spec_enabled_ = false;
+  unsigned header_at_ = 0;
   Metrics metrics_{};
   Result last_result_{};
   unsigned default_angle_ = 1, last_angle_ = 1;

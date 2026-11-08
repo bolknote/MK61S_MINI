@@ -1,5 +1,6 @@
 #include "canvas.hpp"
 #include "ai_chat.hpp"
+#include "ai_clock.hpp"
 #include "input.hpp"
 #include "loadable_ai_service.h"
 #include "screen.hpp"
@@ -231,6 +232,25 @@ struct SineInput {
     return false;
   }
 };
+struct SpecInput {
+  std::string keys=std::string(4,char(0xb6))+"\r\x85";
+  unsigned at=0,stage=0,calls=0,ready=0;
+  static bool pump(void *raw,u8 &key) {
+    auto &p=*static_cast<SpecInput*>(raw);assert(++p.calls<40000);
+    if(p.at==p.keys.size()) {
+      if(p.stage)return false;
+      Session s;picocalc::ai::chat::History history;
+      if(!load_session(store(),250,s)||!history.sync(store(),s)||!history.count())return false;
+      const auto &t=history[history.count()-1];
+      if(!t.has_result)return false;
+      assert(t.result.status==Execution::STOPPED&&t.result.x==0.3746066&&
+             t.program.size==6&&t.telemetry.output==12&&t.telemetry.input==493);
+      if(++p.ready<2)return false;
+      snapshot("spec-real-model-sine");p.keys="\x1b\x1b";p.at=0;++p.stage;
+    }
+    key=u8(p.keys[p.at++]);controls::event({1,key});controls::event({3,key});return false;
+  }
+};
 void launch(void *, const mk61_app_api &api, const mk61_app_services &common) {
   assert(api.query_service(MK61_APP_SERVICE_COMMON,
                            MK61_APP_SERVICES_VERSION) == &common);
@@ -270,6 +290,8 @@ struct FrozenInput {
     if(p.at<p.keys.size()) { emit(u8(p.keys[p.at++]));return false; }
     const bool held=p.services->display_deferred();
     if(held) {
+      if(!p.benchmark && ai_clock::test_statistics().hz)
+        assert(ai_clock::hz()==270000000);
       const auto renders=p.screen.renders();
       assert(!p.screen.render(p.calculator->snapshot(),true,nullptr,p.services) && p.screen.renders()==renders);
     }
@@ -286,6 +308,7 @@ struct FrozenInput {
     if((p.stage==1 || p.stage==3) && !held) {
       Session saved;
       if(!load_session(store(),200,saved) || saved.state!=RunState::PAUSED) return false;
+      if(ai_clock::test_statistics().hz) assert(ai_clock::hz()==125000000);
       if(p.stage==1) { ++p.stage;emit(0x85); }
       else { ++p.stage;p.keys="\x1b\x1b";p.at=0; }
     }
@@ -471,12 +494,48 @@ void picocalc_ai_test() {
     Session task;task.id=200;Example example;
     assert(set_task(task,"X = R0 + R1.",false) && parse_example("R0=7 R1=5 => X=12",example) &&
            set_example(task,0,example) && save_session(store(),task));
+    ai_clock::test_clock(125000000);
     FrozenInput pause_resume{services,calc};pause_resume.keys=std::string(4,char(0xb6))+"\r\x85";
     services.set_pump(FrozenInput::pump,&pause_resume);
     services.test_native_contract(launch,nullptr,true);
     services.set_pump(nullptr,nullptr);
     assert(pause_resume.stage==4 && !services.display_deferred());
+    const auto clocks=ai_clock::test_statistics();
+    assert(clocks.hz==125000000 && clocks.begins==2 && clocks.restores==2);
+    ai_clock::test_clock(0);
     std::puts("Native frozen display: global raster held, Esc interrupts forward, F5 pauses/resumes real model, exit thaws PASS (host)");
+  }
+  if(const char *spec_path=std::getenv("MK61_AI_SPEC_PACKAGE")) {
+    std::ifstream file(spec_path,std::ios::binary);
+    std::vector<u8> package((std::istreambuf_iterator<char>(file)),{});assert(!package.empty());
+    FIL raw;UINT written=0;
+    assert(f_open(&raw,"/AI/MODEL.MKA",FA_WRITE|FA_CREATE_ALWAYS)==FR_OK&&
+           f_write(&raw,package.data(),unsigned(package.size()),&written)==FR_OK&&
+           written==package.size()&&f_close(&raw)==FR_OK);
+    const char protocol[]="MK61SPEC1\n";
+    assert(files::write_text("/AI/MODEL.PRO",protocol,sizeof(protocol)-1));
+    static std::vector<u8> psram_memory(8U*1024*1024);
+    psram::test_memory(psram_memory.data(),unsigned(psram_memory.size()));
+    assert(psram::init()&&buffers::init());
+    // A warm device can retain a 4-MiB optional SD cache. The model fits in
+    // the other half, but its 5-MiB KV allocation then requires repacking
+    // the two required buffers after that optional cache is evicted.
+    shared_memory::Buffer warm_cache;
+    assert(warm_cache.acquire_cache(shared_memory::Owner::USB_CACHE,4U*1024*1024,
+      [] { return shared_memory::EvictionDecision::RELEASE; }));
+    const auto before_reclaims=shared_memory::buffer_statistics().reclaims;
+    Session task;task.id=250;assert(set_task(task,"Синус 22",false)&&
+      append_event(store(),task,"USER",task.task)&&save_session(store(),task));
+    const auto previous=MK61Emu_GetAngleUnit();MK61Emu_SetAngleUnit(DEGREE);
+    ai_clock::test_clock(125000000);
+    SpecInput spec;services.set_pump(SpecInput::pump,&spec);
+    services.test_native_contract(launch,nullptr,true);services.set_pump(nullptr,nullptr);
+    assert(spec.stage==1&&spec.at==spec.keys.size());MK61Emu_SetAngleUnit(previous);
+    assert(!warm_cache.ok()&&shared_memory::buffer_statistics().reclaims>before_reclaims);
+    const auto clocks=ai_clock::test_statistics();
+    assert(clocks.hz==125000000 && clocks.begins==1 && clocks.restores==1);
+    ai_clock::test_clock(0);
+    std::puts("Native SPEC UI: real full-3M Q4, 8MiB PSRAM, emitted tokens/time, compiled program and MK-61 sine PASS");
   }
   std::puts("PicoCalc native AI UI: real APP service, keyboard/forms, emulator "
             "tests, case edit invalidation, input angle, apply backup and "

@@ -22,7 +22,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/ports/picocalc/input.cpp" "$root/ports/picocalc/clock.cpp" "$root/ports/picocalc/diagnostics.cpp" "$root/ports/picocalc/firmware.cpp" "$root/code/crash_dump_format.cpp" \
     "$root/ports/picocalc/chip8_runtime.cpp" "$root/ports/picocalc/native_app.cpp" "$root/ports/picocalc/ai_harness.cpp" "$root/ports/picocalc/ai_chat.cpp" "$root/ports/picocalc/ai_clock.cpp" \
     "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" "$root/code/mk61_ai_tokenizer.cpp" "$build_dir/mk61_ai_kernels.o" \
-    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" \
+    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" "$root/code/mk61_ai_spec.cpp" \
     "$root/ports/picocalc/usb_screen.cpp" "$root/code/chip8.cpp" \
     "$root/code/usb_screen_protocol.cpp" "$root/code/usb_screen_surface.cpp" "$root/code/ui_text_renderer.cpp" "$root/code/loadable_module_format.cpp" \
     "$root/ports/picocalc/ui.cpp" "$root/ports/picocalc/settings.cpp" \

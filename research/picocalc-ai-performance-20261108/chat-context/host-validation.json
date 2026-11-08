@@ -1,0 +1,30 @@
+{
+  "frozen_prefetch": {
+    "log_sha256": "00fe487074aa71c8b2f269cc0b72d5365819e39f74460ece4b6bd925d6e4669b",
+    "output": "prefetch: PASS; 17 full-logit comparisons, 256-position KV exact, 183194 DMA requests, 183194 overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n"
+  },
+  "spec_prefetch": {
+    "log_sha256": "d2d17fda12f605647945205848c6107827faa3906c29c7c9728715066818e08c",
+    "output": "prefetch: PASS; 17 full-logit comparisons, 256-position KV exact, 183211 DMA requests, 183211 overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n"
+  },
+  "frozen_oracle": {
+    "log_sha256": "e1fd828634e6198bdf8f1508526ae206c94aad6fbbe2374155cb994414302ab4",
+    "output": "Long oracle context=64: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=128: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=256: full logits, trajectory, used KV and checksums exact PASS\n"
+  },
+  "spec_oracle": {
+    "log_sha256": "e1fd828634e6198bdf8f1508526ae206c94aad6fbbe2374155cb994414302ab4",
+    "output": "Long oracle context=64: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=128: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=256: full logits, trajectory, used KV and checksums exact PASS\n"
+  },
+  "spec_int8_fixtures": {
+    "log_sha256": "ff984f32888e241970cde11f10091009aecb20b6be5cfb92bb3fc9a66e6e6c83",
+    "output": "SPEC real-model case=1 input=489 output=12 commands=6 core-X=0.3746066 PASS\nSPEC real-model case=2 input=490 output=12 commands=7 core-X=-0.3746066 PASS\nSPEC real-model case=3 input=500 output=12 commands=8 core-X=0.49242357 PASS\nSPEC real-model case=4 input=555 output=24 commands=18 core-X=0.24124549 PASS\nSPEC real-model case=5 input=535 output=12 commands=9 core-X=-88 PASS\nSPEC real-model case=6 input=539 output=12 commands=10 core-X=0.99994788 PASS\nSPEC real-model case=7 input=519 output=12 commands=6 core-X=-0.14054082 PASS\nSPEC real-model case=8 input=552 output=18 commands=16 core-X=-0.06875 PASS\nSPEC: published prompts, real neural token streams, exact compiler, core execution and header pause/resume PASS\n"
+  },
+  "ui_lifecycle": {
+    "passed": true,
+    "log_sha256": "3272afffb66b64fc6796588eacfe2d46cb5520ae86736fa91a3a2fb40cb989d1"
+  },
+  "rewind_oracle": {
+    "passed": true,
+    "output": "Long oracle context=64: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=128: full logits, trajectory, used KV and checksums exact PASS\nLong oracle context=256: full logits, trajectory, used KV and checksums exact PASS\n"
+  }
+}

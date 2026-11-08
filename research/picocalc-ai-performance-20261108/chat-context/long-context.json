@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "ok": true,
+  "matching_reference": true,
+  "model": "MKA-AA8246E1-2093896",
+  "actual_hz": 270000000,
+  "restored_hz": 125000000,
+  "clocks_restored": true,
+  "arithmetic": 1,
+  "model_load_us": 9270355,
+  "model_status": 0,
+  "results": [
+    {
+      "context_tokens": 64,
+      "prefill_us": 63626746,
+      "time_to_first_token_us": 63626746,
+      "decode_us": [
+        1561038,
+        1574288
+      ],
+      "next": [
+        416,
+        7261
+      ],
+      "checksums": [
+        "98543269",
+        "d87552ec"
+      ],
+      "kv_checksum": "b2269123",
+      "decode_layers_us": 2847317,
+      "decode_classifier_us": 287571,
+      "attention_read_bytes": 670720,
+      "activation_preparations": 82,
+      "activation_reuses": 60
+    },
+    {
+      "context_tokens": 128,
+      "prefill_us": 180688461,
+      "time_to_first_token_us": 180688461,
+      "decode_us": [
+        2398488,
+        2410759
+      ],
+      "next": [
+        539,
+        7261
+      ],
+      "checksums": [
+        "de218ef8",
+        "83fca5ed"
+      ],
+      "kv_checksum": "7e89eddc",
+      "decode_layers_us": 4521199,
+      "decode_classifier_us": 287605,
+      "attention_read_bytes": 1326080,
+      "activation_preparations": 82,
+      "activation_reuses": 60
+    },
+    {
+      "context_tokens": 256,
+      "prefill_us": 575607019,
+      "time_to_first_token_us": 575607019,
+      "decode_us": [
+        4075419,
+        4088283
+      ],
+      "next": [
+        52,
+        19
+      ],
+      "checksums": [
+        "13d10903",
+        "12b54c59"
+      ],
+      "kv_checksum": "3073eecc",
+      "decode_layers_us": 7876221,
+      "decode_classifier_us": 287037,
+      "attention_read_bytes": 2636800,
+      "activation_preparations": 82,
+      "activation_reuses": 60
+    }
+  ],
+  "verified_device_steps": 9,
+  "matching_host_tokens": true,
+  "freeze_violations": 0,
+  "freeze_count": 463,
+  "thaw_count": 463,
+  "heap_capacity": 109544,
+  "heap_peak": 70856,
+  "stack_peak": 23488
+}

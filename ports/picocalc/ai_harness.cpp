@@ -4,10 +4,12 @@
 #include "ai_m3.hpp"
 #include "ai_presentation.hpp"
 #include "mk61_ai_perf.hpp"
+#include "mk61_ai_long_bench.hpp"
 #include "mk61_ai_linear.hpp"
 #include "mk61_ai_kernels.h"
 #if defined(PICO_ON_DEVICE)
 #include "io_worker.hpp"
+#include "pico/stdio_usb.h"
 #endif
 #include "mk61_ai_agent.hpp"
 #include "mk61emu_core.h"
@@ -31,6 +33,12 @@
 extern "C" {
 extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 }
+#endif
+
+#if defined(PICO_ON_DEVICE)
+#define AI_COLD_CODE __attribute__((section(".ai_diagnostic_extension"),noinline))
+#else
+#define AI_COLD_CODE
 #endif
 
 namespace picocalc::ai {
@@ -172,7 +180,7 @@ struct UI {
         [](void *p) { return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS); },
         this);
   }
-  ~UI() { ai_m3::close(); }
+  ~UI() { leave_fast_clock();ai_m3::close(); }
   Host host;
   Store store;
   Session s;
@@ -213,7 +221,39 @@ struct UI {
   LinearKernel linear_kernel = LinearKernel::SRAM;
   std::uint32_t cancel_observed = 0, cancel_return_us = 0;
   std::uint32_t model_load_us = 0;
-  Arithmetic arithmetic = Arithmetic::LUT_FLOAT32;
+  Arithmetic arithmetic = Arithmetic::INT8;
+  ai_clock::State fast_clock;
+  char pending_result[224]{};
+  void announce_result() {
+    if(!pending_result[0]) return;
+#if defined(PICO_ON_DEVICE)
+    if(!stdio_usb_connected()) return;
+#endif
+    call(MK61_SERVICE_DEBUG_WRITE,unsigned(std::strlen(pending_result)),0,0,pending_result);
+    pending_result[0]=0;
+  }
+  bool enter_fast_clock() {
+    if(benchmarking || fast_clock.changed) return true;
+#if !defined(PICO_ON_DEVICE)
+    if(!ai_clock::hz()) return true;
+#endif
+    fast_clock={};
+    if(ai_clock::begin(270,fast_clock)) {
+      char text[96];const int n=std::snprintf(text,sizeof(text),
+          "AI_CHAT_FAST hz=%lu arithmetic=%u session=%lu\r\n",
+          (unsigned long)ai_clock::hz(),unsigned(arithmetic),(unsigned long)s.id);
+      call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,text);
+      return true;
+    }
+    leave_fast_clock();message(M8("Не удалось включить270 МГц."));return false;
+  }
+  void leave_fast_clock() {
+    if(!fast_clock.changed) return;
+    if(!ai_clock::restore(fast_clock)) message(M8("Ошибка возврата частоты."));
+    char text[64];const int n=std::snprintf(text,sizeof(text),
+        "AI_CHAT_CLOCK restored=%lu\r\n",(unsigned long)ai_clock::hz());
+    call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,text);
+  }
   Trace manual_trace[16]{};
   chat::History history;
   chat::Renderer chat_renderer;
@@ -266,6 +306,7 @@ struct UI {
       return M8("Читаю условие");
     case Agent::Phase::DECODE:
     case Agent::Phase::ADVANCE:
+    case Agent::Phase::HEADER:
       return M8("Пишу ответ");
     case Agent::Phase::TESTS:
       return M8("Проверяю");
@@ -482,6 +523,7 @@ struct UI {
   unsigned run();
   unsigned bench();
   unsigned perf(const char *directory,const PerfConfig &config);
+  unsigned long_perf(const char *directory);
   void sample_memory();
   void begin_measurements();
   bool write_metrics(const char *path);
@@ -547,7 +589,7 @@ bool UI::write_metrics(const char *path) {
          files::write(path, reinterpret_cast<const u8 *>(json), unsigned(n));
 }
 
-void UI::scan_sessions() {
+AI_COLD_CODE void UI::scan_sessions() {
   session_count = 0;
   unsigned skip = 0;
   bool more = true;
@@ -623,7 +665,7 @@ void UI::open_form(unsigned kind, const char *value, unsigned index) {
   russian = kind == 1;
   changed();
 }
-bool UI::ensure_model() {
+AI_COLD_CODE bool UI::ensure_model() {
   if (model_ready) {
     std::snprintf(s.model, sizeof(s.model), "%s", model_tag);
     return true;
@@ -650,19 +692,23 @@ bool UI::ensure_model() {
   bool ok = package.acquire(shared_memory::Owner::APPLICATION, info.size,
                             shared_memory::BufferAccess::EXTERNAL_ONLY);
   u8 block[1024];
-  while (ok && model_loaded < info.size) {
-    unsigned n = 0;
-    const unsigned take =
-        std::min<unsigned>(unsigned(sizeof(block)), info.size - model_loaded);
-    ok = files::read_range(model_path, model_loaded, block, take, n) &&
-         n == take && package.write(model_loaded, block, n);
-    model_loaded += ok ? n : 0;
-    dirty = true;
-    if (ok && !pump()) {
-      ok = false;
-      break;
+  auto read_package = [&]() {
+    model_loaded = 0;
+    while (ok && model_loaded < info.size) {
+      unsigned n = 0;
+      const unsigned take =
+          std::min<unsigned>(unsigned(sizeof(block)), info.size - model_loaded);
+      ok = files::read_range(model_path, model_loaded, block, take, n) &&
+           n == take && package.write(model_loaded, block, n);
+      model_loaded += ok ? n : 0;
+      dirty = true;
+      if (ok && !pump()) {
+        ok = false;
+        break;
+      }
     }
-  }
+  };
+  read_package();
   ModelStatus status = ModelStatus::MEMORY;
   if (ok) {
     status = model.open({this, info.size, package_read, nullptr,
@@ -670,8 +716,24 @@ bool UI::ensure_model() {
     ok = status == ModelStatus::OK;
   }
   if (ok) {
-    ok = cache.acquire(shared_memory::Owner::APPLICATION, model.cache_bytes(),
+    const auto cache_bytes=model.cache_bytes();
+    ok = cache.acquire(shared_memory::Owner::APPLICATION, cache_bytes,
                        shared_memory::BufferAccess::EXTERNAL_ONLY);
+    if(!ok && package.reset()) {
+      // A retained optional cache can place the package in the middle of
+      // PSRAM. After eviction, reserve the larger KV buffer first so both
+      // required allocations fit. Sizes come from the validated package.
+      ok=cache.acquire(shared_memory::Owner::APPLICATION,cache_bytes,
+                       shared_memory::BufferAccess::EXTERNAL_ONLY) &&
+         package.acquire(shared_memory::Owner::APPLICATION,info.size,
+                         shared_memory::BufferAccess::EXTERNAL_ONLY);
+      read_package();
+      if(ok) {
+        status=model.open({this,info.size,package_read,nullptr,
+                           package_read_begin,package_read_finish});
+        ok=status==ModelStatus::OK && model.cache_bytes()==cache_bytes;
+      }
+    }
     if (ok) {
       workspace.reset(new (std::nothrow)
                           std::uint64_t[(model.workspace_bytes() + 7) / 8]);
@@ -721,6 +783,18 @@ bool UI::ensure_model() {
     prefix[n] = 0;
   }
   model_ready = true;
+  char protocol[16]{}; unsigned protocol_size=0;
+  char protocol_path[128];
+  std::snprintf(protocol_path,sizeof(protocol_path),"/AI/MODEL.PRO");
+  if(benchmarking && host.diagnostic_directory && model_path==diagnostic_model)
+    std::snprintf(protocol_path,sizeof(protocol_path),"%s/MODEL.PRO",host.diagnostic_directory);
+  const bool spec_model=files::exists(protocol_path);
+  if(spec_model && (!files::read(protocol_path,reinterpret_cast<u8*>(protocol),sizeof(protocol)-1,protocol_size) ||
+      std::strcmp(protocol,"MK61SPEC1\n") || model.config().vocab!=8224 || model.config().context!=1024)) {
+    model_ready=false; message(M8("Не совпадает формат модели MODEL.PRO.")); return false;
+  }
+  agent.spec_protocol(spec_model);
+  if(spec_model) { arithmetic=Arithmetic::INT8; filter_head=true; }
   return true;
 }
 void UI::start() {
@@ -736,8 +810,10 @@ void UI::start() {
   }
   if (agent.paused()) {
     cancel = false;
+    if(!enter_fast_clock()) return;
     started = host.api->millis_ms();
     agent.start();
+    if(!agent.active()) leave_fast_clock();
     time_request(agent.active());
     screen = Screen::SESSION;
     s.view = 0;
@@ -762,9 +838,11 @@ void UI::start() {
   }
   cancel = false;
   started = host.api->millis_ms();
+  if(!enter_fast_clock()) { time_request(false);return; }
   configure_execution();
   agent.arithmetic(arithmetic);
   agent.start(prefix[0] ? prefix : nullptr);
+  if(!agent.active()) leave_fast_clock();
   time_request(agent.active());
   screen = Screen::SESSION;
   s.view = 0;
@@ -1564,6 +1642,7 @@ bool UI::pump() {
     service_gap = std::max(service_gap, micros - last_service);
   last_service = micros;
   host.api->service();
+  announce_result();
   for (unsigned n = 0; n < 8; ++n) {
     const int code = host.key();
     if (code < 0)
@@ -1949,12 +2028,24 @@ void UI::key(unsigned wire) {
 void UI::tick() {
   if (agent.active()) {
     agent.tick(service, this);
+    if(!agent.active()) leave_fast_clock();
     time_request(agent.active());
     dirty = true;
     if (!agent.active()) {
       cancel = false;
       sync_chat(true);
       checkpoint();
+      if (agent.last_result().status != Execution::NONE &&
+          agent.last_result().version == s.program.version &&
+          agent.last_result().task_revision == s.task_revision) {
+        const int n=std::snprintf(pending_result,sizeof(pending_result),
+          "AI_CHAT_RESULT task=%lu program=%lu tokens=%lu elapsed_ms=%llu execution=%u X=%.9g\r\n",
+          (unsigned long)s.id,(unsigned long)s.program.version,
+          (unsigned long)(agent.metrics().output_tokens-metric_baseline.output_tokens),
+          (unsigned long long)request_ms,unsigned(agent.last_result().status),agent.last_result().x);
+        if(n<=0||unsigned(n)>=sizeof(pending_result))pending_result[0]=0;
+        announce_result();
+      }
       if (show_trace_after) {
         show_trace_after = false;
         screen = Screen::TRACE;
@@ -1981,7 +2072,7 @@ void UI::tick() {
   if (!loading && save_pending && host.api->millis_ms() - last_edit >= 500)
     checkpoint();
 }
-unsigned UI::bench() {
+AI_COLD_CODE unsigned UI::bench() {
   benchmarking = true;
   s.view = 3;
   screen = Screen::SESSION;
@@ -1993,6 +2084,12 @@ unsigned UI::bench() {
           : !files::mkdir(directory))
     return 3;
   char config_path[128],config_text[513];unsigned config_size=0;
+  std::snprintf(config_path,sizeof(config_path),"%s/LONG.CFG",directory);
+  if(files::exists(config_path)) {
+    if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
+       config_size!=8 || std::memcmp(config_text,"AILONG1\n",8)) return 3;
+    return long_perf(directory);
+  }
   std::snprintf(config_path,sizeof(config_path),"%s/PERF.CFG",directory);
   if(files::exists(config_path)) {
     PerfConfig config;
@@ -2186,7 +2283,142 @@ unsigned UI::bench() {
       files::write(json_path, reinterpret_cast<const u8 *>(json), unsigned(n));
   return ok && !cancel && same && roundtrip && valid_prefix ? 0 : 3;
 }
-unsigned UI::perf(const char *directory,const PerfConfig &config) {
+AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
+  using namespace mk61ai::long_bench;
+  auto plan=model.execution();plan.tile_rows=28;model.execution(plan);
+  if(!ensure_model() || model.config().context<contexts[cases-1]+decode) return 3;
+  std::uint16_t ids[64]{};unsigned count=0;
+  if(model.encode(prompt,ids,64,count)!=ModelStatus::OK || count<2) return 3;
+  std::uint8_t expected[reference_bytes]{};unsigned size=0;
+  char path[128];std::snprintf(path,sizeof(path),"%s/LONG.REF",directory);
+  std::uint32_t model_crc=0;
+  if(!package.read(124,&model_crc,4) ||
+      !files::read(path,expected,sizeof(expected),size) || size!=sizeof(expected) ||
+      word(expected,0)!=magic || word(expected,4)!=model.config().vocab ||
+      word(expected,8)!=cases || word(expected,12)!=decode || word(expected,16)!=model_crc) return 3;
+  for(unsigned i=0;i<cases;++i) if(word(expected,20+i*32)!=contexts[i]) return 3;
+  struct Result {
+    std::uint64_t prefill_us=0,decode_us[decode]{},layers_us=0,classifier_us=0;
+    std::uint64_t attention_bytes=0;
+    std::uint32_t next[decode]{},checksums[decode]{},kv=0;
+    std::uint32_t preparations=0,reuses=0;
+  } result[cases];
+  arithmetic=Arithmetic::INT8;dual_core=true;freeze_screen=true;double_buffer=true;
+  filter_head=false;m3_core=false;linear_kernel=LinearKernel::SRAM;
+  configure_execution();cancel=false;
+  ai_clock::State frequency;
+  bool ok=ai_clock::begin(270,frequency),matching=true,host_tokens=true;
+  unsigned verified_steps=0;
+  const auto actual_hz=ai_clock::hz();
+  ModelStatus status=ModelStatus::OK;
+  auto marker=[&](unsigned context,unsigned position) {
+    char text[96];const int n=std::snprintf(text,sizeof(text),
+        "AI_PERF long_context=%u prefill=%u hz=%lu\r\n",context,position,(unsigned long)ai_clock::hz());
+    call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,text);
+  };
+  auto row_hash=[&](unsigned position) AI_COLD_CODE {
+    const auto &c=model.config();const unsigned bytes=c.kv_heads*c.head_dim*8;
+    std::uint32_t value=2166136261U;std::uint8_t block[256];
+    for(unsigned layer=0;layer<c.layers;++layer) for(unsigned at=0;at<bytes;) {
+      const unsigned take=std::min<unsigned>(sizeof(block),bytes-at);
+      if(!cache.read(layer*c.context*bytes+position*bytes+at,block,take)) { ok=false;return value; }
+      value=hash(value,block,take);at+=take;
+    }
+    return value;
+  };
+  // The host and MCU libm can round transcendental functions differently.
+  // Compare the old INT8 path on the same MCU at selected positions. Rewind
+  // only the current position; both passes read the identical prior KV prefix.
+  auto step=[&](std::uint16_t token,bool output,std::uint16_t &next,bool verify,std::uint64_t &elapsed) AI_COLD_CODE {
+    const auto execution=model.execution();const unsigned position=model.position();
+    std::uint16_t reference_next=0;std::uint32_t reference_hash=0,reference_kv=0;
+    if(verify) {
+      auto reference=execution;reference.reuse_activations=false;reference.share_kv=false;
+      model.execution(reference);
+      status=model.forward(token,output,reference_next,service,this,arithmetic);
+      reference_hash=model.compute_metrics().checksum;reference_kv=row_hash(position);
+      model.execution(execution);
+      if(status!=ModelStatus::OK || !ok || !model.rewind(position))return false;
+    }
+    const auto before=call(MK61_SERVICE_MICROS);
+    status=model.forward(token,output,next,service,this,arithmetic);
+    elapsed=call(MK61_SERVICE_MICROS)-before;
+    if(status!=ModelStatus::OK)return false;
+    if(verify) {
+      ++verified_steps;
+      matching=matching && next==reference_next && model.compute_metrics().checksum==reference_hash &&
+          row_hash(position)==reference_kv;
+    }
+    return ok && matching;
+  };
+  for(unsigned which=0;ok && which<cases;++which) {
+    const unsigned context=contexts[which],at=20+which*32;
+    auto &r=result[which];model.reset();std::uint16_t next=0;
+    for(unsigned pos=0;ok && pos<context;++pos) {
+      if((pos&15U)==0) {
+        marker(context,pos);
+        std::snprintf(s.feedback,sizeof(s.feedback),"Context %u: %u/%u; Esc: stop",context,pos,context);
+        dirty=true;sample_memory();
+      }
+      std::uint64_t elapsed=0;
+      ok=step(input(ids,count,pos),pos+1==context,next,pos+1==context,elapsed);
+      r.prefill_us+=elapsed;
+    }
+    if(!ok) break;
+    host_tokens=host_tokens && next==word(expected,at+4);
+    for(unsigned i=0;ok && i<decode;++i) {
+      ok=step(next,true,next,true,r.decode_us[i]);
+      r.next[i]=next;const auto &m=model.compute_metrics();r.checksums[i]=m.checksum;
+      r.layers_us+=m.layers_us;r.classifier_us+=m.classifier_us;
+      r.attention_bytes+=m.attention_read_bytes;
+      r.preparations+=m.activation_preparations;r.reuses+=m.activation_reuses;
+      host_tokens=host_tokens && next==word(expected,at+12+i*8);
+    }
+    r.kv=2166136261U;std::uint8_t block[512];
+    const auto &c=model.config();const unsigned row=c.kv_heads*c.head_dim*8;
+    for(unsigned layer=0;ok && layer<c.layers;++layer) {
+      for(unsigned offset=0;ok && offset<(context+decode)*row;) {
+        const unsigned take=std::min<unsigned>(sizeof(block),(context+decode)*row-offset);
+        ok=cache.read(layer*c.context*row+offset,block,take);
+        if(ok) r.kv=hash(r.kv,block,take);
+        offset+=take;
+      }
+    }
+    ok=ok && matching;sample_memory();
+  }
+  const bool restored=ai_clock::restore(frequency);
+  ok=ok && restored && matching && !cancel && !freeze_violations && freeze_count==thaw_count;
+  sample_memory();
+  std::unique_ptr<char[]> json(new(std::nothrow) char[8192]);if(!json) return 3;
+  unsigned used=0;bool fits=true;
+  auto append=[&](const char *format,auto...args) {
+    if(!fits)return;const int n=std::snprintf(json.get()+used,8192-used,format,args...);
+    if(n<0 || unsigned(n)>=8192-used)fits=false;else used+=unsigned(n);
+  };
+  append("{\"schema\":1,\"ok\":%s,\"matching_reference\":%s,\"model\":\"%s\","
+      "\"actual_hz\":%lu,\"restored_hz\":%lu,\"clocks_restored\":%s,\"arithmetic\":1,"
+      "\"model_load_us\":%lu,\"model_status\":%u,\"results\":[",
+      ok?"true":"false",matching?"true":"false",model_tag,(unsigned long)actual_hz,
+      (unsigned long)ai_clock::hz(),restored?"true":"false",(unsigned long)model_load_us,unsigned(status));
+  for(unsigned i=0;i<cases;++i) {
+    const auto &r=result[i];
+    append("%s{\"context_tokens\":%u,\"prefill_us\":%llu,\"time_to_first_token_us\":%llu,"
+        "\"decode_us\":[%llu,%llu],\"next\":[%lu,%lu],\"checksums\":[\"%08lx\",\"%08lx\"],"
+        "\"kv_checksum\":\"%08lx\",\"decode_layers_us\":%llu,\"decode_classifier_us\":%llu,"
+        "\"attention_read_bytes\":%llu,\"activation_preparations\":%lu,\"activation_reuses\":%lu}",
+        i?",":"",contexts[i],(unsigned long long)r.prefill_us,(unsigned long long)r.prefill_us,
+        (unsigned long long)r.decode_us[0],(unsigned long long)r.decode_us[1],
+        (unsigned long)r.next[0],(unsigned long)r.next[1],(unsigned long)r.checksums[0],(unsigned long)r.checksums[1],
+        (unsigned long)r.kv,(unsigned long long)r.layers_us,(unsigned long long)r.classifier_us,
+        (unsigned long long)r.attention_bytes,(unsigned long)r.preparations,(unsigned long)r.reuses);
+  }
+  append("],\"verified_device_steps\":%u,\"matching_host_tokens\":%s,\"freeze_violations\":%u,\"freeze_count\":%u,\"thaw_count\":%u,"
+      "\"heap_capacity\":%lu,\"heap_peak\":%lu,\"stack_peak\":%lu}",verified_steps,host_tokens?"true":"false",freeze_violations,freeze_count,thaw_count,
+      (unsigned long)heap_capacity,(unsigned long)heap_peak,(unsigned long)stack_peak);
+  std::snprintf(path,sizeof(path),"%s/LONG.JSON",directory);
+  return fits && files::write(path,reinterpret_cast<const u8*>(json.get()),used) && ok?0:3;
+}
+AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   // Reserve the larger tiles only for this diagnostic, before workspace bind.
   auto memory_plan=model.execution();memory_plan.tile_rows=config.cores==3?64:28;
   model.execution(memory_plan);
@@ -2529,7 +2761,7 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
   const bool saved=fits && files::write(path,reinterpret_cast<const u8*>(json.get()),used);
   return ok && saved?0:3;
 }
-unsigned UI::run() {
+AI_COLD_CODE unsigned UI::run() {
   bool directories = files::ready();
   for (const char *path : {"/AI", "/AI/SESSIONS", "/AI/Exports"}) {
     files::Entry e{};

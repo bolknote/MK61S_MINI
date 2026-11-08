@@ -14,7 +14,7 @@ endif()
 include("${PICO_SDK_PATH}/pico_sdk_init.cmake")
 project(mk61s_picocalc C CXX ASM)
 option(MK61_PICOCALC_COSMIC_CLOCK_DIAG "Temporary125/200/250MHz Cosmic diagnostic" OFF)
-option(MK61_PICOCALC_AI_OVERCLOCK "AI diagnostic at the qualified270MHz rate" OFF)
+option(MK61_PICOCALC_AI_OVERCLOCK "Qualified270MHz AI runtime support" ON)
 option(MK61_PICOCALC_AUDIO_CLOCK "Use 200MHz for real-time APP synthesis" ON)
 option(MK61_PICOCALC_AUDIO_DMA "Use experimental block DMA for APP synthesis" OFF)
 option(MK61_PICOCALC_LCD_COLOR_CHAIN "Use strip DMA and constant fills for color frames" ON)
@@ -107,11 +107,11 @@ target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" "${MK61_ROOT}/code/mk61_ai_tokenizer.cpp"
     "${MK61_ROOT}/code/mk61_ai_kernels.c" "${MK61_ROOT}/code/mk61_ai_harness.cpp"
     "${MK61_ROOT}/code/mk61_ai_tools.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp"
-    "${MK61_ROOT}/code/mk61_ai_grammar.cpp")
+    "${MK61_ROOT}/code/mk61_ai_grammar.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp")
 set_source_files_properties("${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" PROPERTIES COMPILE_OPTIONS "-O3;-ffp-contract=off")
 # The chat and SD journal are cold UI paths. Keep them inside the main flash
 # region without changing inference kernels or the emulator's optimization.
-set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
+set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
 if(DEFINED MK61_PICOCALC_BUILD_ID)
     target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_BUILD_ID=${MK61_PICOCALC_BUILD_ID})
 endif()
@@ -200,6 +200,13 @@ pico_set_program_version(mk61s-picocalc-pico-h "${CMAKE_MATCH_1}")
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.
 file(READ "${PICO_SDK_PATH}/src/rp2_common/pico_crt0/rp2040/memmap_default.ld" MK61_MEMMAP)
+# Keep inference at a qualified XIP-cache index independently of UI growth.
+# Exclude it from both SDK catch-alls; the fixed flash section owns it.
+string(REPLACE "*(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)"
+    "*(EXCLUDE_FILE(*mk61_ai_model.cpp.o *libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)"
+    MK61_MEMMAP "${MK61_MEMMAP}")
+string(REPLACE "        *(.text*)"
+    "        *(EXCLUDE_FILE(*mk61_ai_model.cpp.o) .text*)" MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 256k"
     "RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 224k" MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k"

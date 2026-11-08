@@ -1,0 +1,99 @@
+{
+  "passed": true,
+  "reference_build": "E0CDF5AB",
+  "candidate_build": "BA33A5D4",
+  "cache_index_period_bytes": 8192,
+  "symbols": [
+    {
+      "symbol": "__aeabi_fadd",
+      "fast": {
+        "address": 268914072,
+        "bytes": 14,
+        "cache_index": 3480
+      },
+      "candidate": {
+        "address": 268914072,
+        "bytes": 14,
+        "cache_index": 3480
+      }
+    },
+    {
+      "symbol": "__aeabi_fmul",
+      "fast": {
+        "address": 268914476,
+        "bytes": 14,
+        "cache_index": 3884
+      },
+      "candidate": {
+        "address": 268914476,
+        "bytes": 14,
+        "cache_index": 3884
+      }
+    },
+    {
+      "symbol": "__aeabi_fdiv",
+      "fast": {
+        "address": 268914780,
+        "bytes": 14,
+        "cache_index": 4188
+      },
+      "candidate": {
+        "address": 268914780,
+        "bytes": 14,
+        "cache_index": 4188
+      }
+    },
+    {
+      "symbol": "mk61ai::Model::forward(unsigned short, bool, unsigned short&, bool (*)(void*), void*, mk61ai::Arithmetic, float*, bool (*)(void*, unsigned short), void*)::{lambda(unsigned int, float const*, float*, bool, bool)#1}::operator()(unsigned int, float const*, float*, bool, bool) const::{lambda(mk61ai::Model::forward(unsigned short, bool, unsigned short&, bool (*)(void*), void*, mk61ai::Arithmetic, float*, bool (*)(void*, unsigned short), void*)::{lambda(unsigned int, float const*, float*, bool, bool)#1}::operator()(unsigned int, float const*, float*, bool, bool) const::Tile&, bool)#1}::operator()(mk61ai::Model::forward(unsigned short, bool, unsigned short&, bool (*)(void*), void*, mk61ai::Arithmetic, float*, bool (*)(void*, unsigned short), void*)::{lambda(unsigned int, float const*, float*, bool, bool)#1}::operator()(unsigned int, float const*, float*, bool, bool) const::Tile&, bool) const",
+      "fast": {
+        "address": 269271728,
+        "bytes": 1634,
+        "cache_index": 688
+      },
+      "candidate": {
+        "address": 270189232,
+        "bytes": 1634,
+        "cache_index": 688
+      }
+    },
+    {
+      "symbol": "mk61ai::Model::forward(unsigned short, bool, unsigned short&, bool (*)(void*), void*, mk61ai::Arithmetic, float*, bool (*)(void*, unsigned short), void*)::{lambda(unsigned int, float const*, float*, bool, bool)#1}::operator()(unsigned int, float const*, float*, bool, bool) const",
+      "fast": {
+        "address": 269273364,
+        "bytes": 6080,
+        "cache_index": 2324
+      },
+      "candidate": {
+        "address": 270190868,
+        "bytes": 6080,
+        "cache_index": 2324
+      }
+    },
+    {
+      "symbol": "mk61ai::Model::forward(unsigned short, bool, unsigned short&, bool (*)(void*), void*, mk61ai::Arithmetic, float*, bool (*)(void*, unsigned short), void*)",
+      "fast": {
+        "address": 269281320,
+        "bytes": 6656,
+        "cache_index": 2088
+      },
+      "candidate": {
+        "address": 270198824,
+        "bytes": 6656,
+        "cache_index": 2088
+      }
+    },
+    {
+      "symbol": "mk61ai::linear_batch_sram(void*)",
+      "fast": {
+        "address": 536878524,
+        "bytes": 2896,
+        "cache_index": 7612
+      },
+      "candidate": {
+        "address": 536878524,
+        "bytes": 2896,
+        "cache_index": 7612
+      }
+    }
+  ]
+}

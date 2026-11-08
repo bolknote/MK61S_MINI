@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "build": "5CC4EF8E",
+  "crc": "318A7C05",
+  "seconds_per_token": [
+    0.770563,
+    0.771089
+  ],
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "final": {
+    "build": "5CC4EF8E",
+    "crc": "318A7C05",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "cdc_closed": true,
+  "lease_closed": true,
+  "owned_apps_removed": true
+}

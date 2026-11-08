@@ -1,0 +1,36 @@
+{
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "reference_seconds_per_token": 0.783943,
+  "seconds_per_token": [
+    0.7291845,
+    0.7292815
+  ],
+  "time_reduction_percent": [
+    6.985010389785984,
+    6.9726370412134475
+  ],
+  "speedup": [
+    1.0750955348063487,
+    1.0749525389030161
+  ],
+  "presentation_us_per_token": [
+    150.0,
+    153.0
+  ],
+  "status": "COMPLETE",
+  "short_build": "E0CDF5AB",
+  "short_crc": "0B15A4C7",
+  "final_build": "5CC4EF8E",
+  "final_crc": "318A7C05",
+  "final_seconds_per_token": [
+    0.770563,
+    0.771089
+  ],
+  "final_reduction_percent": [
+    1.7067567412426654,
+    1.6396600263029248
+  ],
+  "long_passed": true,
+  "device_reference_steps": 9,
+  "hardware_released": true
+}

@@ -1,0 +1,20 @@
+{
+  "ui_asan_ubsan": {
+    "passed": true,
+    "log_sha256": "48b29ad27dcea85a0fd419a52591b4c33c97321d39c026fcdc500da366cc2b32"
+  },
+  "spec_int8_asan_ubsan": {
+    "passed": true,
+    "cases": 8,
+    "output": "SPEC real-model case=1 input=489 output=12 commands=6 core-X=0.3746066 PASS\nSPEC real-model case=2 input=490 output=12 commands=7 core-X=-0.3746066 PASS\nSPEC real-model case=3 input=500 output=12 commands=8 core-X=0.49242357 PASS\nSPEC real-model case=4 input=555 output=24 commands=18 core-X=0.24124549 PASS\nSPEC real-model case=5 input=535 output=12 commands=9 core-X=-88 PASS\nSPEC real-model case=6 input=539 output=12 commands=10 core-X=0.99994788 PASS\nSPEC real-model case=7 input=519 output=12 commands=6 core-X=-0.14054082 PASS\nSPEC real-model case=8 input=552 output=18 commands=16 core-X=-0.06875 PASS\nSPEC: published prompts, real neural token streams, exact compiler, core execution and header pause/resume PASS\n"
+  },
+  "hardware_tokens_checksums": true,
+  "target_seconds_per_token": 0.729,
+  "target_met": true,
+  "four_features_retained": {
+    "ordinary_chat_int8_270": true,
+    "long_context_diagnostic": true,
+    "reuse_activations": true,
+    "share_kv": true
+  }
+}

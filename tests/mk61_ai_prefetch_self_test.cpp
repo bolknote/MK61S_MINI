@@ -26,6 +26,7 @@ struct Runtime {
   unsigned began = 0, finished = 0, overlapped = 0;
   unsigned row_limit=8;
   unsigned layout_refusals=0;
+  bool optimized=true;
   void owner() const { assert(std::this_thread::get_id() == foreground); }
   static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
@@ -79,9 +80,9 @@ struct Runtime {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(r.pending);
     r.dma.join();r.pending = false;++r.finished;return !r.job.fail;
   }
-  explicit Runtime(const std::vector<std::uint8_t> &p,unsigned rows=8) : package(p),row_limit(rows) {
+  explicit Runtime(const std::vector<std::uint8_t> &p,unsigned rows=8,bool optim=true) : package(p),row_limit(rows),optimized(optim) {
     assert(model.open({this, unsigned(p.size()), read, nullptr, begin, finish}) == ModelStatus::OK);
-    ComputeExecution plan{};plan.tile_rows=row_limit;model.execution(plan);
+    ComputeExecution plan{};plan.tile_rows=row_limit;plan.share_kv=optimized;model.execution(plan);
     workspace.resize((model.workspace_bytes() + 7) / 8 + 8);
     std::fill(workspace.end() - 8, workspace.end(), UINT64_C(0xb00f61a1b00f61a1));
     cache.resize(model.cache_bytes());
@@ -92,6 +93,7 @@ struct Runtime {
   void configure(bool prefetch, bool filter = false) {
     ComputeExecution e{};e.context = this;e.kernel = LinearKernel::SRAM;
     e.prefetch = prefetch;e.filter_head = filter;e.tile_rows=row_limit;
+    e.reuse_activations=optimized;e.share_kv=optimized;
     e.busy = [](void *p, bool active) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       assert(r.busy != active && !r.pending && r.began == r.finished);
@@ -130,7 +132,7 @@ bool sparse(void *p, std::uint16_t id) {
 int main(int argc, char **argv) {
   assert(argc == 2);std::ifstream stream(argv[1], std::ios::binary);
   const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(stream)), {});
-  Runtime control(bytes), candidate(bytes,28);control.configure(false);
+  Runtime control(bytes,8,false), candidate(bytes,28);control.configure(false);
   const auto large_plan=candidate.model.execution();
   auto small_plan=large_plan;small_plan.tile_rows=24;
   candidate.model.execution(small_plan);
@@ -151,6 +153,14 @@ int main(int argc, char **argv) {
       assert(candidate.forward(tokens[p % count], mode, right, output ? b.data() : nullptr, output) == ModelStatus::OK);
       assert(control.model.compute_metrics().checksum == candidate.model.compute_metrics().checksum);
       assert(control.cache == candidate.cache);
+      const auto &old=control.model.compute_metrics(),&fast=candidate.model.compute_metrics();
+      const auto &config=candidate.model.config();
+      if(config.heads==2*config.kv_heads)
+        assert(fast.attention_read_bytes*2==old.attention_read_bytes);
+      if(mode!=Arithmetic::FLOAT32) {
+        assert(fast.activation_preparations==4*config.layers+(output?1:0));
+        assert(fast.activation_reuses==3*config.layers);
+      }
       if (output) { assert(left == right && !std::memcmp(a.data(), b.data(), vocab * sizeof(float)));++comparisons; }
       assert(!control.model.compute_metrics().prefetches);
       assert(candidate.model.compute_metrics().prefetches == 0 || candidate.overlapped > 0);
@@ -159,6 +169,10 @@ int main(int argc, char **argv) {
   for (unsigned mode = 0; mode < 4; ++mode) compare(Arithmetic(mode), 2, true);
   assert(candidate.model.compute_metrics().worker_jobs < control.model.compute_metrics().worker_jobs);
   compare(Arithmetic::LUT_FLOAT32, 64, false);
+  unsigned context_checked=64;
+  if(candidate.model.config().context>=256) {
+    compare(Arithmetic::INT8,256,false);context_checked=256;
+  }
   assert(candidate.layout_refusals==0);
   assert(candidate.began > 0 && candidate.overlapped > 0);
   // Sparse/non-aligned spans and a refused backend retain the serial path.
@@ -190,6 +204,6 @@ int main(int argc, char **argv) {
   corrupted[scales + 4 * columns / 16] = 1;corrupted[scales + 4 * columns / 16 + 1] = 0x7e;
   assert(bad.forward(tokens[0], Arithmetic::LUT_FLOAT32, right) == ModelStatus::NUMERIC);
   assert(bad.began && bad.model.position() == 0);
-  std::printf("prefetch: PASS; %u full-logit comparisons, 64-position KV exact, %u DMA requests, %u overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n",
-              comparisons, candidate.began, candidate.overlapped);
+  std::printf("prefetch: PASS; %u full-logit comparisons, %u-position KV exact, %u DMA requests, %u overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n",
+              comparisons, context_checked,candidate.began, candidate.overlapped);
 }

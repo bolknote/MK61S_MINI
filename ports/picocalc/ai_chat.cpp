@@ -598,7 +598,7 @@ int Renderer::layout(const View &v, void (*mnemonic)(std::uint8_t, char *)) {
                  14, DANGER) +
             8;
       } else if (!t.program.size) {
-        text(10, y, M8("F5 — начать вычисление"), 12, MUTED);
+        text(10, y, M8("F5: начать вычисление"), 12, MUTED);
         y += 20;
       }
     }

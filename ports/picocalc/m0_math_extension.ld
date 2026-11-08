@@ -116,6 +116,22 @@ SECTIONS {
            "Exp code exceeds one8KiB cache index span")
     ASSERT(ADDR(.m0_exp_core_extension) + SIZEOF(.m0_exp_core_extension) <= 0x10180000,
            "Exp code overlaps isolated comparison reference")
+    /* AI diagnostics and model startup are cold; reserve flash beyond the qualified math slots,
+     * rather than growing the main image into their fixed load addresses. */
+    .ai_diagnostic_extension 0x10180000 : {
+        *(.ai_diagnostic_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.ai_diagnostic_extension) <= 0x10000,
+           "AI diagnostic code exceeds its64KiB flash slot")
+    /* Same 8KiB cache indices as the0.729s/token E0CDF5AB model code.
+     * UI/diagnostic growth must not move these instruction streams. */
+    .ai_inference_extension 0x101ac248 : {
+        *mk61_ai_model.cpp.o(.text*)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.ai_inference_extension) <= 0x6000,
+           "AI inference exceeds its24KiB flash slot")
     ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ADDR(.m0_math_extension),
            "Main firmware overlaps the M0 math extension")
     ASSERT(SIZEOF(.m0_math_extension) <= 0x10000,

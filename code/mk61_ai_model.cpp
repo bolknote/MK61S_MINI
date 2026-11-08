@@ -195,7 +195,7 @@ std::size_t Model::workspace_bytes() const {
       std::max(std::max(c.hidden, c.intermediate), c.heads * c.head_dim);
   const unsigned floats = 3 * c.hidden + 2 * c.heads * c.head_dim +
                           2 * c.kv_heads * c.head_dim + 2 * c.intermediate +
-                          c.context;
+                          c.context*(execution_.share_kv && c.heads>c.kv_heads?2U:1U);
   const unsigned raw =
       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
   const unsigned rows=row_limit(execution_.tile_rows);
@@ -261,7 +261,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   float *x = take(c.hidden), *n = take(c.hidden), *q = take(qn), *k = take(kn),
         *v = take(kn), *a = take(qn), *o = take(c.hidden),
         *gate = take(c.intermediate), *up = take(c.intermediate),
-        *scores = take(c.context);
+        *scores = take(c.context*(execution_.share_kv && c.heads>c.kv_heads?2U:1U));
   auto *raw = reinterpret_cast<std::uint8_t *>(cursor);
   const unsigned columns =
       std::max(std::max(c.hidden, c.intermediate), c.heads * c.head_dim);
@@ -316,8 +316,10 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
                 : float(int(u) - 8)) *
            scale;
   };
+  const float *prepared_input=nullptr;
+  unsigned prepared_columns=0;
   auto linear = [&](unsigned index, const float *input, float *dest,
-                    bool head) -> bool {
+                    bool head,bool reuse=false) -> bool {
     Tensor t{};
     if (!tensor(index, t)) {
       status = ModelStatus::IO;
@@ -327,7 +329,13 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         arithmetic == Arithmetic::INT8 || arithmetic == Arithmetic::LUT_INT8;
     const bool tables = arithmetic == Arithmetic::LUT_INT8 ||
                         arithmetic == Arithmetic::LUT_FLOAT32;
-    if (integer) {
+    const bool prepare=!execution_.reuse_activations || !reuse ||
+        prepared_input!=input || prepared_columns!=t.cols;
+    if(integer || tables) {
+      if(prepare) ++compute_metrics_.activation_preparations;
+      else ++compute_metrics_.activation_reuses;
+    }
+    if (integer && prepare) {
       for (unsigned g = 0; g < t.cols / 32; ++g) {
         float maximum = 0;
         for (unsigned j = 0; j < 32; ++j)
@@ -349,7 +357,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         reinterpret_cast<std::int32_t*>(lookup)[g]=activation_sum;
       }
     }
-    if (tables) {
+    if (tables && prepare) {
       for (unsigned g = 0; g < t.cols / 32; ++g) {
         float total = 0;
         for (unsigned quartet = 0; quartet < 8; ++quartet) {
@@ -375,6 +383,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         input_sums[g] = total;
       }
     }
+    prepared_input=input;prepared_columns=t.cols;
     float maximum = -FLT_MAX;
     best = 0;
     if (execution_.kernel != LinearKernel::REFERENCE) {
@@ -743,7 +752,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   for (unsigned layer = 0; layer < c.layers; ++layer) {
     const unsigned base = 2 + 11 * layer;
     if (!normalize(base, x, n, 1, c.hidden) || !linear(base + 1, n, q, false) ||
-        !linear(base + 2, n, k, false) || !linear(base + 3, n, v, false) ||
+        !linear(base + 2, n, k, false,true) || !linear(base + 3, n, v, false,true) ||
         !normalize(base + 4, q, q, c.heads, c.head_dim) ||
         !normalize(base + 5, k, k, c.kv_heads, c.head_dim))
       return status;
@@ -769,13 +778,18 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
                   true))
       return ModelStatus::IO;
     const float attention_scale = 1.0f / std::sqrt(float(c.head_dim));
+    auto read_attention=[&](unsigned offset,float *out,unsigned bytes) {
+      compute_metrics_.attention_read_bytes+=bytes;
+      return transfer(cache_,offset,out,bytes);
+    };
+    if(!execution_.share_kv || c.heads==c.kv_heads) {
     for (unsigned h = 0; h < c.heads; ++h) {
       float maximum = -FLT_MAX, sum = 0;
       const unsigned kh = h / (c.heads / c.kv_heads);
       for (unsigned t = 0; t <= position_; ++t) {
         if ((t & 31U) == 0 && !alive())
           return status;
-        if (!transfer(cache_, layer_offset + t * kn * 8 + kh * c.head_dim * 4,
+        if (!read_attention(layer_offset + t * kn * 8 + kh * c.head_dim * 4,
                       k, c.head_dim * 4))
           return ModelStatus::IO;
         float dot = 0;
@@ -792,7 +806,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         return ModelStatus::NUMERIC;
       std::fill(a + h * c.head_dim, a + (h + 1) * c.head_dim, 0.0f);
       for (unsigned t = 0; t <= position_; ++t) {
-        if (!transfer(cache_,
+        if (!read_attention(
                       layer_offset + t * kn * 8 + kn * 4 + kh * c.head_dim * 4,
                       v, c.head_dim * 4))
           return ModelStatus::IO;
@@ -801,12 +815,47 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           a[h * c.head_dim + j] += factor * v[j];
       }
     }
+    } else {
+      const unsigned queries=c.heads/c.kv_heads;
+      for(unsigned kh=0;kh<c.kv_heads;++kh) for(unsigned first=0;first<queries;first+=2) {
+        const unsigned lanes=std::min<unsigned>(2,queries-first);
+        float maximum[2]={-FLT_MAX,-FLT_MAX},sum[2]={0,0};
+        for(unsigned t=0;t<=position_;++t) {
+          if((t&31U)==0 && !alive()) return status;
+          if(!read_attention(layer_offset+t*kn*8+kh*c.head_dim*4,k,c.head_dim*4)) return ModelStatus::IO;
+          for(unsigned lane=0;lane<lanes;++lane) {
+            const unsigned h=kh*queries+first+lane;
+            float dot=0;
+            for(unsigned j=0;j<c.head_dim;++j) dot+=q[h*c.head_dim+j]*k[j];
+            const float score=dot*attention_scale;
+            scores[lane*c.context+t]=score;maximum[lane]=std::max(maximum[lane],score);
+          }
+        }
+        for(unsigned lane=0;lane<lanes;++lane) {
+          for(unsigned t=0;t<=position_;++t) {
+            float &score=scores[lane*c.context+t];
+            score=std::exp(score-maximum[lane]);sum[lane]+=score;
+          }
+          if(!std::isfinite(sum[lane]) || sum[lane]<=0) return ModelStatus::NUMERIC;
+          const unsigned h=kh*queries+first+lane;
+          std::fill(a+h*c.head_dim,a+(h+1)*c.head_dim,0.0f);
+        }
+        for(unsigned t=0;t<=position_;++t) {
+          if(!read_attention(layer_offset+t*kn*8+kn*4+kh*c.head_dim*4,v,c.head_dim*4)) return ModelStatus::IO;
+          for(unsigned lane=0;lane<lanes;++lane) {
+            const unsigned h=kh*queries+first+lane;
+            const float factor=scores[lane*c.context+t]/sum[lane];
+            for(unsigned j=0;j<c.head_dim;++j) a[h*c.head_dim+j]+=factor*v[j];
+          }
+        }
+      }
+    }
     if (!linear(base + 6, a, o, false))
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)
       x[j] += o[j];
     if (!normalize(base + 7, x, n, 1, c.hidden) ||
-        !linear(base + 8, n, gate, false) || !linear(base + 9, n, up, false))
+        !linear(base + 8, n, gate, false) || !linear(base + 9, n, up, false,true))
       return status;
     for (unsigned j = 0; j < c.intermediate; ++j)
       gate[j] = (gate[j] / (1.0f + std::exp(-gate[j]))) * up[j];

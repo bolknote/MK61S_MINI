@@ -443,6 +443,11 @@ def leave_app(p):
     p.send(b"\x1e\x1b\x1b")
     end = time.monotonic() + p.remaining(20)
     while time.monotonic() < end:
+        # Native handoff suppresses a held gesture. Allow the180ms virtual
+        # key pulse to release before retrying Esc.
+        released = time.monotonic() + .25
+        while time.monotonic() < released:
+            p.pump(.02)
         s = p.status()
         if "SERVICE=CLOSED" in s and "RUNTIME=NONE" in s:
             p.commands()

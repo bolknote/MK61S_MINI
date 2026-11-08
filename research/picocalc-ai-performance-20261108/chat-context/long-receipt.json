@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "short_rerun": false,
+  "root_model_changed": false,
+  "entry": {
+    "build": "E0CDF5AB",
+    "crc": "0B15A4C7",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 2
+  },
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "decode_seconds": [
+    1.567663,
+    2.4046235,
+    4.081851
+  ],
+  "prefill_seconds": [
+    63.626746,
+    180.688461,
+    575.607019
+  ],
+  "final": {
+    "build": "5CC4EF8E",
+    "crc": "318A7C05",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "cdc_closed": true,
+  "lease_closed": true
+}

@@ -23,12 +23,12 @@ clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" \
 "$ai_build/harness-test" "$root/tests/data/mk61_ai_session_v1.bin"
 clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" \
     "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" "$root/code/mk61_ai_tokenizer.cpp" "$ai_build/kernels.o" \
-    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" \
+    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" "$root/code/mk61_ai_spec.cpp" \
     "$root/code/mk61emu_core.cpp" "$root/tests/mk61_ai_controller_self_test.cpp" -o "$ai_build/controller-test"
 "$ai_build/controller-test" "$ai_package"
 clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" \
     "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" "$root/code/mk61_ai_tokenizer.cpp" "$ai_build/kernels.o" \
-    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" \
+    "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" "$root/code/mk61_ai_spec.cpp" \
     "$root/code/mk61emu_core.cpp" "$root/tests/mk61_ai_agent_self_test.cpp" -o "$ai_build/agent-test"
 "$ai_build/agent-test" "$ai_package"
 clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" -pthread \

@@ -23,11 +23,16 @@
 #include "tusb.h"
 #endif
 namespace picocalc::ai_clock {
+#if !defined(PICO_ON_DEVICE)
+namespace { TestStatistics simulated; }
+void test_clock(u32 initial_hz) { simulated={0,0,initial_hz}; }
+TestStatistics test_statistics() { return simulated; }
+#endif
 u32 hz() {
 #if defined(PICO_ON_DEVICE)
   return clock_get_hz(clk_sys);
 #else
-  return 0;
+  return simulated.hz;
 #endif
 }
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
@@ -92,6 +97,11 @@ bool begin(unsigned mhz,State& s) {
   const bool allowed=mhz==125 || mhz==270;
   if(s.changed || s.restore_attempted || !allowed)return false;
   s.sys=hz();
+#if !defined(PICO_ON_DEVICE)
+  if(simulated.hz && mhz==270 && simulated.hz==125000000) {
+    ++simulated.begins;simulated.hz=270000000;s.changed=true;return true;
+  }
+#endif
   if(compute_clock::active_profile())return mhz==125;
   if(mhz==125 && (!s.sys || s.sys==125000000)) return true;
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
@@ -109,6 +119,9 @@ bool restore(State& s) {
   if(!s.changed)return true;
   if(s.restore_attempted)return false;
   s.restore_attempted=true;
+#if !defined(PICO_ON_DEVICE)
+  if(simulated.hz) { ++simulated.restores;simulated.hz=s.sys;s.changed=false;return true; }
+#endif
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
   const bool ok=transition(s.sys);if(ok)s.changed=false;return ok;
 #else

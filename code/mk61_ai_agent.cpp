@@ -129,7 +129,12 @@ bool Agent::begin_turn() {
     halt("Лимит попыток. Сохранена лучшая проверенная версия.");
     return false;
   }
-  if (!build_prompt(s_, prompt_, sizeof(prompt_), prefix_)) {
+  if (spec_enabled_ && s_.intent == Intent::EXPLAIN) {
+    fail("Эта модель составляет программы. Режим объяснения ей недоступен.");
+    return false;
+  }
+  if (!(spec_enabled_ ? spec_.prompt(s_.task, default_angle_, prompt_, sizeof(prompt_))
+                     : build_prompt(s_, prompt_, sizeof(prompt_), prefix_))) {
     fail("Условие и текущая программа слишком длинные. Сократи описание.");
     return false;
   }
@@ -143,8 +148,22 @@ bool Agent::begin_turn() {
     fail("Контекст модели слишком мал для протокола.");
     return false;
   }
-  const auto status = model_.encode(
-      prompt_, tokens_, std::min(2048U, capacity - reserve), prompt_count_);
+  ModelStatus status = ModelStatus::OK;
+  const unsigned token_capacity = std::min(2047U, capacity - reserve);
+  if (spec_enabled_) {
+    // Newlines are complete BPE pre-token boundaries in this fixed protocol.
+    // Stream them without enlarging the model's SRAM tokenization workspace.
+    prompt_count_=0;
+    for (const char *p=prompt_; *p && status==ModelStatus::OK;) {
+      const char *end=std::strchr(p,'\n'); end=end?end+1:p+std::strlen(p);
+      const unsigned n=unsigned(end-p); char segment[Model::MAX_TEXT+1];
+      if(n>Model::MAX_TEXT){status=ModelStatus::TEXT_LONG;break;}
+      std::memcpy(segment,p,n);segment[n]=0;unsigned used=0;
+      status=model_.encode(segment,tokens_+prompt_count_,token_capacity-prompt_count_,used,false);
+      prompt_count_+=used; p=end;
+    }
+    if(status==ModelStatus::OK)tokens_[prompt_count_++]=30;
+  } else status=model_.encode(prompt_,tokens_,token_capacity,prompt_count_);
   if (status != ModelStatus::OK) {
     s_.state = RunState::NEEDS_INPUT;
     phase_ = Phase::IDLE;
@@ -168,7 +187,7 @@ bool Agent::begin_turn() {
   std::copy(tokens_, tokens_ + cached_count_, cached_prefix_);
   prefilled_ = shared;
   generated_ = 0;
-  generation_limit_ = capacity - prompt_count_;
+  generation_limit_ = capacity - prompt_count_ - (spec_enabled_ ? 4U : 0U);
   grammar_.reset(valid_program(s_.program), s_.intent == Intent::EXPLAIN, false,
                  s_.planning || s_.intent == Intent::EXPLAIN);
   s_.reply[0] = s_.plan[0] = 0;
@@ -179,10 +198,16 @@ bool Agent::begin_turn() {
   generation_intent_ = s_.intent;
   s_.state = RunState::RUNNING;
   phase_ = Phase::PREFILL;
-  if (!append_event(store_, s_, "PROMPT", prompt_)) {
-    fail("Не удалось записать историю задачи.");
-    return false;
-  }
+  const char *part=prompt_;bool first=true;
+  do {
+    char record[1801];unsigned n=unsigned(std::strlen(part));
+    if(n>1800){n=1800;while(n&&(static_cast<unsigned char>(part[n])&0xc0)==0x80)--n;}
+    std::memcpy(record,part,n);record[n]=0;
+    if(!append_event(store_,s_,first?"PROMPT":"PROMPT_PART",record)){
+      fail("Не удалось записать историю задачи.");return false;
+    }
+    first=false;part+=n;
+  } while(*part);
   return checkpoint();
 }
 bool Agent::run_tests(bool trace, unsigned index) {
@@ -220,7 +245,7 @@ void Agent::process_reply() {
     checkpoint();
     return;
   }
-  if (!append_event(store_, s_, "MODEL", s_.reply)) {
+  if (!append_event(store_, s_, spec_enabled_ ? "COMPILE" : "MODEL", s_.reply)) {
     fail("Не удалось сохранить ответ модели.");
     return;
   }
@@ -409,6 +434,12 @@ void Agent::tick(bool (*service)(void *), void *context) {
     std::uint16_t candidate = 0;
     auto allowed = [](void *raw, std::uint16_t id) {
       auto &agent = *static_cast<Agent *>(raw);
+      if (agent.spec_enabled_) {
+        if (!agent.spec_.action()) return id == SpecProtocol::WRITE;
+        char piece[32]; unsigned n = 0;
+        return agent.model_.decode(id,piece,sizeof(piece),n)==ModelStatus::OK &&
+               agent.spec_.allows(id,piece);
+      }
       if (id == agent.model_.config().eos)
         return agent.grammar_.complete();
       if (id == 0 || id == agent.model_.config().bos)
@@ -428,7 +459,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
         model_.forward(token, output, candidate, callback, &pump, arithmetic_,
                        output ? +allowed : nullptr, this);
     const auto elapsed = micros_ ? micros_(clock_context_) - before : 0;
-    if (phase_ == Phase::PREFILL) {
+    if (phase_ == Phase::PREFILL || phase_ == Phase::HEADER) {
       metrics_.prefill_us += elapsed;
       if (status == ModelStatus::OK)
         ++metrics_.prefill_tokens;
@@ -463,7 +494,39 @@ void Agent::tick(bool (*service)(void *), void *context) {
       phase_ = Phase::DECODE;
     return;
   }
+  if (phase_ == Phase::HEADER) {
+    if (forwarded(SpecProtocol::HEADER[header_at_], header_at_ == 3)) {
+      if (++header_at_ == 4) phase_ = Phase::DECODE;
+    }
+    return;
+  }
   if (phase_ == Phase::DECODE) {
+    if (spec_enabled_) {
+      char piece[32]; unsigned n = 0;
+      if (generated_ >= generation_limit_ ||
+          model_.decode(next_,piece,sizeof(piece),n) != ModelStatus::OK ||
+          !spec_.accept(next_,piece)) {
+        fail("Модель не завершила корректную спецификацию программы."); return;
+      }
+      if (spec_.ended()) {
+        Program compiled;
+        if (!append_event(store_,s_,"MODEL_SPEC",s_.reply) || !spec_.compile(compiled)) {
+          fail("Спецификация модели не помещается в программу МК-61."); return;
+        }
+        unsigned used=unsigned(std::snprintf(s_.reply,sizeof(s_.reply),"<write>"));
+        for(unsigned i=0;i<compiled.size;++i)
+          used+=unsigned(std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"%s%02X",i?" ":"",compiled.bytes[i]));
+        std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"</write><run/>");
+        process_reply(); return;
+      }
+      ++generated_; ++metrics_.output_tokens;
+      if (next_ == SpecProtocol::WRITE && generated_ == 1) {
+        header_at_=0; phase_=Phase::HEADER; return;
+      }
+      const unsigned used=unsigned(std::strlen(s_.reply));
+      if(n>=sizeof(s_.reply)-used){fail("Слишком длинная спецификация модели.");return;}
+      std::memcpy(s_.reply+used,piece,n+1); phase_=Phase::ADVANCE; return;
+    }
     if (next_ == model_.config().eos) {
       if (grammar_.complete())
         process_reply();
