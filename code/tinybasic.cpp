@@ -251,6 +251,7 @@ Result dispatch(Request& request){return host_session().apply(request);}
 #endif
 
 #include <type_traits>
+#include "compute_clock.hpp"
 
 #if MK61_ENABLE_TINYBASIC && \
     (!MK61_TINYBASIC_IS_LOADABLE || defined(MK61_BUILD_TINYBASIC_MODULE) || \
@@ -3190,6 +3191,7 @@ static void tinybasic_finish_wait(void) {
 static TinyBasicRunStatus tb_run_program(
     int program_index,
     TinyBasicRunMode mode = TinyBasicRunMode::INTERACTIVE) {
+  compute_clock::Scope computation;
   TinyBasicRunModeScope mode_scope(mode);
   tb_pause_is_final = false;
   tb_key_cancelled = false;

@@ -1,4 +1,5 @@
 #include "ui.hpp"
+#include "compute_clock.hpp"
 #include "menu_model.hpp"
 #include "fonts.hpp"
 #include <cstdio>
@@ -32,7 +33,7 @@ unsigned Ui::count() const {
   case Page::MAIN:
     return menu_model::MAIN_COUNT;
   case Page::SETTINGS:
-    return 10;
+    return 11;
   case Page::FONTS:
     return 3;
   case Page::SYSTEM:
@@ -367,6 +368,9 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
       if (settings_.rtc_ppm < -500)
         settings_.rtc_ppm = 500;
       break;
+    case 10:
+      settings_.compute_profile=compute_clock::step(compute_clock::Platform::PICO, settings_.compute_profile, direction);
+      break;
     }
   if (std::memcmp(&before, &settings_, sizeof(Settings)) != 0)
     ++settings_revision_;
@@ -423,6 +427,11 @@ void Ui::row(unsigned index, char out[64]) const {
       break;
     case 9:
       std::snprintf(out, 64, "RTC ppm: %+d", settings_.rtc_ppm);
+      break;
+    case 10:
+      std::snprintf(out,64,"%s %u MHz%s",text("CPU frequency",M8("Частота процессора")),
+          unsigned(compute_clock::high_mhz(compute_clock::Platform::PICO,settings_.compute_profile)),
+          settings_.compute_profile==compute_clock::active_profile()?"":text(" (restart)",M8(" (перезапуск)")));
       break;
     }
   } else if (page_ == Page::FONTS) {

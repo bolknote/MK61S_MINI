@@ -266,6 +266,10 @@ bool init() {
     if(pending.owner>=0) return false;
     state={};
 #if defined(PICO_ON_DEVICE)
+#if MK61_PICOCALC_MANAGED_CLOCK
+    if(const auto* plan=cosmic_clock::find(clock_get_hz(clk_sys)/1000000))
+        diagnostic_divider256=plan->pio_div256;
+#endif
     if(sm<0) {
         const auto abandon=[]() {
             if(qpi_read_offset!=UINT32_MAX) pio_remove_program(bus,&mk61_psram_qpi_read_program,qpi_read_offset);
@@ -361,6 +365,24 @@ bool init() {
     return state.ready;
 }
 #if MK61_PICOCALC_MANAGED_CLOCK
+bool compute_clock_transition(u32 divider256,void (*change)(void*),void* context) {
+    bool valid=false;for(const auto& plan:cosmic_clock::plans)if(plan.pio_div256==divider256)valid=true;
+    if(!valid || !change)return false;
+    if(sm<0 || !state.ready){change(context);return true;}
+    if(!mutex_try_enter(&bus_mutex,nullptr))return false;
+    const bool idle=!dma_channel_is_busy((unsigned)tx) && !dma_channel_is_busy((unsigned)rx) &&
+        pio_sm_is_tx_fifo_empty(bus,(unsigned)sm) && pio_sm_is_rx_fifo_empty(bus,(unsigned)sm) && gpio_get(CS);
+    if(idle) {
+        pio_sm_set_enabled(bus,(unsigned)sm,false);
+        if(divider256>diagnostic_divider256)
+            pio_sm_set_clkdiv_int_frac(bus,(unsigned)sm,divider256/256,divider256%256);
+        change(context);
+        diagnostic_divider256=divider256;
+        pio_sm_set_clkdiv_int_frac(bus,(unsigned)sm,divider256/256,divider256%256);
+        pio_sm_clkdiv_restart(bus,(unsigned)sm);pio_sm_set_enabled(bus,(unsigned)sm,true);
+    }
+    mutex_exit(&bus_mutex);return idle;
+}
 bool diagnostic_clock_divider(u32 divider256) {
     bool valid=false;for(const auto& plan:cosmic_clock::plans)if(plan.pio_div256==divider256)valid=true;
     if(!valid || sm<0 || !state.ready)return false;

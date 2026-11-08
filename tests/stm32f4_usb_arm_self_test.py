@@ -6,7 +6,7 @@ from unicorn_runtime import Uc
 from unicorn import UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_MEM_READ,UC_HOOK_MEM_WRITE,UC_HOOK_CODE
 from unicorn.arm_const import *
 from run_portable_system_arm_tests import Elf
-p=argparse.ArgumentParser();p.add_argument('elf',type=Path);a=p.parse_args();e=Elf(a.elf)
+p=argparse.ArgumentParser();p.add_argument('elf',type=Path);p.add_argument('--offline-profiles',action='store_true');a=p.parse_args();e=Elf(a.elf)
 u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_MCLASS)
 u.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
 for base,size in [(0x08000000,0x100000),(0x20000000,0x20000),(0x40000000,0x30000),(0x50000000,0x20000),(0xE000E000,0x2000)]:u.mem_map(base,size)
@@ -83,6 +83,18 @@ def call(name,*args):
  return u.reg_read(UC_ARM_REG_R0)
 # Power-up/reset register model; application/middleware calls are mocked.
 put(USB+0x10,0x80000000);put(USB+0x40,0x4F54281A)
+if a.offline_profiles:
+ profiles=[v for n,v in e.symbols.items() if 'compute_clock12_GLOBAL__N_17profileE' in n]
+ assert len(profiles)==1,profiles
+ for profile in (3,4):
+  u.mem_write(profiles[0],bytes([profile]))
+  before=bytes(u.mem_read(USB,0x1000));ahb=get(0x40023834)
+  assert call('USBD_LL_Init',0x20016000)!=0
+  assert call('USBD_LL_Start',0x20016000)!=0
+  assert call('USBD_LL_Stop',0x20016000)==0
+  assert bytes(u.mem_read(USB,0x1000))==before and get(0x40023834)==ahb
+ u.mem_write(profiles[0],b'\0')
+ print('Offline profiles: CDC/MSC LL admission, rejected start/stop, no USB/PHY register writes PASS')
 assert call('USBD_LL_Init',0x20016000)==0
 for ep,kind,mps in [(0,0,64),(0x80,0,64),(1,2,64),(0x81,2,64),(0x82,2,64),(0x83,3,8)]:assert call('USBD_LL_OpenEP',0x20016000,ep,kind,mps)==0
 assert call('USBD_LL_OpenEP',0x20016000,0x8F,2,64)!=0

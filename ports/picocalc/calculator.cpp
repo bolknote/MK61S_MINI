@@ -1,4 +1,5 @@
 #include "calculator.hpp"
+#include "compute_clock.hpp"
 #include "diagnostics.hpp"
 #include "display_symbols.hpp"
 #include <cstring>
@@ -79,6 +80,7 @@ void Calculator::tick(bool script_owns_display,bool park_idle) {
     // presses/releases and a running MK61 program still advance normally.
     if(script_owns_display && idle() && !core_61::is_RUN()) return;
     diagnostics::Scope measure(diagnostics::Point::CORE);
+    compute_clock::Scope compute(!idle() || core_61::is_RUN());
     if(!press_steps_ && !releasing_ && count_) {
         active_ = queue_[read_];
         read_ = (read_ + 1) % QUEUE_SIZE;

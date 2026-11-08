@@ -399,6 +399,14 @@ void test_erased_detection_checks_entire_record(void) {
 } // безымянное пространство имён
 
 int main(void) {
+  for(u8 profile=0;profile<4;++profile) {
+    auto data=fixture(1);data.sound=u8(10 | (profile<<6));
+    u8 record[settings_journal::RECORD_SIZE];
+    settings_journal::encode_uncommitted(data,record);commit(record);
+    settings_journal::RecordData decoded{};
+    assert(settings_journal::decode(record,decoded)==settings_journal::RecordStatus::VALID);
+    assert(decoded.sound==data.sound);
+  }
   test_v4_commit_and_corruption();
   test_ui_font_settings_are_independent_and_bounded();
   test_calculator_font_round_trip();

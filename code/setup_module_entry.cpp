@@ -20,8 +20,10 @@ extern "C" u32 mk61_app_command(u32 command, u32 a, u32 b, u32 c, u32) {
   using loadable_module::Command;
   switch((Command) command) {
     case Command::SETUP_HARDWARE: return setup_ui::hardware();
+    case Command::SETUP_SETTINGS: return setup_ui::settings();
     case Command::SETUP_DATE_TIME: return setup_ui::date_time();
     case Command::SETUP_CALIBRATION: return setup_ui::calibration();
+    case Command::SETUP_COMPUTE_CLOCK: return setup_ui::compute_frequency();
     case Command::SETUP_FONT_STEP: setup_ui::step_font((i8) a); return 0;
     case Command::SETUP_FONT: return setup_ui::font();
     case Command::SETUP_PREVIEW:

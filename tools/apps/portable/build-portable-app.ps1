@@ -60,7 +60,7 @@ $Systems = @{
     }
     'setup' = @{
         Name = 'SETUP'; Macro = 'SETUP'; Magic = $null
-        Sources = @('setup_ui.cpp', 'setup_module_entry.cpp',
+        Sources = @('setup_ui.cpp', 'setup_settings_ui.cpp', 'setup_module_entry.cpp',
             'setup_font_compiler.cpp', 'fmk_font.cpp', 'fmk_prepare.cpp',
             'prepared_font.cpp')
     }
@@ -264,7 +264,8 @@ function Assert-SizeBudget {
         if ($System -eq 'focal') { $appLimit = 15100; $memoryLimit = 20000 }
         elseif ($System -eq 'tinybasic') { $appLimit = 13000; $memoryLimit = 17500 }
     } else {
-        if ($System -eq 'setup') { $appLimit = 10000; $memoryLimit = 20480 }
+        # Full settings UI: authorized 20-KiB file ceiling, unchanged RAM cap.
+        if ($System -eq 'setup') { $appLimit = 20480; $memoryLimit = 20480 }
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
         elseif ($System -eq 'explorer') {
             # Measured graphics growth; the hard 20480-byte loader cap is unchanged.

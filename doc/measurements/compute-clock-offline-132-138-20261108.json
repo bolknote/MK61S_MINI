@@ -1,0 +1,302 @@
+{
+  "state": "COMPLETE",
+  "device": "AEB505B6E0067623",
+  "usb_serial": "2068336B4731",
+  "initial_build": "CFD23EE8",
+  "diagnostic_build": "E4766FED",
+  "diagnostic_sha256": "310073785c0be0387dca1ede8a8384751cafe65dab56eac0a2d4c510840d5156",
+  "restore_image": "/Users/bolk/Projects/MK61S_MINI/.build/compute-clock-20261107/menu-inline/resident.bin",
+  "usb_during_boost": "Serial.end, OTG_FS IRQ disabled, AHB2 OTGFS gate off; OS enumeration disappears. USB power cable stays connected. Results transferred only at96MHz.",
+  "clock_tree": {
+    "HSE_MHz": 25,
+    "PLLM": 25,
+    "PLLN": "2 * CPU_MHz",
+    "PLLP": 2,
+    "PLLQ": 6,
+    "AHB_div": 1,
+    "APB1_div": 4,
+    "APB2_div": 2,
+    "SPI_div": 4,
+    "flash_wait_states": 5,
+    "voltage_scale": 1
+  },
+  "chess": "First search after MCU reset, unchanged installed Turochamp, opening book off, 420nodes/e2e3/full8rankgolden. Two repeats per stage96/132/138/96. MCU KEYWAIT interval excludes PLL switching and USB reconnect.",
+  "caveat": "APB/SPI frequency scales with CPU. Both high frequencies exceed STM32F411 rated100MHz; limited tests cannot qualify all temperatures/voltages/devices. No USB operation claimed at132/138.",
+  "correctness": {
+    "96": {
+      "runs": 4,
+      "pass": true,
+      "formatter_errors": 0,
+      "copy_errors": 0,
+      "atomic_formatter_errors": 0,
+      "max_service_gap_us": 10740
+    },
+    "120": {
+      "runs": 2,
+      "pass": true,
+      "formatter_errors": 0,
+      "copy_errors": 0,
+      "atomic_formatter_errors": 0,
+      "max_service_gap_us": 9258
+    },
+    "132": {
+      "runs": 2,
+      "pass": true,
+      "formatter_errors": 0,
+      "copy_errors": 0,
+      "atomic_formatter_errors": 0,
+      "max_service_gap_us": 9696
+    },
+    "138": {
+      "runs": 2,
+      "pass": true,
+      "formatter_errors": 0,
+      "copy_errors": 0,
+      "atomic_formatter_errors": 0,
+      "max_service_gap_us": 9022
+    }
+  },
+  "chess_rows": [
+    {
+      "stage": 0,
+      "mhz": 96,
+      "repeat": 0,
+      "seconds": 70.936774,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 70936774,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 0,
+      "mhz": 96,
+      "repeat": 1,
+      "seconds": 76.124822,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 76124822,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 1,
+      "mhz": 132,
+      "repeat": 0,
+      "seconds": 62.611114,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 62611114,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 1,
+      "mhz": 132,
+      "repeat": 1,
+      "seconds": 74.562823,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 74562823,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 2,
+      "mhz": 138,
+      "repeat": 0,
+      "seconds": 60.682436,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 60682436,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 2,
+      "mhz": 138,
+      "repeat": 1,
+      "seconds": 64.994044,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 64994044,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 3,
+      "mhz": 96,
+      "repeat": 0,
+      "seconds": 76.446565,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 76446565,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    },
+    {
+      "stage": 3,
+      "mhz": 96,
+      "repeat": 1,
+      "seconds": 70.136971,
+      "nodes": 420,
+      "move": "e2e3",
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "usb_disconnected": true,
+      "before": {
+        "sequence": 0,
+        "us": 0,
+        "key": -1,
+        "screen_begin": 0,
+        "screen_end": 0
+      },
+      "after": {
+        "sequence": 8,
+        "us": 70136971,
+        "key": 37,
+        "screen_begin": 0,
+        "screen_end": 0
+      }
+    }
+  ],
+  "chess_summary": {
+    "96": {
+      "samples_seconds": [
+        70.936774,
+        76.124822,
+        76.446565,
+        70.136971
+      ],
+      "median_seconds": 73.530798,
+      "elapsed_reduction_percent": 0.0,
+      "speedup": 1.0
+    },
+    "132": {
+      "samples_seconds": [
+        62.611114,
+        74.562823
+      ],
+      "median_seconds": 68.5869685,
+      "elapsed_reduction_percent": 6.723481363550555,
+      "speedup": 1.0720811782197373
+    },
+    "138": {
+      "samples_seconds": [
+        60.682436,
+        64.994044
+      ],
+      "median_seconds": 62.83824,
+      "elapsed_reduction_percent": 14.541604730034352,
+      "speedup": 1.1701600490402024
+    }
+  },
+  "excluded_attempts": {
+    "chess": "collector missing open_text_start after reconnect",
+    "chess-v2": "repeat menu book state timeout; no completed series",
+    "chess-cold": "late key-up bytes crossed USB teardown and polluted terminal",
+    "chess-final": "PUT_BUSY because preceding failed run left APP active"
+  },
+  "final": {
+    "build": "CFD23EE8",
+    "profile": 0,
+    "cpu_mhz": 96,
+    "full_flash_readback": true,
+    "running_firmware_crc": "valid",
+    "original_files_sha256_verified": 57,
+    "crash": "none",
+    "mpu_layout": "ok",
+    "calculator_stopped": true,
+    "diagnostic_files_removed": true
+  }
+}

@@ -1,0 +1,347 @@
+--- a/code/usb_screen.cpp
++++ b/code/usb_screen.cpp
+@@ -1,4 +1,6 @@
+ #include "usb_screen.hpp"
++#include "usb_crc_probe.hpp"
++#include "compute_clock.hpp"
+-
++
+ #if MK61_ENABLE_USB_SCREEN
+-
++
+@@ -297,6 +299,12 @@
+       restorePhysicalAndWait(Event::CONNECTION_LOST);
+       break;
+     case MessageType::PING:
++      if(packet.payload_size==2 && (packet.payload[1]==0xD3 || packet.payload[1]==0xD4)) {
++        u32 words[3]={0x55435231,packet.payload[0],0};
++        if(packet.payload[1]==0xD3)words[0]=usb_crc_probe::control(0xC00C,packet.payload[0]);
++        else words[2]=usb_crc_probe::control(0xC00B,packet.payload[0]);
++        queueResponse((MessageType)0x26,(const u8*)words,sizeof(words));break;
++      }
+       if(packet.payload_size == usb_screen_protocol::PING_PAYLOAD_SIZE) {
+ #if MK61_KEY_WAIT_BENCHMARK
+         if(packet.payload[0]=='K' && packet.payload[1]=='W')
+--- a/code/stm32f4_usb_device.cpp
++++ b/code/stm32f4_usb_device.cpp
+@@ -2,6 +2,7 @@
+ #if MK61_USB_DIRECT_SUPPORTED && defined(MK61_USB_BUILD_BRIDGE)
+ #include <stm32f4xx_ll_usb.h>
+ #include <cstring>
++#include "usb_crc_probe.hpp"
+ extern "C" {
+ #include <usbd_core.h>
+ #include <usbd_if.h>
+@@ -54,7 +55,7 @@
+ static USBD_StatusTypeDef status(HAL_StatusTypeDef value) {
+   return value == HAL_OK ? USBD_OK : USBD_FAIL;
+ }
+-static void tx_empty(unsigned n) {
++static void tx_empty_original(unsigned n) {
+   Endpoint& ep = in[n];
+   while(ep.count < ep.length) {
+     const uint32_t remaining = ep.length - ep.count;
+@@ -69,6 +70,68 @@
+     ep.cursor += bytes; ep.count += bytes;
+   }
+   if(ep.count == ep.length) regs()->DIEPEMPMSK &= ~(1U << n);
++}
++static void tx_empty_manual(unsigned n) {
++  Endpoint& ep = in[n];
++  while(ep.count < ep.length) {
++    const uint32_t remaining = ep.length - ep.count;
++    const uint32_t bytes = remaining > ep.maxpacket ? ep.maxpacket : remaining;
++    if(ep.maxpacket == 0 || (input(n)->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) < (bytes+3U)/4U) break;
++    for(uint32_t at = 0; at < bytes; at += 4) {
++      uint32_t word = 0;
++      const uint32_t part = bytes-at < 4 ? bytes-at : 4;
++      for(unsigned i=0;i<part;++i)word|=uint32_t(ep.cursor[at+i])<<(8*i);
++      fifo(n) = word;
++    }
++    ep.cursor += bytes; ep.count += bytes;
++  }
++  if(ep.count == ep.length) regs()->DIEPEMPMSK &= ~(1U << n);
++}
++static void tx_empty_injected(unsigned n) {
++  Endpoint& ep = in[n];
++  while(ep.count < ep.length) {
++    const uint32_t remaining = ep.length - ep.count;
++    const uint32_t bytes = remaining > ep.maxpacket ? ep.maxpacket : remaining;
++    if(ep.maxpacket == 0 || (input(n)->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) < (bytes+3U)/4U) break;
++    for(uint32_t at = 0; at < bytes; at += 4) {
++      uint32_t word = 0;
++      const uint32_t part = bytes-at < 4 ? bytes-at : 4;
++      std::memcpy(&word, ep.cursor+at, part); // never read beyond an unaligned short packet.
++      fifo(n) = word;
++      (void)input(n)->DIEPCTL; // Deliberate ES0287 2.12.1 negative control.
++    }
++    ep.cursor += bytes; ep.count += bytes;
++  }
++  if(ep.count == ep.length) regs()->DIEPEMPMSK &= ~(1U << n);
++}
++static void tx_empty_reference(unsigned n, bool bytewise) {
++  InterruptGuard lock;
++  Endpoint& ep=in[n];
++  uint32_t available=input(n)->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV;
++  while(ep.count<ep.length && ep.maxpacket) {
++    const uint32_t remaining=ep.length-ep.count;
++    const uint32_t bytes=remaining>ep.maxpacket?ep.maxpacket:remaining;
++    const uint32_t words=(bytes+3U)/4U;
++    if(available<words)break;
++    for(uint32_t at=0;at<bytes;at+=4) {
++      uint32_t word=0;const unsigned part=bytes-at<4?bytes-at:4;
++      if(bytewise){for(unsigned i=0;i<part;++i)word|=uint32_t(ep.cursor[at+i])<<(8*i);}
++      else std::memcpy(&word,ep.cursor+at,part);
++      fifo(n)=word;
++    }
++    ep.cursor+=bytes;ep.count+=bytes;available-=words;
++  }
++  if(ep.count==ep.length)regs()->DIEPEMPMSK &= ~(1U<<n);
++}
++static void tx_empty(unsigned n) {
++  switch(usb_crc_probe::mode&15U) {
++    case 1:tx_empty_reference(n,false);break;
++    case 2:{InterruptGuard lock;tx_empty_original(n);break;}
++    case 3:case 8:tx_empty_reference(n,true);break;
++    case 4:tx_empty_manual(n);break;
++    case 9:tx_empty_injected(n);break;
++    default:tx_empty_original(n);break;
++  }
+ }
+ static void rx_packet(unsigned n, unsigned kind, unsigned bytes) {
+   Endpoint* ep = n < ENDPOINTS ? &out[n] : nullptr;
+--- a/code/mk61_usb_serial.cpp
++++ b/code/mk61_usb_serial.cpp
+@@ -1,4 +1,5 @@
+ #include "config.h"
++#include "usb_crc_probe.hpp"
+ #if MK61_NARROW_USB_SERIAL_SUPPORTED
+ extern "C" {
+ #include <usbd_cdc_if.h>
+@@ -22,7 +23,10 @@
+     size_t portion = static_cast<size_t>(CDC_TransmitQueue_WriteSize(&TransmitQueue));
+     if(portion > remaining) portion = remaining;
+     if(portion) {
++      const uint32_t saved=__get_PRIMASK();
++      if((usb_crc_probe::mode&15U)==5)__disable_irq();
+       CDC_TransmitQueue_Enqueue(&TransmitQueue, bytes, static_cast<uint32_t>(portion));
++      if((usb_crc_probe::mode&15U)==5)__set_PRIMASK(saved);
+       bytes += portion;
+       remaining -= portion;
+       CDC_continue_transmit();
+--- a/code/stm32f4_cdc_queue.c
++++ b/code/stm32f4_cdc_queue.c
+@@ -39,6 +39,7 @@
+ #ifdef USBD_USE_CDC
+-
++
+ #include "cdc_queue.h"
++extern unsigned usb_crc_mode_c(void);
+-
++
+ // Fixed CDC SPSC queues. Keep write-before-length snapshots in the RX reader:
+ // the producer can wrap while the foreground consumer is reading.
+@@ -72,6 +73,11 @@
+ void CDC_TransmitQueue_Enqueue(CDC_TransmitQueue_TypeDef *queue,
+                                const uint8_t *buffer, uint32_t size)
+ {
++  if((usb_crc_mode_c()&15U)==6) {
++    unsigned at=queue->write;
++    for(unsigned i=0;i<size;++i){queue->buffer[at]=buffer[i];at=(at+1)%CDC_TRANSMIT_QUEUE_BUFFER_SIZE;}
++    queue->write=(uint16_t)at;return;
++  }
+   uint32_t sizeToEnd = CDC_TRANSMIT_QUEUE_BUFFER_SIZE - queue->write;
+   if (sizeToEnd > size) {
+     memcpy(&queue->buffer[queue->write], &buffer[0], size);
+@@ -92,6 +98,7 @@
+   } else {
+     *size = CDC_TRANSMIT_QUEUE_BUFFER_SIZE - queue->read;
+   }
++  if(((usb_crc_mode_c()&15U)==7 || (usb_crc_mode_c()&15U)==8) && *size>64)*size=64;
+   queue->reserved = *size;
+   return &queue->buffer[queue->read];
+ }
+--- a/code/stm32f4_runtime.cpp
++++ b/code/stm32f4_runtime.cpp
+@@ -2,6 +2,7 @@
+ #include <Arduino.h>
+ #include "stm32f4_gpio.hpp"
+ #include "compute_clock.hpp"
++#include "usb_crc_probe.hpp"
+ extern "C" void osSystickHandler(void);
+ extern "C" {
+ uint32_t SystemCoreClock=16000000;
+@@ -133,6 +134,8 @@
+   SystemClock_Config();return true;
+ }
+ bool set_fast(bool fast) {
++  if((usb_crc_probe::mode & 0x30U)==0x10U)fast=false;
++  if((usb_crc_probe::mode & 0x30U)==0x20U)fast=true;
+   if(!clock_profile || fast==clock_fast)return true;
+   const uint32_t mask=__get_PRIMASK();__disable_irq();
+   const TickStamp stamp=tick_stamp();SysTick->CTRL=0;
+--- a/code/loadable_system_api.cpp
++++ b/code/loadable_system_api.cpp
+@@ -1,3 +1,5 @@
++#include "compute_gap_probe.hpp"
++#include "usb_crc_probe.hpp"
+ #include "compact_format.hpp"
+ #include "compute_clock.hpp"
+ #include "basic_graphics.hpp"
+@@ -279,7 +281,9 @@
+       return Serial.write((const uint8_t*)payload,a)==a;
+ #endif
+     case MK61_SERVICE_COMPUTE:
++      if(a >= 0xC006 && a <= 0xC00E)return payload?0:usb_crc_probe::control(a,b,c);
+       if(c || payload)return 0;
++      if(a >= 0xC001 && a <= 0xC005)return compute_gap_probe::service(a,b);
+       return compute_clock::service(a,b);
+     case MK61_SERVICE_CAPABILITIES:
+       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES | MK61_SERVICE_CAP_RESOURCES |
+--- a/code/dwt_profiler.hpp
++++ b/code/dwt_profiler.hpp
+@@ -433,7 +433,11 @@
+ #define MK61_DWT_JOIN_INNER(left, right) left##right
+ #define MK61_DWT_JOIN(left, right) MK61_DWT_JOIN_INNER(left, right)
+-
++
+-#if MK61_DWT_SERVICE_GAPS_SUPPORTED
++#include "compute_gap_probe.hpp"
++#if 1 /* finite compute HIL, wall-clock microseconds */
++  #define MK61_SERVICE_GAP(service) compute_gap_probe::note(compute_gap_probe::Service::service)
++  #define MK61_KEYBOARD_ROW_GAP(row) compute_gap_probe::row(row)
++#elif MK61_DWT_SERVICE_GAPS_SUPPORTED
+   #define MK61_SERVICE_GAP(service) \
+     dwt_profiler::note_service(dwt_profiler::Service::service)
+   #define MK61_KEYBOARD_ROW_GAP(row) dwt_profiler::note_keyboard_row(row)
+--- /dev/null
++++ b/code/compute_gap_probe.cpp
+@@ -0,0 +1,38 @@
++#include "compute_gap_probe.hpp"
++#include <Arduino.h>
++namespace compute_gap_probe {
++namespace {
++struct Gap {uint32_t last, maximum, samples; bool seen;};
++Gap gaps[8]{};
++bool collecting;
++void at(Service service, uint32_t now) {
++  auto& gap = gaps[unsigned(service)];
++  if(gap.seen) {
++    const uint32_t elapsed = now - gap.last;
++    if(elapsed > gap.maximum) gap.maximum = elapsed;
++    ++gap.samples;
++  }
++  gap.last = now;
++  gap.seen = true;
++}
++}
++void note(Service service) {if(collecting) at(service, micros());}
++void row(uint8_t index) {
++  if(!collecting || index >= 5) return;
++  const uint32_t now = micros();
++  at(Service::KEYBOARD_SAMPLE, now);
++  at(Service(unsigned(Service::KEYBOARD_ROW0) + index), now);
++}
++uint32_t service(uint32_t operation, uint32_t index) {
++  switch(operation) {
++    case 0xC001: return 0x47415031;
++    case 0xC002:
++      for(auto& gap : gaps) gap = {};
++      collecting = true; return 1;
++    case 0xC003: collecting = false; return 1;
++    case 0xC004: return index < 8 ? gaps[index].maximum : 0;
++    case 0xC005: return index < 8 ? gaps[index].samples : 0;
++    default: return 0;
++  }
++}
++}
+--- /dev/null
++++ b/code/compute_gap_probe.hpp
+@@ -0,0 +1,14 @@
++#ifndef MK61_COMPUTE_GAP_PROBE_HPP
++#define MK61_COMPUTE_GAP_PROBE_HPP
++#include <stdint.h>
++// Diagnostic source-copy instrumentation; never linked in a release build.
++namespace compute_gap_probe {
++enum class Service : uint8_t {
++  KEYBOARD_POLL, KEYBOARD_SAMPLE, KEYBOARD_ROW0, KEYBOARD_ROW1,
++  KEYBOARD_ROW2, KEYBOARD_ROW3, KEYBOARD_ROW4, USB_SCREEN
++};
++void note(Service);
++void row(uint8_t);
++uint32_t service(uint32_t operation, uint32_t index);
++}
++#endif
+--- /dev/null
++++ b/code/usb_crc_probe.cpp
+@@ -0,0 +1,58 @@
++#include "usb_crc_probe.hpp"
++#include "compute_clock.hpp"
++#include "compact_format.hpp"
++#include "usb_screen.hpp"
++#include <Arduino.h>
++namespace usb_crc_probe {
++volatile uint32_t mode;
++static uint32_t requested;
++static volatile uint32_t results[128];
++static bool restore_usb_irq;
++uint32_t control(uint32_t operation, uint32_t index, uint32_t value) {
++  switch(operation) {
++    case 0xC006:
++      for(auto& result:results)result=0xFFFFFFFFU;
++      if(requested&0xC0U)usb_screen::cancel();
++      restore_usb_irq=(requested&0x80U) && NVIC_GetEnableIRQ(OTG_FS_IRQn);
++      if(restore_usb_irq)NVIC_DisableIRQ(OTG_FS_IRQn);
++      mode=requested;
++      compute_clock::backend::set_fast((mode & 0x20U)!=0);
++      return 0x55435231;
++    case 0xC007: return mode;
++    case 0xC008: return DBGMCU->IDCODE;
++    case 0xC009:
++      if(index>=128)return 0;
++      results[index]=value;return 1;
++    case 0xC00A:
++      mode=(mode&15U)|0x10U;
++      compute_clock::backend::set_fast(false);
++      if(restore_usb_irq){restore_usb_irq=false;NVIC_EnableIRQ(OTG_FS_IRQn);}
++      return 1;
++    case 0xC00B: return index<128?results[index]:0;
++    case 0xC00C:
++      if((index & 15U)>9 || (index & ~0xFFU) || (index & 0x30U)==0x30U)return 0;
++      requested=index;mode=(index&15U)|0x10U;
++      compute_clock::backend::set_fast(false);return 0x55435231;
++    case 0xC00D:return requested;
++    case 0xC00E: {
++      const uint32_t saved=__get_PRIMASK();
++      if(index)__disable_irq();
++      const uint32_t began=DWT->CYCCNT;
++      uint32_t errors=0;
++      for(unsigned round=0;round<8;++round) {
++        char text[16];
++        const int count=compact_format::snprintf(text,sizeof(text),"%lu",1430475313UL);
++        const char expected[]="1430475313";
++        unsigned bad=count!=10;
++        for(unsigned i=0;i<sizeof(expected);++i)if(text[i]!=expected[i])bad=1;
++        errors+=bad;
++      }
++      results[index?100:101]=DWT->CYCCNT-began;
++      __set_PRIMASK(saved);
++      return errors;
++    }
++    default: return 0;
++  }
++}
++}
++extern "C" unsigned usb_crc_mode_c(){return usb_crc_probe::mode;}
+--- /dev/null
++++ b/code/usb_crc_probe.hpp
+@@ -0,0 +1,9 @@
++#ifndef MK61_USB_CRC_PROBE_HPP
++#define MK61_USB_CRC_PROBE_HPP
++#include <stdint.h>
++// Diagnostic source-copy only. All paths coexist in one ELF for matched tests.
++namespace usb_crc_probe {
++extern volatile uint32_t mode;
++uint32_t control(uint32_t operation, uint32_t index, uint32_t value=0);
++}
++#endif

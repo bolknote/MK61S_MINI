@@ -1,4 +1,5 @@
 #include "config.h"
+#include "compute_clock.hpp"
 #ifndef MK61_LANGUAGE_VM_CACHE_MIXED
 #define MK61_LANGUAGE_VM_CACHE_MIXED 0
 #endif
@@ -812,6 +813,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
 loadable_module::RuntimeStatus invoke_resident(Language language, loadable_module::Command command,
                                                uint32_t a, uint32_t b, uint32_t& result) {
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::VM_INVOKE);
+  compute_clock::Scope computation;
   uint16_t edit_id = 0xFFFF;
   uint32_t edit_position = 0;
   const auto status =

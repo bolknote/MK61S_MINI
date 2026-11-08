@@ -134,6 +134,13 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     u32 sequence = 0;
     require(decode_settings(encoded, decoded, sequence) && sequence == 0xFEDCBA98, "settings roundtrip");
     require(std::memcmp(&settings, &decoded, sizeof(settings)) == 0, "settings payload");
+    for(u8 profile=0;profile<3;++profile) {
+        settings.compute_profile=profile;encode_settings(settings,1,encoded);
+        require(decode_settings(encoded,decoded,sequence) && decoded.compute_profile==profile,"compute profile roundtrip");
+    }
+    settings.compute_profile=3;encode_settings(settings,1,encoded);
+    require(!decode_settings(encoded,decoded,sequence),"invalid compute profile accepted");
+    settings.compute_profile=0;encode_settings(settings,0xFEDCBA98,encoded);
     for(unsigned at = 0; at < 64; ++at) {
         encoded[at] ^= 1;
         require(!decode_settings(encoded, decoded, sequence), "torn or corrupt settings accepted");
@@ -177,7 +184,7 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     }
     ui.input(0xB6, calc); ui.input(0xB6, calc); ui.input('\n', calc);
     require(ui.page() == Page::SETTINGS, "Settings action");
-    require(ui.count() == 10, "Pico settings omit the periodic idle beep");
+    require(ui.count() == 11, "Pico settings include compute clock and omit the periodic idle beep");
     ui.input(0xB7, calc);
     require(ui.settings().key_sound == 1, "right enables key sound");
     ui.row(0, label);

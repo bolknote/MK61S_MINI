@@ -1,6 +1,7 @@
 #include "cosmic_clock.hpp"
 #include "cosmic_clock_plan.hpp"
 #include "audio_stream.hpp"
+#include "compute_clock.hpp"
 #include "io_worker.hpp"
 #include "psram.hpp"
 #include "script.hpp"
@@ -150,13 +151,26 @@ struct AudioBackend {
     [[noreturn]] void reboot(){reset_to125();}
 };
 }
-bool audio_begin(){if(get_core_num()!=0)return false;AudioBackend backend;return audio_clock.begin(backend);}
-void audio_end(){if(get_core_num()!=0)return;AudioBackend backend;audio_clock.end(backend);}
+bool audio_begin(){
+    if(get_core_num()!=0)return false;
+    if(compute_clock::active_profile()) {
+        audio_stream::stop_key_click();compute_clock::audio_floor(true);
+        if(clock_get_hz(clk_sys)>=200000000)return true;
+        compute_clock::audio_floor(false);return false;
+    }
+    AudioBackend backend;return audio_clock.begin(backend);
+}
+void audio_end(){
+    if(get_core_num()!=0)return;
+    if(compute_clock::active_profile()){compute_clock::audio_floor(false);return;}
+    AudioBackend backend;audio_clock.end(backend);
+}
 #endif
 bool command(const char* args,Writer write,void* context) {
     if(!write)return false;
     args=terminal_core::skip_spaces(args);
     if(!std::strncmp(args,"echo ",5))return usb_probe(args+5,write,context);
+    if(compute_clock::active_profile() && std::strcmp(args,"status"))return false;
 #if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
     // Production clock ownership belongs to the audio stream. A diagnostic
     // lease must never reset an interactive game after105 seconds.

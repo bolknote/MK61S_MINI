@@ -1,4 +1,5 @@
 #include "dwt_profiler.hpp"
+#include "compute_clock.hpp"
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 #include "loadable_module_format.hpp"
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
@@ -253,7 +254,9 @@ bool available(void) { return dwt_available; }
 bool running(void) { return collection_active; }
 
 bool start(void) {
-  if(!dwt_available) return false;
+  // Raw CYCCNT totals have one frequency. Do not report a mixed-divider run
+  // as if every cycle were measured at the stock boot frequency.
+  if(!dwt_available || compute_clock::active_profile()) return false;
   reset();
   collection_active = true;
   return true;

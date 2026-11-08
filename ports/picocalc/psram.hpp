@@ -15,6 +15,9 @@ struct Statistics {
 bool init();
 #if MK61_PICOCALC_MANAGED_CLOCK
 bool diagnostic_clock_divider(u32 divider256);
+// Used inside flash_safe_execute: core1 is parked, IRQs are masked. The bus
+// mutex/DMA guard spans both the PIO divider and the CPU divider update.
+bool compute_clock_transition(u32 divider256,void (*change)(void*),void* context);
 u32 diagnostic_clock_divider256(); // Read the actual PIO register.
 #endif
 bool ready();

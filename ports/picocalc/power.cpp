@@ -2,6 +2,7 @@
 #include "io_worker.hpp"
 #include "clock.hpp"
 #include "cosmic_clock.hpp"
+#include "compute_clock.hpp"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
 #include "hardware/pll.h"
@@ -118,7 +119,9 @@ void SleepClocks::leave() {
   if (!usb_) {
     pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
              PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
-    set_sys_clock_hz(sys_hz_, true);
+    if(compute_clock::active_profile()) {
+      if(!cosmic_clock::restore_compute_clock(sys_hz_))panic("compute clock restore");
+    } else set_sys_clock_hz(sys_hz_, true);
     clock_configure_undivided(clk_peri, 0,
 #if MK61_PICOCALC_MANAGED_CLOCK
         CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB, peri_hz_);

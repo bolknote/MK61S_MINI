@@ -13,6 +13,24 @@ extern const mk61_app_api* mk61_api;
 extern uint32_t mk61_app_image_crc;
 extern uint32_t mk61_app_current_kind;
 
+/* CPU work hint, optional on ABI6. Blocking waits may lower the frequency;
+ * callers keep normal timers/frame pacing. Tokens must end in reverse order
+ * and remain valid only for the current logical APP/flow invocation. */
+static inline uint32_t mk61_app_compute_begin(const mk61_app_services* services) {
+  if(!services || !services->call ||
+      services->call(MK61_SERVICE_COMPUTE,MK61_COMPUTE_PROBE,0,0,NULL)!=MK61_COMPUTE_MAGIC)return 0;
+  return services->call(MK61_SERVICE_COMPUTE,MK61_COMPUTE_BEGIN,0,0,NULL);
+}
+static inline uint32_t mk61_app_compute_end(const mk61_app_services* services,uint32_t token) {
+  return token && services && services->call ?
+      services->call(MK61_SERVICE_COMPUTE,MK61_COMPUTE_END,token,0,NULL):0;
+}
+static inline uint32_t mk61_app_compute_hz(const mk61_app_services* services) {
+  if(!services || !services->call ||
+      services->call(MK61_SERVICE_COMPUTE,MK61_COMPUTE_PROBE,0,0,NULL)!=MK61_COMPUTE_MAGIC)return 0;
+  return services->call(MK61_SERVICE_COMPUTE,MK61_COMPUTE_HZ,0,0,NULL);
+}
+
 /* Query MK61_SERVICE_CAP_FORMAT first. Compact firmware provides integer,
  * string and character formatting; floating conversions are not promised. */
 static inline int mk61_app_snprintf(const mk61_app_services* services,

@@ -80,7 +80,7 @@ $budgetFunction = $budgetAst.Find({ param($node)
 }, $true)
 . ([scriptblock]::Create($budgetFunction.Extent.Text))
 $budgetCases = @(
-    @{ System = 'setup'; app_bytes = 10000; memory_bytes = 20480 },
+    @{ System = 'setup'; app_bytes = 20480; memory_bytes = 20480 },
     @{ System = 'focal'; app_bytes = 13500; memory_bytes = 17000 },
     @{ System = 'explorer'; app_bytes = 10000; memory_bytes = 14000 },
     @{ System = 'explorer'; TextOnly = $true; app_bytes = 8000; memory_bytes = 10000 },

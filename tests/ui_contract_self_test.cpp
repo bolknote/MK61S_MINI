@@ -11,6 +11,8 @@
 #include "mk8_literal.hpp"
 #include "keyboard_core.hpp"
 #include "keyboard_layout.hpp"
+#include "settings_menu_model.hpp"
+#include "compute_clock_plan.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -136,26 +138,11 @@ constexpr i32 KEY_SHG_LEFT_PRESS = keyboard_layout::ACTIVE.shg_left;
 constexpr i32 KEY_SHG_RIGHT_PRESS = keyboard_layout::ACTIVE.shg_right;
 constexpr i32 KEY_OK_PRESS = keyboard_layout::ACTIVE.ok;
 constexpr i32 KEY_ESC_PRESS = keyboard_layout::ACTIVE.esc;
-namespace library_mk61 { int* SETTINGS_MENU[1] = {}; }
-class class_menu {
-public:
-  int** puncts = library_mk61::SETTINGS_MENU;
-  u8 active_punct = library_mk61::SETTINGS_DISPLAY_ROWS;
-  void draw() { calls.emplace_back("draw-menu"); }
-  bool handle_settings_adjustment(i32 key);
-};
-void CycleSoundVolumeUp() { assert(false); }
-void StepSoundVolume(i8) { assert(false); }
-void TurnSpeed() { assert(false); }
-void StepSpeedMode(i8) { assert(false); }
-void TurnProgramMemory() { assert(false); }
-void StepProgramMemoryMode(i8) { assert(false); }
-void TurnRandomMode() { assert(false); }
-void StepRandomMode(i8) { assert(false); }
-void TurnLanguage() { assert(false); }
-void TurnIdleSignal() { assert(false); }
-void FontSetup() { calls.emplace_back("open-font"); }
 namespace setup_ui {
+bool font() { calls.emplace_back("open-font");return false; }
+bool date_time() {assert(false);return false;}
+bool calibration() {assert(false);return false;}
+bool compute_frequency() {assert(false);return false;}
 void step_font(i8 delta) {
   assert(delta == -1 || delta == 1);
   calls.emplace_back(delta > 0 ? "font-next" : "font-previous");
@@ -164,31 +151,36 @@ void step_font(i8 delta) {
 #include "ui_settings_adjustment.inc"
 
 static void test_font_settings_key_dispatch() {
-  class_menu menu;
+  const mk61_setup_settings state{};
+  const bool old_ui_fonts=ui_fonts_available;
+  ui_fonts_available=true;
   calls.clear();
   for(i32 key : {KEY_LEFT_PRESS, KEY_RIGHT_PRESS, KEY_ESC_PRESS, -1,
                  KEY_SHG_LEFT_PRESS | keyboard_core::RELEASE_MASK,
                  KEY_SHG_RIGHT_PRESS | keyboard_core::RELEASE_MASK}) {
-    assert(!menu.handle_settings_adjustment(key));
+    assert(!settings_action(settings_menu::FONTS,state,key));
     assert(calls.empty());
-    assert(menu.active_punct == library_mk61::SETTINGS_DISPLAY_ROWS);
   }
   // UC1609 has a Fonts submenu: neither shifted arrow may silently adjust
   // the separate calculator profile from its parent menu entry.
-  assert(!menu.handle_settings_adjustment(KEY_SHG_RIGHT_PRESS));
+  assert(!settings_action(settings_menu::FONTS,state,KEY_SHG_RIGHT_PRESS));
   assert(calls.empty());
-  assert(!menu.handle_settings_adjustment(KEY_SHG_LEFT_PRESS));
+  assert(!settings_action(settings_menu::FONTS,state,KEY_SHG_LEFT_PRESS));
   assert(calls.empty());
-  assert(menu.handle_settings_adjustment(KEY_OK_PRESS));
+  assert(settings_action(settings_menu::FONTS,state,KEY_OK_PRESS));
   assert((calls == std::vector<std::string>{"open-font"}));
 
   calls.clear();
-  menu.puncts = nullptr;
   for(i32 key : {KEY_LEFT_PRESS, KEY_RIGHT_PRESS, KEY_SHG_LEFT_PRESS,
                  KEY_SHG_RIGHT_PRESS, KEY_OK_PRESS}) {
-    assert(!menu.handle_settings_adjustment(key));
+    assert(!settings_action(settings_menu::END,state,key));
     assert(calls.empty());
   }
+  ui_fonts_available=false;
+  assert(settings_action(settings_menu::FONTS,state,KEY_SHG_RIGHT_PRESS));
+  assert(settings_action(settings_menu::FONTS,state,KEY_SHG_LEFT_PRESS));
+  assert((calls==std::vector<std::string>{"font-next","font-previous"}));
+  ui_fonts_available=old_ui_fonts;
 }
 
 static void test_disassembler_shorter_mnemonic_clears_tail() {

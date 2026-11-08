@@ -1,0 +1,1525 @@
+{
+  "status": "144MHZ_NOT_ACCEPTED_USB_SCREEN_CRC_FAILURE",
+  "board": "AEB505B6E0067623",
+  "build": "F406C241",
+  "cpu_chip8": [
+    {
+      "stage": "0-96MHz",
+      "cpu_median_us": 516150,
+      "chip8_fps": 59.89609477462069
+    },
+    {
+      "stage": "1-120MHz",
+      "cpu_median_us": 443186,
+      "chip8_fps": 59.898388733343076
+    },
+    {
+      "stage": "2-144MHz",
+      "cpu_median_us": 373496,
+      "chip8_fps": 59.89989218019407
+    },
+    {
+      "stage": "3-96MHz",
+      "cpu_median_us": 516231,
+      "chip8_fps": 59.89790357337493
+    }
+  ],
+  "chess": [
+    {
+      "stage": "0-96MHz",
+      "profile": 0,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "cold",
+          "seconds": 67.378071833984,
+          "nodes": 420,
+          "nodes_per_second": 6.233482030101095,
+          "move": "e2e3",
+          "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 8.528670333966147
+            },
+            {
+              "nodes": 21,
+              "seconds": 24.422496958984993
+            },
+            {
+              "nodes": 42,
+              "seconds": 25.548981708998326
+            },
+            {
+              "nodes": 63,
+              "seconds": 26.742757333966438
+            },
+            {
+              "nodes": 84,
+              "seconds": 27.906039458990563
+            },
+            {
+              "nodes": 105,
+              "seconds": 29.003332749998663
+            },
+            {
+              "nodes": 126,
+              "seconds": 30.122341874986887
+            },
+            {
+              "nodes": 147,
+              "seconds": 31.29783633397892
+            },
+            {
+              "nodes": 168,
+              "seconds": 32.467562875011936
+            },
+            {
+              "nodes": 189,
+              "seconds": 33.64970391697716
+            },
+            {
+              "nodes": 210,
+              "seconds": 34.81743558397284
+            },
+            {
+              "nodes": 231,
+              "seconds": 36.06737595901359
+            },
+            {
+              "nodes": 252,
+              "seconds": 37.32244429201819
+            },
+            {
+              "nodes": 273,
+              "seconds": 38.57937699998729
+            },
+            {
+              "nodes": 294,
+              "seconds": 39.847422584018204
+            },
+            {
+              "nodes": 315,
+              "seconds": 41.01507024996681
+            },
+            {
+              "nodes": 336,
+              "seconds": 42.18969841697253
+            },
+            {
+              "nodes": 357,
+              "seconds": 43.36431116698077
+            },
+            {
+              "nodes": 378,
+              "seconds": 44.53667945897905
+            },
+            {
+              "nodes": 399,
+              "seconds": 45.678630083973985
+            },
+            {
+              "nodes": 420,
+              "seconds": 46.845186416991055
+            }
+          ],
+          "profile": null,
+          "pongs": 2964,
+          "pong_max_s": 0.007793250028043985,
+          "host_poll_max_s": 0.02358691702829674
+        },
+        {
+          "repeat": 1,
+          "temperature": "repeat",
+          "seconds": 66.54561687499518,
+          "nodes": 420,
+          "nodes_per_second": 6.311460013797197,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12384066596860066
+            },
+            {
+              "nodes": 21,
+              "seconds": 36.57787112495862
+            },
+            {
+              "nodes": 42,
+              "seconds": 37.76069974998245
+            },
+            {
+              "nodes": 63,
+              "seconds": 38.941280415980145
+            },
+            {
+              "nodes": 84,
+              "seconds": 40.0839752079919
+            },
+            {
+              "nodes": 105,
+              "seconds": 41.16646691597998
+            },
+            {
+              "nodes": 126,
+              "seconds": 42.269828249991406
+            },
+            {
+              "nodes": 147,
+              "seconds": 43.40697933296906
+            },
+            {
+              "nodes": 168,
+              "seconds": 44.55681708297925
+            },
+            {
+              "nodes": 189,
+              "seconds": 45.69927495799493
+            },
+            {
+              "nodes": 210,
+              "seconds": 46.85613525001099
+            },
+            {
+              "nodes": 231,
+              "seconds": 48.077219415979926
+            },
+            {
+              "nodes": 252,
+              "seconds": 49.3127414159826
+            },
+            {
+              "nodes": 273,
+              "seconds": 50.54928141599521
+            },
+            {
+              "nodes": 294,
+              "seconds": 51.800197582982946
+            },
+            {
+              "nodes": 315,
+              "seconds": 52.933691040962
+            },
+            {
+              "nodes": 336,
+              "seconds": 54.08456454100087
+            },
+            {
+              "nodes": 357,
+              "seconds": 55.235690624976996
+            },
+            {
+              "nodes": 378,
+              "seconds": 56.38414166599978
+            },
+            {
+              "nodes": 399,
+              "seconds": 57.51148937497055
+            },
+            {
+              "nodes": 420,
+              "seconds": 58.663246499956585
+            }
+          ],
+          "profile": null,
+          "pongs": 3001,
+          "pong_max_s": 0.007200624968390912,
+          "host_poll_max_s": 0.02408145903609693
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 68.177514082985,
+          "nodes": 420,
+          "nodes_per_second": 6.160388885531675,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12606437498470768
+            },
+            {
+              "nodes": 21,
+              "seconds": 37.460412582964636
+            },
+            {
+              "nodes": 42,
+              "seconds": 40.55974508298095
+            },
+            {
+              "nodes": 63,
+              "seconds": 41.76147316599963
+            },
+            {
+              "nodes": 84,
+              "seconds": 42.92191012494732
+            },
+            {
+              "nodes": 105,
+              "seconds": 44.01899908296764
+            },
+            {
+              "nodes": 126,
+              "seconds": 45.14043095795205
+            },
+            {
+              "nodes": 147,
+              "seconds": 46.31238245795248
+            },
+            {
+              "nodes": 168,
+              "seconds": 47.48035429097945
+            },
+            {
+              "nodes": 189,
+              "seconds": 48.656022499955725
+            },
+            {
+              "nodes": 210,
+              "seconds": 49.83848454098916
+            },
+            {
+              "nodes": 231,
+              "seconds": 51.08210645796498
+            },
+            {
+              "nodes": 252,
+              "seconds": 52.33587233297294
+            },
+            {
+              "nodes": 273,
+              "seconds": 53.607490707945544
+            },
+            {
+              "nodes": 294,
+              "seconds": 54.88874233298702
+            },
+            {
+              "nodes": 315,
+              "seconds": 56.05245437496342
+            },
+            {
+              "nodes": 336,
+              "seconds": 57.22643395798514
+            },
+            {
+              "nodes": 357,
+              "seconds": 58.40040479099844
+            },
+            {
+              "nodes": 378,
+              "seconds": 59.5744359579985
+            },
+            {
+              "nodes": 399,
+              "seconds": 60.72350033296971
+            },
+            {
+              "nodes": 420,
+              "seconds": 61.891169749957044
+            }
+          ],
+          "profile": null,
+          "pongs": 3139,
+          "pong_max_s": 0.004898832994513214,
+          "host_poll_max_s": 0.015832874982152134
+        }
+      ],
+      "warm_median_s": 67.36156547899009
+    },
+    {
+      "stage": "1-120MHz",
+      "profile": 2,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "cold",
+          "seconds": 70.63032616698183,
+          "nodes": 420,
+          "nodes_per_second": 5.946454204487888,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12594150000950322
+            },
+            {
+              "nodes": 21,
+              "seconds": 37.2396046249778
+            },
+            {
+              "nodes": 42,
+              "seconds": 40.679320416995324
+            },
+            {
+              "nodes": 63,
+              "seconds": 41.89047174999723
+            },
+            {
+              "nodes": 84,
+              "seconds": 43.04792883299524
+            },
+            {
+              "nodes": 105,
+              "seconds": 44.15223312500166
+            },
+            {
+              "nodes": 126,
+              "seconds": 45.272535916999914
+            },
+            {
+              "nodes": 147,
+              "seconds": 46.44800412497716
+            },
+            {
+              "nodes": 168,
+              "seconds": 47.625554832979105
+            },
+            {
+              "nodes": 189,
+              "seconds": 48.80038604198489
+            },
+            {
+              "nodes": 210,
+              "seconds": 49.986841332982294
+            },
+            {
+              "nodes": 231,
+              "seconds": 51.23301166697638
+            },
+            {
+              "nodes": 252,
+              "seconds": 52.4887371250079
+            },
+            {
+              "nodes": 273,
+              "seconds": 53.77721891697729
+            },
+            {
+              "nodes": 294,
+              "seconds": 55.05159962497419
+            },
+            {
+              "nodes": 315,
+              "seconds": 56.218947166984435
+            },
+            {
+              "nodes": 336,
+              "seconds": 57.3975760419853
+            },
+            {
+              "nodes": 357,
+              "seconds": 58.5707383750123
+            },
+            {
+              "nodes": 378,
+              "seconds": 59.759252916963305
+            },
+            {
+              "nodes": 399,
+              "seconds": 60.90081987500889
+            },
+            {
+              "nodes": 420,
+              "seconds": 62.0742173329927
+            }
+          ],
+          "profile": null,
+          "pongs": 3331,
+          "pong_max_s": 0.008988333982415497,
+          "host_poll_max_s": 0.025228750018868595
+        },
+        {
+          "repeat": 1,
+          "temperature": "repeat",
+          "seconds": 74.76722854201216,
+          "nodes": 420,
+          "nodes_per_second": 5.617434378539248,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 5.839911625022069
+            },
+            {
+              "nodes": 21,
+              "seconds": 37.931871208013035
+            },
+            {
+              "nodes": 42,
+              "seconds": 39.30430725001497
+            },
+            {
+              "nodes": 63,
+              "seconds": 40.47752929199487
+            },
+            {
+              "nodes": 84,
+              "seconds": 41.61260729201604
+            },
+            {
+              "nodes": 105,
+              "seconds": 42.69719670800259
+            },
+            {
+              "nodes": 126,
+              "seconds": 43.79230945801828
+            },
+            {
+              "nodes": 147,
+              "seconds": 44.95338925003307
+            },
+            {
+              "nodes": 168,
+              "seconds": 46.08666254201671
+            },
+            {
+              "nodes": 189,
+              "seconds": 47.26132858300116
+            },
+            {
+              "nodes": 210,
+              "seconds": 48.39870395802427
+            },
+            {
+              "nodes": 231,
+              "seconds": 49.61993212503148
+            },
+            {
+              "nodes": 252,
+              "seconds": 50.8504538750276
+            },
+            {
+              "nodes": 273,
+              "seconds": 52.09405041701393
+            },
+            {
+              "nodes": 294,
+              "seconds": 53.344693874998484
+            },
+            {
+              "nodes": 315,
+              "seconds": 54.48371429200051
+            },
+            {
+              "nodes": 336,
+              "seconds": 55.64310820802348
+            },
+            {
+              "nodes": 357,
+              "seconds": 56.790940000035334
+            },
+            {
+              "nodes": 378,
+              "seconds": 57.95061291701859
+            },
+            {
+              "nodes": 399,
+              "seconds": 59.07861091702944
+            },
+            {
+              "nodes": 420,
+              "seconds": 60.223712750012055
+            }
+          ],
+          "profile": null,
+          "pongs": 3513,
+          "pong_max_s": 0.01519025000743568,
+          "host_poll_max_s": 0.027607708994764835
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 72.37035645800643,
+          "nodes": 420,
+          "nodes_per_second": 5.803481156593569,
+          "move": "e2e3",
+          "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.1331467920099385
+            },
+            {
+              "nodes": 21,
+              "seconds": 33.55377816699911
+            },
+            {
+              "nodes": 42,
+              "seconds": 41.568374958005734
+            },
+            {
+              "nodes": 63,
+              "seconds": 42.76778866699897
+            },
+            {
+              "nodes": 84,
+              "seconds": 43.93201791704632
+            },
+            {
+              "nodes": 105,
+              "seconds": 45.04276416701032
+            },
+            {
+              "nodes": 126,
+              "seconds": 46.16072891704971
+            },
+            {
+              "nodes": 147,
+              "seconds": 47.33203070802847
+            },
+            {
+              "nodes": 168,
+              "seconds": 48.50700783304637
+            },
+            {
+              "nodes": 189,
+              "seconds": 49.6824689580244
+            },
+            {
+              "nodes": 210,
+              "seconds": 50.85741383302957
+            },
+            {
+              "nodes": 231,
+              "seconds": 52.109327667043544
+            },
+            {
+              "nodes": 252,
+              "seconds": 53.36449279199587
+            },
+            {
+              "nodes": 273,
+              "seconds": 54.64028491702629
+            },
+            {
+              "nodes": 294,
+              "seconds": 55.91943587502465
+            },
+            {
+              "nodes": 315,
+              "seconds": 57.08548445801716
+            },
+            {
+              "nodes": 336,
+              "seconds": 58.25991145800799
+            },
+            {
+              "nodes": 357,
+              "seconds": 59.433810083020944
+            },
+            {
+              "nodes": 378,
+              "seconds": 60.61094691703329
+            },
+            {
+              "nodes": 399,
+              "seconds": 61.766830042004585
+            },
+            {
+              "nodes": 420,
+              "seconds": 62.94001295801718
+            }
+          ],
+          "profile": null,
+          "pongs": 3362,
+          "pong_max_s": 0.016122874978464097,
+          "host_poll_max_s": 0.027366666996385902
+        }
+      ],
+      "warm_median_s": 73.5687925000093
+    },
+    {
+      "stage": "2-144MHz",
+      "profile": 3,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "cold",
+          "seconds": 69.1457581249997,
+          "nodes": 420,
+          "nodes_per_second": 6.074125317141453,
+          "move": "e2e3",
+          "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12755970796570182
+            },
+            {
+              "nodes": 21,
+              "seconds": 40.08964424999431
+            },
+            {
+              "nodes": 42,
+              "seconds": 41.29166020802222
+            },
+            {
+              "nodes": 63,
+              "seconds": 42.49766108300537
+            },
+            {
+              "nodes": 84,
+              "seconds": 43.664567333005834
+            },
+            {
+              "nodes": 105,
+              "seconds": 44.770238291006535
+            },
+            {
+              "nodes": 126,
+              "seconds": 45.883954749966506
+            },
+            {
+              "nodes": 147,
+              "seconds": 47.050325124990195
+            },
+            {
+              "nodes": 168,
+              "seconds": 48.236124582996126
+            },
+            {
+              "nodes": 189,
+              "seconds": 49.40404087497154
+            },
+            {
+              "nodes": 210,
+              "seconds": 50.57207541598473
+            },
+            {
+              "nodes": 231,
+              "seconds": 51.82292254100321
+            },
+            {
+              "nodes": 252,
+              "seconds": 53.07815524999751
+            },
+            {
+              "nodes": 273,
+              "seconds": 54.337758915964514
+            },
+            {
+              "nodes": 294,
+              "seconds": 55.619816125021316
+            },
+            {
+              "nodes": 315,
+              "seconds": 56.775682875013445
+            },
+            {
+              "nodes": 336,
+              "seconds": 57.95698445796734
+            },
+            {
+              "nodes": 357,
+              "seconds": 59.12420108297374
+            },
+            {
+              "nodes": 378,
+              "seconds": 60.295759707980324
+            },
+            {
+              "nodes": 399,
+              "seconds": 61.44807212497108
+            },
+            {
+              "nodes": 420,
+              "seconds": 62.623898082994856
+            }
+          ],
+          "profile": null,
+          "pongs": 3200,
+          "pong_max_s": 0.015339833975303918,
+          "host_poll_max_s": 0.020725750015117228
+        },
+        {
+          "repeat": 1,
+          "temperature": "repeat",
+          "seconds": 70.25907862494932,
+          "nodes": 420,
+          "nodes_per_second": 5.977875147523726,
+          "move": "e2e3",
+          "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12608866696245968
+            },
+            {
+              "nodes": 21,
+              "seconds": 41.04203516698908
+            },
+            {
+              "nodes": 42,
+              "seconds": 42.23018862499157
+            },
+            {
+              "nodes": 63,
+              "seconds": 43.41919316694839
+            },
+            {
+              "nodes": 84,
+              "seconds": 44.552968374977354
+            },
+            {
+              "nodes": 105,
+              "seconds": 45.64798808400519
+            },
+            {
+              "nodes": 126,
+              "seconds": 46.740119833964854
+            },
+            {
+              "nodes": 147,
+              "seconds": 47.87835625000298
+            },
+            {
+              "nodes": 168,
+              "seconds": 49.02648533397587
+            },
+            {
+              "nodes": 189,
+              "seconds": 50.18116445897613
+            },
+            {
+              "nodes": 210,
+              "seconds": 51.32909470895538
+            },
+            {
+              "nodes": 231,
+              "seconds": 52.55123337497935
+            },
+            {
+              "nodes": 252,
+              "seconds": 53.788128958956804
+            },
+            {
+              "nodes": 273,
+              "seconds": 55.021289208962116
+            },
+            {
+              "nodes": 294,
+              "seconds": 56.27274399995804
+            },
+            {
+              "nodes": 315,
+              "seconds": 57.40992887498578
+            },
+            {
+              "nodes": 336,
+              "seconds": 58.56072741700336
+            },
+            {
+              "nodes": 357,
+              "seconds": 59.71171858400339
+            },
+            {
+              "nodes": 378,
+              "seconds": 60.86906904197531
+            },
+            {
+              "nodes": 399,
+              "seconds": 61.99971766700037
+            },
+            {
+              "nodes": 420,
+              "seconds": 63.139162624953315
+            }
+          ],
+          "profile": null,
+          "pongs": 3315,
+          "pong_max_s": 0.009351999964565039,
+          "host_poll_max_s": 0.026359874987974763
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 69.55020737502491,
+          "nodes": 420,
+          "nodes_per_second": 6.0388029863850505,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.1288438750198111
+            },
+            {
+              "nodes": 21,
+              "seconds": 39.7021426249994
+            },
+            {
+              "nodes": 42,
+              "seconds": 40.9138772910228
+            },
+            {
+              "nodes": 63,
+              "seconds": 42.11735041602515
+            },
+            {
+              "nodes": 84,
+              "seconds": 43.29684458300471
+            },
+            {
+              "nodes": 105,
+              "seconds": 44.38785720797023
+            },
+            {
+              "nodes": 126,
+              "seconds": 45.50727145798737
+            },
+            {
+              "nodes": 147,
+              "seconds": 46.6757706659846
+            },
+            {
+              "nodes": 168,
+              "seconds": 47.84695333300624
+            },
+            {
+              "nodes": 189,
+              "seconds": 49.01615949999541
+            },
+            {
+              "nodes": 210,
+              "seconds": 50.19975354097551
+            },
+            {
+              "nodes": 231,
+              "seconds": 51.45843275001971
+            },
+            {
+              "nodes": 252,
+              "seconds": 52.69840491598006
+            },
+            {
+              "nodes": 273,
+              "seconds": 53.97005987499142
+            },
+            {
+              "nodes": 294,
+              "seconds": 55.247498749988154
+            },
+            {
+              "nodes": 315,
+              "seconds": 56.430689250002615
+            },
+            {
+              "nodes": 336,
+              "seconds": 57.587098041025456
+            },
+            {
+              "nodes": 357,
+              "seconds": 58.76739691599505
+            },
+            {
+              "nodes": 378,
+              "seconds": 59.93072716600727
+            },
+            {
+              "nodes": 399,
+              "seconds": 61.08133562497096
+            },
+            {
+              "nodes": 420,
+              "seconds": 62.25753241596976
+            }
+          ],
+          "profile": null,
+          "pongs": 3188,
+          "pong_max_s": 0.019424083991907537,
+          "host_poll_max_s": 0.024943207972683012
+        }
+      ],
+      "warm_median_s": 69.90464299998712
+    },
+    {
+      "stage": "3-96MHz",
+      "profile": 0,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "cold",
+          "seconds": 70.53592608397594,
+          "nodes": 420,
+          "nodes_per_second": 5.954412500375661,
+          "move": "e2e3",
+          "final_frame_sha256": "997338e3da396d400644481f1f4364545602436926cad3b3b5b2831b8341ffd9",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 5.635583958995994
+            },
+            {
+              "nodes": 21,
+              "seconds": 36.310727958974894
+            },
+            {
+              "nodes": 42,
+              "seconds": 37.50182795897126
+            },
+            {
+              "nodes": 63,
+              "seconds": 38.70418025000254
+            },
+            {
+              "nodes": 84,
+              "seconds": 39.870959666965064
+            },
+            {
+              "nodes": 105,
+              "seconds": 40.977931750006974
+            },
+            {
+              "nodes": 126,
+              "seconds": 42.09900020901114
+            },
+            {
+              "nodes": 147,
+              "seconds": 43.26884637499461
+            },
+            {
+              "nodes": 168,
+              "seconds": 44.447280874999706
+            },
+            {
+              "nodes": 189,
+              "seconds": 45.61344333400484
+            },
+            {
+              "nodes": 210,
+              "seconds": 46.79248900001403
+            },
+            {
+              "nodes": 231,
+              "seconds": 48.05434095900273
+            },
+            {
+              "nodes": 252,
+              "seconds": 49.297623083984945
+            },
+            {
+              "nodes": 273,
+              "seconds": 50.56692229199689
+            },
+            {
+              "nodes": 294,
+              "seconds": 51.85073912498774
+            },
+            {
+              "nodes": 315,
+              "seconds": 53.006830458994955
+            },
+            {
+              "nodes": 336,
+              "seconds": 54.19149929197738
+            },
+            {
+              "nodes": 357,
+              "seconds": 55.359213959018234
+            },
+            {
+              "nodes": 378,
+              "seconds": 56.5443310419796
+            },
+            {
+              "nodes": 399,
+              "seconds": 57.68629829201382
+            },
+            {
+              "nodes": 420,
+              "seconds": 58.85922404198209
+            }
+          ],
+          "profile": null,
+          "pongs": 3149,
+          "pong_max_s": 0.014432583004236221,
+          "host_poll_max_s": 0.02574237500084564
+        },
+        {
+          "repeat": 1,
+          "temperature": "repeat",
+          "seconds": 69.94194791599875,
+          "nodes": 420,
+          "nodes_per_second": 6.004980022924523,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.135397040983662
+            },
+            {
+              "nodes": 21,
+              "seconds": 33.9729201659793
+            },
+            {
+              "nodes": 42,
+              "seconds": 41.62035391601967
+            },
+            {
+              "nodes": 63,
+              "seconds": 42.805074999982025
+            },
+            {
+              "nodes": 84,
+              "seconds": 43.94619099999545
+            },
+            {
+              "nodes": 105,
+              "seconds": 45.030439666006714
+            },
+            {
+              "nodes": 126,
+              "seconds": 46.12441445799777
+            },
+            {
+              "nodes": 147,
+              "seconds": 47.27342379098991
+            },
+            {
+              "nodes": 168,
+              "seconds": 48.418005290965084
+            },
+            {
+              "nodes": 189,
+              "seconds": 49.58898966596462
+            },
+            {
+              "nodes": 210,
+              "seconds": 50.73785095801577
+            },
+            {
+              "nodes": 231,
+              "seconds": 51.944482249964494
+            },
+            {
+              "nodes": 252,
+              "seconds": 53.17532983300043
+            },
+            {
+              "nodes": 273,
+              "seconds": 54.426256124977954
+            },
+            {
+              "nodes": 294,
+              "seconds": 55.67243341600988
+            },
+            {
+              "nodes": 315,
+              "seconds": 56.81311458296841
+            },
+            {
+              "nodes": 336,
+              "seconds": 57.96390145801706
+            },
+            {
+              "nodes": 357,
+              "seconds": 59.11239733296679
+            },
+            {
+              "nodes": 378,
+              "seconds": 60.2570103330072
+            },
+            {
+              "nodes": 399,
+              "seconds": 61.38171995797893
+            },
+            {
+              "nodes": 420,
+              "seconds": 62.53821429098025
+            }
+          ],
+          "profile": null,
+          "pongs": 3144,
+          "pong_max_s": 0.014344000024721026,
+          "host_poll_max_s": 0.03545450000092387
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 69.04646566597512,
+          "nodes": 420,
+          "nodes_per_second": 6.08286022968687,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12214062496786937
+            },
+            {
+              "nodes": 21,
+              "seconds": 38.96693216601852
+            },
+            {
+              "nodes": 42,
+              "seconds": 40.182752207969315
+            },
+            {
+              "nodes": 63,
+              "seconds": 41.392990082968026
+            },
+            {
+              "nodes": 84,
+              "seconds": 42.56500695797149
+            },
+            {
+              "nodes": 105,
+              "seconds": 43.66583754098974
+            },
+            {
+              "nodes": 126,
+              "seconds": 44.78436645801412
+            },
+            {
+              "nodes": 147,
+              "seconds": 45.952674000000115
+            },
+            {
+              "nodes": 168,
+              "seconds": 47.12875408300897
+            },
+            {
+              "nodes": 189,
+              "seconds": 48.299432291009
+            },
+            {
+              "nodes": 210,
+              "seconds": 49.47938429098576
+            },
+            {
+              "nodes": 231,
+              "seconds": 50.72823299997253
+            },
+            {
+              "nodes": 252,
+              "seconds": 51.99208954098867
+            },
+            {
+              "nodes": 273,
+              "seconds": 53.255490333016496
+            },
+            {
+              "nodes": 294,
+              "seconds": 54.535624583018944
+            },
+            {
+              "nodes": 315,
+              "seconds": 55.70027970802039
+            },
+            {
+              "nodes": 336,
+              "seconds": 56.88567316601984
+            },
+            {
+              "nodes": 357,
+              "seconds": 58.06808108300902
+            },
+            {
+              "nodes": 378,
+              "seconds": 59.229077583004255
+            },
+            {
+              "nodes": 399,
+              "seconds": 60.38334166601999
+            },
+            {
+              "nodes": 420,
+              "seconds": 61.56220995797776
+            }
+          ],
+          "profile": null,
+          "pongs": 3158,
+          "pong_max_s": 0.009635291993618011,
+          "host_poll_max_s": 0.028782541980035603
+        }
+      ],
+      "warm_median_s": 69.49420679098694
+    }
+  ],
+  "queens": {
+    "profile": 3,
+    "mhz": 144,
+    "source_sha256": "ea39268522f5bb90bc3e9302612e5bd35019417495438dc65ecaa46ddc6d567f",
+    "run_seconds": 229.02971095900284,
+    "launch_seconds": 229.11421416699886,
+    "timing": "host first stack marker to second stack marker",
+    "screen": false,
+    "pongs": 0,
+    "pong_max_s": null,
+    "host_poll_max_s": null,
+    "terminal": "open \"/ClockBench1108/queens.m61\"\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> X1 =  9.0000000  00\r\nT  =  5.0000000  00\r\nZ  =  5.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  90\r\n"
+  },
+  "gap_samples": [
+    {
+      "V": 1,
+      "M0": 1686,
+      "N0": 4095,
+      "M1": 2377,
+      "N1": 684,
+      "M2": 6828,
+      "N2": 136,
+      "M3": 6827,
+      "N3": 136,
+      "M4": 6500,
+      "N4": 136,
+      "M5": 6771,
+      "N5": 136,
+      "M6": 6827,
+      "N6": 136,
+      "M7": 1629,
+      "N7": 8191,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "GAPTEST.APP",
+      "section": "low0",
+      "pongs": 102,
+      "pong_max_s": 0.053604874992743134,
+      "host_poll_max_s": 0.007533708005212247
+    },
+    {
+      "V": 1,
+      "M0": 1679,
+      "N0": 4095,
+      "M1": 2371,
+      "N1": 706,
+      "M2": 7333,
+      "N2": 141,
+      "M3": 7374,
+      "N3": 141,
+      "M4": 7375,
+      "N4": 140,
+      "M5": 7411,
+      "N5": 140,
+      "M6": 7063,
+      "N6": 140,
+      "M7": 1640,
+      "N7": 8255,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "GAPTEST.APP",
+      "section": "high",
+      "pongs": 102,
+      "pong_max_s": 0.053604874992743134,
+      "host_poll_max_s": 0.007533708005212247
+    },
+    {
+      "V": 1,
+      "M0": 1686,
+      "N0": 4095,
+      "M1": 2499,
+      "N1": 683,
+      "M2": 6832,
+      "N2": 136,
+      "M3": 6944,
+      "N3": 135,
+      "M4": 6984,
+      "N4": 136,
+      "M5": 6983,
+      "N5": 136,
+      "M6": 6894,
+      "N6": 136,
+      "M7": 1629,
+      "N7": 8191,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "GAPTEST.APP",
+      "section": "low1",
+      "pongs": 102,
+      "pong_max_s": 0.053604874992743134,
+      "host_poll_max_s": 0.007533708005212247
+    },
+    {
+      "V": 1,
+      "M0": 6068,
+      "N0": 8028,
+      "M1": 7067,
+      "N1": 4229,
+      "M2": 15067,
+      "N2": 845,
+      "M3": 15067,
+      "N3": 845,
+      "M4": 15067,
+      "N4": 845,
+      "M5": 15050,
+      "N5": 845,
+      "M6": 15050,
+      "N6": 845,
+      "M7": 3899,
+      "N7": 16056,
+      "stage": "0-96MHz",
+      "profile": 0,
+      "workload": "C8FPS.APP",
+      "section": "chipgap",
+      "pongs": 437,
+      "pong_max_s": 0.2343206669902429,
+      "host_poll_max_s": 0.007546042033936828
+    },
+    {
+      "V": 1,
+      "M0": 2757,
+      "N0": 4095,
+      "M1": 2757,
+      "N1": 1038,
+      "M2": 9001,
+      "N2": 207,
+      "M3": 8874,
+      "N3": 207,
+      "M4": 7670,
+      "N4": 207,
+      "M5": 7617,
+      "N5": 207,
+      "M6": 7494,
+      "N6": 206,
+      "M7": 2631,
+      "N7": 8191,
+      "stage": "1-120MHz",
+      "profile": 2,
+      "workload": "GAPTEST.APP",
+      "section": "low0",
+      "pongs": 147,
+      "pong_max_s": 0.08475083304801956,
+      "host_poll_max_s": 0.007531958050094545
+    },
+    {
+      "V": 1,
+      "M0": 1373,
+      "N0": 4095,
+      "M1": 1534,
+      "N1": 598,
+      "M2": 5806,
+      "N2": 119,
+      "M3": 6206,
+      "N3": 119,
+      "M4": 5933,
+      "N4": 119,
+      "M5": 5881,
+      "N5": 118,
+      "M6": 5801,
+      "N6": 119,
+      "M7": 1315,
+      "N7": 8255,
+      "stage": "1-120MHz",
+      "profile": 2,
+      "workload": "GAPTEST.APP",
+      "section": "high",
+      "pongs": 147,
+      "pong_max_s": 0.08475083304801956,
+      "host_poll_max_s": 0.007531958050094545
+    },
+    {
+      "V": 1,
+      "M0": 2758,
+      "N0": 4095,
+      "M1": 2758,
+      "N1": 1038,
+      "M2": 7679,
+      "N2": 207,
+      "M3": 7658,
+      "N3": 207,
+      "M4": 7533,
+      "N4": 206,
+      "M5": 7419,
+      "N5": 207,
+      "M6": 7418,
+      "N6": 207,
+      "M7": 2654,
+      "N7": 8191,
+      "stage": "1-120MHz",
+      "profile": 2,
+      "workload": "GAPTEST.APP",
+      "section": "low1",
+      "pongs": 147,
+      "pong_max_s": 0.08475083304801956,
+      "host_poll_max_s": 0.007531958050094545
+    },
+    {
+      "V": 1,
+      "M0": 9360,
+      "N0": 6341,
+      "M1": 10370,
+      "N1": 3430,
+      "M2": 25092,
+      "N2": 685,
+      "M3": 24000,
+      "N3": 685,
+      "M4": 18369,
+      "N4": 685,
+      "M5": 23000,
+      "N5": 686,
+      "M6": 25092,
+      "N6": 685,
+      "M7": 6290,
+      "N7": 12682,
+      "stage": "1-120MHz",
+      "profile": 2,
+      "workload": "C8FPS.APP",
+      "section": "chipgap",
+      "pongs": 411,
+      "pong_max_s": 0.11553454102249816,
+      "host_poll_max_s": 0.007516957994084805
+    }
+  ],
+  "failures": [
+    {
+      "stage": "diagnostic GAPTEST at 144MHz",
+      "attempts": 2,
+      "error": "USB Screen packet CRC mismatch",
+      "logs": [
+        "gaps-v2.log",
+        "gaps-v3.log"
+      ]
+    },
+    {
+      "stage": "8 Queens with USB Screen at 144MHz",
+      "error": "USB Screen packet CRC mismatch after at least210s",
+      "log": "queens.log"
+    }
+  ],
+  "final_frequency_mhz": 96,
+  "limits_unchanged": true,
+  "notes": [
+    "No frequency cause is established for USB errors; terminal/screen multiplexing remains to investigate.",
+    "8 Queens repeats unchanged library calculator opcodes; host timestamps bracket two stack outputs.",
+    "No paired96MHz Queens result: no Queens speedup claim.",
+    "Chess first search follows reset; initial series follows derived cache cleanup.",
+    "SETUP file limit20480 was explicitly authorized; other memory/stack limits unchanged."
+  ],
+  "final_health": {
+    "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=F406C241 profile=classic-v3-uc1609\r\n/> ",
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 67 used, 957 free, 1024 total\r\nVisible: 57 files, 10 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=436/18 raw(v/t/b)=1492/955/1019 val(mV/dC/mV)=3331/336/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=402432 footer=400920 expected=0xF406C241 build=0xF406C241 actual=0xF406C241 backend=hardware cycles=1185402\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005558 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC68 observed_low=0x2001FC68 sampled_remaining=15464 watermark=1 watermark_remaining=11312 observed_remaining=11312 sram_xn=1\r\n/> ",
+    "ls": "ls\r\nd\tGames/\r\nd\tURQ/\r\nd\tApps/\r\nd\tSystem/\r\n4 entries.\r\n/> "
+  },
+  "final_clock": "COMPUTE V=1 N=4194304 HASH=3289793925 HZ0=96000000 HZ1=96000000 HZ2=96000000 US0=495728 US1=495539 US2=495537 GAP0=260 GAP1=122 GAP2=122 END=1 DUP=1 MATCH=1\n"
+}

@@ -196,6 +196,7 @@ bool language_is_ru(void) { return focal_host_fixture::russian; }
 #endif
 
 #include "bounded_string.hpp"
+#include "compute_clock.hpp"
 #include "mk8_literal.hpp"
 #include "number_format.hpp"
 #if MK61_ENABLE_FOCAL &&                                                       \
@@ -746,6 +747,7 @@ uint16_t language_vm::frontend_source_id() {
 }
 #endif
 static FocalRunStatus tb_run_program(int slot) {
+  compute_clock::Scope computation;
   focal_trace_message("RUN", slot >= 0 && slot < TB_PROGRAM_COUNT
                                  ? programs[slot].name
                                  : nullptr);

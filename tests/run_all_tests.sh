@@ -29,6 +29,7 @@ if command -v pwsh >/dev/null 2>&1; then
 fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"
+bash "$root/tests/run_compute_clock_tests.sh"
 python3 "$root/tests/hil_vm_cache_latency_self_test.py"
 bash "$root/tests/run_language_vm_opcode_profile_tests.sh"
 "$root/tests/run_core_packed_amk_tests.sh"

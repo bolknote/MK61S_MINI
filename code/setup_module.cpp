@@ -23,8 +23,12 @@ static bool invoke(loadable_module::Command command, u32 a = 0, u32 b = 0,
   return true;
 }
 bool hardware() { invoke(loadable_module::Command::SETUP_HARDWARE); return false; }
+#if MK61_SETUP_IS_LOADABLE
+bool settings() { invoke(loadable_module::Command::SETUP_SETTINGS); return false; }
+#endif
 bool date_time() { invoke(loadable_module::Command::SETUP_DATE_TIME); return false; }
 bool calibration() { invoke(loadable_module::Command::SETUP_CALIBRATION); return false; }
+bool compute_frequency() { invoke(loadable_module::Command::SETUP_COMPUTE_CLOCK); return false; }
 bool font() { invoke(loadable_module::Command::SETUP_FONT); return false; }
 void step_font(i8 delta) { invoke(loadable_module::Command::SETUP_FONT_STEP, (u32) (i32) delta); }
 void preview(const char* name, const u8* data, u16 size) {

@@ -24,6 +24,7 @@ struct Settings {
     u8 text_rows=8,text_width=5,text_height=8,text_gap=0;
     u8 ui_font_family=1;
     u32 ui_font_key=0;
+    u8 compute_profile=0;
 };
 bool valid_settings(const Settings& value);
 constexpr unsigned SETTINGS_PAGE_BYTES = 256;

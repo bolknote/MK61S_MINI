@@ -71,6 +71,7 @@ static bool run_cycle(u8 seconds,
                       deep_idle_policy::WakeReason& wake_reason,
                       u32& elapsed_ms,
                       deep_idle_policy::FailureReason& failure) {
+  const u32 clock_before = SystemCoreClock;
   if(!kbd::prepare_stop_wake()) {
     failure = deep_idle_policy::FailureReason::KEYBOARD_ARM;
     return false;
@@ -173,7 +174,7 @@ static bool run_cycle(u8 seconds,
 #endif
   SystemCoreClockUpdate();
 
-  const bool clock_ok = SystemCoreClock == (u32) F_CPU;
+  const bool clock_ok = SystemCoreClock == clock_before;
 
   // Resolve the waking key as soon as the GPIO timing clock is trustworthy.
   // RTC bookkeeping can wait; a short physical press cannot.

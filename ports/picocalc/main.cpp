@@ -13,6 +13,7 @@
 #include "clock.hpp"
 #include "power.hpp"
 #include "cosmic_clock.hpp"
+#include "compute_clock.hpp"
 #include "buffers.hpp"
 #include "usb_screen.hpp"
 #include "terminal.hpp"
@@ -282,6 +283,7 @@ void report(unsigned math_failures) {
         (unsigned long)usb.active_read_bytes, (unsigned long)usb.active_read_lba);
 }
 void usb_service() {
+    if(!sleep_clocks.active())compute_clock::poll(millis());
     picocalc::diagnostics::Scope measure(picocalc::diagnostics::Point::USB);
     const u64 now=time_us_64();
     if(last_usb_service && now-last_usb_service>max_usb_gap) max_usb_gap=(u32)(now-last_usb_service);
@@ -354,6 +356,9 @@ int main() {
     picocalc::cosmic_clock::idle_check([] { return !services.active() && calculator.idle() && !core_61::is_RUN() && !picocalc::files::usb_active(); });
     picocalc::initialize_heap();
     picocalc::firmware::enforce();
+    picocalc::Settings settings;
+    if(picocalc::load_device_settings(settings)) settings_status = "LOADED";
+    (void)compute_clock::configure(settings.compute_profile);
     picocalc::diagnostics::initialize();
     mark_stack();
     watchdog_enable(8000, true);
@@ -384,8 +389,6 @@ int main() {
     keyboard.init();
     picocalc::psram::init();picocalc::buffers::init();picocalc::external_cache::init();
     calculator.init();
-    picocalc::Settings settings;
-    if(picocalc::load_device_settings(settings)) settings_status = "LOADED";
     ui.init(settings);
     services.set_ui(ui);
     picocalc::clock::calibrate(settings.rtc_ppm);

@@ -139,8 +139,18 @@ enum mk61_service_operation {
    * OPEN: rate=25000, volume=0..100. WRITE: samples/count in, accepted
    * count out (nonblocking, <=1024). STATUS returns queue/underrun counts.
    * CLOSE also accepts c=0,payload=NULL. APP return closes automatically. */
-  MK61_SERVICE_AUDIO_STREAM
+  MK61_SERVICE_AUDIO_STREAM,
+  /* Optional compute-frequency hint. a=mk61_compute_operation,b=token,
+   * c=0,payload=NULL. PROBE returns MK61_COMPUTE_MAGIC (old hosts return0).
+   * BEGIN/END are nested LIFO leases owned by the current logical APP/flow;
+   * all outstanding leases end automatically on return/error. MHz are chosen
+   * by the resident's user setting, never supplied by the APP. */
+  MK61_SERVICE_COMPUTE
 };
+enum mk61_compute_operation {
+  MK61_COMPUTE_PROBE, MK61_COMPUTE_BEGIN, MK61_COMPUTE_END, MK61_COMPUTE_HZ
+};
+#define MK61_COMPUTE_MAGIC UINT32_C(0x434D5031)
 enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS, MK61_AUDIO_CLOSE,
   /* c=sizeof(mk61_service_audio_synth). Callback runs on core 1's timer IRQ;
    * it must not call resident services, allocate, block or use core-0 state
@@ -544,8 +554,26 @@ enum mk61_setup_operation {
   MK61_SETUP_CALCULATOR_FONT_READ, MK61_SETUP_CALCULATOR_FONT_APPLY,
   /* b=0: local seconds since midnight; b=1: civil days since 1970-01-01.
    * c=0,payload=NULL. Query SETUP_FEATURE_RTC_VALUE before use. */
-  MK61_SETUP_RTC_VALUE
+  MK61_SETUP_RTC_VALUE,
+  /* a=0: profile | active<<8 | platform<<16 | count<<24 (0=unsupported).
+   * a=1,b=profile: save requested profile, applied on next boot. */
+  MK61_SETUP_COMPUTE_CLOCK,
+  MK61_SETUP_SETTINGS_READ, /* payload=mk61_setup_settings */
+  MK61_SETUP_SETTING_WRITE /* a=mk61_setting,b=value */
 };
+enum mk61_setting {
+  MK61_SETTING_VOLUME, MK61_SETTING_IDLE_SIGNAL, MK61_SETTING_SPEED,
+  MK61_SETTING_MEMORY, MK61_SETTING_RANDOM, MK61_SETTING_LANGUAGE,
+  MK61_SETTING_OLED, MK61_SETTING_COUNT
+};
+enum mk61_settings_feature {
+  MK61_SETTINGS_RTC=1, MK61_SETTINGS_FONTS=2,
+  MK61_SETTINGS_OLED=4, MK61_SETTINGS_COMPUTE=8
+};
+typedef struct mk61_setup_settings {
+  uint8_t value[MK61_SETTING_COUNT];
+  uint8_t features;
+} mk61_setup_settings;
 enum mk61_setup_feature {
   MK61_SETUP_FEATURE_TEXT_PROFILE = 1u << 0,
   MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE = 1u << 1,

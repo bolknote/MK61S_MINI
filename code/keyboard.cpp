@@ -2,6 +2,7 @@
 #include "stm32f4_gpio.hpp"
 #include "stm32f4_keyboard_exti.hpp"
 #include "keyboard.h"
+#include "compute_clock.hpp"
 #include "keyboard_layout.hpp"
 #include "entropy_pool.hpp"
 #include "tools.hpp"
@@ -470,6 +471,7 @@ u32 overflow_count() { return key_fifo.overflows(); }
 Event poll_event() { (void) scan(); return Event(get_key()); }
 
 i32   get_key_wait(void) {
+  compute_clock::Wait waiting;
   do {
     idle_main_process();  // отдаем безделье в основной поток бездействия
     const i32 scan_code = poll_event().code();

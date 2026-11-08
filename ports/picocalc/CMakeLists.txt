@@ -21,15 +21,16 @@ set(MK61_PICOCALC_LCD_SPI_HZ "12500000" CACHE STRING "Requested LCD SPI clock; r
 if(NOT MK61_PICOCALC_LCD_SPI_HZ MATCHES "^[1-9][0-9]*$" OR MK61_PICOCALC_LCD_SPI_HZ GREATER 62500000)
     message(FATAL_ERROR "LCD SPI request must be an integer from 1 to 62500000 Hz")
 endif()
-add_compile_definitions(MK61_PICOCALC_LCD_SPI_HZ=${MK61_PICOCALC_LCD_SPI_HZ}
+add_compile_definitions(MK61_PICOCALC_COMPUTE_CLOCK=1 PICO_FLASH_SPI_CLKDIV=4 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0
+    MK61_PICOCALC_LCD_SPI_HZ=${MK61_PICOCALC_LCD_SPI_HZ}
     MK61_PICOCALC_LCD_COLOR_CHAIN=$<BOOL:${MK61_PICOCALC_LCD_COLOR_CHAIN}>)
 if(MK61_PICOCALC_AUDIO_DMA)
     add_compile_definitions(MK61_PICOCALC_AUDIO_DMA=1)
 endif()
 if(MK61_PICOCALC_COSMIC_CLOCK_DIAG)
-    add_compile_definitions(MK61_PICOCALC_COSMIC_CLOCK_DIAG=1 PICO_FLASH_SPI_CLKDIV=4 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0)
+    add_compile_definitions(MK61_PICOCALC_COSMIC_CLOCK_DIAG=1)
 elseif(MK61_PICOCALC_AUDIO_CLOCK)
-    add_compile_definitions(MK61_PICOCALC_AUDIO_CLOCK=1 PICO_FLASH_SPI_CLKDIV=4 PICO_CLOCK_ADJUST_PERI_CLOCK_WITH_SYS_CLOCK=0)
+    add_compile_definitions(MK61_PICOCALC_AUDIO_CLOCK=1)
 endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -53,6 +54,7 @@ add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
     dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp
+    compute_clock.cpp "${MK61_ROOT}/code/compute_clock.cpp"
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
@@ -88,10 +90,9 @@ target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/markdown_documen
     "${MK61_ROOT}/code/explorer_autoexec.cpp" "${MK61_ROOT}/code/explorer_view.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/usb_screen_surface.cpp" "${MK61_ROOT}/code/ui_text_renderer.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/crash_dump_format.cpp")
-if(MK61_PICOCALC_COSMIC_CLOCK_DIAG OR MK61_PICOCALC_AUDIO_CLOCK)
-    target_sources(mk61s-picocalc-pico-h PRIVATE cosmic_clock.cpp)
-    target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_vreg pico_flash)
-endif()
+# Compute profiles also share the peripheral/USB clock manager.
+target_sources(mk61s-picocalc-pico-h PRIVATE cosmic_clock.cpp)
+target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_vreg pico_flash)
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/ai_harness.cpp" "${CMAKE_CURRENT_LIST_DIR}/ai_clock.cpp"
     "${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" "${MK61_ROOT}/code/mk61_ai_tokenizer.cpp"

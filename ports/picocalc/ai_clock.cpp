@@ -1,4 +1,5 @@
 #include "ai_clock.hpp"
+#include "compute_clock.hpp"
 #if defined(PICO_ON_DEVICE)
 #include "io_worker.hpp"
 #include "psram.hpp"
@@ -65,6 +66,7 @@ bool transition(u32 sys,State& s,bool restoring) {
 bool begin(unsigned mhz,State& s) {
   if(s.changed || s.restore_attempted || (mhz!=125 && mhz!=200 && mhz!=250 && mhz!=300)) return false;
   s.sys=hz();
+  if(compute_clock::active_profile())return mhz==125;
   if(mhz==125 && (!s.sys || s.sys==125000000)) return true;
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
   if(s.sys!=125000000) return false;

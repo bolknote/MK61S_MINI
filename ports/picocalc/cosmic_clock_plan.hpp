@@ -6,7 +6,7 @@ constexpr uint32_t USB_HZ=48000000,PERI_HZ=48000000;
 constexpr uint32_t PIO_HZ=100000000,PWM_HZ=100000000,LEASE_MS=105000;
 struct Plan { uint32_t mhz,vco_hz,postdiv1,postdiv2,pio_div256,pwm_div16; };
 constexpr Plan step(uint32_t mhz) {return {mhz,mhz*6000000,6,1,(mhz*64+24)/25,(mhz*4+24)/25};}
-constexpr Plan plans[]={{125,1500000000,6,2,320,20},step(130),step(140),step(150),step(160),step(170),
+constexpr Plan plans[]={{100,1200000000,6,2,256,16},{125,1500000000,6,2,320,20},step(130),step(140),step(150),step(160),step(170),
     step(180),step(190),step(200),step(210),step(220),step(230),step(240),step(250)};
 constexpr const Plan* find(uint32_t mhz) {
     for(const auto& p:plans)if(p.mhz==mhz)return &p;

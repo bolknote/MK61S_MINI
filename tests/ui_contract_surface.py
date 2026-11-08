@@ -153,14 +153,9 @@ def main() -> None:
     for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static bool uiClassicFontAvailable(", "static bool uiCompactFontAvailable(", "static bool calculatorFontAvailable(", "static u8 uiFontOptionCount(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static bool stepUiFontField(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
         pieces.append(body(menu, marker))
     pieces.append(body(root / "development.cpp", "static u16 ui_editor_window_start("))
-    settings_source = (root / "menu.cpp").read_text()
-    settings_start = settings_source.index("static constexpr int SETTINGS_VOLUME")
-    settings_end = settings_source.index("static u8 sound_volume_state", settings_start)
-    pieces.append("namespace library_mk61 {\n" +
-                  settings_source[settings_start:settings_end] + "}\n")
     (out / "ui_menu.inc").write_text("\n".join(pieces))
     (out / "ui_settings_adjustment.inc").write_text(
-        body(root / "menu.cpp", "bool class_menu::handle_settings_adjustment("))
+        body(root / "setup_settings_ui.cpp", "static bool settings_action("))
 
 
 

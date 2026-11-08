@@ -1,12 +1,32 @@
 #if defined(MK61_NATIVE_RUNTIME)
 #include <Arduino.h>
 #include "stm32f4_gpio.hpp"
+#include "compute_clock.hpp"
 extern "C" void osSystickHandler(void);
 extern "C" {
 uint32_t SystemCoreClock=16000000;
 volatile uint32_t uwTick;
 }
 namespace {
+uint16_t tick_offset_us;
+uint8_t clock_profile;
+bool clock_fast;
+constexpr auto clock_platform=
+#if defined(STM32F411xE)
+    compute_clock::Platform::F411;
+#else
+    compute_clock::Platform::F401;
+#endif
+struct TickStamp {uint32_t ms,us;};
+TickStamp tick_stamp() {
+  uint32_t ms=uwTick;
+  const uint32_t before=SCB->ICSR&SCB_ICSR_PENDSTSET_Msk;
+  uint32_t counter=SysTick->VAL;
+  const uint32_t after=SCB->ICSR&SCB_ICSR_PENDSTSET_Msk;
+  if(before || after){++ms;counter=SysTick->VAL;}
+  const uint32_t reload=SysTick->LOAD;
+  return {ms,tick_offset_us+(counter?(reload-counter)*1000U/(reload+1U):0)};
+}
 bool ready(volatile uint32_t& reg,uint32_t mask,uint32_t wanted) {
   for(uint32_t count=0;count<4000000;++count) if((reg&mask)==wanted) return true;
   return false;
@@ -19,6 +39,11 @@ void tick_configure() {
   SCB->ICSR=SCB_ICSR_PENDSTCLR_Msk;
   NVIC_SetPriority(SysTick_IRQn,15);
   SysTick->CTRL=SysTick_CTRL_CLKSOURCE_Msk|SysTick_CTRL_TICKINT_Msk|SysTick_CTRL_ENABLE_Msk;
+}
+void tick_restore(TickStamp stamp) {
+  uwTick=stamp.ms+stamp.us/1000U;
+  tick_offset_us=uint16_t(stamp.us%1000U);
+  tick_configure();
 }
 uint32_t apb_clock(uint32_t shift) {
   const uint32_t divider=(RCC->CFGR>>shift)&7U;
@@ -50,8 +75,12 @@ extern "C" void SystemClock_Config(void) {
   // The USB wake IRQ also calls this when STOP was aborted before WFI, or
   // after foreground STOP recovery already restored the PLL. Keep SysTick's
   // fractional phase in those cases, so micros() cannot move backwards.
-  if((RCC->CFGR & RCC_CFGR_SWS) == RCC_CFGR_SWS_PLL &&
-     SystemCoreClock == F_CPU) return;
+  const auto plan=compute_clock::stm32_plan(clock_platform,clock_profile);
+  const uint32_t cfgr=clock_fast?plan.fast_cfgr:plan.slow_cfgr;
+  const uint32_t hz=(uint32_t(plan.mhz)*1000000U)>>((cfgr&RCC_CFGR_HPRE)?1:0);
+  if((RCC->CFGR & RCC_CFGR_SWS) == RCC_CFGR_SWS_PLL && SystemCoreClock==hz)return;
+  const uint32_t mask=__get_PRIMASK();__disable_irq();
+  const TickStamp stamp=tick_stamp();
   SysTick->CTRL=0;
   RCC->CR|=RCC_CR_HSION;
   if(!ready(RCC->CR,RCC_CR_HSIRDY,RCC_CR_HSIRDY)) fail();
@@ -61,23 +90,20 @@ extern "C" void SystemClock_Config(void) {
   if(!ready(RCC->CR,RCC_CR_PLLRDY,0)) fail();
   RCC->APB1ENR|=RCC_APB1ENR_PWREN;
   (void)RCC->APB1ENR;
-  #if defined(STM32F411xE)
+#if defined(STM32F411xE)
   PWR->CR=(PWR->CR&~PWR_CR_VOS)|PWR_REGULATOR_VOLTAGE_SCALE1;
 #else
-  PWR->CR=(PWR->CR&~PWR_CR_VOS)|PWR_REGULATOR_VOLTAGE_SCALE2;
+  PWR->CR=(PWR->CR&~PWR_CR_VOS)|(clock_profile ?
+      PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2);
 #endif
   RCC->CR|=RCC_CR_HSEON;
   if(!ready(RCC->CR,RCC_CR_HSERDY,RCC_CR_HSERDY)) fail();
-#if defined(STM32F411xE)
-  RCC->PLLCFGR=25U|(192U<<6)|RCC_PLLCFGR_PLLSRC_HSE|(4U<<24);
-  FLASH->ACR=FLASH_ACR_LATENCY_3WS|FLASH_ACR_PRFTEN|FLASH_ACR_ICEN|FLASH_ACR_DCEN;
-#else
-  RCC->PLLCFGR=25U|(336U<<6)|(1U<<16)|RCC_PLLCFGR_PLLSRC_HSE|(7U<<24);
-  FLASH->ACR=FLASH_ACR_LATENCY_2WS|FLASH_ACR_PRFTEN|FLASH_ACR_ICEN|FLASH_ACR_DCEN;
-#endif
+  RCC->PLLCFGR=25U|(uint32_t(plan.n)<<6)|(uint32_t(plan.p)<<16)|
+      RCC_PLLCFGR_PLLSRC_HSE|(uint32_t(plan.q)<<24);
+  FLASH->ACR=plan.latency|FLASH_ACR_PRFTEN|FLASH_ACR_ICEN|FLASH_ACR_DCEN;
   (void)FLASH->ACR;
   __DSB(); __ISB();
-  RCC->CFGR=(RCC->CFGR&~(RCC_CFGR_HPRE|RCC_CFGR_PPRE1|RCC_CFGR_PPRE2))|RCC_CFGR_PPRE1_DIV2;
+  RCC->CFGR=(RCC->CFGR&~(RCC_CFGR_HPRE|RCC_CFGR_PPRE1|RCC_CFGR_PPRE2))|cfgr;
   RCC->CR|=RCC_CR_PLLON;
   if(!ready(RCC->CR,RCC_CR_PLLRDY,RCC_CR_PLLRDY)) fail();
   // F401/F411 assert VOSRDY only with the main PLL running. Waiting for it
@@ -85,12 +111,40 @@ extern "C" void SystemClock_Config(void) {
   if(!ready(PWR->CSR,PWR_CSR_VOSRDY,PWR_CSR_VOSRDY)) fail();
   RCC->CFGR=(RCC->CFGR&~RCC_CFGR_SW)|RCC_CFGR_SW_PLL;
   if(!ready(RCC->CFGR,RCC_CFGR_SWS,RCC_CFGR_SWS_PLL)) fail();
-  SystemCoreClock=F_CPU;
-  tick_configure();
+  SystemCoreClock=hz;
+  tick_restore(stamp);
+  __set_PRIMASK(mask);
 }
 extern "C" void SystemCoreClockUpdate(void) {
   const uint32_t source=RCC->CFGR&RCC_CFGR_SWS;
-  SystemCoreClock=source==RCC_CFGR_SWS_PLL ? F_CPU : source==RCC_CFGR_SWS_HSE ? HSE_VALUE : HSI_VALUE;
+  const uint32_t sys=source==RCC_CFGR_SWS_PLL ?
+      uint32_t(compute_clock::high_mhz(clock_platform,clock_profile))*1000000U :
+      source==RCC_CFGR_SWS_HSE?HSE_VALUE:HSI_VALUE;
+  const unsigned hpre=(RCC->CFGR>>4)&15U;
+  SystemCoreClock=sys>>(hpre<8?0:hpre<12?hpre-7:hpre-6);
+}
+namespace compute_clock {
+Platform platform(){return clock_platform;}
+namespace backend {
+uint32_t hz(){return SystemCoreClock;}
+uint32_t now_ms(){return millis();}
+bool configure(uint8_t profile) {
+  clock_profile=profile;clock_fast=false;
+  SystemClock_Config();return true;
+}
+bool set_fast(bool fast) {
+  if(!clock_profile || fast==clock_fast)return true;
+  const uint32_t mask=__get_PRIMASK();__disable_irq();
+  const TickStamp stamp=tick_stamp();SysTick->CTRL=0;
+  const uint32_t cfgr=fast?((5U<<10)|(5U<<13)):((8U<<4)|(4U<<10)|(4U<<13));
+  // One CFGR write keeps APB1/APB2 and their timer clocks unchanged. The
+  // main PLL and its exact USB48 output are never stopped during a request.
+  RCC->CFGR=(RCC->CFGR&~(RCC_CFGR_HPRE|RCC_CFGR_PPRE1|RCC_CFGR_PPRE2))|cfgr;
+  __DSB();__ISB();
+  clock_fast=fast;SystemCoreClock=fast?SystemCoreClock*2:SystemCoreClock/2;
+  tick_restore(stamp);__set_PRIMASK(mask);return true;
+}
+}
 }
 __attribute__((constructor(101))) static void platform_initialize() {
   NVIC_SetPriorityGrouping(3);
@@ -99,23 +153,19 @@ __attribute__((constructor(101))) static void platform_initialize() {
   __enable_irq();
 }
 extern "C" void SysTick_Handler(void) { ++uwTick;osSystickHandler(); }
-extern "C" uint32_t millis(void) { return uwTick; }
+extern "C" uint32_t millis(void) {
+  if(!tick_offset_us)return uwTick;
+  const uint32_t mask=__get_PRIMASK();__disable_irq();
+  const auto stamp=tick_stamp();__set_PRIMASK(mask);
+  return stamp.ms+stamp.us/1000U;
+}
 extern "C" __attribute__((noinline)) uint32_t micros(void) {
   const uint32_t mask=__get_PRIMASK(); __disable_irq();
-  uint32_t ms=uwTick;
-  const uint32_t pending_before=SCB->ICSR&SCB_ICSR_PENDSTSET_Msk;
-  uint32_t counter=SysTick->VAL;
-  const uint32_t pending_after=SCB->ICSR&SCB_ICSR_PENDSTSET_Msk;
-  if(pending_after) {
-    ++ms;
-    if(!pending_before) counter=SysTick->VAL;
-  }
-  const uint32_t reload=SysTick->LOAD;
+  const auto stamp=tick_stamp();
   __set_PRIMASK(mask);
   // VAL=0 is the reload boundary (also the initial write-to-clear value).
   // Counting it as a whole extra millisecond duplicates a pending SysTick.
-  const uint32_t fraction=counter ? (reload-counter)*1000U/(reload+1U) : 0;
-  return ms*1000U+fraction;
+  return stamp.ms*1000U+stamp.us;
 }
 extern "C" void delayMicroseconds(uint32_t us) {
   const uint32_t per_us=SystemCoreClock/1000000U;

@@ -40,6 +40,7 @@ using namespace kbd;
 #include "rtc_idle_clock.hpp"
 #include "sound_driver.hpp"
 #include "classic_timer.hpp"
+#include "compute_clock.hpp"
 #include "dwt_profiler.hpp"
 #include "crash_dump.hpp"
 #include "resident_firmware.hpp"
@@ -553,21 +554,26 @@ void setup() {
   #endif
 
   led::init();
+  #ifdef SPI_FLASH
+      init_external_flash();
+  #endif
+  // Choose the PLL before USB and the timer prescalers are initialized.
+  // COMPUTE requests subsequently change dividers only. Offline profiles
+  // leave USB disabled until a USB-capable profile is selected and reset.
+  // Read only the scalar clock fields here. Loading all settings can load a font APP
+  // and poll background services, which need the timers and USB below.
+  (void) compute_clock::configure(compute_clock::normalize(
+      compute_clock::platform(), read_compute_clock_profile()));
   sound_driver_init(PIN_BUZZER);
   classic_timer::initialize();
-
   usb_start_terminal_mode();
   crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 3, millis());
   dbgln(MINI, "ESC unpressed!");
 
-  #ifdef SPI_FLASH
-      init_external_flash();
-  #endif
   persist_retained_crash_dump();
   crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 4, millis());
 
   library_mk61::load_settings_state();
-
   rtc_clock::init();
 
   //  kbd::test();
@@ -758,6 +764,8 @@ inline void monitor_switch_angle_unit(t_time_ms now) {
 }
 
 inline void mk61_process(void) {
+  compute_clock::Scope computation(compute_clock::active_profile() &&
+      (core_61::is_RUN() || !mk61_calculator_is_idle()));
   static bool m61_display_was_owned = false;
   static u32 last_extended_display_revision = 0;
   const u32 display_revision = core_61::extended_display_revision();
@@ -1319,6 +1327,7 @@ void storage_io_process(void) {
 }
 
 void idle_main_process(void) {
+  compute_clock::poll(millis());
   #if MK61_IDLE_WFI_SUPPORTED
   idle_main_depth++;
   #endif
