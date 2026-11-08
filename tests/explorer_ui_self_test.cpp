@@ -278,7 +278,9 @@ static void test_extensions() {
     {ProgramType::MK61_STATE, ".state.txt"}, {ProgramType::FONT, ".fmk"},
     {ProgramType::IMAGE1, ".wbmp"}, {ProgramType::APP, ".app"},
     {ProgramType::CHIP8, ".ch8"}, {ProgramType::MARKDOWN, ".md"},
-    {ProgramType::MK61_BINARY, ".bin"}
+    {ProgramType::MK61_BINARY, ".bin"}, {ProgramType::SHEET, ".mks"},
+    {ProgramType::URQ, ".urq"}, {ProgramType::URQ_DATA, ".uqd"},
+    {ProgramType::URQ_SAVE, ".urs"}, {ProgramType::EXTERNAL_BINARY, ".bin"}
   };
   for(const auto& item : cases) {
     assert(strcmp(program_store::file_extension(item.type),

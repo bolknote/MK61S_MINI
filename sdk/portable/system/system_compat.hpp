@@ -232,7 +232,8 @@ static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
 static constexpr u16 ROOT_ID = 0xFFFF, INVALID_ID = 0xFFFF;
 enum class ProgramType : u8 { MK61 = 0, FOCAL = 2, TINYBASIC = 3, TEXT = 4,
   MK61_STATE = 5, FONT = 6, IMAGE1 = 7, APP = 8, CHIP8 = 9, MARKDOWN = 10,
-  MK61_BINARY = 11, SHEET = 12, URQ = 13, URQ_DATA = 14, URQ_SAVE = 15 };
+  MK61_BINARY = 11, SHEET = 12, URQ = 13, URQ_DATA = 14, URQ_SAVE = 15,
+  EXTERNAL_BINARY = MK61_SERVICE_FILE_EXTERNAL_BINARY };
 enum class NodeKind : u8 { FILE = 0, DIRECTORY = 1, DIRECTORY_EXTENT = 2, FILE_EXTENT = 3 };
 struct Entry { ProgramType type; char name[NAME_SIZE]; u16 data_len, id, parent_id; NodeKind kind; };
 struct FileSource {
