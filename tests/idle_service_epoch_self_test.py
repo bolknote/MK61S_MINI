@@ -29,6 +29,7 @@ static u8 idle_main_depth;
 static void note(const char* name){++calls[name];order.emplace_back(name);}
 static u32 millis(){return 42;}
 void idle_main_process();
+namespace compute_clock{void poll(u32 now){assert(now==42);note("compute-clock");}}
 namespace power_monitor{void poll(u32){note("power");}}
 namespace rtc_clock{
 struct AlarmEvent{bool missed;};
@@ -87,7 +88,7 @@ int main(){
     nest_terminal=nested;deep_needed=requested;busy=sounding;alarm=alarm_ready;
     idle_main_process();assert(idle_main_depth==initial_depth);
     const unsigned epochs=nested?2U:1U;
-    const char* services[]={"power","rtc","msc","usb","usb-power","event",
+    const char* services[]={"compute-clock","power","rtc","msc","usb","usb-power","event",
       "terminal","sound-busy","sound","led","disk","flush","signal","watchdog"};
     for(const char* service:services)assert(calls[service]==epochs);
     assert(calls["alarm"]==(sounding?0U:epochs));
