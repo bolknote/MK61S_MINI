@@ -13,6 +13,7 @@
 #include "audio_stream.hpp"
 #include "cosmic_clock_plan.hpp"
 #include "ai_clock_transition.hpp"
+#include "ai_flash_clock.hpp"
 #include "hardware/i2c.h"
 #include "hardware/pll.h"
 #include "hardware/resets.h"
@@ -53,47 +54,55 @@ u32 measure() {
 }
 void __no_inline_not_in_flash_func(write_clock)(void* raw) {
   const auto& plan=*static_cast<const cosmic_clock::Plan*>(raw);
-  mark(5,plan.mhz);
-  set_sys_clock_pll(plan.vco_hz,plan.postdiv1,plan.postdiv2);
+  struct Bus {
+    __attribute__((always_inline)) void divider(unsigned div) {
+      while(ssi_hw->sr&SSI_SR_BUSY_BITS)__asm volatile("nop");
+      ssi_hw->ssienr=0;ssi_hw->baudr=div;ssi_hw->ssienr=1;
+    }
+    __attribute__((always_inline)) void pll(const cosmic_clock::Plan& p) {
+      set_sys_clock_pll(p.vco_hz,p.postdiv1,p.postdiv2);
+    }
+  } bus;
+  apply_pll(bus,plan);
   // PERI already comes from PLL_USB48. Do not reconfigure it after changing
   // SYS: the old300MHz failure was in that redundant post-PLL operation.
-  mark(6,plan.mhz);
 }
 bool stock_voltage() {
   return (vreg_and_chip_reset_hw->vreg&VREG_AND_CHIP_RESET_VREG_VSEL_BITS)==
       (u32(VREG_VOLTAGE_1_10)<<VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
 }
 struct Hardware {
-  bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==6 &&
+  bool quiet_usb=false;
+  bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==flash_divider(hz()/1000000) &&
       clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000;}
   void prepare(){audio_stream::stop_key_click();io_worker::drain();stdio_flush();}
   void mark(u32 stage,u32 target){ai_clock::mark(stage,target);}
   bool pio(u32 div){return psram::diagnostic_clock_divider(div);}
-  void disconnect(){tud_disconnect();}
+  void disconnect(){if(tud_inited())tud_disconnect();}
   bool deinit(){return tud_deinit(0);}
   void reset(){reset_block(RESETS_RESET_USBCTRL_BITS);}
   void detach_delay(){sleep_ms(200);}
-  bool pll(const cosmic_clock::Plan& plan){return flash_safe_execute(write_clock,const_cast<cosmic_clock::Plan*>(&plan),50)==PICO_OK;}
+  bool pll(const cosmic_clock::Plan& plan){ai_clock::mark(5,plan.mhz);const bool ok=flash_safe_execute(write_clock,const_cast<cosmic_clock::Plan*>(&plan),50)==PICO_OK;if(ok)ai_clock::mark(6,plan.mhz);return ok;}
   void retune_i2c(){i2c_set_baudrate(i2c1,10000);}
   bool verify(const cosmic_clock::Plan& plan){
     measured_khz=measure();const u32 sys=plan.mhz*1000000;
     return hz()==sys && measured_khz+100>=sys/1000 && measured_khz<=sys/1000+100 &&
         clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000 && stock_voltage() &&
-        ssi_hw->baudr==6 && psram::diagnostic_clock_divider256()==plan.pio_div256;
+        ssi_hw->baudr==flash_divider(plan.mhz) && psram::diagnostic_clock_divider256()==plan.pio_div256;
   }
   void unreset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
-  bool init(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
-  void connect(){tud_connect();}
+  bool init(){if(quiet_usb)return true;const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
+  void connect(){if(!quiet_usb)tud_connect();}
 };
-bool transition(u32 sys) {
+bool transition(u32 sys,bool quiet_usb=false) {
   const auto* before=cosmic_clock::find(hz()/1000000);
   const auto* after=cosmic_clock::find(sys/1000000);
   if(!before || !after)return false;
-  Hardware hardware;return change(hardware,*before,*after);
+  Hardware hardware{quiet_usb};return change(hardware,*before,*after);
 }
 }
 #endif
-bool begin(unsigned mhz,State& s) {
+bool begin(unsigned mhz,State& s,bool quiet_usb) {
   const bool allowed=mhz==125 || mhz==270;
   if(s.changed || s.restore_attempted || !allowed)return false;
   s.sys=hz();
@@ -110,7 +119,7 @@ bool begin(unsigned mhz,State& s) {
   if(!plan || !check_sys_clock_khz(mhz*1000,&vco,&post1,&post2) ||
      vco!=plan->vco_hz || post1!=plan->postdiv1 || post2!=plan->postdiv2)return false;
   s.peri=clock_get_hz(clk_peri);s.changed=true;
-  return transition(mhz*1000000U);
+  return transition(mhz*1000000U,quiet_usb);
 #else
   return false;
 #endif

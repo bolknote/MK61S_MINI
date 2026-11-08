@@ -224,14 +224,37 @@ struct UI {
   std::uint32_t model_load_us = 0;
   Arithmetic arithmetic = Arithmetic::INT8;
   ai_clock::State fast_clock;
-  char pending_result[224]{};
+  char pending_result[768]{};
+  void profile_stage(const char *phase) {
+    if(benchmarking || !s.id)return;
+    sample_memory();
+    char path[64],line[192];
+    std::snprintf(path,sizeof(path),"/AI/SESSIONS/%08lu.PRF",(unsigned long)s.id);
+    const int n=std::snprintf(line,sizeof(line),
+      "AI_CHAT_STAGE phase=%s model_bytes=%u elapsed_ms=%llu hz=%lu heap_peak=%lu stack_peak=%lu\r\n",
+      phase,model_loaded,(unsigned long long)request_ms,(unsigned long)ai_clock::hz(),
+      (unsigned long)heap_peak,(unsigned long)stack_peak);
+    if(n>0 && unsigned(n)<sizeof(line)) {
+      files::write(path,reinterpret_cast<const u8*>(line),unsigned(n));
+      debug_write(line,unsigned(n));
+    }
+  }
+  bool debug_write(const char *text, unsigned size) {
+    // NativeHost accepts at most128 bytes per call, including a long
+    // profiler line. Keep one logical line while respecting that boundary.
+    for(unsigned at=0;at<size;) {
+      const unsigned take=std::min(128U,size-at);
+      if(!call(MK61_SERVICE_DEBUG_WRITE,take,0,0,const_cast<char*>(text+at)))return false;
+      at+=take;
+    }
+    return true;
+  }
   void announce_result() {
     if(!pending_result[0]) return;
 #if defined(PICO_ON_DEVICE)
     if(!stdio_usb_connected()) return;
 #endif
-    call(MK61_SERVICE_DEBUG_WRITE,unsigned(std::strlen(pending_result)),0,0,pending_result);
-    pending_result[0]=0;
+    if(debug_write(pending_result,unsigned(std::strlen(pending_result))))pending_result[0]=0;
   }
   bool enter_fast_clock() {
     if(benchmarking || fast_clock.changed) return true;
@@ -239,7 +262,12 @@ struct UI {
     if(!ai_clock::hz()) return true;
 #endif
     fast_clock={};
-    if(ai_clock::begin(270,fast_clock)) {
+    profile_stage("clock-enter");
+    // Long requests retain input on the PicoCalc keyboard and save their
+    // complete profiler to SD. Re-enumerate CDC after returning to125MHz,
+    // rather than exposing a fresh USB controller during the long compute.
+    if(ai_clock::begin(270,fast_clock,true)) {
+      profile_stage("clock-ready");
       char text[96];const int n=std::snprintf(text,sizeof(text),
           "AI_CHAT_FAST hz=%lu arithmetic=%u session=%lu\r\n",
           (unsigned long)ai_clock::hz(),unsigned(arithmetic),(unsigned long)s.id);
@@ -250,7 +278,9 @@ struct UI {
   }
   void leave_fast_clock() {
     if(!fast_clock.changed) return;
+    profile_stage("clock-restore");
     if(!ai_clock::restore(fast_clock)) message(M8("Ошибка возврата частоты."));
+    profile_stage("clock-restored");
     char text[64];const int n=std::snprintf(text,sizeof(text),
         "AI_CHAT_CLOCK restored=%lu\r\n",(unsigned long)ai_clock::hz());
     call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,text);
@@ -261,6 +291,9 @@ struct UI {
   chat::View chat_view;
   Agent::Metrics metric_baseline{};
   std::uint64_t request_ms = 0;
+  std::uint64_t profile_attention_us=0,profile_attention_io_us=0,profile_attention_jobs=0;
+  std::uint64_t profile_read_us=0,profile_matmul_us=0,profile_wait_us=0;
+  unsigned profile_steps=0;
   std::uint32_t request_stamp = 0;
   bool request_measured = false, request_running = false, chat_graphics = false;
   void time_request(bool running) {
@@ -272,6 +305,8 @@ struct UI {
   void begin_request() {
     metric_baseline = agent.metrics();
     request_ms = 0;
+    profile_attention_us=profile_attention_io_us=profile_attention_jobs=0;
+    profile_read_us=profile_matmul_us=profile_wait_us=0;profile_steps=0;
     request_measured = true;
     request_running = false;
     time_request(true);
@@ -475,7 +510,7 @@ struct UI {
     e.context = this;e.kernel = linear_kernel;e.filter_head = filter_head;
     e.tile_rows = benchmarking && m3_core ? 64 : 28;
     e.prefetch = double_buffer;
-    if (benchmarking) e.micros = [](void *p) {
+    e.micros = [](void *p) {
       return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS);
     };
     e.busy = [](void *raw, bool active) {
@@ -699,7 +734,10 @@ AI_COLD_CODE bool UI::ensure_model() {
   dirty = true;
   bool ok = package.acquire(shared_memory::Owner::APPLICATION, info.size,
                             shared_memory::BufferAccess::EXTERNAL_ONLY);
-  u8 block[1024];
+  profile_stage("load-start");
+  // Keep the proven1KiB I/O/stack bound, servicing input/display every8KiB.
+  // This reduces UI/FAT cursor churn without increasing transfer buffers.
+  alignas(4) u8 block[1024];
   auto read_package = [&]() {
     model_loaded = 0;
     while (ok && model_loaded < info.size) {
@@ -710,13 +748,15 @@ AI_COLD_CODE bool UI::ensure_model() {
            n == take && package.write(model_loaded, block, n);
       model_loaded += ok ? n : 0;
       dirty = true;
-      if (ok && !pump()) {
+      if(ok && (!(model_loaded&131071U) || model_loaded==info.size))profile_stage("load-data");
+      if (ok && (!(model_loaded&8191U) || model_loaded==info.size) && !pump()) {
         ok = false;
         break;
       }
     }
   };
   read_package();
+  profile_stage("model-open");
   ModelStatus status = ModelStatus::MEMORY;
   if (ok) {
     status = model.open({this, info.size, package_read, nullptr,
@@ -724,6 +764,7 @@ AI_COLD_CODE bool UI::ensure_model() {
     ok = status == ModelStatus::OK;
   }
   if (ok) {
+    profile_stage("cache-allocate");
     const auto cache_bytes=model.cache_bytes();
     ok = cache.acquire(shared_memory::Owner::APPLICATION, cache_bytes,
                        shared_memory::BufferAccess::EXTERNAL_ONLY);
@@ -743,11 +784,13 @@ AI_COLD_CODE bool UI::ensure_model() {
       }
     }
     if (ok) {
+      profile_stage("workspace-allocate");
       workspace.reset(new (std::nothrow)
                           std::uint64_t[(model.workspace_bytes() + 7) / 8]);
       ok = bool(workspace);
     }
     if (ok) {
+      profile_stage("workspace-bind");
       status = model.bind(workspace.get(), model.workspace_bytes(),
                           {this, u32(cache.size()), cache_read, cache_write,cache_read_begin,cache_read_finish});
       ok = status == ModelStatus::OK;
@@ -764,6 +807,7 @@ AI_COLD_CODE bool UI::ensure_model() {
   }
   dirty = true;
   if (!ok) {
+    profile_stage("load-failed");
     s.state = cancel ? RunState::PAUSED : RunState::ERROR;
     message(cancel ? M8("Загрузка приостановлена")
                    : M8("Не удалось загрузить модель: память или формат"));
@@ -791,6 +835,7 @@ AI_COLD_CODE bool UI::ensure_model() {
     prefix[n] = 0;
   }
   model_ready = true;
+  profile_stage("model-ready");
   char protocol[16]{}; unsigned protocol_size=0;
   char protocol_path[128];
   std::snprintf(protocol_path,sizeof(protocol_path),"/AI/MODEL.PRO");
@@ -2035,7 +2080,29 @@ void UI::key(unsigned wire) {
 }
 void UI::tick() {
   if (agent.active()) {
+    const unsigned before_position=model.position();
     agent.tick(service, this);
+    if(model.position()==before_position+1) {
+      const auto &m=model.compute_metrics();
+      profile_attention_us+=m.attention_us;profile_attention_io_us+=m.attention_io_us;
+      profile_attention_jobs+=m.attention_worker_jobs;
+      profile_read_us+=m.read_us;profile_matmul_us+=m.matmul_us;profile_wait_us+=m.wait_us;
+      ++profile_steps;
+      if((profile_steps%32)==0 || !agent.active()) {
+        char progress[200];const auto &a=agent.metrics();
+        const int n=std::snprintf(progress,sizeof(progress),
+          "AI_CHAT_PROGRESS position=%u prompt=%u prefill_us=%llu decode_us=%llu attention_us=%llu io_us=%llu\r\n",
+          model.position(),agent.prompt_size(),
+          (unsigned long long)(a.prefill_us-metric_baseline.prefill_us),
+          (unsigned long long)(a.decode_us-metric_baseline.decode_us),
+          (unsigned long long)profile_attention_us,(unsigned long long)profile_attention_io_us);
+        if(n>0 && unsigned(n)<sizeof(progress)) {
+          char path[64];std::snprintf(path,sizeof(path),"/AI/SESSIONS/%08lu.PRF",(unsigned long)s.id);
+          files::write(path,reinterpret_cast<const u8*>(progress),unsigned(n));
+          debug_write(progress,unsigned(n));
+        }
+      }
+    }
     if(!agent.active()) leave_fast_clock();
     time_request(agent.active());
     dirty = true;
@@ -2046,12 +2113,32 @@ void UI::tick() {
       if (agent.last_result().status != Execution::NONE &&
           agent.last_result().version == s.program.version &&
           agent.last_result().task_revision == s.task_revision) {
+        sample_memory();
         const int n=std::snprintf(pending_result,sizeof(pending_result),
           "AI_CHAT_RESULT task=%lu program=%lu tokens=%lu elapsed_ms=%llu execution=%u X=%.9g\r\n",
           (unsigned long)s.id,(unsigned long)s.program.version,
           (unsigned long)(agent.metrics().output_tokens-metric_baseline.output_tokens),
           (unsigned long long)request_ms,unsigned(agent.last_result().status),agent.last_result().x);
-        if(n<=0||unsigned(n)>=sizeof(pending_result))pending_result[0]=0;
+        const auto &a=agent.metrics();
+        if(n>0 && unsigned(n)<sizeof(pending_result)) {
+          const int extra=std::snprintf(pending_result+n,sizeof(pending_result)-unsigned(n),
+            "AI_CHAT_PROFILE input=%lu reused=%lu prefill_us=%llu decode_us=%llu tool_us=%llu load_us=%lu attention_us=%llu attention_io_us=%llu linear_read_us=%llu matmul_us=%llu wait_us=%llu workers=%llu heap_peak=%lu stack_peak=%lu service_gap_us=%lu\r\n",
+            (unsigned long)(a.prefill_tokens-metric_baseline.prefill_tokens),
+            (unsigned long)(a.reused_tokens-metric_baseline.reused_tokens),
+            (unsigned long long)(a.prefill_us-metric_baseline.prefill_us),
+            (unsigned long long)(a.decode_us-metric_baseline.decode_us),
+            (unsigned long long)(a.tool_us-metric_baseline.tool_us),(unsigned long)model_load_us,
+            (unsigned long long)profile_attention_us,(unsigned long long)profile_attention_io_us,
+            (unsigned long long)profile_read_us,(unsigned long long)profile_matmul_us,
+            (unsigned long long)profile_wait_us,(unsigned long long)profile_attention_jobs,
+            (unsigned long)heap_peak,(unsigned long)stack_peak,(unsigned long)service_gap);
+          if(extra<0 || unsigned(extra)>=sizeof(pending_result)-unsigned(n))pending_result[0]=0;
+        } else pending_result[0]=0;
+        if(pending_result[0]) {
+          char path[64];std::snprintf(path,sizeof(path),"/AI/SESSIONS/%08lu.PRF",(unsigned long)s.id);
+          if(!files::write(path,reinterpret_cast<const u8*>(pending_result),unsigned(std::strlen(pending_result))))
+            message(M8("Не удалось сохранить профиль запроса."));
+        }
         announce_result();
       }
       if (show_trace_after) {
@@ -2445,7 +2532,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
     std::uint64_t read_us=0,matmul_us=0,wait_us=0;
     std::uint64_t decode_layers_us=0,decode_classifier_us=0;
     std::uint64_t decode_presentation_us=0,decode_service_us=0;
-    std::uint32_t decode_service_calls=0;
+    std::uint32_t decode_service_calls=0,decode_kv_reads=0,decode_kv_batches=0;
     std::uint32_t remote_jobs=0,remote_rows=0,remote_fallbacks=0;
     std::uint64_t remote_prepare_us=0,remote_submit_us=0,remote_wait_us=0;
     ai_m3::Statistics m3{};
@@ -2561,6 +2648,8 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
         result.decode_presentation_us+=metrics.presentation_us;
         result.decode_service_us+=metrics.service_us;
         result.decode_service_calls+=metrics.service_calls;
+        result.decode_kv_reads+=metrics.attention_read_transactions;
+        result.decode_kv_batches+=metrics.attention_batches;
       }
       if(pass) {
         matching_tokens=matching_tokens && next==results[0].next[i];
@@ -2742,14 +2831,14 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
         "\"max_step_us\":%lu,\"rows\":%lu,\"skipped_rows\":%lu,\"worker_jobs\":%lu,\"worker_rows\":%lu,"
         "\"prefetches\":%lu,\"prefetched_bytes\":%lu,\"read_us\":%llu,\"matmul_us\":%llu,\"wait_us\":%llu,"
         "\"decode_layers_us\":%llu,\"decode_classifier_us\":%llu,"
-        "\"decode_presentation_us\":%llu,\"decode_service_us\":%llu,\"decode_service_calls\":%lu,\"next\":[",
+        "\"decode_presentation_us\":%llu,\"decode_service_us\":%llu,\"decode_service_calls\":%lu,\"decode_kv_reads\":%lu,\"decode_kv_batches\":%lu,\"next\":[",
         i>(archived?1U:0U)?",":"",i,r.prefill,(unsigned long long)r.prefill_us,r.decode,(unsigned long long)r.decode_us,
         (unsigned long)r.max_step_us,(unsigned long)r.rows,(unsigned long)r.skipped,(unsigned long)r.jobs,
         (unsigned long)r.worker_rows,(unsigned long)r.prefetches,(unsigned long)r.prefetched_bytes,
         (unsigned long long)r.read_us,(unsigned long long)r.matmul_us,(unsigned long long)r.wait_us,
         (unsigned long long)r.decode_layers_us,(unsigned long long)r.decode_classifier_us,
         (unsigned long long)r.decode_presentation_us,(unsigned long long)r.decode_service_us,
-        (unsigned long)r.decode_service_calls);
+        (unsigned long)r.decode_service_calls,(unsigned long)r.decode_kv_reads,(unsigned long)r.decode_kv_batches);
     for(unsigned j=0;j<r.completed;++j) append("%s%u",j?",":"",unsigned(r.next[j]));
     append("],\"checksums\":[");
     for(unsigned j=0;j<r.completed;++j) append("%s\"%08lx\"",j?",":"",(unsigned long)r.checksum[j]);

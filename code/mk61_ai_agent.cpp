@@ -183,7 +183,7 @@ bool Agent::begin_turn() {
   }
   reused_prefix_ = shared;
   metrics_.reused_tokens += shared;
-  cached_count_ = std::min(256U, prompt_count_);
+  cached_count_ = std::min(unsigned(sizeof(cached_prefix_) / sizeof(cached_prefix_[0])), prompt_count_);
   std::copy(tokens_, tokens_ + cached_count_, cached_prefix_);
   prefilled_ = shared;
   generated_ = 0;

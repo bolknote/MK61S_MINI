@@ -1,4 +1,5 @@
 #include "mk61_ai_agent.hpp"
+#include "mk61_ai_worker_fixture.hpp"
 #include "mk61emu_core.h"
 #include <cassert>
 #include <chrono>
@@ -76,9 +77,17 @@ int main(int argc,char **argv) {
   Model model;assert(model.open({&package,unsigned(package.size()),read,nullptr})==ModelStatus::OK);
   assert(model.config().vocab==8224&&model.config().context==1024);
   ComputeExecution execution{};execution.filter_head=true;execution.kernel=LinearKernel::SRAM;
+  TestAiWorker worker;
+  execution.context=&worker;
+  execution.submit=[](void *p,void(*fn)(void*),void *job){return static_cast<TestAiWorker*>(p)->submit(fn,job);};
+  execution.join=[](void *p){static_cast<TestAiWorker*>(p)->join();};
   execution.tile_rows=28;model.execution(execution);
   cache.resize(model.cache_bytes());std::vector<std::uint64_t> workspace((model.workspace_bytes()+7)/8);
-  assert(model.bind(workspace.data(),workspace.size()*8,{&cache,unsigned(cache.size()),read,write})==ModelStatus::OK);
+  assert(model.bind(workspace.data(),workspace.size()*8,{&cache,unsigned(cache.size()),read,write,
+    [](void *p,const block_io::ReadSpan *spans,unsigned n){
+      for(unsigned i=0;i<n;++i)if(!read(p,spans[i].offset,spans[i].destination,spans[i].bytes))return false;
+      return true;
+    },[](void*){return true;}})==ModelStatus::OK);
   core_61::enable();core_61::set_expanded_program_mode(false);
   {
     SpecProtocol spec;char prompt[Agent::PROMPT_BYTES+1];
@@ -125,6 +134,16 @@ int main(int argc,char **argv) {
     assert(agent.last_result().status!=Execution::NONE&&agent.last_result().status!=Execution::CANCELLED);
     if(cases<=3){assert(agent.last_result().status==Execution::STOPPED);if(cases==1)assert(agent.last_result().x==0.3746066);}
     std::printf("SPEC real-model case=%u input=%u output=%u commands=%u core-X=%.9g PASS\n",cases,agent.prompt_size(),agent.metrics().output_tokens,unsigned(session.program.size),agent.last_result().x);
+    assert(model.compute_metrics().attention_worker_jobs>0);
+    if(cases==1) {
+      assert(agent.reused_prefix()==0 && agent.metrics().prefill_tokens==493);
+      observed.tokens.clear();agent.reset();assert(agent.start());
+      assert(agent.reused_prefix()==488);
+      unsigned repeats=0;while(agent.active()&&++repeats<100)agent.tick();
+      assert(!agent.active()&&observed.tokens==expected && agent.metrics().prefill_tokens==498);
+      assert(agent.last_result().status==Execution::STOPPED&&agent.last_result().x==0.3746066);
+      std::puts("Repeated full SPEC request:488 prompt tokens reused, identical generated tokens and core result PASS");
+    }
   }
   assert(cases==8);
   std::puts("SPEC: published prompts, real neural token streams, exact compiler, core execution and header pause/resume PASS");

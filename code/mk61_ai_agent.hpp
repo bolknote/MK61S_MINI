@@ -122,7 +122,7 @@ private:
   std::uint16_t tokens_[2048]{}, next_ = 0;
   unsigned prompt_count_ = 0, prefilled_ = 0, generated_ = 0, test_ = 0;
   unsigned generation_limit_ = 0, reused_prefix_ = 0, cached_count_ = 0;
-  std::uint16_t cached_prefix_[256]{};
+  std::uint16_t cached_prefix_[2048]{};
   std::uint32_t pending_reply_ = 0;
   ToolGrammar grammar_;
   SpecProtocol spec_;

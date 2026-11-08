@@ -1,0 +1,15 @@
+{
+  "ASan_UBSan": true,
+  "natural_spec_cases": 8,
+  "natural_spec_exact_programs_and_core": "PASS",
+  "repeated_prompt_reused_tokens": 488,
+  "full_context": 1024,
+  "full_logits_and_kv": "bit exact",
+  "fp32_exact_pairs": 8722880,
+  "native_dark_chat_and_real_model": "PASS",
+  "romcache_max_uf2_address_exclusive": "0x101B5200",
+  "build": "D436ECC8",
+  "crc": "4C93505B",
+  "model_weights_committed": false,
+  "physical_measurement": "PENDING"
+}

@@ -10,7 +10,7 @@ struct State {
   bool changed=false,restore_attempted=false;
 };
 u32 hz();
-bool begin(unsigned mhz,State& state);
+bool begin(unsigned mhz,State& state,bool quiet_usb=false);
 bool restore(State& state);
 #if !defined(PICO_ON_DEVICE)
 struct TestStatistics { unsigned begins=0,restores=0;u32 hz=0; };

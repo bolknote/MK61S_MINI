@@ -1,0 +1,42 @@
+{
+  "research_selected_export": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/spec-pairs-v1/server-results/export/lora",
+  "selection": {
+    "branches": {
+      "lora": {
+        "step": 0,
+        "key": [
+          true,
+          180,
+          739,
+          -92,
+          -68,
+          0.7617554858934169
+        ],
+        "sha256": "881f703635cc1bda60126cd8324c3378d7e00a8e604dd97880ad56980f14a756"
+      },
+      "full": {
+        "step": 0,
+        "key": [
+          true,
+          173,
+          718,
+          -116,
+          -78,
+          0.7460815047021944
+        ],
+        "sha256": "752348a39b35b0a6e6a4c5389232990e17f26671098c8ea4b82a657ad6107611"
+      }
+    },
+    "preferred": "lora",
+    "closed_used_for_selection": false,
+    "selection_split": "new natural development only",
+    "same_data_draws": true,
+    "continue_own_parent_weights": true,
+    "unix": 1794152582.439976
+  },
+  "planar_sha256": "36e45e648f71e4bbf9a7fad03007067d03e9557d2382ac0b97d7326e0c1f78a0",
+  "paired_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
+  "bytes": 2160856,
+  "weights_in_git": false,
+  "latest_unfinished_training_included": false
+}

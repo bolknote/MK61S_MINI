@@ -245,6 +245,12 @@ struct SpecInput {
       if(!t.has_result)return false;
       assert(t.result.status==Execution::STOPPED&&t.result.x==0.3746066&&
              t.program.size==6&&t.telemetry.output==12&&t.telemetry.input==493);
+      char profile[768];unsigned size=0;
+      assert(files::read_text("/AI/SESSIONS/00000250.PRF",profile,sizeof(profile),size));
+      assert(size>128&&std::strstr(profile,"AI_CHAT_RESULT task=250 ")&&
+             std::strstr(profile,"tokens=12 ")&&
+             std::strstr(profile,"AI_CHAT_PROFILE input=493 reused=0 ")&&
+             std::strstr(profile,"attention_us=")&&std::strstr(profile,"workers="));
       if(++p.ready<2)return false;
       snapshot("spec-real-model-sine");p.keys="\x1b\x1b";p.at=0;++p.stage;
     }

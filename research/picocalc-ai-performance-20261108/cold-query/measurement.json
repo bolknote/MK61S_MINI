@@ -1,0 +1,54 @@
+{
+  "status": "release_host_validated_waiting_for_device_install",
+  "query": "\u0421\u0438\u043d\u0443\u0441 22",
+  "model_sha256": "2cd7233c1302d70b6bf58ea62db78cc8b164e4397dc00f6dec6adef5424eea48",
+  "baseline": {
+    "firmware_build": "BA33A5D4",
+    "elapsed_ms": 1893006,
+    "input_tokens": 493,
+    "reused_tokens": 0,
+    "output_tokens": 12,
+    "prefill_us": 1729636249,
+    "decode_us": 73787629,
+    "tool_us": 159383
+  },
+  "host_validation": {
+    "natural_spec_cases": 8,
+    "natural_spec": "PASS",
+    "full_context_positions": 1024,
+    "full_logits_and_kv_bit_exact": "PASS",
+    "true_worker_threads": "PASS",
+    "ASan_UBSan": "PASS",
+    "native_real_model_ui": "PASS",
+    "firmware_romcache_overlap_regression": "PASS",
+    "exact_fp32_operand_pairs": 8722880,
+    "native_dark_chat": "PASS",
+    "stock_and_ai_flash_clock": "PASS",
+    "qualified_psram_read_profile": "PASS"
+  },
+  "physical": {
+    "first_candidate": "D1041C0A/853068D9",
+    "first_candidate_status": "FAILED; SDK panic; no latency result",
+    "repair_status": "PASS",
+    "repair_firmware": "2EE8A549/9DF1AC78",
+    "romcache_payload_sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+    "final_cold_measurement": "PENDING",
+    "second_candidate": "48BAD39A/4B592E3A",
+    "second_candidate_status": "FAILED; watchdog reset before PROMPT event, no latency result",
+    "current_installed": "048A0B3E/597DDC06 per latest inference receipt; awaiting fresh identity check"
+  },
+  "expected_program_hex": "0E 0D 02 02 1C 50",
+  "expected_core_x": 0.3746066,
+  "evidence_directory": "/Users/bolk/Projects/MK61S_MINI/.build/harness-cold-20261108",
+  "candidate": {
+    "build": "d436ecc8",
+    "crc": "4c93505b",
+    "written_to_device": false,
+    "firmware_flash_bytes": 1790272,
+    "romcache_boundary": 1835008,
+    "uf2_sha256": "4ba32aef0a43387e9d5b8dcc48a54d9133ab01ccdd2f2221f426b7b17fd15edc",
+    "platform_parent": "048A0B3E/597DDC06",
+    "heap_capacity": 109016,
+    "latest_inference_commit": "59e40583b"
+  }
+}

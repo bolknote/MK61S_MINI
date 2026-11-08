@@ -20,6 +20,13 @@ ROOT = Path(__file__).resolve().parents[3]
 SDK_VERSION = "2.2.0"
 SDK_COMMIT = "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 TARGET = "mk61s-picocalc-pico-h"
+FIRMWARE_FLASH_LIMIT = 0x1C0000
+
+
+def firmware_flash_budget(image_bytes):
+    # Spectrum ROM assets persist above this address across firmware updates.
+    if not 0 < image_bytes <= FIRMWARE_FLASH_LIMIT:
+        raise ValueError("Firmware overlaps the persistent Spectrum ROM cache at 0x101C0000")
 
 
 def audio_memory_budget(static_ram_bytes, enabled):
@@ -174,8 +181,7 @@ def main():
         if "v6S-M" not in attributes or "VFP registers" in attributes:
             raise ValueError("ELF must target ARMv6-M with the soft-float ABI")
         image = (build / (TARGET + ".bin")).read_bytes()
-        if len(image) > 2 * 1024 * 1024 - 8192:
-            raise ValueError("Firmware overlaps the PicoCalc settings journal")
+        firmware_flash_budget(len(image))
         from seal_picocalc import seal, verify, FOOTER, BASE, patch_elf_footer
         symbols=run([toolchain / ("arm-none-eabi-nm" + suffix),"--defined-only",build / (TARGET + ".elf")],capture_output=True,text=True).stdout
         ram_end=re.search(r'^([0-9a-fA-F]+) [A-Za-z] __end__$',symbols,re.M)
@@ -228,7 +234,7 @@ def main():
             "pico_sdk": SDK_VERSION, "pico_sdk_commit": sdk_revision,
             "compiler": run([toolchain / ("arm-none-eabi-gcc" + suffix), "-dumpfullversion"],
                             capture_output=True, text=True).stdout.strip(),
-            "flash_bytes": len(image), "flash_limit": 2 * 1024 * 1024,
+            "flash_bytes": len(image), "flash_limit": FIRMWARE_FLASH_LIMIT,
             "static_ram_bytes": static_ram_bytes,
             "foreground_memory_budget": foreground_budget,
             "static_ram_data_bss_bytes": int(fields[1]) + int(fields[2]),

@@ -1,0 +1,10 @@
+MK61 AI harness: parser, cases, durable versions, commit failure, isolation, pause and limits PASS
+AI controller: 105-byte write beyond 160 tokens, full-page patch, hidden cases, pause/resume, prefix reuse, cycle stop and best-version rollback PASS
+native agent: attempts=1 version=0 checks=0/2 ticks=1913 feedback=
+Native dual-thread model pause/resume and joined lifecycle PASS
+Native real-model smoke: bounded protocol/tools/session lifecycle PASS; solution quality is reported by the held-out evaluator
+parallel: PASS; bit-identical full-logit comparisons=68, worker_jobs=1761889; context=1024 KV=5242880 bytes exact; mask/cancel/retry/io/numeric/refusal/join/thaw PASS
+prefetch: PASS; 23 full-logit comparisons, 256-position KV exact, 188975 DMA requests, 188975 overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS
+AI presentation PASS: frame reuse, color DMA handoff, progress cadence/input/phase/wrap; full logits/KV/checksum exact; timers/cancel balanced
+FP16 dot scaling: 3114112 exact results; signed zero, subnormal scales, rounding, extremes and nonfinite fallback PASS
+Exact FP32 multiply/add vs production M0 EABI: 8722880 operand pairs, signed zero/subnormal/nonfinite/boundaries/ties/cancellation PASS
