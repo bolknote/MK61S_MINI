@@ -18,6 +18,7 @@
 #include "mk_math.hpp"
 #include "native_runtime.hpp"
 #include "ai_harness.hpp"
+#include "ai_presentation.hpp"
 #include "loadable_ai_service.h"
 #include "language_cache.hpp"
 #include "number_format.hpp"
@@ -114,7 +115,9 @@ public:
     controls::set_listener([](void* raw,KeyEvent event) {
       auto& host=*(NativeHost*)raw;host.input_received=true;host.keyboard.event(event,millis());
     },this);
-    display.color_sink(s.color_display_,s.color_context_,[](void* raw) { ((NativeHost*)raw)->pump(); },this);
+    if(s.color_display_) display.color_sink([](void* raw,u32 op,const void* data) {
+      return static_cast<NativeHost*>(raw)->present_color(op,data);
+    },this,[](void* raw) { ((NativeHost*)raw)->pump(); },this);
   }
   ~NativeHost() {
     s.presentation_suspended_=false;
@@ -153,6 +156,13 @@ public:
   unsigned font_sessions = 0;
   bool preview = false;
   bool ai_frozen = false;
+  ai::PresentationGate ai_presentation;
+  u32 present_color(u32 operation,const void* payload) {
+    const u32 result=s.color_display_(s.color_context_,operation,payload);
+    if(result==1 && operation==MK61_COLOR_PRESENT) ai_presentation.color_presented();
+    if(result==1 && operation==MK61_COLOR_END) ai_presentation.color_ended();
+    return result;
+  }
   Settings settings() const { return s.ui_ ? s.ui_->settings() : Settings{}; }
   u32 setup(u32 op, u32 a, u32 b, void *payload);
   u32 resource(u32 op, u32 inode, void *payload);
@@ -271,15 +281,16 @@ public:
     if(!enabled) {
       host.display.flush();
 #if defined(PICO_ON_DEVICE)
-      // NativeDisplay has published a logical frame, but service_pump owns
-      // the physical LCD and can still be inside its 80ms frame interval.
-      // Let that owner submit the new status before the presentation gate
-      // closes. Otherwise consecutive forwards can hold the last loading
-      // frame indefinitely. Pumping keeps input and watchdog service live.
-      const u32 before=io_worker::statistics().display_frames;
-      const u64 deadline=time_us_64()+100000;
-      do { host.pump(); }
-      while(io_worker::statistics().display_frames==before && time_us_64()<deadline);
+      // Give the LCD owner one opportunity to submit pending progress.
+      // An unchanged frame does not increment display_frames: waiting for
+      // that counter can burn100ms even though there is nothing to send.
+      // If the owner is rate-limited, retry at the next forward boundary.
+      const u32 revision=script::frame_revision();
+      if(host.ai_presentation.needs_wait(revision)) {
+        const u32 before=io_worker::statistics().display_frames;
+        host.pump();
+        if(io_worker::statistics().display_frames!=before) host.ai_presentation.frozen(revision);
+      } else host.ai_presentation.frozen(revision);
       io_worker::suspend_frames(true);
 #endif
     }
@@ -705,15 +716,15 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   case MK61_SERVICE_COLOR_DISPLAY:
     if(a==MK61_COLOR_SPI_HZ) {
       if(!s.color_display_ || b || c!=sizeof(u32) || !payload) return 0;
-      return s.color_display_(s.color_context_,a,payload);
+      return host.present_color(a,payload);
     }
     if(a==MK61_COLOR_PALETTE64) {
       if(!s.color_display_ || b || c!=128 || !payload) return 0;
-      return s.color_display_(s.color_context_,a,payload);
+      return host.present_color(a,payload);
     }
     if(!s.color_display_ || b ||
        (a==MK61_COLOR_PRESENT ? c!=sizeof(mk61_service_color_frame) || !payload : c || payload)) return 0;
-    return s.color_display_(s.color_context_,a,payload);
+    return host.present_color(a,payload);
   case MK61_SERVICE_AUDIO_STREAM:
 #if defined(PICO_ON_DEVICE)
     if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN) {

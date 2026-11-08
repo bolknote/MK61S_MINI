@@ -19,12 +19,14 @@ static unsigned decode(uint8_t*p,unsigned n){
  }return at;
 }
 void stm3_client_init(stm3_client*c,const stm3_client_io*io){memset(c,0,sizeof(*c));c->io=*io;}
-static int exchange(stm3_client*c,void*out,unsigned*used,uint32_t timeout){
+static int exchange(stm3_client*c,void*out,unsigned*used,uint32_t timeout,int send){
  const unsigned capacity=*used;*used=0;
  if(!c->tx_bytes||!timeout||timeout>1000000u)return S3_SIZE;
  const uint32_t start=c->io.micros(c->io.context);
- if(!c->io.send(c->io.context,c->tx,c->tx_bytes,timeout))return S3_IO;
- c->sent+=c->tx_bytes;++c->requests;
+ if(send){
+  if(!c->io.send(c->io.context,c->tx,c->tx_bytes,timeout))return S3_IO;
+  c->sent+=c->tx_bytes;++c->requests;
+ }
  unsigned n=0;int overflow=0;
  for(;;){
   const uint32_t elapsed=c->io.micros(c->io.context)-start;
@@ -48,8 +50,8 @@ static int exchange(stm3_client*c,void*out,unsigned*used,uint32_t timeout){
  if(payload>4)memcpy(out,c->rx+12,payload-4);
  *used=payload-4;return 0;
 }
-int stm3_client_request(stm3_client*c,uint8_t command,const void*in,unsigned bytes,void*out,unsigned*used,uint32_t timeout){
- if(bytes>256||!used||(bytes&&!in)||!command||command&128u)return S3_SIZE;
+static int prepare_request(stm3_client*c,uint8_t command,const void*in,unsigned bytes){
+ if(bytes>256||(bytes&&!in)||!command||command&128u)return S3_SIZE;
  ++c->seq;c->command=command;
  uint8_t*p=c->rx;p[0]=1;p[1]=command;p[2]=(uint8_t)c->seq;p[3]=(uint8_t)(c->seq>>8);
  p[4]=(uint8_t)bytes;p[5]=(uint8_t)(bytes>>8);p[6]=p[7]=0;
@@ -57,9 +59,24 @@ int stm3_client_request(stm3_client*c,uint8_t command,const void*in,unsigned byt
  stm3_put32(p+8+bytes,crc(p,8+bytes));
  c->tx[0]=0;unsigned encoded=encode(p,12+bytes,c->tx+1);
  c->tx[encoded+1]=0;c->tx_bytes=encoded+2;
- return exchange(c,out,used,timeout);
+ return 0;
+}
+int stm3_client_request(stm3_client*c,uint8_t command,const void*in,unsigned bytes,void*out,unsigned*used,uint32_t timeout){
+ if(!used)return S3_SIZE;
+ int e=prepare_request(c,command,in,bytes);if(e)return e;
+ return exchange(c,out,used,timeout,1);
+}
+int stm3_client_begin(stm3_client*c,uint8_t command,const void*in,unsigned bytes,uint32_t timeout){
+ if(!timeout||timeout>1000000u)return S3_SIZE;
+ int e=prepare_request(c,command,in,bytes);if(e)return e;
+ if(!c->io.send(c->io.context,c->tx,c->tx_bytes,timeout))return S3_IO;
+ c->sent+=c->tx_bytes;++c->requests;return 0;
+}
+int stm3_client_finish(stm3_client*c,void*out,unsigned*used,uint32_t timeout){
+ if(!used)return S3_SIZE;
+ return exchange(c,out,used,timeout,0);
 }
 int stm3_client_replay(stm3_client*c,void*out,unsigned*used,uint32_t timeout){
  if(!used)return S3_SIZE;
- return exchange(c,out,used,timeout);
+ return exchange(c,out,used,timeout,1);
 }

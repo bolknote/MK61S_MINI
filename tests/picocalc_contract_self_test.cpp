@@ -408,6 +408,18 @@ void colored_text_contract() {
         if(ink) found[index]=true;
     }
     for(bool value:found) CHECK(value);
+    const auto before=capture.pixels;
+    const unsigned frames_before=capture.frames;
+    char changed_line[]="ABC";
+    display.call(MK61_SERVICE_DISPLAY_UI_LINE,1,0,changed_line);
+    const unsigned pitch=fonts::info(settings).height+fonts::info(settings).line_gap;
+    CHECK(capture.frames>frames_before && capture.frames-frames_before<10);
+    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
+        if(y<pitch || y>=2*pitch) CHECK(capture.pixels[y*320+x]==before[y*320+x]);
+    const unsigned unchanged_frames=capture.frames;
+    display.call(MK61_SERVICE_DISPLAY_UI_LINE,1,0,changed_line);
+    CHECK(capture.frames==unchanged_frames);
+    std::puts("Native colored damage: changed-row strips, unchanged-row zero traffic, neighboring pixels preserved PASS");
     display.call(MK61_SERVICE_DISPLAY_END_UI_TEXT,0,0,nullptr);CHECK(capture.ends==1);
 }
 }

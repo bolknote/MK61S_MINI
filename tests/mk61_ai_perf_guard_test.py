@@ -103,6 +103,44 @@ class Guards(unittest.TestCase):
         self.assertEqual(receipt["status"], "HOLD")
         self.assertTrue(receipt["cdc_closed"])
         self.assertFalse(receipt["temporary_removed"])
+    def test_m3_requires_same_arithmetic_clocks_and_pinned_module(self):
+        raw=(self.raw.replace(b"AIPERF1",b"AIPERF2").replace(b"cores=2",b"cores=3")
+             .replace(b"control=0",b"control=1")+b"prefetch=1\n")
+        self.config=perf.parse_config(raw)
+        self.p["config"]=self.config
+        path=Path(self.p["payloads"]["config"]["path"]);path.write_bytes(raw)
+        self.p["payloads"]["config"].update(bytes=len(raw),sha256=perf.ai.sha(path))
+        self.write()
+        with self.assertRaises(ValueError): self.check()
+        module=self.root/"M3LINE.S3M";module.write_bytes(b"owned-module")
+        self.p["payloads"]["m3_module"]={"path":str(module),"bytes":module.stat().st_size,"sha256":perf.ai.sha(module)}
+        lease=self.root/"ROOT-PICO-LEASE-001.json";lease.write_bytes(b"lease-test-fixture")
+        self.p.update(root_lease_path=str(lease),root_lease_inode=lease.stat().st_ino)
+        self.write();self.assertEqual(self.check()[0]["config"]["cores"],3)
+        module.write_bytes(b"changed-module")
+        with self.assertRaises(ValueError): self.check()
+        self.assertEqual(perf.parse_config(raw.replace(b"arithmetic=3",b"arithmetic=1"))["arithmetic"],1)
+        for invalid in (raw.replace(b"arithmetic=3",b"arithmetic=2"),
+                        raw.replace(b"mhz=125",b"mhz=250"),raw.replace(b"control=1",b"control=0"),
+                        raw.replace(b"stress_ms=0",b"stress_ms=1")):
+            with self.assertRaises(ValueError): perf.parse_config(invalid)
+    def test_m3_health_keeps_only_counters_and_rejects_faults(self):
+        values=dict(BOOTS=4,CRASH="NONE",SYS_HZ=125000000,PERI_HZ=48000000,PHYSICAL_KEYS=0,
+                    SETTINGS_WRITES=0,RTC_SET=0,APP_BUFFERS=0,ERRORS=0,QPI_FALLBACKS=0,TAIL_TIMEOUTS=0,
+                    CRC_ERRORS=0,DMA_TIMEOUTS=0,LCD_ERRORS=0,SD_SPEED_FALLBACKS=0,SD_PROBE_FAILURES=0,
+                    I2C_TIMEOUTS=0,I2C_ABORTS=0,SCREEN_ERRORS=0)
+        text=" ".join(f"{k}={v}" for k,v in values.items())+" RTC=private X=private"
+        self.assertEqual(perf.m3_health(text),{k:str(v) for k,v in values.items()})
+        for bad in (text.replace("I2C_ABORTS=0","I2C_ABORTS=1"),text.replace("APP_BUFFERS=0","APP_BUFFERS=1"),
+                    text.replace("SYS_HZ=125000000","SYS_HZ=200000000"),text.replace("CRASH=NONE","CRASH=FAULT")):
+            with self.assertRaises(ValueError): perf.m3_health(bad)
+        startup=text.replace("I2C_ABORTS=0","I2C_ABORTS=7").replace("QPI_FALLBACKS=0","QPI_FALLBACKS=1")
+        limits={"QPI_FALLBACKS":1,"I2C_ABORTS":64}
+        self.assertEqual(perf.m3_health(startup,limits)["I2C_ABORTS"],"7")
+        for bad in (startup.replace("I2C_TIMEOUTS=0","I2C_TIMEOUTS=1"),
+                    startup.replace("I2C_ABORTS=7","I2C_ABORTS=65"),
+                    startup.replace("QPI_FALLBACKS=1","QPI_FALLBACKS=2")):
+            with self.assertRaises(ValueError): perf.m3_health(bad,limits)
 
 
 if __name__ == "__main__": unittest.main()

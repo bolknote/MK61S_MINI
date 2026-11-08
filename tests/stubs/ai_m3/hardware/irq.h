@@ -1,0 +1,10 @@
+#pragma once
+using irq_handler_t=void(*)();
+enum {UART1_IRQ=21};
+bool irq_is_enabled(unsigned);
+irq_handler_t irq_get_exclusive_handler(unsigned);
+unsigned irq_get_priority(unsigned);
+void irq_set_exclusive_handler(unsigned,irq_handler_t);
+void irq_set_priority(unsigned,unsigned);
+void irq_set_enabled(unsigned,bool);
+void irq_remove_handler(unsigned,irq_handler_t);

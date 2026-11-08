@@ -1,6 +1,8 @@
 #include "ai_harness.hpp"
 #include "ai_chat.hpp"
 #include "ai_clock.hpp"
+#include "ai_m3.hpp"
+#include "ai_presentation.hpp"
 #include "mk61_ai_perf.hpp"
 #include "mk61_ai_linear.hpp"
 #include "mk61_ai_kernels.h"
@@ -168,6 +170,7 @@ struct UI {
         [](void *p) { return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS); },
         this);
   }
+  ~UI() { ai_m3::close(); }
   Host host;
   Store store;
   Session s;
@@ -182,6 +185,7 @@ struct UI {
   unsigned rows = 18, width = 304, line_count = 0, line_limit = 128,
            render_start = 0, model_loaded = 0, reads = 0;
   std::uint32_t last_draw = 0, last_edit = 0, started = 0;
+  PresentationCadence presentation;
   std::uint32_t sessions[16]{};
   unsigned session_count = 0;
   char prefix[1024]{}, notice[128]{}, lines[40][96]{}, text[2305]{};
@@ -197,7 +201,12 @@ struct UI {
   std::uint64_t psram_reads = 0, psram_writes = 0;
   std::uintptr_t stack_fill_end = 0;
   bool benchmarking = false, computing = false, freeze_screen = true;
+  bool compute_polled = false;
+  bool legacy_painted = false;
+  std::uint32_t compute_poll_stamp = 0;
   bool dual_core = true, filter_head = false, double_buffer = true;
+  bool m3_core = false;
+  char m3_module_path[128] = "/AI/M3LINE.S3M";
   unsigned freeze_count = 0, thaw_count = 0, freeze_violations = 0, frozen_revision = 0;
   LinearKernel linear_kernel = LinearKernel::SRAM;
   std::uint32_t cancel_observed = 0, cancel_return_us = 0;
@@ -281,6 +290,15 @@ struct UI {
     default:
       return M8("Готов");
     }
+  }
+  std::uint32_t presentation_phase() const {
+    const auto phase=agent.phase()==Agent::Phase::ADVANCE?Agent::Phase::DECODE:agent.phase();
+    return (unsigned(screen)<<16) | (unsigned(s.view)<<12) |
+        (loading?0x800U:benchmarking?0x400U:unsigned(phase));
+  }
+  bool draw_due(std::uint32_t now) const {
+    return (!loading && !benchmarking && !agent.active()) ||
+        presentation.due(now,presentation_phase(),loading?1000U:2000U);
   }
   u32 call(u32 op, u32 a = 0, u32 b = 0, u32 c = 0, void *p = nullptr) {
     return host.services->call(op, a, b, c, p);
@@ -404,6 +422,7 @@ struct UI {
   void configure_execution() {
     ComputeExecution e{};
     e.context = this;e.kernel = linear_kernel;e.filter_head = filter_head;
+    e.tile_rows = benchmarking && m3_core ? 64 : 8;
     e.prefetch = double_buffer;
     if (benchmarking) e.micros = [](void *p) {
       return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS);
@@ -411,12 +430,13 @@ struct UI {
     e.busy = [](void *raw, bool active) {
       auto &u = *static_cast<UI *>(raw);
       if (active && u.freeze_screen) {
-        if (u.dirty) u.draw();
+        if (u.dirty && u.draw_due(u.host.api->millis_ms())) u.draw();
         if (u.host.render) u.host.render(false);
         ++u.freeze_count;
         if (u.host.revision) u.frozen_revision = u.host.revision();
       }
       u.computing = active;
+      if (active) u.compute_polled = false;
       if (!active && u.freeze_screen) {
         if (u.host.revision && u.host.revision() != u.frozen_revision) ++u.freeze_violations;
         if (u.host.render) u.host.render(true);
@@ -431,6 +451,12 @@ struct UI {
       e.join = [](void *) { io_worker::join_compute(); };
     }
 #endif
+    if (m3_core && (arithmetic == Arithmetic::LUT_FLOAT32 || arithmetic == Arithmetic::INT8) &&
+        linear_kernel != LinearKernel::REFERENCE && ai_m3::open(m3_module_path)) {
+      e.remote_prepare = [](void *, const LinearBatch *b) { return ai_m3::prepare(b); };
+      e.remote_submit = [](void *, LinearBatch *b) { return ai_m3::submit(b); };
+      e.remote_join = [](void *) { return ai_m3::join(); };
+    } else ai_m3::close();
     model.execution(e);
   }
   static bool service(void *p) { return static_cast<UI *>(p)->pump(); }
@@ -755,7 +781,7 @@ unsigned UI::menu_count() const {
   case Screen::INTENT:
     return 3;
   case Screen::SETTINGS:
-    return 6;
+    return 7;
   case Screen::APPLY:
     return 2;
   default:
@@ -836,6 +862,9 @@ void UI::menu_label(unsigned i, char out[96]) {
                                : M8("Краткий план: выключен"));
       break;
     case 5:
+      std::snprintf(out, 96, "%s", m3_core ? M8("Ядра: 2 Pico + STM32") : M8("Ядра: 2 Pico"));
+      break;
+    case 6:
       std::snprintf(out, 96, "%s", M8("Назад"));
       break;
     }
@@ -1074,6 +1103,7 @@ void UI::body() {
 }
 void UI::draw() {
   if (screen == Screen::SESSION && !benchmarking) {
+    legacy_painted = false;
     sync_chat();
     if (!chat_graphics) {
       display(MK61_SERVICE_DISPLAY_END_UI_TEXT);
@@ -1098,6 +1128,7 @@ void UI::draw() {
       });
       dirty = false;
       last_draw = host.api->millis_ms();
+      presentation.presented(last_draw,presentation_phase());
       return;
     }
   }
@@ -1109,7 +1140,7 @@ void UI::draw() {
   if (!width)
     width = 304;
   display(MK61_SERVICE_DISPLAY_BEGIN_UPDATE);
-  display(MK61_SERVICE_DISPLAY_CLEAR);
+  if(!legacy_painted) display(MK61_SERVICE_DISPLAY_CLEAR);
   char header[96];
   std::snprintf(header, sizeof(header), M8("МК-61 #%lu | %s"),
                 (unsigned long)s.id, phase_name());
@@ -1196,9 +1227,11 @@ void UI::draw() {
                     ? M8("F1-F4:вкладки Esc:пауза/назад")
                     : "");
   display(MK61_SERVICE_DISPLAY_END_UPDATE);
+  legacy_painted = true;
   display(MK61_SERVICE_DISPLAY_FLUSH);
   dirty = false;
   last_draw = host.api->millis_ms();
+  presentation.presented(last_draw,presentation_phase());
 }
 void UI::open_binary() {
   mk61_service_choice choice{};
@@ -1515,8 +1548,16 @@ void UI::submit() {
   if (kind == 3) act(RUN_TESTS);
 }
 bool UI::pump() {
-  time_request(request_measured && (loading || agent.active()));
   const auto micros = call(MK61_SERVICE_MICROS);
+  // The model checks cancellation at every tile. Full native service pumps
+  // twice (service and key input), so do that work at a bounded8ms cadence
+  // instead of thousands of times per token. Loading and normal UI stay live.
+  if (computing) {
+    if (compute_polled && std::uint32_t(micros-compute_poll_stamp)<8000)
+      return !cancel && !quit;
+    compute_polled=true;compute_poll_stamp=micros;
+  }
+  time_request(request_measured && (loading || agent.active()));
   if (last_service)
     service_gap = std::max(service_gap, micros - last_service);
   last_service = micros;
@@ -1531,12 +1572,13 @@ bool UI::pump() {
   }
   const u32 now = host.api->millis_ms();
   if (screen == Screen::SESSION && request_running && now - last_draw >= 1000) dirty = true;
-  if (dirty && !(computing && freeze_screen) &&
+  if (dirty && !(computing && freeze_screen) && draw_due(now) &&
       (now - last_draw >= 80 || (!agent.active() && !loading && !benchmarking)))
     draw();
   return !cancel && !quit;
 }
 void UI::key(unsigned wire) {
+  presentation.invalidate();
   if (benchmarking) {
     if (!cancel && (wire == 0x1B || wire == 0xB1 || wire == 0x85)) {
       cancel_observed = call(MK61_SERVICE_MICROS);
@@ -1716,6 +1758,7 @@ void UI::key(unsigned wire) {
         open_form(5, value);
       } else if (selected == 1) {
         arithmetic = Arithmetic((unsigned(arithmetic) + 1) % 4);
+        if (arithmetic != Arithmetic::LUT_FLOAT32) { m3_core = false; ai_m3::close(); }
         agent.reset();
         dirty = true;
       } else if (selected == 4) {
@@ -1724,6 +1767,15 @@ void UI::key(unsigned wire) {
         checkpoint();
         dirty = true;
       } else if (selected == 5) {
+        m3_core = !m3_core;
+        if (m3_core) arithmetic = Arithmetic::LUT_FLOAT32;
+        configure_execution();
+        if (m3_core && !ai_m3::statistics().active) {
+          m3_core = false;
+          message(M8("STM32 недоступен. Нужен M3LINE.S3M."));
+        }
+        agent.reset(); dirty = true;
+      } else if (selected == 6) {
         screen = Screen::SESSION;
         dirty = true;
       }
@@ -2133,22 +2185,54 @@ unsigned UI::bench() {
   return ok && !cancel && same && roundtrip && valid_prefix ? 0 : 3;
 }
 unsigned UI::perf(const char *directory,const PerfConfig &config) {
+  // Reserve the larger tiles only for this diagnostic, before workspace bind.
+  auto memory_plan=model.execution();memory_plan.tile_rows=config.cores==3?64:8;
+  model.execution(memory_plan);
   if(!ensure_model()) return 3;
   cancel=false;cancel_observed=cancel_return_us=0;
   std::uint16_t ids[64]{};unsigned count=0;
   if(model.encode("Задача: вычисли выражение в регистрах. Проверь результат и заверши программу.",
                   ids,64,count)!=ModelStatus::OK || count<config.prefill) return 3;
+  if(config.cores==3) {
+    const int n=std::snprintf(m3_module_path,sizeof(m3_module_path),"%s/M3LINE.S3M",directory);
+    if(n<0 || unsigned(n)>=sizeof(m3_module_path)) return 3;
+  }
   struct Result {
     std::uint64_t prefill_us=0,decode_us=0;
     std::uint32_t max_step_us=0,rows=0,skipped=0,jobs=0,worker_rows=0,prefetches=0,prefetched_bytes=0;
     std::uint64_t read_us=0,matmul_us=0,wait_us=0;
+    std::uint64_t decode_layers_us=0,decode_classifier_us=0;
+    std::uint64_t decode_presentation_us=0,decode_service_us=0;
+    std::uint32_t decode_service_calls=0;
+    std::uint32_t remote_jobs=0,remote_rows=0,remote_fallbacks=0;
+    std::uint64_t remote_prepare_us=0,remote_submit_us=0,remote_wait_us=0;
+    ai_m3::Statistics m3{};
+    std::uint32_t kv_checksum=0;
     unsigned completed=0,prefill=0,decode=0;
     std::uint16_t next[24]{};
     std::uint32_t checksum[24]{};
   };
   std::unique_ptr<Result[]> results(new(std::nothrow) Result[5]);
   if(!results) return 3;
-  bool matching_tokens=true,matching_checksums=true,valid_prefix=true;
+  const bool archived = config.control == 2;
+  if(archived) {
+    char path[128];std::snprintf(path,sizeof(path),"%s/PERF.REF",directory);
+    std::uint8_t bytes[20+24*8];unsigned used=0;
+    const unsigned steps=config.prefill+config.decode;
+    files::Entry entry{};
+    const auto word=[&](unsigned at) { return unsigned(bytes[at]) | unsigned(bytes[at+1])<<8 |
+        unsigned(bytes[at+2])<<16 | unsigned(bytes[at+3])<<24; };
+    if(!files::stat(path,entry) || entry.directory || entry.size!=20+steps*8 ||
+        !files::read_range(path,0,bytes,entry.size,used) || used!=entry.size ||
+        word(0)!=0x31524941U || word(4)!=steps || word(8)!=config.prefill ||
+        word(12)!=config.decode || word(16)!=model.config().vocab) return 3;
+    for(unsigned i=0;i<steps;++i) {
+      if(word(20+i*8)>=model.config().vocab) return 3;
+      results[0].next[i]=std::uint16_t(word(20+i*8));
+      results[0].checksum[i]=word(24+i*8);
+    }
+  }
+  bool matching_tokens=true,matching_checksums=true,matching_kv=true,valid_prefix=true;
   ModelStatus status=ModelStatus::OK;
   struct Policy { UI *ui;ToolGrammar grammar; } policy{this,{}};
   auto allowed=[](void *raw,std::uint16_t id) {
@@ -2164,13 +2248,32 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
     auto &result=results[pass];
     const bool original=pass==0 && !config.control;
     linear_kernel=original?LinearKernel::REFERENCE:LinearKernel(config.kernel);
-    dual_core=!original && config.cores==2;
+    dual_core=!original && config.cores>=2;
+    m3_core=pass>0 && config.cores==3;
+    arithmetic=Arithmetic(config.arithmetic);
     freeze_screen=!original && config.freeze;
     filter_head=!original && config.filter;
-    // The control is the current synchronous two-core kernel at stock clocks.
-    // Only target passes enable prefetch; all arithmetic/settings are shared.
-    double_buffer=pass>0 && config.prefetch;
+    // M3 compares identical two-core settings, including prefetch. Older DMA
+    // experiments retain their synchronous control and target-only prefetch.
+    double_buffer=(pass>0 || config.cores==3) && config.prefetch;
     configure_execution();model.reset();policy.grammar.reset(false,false,false);
+    const auto transport_before=ai_m3::statistics();
+    struct TransportEnd {
+      bool enabled;
+      Result &result;
+      ai_m3::Statistics before;
+      ~TransportEnd() {
+        if(!enabled) return;
+        result.m3=ai_m3::statistics();
+        result.m3.sent-=before.sent;result.m3.received-=before.received;
+        result.m3.requests-=before.requests;
+        ai_m3::close();
+        const auto closed=ai_m3::statistics();
+        result.m3.unload_failures=closed.unload_failures;
+        result.m3.uart_errors=closed.uart_errors;result.m3.error=closed.error;
+      }
+    } transport_end{m3_core,result,transport_before};
+    if(m3_core && !transport_before.active) return false;
     for(unsigned i=0;i<steps;++i) {
       std::snprintf(s.feedback,sizeof(s.feedback),"Perf pass %u step %u/%u; Esc: stop",pass,i+1,steps);
       dirty=true;
@@ -2183,6 +2286,7 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       status=model.forward(token,i+1>=config.prefill,next,service,this,
           Arithmetic(config.arithmetic),nullptr,config.constrained?+allowed:nullptr,&policy);
       const auto elapsed=call(MK61_SERVICE_MICROS)-before;
+      if(m3_core && ai_m3::statistics().error) return false;
       result.max_step_us=std::max(result.max_step_us,elapsed);
       if(status!=ModelStatus::OK) {
         if(cancel_observed) cancel_return_us=call(MK61_SERVICE_MICROS)-cancel_observed;
@@ -2199,9 +2303,23 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       result.read_us+=model.compute_metrics().read_us;
       result.matmul_us+=model.compute_metrics().matmul_us;
       result.wait_us+=model.compute_metrics().wait_us;
+      const auto &metrics=model.compute_metrics();
+      result.remote_jobs+=metrics.remote_jobs;
+      result.remote_rows+=metrics.remote_rows;
+      result.remote_fallbacks+=metrics.remote_fallbacks;
+      result.remote_prepare_us+=metrics.remote_prepare_us;
+      result.remote_submit_us+=metrics.remote_submit_us;
+      result.remote_wait_us+=metrics.remote_wait_us;
       ++result.completed;
       if(i<config.prefill) { result.prefill_us+=elapsed;++result.prefill; }
-      else { result.decode_us+=elapsed;++result.decode; }
+      else {
+        result.decode_us+=elapsed;++result.decode;
+        result.decode_layers_us+=metrics.layers_us;
+        result.decode_classifier_us+=metrics.classifier_us;
+        result.decode_presentation_us+=metrics.presentation_us;
+        result.decode_service_us+=metrics.service_us;
+        result.decode_service_calls+=metrics.service_calls;
+      }
       if(pass) {
         matching_tokens=matching_tokens && next==results[0].next[i];
         // A legacy control evaluates masked-out logits too. Sparse output
@@ -2217,9 +2335,28 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       sample_memory();
       if(!matching_tokens || !matching_checksums || !valid_prefix) return false;
     }
+    if(config.cores==3) {
+      // Outside forward timing, after every worker/DMA job is joined. The
+      // unwritten KV bytes remain unchanged between passes; compare the whole
+      // allocation too, so accidental writes outside valid positions count.
+      std::uint8_t block[256];std::uint32_t hash=2166136261U;
+      for(unsigned at=0;at<model.cache_bytes();) {
+        const unsigned take=std::min(unsigned(sizeof(block)),unsigned(model.cache_bytes()-at));
+        if(!cache.read(at,block,take)) { status=ModelStatus::IO;return false; }
+        for(unsigned j=0;j<take;++j) hash=(hash^block[j])*16777619U;
+        at+=take;
+        if((at&16383U)==0 && !pump()) { cancel=true;return false; }
+      }
+      result.kv_checksum=hash;
+      if(pass && !archived) matching_kv=matching_kv && hash==results[0].kv_checksum;
+    }
+    if(m3_core) {
+      const auto state=ai_m3::statistics();
+      if(!result.remote_jobs || result.remote_fallbacks || state.error || state.uart_errors) return false;
+    }
     return true;
   };
-  bool ok=run(0);
+  bool ok=archived || run(0);
   // Stress only an owned external allocation. Never run the device-wide
   // PSRAM self-test while the model/KV or another cache is resident.
   shared_memory::Buffer scratch;
@@ -2280,7 +2417,7 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       LinearBatch local=stress,remote=stress;
       bool submitted=false;
 #if defined(PICO_ON_DEVICE)
-      if(config.cores==2) {
+      if(config.cores>=2) {
         local.rows=remote.rows=2;remote.weights+=32;remote.scales+=4;remote.output+=2;
         submitted=io_worker::submit_compute(&remote,linear_batch_sram);
         if(!submitted) local.rows=4;
@@ -2304,6 +2441,7 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
     if(stress_execution.busy) stress_execution.busy(stress_execution.context,false);
   }
   const bool clocks_restored=ai_clock::restore(frequency);
+  ai_m3::close();
   const auto restored_hz=ai_clock::hz();
   // All exits after begin converge here, before SD writes, teardown or return.
   // A failed stability check does not start the next requested frequency.
@@ -2320,7 +2458,10 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
 #endif
   bool used_worker=!device || config.cores==1;
   for(unsigned i=1;i<=passes;++i) used_worker=used_worker || results[i].jobs>0;
-  ok=ok && !cancel && matching_tokens && matching_checksums && valid_prefix && clocks_restored &&
+  if(config.cores==3) for(unsigned i=1;i<=passes;++i)
+    ok=ok && results[i].remote_jobs && !results[i].remote_fallbacks &&
+       !results[i].m3.error && !results[i].m3.uart_errors && !results[i].m3.unload_failures;
+  ok=ok && !cancel && matching_tokens && matching_checksums && matching_kv && valid_prefix && clocks_restored &&
       !freeze_violations && freeze_count==thaw_count && used_worker && !i2c_errors;
   std::unique_ptr<char[]> json(new(std::nothrow) char[8192]);
   if(!json) return 3;
@@ -2340,25 +2481,40 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       config.kernel,config.arithmetic,config.cores,config.freeze,config.filter,config.mhz,config.prefill,
       config.decode,config.repeat,config.stress_ms,config.control,config.constrained);
   if(config.version==2) append(",\"prefetch\":%u",config.prefetch);
-  append("},"
+  append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:8);
+  append(
       "\"actual_hz\":%lu,\"restored_hz\":%lu,\"clocks_restored\":%s,\"matching_tokens\":%s,"
-      "\"matching_checksums\":%s,\"valid_tool_prefix\":%s,\"model_status\":%u,\"results\":[",
+      "\"matching_checksums\":%s,\"matching_kv\":%s,\"valid_tool_prefix\":%s,\"model_status\":%u,\"results\":[",
       (unsigned long)actual_hz,
       (unsigned long)restored_hz,clocks_restored?"true":"false",matching_tokens?"true":"false",
-      matching_checksums?"true":"false",valid_prefix?"true":"false",unsigned(status));
-  for(unsigned i=0;i<=passes;++i) {
+      matching_checksums?"true":"false",archived?"null":matching_kv?"true":"false",valid_prefix?"true":"false",unsigned(status));
+  for(unsigned i=archived?1U:0U;i<=passes;++i) {
     const auto &r=results[i];
     append("%s{\"pass\":%u,\"prefill_tokens\":%u,\"prefill_us\":%llu,\"decode_tokens\":%u,\"decode_us\":%llu,"
         "\"max_step_us\":%lu,\"rows\":%lu,\"skipped_rows\":%lu,\"worker_jobs\":%lu,\"worker_rows\":%lu,"
-        "\"prefetches\":%lu,\"prefetched_bytes\":%lu,\"read_us\":%llu,\"matmul_us\":%llu,\"wait_us\":%llu,\"next\":[",
-        i?",":"",i,r.prefill,(unsigned long long)r.prefill_us,r.decode,(unsigned long long)r.decode_us,
+        "\"prefetches\":%lu,\"prefetched_bytes\":%lu,\"read_us\":%llu,\"matmul_us\":%llu,\"wait_us\":%llu,"
+        "\"decode_layers_us\":%llu,\"decode_classifier_us\":%llu,"
+        "\"decode_presentation_us\":%llu,\"decode_service_us\":%llu,\"decode_service_calls\":%lu,\"next\":[",
+        i>(archived?1U:0U)?",":"",i,r.prefill,(unsigned long long)r.prefill_us,r.decode,(unsigned long long)r.decode_us,
         (unsigned long)r.max_step_us,(unsigned long)r.rows,(unsigned long)r.skipped,(unsigned long)r.jobs,
         (unsigned long)r.worker_rows,(unsigned long)r.prefetches,(unsigned long)r.prefetched_bytes,
-        (unsigned long long)r.read_us,(unsigned long long)r.matmul_us,(unsigned long long)r.wait_us);
+        (unsigned long long)r.read_us,(unsigned long long)r.matmul_us,(unsigned long long)r.wait_us,
+        (unsigned long long)r.decode_layers_us,(unsigned long long)r.decode_classifier_us,
+        (unsigned long long)r.decode_presentation_us,(unsigned long long)r.decode_service_us,
+        (unsigned long)r.decode_service_calls);
     for(unsigned j=0;j<r.completed;++j) append("%s%u",j?",":"",unsigned(r.next[j]));
     append("],\"checksums\":[");
     for(unsigned j=0;j<r.completed;++j) append("%s\"%08lx\"",j?",":"",(unsigned long)r.checksum[j]);
-    append("]}");
+    append("],\"kv_checksum\":\"%08lx\",\"remote_jobs\":%lu,\"remote_rows\":%lu,\"remote_fallbacks\":%lu,"
+        "\"remote_prepare_us\":%llu,\"remote_submit_us\":%llu,\"remote_wait_us\":%llu,"
+        "\"m3\":{\"error\":%d,\"setup_us\":%lu,\"sent\":%lu,\"received\":%lu,\"requests\":%lu,"
+        "\"jobs\":%lu,\"rows\":%lu,\"vectors\":%lu,\"max_slice_us\":%lu,\"context_bytes\":%lu,"
+        "\"uart_errors\":%lu,\"unload_failures\":%lu}}",
+        (unsigned long)r.kv_checksum,(unsigned long)r.remote_jobs,(unsigned long)r.remote_rows,(unsigned long)r.remote_fallbacks,
+        (unsigned long long)r.remote_prepare_us,(unsigned long long)r.remote_submit_us,(unsigned long long)r.remote_wait_us,
+        r.m3.error,(unsigned long)r.m3.setup_us,(unsigned long)r.m3.sent,(unsigned long)r.m3.received,(unsigned long)r.m3.requests,
+        (unsigned long)r.m3.jobs,(unsigned long)r.m3.rows,(unsigned long)r.m3.vectors,(unsigned long)r.m3.max_slice_us,
+        (unsigned long)r.m3.context_bytes,(unsigned long)r.m3.uart_errors,(unsigned long)r.m3.unload_failures);
   }
   append("],\"freeze_count\":%u,\"thaw_count\":%u,\"freeze_violations\":%u,\"worker_jobs\":%u,\"worker_max_us\":%u,"
       "\"i2c_errors\":%u,\"stress_iterations\":%u,\"control_probe_calls\":%u,\"heap_capacity\":%lu,\"sampled_heap_peak\":%lu,"
@@ -2442,7 +2598,7 @@ unsigned UI::run() {
   while (!quit) {
     pump();
     tick();
-    if (dirty)
+    if (dirty && draw_due(host.api->millis_ms()))
       draw();
     if (!agent.active() && !loading) {
       const auto now = host.api->millis_ms();

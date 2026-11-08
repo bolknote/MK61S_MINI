@@ -7,7 +7,11 @@ constexpr uint32_t PIO_HZ=100000000,PWM_HZ=100000000,LEASE_MS=105000;
 struct Plan { uint32_t mhz,vco_hz,postdiv1,postdiv2,pio_div256,pwm_div16; };
 constexpr Plan step(uint32_t mhz) {return {mhz,mhz*6000000,6,1,(mhz*64+24)/25,(mhz*4+24)/25};}
 constexpr Plan plans[]={{125,1500000000,6,2,320,20},step(130),step(140),step(150),step(160),step(170),
-    step(180),step(190),step(200),step(210),step(220),step(230),step(240),step(250)};
+    step(180),step(190),step(200),step(210),step(220),step(230),step(240),step(250)
+#if defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK
+    ,{270,1080000000,4,1,692,44}
+#endif
+};
 constexpr const Plan* find(uint32_t mhz) {
     for(const auto& p:plans)if(p.mhz==mhz)return &p;
     return nullptr;

@@ -144,7 +144,7 @@ void wide_head_layout(std::vector<std::uint8_t> package) {
                     {&cache, unsigned(cache.size()), read_memory,
                      write_memory}) == ModelStatus::OK);
   std::uint16_t best = 999;
-  for(auto kernel:{LinearKernel::REFERENCE,LinearKernel::FLASH,LinearKernel::SRAM}) {
+  for(auto kernel:{LinearKernel::REFERENCE,LinearKernel::FLASH_CODE,LinearKernel::SRAM}) {
     ComputeExecution execution{};execution.kernel=kernel;model.execution(execution);
     for(auto arithmetic:{Arithmetic::FLOAT32,Arithmetic::INT8,Arithmetic::LUT_INT8,Arithmetic::LUT_FLOAT32}) {
       model.reset();

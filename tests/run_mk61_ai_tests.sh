@@ -41,6 +41,11 @@ clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" \
     "$root/code/mk61_ai_tokenizer.cpp" "$ai_build/kernels.o" \
     "$root/tests/mk61_ai_prefetch_self_test.cpp" -o "$ai_build/prefetch-test"
 "$ai_build/prefetch-test" "$ai_package"
+clang++ "${ai_flags[@]}" "${ai_sanitizers[@]}" -I"$root/ports/picocalc" \
+    "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" \
+    "$root/code/mk61_ai_tokenizer.cpp" "$ai_build/kernels.o" \
+    "$root/tests/mk61_ai_presentation_self_test.cpp" -o "$ai_build/presentation-test"
+"$ai_build/presentation-test" "$ai_package"
 if [[ -n "${MK61_AI_REFERENCE_PYTHON:-}" ]]; then
     if [[ "${MK61_AI_TEST_SANITIZERS:-0}" == 1 ]]; then
         echo "Run Python parity separately without sanitizers." >&2

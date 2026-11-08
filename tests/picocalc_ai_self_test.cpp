@@ -414,6 +414,43 @@ void picocalc_ai_test() {
           at=std::strstr(at,"\"prefetches\":");assert(at);at+=13;
           assert(pass?std::strtoul(at,nullptr,10)>0:std::strtoul(at,nullptr,10)==0);
         }
+        // Reuse the HOST oracle just produced. An archived run must emit only
+        // candidate pass 1, and reject a malformed reference before computing.
+        std::array<u8,52> reference{};
+        const auto put=[&](unsigned offset,unsigned value) {
+          for(unsigned byte=0;byte<4;++byte) reference[offset+byte]=u8(value>>(8*byte));
+        };
+        const char *vocab=std::strstr(result,"\"vocab\":");assert(vocab);
+        put(0,0x31524941U);put(4,4);put(8,2);put(12,2);
+        put(16,unsigned(std::strtoul(vocab+8,nullptr,10)));
+        const char *next=std::strstr(result,"\"next\":[");
+        const char *checksums=std::strstr(result,"\"checksums\":[");
+        assert(next && checksums);next+=8;checksums+=13;
+        for(unsigned step=0;step<4;++step) {
+          char *end=nullptr;
+          put(20+8*step,unsigned(std::strtoul(next,&end,10)));next=end+1;
+          assert(*checksums=='\"');
+          put(24+8*step,unsigned(std::strtoul(checksums+1,&end,16)));
+          assert(*end=='\"');checksums=end+2;
+        }
+        assert(files::write("/AI/HOSTBENCH/PERF.REF",reference.data(),unsigned(reference.size())));
+        const char archived[]="AIPERF2\nkernel=2\narithmetic=3\ncores=2\nfreeze=1\nfilter=0\nmhz=125\nprefill=2\ndecode=2\nrepeat=1\nstress_ms=0\ncontrol=2\nconstrained=0\nprefetch=1\n";
+        assert(files::write_text("/AI/HOSTBENCH/PERF.CFG",archived,sizeof(archived)-1));
+        services.test_native_contract(launch_benchmark,nullptr,true);
+        assert(files::read_text("/AI/HOSTBENCH/PERF.JSON",result,sizeof(result)-1,used));result[used]=0;
+        assert(std::strstr(result,"\"ok\":true") &&
+               std::strstr(result,"\"reference_external\":true") &&
+               std::strstr(result,"\"matching_tokens\":true") &&
+               std::strstr(result,"\"matching_checksums\":true") &&
+               std::strstr(result,"\"matching_kv\":null") &&
+               std::strstr(result,"\"pass\":1") && !std::strstr(result,"\"pass\":0") &&
+               !std::strstr(result,"\"pass\":2"));
+        assert(files::remove("/AI/HOSTBENCH/PERF.JSON"));
+        reference[0]^=1;
+        assert(files::write("/AI/HOSTBENCH/PERF.REF",reference.data(),unsigned(reference.size())));
+        services.test_native_contract(launch_cancelled_benchmark,nullptr,true);
+        assert(!files::exists("/AI/HOSTBENCH/PERF.JSON") && files::remove("/AI/HOSTBENCH/PERF.REF"));
+        std::puts("Native archived performance: only candidate pass, exact oracle tokens/checksums, malformed reference rejected PASS (host)");
       }
     }
     assert(files::remove("/AI/HOSTBENCH/PERF.CFG"));

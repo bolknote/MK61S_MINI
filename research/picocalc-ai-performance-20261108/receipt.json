@@ -1,0 +1,32 @@
+{
+  "status": "MEASUREMENT_PASS_RECOVERED_REPORT",
+  "controller_prompt_lost": true,
+  "report_freshness": "model_load_us5132064 matches this run AI_LOAD marker; config and complete passes validated",
+  "build": "19222E8E",
+  "crc": "6806A4A1",
+  "reference_seconds_per_token": 1.114016,
+  "seconds_per_token": [
+    1.0719955,
+    1.0720915
+  ],
+  "time_reduction_percent": [
+    3.771983526268907,
+    3.7633660557837567
+  ],
+  "speedup": [
+    1.0391983921574295,
+    1.0391053375574753
+  ],
+  "control_rerun": false,
+  "matching_tokens": true,
+  "matching_checksums": true,
+  "actual_hz": 270000000,
+  "final_hz": 125000000,
+  "final_runtime": "NONE",
+  "final_service": "CLOSED",
+  "final_ui": "CALCULATOR",
+  "cdc_closed": true,
+  "msc_closed": true,
+  "lease_closed": true,
+  "apps_removed": true
+}

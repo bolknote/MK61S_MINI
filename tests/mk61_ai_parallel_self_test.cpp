@@ -108,6 +108,16 @@ int main(int argc, char **argv) {
   auto prefetch_config=std::string(valid);prefetch_config[6]='2';prefetch_config+="prefetch=1\n";
   assert(parse_perf_config(prefetch_config.data(),unsigned(prefetch_config.size()),config) &&
          config.version==2 && config.prefetch==1 && config.cores==2);
+  auto archived=prefetch_config;
+  archived.replace(archived.find("control=1"),9,"control=2");
+  archived.replace(archived.find("mhz=250"),7,"mhz=270");
+  assert(parse_perf_config(archived.data(),unsigned(archived.size()),config) &&
+         config.control==2 && config.cores==2 && config.mhz==270);
+  for(auto bad:{archived,std::string(valid)}) {
+    if(bad==archived) bad.replace(bad.find("cores=2"),7,"cores=1");
+    else bad.replace(bad.find("control=1"),9,"control=2");
+    assert(!parse_perf_config(bad.data(),unsigned(bad.size()),config));
+  }
   auto invalid_prefetch=prefetch_config;invalid_prefetch.replace(invalid_prefetch.find("prefetch=1"),10,"prefetch=2");
   assert(!parse_perf_config(invalid_prefetch.data(),unsigned(invalid_prefetch.size()),config));
   for (const auto &bad : {std::string(valid)+"mhz=300\n",std::string(valid)+"unknown=1\n",
@@ -137,7 +147,7 @@ int main(int argc, char **argv) {
       oracle.push_back(a);
       checksum.push_back(reference.model.compute_metrics().checksum);
     }
-    for (auto kernel : {LinearKernel::FLASH, LinearKernel::SRAM}) {
+    for (auto kernel : {LinearKernel::FLASH_CODE, LinearKernel::SRAM}) {
       for (bool parallel : {false, true}) {
         candidate.configure(kernel, parallel ? &worker : nullptr);
         candidate.model.reset();

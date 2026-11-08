@@ -28,7 +28,8 @@ enum class ModelStatus : std::uint8_t {
   NUMERIC
 };
 enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32 };
-enum class LinearKernel : std::uint8_t { REFERENCE, FLASH, SRAM };
+enum class LinearKernel : std::uint8_t { REFERENCE, FLASH_CODE, SRAM };
+struct LinearBatch;
 struct ComputeExecution {
   // submit publishes one bounded SRAM-only job; join completes it before any
   // input, LUT, tile, output or job descriptor is changed or destroyed.
@@ -40,12 +41,27 @@ struct ComputeExecution {
   bool filter_head = false;
   bool prefetch = true;
   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
+  // Optional coprocessor. prepare stages the immutable vector before PSRAM
+  // prefetch and returns its row capacity. submit must leave no live job on
+  // refusal; join always drains a successful submission, even on failure.
+  unsigned (*remote_prepare)(void *, const LinearBatch *) = nullptr;
+  bool (*remote_submit)(void *, LinearBatch *) = nullptr;
+  bool (*remote_join)(void *) = nullptr;
+  unsigned tile_rows = 8; // 8 normally; 64 for the three-core diagnostic.
 };
 struct ComputeMetrics {
   std::uint32_t rows = 0, skipped_rows = 0, worker_jobs = 0, worker_rows = 0;
   std::uint32_t checksum = 2166136261U;
   std::uint32_t prefetches = 0, prefetched_bytes = 0;
   std::uint32_t read_us = 0, matmul_us = 0, wait_us = 0;
+  // Wall time: embedding + transformer body, then final norm + classifier.
+  // Zero when the optional diagnostic clock is absent.
+  std::uint32_t layers_us = 0, classifier_us = 0;
+  // Presentation brackets the layer/head timers. Service time is nested
+  // inside those timers and must not be added to them a second time.
+  std::uint32_t presentation_us = 0, service_us = 0, service_calls = 0;
+  std::uint32_t remote_jobs = 0, remote_rows = 0, remote_fallbacks = 0;
+  std::uint32_t remote_prepare_us = 0, remote_submit_us = 0, remote_wait_us = 0;
 };
 struct ModelConfig {
   std::uint32_t layers, hidden, intermediate, heads, kv_heads, head_dim;

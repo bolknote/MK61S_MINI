@@ -99,6 +99,7 @@ def main():
     parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
     parser.add_argument("--psram-spi", action="store_true", help="Control build without four-bit PSRAM")
     parser.add_argument("--cosmic-clock-diagnostic", action="store_true", help="Prepare temporary125/200/250MHz diagnostic image")
+    parser.add_argument("--ai-overclock-diagnostic", action="store_true", help="AI diagnostic at qualified270MHz; stock voltage")
     parser.add_argument("--audio-clock", action=argparse.BooleanOptionalAction, default=True,
                         help="Use200MHz while a real-time APP synth runs; restore125MHz on close")
     parser.add_argument("--audio-dma", action=argparse.BooleanOptionalAction, default=False,
@@ -139,7 +140,8 @@ def main():
         if args.psram_spi:
             source_hash.update(b'picocalc-psram-qpi=0\0')
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
-        if args.audio_clock and not args.cosmic_clock_diagnostic: source_hash.update(b"audio-clock=200\0")
+        if args.ai_overclock_diagnostic: source_hash.update(b"ai-clock270=1\0")
+        if args.audio_clock and not args.cosmic_clock_diagnostic and not args.ai_overclock_diagnostic: source_hash.update(b"audio-clock=200\0")
         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
         if args.m0_libc_candidate: source_hash.update(f"m0-libc-candidate={args.m0_libc_candidate}\0".encode())
         source_hash.update(f"lcd-color-chain={int(args.lcd_color_chain)}\0lcd-spi-request={args.lcd_spi_hz}\0".encode())
@@ -155,6 +157,7 @@ def main():
              f"-DMK61_PICOCALC_PSRAM_QPI={'OFF' if args.psram_spi else 'ON'}",
              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
+             f"-DMK61_PICOCALC_AI_OVERCLOCK={'ON' if args.ai_overclock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
              f"-DMK61_PICOCALC_M0_LIBC_CANDIDATE={args.m0_libc_candidate}",
@@ -207,7 +210,8 @@ def main():
             "profile": args.profile, "prototype_version": re.search(r'VERSION\[\]\s*=\s*"(\d+\.\d+\.\d+)"',
                 (ROOT / 'ports/picocalc/version.hpp').read_text())[1], "mcu": "RP2040",
             "sampling_profile": args.sampling_profile,
-            "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic else None,
+            "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic and not args.ai_overclock_diagnostic else None,
+            "ai_overclock_diagnostic": args.ai_overclock_diagnostic,
             "block_audio_dma": args.audio_dma,
             "m0_libc_candidate": args.m0_libc_candidate,
             "lcd_color_chain": args.lcd_color_chain,

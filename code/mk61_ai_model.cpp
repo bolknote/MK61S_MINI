@@ -192,7 +192,8 @@ std::size_t Model::workspace_bytes() const {
       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
   const unsigned needed =
       4 * floats + raw + columns + 8 * (columns / 32) + 16 * columns +
-      16 * (columns * 9 / 16) + 8 * sizeof(float) + 16;
+      2 * (execution_.tile_rows==64?64U:8U) * (columns * 9 / 16) +
+      (execution_.tile_rows==64?64U:8U) * sizeof(float) + 16;
   return std::max(needed, 6U * MAX_TEXT);
 }
 ModelStatus Model::bind(void *workspace, std::size_t n, Memory cache) {
@@ -211,7 +212,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
                            void *context, Arithmetic arithmetic, float *logits,
                            bool (*allowed)(void *, std::uint16_t),
                            void *policy) {
-  if (!workspace_)
+  if (!workspace_ || bound_ < workspace_bytes())
     return ModelStatus::MEMORY;
   if (token >= config_.vocab)
     return ModelStatus::FORMAT;
@@ -222,13 +223,25 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   // screen. Per-tile joins below happen before this scope can be left.
   struct Busy {
     ComputeExecution execution;
-    explicit Busy(ComputeExecution e) : execution(e) {
+    ComputeMetrics &metrics;
+    std::uint32_t stamp() const {
+      return execution.micros?execution.micros(execution.context):0U;
+    }
+    Busy(ComputeExecution e,ComputeMetrics &m) : execution(e),metrics(m) {
+      const auto before=stamp();
       if (execution.busy) execution.busy(execution.context, true);
+      metrics.presentation_us+=stamp()-before;
     }
     ~Busy() {
+      const auto before=stamp();
       if (execution.busy) execution.busy(execution.context, false);
+      metrics.presentation_us+=stamp()-before;
     }
-  } busy(execution_);
+  } busy(execution_,compute_metrics_);
+  auto forward_stamp = [&]() {
+    return execution_.micros ? execution_.micros(execution_.context) : 0U;
+  };
+  const auto layers_started = forward_stamp();
   const auto &c = config_;
   const unsigned qn = c.heads * c.head_dim, kn = c.kv_heads * c.head_dim;
   float *cursor = reinterpret_cast<float *>(workspace_);
@@ -253,11 +266,19 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   auto *input_sums = activation_scales + columns / 32;
   auto *lookup = input_sums + columns / 32;
   auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * columns);
-  const unsigned tile_bytes = 8 * columns * 9 / 16;
+  const unsigned tile_rows = execution_.tile_rows==64?64U:8U;
+  const unsigned tile_bytes = tile_rows * columns * 9 / 16;
   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
   ModelStatus status = ModelStatus::OK;
   auto alive = [&]() {
-    if (service && !service(context)) {
+    bool proceed=true;
+    if(service) {
+      const auto before=forward_stamp();
+      proceed=service(context);
+      compute_metrics_.service_us+=forward_stamp()-before;
+      ++compute_metrics_.service_calls;
+    }
+    if (!proceed) {
       status = ModelStatus::CANCELLED;
       return false;
     }
@@ -343,13 +364,13 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     float maximum = -FLT_MAX;
     best = 0;
     if (execution_.kernel != LinearKernel::REFERENCE) {
-      constexpr unsigned TILE = 8;
+      const unsigned TILE = tile_rows;
       const unsigned bytes = t.cols * t.bits / 8, scales = t.cols / 16;
       auto kernel = execution_.kernel == LinearKernel::SRAM
                         ? linear_batch_sram : linear_batch_flash;
       struct Tile {
         std::uint8_t *data;
-        std::uint16_t indices[TILE]{};
+        std::uint16_t indices[64]{};
         unsigned count = 0;
       } tiles[2]{{tile}, {tile + tile_bytes}};
       // No service, tokenizer, KV or other PSRAM access is made while the
@@ -366,6 +387,18 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       } pending{package_};
       const bool prefetch = execution_.prefetch && package_.read_begin && package_.read_finish;
       auto stamp = [&]() { return execution_.micros ? execution_.micros(execution_.context) : 0U; };
+      LinearBatch shape{};
+      shape.arithmetic = arithmetic;
+      shape.columns = t.cols; shape.bits = t.bits; shape.grid = t.grid;
+      shape.input = input; shape.quant = quant;
+      shape.activation_scales = activation_scales;
+      shape.input_sums = input_sums; shape.lookup = lookup;
+      unsigned remote_capacity = 0;
+      if (execution_.remote_prepare && execution_.remote_submit && execution_.remote_join) {
+        const auto started = stamp();
+        remote_capacity = std::min(2U, execution_.remote_prepare(execution_.context, &shape));
+        compute_metrics_.remote_prepare_us += stamp() - started;
+      }
       unsigned r = 0;
       auto load = [&](Tile &target, bool asynchronous) {
         target.count = 0;
@@ -383,7 +416,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         }
         if (!target.count) return true;
         auto *tile_scales = target.data + TILE * bytes;
-        block_io::ReadSpan spans[2 * TILE];
+        block_io::ReadSpan spans[2 * 64];
         unsigned span_count = 0;
         for (unsigned part = 0; part < 2; ++part) {
           const unsigned stride = part ? scales : bytes;
@@ -448,11 +481,28 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         first.input_sums = input_sums;first.lookup = lookup;
         first.weights = active.data;first.scales = active.data + TILE * bytes;
         first.output = tile_output;
+        LinearBatch third = first;
+        bool remote = false;
+        if (remote_capacity && count > 2) {
+          third.rows = std::min(remote_capacity, count - 2);
+          const unsigned local = count - third.rows;
+          third.weights += local * bytes; third.scales += local * scales;
+          third.output += local;
+          const auto started = stamp();
+          remote = execution_.remote_submit(execution_.context, &third);
+          compute_metrics_.remote_submit_us += stamp() - started;
+          if (remote) {
+            first.rows = local;
+            ++compute_metrics_.remote_jobs;
+            compute_metrics_.remote_rows += third.rows;
+          }
+        }
+        const unsigned local_count = first.rows;
         LinearBatch second = first;
         bool submitted = false;
-        if (count > 1 && execution_.submit && execution_.join) {
-          const unsigned local = (count + 1) / 2;
-          second.rows = count - local;
+        if (local_count > 1 && execution_.submit && execution_.join) {
+          const unsigned local = (local_count + 1) / 2;
+          second.rows = local_count - local;
           second.weights += local * bytes;second.scales += local * scales;
           second.output += local;
           submitted = execution_.submit(execution_.context, kernel, &second);
@@ -466,6 +516,17 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         // Join even if local computation failed: the descriptor and shared
         // LUT must remain alive until core 1 has published completion.
         if (submitted) execution_.join(execution_.context);
+        if (remote) {
+          const auto started = stamp();
+          const bool complete = execution_.remote_join(execution_.context);
+          compute_metrics_.remote_wait_us += stamp() - started;
+          if (!complete) {
+            ++compute_metrics_.remote_fallbacks;
+            // A failed backend has drained its job; recompute the exact rows
+            // locally before using any output or recycling the tile.
+            kernel(&third);
+          }
+        }
         compute_metrics_.matmul_us += stamp() - matmul_started;
         if (pending.active) {
           const auto wait_started = stamp();
@@ -477,8 +538,10 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           }
         }
         if (first.status != ModelStatus::OK ||
-            (submitted && second.status != ModelStatus::OK)) {
-          status = first.status != ModelStatus::OK ? first.status : second.status;
+            (submitted && second.status != ModelStatus::OK) ||
+            (remote && third.status != ModelStatus::OK)) {
+          status = first.status != ModelStatus::OK ? first.status :
+                   submitted && second.status != ModelStatus::OK ? second.status : third.status;
           return false;
         }
         compute_metrics_.rows += count;
@@ -728,9 +791,12 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     for (unsigned j = 0; j < c.hidden; ++j)
       x[j] += o[j];
   }
+  const auto classifier_started = forward_stamp();
+  compute_metrics_.layers_us = classifier_started - layers_started;
   if (output &&
       (!normalize(1, x, n, 1, c.hidden) || !linear(0, n, nullptr, true)))
     return status;
+  if (output) compute_metrics_.classifier_us = forward_stamp() - classifier_started;
   ++position_;
   return ModelStatus::OK;
 }

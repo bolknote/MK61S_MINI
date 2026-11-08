@@ -83,6 +83,7 @@ void NativeDisplay::flush() {
 unsigned NativeDisplay::columns() { flush();return native_?ncols_:surface_.cols(); }
 unsigned NativeDisplay::rows() { flush();return native_?nrows_:surface_.rows(); }
 u32 NativeDisplay::clear() {
+    color_dirty_rows_=~0U;
     script::clear_text_record();
     if(native_) {
         std::memset(cells_,0,sizeof(cells_));nx_=ny_=0;gutters_=tails_=0;native_dirty_=true;
@@ -192,9 +193,10 @@ bool NativeDisplay::bitmap_present(const u8* frame,unsigned size) {
     if(!bitmap_ || !surface_.showFullscreenBitmap(frame,size)) return false;
     flush();return true;
 }
-void NativeDisplay::bitmap_end() { if(!native_) surface_.endFullscreenBitmap();bitmap_=false;native_dirty_=true;flush(); }
+void NativeDisplay::bitmap_end() { if(!native_) surface_.endFullscreenBitmap();bitmap_=false;native_dirty_=true;color_dirty_rows_=~0U;flush(); }
 
 void NativeDisplay::native_layout() {
+    color_dirty_rows_=~0U;
     bitmap_=false;update_=0;nx_=ny_=0;gutters_=tails_=0;
     (void)load_text_font();
     const auto info=fonts::info(settings_);
@@ -217,6 +219,7 @@ unsigned NativeDisplay::native_measure(const char* text,unsigned length) const {
     unsigned width=0;for(unsigned i=0;i<length;++i) width+=native_advance(mk8::codepoint((u8)text[i]));return width;
 }
 void NativeDisplay::native_put(u16 cp) {
+    color_dirty_rows_=~0U;
     if(cp=='\r') { nx_=0;return; }
     if(cp=='\n') { nx_=0;ny_=(ny_+1)%nrows_;return; }
     unsigned width=0;
@@ -232,7 +235,7 @@ void NativeDisplay::native_flush() {
     if(font_revision_!=script::font_revision() || ui_font_revision_!=fonts::revision()) { native_layout();return; }
     const u32 now=millis();
     if(native_blink_ && (i32)(now-blink_at_)>=0) {
-        native_phase_=!native_phase_;blink_at_=now+500;native_dirty_=true;
+        native_phase_=!native_phase_;blink_at_=now+500;native_dirty_=true;color_dirty_rows_=~0U;
     }
     if(bitmap_ || update_ || color_presenting_ || !native_dirty_) return;
     canvas::clear();
@@ -263,12 +266,18 @@ void NativeDisplay::native_flush() {
     }
     script::show_native_frame(canvas::frame());native_dirty_=false;++revision_;
     if(colored_) color_flush();
+    color_dirty_rows_=0;
 }
 void NativeDisplay::color_flush() {
     // A bounded strip is converted from the existing glyph raster. No second
     // framebuffer or alternate font renderer is needed for colored text.
     color_presenting_=true;
     for(unsigned top=0;top<320;top+=8) {
+        const unsigned first=top/npitch_,last=(top+7)/npitch_;
+        bool changed=color_dirty_rows_==~0U;
+        for(unsigned row=first;row<=last && row<20;++row)
+            changed=changed || (color_dirty_rows_&(1U<<row));
+        if(!changed) continue;
         struct Span { unsigned x,width; } pending[12];unsigned used=1;pending[0]={0,320};
         while(used) {
             const auto span=pending[--used];
@@ -304,8 +313,15 @@ u16 NativeDisplay::color_row(unsigned y,u16* foreground) {
 u32 NativeDisplay::color_rect(unsigned left,unsigned top,unsigned width,unsigned height) {
     u8 pixels[320*8/2];u16 foreground[320];mk61_service_color_frame frame{};unsigned count=0;
     const unsigned stride=(width+1)/2;
+    unsigned cached_row=~0U;
+    u16 background=background_;
     for(unsigned y=0;y<height;++y) {
-        const u16 background=color_row(top+y,foreground);
+        // Glyph advances and per-cell colors depend on the text row, not
+        // the pixel scanline. Reuse them throughout this bounded strip.
+        const unsigned row=(top+y)/npitch_;
+        if(row!=cached_row) {
+            background=color_row(top+y,foreground);cached_row=row;
+        }
         const auto* mono=canvas::frame()+((top+y)/8)*320;
         for(unsigned dx=0;dx<width;++dx) {
             const unsigned x=left+dx;
@@ -329,6 +345,9 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
     switch(op) {
     case MK61_SERVICE_DISPLAY_UI_COLORS:
         if(!color_sink_ || b>65535 || c>65535 || payload) return 0;
+        if(!colored_ || foreground_!=b || background_!=c) {
+            native_dirty_=true;color_dirty_rows_=~0U;
+        }
         if(!color_cells_) {
             color_cells_.reset(new(std::nothrow) u16[20*64]);if(!color_cells_) return 0;
             for(unsigned i=0;i<20*64;++i) color_cells_[i]=foreground_;
@@ -336,7 +355,7 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
         foreground_=(u16)b;background_=(u16)c;colored_=true;return 1;
     case MK61_SERVICE_DISPLAY_UI_RUN_COLORS:
         if(!colored_ || b>=nrows_ || c>ncols_ || (!payload && c)) return 0;
-        if(c) std::memcpy(color_cells_.get()+b*64,payload,c*sizeof(u16));native_dirty_=true;break;
+        if(c) std::memcpy(color_cells_.get()+b*64,payload,c*sizeof(u16));native_dirty_=true;color_dirty_rows_|=1U<<b;break;
     case MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT:
     case MK61_SERVICE_DISPLAY_END_UI_TEXT:
         if(op==MK61_SERVICE_DISPLAY_END_UI_TEXT && colored_) {
@@ -350,6 +369,13 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
     }
     case MK61_SERVICE_DISPLAY_UI_LINE: {
         unsigned n=0;if(!ui_ || b>=nrows_ || !text_length((const char*)payload,256,n)) return 0;
+        u16 previous[64],previous_colors[64];
+        std::memcpy(previous,cells_[b],sizeof(previous));
+        if(color_cells_) std::memcpy(previous_colors,color_cells_.get()+b*64,sizeof(previous_colors));
+        const auto old_mask=color_dirty_rows_,old_gutters=gutters_,old_tails=tails_;
+        const u16 old_fore=color_fore_[b],old_back=color_back_[b];
+        const bool was_dirty=native_dirty_;
+        bool multiline=false;
         std::memset(cells_[b],0,sizeof(cells_[b]));ny_=b;nx_=0;
         const char marker=(char)c;const u16 tail=c>>8;const unsigned end=tail?ncols_-1:ncols_;
         if(marker) { gutters_|=1U<<b;native_put((u8)marker); }else gutters_&=~(1U<<b);
@@ -358,14 +384,28 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
         unsigned used=0,limit=316-(marker?(marker_width>12?marker_width:12):0)-(tail?native_advance(tail):0),i=0;
         const char* text=(const char*)payload;
         while(i<n && nx_<end && used+native_advance(mk8::codepoint((u8)text[i]))<=limit) {
-            const u16 cp=mk8::codepoint((u8)text[i++]);used+=native_advance(cp);native_put(cp);
+            const u16 cp=mk8::codepoint((u8)text[i++]);used+=native_advance(cp);
+            if(cp=='\r' || cp=='\n' || ny_!=b) { multiline=true;native_put(cp);continue; }
+            // This bounded line already tracks its pixel width above.
+            // native_put would measure every preceding glyph again for
+            // every character, turning one line into quadratic font work.
+            if(color_cells_) color_cells_[b*64+nx_]=foreground_;
+            cells_[b][nx_++]=cp;
+            script::record_codepoint(nx_-1,b,cp);
+            color_fore_[b]=foreground_;color_back_[b]=background_;
         }
         if(i<n && nx_>(marker?1U:0U)) cells_[b][nx_-1]=0x2026;
         if(tail) cells_[b][ncols_-1]=tail;
-        nx_=0;ny_=b;native_dirty_=true;break;
+        const bool changed=multiline || std::memcmp(previous,cells_[b],sizeof(previous)) ||
+            (color_cells_ && std::memcmp(previous_colors,color_cells_.get()+b*64,sizeof(previous_colors))) ||
+            old_fore!=color_fore_[b] || old_back!=color_back_[b] ||
+            old_gutters!=gutters_ || old_tails!=tails_ || native_cursor_ || native_blink_;
+        color_dirty_rows_=old_mask | (changed?(1U<<b):0U);
+        if(multiline || native_cursor_ || native_blink_) color_dirty_rows_=~0U;
+        nx_=0;ny_=b;native_dirty_=was_dirty || changed;break;
     }
     case MK61_SERVICE_DISPLAY_CLEAR:return clear();
-    case MK61_SERVICE_DISPLAY_CURSOR:if(b>=ncols_ || c>=nrows_) return 0;nx_=b;ny_=c;native_dirty_=true;break;
+    case MK61_SERVICE_DISPLAY_CURSOR:if(b>=ncols_ || c>=nrows_) return 0;nx_=b;ny_=c;native_dirty_=true;color_dirty_rows_=~0U;break;
     case MK61_SERVICE_DISPLAY_WRITE:if(b>255 || !mk8::valid_byte((u8)b)) return 0;native_put(mk8::codepoint((u8)b));break;
     case MK61_SERVICE_DISPLAY_WRITE_CODEPOINT:native_put(b>65535?'?':(u16)b);break;
     case MK61_SERVICE_DISPLAY_PRINT: {
@@ -377,9 +417,9 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
     case MK61_SERVICE_DISPLAY_SUPPORTS_CURSOR:
     case MK61_SERVICE_DISPLAY_GRAPHICS:
     case MK61_SERVICE_DISPLAY_GRAPHICS_MODE:return 1;
-    case MK61_SERVICE_DISPLAY_CURSOR_ON:native_cursor_=true;native_dirty_=true;break;
-    case MK61_SERVICE_DISPLAY_CURSOR_OFF:native_cursor_=native_blink_=false;native_dirty_=true;break;
-    case MK61_SERVICE_DISPLAY_BLINK_ON:native_blink_=true;native_phase_=true;blink_at_=millis()+500;native_dirty_=true;break;
+    case MK61_SERVICE_DISPLAY_CURSOR_ON:native_cursor_=true;native_dirty_=true;color_dirty_rows_=~0U;break;
+    case MK61_SERVICE_DISPLAY_CURSOR_OFF:native_cursor_=native_blink_=false;native_dirty_=true;color_dirty_rows_=~0U;break;
+    case MK61_SERVICE_DISPLAY_BLINK_ON:native_blink_=true;native_phase_=true;blink_at_=millis()+500;native_dirty_=true;color_dirty_rows_=~0U;break;
     case MK61_SERVICE_DISPLAY_BEGIN_UPDATE:++update_;return 1;
     case MK61_SERVICE_DISPLAY_END_UPDATE:if(update_) --update_;break;
     case MK61_SERVICE_DISPLAY_END_VIEWPORT:
@@ -414,7 +454,7 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
             at=after;
         }
         if(!r.length && total) { std::memset(cells_[r.first_row],0,sizeof(cells_[0]));row=1; }
-        native_dirty_=true;native_flush();return row;
+        native_dirty_=true;color_dirty_rows_=~0U;native_flush();return row;
     }
     default:return 0;
     }

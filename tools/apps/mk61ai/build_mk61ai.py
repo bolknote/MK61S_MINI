@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tools"))
 from firmware.picocalc.build_picocalc import compiler_bin
 from export_model import export
+from build_m3_linear import build as build_m3_linear
 
 
 def main():
@@ -47,6 +48,8 @@ def main():
                     "--source", str(ROOT / "examples/portable-apps/MK61AI/bench.c"),
                     "--arm-toolchain-bin", str(toolchain), "--output-dir", str(build / "benchmark")], check=True)
     shutil.copy2(build / "benchmark/AIBENCH.APP", app_dir / "AIBENCH.APP")
+    m3 = build_m3_linear(build / "m3-linear", toolchain)
+    shutil.copy2(m3["package"], model_dir / "M3LINE.S3M")
     export(args.weights.resolve(), args.hf.resolve() / "tokenizer.json", model_dir / "MODEL.MKA", "lut")
     prompt_path = model_dir / "PROMPT.TXT"
     if args.prompt:
@@ -82,6 +85,7 @@ def main():
         "launcher": json.loads((build / "app/MK61AI.json").read_text()),
         "benchmark": json.loads((build / "benchmark/AIBENCH.json").read_text()),
         "arithmetic": "LUT FP32", "kv": "FP32 in PSRAM",
+        "optional_m3": m3,
         "hardware_verified": False,
         "files": {},
     }

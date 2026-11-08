@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     else if (std::strncmp(argv[i], "--linear=", 9) == 0) {
       const char *name=argv[i]+9;
       if(!std::strcmp(name,"reference")) execution.kernel=LinearKernel::REFERENCE;
-      else if(!std::strcmp(name,"flash")) execution.kernel=LinearKernel::FLASH;
+      else if(!std::strcmp(name,"flash")) execution.kernel=LinearKernel::FLASH_CODE;
       else if(!std::strcmp(name,"sram")) execution.kernel=LinearKernel::SRAM;
       else return 2;
     }

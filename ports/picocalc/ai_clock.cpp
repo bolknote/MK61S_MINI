@@ -1,19 +1,25 @@
 #include "ai_clock.hpp"
 #if defined(PICO_ON_DEVICE)
-#include "io_worker.hpp"
-#include "psram.hpp"
-#include "audio_stream.hpp"
-#include "hardware/clocks.h"
-#include "hardware/i2c.h"
-#include "hardware/irq.h"
-#include "hardware/spi.h"
-#include "hardware/structs/ssi.h"
-#include "hardware/uart.h"
 #include "pico/stdlib.h"
-#include "tusb.h"
+#include "hardware/clocks.h"
 #endif
 #ifndef MK61_PICOCALC_AI_OVERCLOCK
 #define MK61_PICOCALC_AI_OVERCLOCK 0
+#endif
+#if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
+#include "io_worker.hpp"
+#include "psram.hpp"
+#include "audio_stream.hpp"
+#include "cosmic_clock_plan.hpp"
+#include "ai_clock_transition.hpp"
+#include "hardware/i2c.h"
+#include "hardware/pll.h"
+#include "hardware/resets.h"
+#include "hardware/structs/ssi.h"
+#include "hardware/structs/vreg_and_chip_reset.h"
+#include "hardware/vreg.h"
+#include "pico/flash.h"
+#include "tusb.h"
 #endif
 namespace picocalc::ai_clock {
 u32 hz() {
@@ -25,73 +31,84 @@ u32 hz() {
 }
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
 namespace {
-void retune(u32 spi0_hz,u32 spi1_hz) {
-  if(spi0_hz) spi_set_baudrate(spi0,spi0_hz);
-  if(spi1_hz) spi_set_baudrate(spi1,spi1_hz);
-  i2c_set_baudrate(i2c1,10000);
-#if LIB_PICO_STDIO_UART && defined(PICO_DEFAULT_UART_BAUD_RATE)
-  uart_set_baudrate(uart_default,PICO_DEFAULT_UART_BAUD_RATE);
-#endif
-  psram::clock_changed();
+constexpr u32 MAGIC=0xA1C10607;
+struct Retained { u32 magic,stage,target; };
+Retained trace __attribute__((section(".uninitialized_data.picocalc_ai_clock")));
+u32 measured_khz=0;
+void mark(u32 stage,u32 target) { trace.magic=0;trace.stage=stage;trace.target=target;__dmb();trace.magic=MAGIC;__dmb(); }
+u32 measure() {
+  const u64 end=time_us_64()+50000;
+  while(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_RUNNING_BITS) if(time_us_64()>=end)return 0;
+  clocks_hw->fc0.ref_khz=clock_get_hz(clk_ref)/1000;
+  clocks_hw->fc0.interval=10;clocks_hw->fc0.min_khz=0;clocks_hw->fc0.max_khz=UINT32_MAX;
+  clocks_hw->fc0.src=CLOCKS_FC0_SRC_VALUE_CLK_SYS;
+  while(!(clocks_hw->fc0.status&CLOCKS_FC0_STATUS_DONE_BITS)) if(time_us_64()>=end)return 0;
+  return clocks_hw->fc0.result>>CLOCKS_FC0_RESULT_KHZ_LSB;
 }
-bool transition(u32 sys,State& s,bool restoring) {
-  // This image boots with Flash SCK / 6, hence <= 50 MHz at every allowed
-  // rate. No live SSI reconfiguration, voltage increase or RTC changes.
-  io_worker::drain();stdio_flush();
-  const bool usb_irq=irq_is_enabled(USBCTRL_IRQ);
-  tud_disconnect();irq_set_enabled(USBCTRL_IRQ,false);
-  const u32 usb_ctrl=clocks_hw->clk[clk_usb].ctrl,usb_div=clocks_hw->clk[clk_usb].div;
-  const u32 usb_hz=clock_get_hz(clk_usb);
-  clock_stop(clk_usb);
-  busy_wait_us(1); // Allow the USB clock gate to settle before lowering SYS.
-  // Keep SPI/UART's parent independent of PLL_SYS while it is reconfigured.
-  clock_configure_undivided(clk_peri,0,CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,48000000);
-  const bool ok=set_sys_clock_khz(unsigned(sys/1000),false);
-  if(restoring) {
-    clocks_hw->clk[clk_peri].div=s.peri_div;
-    clocks_hw->clk[clk_peri].ctrl=s.peri_ctrl;
-    clock_set_reported_hz(clk_peri,s.peri);
-  } else {
-    clock_configure_undivided(clk_peri,0,CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,48000000);
+void __no_inline_not_in_flash_func(write_clock)(void* raw) {
+  const auto& plan=*static_cast<const cosmic_clock::Plan*>(raw);
+  mark(5,plan.mhz);
+  set_sys_clock_pll(plan.vco_hz,plan.postdiv1,plan.postdiv2);
+  // PERI already comes from PLL_USB48. Do not reconfigure it after changing
+  // SYS: the old300MHz failure was in that redundant post-PLL operation.
+  mark(6,plan.mhz);
+}
+bool stock_voltage() {
+  return (vreg_and_chip_reset_hw->vreg&VREG_AND_CHIP_RESET_VREG_VSEL_BITS)==
+      (u32(VREG_VOLTAGE_1_10)<<VREG_AND_CHIP_RESET_VREG_VSEL_LSB);
+}
+struct Hardware {
+  bool allowed(){return stock_voltage() && !audio_stream::active() && ssi_hw->baudr==6 &&
+      clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000;}
+  void prepare(){audio_stream::stop_key_click();io_worker::drain();stdio_flush();}
+  void mark(u32 stage,u32 target){ai_clock::mark(stage,target);}
+  bool pio(u32 div){return psram::diagnostic_clock_divider(div);}
+  void disconnect(){tud_disconnect();}
+  bool deinit(){return tud_deinit(0);}
+  void reset(){reset_block(RESETS_RESET_USBCTRL_BITS);}
+  void detach_delay(){sleep_ms(200);}
+  bool pll(const cosmic_clock::Plan& plan){return flash_safe_execute(write_clock,const_cast<cosmic_clock::Plan*>(&plan),50)==PICO_OK;}
+  void retune_i2c(){i2c_set_baudrate(i2c1,10000);}
+  bool verify(const cosmic_clock::Plan& plan){
+    measured_khz=measure();const u32 sys=plan.mhz*1000000;
+    return hz()==sys && measured_khz+100>=sys/1000 && measured_khz<=sys/1000+100 &&
+        clock_get_hz(clk_peri)==48000000 && clock_get_hz(clk_usb)==48000000 && stock_voltage() &&
+        ssi_hw->baudr==6 && psram::diagnostic_clock_divider256()==plan.pio_div256;
   }
-  retune(s.spi0_hz,s.spi1_hz);
-  clocks_hw->clk[clk_usb].div=usb_div;clocks_hw->clk[clk_usb].ctrl=usb_ctrl;
-  clock_set_reported_hz(clk_usb,usb_hz);
-  irq_set_enabled(USBCTRL_IRQ,usb_irq);tud_connect();
-  return ok && clock_get_hz(clk_sys)==sys;
+  void unreset(){unreset_block_wait(RESETS_RESET_USBCTRL_BITS);}
+  bool init(){const tusb_rhport_init_t init{TUSB_ROLE_DEVICE,TUSB_SPEED_FULL};return tusb_init(0,&init);}
+  void connect(){tud_connect();}
+};
+bool transition(u32 sys) {
+  const auto* before=cosmic_clock::find(hz()/1000000);
+  const auto* after=cosmic_clock::find(sys/1000000);
+  if(!before || !after)return false;
+  Hardware hardware;return change(hardware,*before,*after);
 }
 }
 #endif
 bool begin(unsigned mhz,State& s) {
-  if(s.changed || s.restore_attempted || (mhz!=125 && mhz!=200 && mhz!=250 && mhz!=300)) return false;
+  const bool allowed=mhz==125 || mhz==270;
+  if(s.changed || s.restore_attempted || !allowed)return false;
   s.sys=hz();
-  if(mhz==125 && (!s.sys || s.sys==125000000)) return true;
+  if(mhz==125 && (!s.sys || s.sys==125000000))return true;
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
-  if(s.sys!=125000000) return false;
-  if(audio_stream::active()) return false;
-  if(ssi_hw->baudr!=6) return false;
-  // Reject malformed/unsupported PLL requests before disconnecting USB.
-  unsigned vco=0,post1=0,post2=0;
-  if(!check_sys_clock_khz(mhz*1000,&vco,&post1,&post2)) return false;
-  io_worker::drain();
-  s.peri=clock_get_hz(clk_peri);s.peri_ctrl=clocks_hw->clk[clk_peri].ctrl;
-  s.peri_div=clocks_hw->clk[clk_peri].div;
-  s.spi0_hz=spi_get_baudrate(spi0);s.spi1_hz=spi_get_baudrate(spi1);
-  s.changed=true;
-  if(transition(mhz*1000000U,s,false)) return true;
-  (void)restore(s);return false;
+  if(s.sys!=125000000)return false;
+  const auto* plan=cosmic_clock::find(mhz);unsigned vco=0,post1=0,post2=0;
+  if(!plan || !check_sys_clock_khz(mhz*1000,&vco,&post1,&post2) ||
+     vco!=plan->vco_hz || post1!=plan->postdiv1 || post2!=plan->postdiv2)return false;
+  s.peri=clock_get_hz(clk_peri);s.changed=true;
+  return transition(mhz*1000000U);
 #else
   return false;
 #endif
 }
 bool restore(State& s) {
-  if(!s.changed) return true;
-  if(s.restore_attempted) return false;
+  if(!s.changed)return true;
+  if(s.restore_attempted)return false;
   s.restore_attempted=true;
 #if defined(PICO_ON_DEVICE) && MK61_PICOCALC_AI_OVERCLOCK
-  const bool ok=transition(s.sys,s,true);
-  if(ok) s.changed=false;
-  return ok;
+  const bool ok=transition(s.sys);if(ok)s.changed=false;return ok;
 #else
   return false;
 #endif

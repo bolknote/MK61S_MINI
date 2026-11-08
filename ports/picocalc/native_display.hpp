@@ -50,6 +50,7 @@ private:
     bool native_=false,native_dirty_=true,native_cursor_=false,native_blink_=false,native_phase_=false;
     unsigned nx_=0,ny_=0,ncols_=32,nrows_=18,npitch_=18,ncell_=8,update_=0;
     u32 blink_at_=0,gutters_=0,tails_=0;
+    u32 color_dirty_rows_=~0U;
     u16 cells_[20][64]{};
     u8 pixels_[usb_screen::FRAME_BYTES]{};
     usb_screen::Surface surface_;

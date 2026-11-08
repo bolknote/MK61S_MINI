@@ -32,11 +32,14 @@ inline bool parse_perf_config(const char *text,unsigned size,PerfConfig& out) {
     if(at<size) ++at;
     values[key]=value;seen|=1U<<key;
   }
-  if(seen!=((1U<<fields)-1) || values[0]>2 || values[1]>3 || values[2]<1 || values[2]>2 ||
-     values[3]>1 || values[4]>1 || (values[5]!=125 && values[5]!=200 && values[5]!=250 && values[5]!=300) ||
+  if(seen!=((1U<<fields)-1) || values[0]>2 || values[1]>3 || values[2]<1 || values[2]>3 ||
+     values[3]>1 || values[4]>1 || (values[5]!=125 && values[5]!=200 && values[5]!=250 && values[5]!=270 && values[5]!=300) ||
      values[6]<1 || values[6]>16 || values[7]<1 || values[7]>8 || values[6]+values[7]>24 ||
-     values[8]<1 || values[8]>4 || values[10]>1 || values[11]>1 || values[12]>1 ||
+     values[8]<1 || values[8]>4 || values[10]>2 || (values[10]==2 && (!v2 || values[2]<2)) || values[11]>1 || values[12]>1 ||
      (!values[0] && (values[2]!=1 || values[4] || values[12])) || (values[4] && !values[11])) return false;
+  // control=2 uses archived tokens/checksums in PERF.REF and runs only the
+  // requested two- or three-core candidate; it never executes a control pass.
+  if(values[2]==3 && (!v2 || (values[1]!=3 && values[1]!=1) || !values[10] || values[9])) return false;
   out={values[0],values[1],values[2],values[3],values[4],values[5],
        values[6],values[7],values[8],values[9],values[10],values[11],values[12],v2?2U:1U};
   return true;
