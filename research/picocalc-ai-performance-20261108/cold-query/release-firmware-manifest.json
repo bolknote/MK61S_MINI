@@ -35,7 +35,7 @@
   "uf2_bytes": 3580928,
   "bin_sha256": "de0801f0ed8adea7709fdc35c148accc0ec5fc5a0b214c6848a043cd707fc7e3",
   "uf2_sha256": "2f0ec65d9b0d8abae3f8cd7fdf5672f302832636b239137e44449e02208bffc4",
-  "hardware_verified": false,
+  "hardware_verified": true,
   "source_sha256": "c01670b7d6e0f3b9c3bc135d1ee3d6575dbe98c46168b72dec7fdf1901611a49",
   "build_id": "f988ef2a",
   "firmware_integrity": {
@@ -46,5 +46,8 @@
     "footer_offset": 933580,
     "profile_id": "50434831",
     "crc32": "b99e7e71"
-  }
+  },
+  "original_built_manifest_sha256": "4c45d72eebfbc1d36e710472ba19c505a6cf81380c7eb70278726df25f683129",
+  "physical_validation": "first-complete/receipt.json",
+  "postflight_validation": "first-complete/postflight.json"
 }

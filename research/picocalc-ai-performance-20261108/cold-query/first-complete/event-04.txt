@@ -1,3 +1,0 @@
-COMPILE
-task=2 program=0
-<write>0E 0D 02 02 1C 50</write><run/>

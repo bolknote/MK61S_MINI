@@ -1,3 +1,0 @@
-TOOL
-task=2 program=1
-RUN X=0.37460660; status=1; ожидаемый ответ не задан

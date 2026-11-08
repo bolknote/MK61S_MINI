@@ -1,0 +1,31 @@
+{
+  "source_snapshot": "/Users/bolk/Projects/MK61S_MINI/.build/harness-release-20261108/source-attention",
+  "runtime_commit": "59e40583ba07c5a05832ffc0bb6709e54790c7ec",
+  "platform_parent": "F73B20D0/8EA8C660 with exact59e40583b AI/PSRAM/linker retained",
+  "files": {
+    "code/mk61_ai_agent.cpp": "df3247ded3895ac792599a1aba3c08647ef01ad7a323274a5ab9ed67581c923c",
+    "code/mk61_ai_agent.hpp": "83fd84c03f7f16137ada8feb6b49cf9c0f12e4e53d8259c1ca096b7a88132e39",
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "code/mk61_ai_attention.hpp": "6d34745fa22b1c1d4dcc7e3a1fa3d75588fb3ba2393592453d584597addb1d6b",
+    "code/mk61_ai_kv_stream.hpp": "f849f1b053786a813146e4b5380280f3777d6bd36711058703683c735a041070",
+    "ports/picocalc/ai_harness.cpp": "6a65669f049f4599bcd431f8beb98324c47fc86fea8ee6fdbae6075d8f30dca5",
+    "ports/picocalc/ai_clock.cpp": "93db8c08316602b10b7733df887588b8ad8b381e45cc2f8ed9643c7e6c98e207",
+    "ports/picocalc/ai_flash_clock.hpp": "dbc895c42416c459a61212ff198218a767cf62346de9f53a68478d50c8dc72b1",
+    "ports/picocalc/ai_psram_read_clock.hpp": "cb52a698e4dd79a3e13d353dc1258b060fbe480941f93ff01458b0b00012927e",
+    "ports/picocalc/psram.cpp": "d86a5f34090c2eb1ffca964cd257ad43160eee783977d31380d3a09b606a1fd6",
+    "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d",
+    "ports/picocalc/m0_math_extension.ld": "683ef9189183e7e1d3802d32914be1d053f251998d3968fecaae86334401f73c",
+    "ports/picocalc/CMakeLists.txt": "4036b15f325a9b5292952690634db79068191f0c3c4757e044e3e8178b3ed559",
+    "ports/picocalc/m3_audio.cpp": "23ca0d1fb991061f2b5ff208c79ff6697ba77d96f3ade7189f5a56775f3876da",
+    "ports/picocalc/m3_audio.hpp": "fa0cec6e3c8a43efa0a3e0596abea4a15b7cac6d52150431201fe7220f48bf00",
+    "ports/picocalc/m3_audio_engine.hpp": "4b3107fe2ff214f65ae5a70c8ec3f640b9c326aaf3b5c46542c8f8f63674e1d5",
+    "ports/picocalc/m3_wire.hpp": "fed02f41117063495740ea5d688ad5336045638c0500853cfba0cce3863edbe8",
+    "ports/picocalc/main.cpp": "cd2a79f73aadf8505ead386fccc7bf8fe1f94e7bc7139709b5418d21d927aa3b",
+    "tools/firmware/picocalc/build_picocalc.py": "293a3e53325657fb5a66ecf7d27274898201c3763bfd524aab965bd6c437ac02"
+  },
+  "hardware_validated": false,
+  "role": "HOST/ARM candidate; device still F988EF2A"
+}

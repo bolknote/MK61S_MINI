@@ -17,3 +17,9 @@ The release candidate is described by `release-firmware-manifest.json` and `rele
 Firmware F988EF2A / B99E7E71 completed the identical cold request in **1,256,365 ms (20:56.365)** versus **1,893,006 ms (31:33.006)**: 33.63% less time, 1.507x speedup. Input 493, reused 0, output 12. The saved AIS contains model `MKA-A9980CAA-2160856`, program `0E 0D 02 02 1C 50`; actual core execution stopped with X=0.3746066. The controller then closed its own APP and verified 125 MHz / CLOSED / NONE. See `first-complete/`.
 
 Prefill took 1,121.296 s and decode 47.548 s. Attention accounted for 927.851 s, including 110.292 s of KV reads. This identifies a remaining long-context arithmetic cost. The next candidate applies the already validated exact FP32 multiply/add helpers to attention reductions, preserving order and rounding. The full model, KV, eight SPEC cases and ARM kernels match bit for bit; the compiled ARM attention kernels use 2.33–2.47x fewer instructions for 16-row batches. This is not a device latency result; a fresh complete cold query is required.
+
+## Installed image and release
+
+The installed and physically verified firmware remains **F988EF2A / B99E7E71**. Its final health and native ROM-cache check passed (`first-complete/postflight.json`): stock125MHz, calculator idle, APP closed, SD/PSRAM/math/firmware CRC healthy, all five ROM CRCs and the complete77,824-byte ROM SHA unchanged. CDC and the common device lease were closed before handoff to the user-prioritized Spectrum stock125/72 tests. The newer attention candidate **0AD0F67D / CF56FAC7** is committed and HOST/ARM validated, but has not been installed or measured on hardware.
+
+The faint calculator image reported during the run faded on its own. The renderer opacity test overwrote all102,400 pixels, producing identical RGB565 output over two different previous frames. A physical solid-fill test was not run because the symptom had already disappeared.

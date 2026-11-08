@@ -1,3 +1,0 @@
-USER
-task=2 program=0
-Синус 22

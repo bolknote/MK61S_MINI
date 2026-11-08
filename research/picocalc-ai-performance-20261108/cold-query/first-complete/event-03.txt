@@ -1,3 +1,0 @@
-MODEL_SPEC
-task=2 program=0
-FF 28 10 0C

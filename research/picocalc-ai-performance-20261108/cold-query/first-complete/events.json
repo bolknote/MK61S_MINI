@@ -1,0 +1,32 @@
+[
+  {
+    "file": "event-01.txt",
+    "sha256": "5cf7c99719dad46c32582fe223b36b0f6d2891db8e331af58bc8d63f3d424bef",
+    "utf8": "USER\ntask=2 program=0\nСинус 22\n"
+  },
+  {
+    "file": "event-02.txt",
+    "sha256": "e53d948aaeb248b22fcfef0b101c6a5fbaa9c63701654b0adceb992f16953480",
+    "utf8": "PROMPT\ntask=2 program=0\nМК-61: DEG; 105 ячеек; R0–RE, стек X/Y/Z/T/X1. HEX+макросы FF00=байт FF, FF01kk=константа kk, FF02ll=метка ll, FF03ll=адрес метки ll.\nВызовы: <write>SPEC</write><run/>, <run>номер теста HEX</run>, <trace/>, <done/>. Эмулятор сообщает фактическое состояние.\nDIAG: <diag>TT HH LL AA BB</diag>. TT: 00=верно, 01=операция, 02=аргумент, 03=порядок. HH LL — первый индекс различия в текущем HEX; AA — текущий байт; BB — нужный байт. Для верного кода: 00 FF FF 00 00. Диагноз — гипотеза; исправляй WRITE и проверяй RUN.\nКонстанты: 00=0;01=1;02=-1;03=-2;04=0.25;05=0.5;06=1.5;07=2;08=2.5;09=3;0A=4;0B=10;0C=22;0D=-22\nЗадача: Синус 22\nЗаметки: Осталось действий: 12. Исправление: WRITE с компактной спецификацией SPEC. Проверяй результат по условию; stopped означает только останов. DONE заявляет решение. Если условие неполно или решение не найдено, UNSURE. \nАссистент: \n"
+  },
+  {
+    "file": "event-03.txt",
+    "sha256": "b979adc34c57048de48f452b6909dc37b2780a827b9985fc162d95b79f189927",
+    "utf8": "MODEL_SPEC\ntask=2 program=0\nFF 28 10 0C\n"
+  },
+  {
+    "file": "event-04.txt",
+    "sha256": "ea0503b3b89dd9389025b75224cbb4b5dee2ea3004328da754cbbd963153d7c8",
+    "utf8": "COMPILE\ntask=2 program=0\n<write>0E 0D 02 02 1C 50</write><run/>\n"
+  },
+  {
+    "file": "event-05.txt",
+    "sha256": "d23fd539fbf3f45ee615c6aad2ed58703750f32cff3a8033010cf416992921cf",
+    "utf8": "TOOL\ntask=2 program=1\nRUN X=0.37460660; status=1; ожидаемый ответ не задан\n"
+  },
+  {
+    "file": "event-06.txt",
+    "sha256": "ca4d08e871ed62132a6445f52cc65d99000390bd82e85a2b0837d65f9b2b88f5",
+    "utf8": "CHAT\ntask=2 program=1\nCHAT1 2 1 0 2 493 12 0 11 1121295782 47548141 159489 1256365\nRUN 1 0.37460660000000000 6 6 1 2 1\nHEX 0E 0D 02 02 1C 50\nTEXT Прогон сохранён. Добавь ожидаемые результаты для проверки.\n"
+  }
+]
