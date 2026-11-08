@@ -149,8 +149,15 @@ int main(void) {
     same_state(&s);
     uint8_t measured[SPECTRUM_M3_PROFILE_BYTES];profile(measured);
     assert(spectrum_m3_get32(measured+4)==120 && spectrum_m3_get32(measured+8)==1);
-    assert(spectrum_m3_get32(measured+12)==8 && spectrum_m3_get32(measured+16)==56);
-    assert(!spectrum_m3_get32(measured+20) && spectrum_m3_get32(measured+24)==56 && spectrum_m3_get32(measured+28)==7);
+#if defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT>=120
+    /* With the synthetic 7-us clock all eight inner chunks fit in the
+     * bounded INIT turn. They are one measured slice instead of eight. */
+    const unsigned slices=1,max_slice=56;
+#else
+    const unsigned slices=8,max_slice=7;
+#endif
+    assert(spectrum_m3_get32(measured+12)==slices && spectrum_m3_get32(measured+16)==56);
+    assert(!spectrum_m3_get32(measured+20) && spectrum_m3_get32(measured+24)==56 && spectrum_m3_get32(measured+28)==max_slice);
     uint8_t request[8]={0};spectrum_m3_put32(request,SPECTRUM_M3_AUDIO_MAGIC);request[4]=SPECTRUM_M3_PROFILE;
     stm3_job short_profile={request,8,output,SPECTRUM_M3_PROFILE_BYTES-1,0,0};
     assert(module_entry(STM3_INIT,&api,&short_profile)==STM3_INVALID);

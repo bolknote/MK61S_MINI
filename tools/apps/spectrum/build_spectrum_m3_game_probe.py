@@ -37,11 +37,15 @@ def main():
     ap.add_argument('--fixture-dir',required=True)
     ap.add_argument('--runtime-dir',type=Path,required=True,
                     help='Folder containing AY.S3M and the three Spectrum ROMs')
+    ap.add_argument('--producer-profile',action='store_true',help='Measure Z80, API, video and producer gaps')
+    ap.add_argument('--producer-trace',action='store_true',help='Also capture the first 65 ms of producer/consumer progress')
     args=ap.parse_args()
     if not 60<=args.frames<=3100:ap.error('frames must be60..3100')
     for local in (False,True):
         folder=args.build_dir.resolve()/('local' if local else 'remote');folder.mkdir(parents=True,exist_ok=True)
-        wrapper=folder/'game.c';wrapper.write_text('#define S3_FORCE_LOCAL '+str(int(local))+
+        wrapper=folder/'game.c';wrapper.write_text('#define S3_PRODUCER_PROFILE '+str(int(args.producer_profile or args.producer_trace))+
+            '\n#define S3_PRODUCER_TRACE '+str(int(args.producer_trace))+
+            '\n#define S3_FORCE_LOCAL '+str(int(local))+
             '\n#define S3_GAME_FOLDER '+json.dumps(args.fixture_dir)+'\n#define S3_GAME_FRAMES '+str(args.frames)+'u\n#include "'+str(ROOT/'tests/spectrum_m3_game_probe.c')+'"\n')
         sources=[wrapper,*[ROOT/s for s in SOURCES[1:]]]
         command=[sys.executable,str(ROOT/'tools/apps/portable/build_portable_app.py'),'--target','picocalc-pico-h',
@@ -51,9 +55,11 @@ def main():
         runtime=stage_runtime(args.runtime_dir,folder/'app')
         meta=json.loads((folder/'app/S3GAME.json').read_text())
         inputs=[*sources,ROOT/'tests/spectrum_m3_game_probe.c',ROOT/SOURCES[0],
-                *sorted((ROOT/'examples/portable-apps/SPECTRUM').glob('*.h'))]
+                *sorted((ROOT/'examples/portable-apps/SPECTRUM').glob('*.h')),
+                ROOT/'third_party/z80/z80.h',ROOT/'third_party/emu2149/emu2149.h']
         sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
         meta.update(app=str(folder/'app/S3GAME.APP'),sha256=sha(folder/'app/S3GAME.APP'),frames=args.frames,
+                    producer_profile=args.producer_profile or args.producer_trace,producer_trace=args.producer_trace,
                     runtime_files=runtime,source_pins={str(p):sha(p)for p in inputs})
         (folder/'manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
         print(('local' if local else 'M3')+': '+str(meta['memory_bytes'])+'/49152bytes')

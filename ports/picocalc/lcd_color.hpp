@@ -69,6 +69,9 @@ inline void append_color_rect(Update& u,const Rect& next) {
     }
     u.rectangles[best]=expanded;
 }
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("O2")))
+#endif
 inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_service_color_frame& next,bool force) {
     u.count=u.bytes=0;
     // Use the same conservative window charge as the monochrome planner:
@@ -78,19 +81,37 @@ inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_
     if(force || !same_color_view(old,next) || std::memcmp(old.palette,next.palette,sizeof(old.palette))) {
         u.rectangles[0]={next.x,next.y,next.width,next.height};u.count=1;
     } else {
+        // An unchanged frame needs no tile walk. The bulk comparison also
+        // avoids thousands of tiny memcmp calls for idle/held game frames.
+        if(!std::memcmp(old.pixels,next.pixels,next.pixel_bytes) &&
+           (!next.tile_bytes || !std::memcmp(old.tiles,next.tiles,next.tile_bytes)))return;
         // Compare each tile once. Keep distant dirty runs separate; bridge
         // short gaps only when their pixel data costs less than a new window.
         for(unsigned y=0;y<next.height;y+=8) {
             unsigned first=next.width,last=0;
             const unsigned rows=next.height-y<8?next.height-y:8;
+            const bool tiled=format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8;
+            uint8_t changed[WIDTH/8]{};
+            if(tiled) {
+                // Walk the bitmap in row order and accumulate one byte per
+                // tile. No per-tile memcmp, division or strided inner walk.
+                const unsigned stride=next.width/8;
+                const auto* before=old.pixels+y*stride;const auto* after=next.pixels+y*stride;
+                for(unsigned row=0;row<rows;++row) {
+                    for(unsigned column=0;column<stride;++column)changed[column]|=before[column]^after[column];
+                    before+=stride;after+=stride;
+                }
+                const unsigned bytes=format==MK61_COLOR_TILE8?2:1;
+                before=old.tiles+(y/8)*stride*bytes;after=next.tiles+(y/8)*stride*bytes;
+                for(unsigned column=0;column<stride;++column) {
+                    changed[column]|=before[column*bytes]^after[column*bytes];
+                    if(bytes==2)changed[column]|=before[column*2+1]^after[column*2+1];
+                }
+            }
             for(unsigned x=0;x<next.width;x+=8) {
                 bool dirty=false;
-                if(format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8) {
-                    const unsigned column=x/8,stride=next.width/8;
-                    const unsigned bytes=format==MK61_COLOR_TILE8?2:1;
-                    dirty=std::memcmp(old.tiles+((y/8)*stride+column)*bytes,next.tiles+((y/8)*stride+column)*bytes,bytes)!=0;
-                    for(unsigned row=0;row<rows && !dirty;++row)
-                        dirty=old.pixels[(y+row)*stride+column]!=next.pixels[(y+row)*stride+column];
+                if(tiled) {
+                    dirty=changed[x/8]!=0;
                 } else {
                     const unsigned stride=(next.width+1U)/2;
                     const unsigned bytes=(next.width-x<8?(next.width-x+1U)/2:4);

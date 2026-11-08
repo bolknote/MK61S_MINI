@@ -1,0 +1,746 @@
+{
+  "date": "2026-11-08",
+  "device_uid": "E6657CD423721C35",
+  "branch": "main",
+  "clocks": {
+    "pico_sys_hz": 125000000,
+    "pico_peri_hz": 48000000,
+    "m3_hz": 72000000,
+    "uart_baud": 2250000
+  },
+  "scope": "Z80 event producer, core0 frame preparation, pure MICROS service; Pico-only image, unchanged M3 BIOS",
+  "verdict": {
+    "producer_throughput_fixed": true,
+    "both_600_frame_runs_completed": true,
+    "audio_underruns": 0,
+    "fallbacks": 0,
+    "strict_all_checks_pass": false,
+    "remaining": [
+      "per-frame interval jitter",
+      "M3 blocks exceeding 4800 us while buffered",
+      "priming above 20000 us"
+    ]
+  },
+  "baseline": {
+    "tag": "PRODUCER-PROFILE-001",
+    "cpu_tstates": 114905,
+    "cpu_us": 55712,
+    "page_loads": 2,
+    "profiles": {
+      "CPU": {
+        "calls": 56,
+        "us": 55712,
+        "max_us": 2930
+      },
+      "SERVICE": {
+        "calls": 2,
+        "us": 1889,
+        "max_us": 1361
+      },
+      "KEYS": {
+        "calls": 4,
+        "us": 63550,
+        "max_us": 60656
+      },
+      "BUFFER": {
+        "calls": 2,
+        "us": 1345,
+        "max_us": 682
+      },
+      "COLOR": {
+        "calls": 2,
+        "us": 647,
+        "max_us": 568
+      },
+      "MICROS": {
+        "calls": 59,
+        "us": 1032,
+        "max_us": 55
+      },
+      "VIDEO": {
+        "calls": 1,
+        "us": 936,
+        "max_us": 936
+      },
+      "OTHER": {
+        "calls": 2,
+        "us": 108,
+        "max_us": 67
+      }
+    }
+  },
+  "variants": {
+    "PRODUCER-PROFILE-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "z80_paced",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "continuous_sample_coverage",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 0,
+        "cycles": 0,
+        "elapsed_us": 0,
+        "timing_valid": false,
+        "mhz": null,
+        "fps": null,
+        "starved": 0,
+        "frame_min_us": 0,
+        "frame_max_us": 0,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 0,
+        "samples": 600,
+        "blocks": 5,
+        "block_max_us": 4778,
+        "block_min_us": 4330,
+        "prime_us": 31931,
+        "min_queued": 0,
+        "inline_requests": 4,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 7007,
+        "transport_rx_bytes": 1818,
+        "native_render_us": 14300,
+        "exchange_block_us": 22780
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 16,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 0
+      },
+      "cpu_profile": {
+        "calls": 56,
+        "us": 55712,
+        "max_us": 2930
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-PROFILE-001.result/receipt.json"
+    },
+    "PRODUCER-LOOP-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1,
+        "cycles": 71791,
+        "elapsed_us": 27913,
+        "timing_valid": true,
+        "mhz": 2.5719557195571956,
+        "fps": 35.82560097445635,
+        "starved": 0,
+        "frame_min_us": 27913,
+        "frame_max_us": 27913,
+        "late_frames_1ms": 1,
+        "max_frame_lag_us": 7433,
+        "samples": 720,
+        "blocks": 6,
+        "block_max_us": 4964,
+        "block_min_us": 4253,
+        "prime_us": 28098,
+        "min_queued": 0,
+        "inline_requests": 4,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 7038,
+        "transport_rx_bytes": 1972,
+        "native_render_us": 16698,
+        "exchange_block_us": 27804
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 16,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 2
+      },
+      "cpu_profile": {
+        "calls": 79,
+        "us": 54683,
+        "max_us": 2140
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-LOOP-001.result/receipt.json"
+    },
+    "PRODUCER-LAYOUT-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1,
+        "cycles": 71791,
+        "elapsed_us": 25489,
+        "timing_valid": true,
+        "mhz": 2.816548314959394,
+        "fps": 39.23261014555298,
+        "starved": 0,
+        "frame_min_us": 25489,
+        "frame_max_us": 25489,
+        "late_frames_1ms": 1,
+        "max_frame_lag_us": 5009,
+        "samples": 840,
+        "blocks": 7,
+        "block_max_us": 4973,
+        "block_min_us": 4311,
+        "prime_us": 26813,
+        "min_queued": 0,
+        "inline_requests": 4,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 7069,
+        "transport_rx_bytes": 2126,
+        "native_render_us": 19100,
+        "exchange_block_us": 31978
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 16,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 1
+      },
+      "cpu_profile": {
+        "calls": 105,
+        "us": 50708,
+        "max_us": 2112
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-LAYOUT-001.result/receipt.json"
+    },
+    "PRODUCER-ALU-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_paced",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 4,
+        "cycles": 287060,
+        "elapsed_us": 71904,
+        "timing_valid": true,
+        "mhz": 3.9922674677347576,
+        "fps": 55.62972852692479,
+        "starved": 0,
+        "frame_min_us": 6480,
+        "frame_max_us": 24392,
+        "late_frames_1ms": 1,
+        "max_frame_lag_us": 3912,
+        "samples": 2040,
+        "blocks": 17,
+        "block_max_us": 5361,
+        "block_min_us": 4222,
+        "prime_us": 26836,
+        "min_queued": 0,
+        "inline_requests": 9,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 7461,
+        "transport_rx_bytes": 3666,
+        "native_render_us": 42124,
+        "exchange_block_us": 80087
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 24,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 6
+      },
+      "cpu_profile": {
+        "calls": 210,
+        "us": 79948,
+        "max_us": 2077
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-ALU-001.result/receipt.json"
+    },
+    "PRODUCER-O2LOOP-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 8,
+        "cycles": 574048,
+        "elapsed_us": 172920,
+        "timing_valid": true,
+        "mhz": 3.319731667823271,
+        "fps": 46.26416840157298,
+        "starved": 0,
+        "frame_min_us": 17598,
+        "frame_max_us": 29825,
+        "late_frames_1ms": 2,
+        "max_frame_lag_us": 11962,
+        "samples": 4080,
+        "blocks": 34,
+        "block_max_us": 5836,
+        "block_min_us": 4145,
+        "prime_us": 21694,
+        "min_queued": 0,
+        "inline_requests": 17,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 8109,
+        "transport_rx_bytes": 6284,
+        "native_render_us": 81146,
+        "exchange_block_us": 161225
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 16,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 13
+      },
+      "cpu_profile": {
+        "calls": 317,
+        "us": 93406,
+        "max_us": 1922
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-O2LOOP-001.result/receipt.json"
+    },
+    "PRODUCER-LCD-001": {
+      "status": "FAIL",
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_ERROR",
+        "zero_M3_UNDERRUNS",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 182,
+        "cycles": 13047643,
+        "elapsed_us": 3730495,
+        "timing_valid": true,
+        "mhz": 3.497563460077014,
+        "fps": 48.78709125732644,
+        "starved": 0,
+        "frame_min_us": 11413,
+        "frame_max_us": 30893,
+        "late_frames_1ms": 60,
+        "max_frame_lag_us": 6789,
+        "samples": 93000,
+        "blocks": 775,
+        "block_max_us": 7072,
+        "block_min_us": 3572,
+        "prime_us": 21698,
+        "min_queued": 0,
+        "inline_requests": 359,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 36327,
+        "transport_rx_bytes": 120398,
+        "native_render_us": 1817430,
+        "exchange_block_us": 3636184
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": -29,
+        "M3_UNDERRUNS": 96,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 248
+      },
+      "cpu_profile": {
+        "calls": 6432,
+        "us": 2025117,
+        "max_us": 1959
+      },
+      "profiles": null,
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-LCD-001.result/receipt.json"
+    },
+    "PRODUCER-LCD2-001": {
+      "status": "FAIL",
+      "failures": [
+        "no_frame_delays_over_1ms",
+        "zero_M3_LATE_BLOCKS",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 598,
+        "cycles": 42866269,
+        "elapsed_us": 12244018,
+        "timing_valid": true,
+        "mhz": 3.5009968949735293,
+        "fps": 48.84017648454943,
+        "starved": 0,
+        "frame_min_us": 16551,
+        "frame_max_us": 24848,
+        "late_frames_1ms": 198,
+        "max_frame_lag_us": 961,
+        "samples": 306720,
+        "blocks": 2556,
+        "block_max_us": 7030,
+        "block_min_us": 3413,
+        "prime_us": 21686,
+        "min_queued": 32,
+        "inline_requests": 1188,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 104575,
+        "transport_rx_bytes": 394863,
+        "native_render_us": 5997742,
+        "exchange_block_us": 12010523
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": 0,
+        "M3_UNDERRUNS": 0,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 895
+      },
+      "cpu_profile": {
+        "calls": 20974,
+        "us": 6573268,
+        "max_us": 2756
+      },
+      "profiles": {
+        "CPU": {
+          "calls": 20974,
+          "us": 6573268,
+          "max_us": 2756
+        },
+        "SERVICE": {
+          "calls": 21156,
+          "us": 3113976,
+          "max_us": 1795
+        },
+        "KEYS": {
+          "calls": 600,
+          "us": 461170,
+          "max_us": 1857
+        },
+        "BUFFER": {
+          "calls": 3,
+          "us": 2219,
+          "max_us": 825
+        },
+        "COLOR": {
+          "calls": 0,
+          "us": 0,
+          "max_us": 0
+        },
+        "PRESENT": {
+          "calls": 595,
+          "us": 1271241,
+          "max_us": 3840
+        },
+        "PALETTE": {
+          "calls": 600,
+          "us": 44136,
+          "max_us": 313
+        },
+        "MICROS": {
+          "calls": 79017,
+          "us": 120133,
+          "max_us": 110
+        },
+        "VIDEO": {
+          "calls": 595,
+          "us": 477326,
+          "max_us": 946
+        },
+        "OTHER": {
+          "calls": 3,
+          "us": 316,
+          "max_us": 116
+        }
+      },
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-LCD2-001.result/receipt.json"
+    },
+    "PRODUCER-INIT120-001": {
+      "status": "FAIL",
+      "failures": [
+        "no_frame_delays_over_1ms",
+        "frame_lag_bounded",
+        "zero_M3_LATE_BLOCKS",
+        "started_promptly"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 598,
+        "cycles": 42866269,
+        "elapsed_us": 12244174,
+        "timing_valid": true,
+        "mhz": 3.5009522896358707,
+        "fps": 48.839554223910895,
+        "starved": 0,
+        "frame_min_us": 16480,
+        "frame_max_us": 24867,
+        "late_frames_1ms": 198,
+        "max_frame_lag_us": 1232,
+        "samples": 306720,
+        "blocks": 2556,
+        "block_max_us": 7176,
+        "block_min_us": 3420,
+        "prime_us": 21662,
+        "min_queued": 40,
+        "inline_requests": 1188,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 104575,
+        "transport_rx_bytes": 394863,
+        "native_render_us": 5999342,
+        "exchange_block_us": 11928424
+      },
+      "native_integrity_errors_and_resource_checks_pass": true,
+      "m3": {
+        "M3_ERROR": 0,
+        "M3_UNDERRUNS": 0,
+        "M3_UART_ERRORS": 0,
+        "M3_UNLOAD_FAILURES": 0,
+        "M3_FALLBACKS": 0,
+        "M3_LATE_BLOCKS": 848
+      },
+      "cpu_profile": {
+        "calls": 20974,
+        "us": 6575010,
+        "max_us": 2296
+      },
+      "profiles": {
+        "CPU": {
+          "calls": 20974,
+          "us": 6575010,
+          "max_us": 2296
+        },
+        "SERVICE": {
+          "calls": 21228,
+          "us": 3128964,
+          "max_us": 1619
+        },
+        "KEYS": {
+          "calls": 600,
+          "us": 449503,
+          "max_us": 1876
+        },
+        "BUFFER": {
+          "calls": 3,
+          "us": 2023,
+          "max_us": 727
+        },
+        "COLOR": {
+          "calls": 0,
+          "us": 0,
+          "max_us": 0
+        },
+        "PRESENT": {
+          "calls": 595,
+          "us": 1271847,
+          "max_us": 3816
+        },
+        "PALETTE": {
+          "calls": 600,
+          "us": 43789,
+          "max_us": 264
+        },
+        "MICROS": {
+          "calls": 77285,
+          "us": 118100,
+          "max_us": 102
+        },
+        "VIDEO": {
+          "calls": 595,
+          "us": 474940,
+          "max_us": 936
+        },
+        "OTHER": {
+          "calls": 3,
+          "us": 288,
+          "max_us": 115
+        }
+      },
+      "receipt": ".build/spectrum-producer-20261108/PRODUCER-INIT120-001.result/receipt.json"
+    }
+  },
+  "implementation": [
+    "one shared Z80 batch dispatcher; preserve M1/prefix/IM0/INT/NMI/EI/HALT boundaries",
+    "hot Z80 registers in Thumb-1 short-address range",
+    "compact register-operand decoding permits GCC O2 on only the batch dispatcher",
+    "result-indexed INC/DEC flags, direct 16-bit ADD flags, word-pair EXX",
+    "LCD unchanged-frame shortcut and row-order dirty tile accumulation; O2 planner",
+    "pure MICROS return before copying/reapplying display settings"
+  ],
+  "production_app": {
+    "name": "SPECTRUM",
+    "target": "picocalc-pico-h",
+    "abi": 6,
+    "load_address": 536870912,
+    "native_display": true,
+    "graphics_width": 320,
+    "graphics_height": 320,
+    "relocations": 544,
+    "relocation_bytes": 593,
+    "entry_offset": 0,
+    "image_bytes": 47468,
+    "bss_bytes": 388,
+    "memory_bytes": 47856,
+    "app_bytes": 35525,
+    "compression": "ZX0+BCJ",
+    "zx0_parser": "greedy",
+    "resident_imports": 0,
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "production_app_sha256": "e0c93e20b74266a9e1726c3748225e6aa136aeb952f0e6218889912935d4dc6d",
+  "firmware": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.16",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "automatic_audio_clock_mhz": null,
+    "ai_overclock_diagnostic": true,
+    "block_audio_dma": false,
+    "m0_libc_candidate": 0,
+    "lcd_color_chain": true,
+    "lcd_spi_requested_hz": 12500000,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1538304,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 119772,
+    "foreground_memory_budget": {
+      "minimum_heap_bytes": 108544,
+      "heap_capacity_bytes": 109604
+    },
+    "static_ram_data_bss_bytes": 84260,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3076608,
+    "bin_sha256": "7537045249632fb2f59fbbb23a154955c6cf47e200e11025ac16f5e046ec0f56",
+    "uf2_sha256": "7674c8a530c98447532d940493f2f5bff5210f59854bccc394ab32194321108e",
+    "hardware_verified": false,
+    "source_sha256": "b8f5ddb5da2c5091005d0d13500ccb5260cc512448ef9051b865625ce20df061",
+    "build_id": "6fb3cd61",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1538304,
+      "footer_offset": 943660,
+      "profile_id": "50434831",
+      "crc32": "82cd4a85"
+    }
+  },
+  "m3_bios_changed": false,
+  "fast_init_ab": {
+    "original_limit": 96,
+    "candidate_limit": 120,
+    "block_samples": 120,
+    "candidate_sha256": "17001db8906327072cff00ff30a32c1af8775e0fc9d10eabf439e9af9e2645d4",
+    "production_module": "unchanged original AY.S3M; candidate remains separate AY120.S3M",
+    "observation": "A single paired run reduced total exchange by 82099 us across 2556 blocks (~32 us/block). Both had zero underruns. This does not explain the former producer failure."
+  },
+  "validation": {
+    "spectrum_asan_ubsan": "PASS",
+    "picocalc_host_suite": "PASS",
+    "m3_fast_init_96_tests": "PASS",
+    "m3_fast_init_120_tests": "PASS",
+    "inc_dec_exhaustive_cases": 1048576,
+    "word_add_cases": 786432,
+    "exx_cases": 65536,
+    "zexdoc": {
+      "instructions": 5764169747,
+      "tstates": 46734978649,
+      "expected_tstates": 46734978649,
+      "result": "PASS"
+    },
+    "zexall": {
+      "instructions": 5764169747,
+      "tstates": 46734978649,
+      "expected_tstates": 46734978649,
+      "result": "PASS"
+    }
+  },
+  "notes": [
+    "CPU aggregate rates from different duration runs have different HALT/work mixtures; do not treat their ratios as a controlled speedup.",
+    "600 requested frames leave 598 full interior frame intervals in SP3 RESULT.",
+    "M3_STARVE_AHEAD is measured in Z80 tstates, not audio samples."
+  ],
+  "cpu_commit": "980447229",
+  "deployment": {
+    "directory": "/SpectrumM3",
+    "firmware_build": "6FB3CD61",
+    "firmware_crc": "82CD4A85",
+    "m3_bios_changed": false,
+    "receipt": ".build/spectrum-producer-20261108/PRODUCER-DEPLOY-001.result/receipt.json",
+    "full_runtime_readback": true,
+    "production_module_unchanged": true,
+    "cdc_closed": true,
+    "msc_export_inactive": true,
+    "shared_lock_released": true
+  }
+}

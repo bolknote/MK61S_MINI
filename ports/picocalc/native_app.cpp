@@ -522,6 +522,15 @@ const mk61_app_services NativeHost::common = {MK61_APP_SERVICES_MAGIC,
 #endif
 
 u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
+  // A clock read has no presentation state. Keep the hot APP timing path
+  // independent of copying/reapplying all display settings.
+  if(op==MK61_SERVICE_MICROS) {
+#if defined(PICO_ON_DEVICE)
+    return time_us_32();
+#else
+    return millis()*1000;
+#endif
+  }
   auto &host = *current;
   host.display.settings(host.settings());
   auto &s = host.s;
@@ -765,12 +774,6 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     word = word * 1664525 + 1013904223;
     return word;
   }
-  case MK61_SERVICE_MICROS:
-#if defined(PICO_ON_DEVICE)
-    return time_us_32();
-#else
-    return millis() * 1000;
-#endif
   case MK61_SERVICE_TEXT_ROWS: {
     if (!payload || a > MK61_SERVICE_MAX_ROWS)
       return 0;
