@@ -1,5 +1,11 @@
 #include "z80.h"
+#include <stddef.h>
 #include <string.h>
+
+#if defined(MK61_TARGET_PICOCALC) && defined(__arm__)
+_Static_assert(offsetof(z80,a)<32 && offsetof(z80,f)<32 && offsetof(z80,r)<32 &&
+               offsetof(z80,iff_delay)<32,"Keep live Z80 byte registers in Thumb-1's short load range");
+#endif
 
 /* Local port: embedded builds have no stderr; undocumented opcodes remain NOPs. */
 #if defined(MK61_TARGET_PICOCALC)
@@ -122,6 +128,18 @@ static inline void wb(z80* const z, uint16_t addr, uint8_t val) {
   z->write_byte(z->userdata, addr, val);
 }
 
+/* Z80's register encoding is shared by LD and the byte ALU. Decode it
+ * once instead of retaining a separate operand-fetch body per register. */
+static const uint8_t register_offsets[8]={offsetof(z80,b),offsetof(z80,c),offsetof(z80,d),offsetof(z80,e),
+    offsetof(z80,h),offsetof(z80,l),0,offsetof(z80,a)};
+_Static_assert(offsetof(z80,a)<256 && offsetof(z80,l)<256,"Byte register offsets must fit");
+static inline Z80_HOT_INLINE uint8_t reg_byte(z80* z,unsigned reg) {
+  return reg==6?rb(z,z->hl):*((uint8_t*)z+register_offsets[reg]);
+}
+static inline Z80_HOT_INLINE void set_reg_byte(z80* z,unsigned reg,uint8_t value) {
+  if(reg==6)wb(z,z->hl,value);else *((uint8_t*)z+register_offsets[reg])=value;
+}
+
 static inline uint16_t rw(z80* const z, uint16_t addr) {
   return (rb(z, (uint16_t)(addr + 1)) << 8) | rb(z, addr);
 }
@@ -153,7 +171,7 @@ static uint8_t opcode_notify(z80* const z, uint16_t address) {
   if(z->m1) z->m1(z->userdata,address,false);
   return value;
 }
-static inline uint8_t opcode_byte(z80* const z) {
+static inline Z80_HOT_INLINE uint8_t opcode_byte(z80* const z) {
   const uint16_t address=z->pc;
   if(z->m1 && (uint16_t)(address-z->m1_start)<=z->m1_limit)
     return opcode_notify(z,address);
@@ -329,26 +347,20 @@ static inline uint16_t subw(z80* const z, uint16_t a, uint16_t b, bool cy) {
 
 // adds a word to HL
 static inline void addhl(z80* const z, uint16_t val) {
-  bool sf = z->sf;
-  bool zf = z->zf;
-  bool pf = z->pf;
-  uint16_t result = addw(z, get_hl(z), val, 0);
-  set_hl(z, result);
-  z->sf = sf;
-  z->zf = zf;
-  z->pf = pf;
+  const uint16_t before=z->hl;
+  const uint32_t wide=(uint32_t)before+val;
+  const uint16_t result=(uint16_t)wide;
+  z->f=(z->f&0xC4)|((result>>8)&0x28)|(((before^val^result)>>8)&0x10)|(wide>>16);
+  z->mem_ptr=(uint16_t)(before+1);z->hl=result;
 }
 
 // adds a word to IX or IY
 static inline void addiz(z80* const z, uint16_t* reg, uint16_t val) {
-  bool sf = z->sf;
-  bool zf = z->zf;
-  bool pf = z->pf;
-  uint16_t result = addw(z, *reg, val, 0);
-  *reg = result;
-  z->sf = sf;
-  z->zf = zf;
-  z->pf = pf;
+  const uint16_t before=*reg;
+  const uint32_t wide=(uint32_t)before+val;
+  const uint16_t result=(uint16_t)wide;
+  z->f=(z->f&0xC4)|((result>>8)&0x28)|(((before^val^result)>>8)&0x10)|(wide>>16);
+  z->mem_ptr=(uint16_t)(before+1);*reg=result;
 }
 
 // adds a word (+ carry) to HL
@@ -367,19 +379,55 @@ static inline void sbchl(z80* const z, uint16_t val) {
   set_hl(z, result);
 }
 
+/* Carry is preserved; the other INC/DEC flags depend only on the result.
+ * These tables avoid per-opcode half-carry/overflow reconstruction. */
+static const uint8_t inc_flags[256] = {
+  0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
+  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
+  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
+  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
+  0x94, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
+  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
+  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
+  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
+  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
+};
+static const uint8_t dec_flags[256] = {
+  0x42, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
+  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
+  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
+  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
+  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3e,
+  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
+  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
+  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
+  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
+  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
+  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
+  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
+  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
+};
 // increments a byte value
 static inline uint8_t inc(z80* const z, uint8_t a) {
   const uint8_t result = (uint8_t)(a + 1);
-  z->f = (z->f & 1) | (szp_flags[result] & ~4U) |
-         ((a ^ result) & 16) | (a == 127 ? 4 : 0);
+  z->f = (z->f & 1) | inc_flags[result];
   return result;
 }
 
 // decrements a byte value
 static inline uint8_t dec(z80* const z, uint8_t a) {
   const uint8_t result = (uint8_t)(a - 1);
-  z->f = (z->f & 1) | (szp_flags[result] & ~4U) |
-         ((a ^ result) & 16) | (a == 128 ? 4 : 0) | 2;
+  z->f = (z->f & 1) | dec_flags[result];
   return result;
 }
 
@@ -750,26 +798,17 @@ void z80_init(z80* const z) {
   z->int_data = 0;
 }
 
-// executes the next instruction in memory + handles interrupts
-void z80_step(z80* const z) {
-  if (z->halted) {
-    exec_opcode(z, 0x00);
-  } else {
-    const uint8_t opcode = opcode_byte(z);
-    exec_opcode(z, opcode);
-  }
+/* One dispatcher serves both single-opcode prefix/IM0 calls (cycles=0)
+ * and instruction batches. Its stack frame is paid once per batch, not
+ * for every emulated instruction. Interrupts still run after each one. */
+static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode);
 
-  process_interrupts(z);
-}
+// executes the next instruction in memory + handles interrupts
+void z80_step(z80* const z) { (void)execute(z,1,NULL,0); }
 
 uint32_t z80_run(z80* z, uint32_t cycles, const bool* stop) {
   if (cycles>INT32_MAX) cycles=INT32_MAX;
-  const unsigned long before=z->cyc;
-  while ((uint32_t)(z->cyc-before)<cycles && !(stop && *stop)) {
-    z80_step(z);
-    if (z->halted) break;
-  }
-  return (uint32_t)(z->cyc-before);
+  return cycles?execute(z,cycles,stop,0):0;
 }
 
 // outputs to stdout a debug trace of the emulator
@@ -796,81 +835,34 @@ void z80_gen_int(z80* const z, uint8_t data) {
 
 // executes a non-prefixed opcode
 void exec_opcode(z80* const z, uint8_t opcode) {
+  (void)execute(z,0,NULL,opcode);
+}
+
+#if defined(__GNUC__) && !defined(__clang__)
+/* Optimize the batch, not the whole APP. Shared operand decoding keeps
+ * this hot loop within the same 48 KiB image budget. */
+__attribute__((optimize("O2")))
+#endif
+static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) {
+  const unsigned long before=z->cyc;
+  for(;;) {
+    if(cycles) {
+      if((uint32_t)(z->cyc-before)>=cycles || (stop && *stop))break;
+      opcode=z->halted?0:opcode_byte(z);
+    }
   z->cyc += cyc_00[opcode];
   inc_r(z);
 
   switch (opcode) {
-  case 0x7F: z->a = z->a; break; // ld a,a
-  case 0x78: z->a = z->b; break; // ld a,b
-  case 0x79: z->a = z->c; break; // ld a,c
-  case 0x7A: z->a = z->d; break; // ld a,d
-  case 0x7B: z->a = z->e; break; // ld a,e
-  case 0x7C: z->a = z->h; break; // ld a,h
-  case 0x7D: z->a = z->l; break; // ld a,l
-
-  case 0x47: z->b = z->a; break; // ld b,a
-  case 0x40: z->b = z->b; break; // ld b,b
-  case 0x41: z->b = z->c; break; // ld b,c
-  case 0x42: z->b = z->d; break; // ld b,d
-  case 0x43: z->b = z->e; break; // ld b,e
-  case 0x44: z->b = z->h; break; // ld b,h
-  case 0x45: z->b = z->l; break; // ld b,l
-
-  case 0x4F: z->c = z->a; break; // ld c,a
-  case 0x48: z->c = z->b; break; // ld c,b
-  case 0x49: z->c = z->c; break; // ld c,c
-  case 0x4A: z->c = z->d; break; // ld c,d
-  case 0x4B: z->c = z->e; break; // ld c,e
-  case 0x4C: z->c = z->h; break; // ld c,h
-  case 0x4D: z->c = z->l; break; // ld c,l
-
-  case 0x57: z->d = z->a; break; // ld d,a
-  case 0x50: z->d = z->b; break; // ld d,b
-  case 0x51: z->d = z->c; break; // ld d,c
-  case 0x52: z->d = z->d; break; // ld d,d
-  case 0x53: z->d = z->e; break; // ld d,e
-  case 0x54: z->d = z->h; break; // ld d,h
-  case 0x55: z->d = z->l; break; // ld d,l
-
-  case 0x5F: z->e = z->a; break; // ld e,a
-  case 0x58: z->e = z->b; break; // ld e,b
-  case 0x59: z->e = z->c; break; // ld e,c
-  case 0x5A: z->e = z->d; break; // ld e,d
-  case 0x5B: z->e = z->e; break; // ld e,e
-  case 0x5C: z->e = z->h; break; // ld e,h
-  case 0x5D: z->e = z->l; break; // ld e,l
-
-  case 0x67: z->h = z->a; break; // ld h,a
-  case 0x60: z->h = z->b; break; // ld h,b
-  case 0x61: z->h = z->c; break; // ld h,c
-  case 0x62: z->h = z->d; break; // ld h,d
-  case 0x63: z->h = z->e; break; // ld h,e
-  case 0x64: z->h = z->h; break; // ld h,h
-  case 0x65: z->h = z->l; break; // ld h,l
-
-  case 0x6F: z->l = z->a; break; // ld l,a
-  case 0x68: z->l = z->b; break; // ld l,b
-  case 0x69: z->l = z->c; break; // ld l,c
-  case 0x6A: z->l = z->d; break; // ld l,d
-  case 0x6B: z->l = z->e; break; // ld l,e
-  case 0x6C: z->l = z->h; break; // ld l,h
-  case 0x6D: z->l = z->l; break; // ld l,l
-
-  case 0x7E: z->a = rb(z, get_hl(z)); break; // ld a,(hl)
-  case 0x46: z->b = rb(z, get_hl(z)); break; // ld b,(hl)
-  case 0x4E: z->c = rb(z, get_hl(z)); break; // ld c,(hl)
-  case 0x56: z->d = rb(z, get_hl(z)); break; // ld d,(hl)
-  case 0x5E: z->e = rb(z, get_hl(z)); break; // ld e,(hl)
-  case 0x66: z->h = rb(z, get_hl(z)); break; // ld h,(hl)
-  case 0x6E: z->l = rb(z, get_hl(z)); break; // ld l,(hl)
-
-  case 0x77: wb(z, get_hl(z), z->a); break; // ld (hl),a
-  case 0x70: wb(z, get_hl(z), z->b); break; // ld (hl),b
-  case 0x71: wb(z, get_hl(z), z->c); break; // ld (hl),c
-  case 0x72: wb(z, get_hl(z), z->d); break; // ld (hl),d
-  case 0x73: wb(z, get_hl(z), z->e); break; // ld (hl),e
-  case 0x74: wb(z, get_hl(z), z->h); break; // ld (hl),h
-  case 0x75: wb(z, get_hl(z), z->l); break; // ld (hl),l
+  case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+  case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+  case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+  case 0x58: case 0x59: case 0x5A: case 0x5B: case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+  case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+  case 0x68: case 0x69: case 0x6A: case 0x6B: case 0x6C: case 0x6D: case 0x6E: case 0x6F:
+  case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x77:
+  case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
+    set_reg_byte(z,(opcode>>3)&7,reg_byte(z,opcode&7));break; // ld r,r / r,(hl) / (hl),r
 
   case 0x3E: z->a = nextb(z); break; // ld a,*
   case 0x06: z->b = nextb(z); break; // ld b,*
@@ -943,44 +935,20 @@ void exec_opcode(z80* const z, uint8_t opcode) {
     z->mem_ptr = val;
   } break; // ex (sp),hl
 
-  case 0x87: z->a = addb(z, z->a, z->a, 0); break; // add a,a
-  case 0x80: z->a = addb(z, z->a, z->b, 0); break; // add a,b
-  case 0x81: z->a = addb(z, z->a, z->c, 0); break; // add a,c
-  case 0x82: z->a = addb(z, z->a, z->d, 0); break; // add a,d
-  case 0x83: z->a = addb(z, z->a, z->e, 0); break; // add a,e
-  case 0x84: z->a = addb(z, z->a, z->h, 0); break; // add a,h
-  case 0x85: z->a = addb(z, z->a, z->l, 0); break; // add a,l
-  case 0x86: z->a = addb(z, z->a, rb(z, get_hl(z)), 0); break; // add a,(hl)
+  case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+    z->a=addb(z,z->a,reg_byte(z,opcode&7),0);break;
   case 0xC6: z->a = addb(z, z->a, nextb(z), 0); break; // add a,*
 
-  case 0x8F: z->a = addb(z, z->a, z->a, z->cf); break; // adc a,a
-  case 0x88: z->a = addb(z, z->a, z->b, z->cf); break; // adc a,b
-  case 0x89: z->a = addb(z, z->a, z->c, z->cf); break; // adc a,c
-  case 0x8A: z->a = addb(z, z->a, z->d, z->cf); break; // adc a,d
-  case 0x8B: z->a = addb(z, z->a, z->e, z->cf); break; // adc a,e
-  case 0x8C: z->a = addb(z, z->a, z->h, z->cf); break; // adc a,h
-  case 0x8D: z->a = addb(z, z->a, z->l, z->cf); break; // adc a,l
-  case 0x8E: z->a = addb(z, z->a, rb(z, get_hl(z)), z->cf); break; // adc a,(hl)
+  case 0x88: case 0x89: case 0x8A: case 0x8B: case 0x8C: case 0x8D: case 0x8E: case 0x8F:
+    z->a=addb(z,z->a,reg_byte(z,opcode&7),z->cf);break;
   case 0xCE: z->a = addb(z, z->a, nextb(z), z->cf); break; // adc a,*
 
-  case 0x97: z->a = subb(z, z->a, z->a, 0); break; // sub a,a
-  case 0x90: z->a = subb(z, z->a, z->b, 0); break; // sub a,b
-  case 0x91: z->a = subb(z, z->a, z->c, 0); break; // sub a,c
-  case 0x92: z->a = subb(z, z->a, z->d, 0); break; // sub a,d
-  case 0x93: z->a = subb(z, z->a, z->e, 0); break; // sub a,e
-  case 0x94: z->a = subb(z, z->a, z->h, 0); break; // sub a,h
-  case 0x95: z->a = subb(z, z->a, z->l, 0); break; // sub a,l
-  case 0x96: z->a = subb(z, z->a, rb(z, get_hl(z)), 0); break; // sub a,(hl)
+  case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+    z->a=subb(z,z->a,reg_byte(z,opcode&7),0);break;
   case 0xD6: z->a = subb(z, z->a, nextb(z), 0); break; // sub a,*
 
-  case 0x9F: z->a = subb(z, z->a, z->a, z->cf); break; // sbc a,a
-  case 0x98: z->a = subb(z, z->a, z->b, z->cf); break; // sbc a,b
-  case 0x99: z->a = subb(z, z->a, z->c, z->cf); break; // sbc a,c
-  case 0x9A: z->a = subb(z, z->a, z->d, z->cf); break; // sbc a,d
-  case 0x9B: z->a = subb(z, z->a, z->e, z->cf); break; // sbc a,e
-  case 0x9C: z->a = subb(z, z->a, z->h, z->cf); break; // sbc a,h
-  case 0x9D: z->a = subb(z, z->a, z->l, z->cf); break; // sbc a,l
-  case 0x9E: z->a = subb(z, z->a, rb(z, get_hl(z)), z->cf); break; // sbc a,(hl)
+  case 0x98: case 0x99: case 0x9A: case 0x9B: case 0x9C: case 0x9D: case 0x9E: case 0x9F:
+    z->a=subb(z,z->a,reg_byte(z,opcode&7),z->cf);break;
   case 0xDE: z->a = subb(z, z->a, nextb(z), z->cf); break; // sbc a,*
 
   case 0x09: addhl(z, get_bc(z)); break; // add hl,bc
@@ -1094,44 +1062,20 @@ void exec_opcode(z80* const z, uint8_t opcode) {
     z->yf = GET_BIT(5, z->a);
   } break; // rra
 
-  case 0xA7: land(z, z->a); break; // and a
-  case 0xA0: land(z, z->b); break; // and b
-  case 0xA1: land(z, z->c); break; // and c
-  case 0xA2: land(z, z->d); break; // and d
-  case 0xA3: land(z, z->e); break; // and e
-  case 0xA4: land(z, z->h); break; // and h
-  case 0xA5: land(z, z->l); break; // and l
-  case 0xA6: land(z, rb(z, get_hl(z))); break; // and (hl)
+  case 0xA0: case 0xA1: case 0xA2: case 0xA3: case 0xA4: case 0xA5: case 0xA6: case 0xA7:
+    land(z,reg_byte(z,opcode&7));break;
   case 0xE6: land(z, nextb(z)); break; // and *
 
-  case 0xAF: lxor(z, z->a); break; // xor a
-  case 0xA8: lxor(z, z->b); break; // xor b
-  case 0xA9: lxor(z, z->c); break; // xor c
-  case 0xAA: lxor(z, z->d); break; // xor d
-  case 0xAB: lxor(z, z->e); break; // xor e
-  case 0xAC: lxor(z, z->h); break; // xor h
-  case 0xAD: lxor(z, z->l); break; // xor l
-  case 0xAE: lxor(z, rb(z, get_hl(z))); break; // xor (hl)
+  case 0xA8: case 0xA9: case 0xAA: case 0xAB: case 0xAC: case 0xAD: case 0xAE: case 0xAF:
+    lxor(z,reg_byte(z,opcode&7));break;
   case 0xEE: lxor(z, nextb(z)); break; // xor *
 
-  case 0xB7: lor(z, z->a); break; // or a
-  case 0xB0: lor(z, z->b); break; // or b
-  case 0xB1: lor(z, z->c); break; // or c
-  case 0xB2: lor(z, z->d); break; // or d
-  case 0xB3: lor(z, z->e); break; // or e
-  case 0xB4: lor(z, z->h); break; // or h
-  case 0xB5: lor(z, z->l); break; // or l
-  case 0xB6: lor(z, rb(z, get_hl(z))); break; // or (hl)
+  case 0xB0: case 0xB1: case 0xB2: case 0xB3: case 0xB4: case 0xB5: case 0xB6: case 0xB7:
+    lor(z,reg_byte(z,opcode&7));break;
   case 0xF6: lor(z, nextb(z)); break; // or *
 
-  case 0xBF: cp(z, z->a); break; // cp a
-  case 0xB8: cp(z, z->b); break; // cp b
-  case 0xB9: cp(z, z->c); break; // cp c
-  case 0xBA: cp(z, z->d); break; // cp d
-  case 0xBB: cp(z, z->e); break; // cp e
-  case 0xBC: cp(z, z->h); break; // cp h
-  case 0xBD: cp(z, z->l); break; // cp l
-  case 0xBE: cp(z, rb(z, get_hl(z))); break; // cp (hl)
+  case 0xB8: case 0xB9: case 0xBA: case 0xBB: case 0xBC: case 0xBD: case 0xBE: case 0xBF:
+    cp(z,reg_byte(z,opcode&7));break;
   case 0xFE: cp(z, nextb(z)); break; // cp *
 
   case 0xC3: jump(z, nextw(z)); break; // jm **
@@ -1220,21 +1164,9 @@ void exec_opcode(z80* const z, uint8_t opcode) {
     z->f_ = f;
   } break; // ex af,af'
   case 0xD9: {
-    uint8_t b = z->b, c = z->c, d = z->d, e = z->e, h = z->h, l = z->l;
-
-    z->b = z->b_;
-    z->c = z->c_;
-    z->d = z->d_;
-    z->e = z->e_;
-    z->h = z->h_;
-    z->l = z->l_;
-
-    z->b_ = b;
-    z->c_ = c;
-    z->d_ = d;
-    z->e_ = e;
-    z->h_ = h;
-    z->l_ = l;
+    const uint16_t bc=z->bc,de=z->de,hl=z->hl;
+    z->bc=z->bc_;z->de=z->de_;z->hl=z->hl_;
+    z->bc_=bc;z->de_=de;z->hl_=hl;
   } break; // exx
 
   case 0xCB: exec_opcode_cb(z, opcode_byte(z)); break;
@@ -1244,6 +1176,11 @@ void exec_opcode(z80* const z, uint8_t opcode) {
 
   default: Z80_DIAGNOSTIC("unknown opcode %02X\n", opcode); break;
   }
+    if(!cycles)break;
+    process_interrupts(z);
+    if(z->halted)break;
+  }
+  return (uint32_t)(z->cyc-before);
 }
 
 // executes a DD/FD opcode (IZ = IX or IY)

@@ -10,6 +10,9 @@ clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/sdk/portable/include" -I"$root/code" \
     "$root/tests/spectrum_display_self_test.c" -o "$build/display"
 "$build/display" "$root/third_party/spectrum-rom/48.rom"
+clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
+    "$root/tests/z80_alu_self_test.c" "$root/third_party/z80/z80.c" -o "$build/z80-alu"
+"$build/z80-alu"
 for test in spectrum_self_test spectrum_ldir_self_test spectrum_batch_self_test spectrum_audio_timeline_self_test; do
 clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
     "$root/tests/$test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \

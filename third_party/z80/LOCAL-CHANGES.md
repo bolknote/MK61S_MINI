@@ -28,12 +28,27 @@ Upstream and pinned revision are recorded in `UPSTREAM`; `LICENSE` is unmodified
 - The individual flag fields share their native F byte. PUSH/POP AF and
   EX AF,AF' no longer assemble or unpack eight separate booleans. GCC ARM
   and Clang host layouts pass ZEXDOC/ZEXALL with the same cycle totals.
+- Live registers and interrupt flags precede callbacks/maps, within
+  Thumb-1's short byte/halfword load ranges. The layout is internal;
+  Spectrum snapshots still serialize individual Z80 registers.
 - A 256-byte table supplies result-dependent S/Z/5/3/parity flags. Byte
   arithmetic computes half carry, overflow and carry directly; logic and
   CB shifts write the complete F byte. ZEXDOC/ZEXALL pass unchanged.
 - Byte reads, next-byte fetches and R increments are explicitly inlined
   under GCC/Clang. Other helpers retain the size-optimized build settings
   so the complete APP still fits the 48 KiB image limit.
+- A shared dispatcher loops over instruction batches without returning
+  through opcode-fetch/step/dispatch stack frames for each instruction.
+  Prefix fallback and IM0 enter the same dispatcher for one opcode without
+  fetching or processing an extra interrupt. Normal batches still sample
+  EI/NMI/INT after every complete instruction and honor stop/HALT boundaries.
+- LD and byte ALU groups share the Z80 register-operand decoder. The saved
+  code permits GCC `-O2` on the batch dispatcher while the rest of the APP
+  retains its size setting (47,856 loaded bytes in the 2026-11-08 build).
+- INC/DEC use result-indexed flag tables; 16-bit ADD computes H/C directly
+  and preserves S/Z/PV; EXX swaps native register pairs. Exhaustive byte/F
+  tests, 786,432 word-add cases, and both full ZEXDOC/ZEXALL runs retain the
+  expected flags and 46,734,978,649 t-states per exerciser.
 - An optional virtual-cycle deadline enables batched LDIR copies through
   existing direct windows or cached pages. Nonoverlapping blocks use the
   resident memcpy; forward overlap retains Z80 byte-by-byte semantics.
