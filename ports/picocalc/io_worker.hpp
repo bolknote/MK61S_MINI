@@ -21,6 +21,9 @@ bool frames_suspended();
 // for a complete 320x320 RGB565 transfer.
 // I2C transfers finish through IRQs; no LCD strip waits for bus clocks.
 void service(bool allow_i2c=true);
+// LCD DMA waits must retain the audio transport's short polling interval.
+// RX uses DMA without per-byte IRQs, and TX may still have FIFO work pending.
+void wait_for_progress();
 // Core 0 drains outstanding peripheral work before reset/sleep/clock changes.
 void drain();
 // Synchronous bounded setup/teardown on core 1, serialized with LCD work.

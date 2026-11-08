@@ -27,7 +27,7 @@ static const mk61_app_services* original;
 static mk61_app_services proxy;
 static uint32_t mode,seen,first_us,last_us,first_cycles,last_cycles,first_frame,last_frame,start_frame;
 static uint32_t previous_us,min_frame_us=UINT32_MAX,max_frame_us,late_frames,max_lag_us,run_epoch;
-static bool first_set,measured,strict_fault,fault_reported;
+static bool first_set,last_set,measured,strict_fault,fault_reported;
 #if !defined(S3_FORCE_LOCAL) || !S3_FORCE_LOCAL
 static void (*original_recover)(void*);
 #endif
@@ -36,14 +36,15 @@ static void report(const char* line){original->call(MK61_SERVICE_DEBUG_WRITE,str
 static void measurement(void) {
     if(measured)return;
     measured=true;
+    const uint32_t frames=last_set?last_frame-first_frame:0;
     char line[144];mk61_app_snprintf(original,line,sizeof(line),
         "SP3 RESULT mode=%lu frames=%lu cycles=%lu us=%lu starved=%lu\n",
-        (unsigned long)mode,(unsigned long)(last_frame-first_frame),
-        (unsigned long)(last_cycles-first_cycles),(unsigned long)(last_us-first_us),
+        (unsigned long)mode,(unsigned long)frames,
+        (unsigned long)(last_set?last_cycles-first_cycles:0),(unsigned long)(last_set?last_us-first_us:0),
         (unsigned long)atomic_load(&machine.sound.starved));report(line);
     mk61_app_snprintf(original,line,sizeof(line),
         "SP3 FRAME min_us=%lu max_us=%lu late_1ms=%lu max_lag_us=%lu strict_fault=%u\n",
-        (unsigned long)(last_frame>first_frame?min_frame_us:0),(unsigned long)max_frame_us,
+        (unsigned long)(frames?min_frame_us:0),(unsigned long)max_frame_us,
         (unsigned long)late_frames,(unsigned long)max_lag_us,strict_fault);report(line);
 }
 #if !defined(S3_FORCE_LOCAL) || !S3_FORCE_LOCAL
@@ -81,7 +82,7 @@ static uint32_t observed_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void*
     if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_PSG_ONLY_OPEN && result!=2)strict_fault=true;
     if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_SYNTH_OPEN || a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN) && result) {
         mode=result;seen=start_frame=machine.frames;first_us=last_us=0;
-        first_set=measured=false;run_epoch=clock_us();
+        first_set=last_set=measured=false;run_epoch=clock_us();
         report(mode==2?"SP3 MODE=M3\n":"SP3 MODE=LOCAL\n");
     }
     if(op==MK61_SERVICE_KEYBOARD && a==MK61_SERVICE_KEY_BITMAP) {
@@ -113,6 +114,7 @@ static uint32_t observed_run(spectrum* s,uint32_t cycles) {
             const int32_t lag=(int32_t)((now-first_us)-(s->frames-first_frame)*period);
             if(lag>0 && (uint32_t)lag>max_lag_us)max_lag_us=(uint32_t)lag;
             last_us=now;last_cycles=(uint32_t)s->cpu.cyc;last_frame=s->frames;
+            last_set=true;
         }
         previous_us=now;
     }

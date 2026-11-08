@@ -35,6 +35,16 @@ for changes,key in [({'M3_FALLBACKS':1},'no_fallback'),({'M3_LATE_BLOCKS':1},'ze
     result=q.qualify(wire(),status(),status(changes));assert result['status']=='FAIL' and key in result['failures'],result
 assert not q.qualify(wire(fault=1),status(),status())['checks']['no_probe_fault']
 assert not q.qualify(wire(policy=0),status(),status())['checks']['strict_remote_policy']
+early=wire(fault=1).replace('frames=598 cycles=42864640 us=12247040',
+                           'frames=4294967295 cycles=4294895456 us=3853025742')
+result=q.qualify(early,status(),status())
+assert not result['checks']['complete_run'] and not result['metrics']['timing_valid']
+assert result['metrics']['mhz'] is None and result['metrics']['fps'] is None
+empty=wire(fault=1).replace('frames=598 cycles=42864640 us=12247040','frames=0 cycles=0 us=0')
+result=q.qualify(empty,status(),status())
+for key in ('complete_run','z80_at_least_3_5MHz','z80_paced','no_frame_delays_over_1ms',
+            'frame_lag_bounded','continuous_sample_coverage'):
+    assert not result['checks'][key],key
 assert q.qualify(wire(mode=1,policy=0),status(),status(),mode='local')['status']=='PASS'
 try:q.qualify(wire(),status(),status().replace('M3_PROFILE=1',''))
 except ValueError:pass

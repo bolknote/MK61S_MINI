@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-08",
+  "status": "DSP_EXACT_STREAM_REALTIME_FAIL",
+  "physical_io": true,
+  "device_uid": "E6657CD423721C35",
+  "clocks_hz": {"pico": 125000000, "stm32": 72000000, "uart_baud": 2250000},
+  "m3_bios_sha256": "9e9a382530a8c60001c6985689707e15dc44343a782a2c0cedd03bc486e88183",
+  "m3_flash_writes": 0,
+  "sd": {
+    "directory": "/SpectrumM3",
+    "readback_equal": true,
+    "runtime": ["SPECTRUM.APP", "AY.S3M", "48.rom", "128-0.rom", "128-1.rom"],
+    "fixtures": ["COSMIC.Z80", "COSMIC.ULP", "DEMO.sna", "DEMO128.sna"],
+    "test_apps": ["S3SOUND.APP", "S3GAME.APP", "S3FIX.APP"]
+  },
+  "dsp": {
+    "status": "PASS",
+    "samples_per_mode": 7680,
+    "uart_errors": 0,
+    "modes": {
+      "TONE3": {"elapsed_us": 300289, "render_us": 96711, "max_job_us": 1622, "pcm_crc": "D9900974"},
+      "TURBO_ENV_NOISE": {"elapsed_us": 458561, "render_us": 286362, "max_job_us": 4694, "pcm_crc": "5E2CD6B9"},
+      "DAC_DENSE": {"elapsed_us": 437842, "render_us": 130825, "max_job_us": 2145, "pcm_crc": "ACFEE1E6"}
+    },
+    "scope": "Exact PCM/PWM calculation and transport; standalone probe does not drive speakers or prove continuous playback"
+  },
+  "cosmic": {
+    "requested_frames": 600,
+    "samples_per_block": 120,
+    "block_budget_us": 4800,
+    "remote_only": true,
+    "local_fallbacks": 0,
+    "readiness_polls": 0,
+    "streaming_write_requests": 0,
+    "runs": [
+      {
+        "tag": "FUSED-COSMIC-001", "build": "8341F036", "firmware_crc": "C7B6DD47",
+        "status": "FAIL", "m3_error": -29, "blocks": 5, "samples": 600,
+        "block_min_us": 4409, "block_max_us": 5500, "block_total_us": 24319,
+        "late_blocks": 3, "prime_us": 33213, "underruns": 16,
+        "render_samples": 720, "render_us": 14290, "render_max_job_us": 2400,
+        "starve_stage": 2, "starve_request_us": 467, "producer_ahead_tstates": 1793
+      },
+      {
+        "tag": "FUSED-COSMIC-002", "build": "9C07106D", "firmware_crc": "1D51AEAD",
+        "status": "FAIL", "m3_error": -29, "blocks": 5, "samples": 600,
+        "block_min_us": 4307, "block_max_us": 5379, "block_total_us": 24024,
+        "late_blocks": 2, "prime_us": 31949, "underruns": 16,
+        "render_samples": 720, "render_us": 14295, "render_max_job_us": 2400,
+        "starve_stage": 2, "starve_request_us": 328, "producer_ahead_tstates": 1793,
+        "valid_frame_intervals": 0
+      }
+    ],
+    "timing_valid": false,
+    "mhz": null,
+    "fps": null,
+    "interpretation": "Playback faults before two complete frame boundaries. Producer ahead is Z80 t-states (1793/140 gives only 12 available samples), not a count of audio samples. Block latency alone does not account for waits between available producer packets. LCD wait change does not resolve realtime playback."
+  },
+  "candidate": {
+    "change": "Service UART at most every 50us during LCD DMA waits when M3 transport is active; retain 1000us otherwise",
+    "build": "9C07106D", "firmware_crc": "1D51AEAD",
+    "uf2_sha256": "b8e9f430109b8712a49edf2436c021f2fd536dce6b6a912b88d6427a3723e036",
+    "bin_sha256": "77a0c7f91d78b632cee113e06faa6b36a85d310a013a1bd4a1817029f1bf78a3",
+    "flash_bytes": 1538304, "static_ram_bytes": 119772, "heap_bytes": 109604,
+    "readback_verified": true,
+    "host_checks": "Production LCD DMA fill/timeout/service interval, panel color/scroll recovery, battery poll, audio ownership and strict failure, ASan/UBSan; firmware build PASS"
+  },
+  "final": {
+    "build": "9C07106D", "firmware_crc": "1D51AEAD", "service": "CLOSED", "runtime": "NONE",
+    "app_buffers": 0, "uart_errors": 0, "new_peripheral_errors": 0,
+    "cdc_closed": true, "msc_active": false, "shared_lease_released": true,
+    "coordinator_notified": true
+  },
+  "raw_evidence_directory": ".build/spectrum-cosmic-fused-20261108"
+}

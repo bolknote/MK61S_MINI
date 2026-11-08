@@ -27,8 +27,8 @@ constexpr int spi1=1,DMA_SIZE_16=1;
 u16 scanlines[lcd::STRIP_ROWS*Screen::WIDTH];
 std::vector<u16> wire;
 unsigned services=0,starts=0,aborts=0;
-u64 now=0;
-bool stall=false;
+u64 now=0,max_service_gap=0,last_service=0;
+bool stall=false,audio_active=false;
 Config dma_channel_get_default_config(unsigned ch) { Config c;c.chain=ch;return c; }
 void channel_config_set_transfer_data_size(Config* c,unsigned value) { c->size=value; }
 void channel_config_set_dreq(Config* c,unsigned value) { c->dreq=value; }
@@ -67,7 +67,15 @@ int spi_write16_blocking(int,const u16* pixels,unsigned count) {
     wire.insert(wire.end(),pixels,pixels+count);return count;
 }
 }
-namespace io_worker { void service() { ++services;progress(); } }
+namespace m3_audio { bool transport_active() { return audio_active; } }
+namespace io_worker {
+void service() {
+    ++services;
+    const u64 gap=now-last_service;if(gap>max_service_gap)max_service_gap=gap;
+    last_service=now;progress();
+}
+void wait_for_progress();
+}
 namespace dma_support {
 void enable_irq(unsigned) {}
 bool wait(unsigned first,int second) {
@@ -96,6 +104,14 @@ int main() {
     assert(!panel.transfer_fill(0xAAAA,320,320));
     assert(now-before==1000000 && aborts==1 && !panel.dma_irq_ready_ && !channels[0].busy && !channels[1].busy);
     stall=false;assert(panel.transfer_fill(0xABCD,3,5));
+    // The actual LCD fill loop and production worker wait share the CPU with
+    // M3 UART. No DMA completion IRQ arrives during a constant long fill.
+    audio_active=true;max_service_gap=0;last_service=now;
+    assert(panel.transfer_fill(0x1234,320,320));
+    assert(max_service_gap<=50 && max_service_gap>0);
+    audio_active=false;max_service_gap=0;last_service=now;
+    assert(panel.transfer_fill(0x1234,320,320));
+    assert(max_service_gap==1000);
     Panel fallback;wire.clear();assert(fallback.transfer_fill(0x5678,7,11));
     assert(wire.size()==77);for(auto pixel:wire) assert(pixel==0x5678);
     puts("LCD production DMA: arbitrary RGB565 constant fill, serviced wait, bounded timeout, increment/chain restoration and no-DMA fallback PASS");

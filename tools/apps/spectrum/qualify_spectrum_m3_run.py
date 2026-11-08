@@ -22,14 +22,15 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590):
     if len(rows)!=1 or len(frame)!=1 or len(policy)!=1:raise ValueError('Missing/ambiguous finite game records')
     engine,frames,cycles,elapsed,starved=map(int,rows[0]);fmin,fmax,late,lag,fault=map(int,frame[0])
     expected=2 if mode=='remote'else 1
+    timing_valid=0<frames<=3100 and 0<cycles<=122500000 and 0<elapsed<=35000000
     checks={'selected_backend':engine==expected,'strict_remote_policy':int(policy[0])==(mode=='remote'),
-            'complete_run':frames>=minimum_frames and cycles>0 and elapsed>0,
+            'complete_run':timing_valid and frames>=minimum_frames,
             'no_probe_fault':not fault and 'SP3 FAULT'not in wire,'producer_not_starved':starved==0,
             # Accept only the actual one-microsecond timestamp uncertainty;
             # 3.4998MHz over a multi-second run does not pass this predicate.
-            'z80_at_least_3_5MHz':elapsed>0 and cycles*2>=7*max(0,elapsed-1),
-            'z80_paced':elapsed>0 and cycles*2000<=7007*elapsed,
-            'no_frame_delays_over_1ms':late==0,'frame_lag_bounded':lag<=1000}
+            'z80_at_least_3_5MHz':timing_valid and cycles*2>=7*max(0,elapsed-1),
+            'z80_paced':timing_valid and cycles*2000<=7007*elapsed,
+            'no_frame_delays_over_1ms':timing_valid and late==0,'frame_lag_bounded':timing_valid and lag<=1000}
     for key,value in {'SYS_HZ':'125000000','PERI_HZ':'48000000','KBD':'OK','SD':'OK',
                       'SERVICE':'CLOSED','RUNTIME':'NONE','UI':'CALCULATOR','CRASH':'NONE',
                       'FIRMWARE_CRC':'valid','APP_BUFFERS':'0','APP_BUFFER_BYTES':'0',
@@ -40,7 +41,8 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590):
     checks['no_dma_underruns']=int(field(after,'SYNTH_UNDERRUNS'))==0
     checks['no_fallback']=field(after,'M3_FALLBACKS')==field(before,'M3_FALLBACKS')
     metrics={'mode':engine,'frames':frames,'cycles':cycles,'elapsed_us':elapsed,
-             'mhz':cycles/elapsed if elapsed else 0,'fps':frames*1e6/elapsed if elapsed else 0,
+             'timing_valid':timing_valid,'mhz':cycles/elapsed if timing_valid else None,
+             'fps':frames*1e6/elapsed if timing_valid else None,
              'starved':starved,'frame_min_us':fmin,'frame_max_us':fmax,'late_frames_1ms':late,'max_frame_lag_us':lag}
     if mode=='remote':
         for key in ('M3_ERROR','M3_UNDERRUNS','M3_UART_ERRORS','M3_UNLOAD_FAILURES','M3_READY_POLLS','M3_LATE_BLOCKS'):
@@ -55,7 +57,7 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590):
         checks['real_dma_output']=int(field(after,'SYNTH_BLOCKS'))>0
         checks['dma_released']=field(after,'SYNTH_DMA')=='0'
         samples=int(field(after,'M3_SAMPLES'));blocks=int(field(after,'M3_BLOCKS'))
-        checks['continuous_sample_coverage']=samples>=max(192,cycles*95//14000)
+        checks['continuous_sample_coverage']=timing_valid and samples>=max(192,cycles*95//14000)
         checks['profile_sample_coverage']=int(field(after,'M3_RENDER_SAMPLES'))==samples
         checks['started_promptly']=int(field(after,'M3_PRIME_US'))<=20000
         checks['native_slices_bounded']=int(field(after,'M3_RENDER_MAX_SLICE_US'))<=2000

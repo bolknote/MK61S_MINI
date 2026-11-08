@@ -376,7 +376,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
         } else {
             resume();
             if(time_us_64()>=limit) { abort_dma();return false; }
-            best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+            io_worker::wait_for_progress();
         }
         // Convert future pixels while the chain shifts the prepared strips;
         // I2C/UART likewise overlap the transfer. A late producer pauses safely.
@@ -386,7 +386,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
           dma_channel_is_busy((unsigned)dma_control_) || loaded()!=stream_.count+1) {
         resume();
         if(time_us_64()>=limit) { abort_dma();return false; }
-        service();best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+        io_worker::wait_for_progress();
     }
     while(spi_is_busy(spi1)) tight_loop_contents();
     return true;
@@ -420,7 +420,7 @@ bool Panel::transfer_fill(u16 color,unsigned width,unsigned height) {
     const u64 limit=time_us_64()+1000000;
     while(dma_channel_is_busy((unsigned)dma_tx_) || dma_channel_is_busy((unsigned)dma_rx_)) {
         if(time_us_64()>=limit) { abort_dma();return false; }
-        io_worker::service();best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+        io_worker::wait_for_progress();
     }
     return finish_scanline();
 }

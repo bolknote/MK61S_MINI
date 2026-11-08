@@ -328,6 +328,10 @@ void service(bool allow_i2c) {
     }
     restore_interrupts(interrupts);
 }
+void wait_for_progress() {
+    service();
+    best_effort_wfe_or_timeout(make_timeout_time_us(m3_audio::transport_active()?50:1000));
+}
 void drain() {
     if(!ready.load(std::memory_order_acquire)) return;
     while(frame_pending() || compute.active() || i2c.stage.load(std::memory_order_acquire)==QUEUED ||
