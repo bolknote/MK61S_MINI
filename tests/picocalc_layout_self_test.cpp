@@ -25,10 +25,10 @@ void require(bool value,const char* why) {
 struct Text {
     unsigned width,height;
     std::vector<u8> pixels;
-    Text(Settings font,const char* value,unsigned size) {
+    Text(Settings font,const char* value,unsigned size,unsigned tracking=0,bool bold=false) {
         if(font.ui_font_family==1) font.ui_font_size=(u8)size;
         const auto metrics=fonts::info(font);
-        width=fonts::text_width(font,value,(unsigned)std::strlen(value));height=metrics.height;
+        width=fonts::text_width(font,value,(unsigned)std::strlen(value))+tracking*std::strlen(value);height=metrics.height+(bold?1:0);
         pixels.resize(width*height);
         unsigned left=0;
         for(;*value;++value) {
@@ -39,8 +39,14 @@ struct Text {
                 const int px=(int)left+glyph.bearing_x+x,py=(int)metrics.ascent-glyph.bearing_y+y;
                 require(px>=0 && (unsigned)px<width && py>=0 && (unsigned)py<height,"glyph stays in its line box");
                 pixels[(unsigned)py*width+(unsigned)px]=1;
+                if(bold) {
+                    require((unsigned)px+1<width && (unsigned)py+1<height,"bold native glyph stays in its line box");
+                    pixels[(unsigned)py*width+(unsigned)px+1]=1;
+                    pixels[((unsigned)py+1)*width+(unsigned)px]=1;
+                    pixels[((unsigned)py+1)*width+(unsigned)px+1]=1;
+                }
             }
-            left+=glyph.advance;
+            left+=glyph.advance+tracking;
         }
     }
     bool matches(const Screen& screen,unsigned left,unsigned top,bool inverse=false) const {
@@ -385,6 +391,67 @@ void explorer_hints(Calculator& calc) {
 }
 }
 
+namespace {
+template<unsigned N> bool banner_matches(const picocalc::Screen& screen,const u8 (&packed)[N]) {
+    u8 raw[12800]{};return picocalc::utility::draw_label(raw,picocalc::utility::asset(packed),34,20) &&
+        !std::memcmp(raw+34*40,screen.data()+34*40,960);
+}
+}
+void picocalc_utility_test() {
+    using namespace picocalc;
+    Calculator calc;calc.init();
+    for(bool ru:{false,true}) {
+        Settings settings;settings.russian=ru;
+        // A deliberately different chosen UI font must not resize pixel artwork.
+        settings.ui_font_family=4;settings.ui_font_size=16;
+        Ui ui;ui.init(settings);Services service;service.set_ui(ui);Screen screen;
+        Settings native;native.ui_font_family=1;native.ui_font_key=0;
+        service.open(Action::USB_DISK,ru,calc);require(service.usb_disk(),"USB fixture exports RAM disk");
+        screen.animation_tick(1000,0,0);
+        require(screen.render({},true,&ui,&service),"USB native page first frame");
+        require(ru?banner_matches(screen,utility_art::title_usb_ru):banner_matches(screen,utility_art::title_usb_en),"native USB banner");
+        const Text caption(native,ru?M8("Карта подключена к ПК"):"Card connected to computer",16,1,true);
+        require(caption.width<=296 && caption.matches(screen,(320-caption.width)/2,227),"large centered native USB instructions");
+        require(!screen.render({},true,&ui,&service),"idle USB page retains raster");
+        const std::vector<u8> before(screen.data(),screen.data()+Screen::BYTES);
+        screen.animation_tick(1200,1,0);require(screen.render({},true,&ui,&service),"real USB read animates");
+        unsigned changed=0;
+        for(unsigned y=0;y<320;++y)for(unsigned x=0;x<320;++x) {
+            const bool old=before[y*40+x/8]&(128U>>(x&7));
+            if(old!=screen.pixel(x,y)) {++changed;require(y>=118 && y<158,"USB animation changes only tiny face/packet region");}
+        }
+        require(changed && changed<300,"USB dirty areas stay bounded");
+        if(ru)preview(screen,"-usb-ru");else preview(screen,"-usb-en");
+        if(ru) for(unsigned step=0;step<10;++step) {
+            screen.animation_tick(1200+step*140,1+(step<5?step:4),step<5?0:step-4);
+            screen.render({},true,&ui,&service);
+            char suffix[32];std::snprintf(suffix,sizeof(suffix),"-usb-step%u",step);preview(screen,suffix);
+        }
+        require(!service.input('\r') || service.usb_disk(),"Enter cannot abandon mounted host filesystem");
+        files::usb_eject();screen.animation_tick(2600,5,5);
+        require(screen.render({},true,&ui,&service),"safe eject changes scene");
+        require(ru?banner_matches(screen,utility_art::title_ejected_ru):banner_matches(screen,utility_art::title_ejected_en),"ejected banner");
+        if(ru)preview(screen,"-usb-ejected");
+        require(service.input('\r') && !service.active() && files::ready(),"safe eject returns native SD ownership");
+        require(ui.input('\t',calc) && ui.input('\r',calc) && ui.bootloader_confirmation(),"UF2 confirmation via actual UI");
+        screen.animation_tick(3000,5,5);require(screen.render({},true,&ui,&service),"UF2 native confirmation");
+        require(ru?banner_matches(screen,utility_art::title_uf2_ru):banner_matches(screen,utility_art::title_uf2_en),"UF2 banner");
+        if(ru)preview(screen,"-uf2-confirm");
+        require(ui.input(0x1b,calc) && !ui.bootloader_confirmation() && ui.take_action()==Action::NONE,"UF2 Esc cancels without arming ROM");
+        require(ui.input('\r',calc) && ui.input('\r',calc) && ui.take_action()==Action::BOOTLOADER,"UF2 Enter requests ROM");
+        screen.begin_bootloader(4000);
+        for(unsigned step=0;step<8;++step) {
+            screen.animation_tick(4000+step*120,5,5);
+            require(screen.render({},true,&ui,&service),"cartridge insertion frame");
+            if(ru) {char suffix[32];std::snprintf(suffix,sizeof(suffix),"-uf2-step%u",step);preview(screen,suffix);}
+        }
+        screen.animation_tick(4960,5,5);require(screen.render({},true,&ui,&service) && screen.bootloader_ready(),"final ROM instructions before handoff");
+        require(ru?banner_matches(screen,utility_art::title_ready_ru):banner_matches(screen,utility_art::title_ready_en),"static ROM banner");
+        if(ru)preview(screen,"-uf2-ready");
+        screen.animation_tick(7000,5,5);require(!screen.render({},true,&ui,&service),"ROM last frame stays static");
+    }
+    std::puts("Pico USB/UF2: native EN/RU text, compressed art, dirty-only animation, safe eject, cancel and ROM final frame PASS");
+}
 void picocalc_layout_self_test() {
     // This translation unit is only linked to the host tests. Its FatFs disk is
     // tests/picocalc_host_disk.cpp's RAM vector; no host block device is opened.
@@ -407,7 +474,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
-    clock_during_input();published_x2();power_indicator();explorer_hints(calc);
+    clock_during_input();published_x2();power_indicator();explorer_hints(calc);picocalc_utility_test();
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)

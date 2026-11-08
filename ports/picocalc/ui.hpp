@@ -16,6 +16,7 @@ public:
     void init(const Settings& value = Settings{});
     bool input(u8 code, Calculator& calculator);
     Page page() const { return page_; }
+    bool bootloader_confirmation() const { return page_==Page::CONFIRM && confirm_==Action::BOOTLOADER; }
     View view() const { return view_; }
     u8 offset() const { return offset_; }
     u8 selected() const { return selected_[(unsigned)page_]; }

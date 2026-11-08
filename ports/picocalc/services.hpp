@@ -33,6 +33,7 @@ public:
     void set_ui(Ui& ui) { ui_ = &ui; }
     unsigned sound_volume() const { return ui_ ? ui_->settings().volume : 10; }
     bool active() const { return page_ != ServicePage::CLOSED; }
+    bool usb_disk() const { return page_ == ServicePage::USB_DISK; }
     void open(Action action, bool russian, Calculator& calculator);
     bool input(u8 code);
     void tick();

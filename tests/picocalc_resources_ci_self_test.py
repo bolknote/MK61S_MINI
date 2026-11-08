@@ -22,12 +22,14 @@ class ResourceCiTests(unittest.TestCase):
             for path in ('programs/games/Bumblebee/scene-320.wbmp','doc/game-artwork/native/recipe.json',
                 'doc/game-artwork/bumblebee.svg','programs/examples/Graphics.foc',
                 'dev/tools/generate_picocalc_game_assets.py','dev/lib/m8_codec.py','tools/fonts/ui-atlases/pixel-16.json',
-                'tests/run_picocalc_recovery_tests.sh','tests/basic_graphics_self_test.cpp'):
+                'tests/run_picocalc_recovery_tests.sh','tests/basic_graphics_self_test.cpp',
+                'dev/tools/generate_picocalc_utility_art.py','doc/picocalc-utility/manifest.json'):
                 self.assertTrue(any(fnmatch.fnmatchcase(path,p) for p in paths),path)
         for command in ('python3 dev/tools/generate_picocalc_game_assets.py --check-inputs',
             'python3 tests/picocalc_native_assets_self_test.py','python3 tests/picocalc_version_self_test.py',
             'bash tests/run_picocalc_recovery_tests.sh','bash tests/run_basic_graphics_tests.sh'):
             self.assertIn(command,workflow)
+        self.assertIn('picocalc_utility_scene_self_test.py',(ROOT/'tests/run_picocalc_hardware_tests.sh').read_text())
 
     def test_modified_input_or_output_requires_regeneration(self):
         receipt=ROOT/'doc/game-artwork/native/recipe.json'

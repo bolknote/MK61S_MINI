@@ -24,6 +24,11 @@ last='        terminal.tick();\n'
 assert source.count(first)==1 and source.count(last)==1
 begin=source.index(first);end=source.index(last,begin)
 Path(sys.argv[2]).write_text(source[begin:end])
+opening=source.index('{',source.index('void begin_bootloader()'))
+end=opening+1;depth=1
+while depth:
+    depth+=(source[end]=='{')-(source[end]=='}');end+=1
+Path(sys.argv[2]).with_name('picocalc_boot_request.inc').write_text(source[opening+1:end-1])
 PYINPUT
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -DMK61_CORE_STANDALONE=1 -I"$build" -I"$root/ports/picocalc" -I"$root/code" \

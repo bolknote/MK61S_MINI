@@ -7,6 +7,7 @@
 #include "calculator_face.hpp"
 #include "battery.hpp"
 #include "lcd_scroll.hpp"
+#include "utility_scene.hpp"
 
 namespace picocalc {
 class Services;
@@ -23,6 +24,11 @@ public:
     void presented() { present_pending_=false; }
     u32 renders() const { return renders_; }
     u32 skipped() const { return skipped_; }
+    void animation_tick(u32 now_ms,u32 reads=0,u32 writes=0) { animation_.tick(now_ms,reads,writes); }
+    void begin_bootloader(u32 now_ms) { animation_.begin_bootloader(now_ms);invalidate(); }
+    bool bootloader_pending() const { return animation_.bootloader_pending(); }
+    bool bootloader_ready() const { return animation_.ready(); }
+    bool bootloader_timed_out() const { return animation_.timed_out(); }
     void logical_frame(const Ui& ui, const Services& services, u8 out[1536]) const;
     const u8* data() const { return pixels_; }
     lcd::Region scroll_region() const { return scroll_region_; }
@@ -51,6 +57,10 @@ private:
     lcd::Region scroll_region_;
     u32 native_revision_ = 0;
     bool native_valid_ = false;
+    utility::Animation animation_;
+    utility::Mode utility_mode(const Ui&,const Services*) const;
+    void utility_page(utility::Mode,unsigned phase,const Ui&,const Services*);
+    void utility_caption(unsigned top,const char*,unsigned height=16);
     void set_pixel(unsigned x, unsigned y);
     void text(unsigned x, unsigned y, const char* value, unsigned height = 14, unsigned right=WIDTH-8);
     void status_field(unsigned left, unsigned width, const char* value);

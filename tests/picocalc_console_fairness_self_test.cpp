@@ -46,11 +46,17 @@ struct MainInputFixture {
         std::vector<u8> bytes;
         int receive(u8 byte,u32 now) {bytes.push_back(byte);return actual.receive(byte,now);}
     } screen;
+    struct BootScreen {
+        bool pending=false;unsigned requests=0;
+        bool bootloader_pending() const {return pending;}
+        void begin_bootloader(u32) {pending=true;++requests;}
+    } boot_screen;
     struct Services {bool active() const {return false;}} services;
     struct SleepClocks {bool usb_available() const {return true;}} sleep_clocks;
     struct Power {
-        void activity(u64) {}
-        bool asleep() const {return false;}
+        bool sleeping=false;unsigned wakes=0,activities=0;
+        void activity(u64) {++activities;}
+        bool asleep() const {return sleeping;}
     } power;
 };
 MainInputFixture* main_input=nullptr;
@@ -73,14 +79,17 @@ namespace {
 u32 millis() {return 10;}
 u64 time_us_64() {return 10000;}
 void report(u32) {++main_input->reports;}
-void stdio_flush() {assert(false);}
-void reset_usb_boot(u32,u32) {assert(false);}
 void input(u8,bool) {assert(false);}
-void wake(u64) {assert(false);}
+void wake(u64) {main_input->power.sleeping=false;++main_input->power.wakes;}
+void begin_bootloader() {
+    auto& power=main_input->power;auto& screen=main_input->boot_screen;
+#include "picocalc_boot_request.inc"
+}
 void production_main_input(MainInputFixture& fixture) {
     main_input=&fixture;
     auto& terminal=fixture.terminal;
     auto& remote_screen=fixture.screen;
+    auto& screen=fixture.boot_screen;
     auto& services=fixture.services;
     auto& sleep_clocks=fixture.sleep_clocks;
     auto& power=fixture.power;
@@ -138,6 +147,17 @@ bool main_input_regression() {
         }
     }
     assert(cases==24);
+    for(Channel channel:{Channel::USB,Channel::UART}) {
+        MainInputFixture fixture;select_input(fixture,channel,true);
+        fixture.power.sleeping=channel==Channel::USB;
+        auto& bytes=channel==Channel::USB?fixture.backend.usb:fixture.backend.uart;
+        for(int byte:{0x21,0x37,0x6d,0x3f,5})bytes.push_back(byte);
+        production_main_input(fixture);
+        assert(fixture.boot_screen.requests==1 && fixture.boot_screen.pending);
+        assert(fixture.terminal.bytes.empty() && fixture.reports==1);
+        assert(!fixture.power.sleeping && fixture.power.activities==1);
+        assert(fixture.power.wakes==(channel==Channel::USB?1U:0U));
+    }
     std::printf("Main production input: %u RAW/COMMAND USB/UART no-data/timeout/NUL/status/FF cases, no ghost bytes/RX and valid transport semantics PASS\n",cases);
     return true;
 }

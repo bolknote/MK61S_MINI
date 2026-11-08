@@ -1,0 +1,119 @@
+{
+  "glyphs": {
+    "width": 7,
+    "height": 9,
+    "raw_bytes": 288,
+    "packed_bytes": 173,
+    "packing": "zx0-stroke-table",
+    "raw_sha256": "ed6bef8f4f3f89e90c0695599e9b66c9428be2a4593da97d3c0a707b89277a30",
+    "packed_sha256": "f6f4d6c2ed56f9eeb761379bc112f9664eb3e1b1e61c15953ddf3a79ee36ecb6"
+  },
+  "usb": {
+    "width": 320,
+    "height": 160,
+    "raw_bytes": 6400,
+    "packed_bytes": 414,
+    "packing": "zx0",
+    "raw_sha256": "6ff57fa4e393ed4141d073bad3718b731f1d44f4b84aa317d9368c4954eb4ab9",
+    "packed_sha256": "8bea6a53c06f48f5bfeb2fd65b224a27cd39400473442537ccc819d3fda727d6"
+  },
+  "chip": {
+    "width": 320,
+    "height": 160,
+    "raw_bytes": 6400,
+    "packed_bytes": 211,
+    "packing": "zx0",
+    "raw_sha256": "0e870743fd2dae9c3545cd875559d9f10942b61b55b42470df514a21e5c40dfe",
+    "packed_sha256": "4cff07e290aea41ad46a3996869eaab1b866500dfc62c41f14a1181f1dd3b89e"
+  },
+  "cartridge": {
+    "width": 80,
+    "height": 72,
+    "raw_bytes": 720,
+    "packed_bytes": 165,
+    "packing": "zx0",
+    "raw_sha256": "4c37e32b2a43af87bbac2bac3c13da2c5ab7941dde8c2b4369218275d45cbf62",
+    "packed_sha256": "aeb23c5319a0d1a2bfb19a0cc03ded743b4b54b083279121c5e42a428db25ec3"
+  },
+  "title_usb_ru": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 8,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "d2c68ad52efc00ea475bce7e1d0a853d91d612bcbb56dd37121ea8541450169a",
+    "packed_sha256": "782fc80720619f8e9d27c7c0265782c1fc5ddb16562deb884b71757cdfde4af6"
+  },
+  "title_usb_en": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 8,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "fe1d716b021ce07c0f0485b43b717faa3a1fe5134331b4a850d554bf89342119",
+    "packed_sha256": "2c51f5a300063067dc3c62af5baed503aeb7477905cc22f14f8a55e085f0ce10"
+  },
+  "title_ejected_ru": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 15,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "0c2fa85079628c5255236f01ef58b269fc86cea593bef3a20a6271c2cade8e9c",
+    "packed_sha256": "da395598c403e449d25b27df1c7576fed1554875239cbd9e2e9aaee4006c0ad0"
+  },
+  "title_ejected_en": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 12,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "f2eb191cdff2863441ca5a49ca2e05fa4e196ef6c6a13e109b4f1ca49767e807",
+    "packed_sha256": "5da0d221b8a57c6b752f255aa9dba739882dce50436f6928713a2c0d45388638"
+  },
+  "title_uf2_ru": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 12,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "d22144850866c334c54f9043a1ea4ee4055d02be3b0afa17f71ae3e8ef95658c",
+    "packed_sha256": "1781b1c92979b9ed8ed7fbb39a1545c7ec06e215100c2f6beacb7560d6524637"
+  },
+  "title_uf2_en": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 12,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "ee62ac083679e9a3bef00d54dc5cc01fe5c0c35b4d43a71ee902910011b90823",
+    "packed_sha256": "c7c1bce9a741bbf67a3f3a775e29e0e4aa35ba71fcf9d77f659b3e5aaf419902"
+  },
+  "title_ready_ru": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 13,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "159f8cd8385cb3e0b2df9c4cec1813e6099fb46c7765ddb20374d7b9fad47017",
+    "packed_sha256": "234d12658bc5f3570f175ac3a812520d0a3211ed6d6db44ff665d739afbf5700"
+  },
+  "title_ready_en": {
+    "width": 320,
+    "height": 24,
+    "raw_bytes": 960,
+    "packed_bytes": 10,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "ce4e8789cecd497df0fb768a28870da97c2981dc4e1222921f84adcb5a5c9864",
+    "packed_sha256": "b8d5582201773f25acedb256b2f84a52beac20aba452de641dda24fc992e8795"
+  },
+  "brand": {
+    "width": 320,
+    "height": 22,
+    "raw_bytes": 880,
+    "packed_bytes": 5,
+    "packing": "shared-stroke-glyphs",
+    "raw_sha256": "1a243bb55a1645dd1b096bbd681412a805e31bcdb796a9bb394f6727f9289a56",
+    "packed_sha256": "c49840b4af49cc1e56753573a2686870e9a3e6c123667de01e86991740a52259"
+  }
+}

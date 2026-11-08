@@ -385,11 +385,88 @@ void Screen::RenderKey::text(const char* value) { if(!value) value="";data(value
 bool Screen::RenderKey::same(const RenderKey& other) const {
     return !overflow && !other.overflow && used==other.used && !std::memcmp(bytes,other.bytes,used);
 }
+utility::Mode Screen::utility_mode(const Ui& ui,const Services* services) const {
+    if(animation_.bootloader_pending()) return animation_.boot_mode();
+    if(services && services->usb_disk()) return files::usb_ejected()?utility::Mode::EJECTED:utility::Mode::USB;
+    if((!services || !services->active()) && ui.bootloader_confirmation()) return utility::Mode::UF2_CONFIRM;
+    return utility::Mode::NONE;
+}
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
+void Screen::utility_caption(unsigned top,const char* value,unsigned height) {
+    Settings font=*font_settings_;font.ui_font_size=(u8)height;
+    unsigned width=0;
+    for(const char* p=value;*p;++p) {
+        mk61_service_ui_glyph glyph{};
+        if(fonts::glyph(font,mk8::codepoint((u8)*p),glyph)) width+=glyph.advance+1;
+    }
+    unsigned left=width<=296?(WIDTH-width)/2:12;
+    const unsigned baseline=top+fonts::info(font).ascent;
+    for(;*value;++value) {
+        mk61_service_ui_glyph glyph{};
+        if(!fonts::glyph(font,mk8::codepoint((u8)*value),glyph))continue;
+        if(left+glyph.advance+1>308)break;
+        for(unsigned y=0;y<glyph.height;++y)for(unsigned x=0;x<glyph.width;++x) {
+            if(!(glyph.pixels[y*((glyph.width+7)/8)+x/8]&(128U>>(x&7))))continue;
+            const int px=(int)left+glyph.bearing_x+x,py=(int)baseline-glyph.bearing_y+y;
+            if(px<12 || px>=307 || py<0 || py>=319)continue;
+            // Native strike, heavier weight; extra tracking preserves the
+            // blank column between letters instead of closing their gaps.
+            u8* row=pixels_+py*STRIDE+px/8;const u8 mask=(u8)(0xc0U>>(px&7));
+            row[0]|=mask;row[STRIDE]|=mask;
+            if((px&7)==7) {row[1]|=0x80;row[STRIDE+1]|=0x80;}
+        }
+        left+=glyph.advance+1;
+    }
+}
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
+void Screen::utility_page(utility::Mode mode,unsigned phase,const Ui& ui,const Services* services) {
+    const auto* saved=font_settings_;Settings font{};
+    font.ui_font_family=1;font.ui_font_key=0;font_settings_=&font;
+    const bool ru=ui.settings().russian;
+    if(!utility::draw_headers(pixels_,mode,ru)) text(12,5,"MK61S / USB / UF2",16);
+    battery_icon(battery_,[this](unsigned x,unsigned y){set_pixel(x,y);});utility::rectangle(pixels_,12,27,296,2);
+    const bool usb=mode==utility::Mode::USB || mode==utility::Mode::EJECTED;
+    const bool ejected=mode==utility::Mode::EJECTED;
+    const bool ready=mode==utility::Mode::UF2_READY;
+    if(!utility::draw(pixels_,mode,phase)) text(12,144,"USB / UF2",16);
+    if(usb) {
+        const bool failed=services && ejected && !files::usb_active() && !files::ready() && *services->status();
+        utility_caption(227,failed?(ru?M8("Не удалось открыть карту"):"Cannot open the card"):ejected?(ru?M8("Можно вернуться в MK61S"):"Ready to return to MK61S"):
+            (ru?M8("Карта подключена к ПК"):"Card connected to computer"));
+        utility_caption(247,failed?(ru?M8("Проверьте microSD"):"Check the microSD card"):ejected?(ru?M8("Карта снова будет у PicoCalc"):"PicoCalc will take the card back"):
+            (ru?M8("Файлы доступны на компьютере"):"Files are available on your PC"));
+        const char* status=services?services->status():"";
+        if(ru && !std::strcmp(status,"Eject the USB disk on the computer")) status=M8("Сначала извлеките диск на ПК");
+        utility_caption(271,failed?status:ejected?"":*status?status:
+            (ru?M8("Сначала извлеките диск на ПК"):"Safely eject on the computer first"),14);
+    } else {
+        utility_caption(237,ready?(ru?M8("Откройте диск RPI-RP2 на ПК"):"Open RPI-RP2 on the computer"):
+            (ru?M8("На ПК появится RPI-RP2"):"RPI-RP2 appears on the computer"));
+        utility_caption(257,ru?M8("Скопируйте на него файл .uf2"):"Copy your .uf2 file onto it");
+        if(ready) utility_caption(273,ru?M8("После записи: перезапуск"):"PicoCalc restarts after writing",14);
+    }
+    utility::rectangle(pixels_,12,288,296,2);
+    const char* footer=usb?(ru?M8("Enter / Esc: вернуться"):"Enter / Esc: return"):
+        mode==utility::Mode::UF2_CONFIRM?(ru?M8("Enter: начать  Esc: назад"):"Enter: start  Esc: back"):
+        mode==utility::Mode::UF2_ENTERING?(ru?M8("Включаем загрузчик..."):"Starting loader..."):
+        (ru?M8("Ожидание файла .uf2"):"Waiting for a .uf2 file");
+    utility_caption(295,footer);font_settings_=saved;
+}
 Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const Services* services,BatteryStatus battery) const {
     RenderKey out;
     u8 settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,settings);out.data(settings,sizeof(settings));
     out.number((u32)battery.percent);out.number(battery.available);out.number(battery.power_status);
     out.number(fonts::revision());out.number(files::revision());out.number(keyboard);
+    const auto mode=utility_mode(ui,services);out.number((u32)mode);
+    if(mode!=utility::Mode::NONE) {
+        out.number(animation_.frame(mode));
+        if(services && services->usb_disk()) out.text(services->status());
+        return out;
+    }
     out.number((u32)ui.page());out.number((u32)ui.view());out.number(ui.offset());out.number(ui.selected());
     const bool active=services && services->active();out.number(active);
     if(active) {
@@ -470,6 +547,8 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     }
     native_valid_=false;
     std::memset(pixels_, 0, sizeof(pixels_));
+    const auto mode=utility_mode(*ui,services);
+    if(mode!=utility::Mode::NONE) {utility_page(mode,animation_.frame(mode),*ui,services);return;}
     char heading[64];
     if(services && services->active()) services->heading(heading);
     else std::snprintf(heading, sizeof(heading), "%s", ui->title());

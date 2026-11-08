@@ -70,7 +70,7 @@ unsigned math_failures = 0;
 constexpr u32 FRAME_INTERVAL_US=20000;
 constexpr u32 STACK_PATTERN = 0xD52AC37E;
 bool calculator_visible() {
-    return !services.active() && ui.page()==picocalc::Page::CALCULATOR && !m61_text::display_owned();
+    return !screen.bootloader_pending() && !services.active() && ui.page()==picocalc::Page::CALCULATOR && !m61_text::display_owned();
 }
 picocalc::Snapshot display_snapshot() {
     // Text/graphics pages own their entire raster. Reading and formatting all
@@ -101,7 +101,14 @@ void wake(u64 now) {
     }
     power.wake(now);
 }
+void begin_bootloader() {
+    const u64 now=time_us_64();
+    if(power.asleep()) wake(now);
+    power.activity(now);
+    screen.begin_bootloader((u32)(now/1000));
+}
 void input(u8 code, bool physical) {
+    if(screen.bootloader_pending()) return;
     calculator.wake_core();
     power.activity(time_us_64());
     if(power.asleep()) { wake(time_us_64());return; }
@@ -450,8 +457,10 @@ int main() {
                     std::puts("BOOTLOADER=RP2040 ROM UF2");std::printf("%.*s",(int)n,text);return true;
                 }
                 if((id==CMD_DFU && *args) || (id==CMD_RESET && std::strcmp(args,"now")) || services.running() || picocalc::files::usb_active()) return false;
-                save_settings();picocalc::io_worker::drain();stdio_flush();picocalc::psram::prepare_reset();
-                if(id==CMD_DFU) reset_usb_boot(0,0);else watchdog_reboot(0,0,10);
+                save_settings();
+                if(id==CMD_DFU) {begin_bootloader();return true;}
+                picocalc::io_worker::drain();stdio_flush();picocalc::psram::prepare_reset();
+                watchdog_reboot(0,0,10);
                 for(;;) tight_loop_contents();
             }
             if(id==CMD_DISPLAY) {
@@ -513,8 +522,6 @@ int main() {
     u8 applied_lcd = 0, applied_keys = 255;
     picocalc::Settings applied_profile=settings;
     char previous_indicator[INDICATOR_STRING_LENGTH] = {};
-    bool drawn_usb = false, drawn_ejected = false;
-    u64 drawn_activity = 0;
     for(;;) {
         picocalc::diagnostics::context(power.asleep()?picocalc::diagnostics::State::SLEEP:
             picocalc::files::usb_active()?picocalc::diagnostics::State::USB_DISK:
@@ -563,13 +570,14 @@ int main() {
             if(c < 0) break;
             if(picocalc::console::input_usb()) c=remote_screen.receive((u8)c,millis());
             if(c<0 || !picocalc::console::accept(c,exclusive)) continue;
-            if(c == 5 || (terminal.raw() && !services.active() && (c == '?' || c == 'm'))) {
+            if(c == 5 || (!screen.bootloader_pending() && terminal.raw() && !services.active() && (c == '?' || c == 'm'))) {
                 if(c == 'm') math_failures = picocalc::math_self_test();
                 report(math_failures);
+            } else if(screen.bootloader_pending()) {
+                continue;
             } else if(c == '!' && terminal.raw() && !services.active()) {
                 std::puts("Entering RP2040 USB BOOTSEL");
-                picocalc::io_worker::drain();stdio_flush();picocalc::psram::prepare_reset();
-                reset_usb_boot(0, 0);
+                begin_bootloader();
             } else {
                 terminal.input_source(picocalc::console::input_usb());
                 const int key=terminal.receive((u8)c);
@@ -631,7 +639,7 @@ int main() {
         picocalc::script::service_effects();
         const bool foreground_active=services.active() || m61_text::active();
         if(foreground_active!=foreground_was_active) { calculator.wake_core();foreground_was_active=foreground_active; }
-        if(picocalc::files::usb_active() || m61_text::calculator_suspended()) {
+        if(picocalc::files::usb_active() || screen.bootloader_pending() || m61_text::calculator_suspended()) {
             // A single host READ can span thousands of sectors. Running one
             // whole MK61 microcode step between each 512-byte USB packet
             // exceeds the host's SCSI deadline on RP2040. USB owns this loop.
@@ -666,33 +674,42 @@ int main() {
         } else if(action >= picocalc::Action::USB_DISK) {
             services.open(action, ui.settings().russian, calculator);
             if(picocalc::files::usb_active()) { max_usb_gap = 0; last_usb_service = time_us_64(); }
+        } else if(action == picocalc::Action::BOOTLOADER) {
+            save_settings();begin_bootloader();
         } else if(action != picocalc::Action::NONE) {
             save_settings();
             picocalc::io_worker::drain();picocalc::psram::prepare_reset();
-            if(action == picocalc::Action::BOOTLOADER) reset_usb_boot(0, 0);
-            else watchdog_reboot(0, 0, 10);
+            watchdog_reboot(0, 0, 10);
             for(;;) tight_loop_contents();
         }
-        if(power.due(time_us_64(),current.sleep_minutes,core_61::is_RUN() || !calculator.idle() || services.active() || m61_text::active() || picocalc::files::usb_active() || remote_screen.attached())) power.sleep();
+        if(power.due(time_us_64(),current.sleep_minutes,screen.bootloader_pending() || core_61::is_RUN() || !calculator.idle() || services.active() || m61_text::active() || picocalc::files::usb_active() || remote_screen.attached())) power.sleep();
         if(now >= next_frame) {
-            const bool usb = picocalc::files::usb_active(), ejected = picocalc::files::usb_ejected();
-            // The USB instructions are static. Redraw only on a key or eject,
-            // leaving the CPU and bus budget for mass-storage transfers.
-            if(!usb || !drawn_usb || ejected != drawn_ejected || last_activity != drawn_activity) {
+            const auto& usb=picocalc::usb::counters();
+            screen.animation_tick((u32)(time_us_64()/1000),usb.reads,usb.writes);
+            // Never delay a multi-sector SCSI READ for an animation. A retained
+            // phase key suppresses idle redraws; changed pixels use LCD DMA windows.
+            if(!picocalc::files::usb_active() || !usb.active_read_bytes) {
                 const auto model = display_snapshot();
                 if(calculator_visible() && std::strcmp(previous_indicator, model.indicator) != 0) {
                     std::memcpy(previous_indicator, model.indicator, sizeof(previous_indicator));
                     std::printf("X=[%s]\n", model.indicator);
                 }
-                if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending()) {
+                if(panel_ready && (!remote_screen.holds_frame() || screen.bootloader_pending()) && !picocalc::io_worker::frame_pending()) {
                     screen.render(model, keyboard.online(), &ui, &services,keyboard.battery());
                     if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
                 }
-                if(!panel_ready || !picocalc::io_worker::frame_pending()) {
-                    drawn_usb = usb; drawn_ejected = ejected; drawn_activity = last_activity;
-                }
             }
             next_frame = time_us_64() + FRAME_INTERVAL_US;
+        }
+        if(screen.bootloader_pending() &&
+           ((screen.bootloader_ready() && panel_ready && !screen.presentation_pending() && !picocalc::io_worker::frame_pending()) ||
+            screen.bootloader_timed_out())) {
+            // The final instructions are on the actual panel before ROM takes
+            // over. No animation can run inside ROM; a missing panel never
+            // prevents emergency recovery through BOOTSEL.
+            picocalc::io_worker::drain();stdio_flush();picocalc::psram::prepare_reset();
+            reset_usb_boot(0,0);
+            for(;;) tight_loop_contents();
         }
         // Running programs, held emulated keys and foreground services retain
         // their execution cadence. A settled calculator/menu can wait for the
