@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 // Host clock/register boundary for actual power.cpp. Model SDK clock helper
 // transients through REF/PLL_USB so the test cannot hide RP2040-E16.
@@ -122,4 +123,5 @@ inline void power_test_wfe() { ++power_test::waits;++power_test::now; }
 #define __sev power_test_sev
 #define __wfe power_test_wfe
 inline void best_effort_wfe_or_timeout(absolute_time_t t) { ++power_test::waits;power_test::now=t; }
+[[noreturn]] inline void panic(const char*) { std::abort(); }
 #endif

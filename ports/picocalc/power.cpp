@@ -119,9 +119,12 @@ void SleepClocks::leave() {
   if (!usb_) {
     pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
              PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
+#if MK61_PICOCALC_MANAGED_CLOCK
     if(compute_clock::active_profile()) {
       if(!cosmic_clock::restore_compute_clock(sys_hz_))panic("compute clock restore");
-    } else set_sys_clock_hz(sys_hz_, true);
+    } else
+#endif
+      set_sys_clock_hz(sys_hz_, true);
     clock_configure_undivided(clk_peri, 0,
 #if MK61_PICOCALC_MANAGED_CLOCK
         CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB, peri_hz_);
