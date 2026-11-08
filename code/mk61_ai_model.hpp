@@ -47,7 +47,7 @@ struct ComputeExecution {
   unsigned (*remote_prepare)(void *, const LinearBatch *) = nullptr;
   bool (*remote_submit)(void *, LinearBatch *) = nullptr;
   bool (*remote_join)(void *) = nullptr;
-  unsigned tile_rows = 8; // 24 adapts rows to the existing8-row weight buffers.
+  unsigned tile_rows = 8; // 24 reuses8-row buffers; 28 also fits28 hidden-width rows.
 };
 struct ComputeMetrics {
   std::uint32_t rows = 0, skipped_rows = 0, worker_jobs = 0, worker_rows = 0;

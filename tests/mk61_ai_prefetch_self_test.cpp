@@ -25,6 +25,7 @@ struct Runtime {
   int cancel_after = -1, fail_finish_after = -1;
   unsigned began = 0, finished = 0, overlapped = 0;
   unsigned row_limit=8;
+  unsigned layout_refusals=0;
   void owner() const { assert(std::this_thread::get_id() == foreground); }
   static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
@@ -49,9 +50,11 @@ struct Runtime {
     for (unsigned i = 0; i < count; ++i) {
       assert(spans[i].offset <= r.package.size() && spans[i].bytes <= r.package.size() - spans[i].offset);
       // Match the direct QPI backend's bounded, aligned destination contract.
-      if ((spans[i].offset & 15) || (spans[i].bytes & 15) ||
-          static_cast<std::uint8_t *>(spans[i].destination) !=
-              static_cast<std::uint8_t *>(spans[0].destination) + total) return false;
+      if ((spans[i].offset & 15) || (spans[i].bytes & 15)) return false;
+      if (static_cast<std::uint8_t *>(spans[i].destination) !=
+          static_cast<std::uint8_t *>(spans[0].destination) + total) {
+        ++r.layout_refusals;return false;
+      }
       total += spans[i].bytes;
     }
     if (total > 2048) return false;
@@ -127,8 +130,14 @@ bool sparse(void *p, std::uint16_t id) {
 int main(int argc, char **argv) {
   assert(argc == 2);std::ifstream stream(argv[1], std::ios::binary);
   const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(stream)), {});
-  Runtime control(bytes), candidate(bytes,24);control.configure(false);
-  assert(candidate.model.workspace_bytes()<=control.model.workspace_bytes()+16*sizeof(float));
+  Runtime control(bytes), candidate(bytes,28);control.configure(false);
+  const auto large_plan=candidate.model.execution();
+  auto small_plan=large_plan;small_plan.tile_rows=24;
+  candidate.model.execution(small_plan);
+  const auto old_size=candidate.model.workspace_bytes();
+  candidate.model.execution(large_plan);
+  if(candidate.model.config().hidden==128 && candidate.model.config().intermediate==384)
+    assert(candidate.model.workspace_bytes()==old_size+592);
   std::uint16_t tokens[64];unsigned count = 0;
   assert(control.model.encode("Задача: вычисли синус и проверь результат.", tokens, 64, count) == ModelStatus::OK && count > 2);
   const auto vocab = control.model.config().vocab;
@@ -150,6 +159,7 @@ int main(int argc, char **argv) {
   for (unsigned mode = 0; mode < 4; ++mode) compare(Arithmetic(mode), 2, true);
   assert(candidate.model.compute_metrics().worker_jobs < control.model.compute_metrics().worker_jobs);
   compare(Arithmetic::LUT_FLOAT32, 64, false);
+  assert(candidate.layout_refusals==0);
   assert(candidate.began > 0 && candidate.overlapped > 0);
   // Sparse/non-aligned spans and a refused backend retain the serial path.
   for (bool refuse : {false, true}) {

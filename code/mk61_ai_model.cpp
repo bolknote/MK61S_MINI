@@ -8,6 +8,14 @@
 
 namespace mk61ai {
 namespace {
+unsigned row_limit(unsigned requested) {
+  return requested==64?64U:requested==28?28U:requested==24?24U:8U;
+}
+unsigned weight_tile_bytes(unsigned columns,unsigned hidden,unsigned rows) {
+  if(rows==64) return 64U*columns*9/16;
+  const unsigned elements=rows==28?std::max(8U*columns,28U*hidden):8U*columns;
+  return elements*9/16;
+}
 std::uint32_t crc(const std::uint8_t *p, unsigned n,
                   std::uint32_t value = ~0U) {
   static constexpr std::uint32_t table[16] = {
@@ -190,10 +198,10 @@ std::size_t Model::workspace_bytes() const {
                           c.context;
   const unsigned raw =
       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
+  const unsigned rows=row_limit(execution_.tile_rows);
   const unsigned needed =
       4 * floats + raw + columns + 8 * (columns / 32) + 16 * columns +
-      2 * (execution_.tile_rows==64?64U:8U) * (columns * 9 / 16) +
-      (execution_.tile_rows==64?64U:execution_.tile_rows==24?24U:8U) * sizeof(float) + 16;
+      2 * weight_tile_bytes(columns,c.hidden,rows) + rows * sizeof(float) + 16;
   return std::max(needed, 6U * MAX_TEXT);
 }
 ModelStatus Model::bind(void *workspace, std::size_t n, Memory cache) {
@@ -266,8 +274,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   auto *input_sums = activation_scales + columns / 32;
   auto *lookup = input_sums + columns / 32;
   auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * columns);
-  const unsigned tile_rows = execution_.tile_rows==64?64U:execution_.tile_rows==24?24U:8U;
-  const unsigned tile_bytes = (tile_rows==64?64U:8U) * columns * 9 / 16;
+  const unsigned tile_rows = row_limit(execution_.tile_rows);
+  const unsigned tile_bytes = weight_tile_bytes(columns,c.hidden,tile_rows);
   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
   ModelStatus status = ModelStatus::OK;
   auto alive = [&]() {
@@ -372,7 +380,9 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     if (execution_.kernel != LinearKernel::REFERENCE) {
       // Narrow matrices fit more rows in the same two weight buffers.
       // Keep sparse head tiles bounded to16 disjoint read spans.
-      const unsigned capacity=std::min<unsigned>(tile_rows,tile_bytes/(t.cols*9/16));
+      unsigned capacity=std::min<unsigned>(tile_rows,tile_bytes/(t.cols*9/16));
+      // Even row counts keep the128/384-column scale spans16-byte aligned.
+      if(tile_rows==28) capacity&=~1U;
       const unsigned TILE=head && execution_.filter_head && allowed && !logits?
           std::min(8U,capacity):capacity;
       const unsigned bytes = t.cols * t.bits / 8, scales = t.cols / 16;
@@ -427,7 +437,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           target.indices[target.count++] = std::uint16_t(r);
         }
         if (!target.count) return true;
-        auto *tile_scales = target.data + TILE * bytes;
+        auto *tile_scales = target.data + target.count * bytes;
         block_io::ReadSpan spans[2 * 64];
         unsigned span_count = 0;
         for (unsigned part = 0; part < 2; ++part) {
@@ -493,7 +503,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         first.input_sums = input_sums;first.lookup = lookup;
         first.quant_sums = arithmetic==Arithmetic::INT8?
             reinterpret_cast<const std::int32_t*>(lookup):nullptr;
-        first.weights = active.data;first.scales = active.data + TILE * bytes;
+        first.weights = active.data;first.scales = active.data + active.count * bytes;
         first.output = tile_output;
         LinearBatch third = first;
         bool remote = false;
