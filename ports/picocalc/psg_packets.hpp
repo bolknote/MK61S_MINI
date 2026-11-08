@@ -34,6 +34,89 @@ inline bool restore(const mk61_service_audio_psg& r,const uint8_t* in,unsigned n
 inline const uint8_t* event(const mk61_service_audio_psg& r,uint32_t index) {
     return r.events+(index&(r.event_capacity-1))*8;
 }
+// AY music commonly leaves all three DACs constant for an entire block.
+// Walk only published events in that case, without two per-sample passes.
+// -2 asks the general encoder to handle changing DACs or a full packet.
+inline int prepare_sparse(const mk61_service_audio_psg& r,uint8_t* out,unsigned limit,
+                          uint32_t time,uint32_t start,uint32_t w) {
+    unsigned at=11;uint32_t cursor=start;
+    const uint32_t until=time+limit*140;
+    while(cursor!=w) {
+        const auto* e=event(r,cursor);const int32_t delta=int32_t(get32(e)-time);
+        if(int32_t(get32(e)-until)>0)break;
+        if(e[4]<2) {
+            if(e[5]>15)return -1;
+            if(at+3>CAPACITY)return -2;
+            out[at++]=uint8_t(delta<=0?0:(unsigned(delta)-1)/140);
+            out[at++]=uint8_t(e[4]*16+e[5]);out[at++]=e[6];
+        } else if(e[4]<=4) {
+            if(e[4]==2 && e[6]>1)return -1;
+            if(e[6]!=r.dac[e[4]-2])return -2;
+        } else return -1;
+        ++cursor;
+    }
+    put32(out,MAGIC);out[4]=1;out[5]=uint8_t(limit);out[6]=uint8_t(r.extensions);out[7]=0;
+    std::memcpy(out+8,r.dac,3);*r.time=time+limit*140;
+    __atomic_store_n(r.read,cursor,__ATOMIC_RELEASE);return int(at);
+}
+inline void sample_run(uint8_t* beep,uint8_t* covox,uint8_t* specdrum,
+                       unsigned from,unsigned to,const uint8_t dac[3]) {
+    if(covox)std::memset(covox+from,dac[1],to-from);
+    if(specdrum)std::memset(specdrum+from,dac[2],to-from);
+    if(beep && dac[0]) {
+        while(from<to && (from&7)){beep[from/8]|=uint8_t(1u<<(from&7));++from;}
+        const unsigned bytes=(to-from)/8;
+        std::memset(beep+from/8,255,bytes);from+=bytes*8;
+        if(from<to)beep[from/8]|=uint8_t((1u<<(to-from))-1);
+    }
+}
+// Changing DACs are constant between event groups. Find the exact flags
+// from the final value at each affected sample, then fill whole runs. Fall
+// back to the bounded partial-block encoder if a full block cannot fit.
+inline int prepare_runs(const mk61_service_audio_psg& r,uint8_t* out,unsigned limit,
+                        uint32_t time,uint32_t start,uint32_t w) {
+    uint32_t cursor=start;unsigned ay=0,flags=0;
+    uint8_t dac[3],first[3];std::memcpy(dac,r.dac,3);std::memcpy(first,dac,3);
+    while(cursor!=w) {
+        const auto* e=event(r,cursor);const int32_t delta=int32_t(get32(e)-time);
+        if(delta>int32_t(limit*140))break;
+        const unsigned sample=delta<=0?0:(unsigned(delta)-1)/140;
+        const uint32_t until=time+(sample+1)*140;
+        do {
+            e=event(r,cursor);
+            if(e[4]<2){if(e[5]>15)return -1;++ay;}
+            else if(e[4]<=4){if(e[4]==2 && e[6]>1)return -1;dac[e[4]-2]=e[6];}
+            else return -1;
+            ++cursor;
+        } while(cursor!=w && int32_t(get32(event(r,cursor))-until)<=0);
+        if(!sample)std::memcpy(first,dac,3);
+        else for(unsigned d=0;d<3;++d)if(dac[d]!=first[d])flags|=1u<<d;
+        if(11+((flags&1)?(limit+7)/8:0)+((flags&2)?limit:0)+((flags&4)?limit:0)+3*ay>CAPACITY)return -2;
+    }
+    const uint32_t accepted=cursor;
+    put32(out,MAGIC);out[4]=1;out[5]=uint8_t(limit);out[6]=uint8_t(r.extensions);out[7]=uint8_t(flags);
+    std::memcpy(out+8,first,3);
+    unsigned at=11;uint8_t *beep=nullptr,*covox=nullptr,*specdrum=nullptr;
+    if(flags&1){beep=out+at;const unsigned bytes=(limit+7)/8;std::memset(beep,0,bytes);at+=bytes;}
+    if(flags&2){covox=out+at;at+=limit;}
+    if(flags&4){specdrum=out+at;at+=limit;}
+    unsigned from=0;cursor=start;std::memcpy(dac,r.dac,3);
+    while(cursor!=accepted) {
+        const auto* e=event(r,cursor);const int32_t delta=int32_t(get32(e)-time);
+        const unsigned sample=delta<=0?0:(unsigned(delta)-1)/140;
+        sample_run(beep,covox,specdrum,from,sample,dac);from=sample;
+        const uint32_t until=time+(sample+1)*140;
+        do {
+            e=event(r,cursor);
+            if(e[4]<2){out[at++]=uint8_t(sample);out[at++]=uint8_t(e[4]*16+e[5]);out[at++]=e[6];}
+            else dac[e[4]-2]=e[6];
+            ++cursor;
+        } while(cursor!=accepted && int32_t(get32(event(r,cursor))-until)<=0);
+    }
+    sample_run(beep,covox,specdrum,from,limit,dac);
+    std::memcpy(r.dac,dac,3);*r.time=time+limit*140;
+    __atomic_store_n(r.read,accepted,__ATOMIC_RELEASE);return int(at);
+}
 /* Returns bytes,0=not ready,-1=invalid producer state. No heap and <128B
  * stack: core1 also services this between LCD strips on its 2KiB stack. */
 inline int prepare(const mk61_service_audio_psg& r,uint8_t* out,unsigned minimum=SAMPLES,unsigned maximum=SAMPLES) {
@@ -47,6 +130,10 @@ inline int prepare(const mk61_service_audio_psg& r,uint8_t* out,unsigned minimum
     unsigned limit=unsigned(ahead)/140;if(limit>maximum)limit=maximum;
     // Wait for a useful block, but always drain a full producer ring.
     if(limit<minimum && w-start<r.event_capacity)return 0;
+    const int sparse=prepare_sparse(r,out,limit,time,start,w);
+    if(sparse!=-2)return sparse;
+    const int runs=prepare_runs(r,out,limit,time,start,w);
+    if(runs!=-2)return runs;
     uint32_t cursor=start,accepted=start;
     uint8_t dac[3]={r.dac[0],r.dac[1],r.dac[2]},first[3]={0,0,0};
     unsigned count=0,flags=0,ay=0;

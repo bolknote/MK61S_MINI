@@ -13,6 +13,24 @@
 #define SPECTRUM_M3_PROFILE_MAGIC 0x31504153u /* SAP1 */
 #define SPECTRUM_M3_PROFILE_BYTES 32u
 #define SPECTRUM_M3_AUDIO_SAMPLES 120u
+#ifndef SPECTRUM_M3_SLICE_SAMPLES
+#define SPECTRUM_M3_SLICE_SAMPLES 16u
+#endif
+#ifndef SPECTRUM_M3_STEP_BUDGET_US
+#define SPECTRUM_M3_STEP_BUDGET_US 0u
+#endif
+#ifndef SPECTRUM_M3_INIT_BUDGET_US
+#define SPECTRUM_M3_INIT_BUDGET_US 100u
+#endif
+#if SPECTRUM_M3_INIT_BUDGET_US>1250 || (SPECTRUM_M3_INIT_BUDGET_US>100 && SPECTRUM_M3_SLICE_SAMPLES>16)
+#error "INIT budget must be <=1250us; above 100us requires chunks of at most 16 samples"
+#endif
+#if SPECTRUM_M3_STEP_BUDGET_US>1250 || (SPECTRUM_M3_STEP_BUDGET_US>1000 && SPECTRUM_M3_SLICE_SAMPLES>16)
+#error "Reserve 750us of the 2ms limit; budgets above 1000us require chunks of at most 16 samples"
+#endif
+#if SPECTRUM_M3_SLICE_SAMPLES<1 || SPECTRUM_M3_SLICE_SAMPLES>40
+#error "M3 audio slice must be 1..40 samples; qualify its 2ms limit on hardware"
+#endif
 #define SPECTRUM_M3_AUDIO_IO 512u
 #define SPECTRUM_M3_PSG_BYTES (offsetof(PSG,ch_out)+sizeof(((PSG*)0)->ch_out)-offsetof(PSG,reg))
 #define SPECTRUM_M3_STATE_BYTES (8u+2u*SPECTRUM_M3_PSG_BYTES+8u+3u)
@@ -29,10 +47,14 @@ enum { SPECTRUM_M3_BEEPER_ARRAY=1,SPECTRUM_M3_COVOX_ARRAY=2,SPECTRUM_M3_SPECDRUM
  * PCM1/PWM1 reply: magic, uint16 count, uint16 sequence, mono16/PWM8 samples.
  * CONFIG acknowledgement: PCM1/count0, byte6=fast-INIT sample limit,
  * byte7=capabilities (bit0 inline INIT,bit1 exact PWM8,bit2 adaptive INIT,
- * bit3 read-only PROFILE). PROFILE is queried after playback, never per block.
+ * bit3 read-only PROFILE,bit4 bounded adaptive STEP). PROFILE is queried
+ * after playback, never per block.
  * Adaptive INIT may return MORE: STATUS must confirm completion before READ.
- * Adaptive INIT checks its100us budget every16 samples, then yields MORE;
- * STEP renders at most16 samples. The resident's2ms limit is unchanged.
+ * Adaptive INIT checks its configured budget after each sample chunk,
+ * then yields MORE. With STEP_BUDGET_US=0 STEP renders one sample chunk;
+ * otherwise it repeats chunks until that elapsed-time budget, then yields.
+ * Without a timer STEP always renders one chunk.
+ * The resident's2ms limit is unchanged.
  * EXPORT input: magic/op plus three reserved bytes. SAS1 output uses CONFIG's
  * state layout. PROFILE input: magic/op plus three reserved bytes. Output:
  * SAP1, uint32 samples/jobs/slices, uint64 render_us, uint32 max_job_us and

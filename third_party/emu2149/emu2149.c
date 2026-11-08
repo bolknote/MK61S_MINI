@@ -389,13 +389,13 @@ static void advance_envelope(PSG* psg,unsigned ticks)
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
 static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t seed,unsigned shifts)
 {
-  if(shifts<=8) {
+  do {
     /* During these shifts feedback cannot reach the consumed low bits.
      * Advance both taps of x^17+x^14+1 together, including overlaps via XOR. */
-    const uint32_t feedback=seed&((1u<<shifts)-1);
-    return (seed>>shifts)^(feedback<<(17-shifts))^(feedback<<(14-shifts));
-  }
-  while(shifts--){if(seed&1)seed^=0x24000;seed>>=1;}
+    const unsigned n=shifts>8?8:shifts;
+    const uint32_t feedback=seed&((1u<<n)-1);
+    seed=(seed>>n)^(feedback<<(17-n))^(feedback<<(14-n));shifts-=n;
+  } while(shifts);
   return seed;
 }
 #endif

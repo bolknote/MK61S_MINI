@@ -21,6 +21,12 @@ with tempfile.TemporaryDirectory() as temporary:
     hashes=module.stage_runtime(runtime,app)
     assert set(hashes)==set(files)
     assert all((app/name).read_bytes()==data for name,data in files.items())
+    alternate=module.stage_runtime(runtime,app,'AY32.S3M')
+    assert set(alternate)=={'AY32.S3M','48.rom','128-0.rom','128-1.rom'}
+    assert (app/'AY32.S3M').read_bytes()==files['AY.S3M']
+    try:module.stage_runtime(runtime,app,'../AY.S3M')
+    except ValueError as error:assert 'basename' in str(error)
+    else:raise AssertionError('module path traversal accepted')
     (runtime/'48.rom').write_bytes(b'short')
     try:module.stage_runtime(runtime,app)
     except ValueError as error:assert '16384' in str(error)

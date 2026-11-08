@@ -41,7 +41,9 @@
 #include "pico/stdlib.h"
 #include <cstdio>
 #include <cstring>
+#include <malloc.h>
 extern "C" { extern u32 __StackBottom[], __StackTop[]; }
+extern "C" { extern char __end__,__HeapLimit; }
 
 namespace {
 picocalc::Calculator calculator;
@@ -141,6 +143,16 @@ void report(unsigned math_failures) {
         synth.coprocessor,m3.error,(unsigned long)m3.blocks,(unsigned long)m3.samples,
         (unsigned long)m3.underruns,(unsigned long)m3.max_slice,(unsigned long)m3.requests,
         (unsigned long)m3.uart_errors,(unsigned long)m3.unload_failures,(unsigned long)synth.fallbacks);
+    std::printf("M3_SERVICE_GAP_US=%lu\n",(unsigned long)m3.max_service_gap_us);
+    std::printf("M3_IDLE_GAP_US=%lu M3_PUMP_US=%lu M3_STEP_US=%lu M3_TX_US=%lu\n",
+        (unsigned long)m3.max_idle_gap_us,(unsigned long)m3.max_pump_us,
+        (unsigned long)m3.max_step_us,(unsigned long)m3.max_tx_us);
+    const auto heap=mallinfo();
+    const auto heap_capacity=(uintptr_t)&__HeapLimit-(uintptr_t)&__end__;
+    std::printf("HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu\n",
+        (unsigned long)heap_capacity,(unsigned long)heap.uordblks,
+        (unsigned long)(heap_capacity-heap.uordblks),(unsigned long)heap.arena,
+        (unsigned long)heap.ordblks,(unsigned long)heap.keepcost);
     std::printf("M3_BLOCK_US=%lu M3_STARVE_STAGE=%lu M3_STARVE_REQUEST_US=%lu M3_STARVE_AHEAD=%ld\n",
         (unsigned long)m3.max_render_us,(unsigned long)m3.starve_stage,
         (unsigned long)m3.starve_request_us,(long)m3.starve_ahead);
@@ -343,7 +355,10 @@ bool service_pump(void*, u8& key) {
     picocalc::script::service_effects();
     const u64 now = time_us_64();
     static u64 next = 0;
-    if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && now >= next) {
+    // The color owner already prevents monochrome flushes. Avoid rendering
+    // that hidden resident frame too; it otherwise consumes the APP's next
+    // CPU/audio slice without putting a single pixel on the panel.
+    if(panel_ready && !panel.color_active() && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && now >= next) {
         screen.render(display_snapshot(), keyboard.online(), &ui, &services,keyboard.battery()); if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented(); next = time_us_64() + FRAME_INTERVAL_US;
     }
     picocalc::KeyEvent event{};

@@ -122,7 +122,8 @@ void service() {}
 void drain() { if(controller.pending) controller.run(); }
 }
 namespace dma_support {
-u32 crc32(const u8* bytes,unsigned size) {
+u32 crc32(const u8* bytes,unsigned size,void (*progress)()) {
+    if(progress)progress();
     u32 result=0;for(unsigned i=0;i<size;++i) result=result*33U+bytes[i];return result;
 }
 }

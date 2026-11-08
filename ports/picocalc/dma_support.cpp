@@ -1,5 +1,18 @@
 #include "dma_support.hpp"
 #include "crc32.hpp"
+namespace picocalc::dma_support {
+namespace {
+u32 software_crc32(const u8* bytes,unsigned count,Progress progress) {
+    if(!progress || !bytes)return mk61_crc32::calculate(bytes,count);
+    u32 state=mk61_crc32::INITIAL_STATE;
+    while(count) {
+        const unsigned n=count<256?count:256;
+        state=mk61_crc32::extend(state,bytes,n);bytes+=n;count-=n;progress();
+    }
+    return mk61_crc32::finish(state);
+}
+}
+}
 #if defined(PICO_ON_DEVICE)
 #include "hardware/dma.h"
 #include "hardware/irq.h"
@@ -26,6 +39,9 @@ void enable_irq(unsigned channel) {
     else dma_channel_set_irq0_enabled(channel,true);
 }
 bool wait(unsigned first,int second) {
+    return wait(first,second,nullptr);
+}
+bool wait(unsigned first,int second,Progress progress) {
     const unsigned core=get_core_num();
     const u64 started=time_us_64(),limit=started+1000000;
     waits[core].fetch_add(1,std::memory_order_relaxed);
@@ -34,9 +50,11 @@ bool wait(unsigned first,int second) {
             dma_channel_abort(first);if(second>=0) dma_channel_abort((unsigned)second);
             timeouts.fetch_add(1,std::memory_order_relaxed);return false;
         }
-        // The SDK alarm-pool timer also bounds the wait if a peripheral stops
-        // producing DREQs. Completion itself is interrupt/event driven.
-        best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+        // A servicing callback keeps short memory/CRC transfers productive
+        // without posting cross-core SDK timer IRQs. Other owners retain
+        // the interrupt/event wait and the same peripheral timeout.
+        if(progress)progress();
+        else best_effort_wfe_or_timeout(make_timeout_time_us(1000));
     }
     sleep_us[core].fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
     return true;
@@ -56,6 +74,9 @@ u32 end_crc() {
     dma_sniffer_disable();mutex_exit(&crc_mutex);return result;
 }
 u32 crc32(const u8* bytes,unsigned count) {
+    return crc32(bytes,count,nullptr);
+}
+u32 crc32(const u8* bytes,unsigned count,Progress progress) {
     if(!count) return 0;
     const unsigned core=get_core_num();
     int& channel=crc_channel[core];
@@ -63,7 +84,7 @@ u32 crc32(const u8* bytes,unsigned count) {
         channel=dma_claim_unused_channel(false);
         if(channel>=0) enable_irq((unsigned)channel);
     }
-    if(channel<0 || !begin_crc((unsigned)channel,true)) return mk61_crc32::calculate(bytes,count);
+    if(channel<0 || !begin_crc((unsigned)channel,true)) return software_crc32(bytes,count,progress);
     u8 discard=0;
     auto config=dma_channel_get_default_config((unsigned)channel);
     channel_config_set_transfer_data_size(&config,DMA_SIZE_8);
@@ -71,9 +92,9 @@ u32 crc32(const u8* bytes,unsigned count) {
     channel_config_set_write_increment(&config,false);
     channel_config_set_sniff_enable(&config,true);
     dma_channel_configure((unsigned)channel,&config,&discard,bytes,count,true);
-    const bool ok=wait((unsigned)channel);
+    const bool ok=wait((unsigned)channel,-1,progress);
     const u32 result=end_crc();
-    if(!ok) return mk61_crc32::calculate(bytes,count);
+    if(!ok) return software_crc32(bytes,count,progress);
     crc_calls.fetch_add(1,std::memory_order_relaxed);return result;
 }
 Statistics statistics() {
@@ -85,9 +106,11 @@ Statistics statistics() {
 namespace picocalc::dma_support {
 void enable_irq(unsigned) {}
 bool wait(unsigned,int) { return true; }
+bool wait(unsigned,int,Progress progress) { if(progress)progress();return true; }
 bool begin_crc(unsigned,bool) { return false; }
 u32 end_crc() { return 0; }
 u32 crc32(const u8* bytes,unsigned count) { return mk61_crc32::calculate(bytes,count); }
+u32 crc32(const u8* bytes,unsigned count,Progress progress) { return software_crc32(bytes,count,progress); }
 Statistics statistics() { return {}; }
 }
 #endif

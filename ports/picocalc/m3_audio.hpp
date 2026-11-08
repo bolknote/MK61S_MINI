@@ -12,6 +12,8 @@ struct Statistics {
     bool inline_input;
     uint32_t transport_flags,inline_requests,stream_write_requests,tx_bytes,rx_bytes;
     uint64_t block_us;
+    uint32_t max_service_gap_us;
+    uint32_t max_idle_gap_us,max_pump_us,max_step_us,max_tx_us;
 };
 #if defined(PICO_ON_DEVICE) || defined(MK61_TEST_M3_AUDIO_BACKEND)
 // Open/close/poll belong to core0. service and duty run only on core1.

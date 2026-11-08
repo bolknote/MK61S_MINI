@@ -10,6 +10,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/firmware/picocalc'))
 from bios_stm3_input import stage_stm3_input
+from bios_stm3_crc import stage_stm3_crc
 FILES={
     'stm3_runtime.c':'source/Core/Src/stm3_runtime.c',
     'stm3_runtime.h':'source/Core/Inc/stm3_runtime.h',
@@ -39,6 +40,7 @@ def prepare(output):
     (staged/'Core/Inc/stm3_runtime.h').write_bytes((output/'stm3_runtime.h').read_bytes())
     (staged/'Core/Src/stm3_runtime.c').write_bytes((output/'stm3_runtime.c').read_bytes())
     stage_stm3_input(staged)
+    stage_stm3_crc(staged)
     (output/'stm3_runtime.h').write_bytes((staged/'Core/Inc/stm3_runtime.h').read_bytes())
     (output/'stm3_runtime.c').write_bytes((staged/'Core/Src/stm3_runtime.c').read_bytes())
     pins['staged/Core/Inc/stm3_runtime.h']=hashlib.sha256((output/'stm3_runtime.h').read_bytes()).hexdigest()

@@ -18,6 +18,8 @@ sys.path[:0] = [str(ROOT), str(Path(__file__).resolve().parent), str(ROOT / "sdk
 from build_picocalc import compiler_bin
 from bios_pmu_async import stage_async_pmu
 from bios_stm3_input import stage_stm3_input
+from bios_stm3_reply import stage_stm3_reply
+from bios_stm3_crc import stage_stm3_crc
 from elf32 import ELF
 
 
@@ -70,6 +72,8 @@ def main():
         (source / "Drivers").symlink_to(drivers, target_is_directory=True)
     delta = stage_async_pmu(source)
     delta.update(stage_stm3_input(source))
+    delta.update(stage_stm3_reply(source))
+    delta.update(stage_stm3_crc(source))
     sources = {str(p.relative_to(source)): sha(p) for p in source.rglob("*")
                if p.is_file() and not p.is_relative_to(source / "Drivers") and not p.is_relative_to(source / "build")}
     output.mkdir(parents=True, exist_ok=True)

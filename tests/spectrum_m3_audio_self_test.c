@@ -38,7 +38,8 @@ static void run(uint8_t* in,unsigned size,uint8_t* out,unsigned capacity,unsigne
     uint32_t result=module_entry(STM3_INIT,&api,&job);unsigned calls=0;
     while(result==STM3_MORE) {
         const unsigned before=job.progress;result=module_entry(STM3_STEP,&api,&job);
-        assert(job.progress>before && job.progress-before<=16 && ++calls<=8);
+        assert(job.progress>before && job.progress-before<=(api.micros && SPECTRUM_M3_STEP_BUDGET_US?120:SPECTRUM_M3_SLICE_SAMPLES) &&
+               ++calls<=(120+SPECTRUM_M3_SLICE_SAMPLES-1)/SPECTRUM_M3_SLICE_SAMPLES);
     }
     assert(result==STM3_DONE && job.output_bytes==8+output_width*expected_samples);
     assert(spectrum_m3_get32(out)==(expected_samples && output_width==1?SPECTRUM_M3_PWM_MAGIC:SPECTRUM_M3_PCM_MAGIC) && out[4]==expected_samples && !out[5]);
@@ -61,8 +62,8 @@ static void profile(uint8_t* out) {
     assert(spectrum_m3_get32(out)==SPECTRUM_M3_PROFILE_MAGIC);
     vector(request,8,out,job.output_bytes);
 }
-static uint32_t fake_time;
-static uint32_t fake_micros(void* context) {(void)context;const uint32_t now=fake_time;fake_time+=7;return now;}
+static uint32_t fake_time,fake_tick=7;
+static uint32_t fake_micros(void* context) {(void)context;const uint32_t now=fake_time;fake_time+=fake_tick;return now;}
 static void unchanged_after_bad_render(spectrum* s,const uint8_t* source,unsigned n,unsigned at,unsigned value) {
     uint8_t bad[512],out[512];memcpy(bad,source,n);bad[at]=(uint8_t)value;
     stm3_job job={bad,n,out,sizeof(out),0,0};assert(module_entry(STM3_INIT,&api,&job)==STM3_INVALID);same_state(s);
@@ -74,6 +75,29 @@ int main(void) {
     const unsigned size=config(&s,input);assert(size<=512);
     run(input,size,output,sizeof(output),0);same_state(&s);
     profile(output);for(unsigned i=4;i<SPECTRUM_M3_PROFILE_BYTES;++i)assert(!output[i]);
+    /* A muted second chip must retain its exact phase even when its sample
+     * updates are merged. Include active envelopes, warm phases, an AY2
+     * write inside the block and unusual imported counters (fallback). */
+    for(unsigned trial=0;trial<64;++trial) {
+        init(&s);s.extensions=1;
+        for(unsigned reg=0;reg<7;++reg)PSG_writeReg(&s.ay2,reg,rnd());
+        PSG_writeReg(&s.ay2,11,rnd());PSG_writeReg(&s.ay2,12,rnd());PSG_writeReg(&s.ay2,13,trial&15);
+        for(unsigned warm=0;warm<(trial&31);++warm)(void)PSG_calc(&s.ay2);
+        if(trial&8){s.ay2.count[0]=65535;s.ay2.noise_count=255;s.ay2.env_count=UINT32_MAX;}
+        PSG_writeReg(&s.ay,0,71);PSG_writeReg(&s.ay,1,1);PSG_writeReg(&s.ay,7,0x38);PSG_writeReg(&s.ay,8,15);
+        config(&s,input);run(input,size,output,sizeof(output),0);
+        memset(input,0,14);spectrum_m3_put32(input,SPECTRUM_M3_AUDIO_MAGIC);
+        input[4]=SPECTRUM_M3_RENDER;input[5]=120;input[6]=1;input[9]=input[10]=128;
+        if(trial&1){input[11]=63;input[12]=29;input[13]=(uint8_t)((trial+5)&15);}
+        run(input,(trial&1)?14:11,output,sizeof(output),120);
+        for(unsigned i=0;i<120;++i) {
+            if((trial&1) && i==63)PSG_writeReg(&s.ay2,13,(trial+5)&15);
+            atomic_store(&s.sound.produced,s.sound.time+140);
+            const uint16_t sample=(uint16_t)spectrum_sound_render(&s);
+            assert(output[8+2*i]==(uint8_t)sample && output[9+2*i]==(uint8_t)(sample>>8));
+        }
+        same_state(&s);
+    }
     /* Exact physical PWM duties, including zero and fractional software gain.
      * The internal16-bit synth/filter state must remain identical too. */
     static const unsigned gains[]={0,1,123,333,777,999,1000};
@@ -134,7 +158,7 @@ int main(void) {
     input[4]=SPECTRUM_M3_RENDER;input[5]=1;input[9]=input[10]=128;
     for(unsigned i=0;i<65538;++i){run(input,11,output,sizeof(output),1);assert(((unsigned)output[6]|(unsigned)output[7]<<8)==(uint16_t)i);}
     /* PROFILE leaves oscillator/filter state and sample sequence untouched.
-     * The timestamp wraps during the first of eight cooperative slices. */
+     * The timestamp wraps during the first cooperative slice. */
     init(&s);config(&s,input);run(input,size,output,sizeof(output),0);
     profile(output);for(unsigned i=4;i<SPECTRUM_M3_PROFILE_BYTES;++i)assert(!output[i]);
     memset(input,0,11);spectrum_m3_put32(input,SPECTRUM_M3_AUDIO_MAGIC);
@@ -149,15 +173,16 @@ int main(void) {
     same_state(&s);
     uint8_t measured[SPECTRUM_M3_PROFILE_BYTES];profile(measured);
     assert(spectrum_m3_get32(measured+4)==120 && spectrum_m3_get32(measured+8)==1);
-#if defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT>=120
-    /* With the synthetic 7-us clock all eight inner chunks fit in the
+#if (defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT>=120) || SPECTRUM_M3_STEP_BUDGET_US>=100
+    /* With the synthetic 7-us clock all inner chunks fit in the
      * bounded INIT turn. They are one measured slice instead of eight. */
-    const unsigned slices=1,max_slice=56;
+    const unsigned slices=1,max_slice=7*((120+SPECTRUM_M3_SLICE_SAMPLES-1)/SPECTRUM_M3_SLICE_SAMPLES);
 #else
-    const unsigned slices=8,max_slice=7;
+    const unsigned slices=(120+SPECTRUM_M3_SLICE_SAMPLES-1)/SPECTRUM_M3_SLICE_SAMPLES,max_slice=7;
 #endif
-    assert(spectrum_m3_get32(measured+12)==slices && spectrum_m3_get32(measured+16)==56);
-    assert(!spectrum_m3_get32(measured+20) && spectrum_m3_get32(measured+24)==56 && spectrum_m3_get32(measured+28)==max_slice);
+    const unsigned total=7*((120+SPECTRUM_M3_SLICE_SAMPLES-1)/SPECTRUM_M3_SLICE_SAMPLES);
+    assert(spectrum_m3_get32(measured+12)==slices && spectrum_m3_get32(measured+16)==total);
+    assert(!spectrum_m3_get32(measured+20) && spectrum_m3_get32(measured+24)==total && spectrum_m3_get32(measured+28)==max_slice);
     uint8_t request[8]={0};spectrum_m3_put32(request,SPECTRUM_M3_AUDIO_MAGIC);request[4]=SPECTRUM_M3_PROFILE;
     stm3_job short_profile={request,8,output,SPECTRUM_M3_PROFILE_BYTES-1,0,0};
     assert(module_entry(STM3_INIT,&api,&short_profile)==STM3_INVALID);
@@ -165,6 +190,28 @@ int main(void) {
     assert(module_entry(STM3_INIT,&api,&short_profile)==STM3_INVALID);
     profile(output);assert(!memcmp(output,measured,sizeof(measured)));same_state(&s);
     api.micros=NULL;input[5]=1;run(input,11,output,sizeof(output),1);assert(output[6]==1 && !output[7]);
+    /* A slow clock forces bounded turns even with adaptive STEP. Verify
+     * exact PCM/state across yields and an unsigned timestamp wrap. */
+    init(&s);config(&s,input);run(input,size,output,sizeof(output),0);
+    memset(input,0,11);spectrum_m3_put32(input,SPECTRUM_M3_AUDIO_MAGIC);
+    input[4]=SPECTRUM_M3_RENDER;input[5]=120;input[9]=input[10]=128;
+    fake_time=UINT32_MAX-100;fake_tick=400;api.micros=fake_micros;
+    stm3_job bounded={input,11,output,sizeof(output),0,0};
+    uint32_t result=module_entry(STM3_INIT,&api,&bounded);unsigned turns=0;
+    while(result==STM3_MORE) {
+        const unsigned before=bounded.progress;
+        result=module_entry(STM3_STEP,&api,&bounded);
+        const unsigned chunks=SPECTRUM_M3_STEP_BUDGET_US?(SPECTRUM_M3_STEP_BUDGET_US+399)/400:1;
+        assert(bounded.progress>before && bounded.progress-before<=chunks*SPECTRUM_M3_SLICE_SAMPLES);
+        assert(++turns<=120);
+    }
+    assert(result==STM3_DONE && turns && bounded.progress==120 && bounded.output_bytes==248);
+    for(unsigned i=0;i<120;++i) {
+        atomic_store(&s.sound.produced,s.sound.time+140);
+        const uint16_t sample=(uint16_t)spectrum_sound_render(&s);
+        assert(output[8+2*i]==(uint8_t)sample && output[9+2*i]==(uint8_t)(sample>>8));
+    }
+    same_state(&s);api.micros=NULL;fake_tick=7;
     // Envelope pointers address a32-entry table; reject corrupt state before
     // it can reach the renderer, including the old32..63 acceptance range.
     static const unsigned bad_envelopes[]={32,63,255};

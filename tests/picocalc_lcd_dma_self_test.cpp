@@ -69,6 +69,7 @@ int spi_write16_blocking(int,const u16* pixels,unsigned count) {
 }
 namespace m3_audio { bool transport_active() { return audio_active; } }
 namespace io_worker {
+void timed_wait(unsigned us) { best_effort_wfe_or_timeout(make_timeout_time_us(us)); }
 void service() {
     ++services;
     const u64 gap=now-last_service;if(gap>max_service_gap)max_service_gap=gap;

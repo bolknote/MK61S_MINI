@@ -13,17 +13,27 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--build-dir',type=Path,required=True)
     ap.add_argument('--optimization',choices=['Os','O2','O3'],default='O2')
-    ap.add_argument('--fast-init',type=int,choices=[0,64,80,96],default=96)
+    ap.add_argument('--fast-init',type=int,choices=[0,64,80,96,120],default=96)
+    ap.add_argument('--slice-samples',type=int,choices=[16,24,32,40],default=16)
+    ap.add_argument('--step-budget-us',type=int,choices=[0,500,750,900,1000,1250],default=0)
+    ap.add_argument('--init-budget-us',type=int,choices=[100,250,500,750,1000,1250],default=100)
+    ap.add_argument('--lto',action='store_true')
+    ap.add_argument('--silent-batch',action='store_true')
     ap.add_argument('--frames',type=int,choices=[64,80,96,120],default=96)
     ap.add_argument('--pwm8',action='store_true')
     ap.add_argument('--direct-read',action='store_true')
     ap.add_argument('--legacy-poll',action='store_true',help='Explicit old-resident comparison only; normal tests use pushed completion')
     args=ap.parse_args()
     folder=args.build_dir.resolve()/'probe';folder.mkdir(parents=True,exist_ok=True)
-    module=build(folder.parent/'module',optimization='-'+args.optimization,fast_init=args.fast_init)
+    module=build(folder.parent/'module',optimization='-'+args.optimization,fast_init=args.fast_init,
+                 slice_samples=args.slice_samples,step_budget_us=args.step_budget_us,init_budget_us=args.init_budget_us,lto=args.lto,silent_batch=args.silent_batch)
     defines=['M3_SOUND_FRAMES='+str(args.frames),'S3_SOUND_PWM8='+str(int(args.pwm8)),
              'S3_SOUND_DIRECT_READ='+str(int(args.direct_read)),'S3_SOUND_PUSH='+str(int(not args.legacy_poll))]
     if args.fast_init:defines+=['EMU2149_M3_AUDIO=1','SPECTRUM_M3_FAST_INIT='+str(args.fast_init)]
+    defines+=['SPECTRUM_M3_SLICE_SAMPLES='+str(args.slice_samples)]
+    defines+=['SPECTRUM_M3_STEP_BUDGET_US='+str(args.step_budget_us)]
+    defines+=['SPECTRUM_M3_INIT_BUDGET_US='+str(args.init_budget_us)]
+    if args.silent_batch:defines+=['SPECTRUM_M3_SILENT_BATCH=1']
     app=ROOT/'examples/portable-apps/SPECTRUM'
     generator=folder/'vectors'
     cmd=['clang','-std=c11','-O2','-Wall','-Wextra','-Werror',*['-D'+d for d in defines],'-I'+str(RUNTIME),

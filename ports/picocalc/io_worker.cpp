@@ -94,7 +94,16 @@ void finish_i2c() {
     i2c.stage.store(DONE,std::memory_order_release);__sev();
 }
 void i2c_irq() { i2c_irqs.fetch_add(1,std::memory_order_relaxed);finish_i2c(); }
-void i2c_timeout(unsigned) { finish_i2c(); }
+void i2c_timeout(unsigned) {
+    finish_i2c();
+    // A short worker wake may precede the bus timeout. Keep the original
+    // deadline armed even if audio stops before the next timed wait.
+    if(i2c.stage.load(std::memory_order_acquire)==WORKING &&
+       hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(i2c_transfer.deadline())))finish_i2c();
+    // Retain an event if the IRQ runs just before the caller's WFE. Without
+    // it, an idle I2C alarm can be lost until the next 1280us audio refill.
+    __sev();
+}
 std::atomic<u32> uart_wait_us{0},uart_flush_us{0},uart_flushes{0};
 std::atomic<u32> idle_us{0},uart_event_waits{0};
 WorkerJobSlot compute;
@@ -219,6 +228,18 @@ bool queue_function(void* context,void (*function)(void*)) {
     frame_context=context;frame_transfer=function;
     frame.store(true,std::memory_order_release);__sev();return true;
 }
+void timed_wait(unsigned us) {
+    if(get_core_num()!=1 || i2c_alarm<0) {
+        best_effort_wfe_or_timeout(make_timeout_time_us(us));return;
+    }
+    // The SDK default alarm pool belongs to core0. Repeated 50us audio
+    // waits there interrupt the Z80 core. Reuse this core's existing alarm,
+    // keeping an in-flight I2C deadline earlier than the polling deadline.
+    u64 target=time_us_64()+us;
+    if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_transfer.deadline()<target)
+        target=i2c_transfer.deadline();
+    if(!hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(target)))__wfe();
+}
 void worker() {
     flash_safe_execute_core_init();
     i2c_alarm=hardware_alarm_claim_unused(false);
@@ -251,9 +272,9 @@ void worker() {
            i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
             const u64 started=time_us_64();
             if(m3_audio::transport_active())
-                best_effort_wfe_or_timeout(make_timeout_time_us(50));
+                timed_wait(50);
             else if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_alarm<0)
-                best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+                timed_wait(1000);
             else __wfe();
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
         } else if(!frame.load(std::memory_order_acquire) && !compute.queued() &&
@@ -262,7 +283,7 @@ void worker() {
             // If DMA allocation failed, the UART FIFO still drains in
             // hardware. Poll it from a bounded sleep instead of spinning.
             const u64 started=time_us_64();
-            best_effort_wfe_or_timeout(make_timeout_time_us(100));
+            timed_wait(100);
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
         }
     }
@@ -330,7 +351,7 @@ void service(bool allow_i2c) {
 }
 void wait_for_progress() {
     service();
-    best_effort_wfe_or_timeout(make_timeout_time_us(m3_audio::transport_active()?50:1000));
+    timed_wait(m3_audio::transport_active()?50:1000);
 }
 void drain() {
     if(!ready.load(std::memory_order_acquire)) return;

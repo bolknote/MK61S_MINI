@@ -11,9 +11,10 @@ static uint32_t test_clock;
 
 static char output[32768];
 static unsigned used,escape_key;
+static uint32_t keyboard_cost=37,service_cost=7,service_calls;
 static uint8_t ram[49152],rom[16384];
 static spectrum test_machine;
-static void service(void) { test_clock+=7; }
+static void service(void) { test_clock+=service_cost;++service_calls; }
 static void millisecond_delay(uint32_t n) { (void)n;assert(!"Frame pacing must not call the millisecond delay"); }
 static const mk61_app_api api={.service=service,.delay_ms=millisecond_delay};
 const mk61_app_api* mk61_api=&api;
@@ -21,7 +22,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* p) {
     if(op==MK61_SERVICE_MICROS) return test_clock++;
     if(op==MK61_SERVICE_DISPLAY) return 0;
     if(op==MK61_SERVICE_KEYBOARD) {
-        assert(a==MK61_SERVICE_KEY_BITMAP && b==32 && !c);memset(p,0,32);test_clock+=37;
+        assert(a==MK61_SERVICE_KEY_BITMAP && b==32 && !c);memset(p,0,32);test_clock+=keyboard_cost;
         if(escape_key)((uint8_t*)p)[escape_key/8]|=1U<<(escape_key&7);
         return 1;
     }
@@ -96,6 +97,17 @@ static void escape_and_resync(void) {
     deadline=test_clock-20480-100002-machine.frame_tstates*2/7;
     assert(pace_frame(blocked,&keyboard_deadline,&deadline));assert(state.resyncs==1);
 }
+static void bounded_native_turns(uint32_t start) {
+    paced_trace state;begin(&state,start,0);machine.pentagon=true;machine.frame_tstates=0;
+    uint8_t blocked[32]={0};uint32_t keyboard_deadline=start;
+    uint32_t deadline=start-20480+2050,target=start+2050;
+    keyboard_cost=service_cost=1800;service_calls=0;
+    assert(pace_frame(blocked,&keyboard_deadline,&deadline));
+    // The key read used almost all the available time. An additional
+    // service turn based on the old timestamp would overrun by >1.5ms.
+    assert(service_calls==0 && test_clock-target<=1);
+    keyboard_cost=37;service_cost=7;
+}
 int main(int argc,char** argv) {
     scheduled_frames(1000000,0,0,true);
     if(argc==2) { FILE* f=fopen(argv[1],"wb");assert(f);assert(fwrite(output,1,used,f)==used);assert(!fclose(f)); }
@@ -103,5 +115,6 @@ int main(int argc,char** argv) {
     scheduled_frames(1000000,0,0,false);
     scheduled_frames(UINT32_MAX-100000,UINT32_MAX-12345,779,false);
     zero_timestamps(false);zero_timestamps(true);delayed_window_is_not_discarded();escape_and_resync();
+    bounded_native_turns(1000000);bounded_native_turns(UINT32_MAX-1000);
     puts("Actual APP pacing: microsecond boundaries, resumed phase, late reset, Esc/F10, ten adjacent windows, zero/wrapping timestamps and cycle wrap PASS");
 }

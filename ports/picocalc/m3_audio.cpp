@@ -25,6 +25,7 @@ struct Clocks {
 };
 struct Context {
     m3::AudioEngine engine;
+    uint32_t crc_values[256];
     stm3_pico_uart1 uart{};
     std::optional<SleepClockLease<Clocks>> clocks;
     int rx=-1;
@@ -34,6 +35,15 @@ struct Context {
     bool inline_input=false;
     std::atomic<bool> control{false};
     bool streaming=false,owned=false,tx_started=false;
+    uint32_t service_at=0,max_service_gap_us=0;
+    uint32_t service_end=0,max_idle_gap_us=0,max_pump_us=0,max_step_us=0,max_tx_us=0;
+    bool service_running=false;
+    Context() {
+        // Only an active M3 stream leases this 1 KiB. Keep random CRC
+        // lookups off XIP without reducing the resident APP heap budget.
+        std::memcpy(crc_values,m3::Wire::crc_table(),sizeof(crc_values));
+        engine.wire.crc_values=crc_values;
+    }
 };
 alignas(512) uint8_t receive[512];
 std::atomic<Context*> context{nullptr};
@@ -85,6 +95,9 @@ void snapshot(Context& c) {
     last.ready_polls=e.ready_polls;last.prime_us=e.prime_us;last.min_queued=e.primed?e.min_queued:0;
     last.inline_input=c.inline_input;last.transport_flags=c.transport_flags;last.inline_requests=c.inline_requests;
     last.stream_write_requests=c.stream_write_requests;last.tx_bytes=c.tx_bytes;last.rx_bytes=c.rx_bytes;
+    last.max_service_gap_us=c.max_service_gap_us;
+    last.max_idle_gap_us=c.max_idle_gap_us;last.max_pump_us=c.max_pump_us;
+    last.max_step_us=c.max_step_us;last.max_tx_us=c.max_tx_us;
 }
 void release(void* raw) {
     auto& c=*(Context*)raw;snapshot(c);last.active=false;
@@ -199,11 +212,28 @@ bool load(Context& c,const char* path,unsigned gain) {
 bool transport_active(){return context.load(std::memory_order_acquire)!=nullptr;}
 void service() {
     auto* c=context.load(std::memory_order_acquire);if(!c)return;
+    const uint32_t begin=time_us_32();
     pump(*c);
-    if(c->streaming && !c->control.load(std::memory_order_relaxed) && !c->tx_started) {
-        c->engine.step(time_us_32());
+    const uint32_t now=time_us_32();
+    const bool running=c->streaming && !c->engine.stopping.load(std::memory_order_relaxed) &&
+        __atomic_load_n(c->engine.request.running,__ATOMIC_ACQUIRE);
+    if(running && c->service_running) {
+        const uint32_t gap=now-c->service_at;if(gap>c->max_service_gap_us)c->max_service_gap_us=gap;
+        const uint32_t idle=begin-c->service_end;if(idle>c->max_idle_gap_us)c->max_idle_gap_us=idle;
     }
+    c->service_running=running;c->service_at=now;
+    if(c->streaming && !c->control.load(std::memory_order_relaxed) && !c->tx_started) {
+        c->engine.step(now);
+    }
+    const uint32_t stepped=time_us_32();
     tx(*c);
+    c->service_end=time_us_32();
+    if(running) {
+        const uint32_t pump_us=now-begin,step_us=stepped-now,tx_us=c->service_end-stepped;
+        if(pump_us>c->max_pump_us)c->max_pump_us=pump_us;
+        if(step_us>c->max_step_us)c->max_step_us=step_us;
+        if(tx_us>c->max_tx_us)c->max_tx_us=tx_us;
+    }
 }
 uint32_t duty(void*){auto* c=context.load(std::memory_order_acquire);return c?c->engine.sample(time_us_32()):0x00800080u;}
 bool failed(){auto* c=context.load(std::memory_order_acquire);return c && c->engine.error.load(std::memory_order_acquire);}

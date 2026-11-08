@@ -7,6 +7,66 @@
 #include <random>
 
 using namespace picocalc::lcd;
+static uint16_t* progressive_line;
+static unsigned progressive_width,progressive_seen,progressive_max;
+static void observe_expansion() {
+    unsigned end=progressive_seen;
+    while(end<progressive_width && progressive_line[end]!=0xDEAD)++end;
+    assert(end>progressive_seen);
+    progressive_max=std::max(progressive_max,end-progressive_seen);progressive_seen=end;
+}
+static void bounded_expansion() {
+    for(unsigned format:{MK61_COLOR_TILE1,MK61_COLOR_TILE8,MK61_COLOR_INDEX4}) {
+        mk61_service_color_frame frame{};frame.width=320;frame.height=8;frame.format=format;
+        frame.x=0;frame.y=16;frame.pixel_bytes=format==MK61_COLOR_INDEX4?1280:320;
+        frame.tile_bytes=format==MK61_COLOR_TILE8?80:format==MK61_COLOR_TILE1?40:0;
+        std::vector<uint8_t> pixels(frame.pixel_bytes,0x16),tiles(frame.tile_bytes,1);
+        frame.pixels=pixels.data();frame.tiles=tiles.empty()?nullptr:tiles.data();
+        for(unsigned i=0;i<16;++i)frame.palette[i]=uint16_t(i+1);
+        uint16_t palette[64];for(unsigned i=0;i<64;++i)palette[i]=uint16_t(i+1);
+        uint16_t line[320];progressive_line=line;
+        for(unsigned first:{0u,3u,63u,65u})for(unsigned width:{1u,63u,128u,255u}) {
+            if(first+width>320)continue;
+            std::fill(std::begin(line),std::end(line),uint16_t(0xDEAD));
+            progressive_width=width;progressive_seen=progressive_max=0;
+            const Rect r{uint16_t(first),16,uint16_t(width),1};
+            color_scanline(frame,r,0,line,palette,observe_expansion);
+            progressive_max=std::max(progressive_max,width-progressive_seen);
+            assert(progressive_max<=64);
+            for(unsigned x=0;x<width;++x)assert(line[x]==color_pixel(frame,first+x,0,palette));
+        }
+    }
+    puts("LCD expansion: unchanged pixels and at most 64 pixels between transport service points PASS");
+}
+static void aligned_and_unaligned_tiles() {
+    for(unsigned format:{MK61_COLOR_TILE1,MK61_COLOR_TILE8})for(unsigned width:{8U,24U,32U,256U,320U})
+      for(unsigned offset=0;offset<2;++offset) {
+        mk61_service_color_frame before{},after{};
+        after.width=(uint16_t)width;after.height=24;after.format=format;
+        after.pixel_bytes=width*3;after.tile_bytes=width/8*3*(format==MK61_COLOR_TILE8?2:1);
+        std::vector<uint8_t> old_pixels(after.pixel_bytes+4),new_pixels(after.pixel_bytes+4),
+            old_tiles(after.tile_bytes+4),new_tiles(after.tile_bytes+4);
+        after.pixels=new_pixels.data()+offset;after.tiles=new_tiles.data()+offset;
+        before=after;before.pixels=old_pixels.data();before.tiles=old_tiles.data();
+        assert(valid_color(before) && valid_color(after));Update update;
+        plan_color(update,before,after,false);assert(!update.count && !update.bytes);
+        for(unsigned row=0;row<24;++row)for(unsigned column=0;column<width/8;++column) {
+            new_pixels[offset+row*(width/8)+column]=0x80;
+            plan_color(update,before,after,false);
+            assert(update.count==1 && update.rectangles[0].x==column*8 && update.rectangles[0].y==(row/8)*8 &&
+                   update.rectangles[0].width==8 && update.rectangles[0].height==8 && update.bytes==128);
+            new_pixels[offset+row*(width/8)+column]=0;
+        }
+        for(unsigned i=0;i<after.tile_bytes;++i) {
+            new_tiles[offset+i]=1;plan_color(update,before,after,false);
+            const unsigned tile=i/(format==MK61_COLOR_TILE8?2:1);
+            assert(update.count==1 && update.rectangles[0].x==(tile%(width/8))*8 &&
+                   update.rectangles[0].y==(tile/(width/8))*8 && update.bytes==128);
+            new_tiles[offset+i]=0;
+        }
+      }
+    puts("LCD tiled plans: aligned/unaligned sources, 1/3/4/32/40-byte strides, every pixel row and attribute byte PASS");
+}
 static void randomized_color_plans() {
     std::mt19937 random(0xC010U);unsigned frames=0;
     for(unsigned format:{MK61_COLOR_TILE1,MK61_COLOR_TILE8,MK61_COLOR_INDEX4}) {
@@ -53,6 +113,8 @@ static void randomized_color_plans() {
     std::printf("LCD randomized reconstruction: %u TILE1/TILE8/odd INDEX4 frames PASS\n",frames);
 }
 int main() {
+    bounded_expansion();
+    aligned_and_unaligned_tiles();
     randomized_color_plans();
     std::vector<uint8_t> storage(MK61_COLOR_SNAPSHOT_BYTES),bits(6144),tiles(768);
     mk61_service_color_frame next{},old{};

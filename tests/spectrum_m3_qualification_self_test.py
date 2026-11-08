@@ -46,6 +46,29 @@ for key in ('complete_run','z80_at_least_3_5MHz','z80_paced','no_frame_delays_ov
             'frame_lag_bounded','continuous_sample_coverage'):
     assert not result['checks'][key],key
 assert q.qualify(wire(mode=1,policy=0),status(),status(),mode='local')['status']=='PASS'
+# A long test must cover its entire requested duration. Extending the finite
+# run cap never relaxes rates, late-block/frame, startup or native-slice limits.
+long_cycles=29998*71680;long_us=long_cycles*2//7
+long_wire=wire().replace('frames=598 cycles=42864640 us=12247040',
+                         f'frames=29998 cycles={long_cycles} us={long_us}')
+long_status=status({'M3_SAMPLES':long_us//40+2048,'M3_RENDER_SAMPLES':long_us//40+2048})
+assert q.qualify(long_wire,status(),long_status)['status']=='FAIL'
+assert q.qualify(long_wire,status(),long_status,run_frames=30000)['status']=='PASS'
+assert not q.qualify(wire(),status(),status(),run_frames=30000)['checks']['complete_run']
+for changes,key in [({'M3_LATE_BLOCKS':1},'zero_M3_LATE_BLOCKS'),
+                    ({'M3_PRIME_US':20001},'started_promptly'),
+                    ({'M3_RENDER_MAX_SLICE_US':2001},'native_slices_bounded')]:
+    after=status({
+        'M3_SAMPLES':long_us//40+2048,'M3_RENDER_SAMPLES':long_us//40+2048,**changes})
+    assert not q.qualify(long_wire,status(),after,run_frames=30000)['checks'][key]
+assert not q.qualify(long_wire.replace('late_1ms=0','late_1ms=1'),status(),long_status,
+                     run_frames=30000)['checks']['no_frame_delays_over_1ms']
+assert not q.qualify(long_wire.replace(f'us={long_us}',f'us={round(long_cycles/3.4998)}'),
+                     status(),long_status,run_frames=30000)['checks']['z80_at_least_3_5MHz']
+for invalid in (599,30001,True,600.0):
+    try:q.qualify(long_wire,status(),long_status,run_frames=invalid)
+    except ValueError:pass
+    else:raise AssertionError('Invalid finite run length accepted')
 try:q.qualify(wire(),status(),status().replace('M3_PROFILE=1',''))
 except ValueError:pass
 else:raise AssertionError('Incomplete diagnostics must hold qualification')

@@ -14,6 +14,24 @@ static bool configured;
 static uint64_t render_us;
 static uint32_t render_samples,render_jobs,render_slices,job_us,max_job_us,max_slice_us;
 static unsigned event_cursor;
+#if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
+static bool second_idle;
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+static bool advance_silent_second(unsigned samples) {
+    PSG* p=&chips[1];
+    if(p->out || (p->volume[0]|p->volume[1]|p->volume[2]))return false;
+    // Valid phases do not wrap their narrow counters before a period edge.
+    // Keep unusual imported states on the ordinary per-sample path.
+    for(unsigned i=0;i<3;++i)if(p->freq[i] && p->count[i]>=p->freq[i])return false;
+    if((p->noise_freq && p->noise_count>=p->noise_freq) ||
+       (p->env_freq && p->env_count>=p->env_freq))return false;
+    // CONFIG guarantees this clock/rate and quality=1. With zero output and
+    // volumes, merging samples preserves every counter/LFSR/envelope phase.
+    p->realstep=1750000u*samples;(void)PSG_calc(p);p->realstep=1750000u;return true;
+}
+#endif
 
 static void state_export(uint8_t* out) {
     spectrum_m3_put32(out,SPECTRUM_M3_STATE_MAGIC);
@@ -65,16 +83,25 @@ static uint32_t render_step(stm3_job* job) {
     if(flags&2){cv=p+at;at+=n;}
     if(flags&4){sd=p+at;at+=n;}
     at=event_cursor;
-    /* At most sixteen samples per cooperative turn. No state changes while
+#if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
+    const unsigned span=n-first<SPECTRUM_M3_SLICE_SAMPLES?n-first:SPECTRUM_M3_SLICE_SAMPLES;
+    const bool silent=(p[6]&1) && second_idle && advance_silent_second(span);
+#endif
+    /* A bounded sample slice per cooperative turn. No state changes while
      * validating a render packet, and no callbacks into the loaded APP. */
-    for(unsigned i=first;i<n && i<first+16;++i) {
+    for(unsigned i=first;i<n && i<first+SPECTRUM_M3_SLICE_SAMPLES;++i) {
         while(at<job->input_bytes && p[at]<i)at+=3;
         while(at<job->input_bytes && p[at]==i) {
             PSG_writeReg(&chips[p[at+1]>>4],p[at+1]&15,p[at+2]);at+=3;
         }
         beeper=bits?((bits[i/8]>>(i&7))&1):p[8];covox=cv?cv[i]:p[9];specdrum=sd?sd[i]:p[10];
         int32_t sample=PSG_calc(&chips[0]);
-        if(p[6]&1)sample+=PSG_calc(&chips[1]);else sample*=2;
+        if(p[6]&1) {
+#if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
+            if(!silent)
+#endif
+            sample+=PSG_calc(&chips[1]);
+        } else sample*=2;
         sample+=beeper?8192:0;
         if(p[6]&2)sample+=((int32_t)covox-128)*64;
         if(p[6]&4)sample+=((int32_t)specdrum-128)*64;
@@ -93,9 +120,10 @@ static uint32_t render_measured(const stm3_api* api,stm3_job* job,bool inline_in
     const uint32_t begin=api->micros?api->micros(api->context):0;
     const unsigned first=job->progress;
     uint32_t result;
+    const uint32_t budget=inline_init?SPECTRUM_M3_INIT_BUDGET_US:SPECTRUM_M3_STEP_BUDGET_US;
     do {result=render_step(job);}
-    while(inline_init && result==STM3_MORE &&
-          (!api->micros || api->micros(api->context)-begin<100));
+    while(result==STM3_MORE && budget &&
+          (api->micros?api->micros(api->context)-begin<budget:inline_init));
     const uint32_t elapsed=api->micros?api->micros(api->context)-begin:0;
     render_us+=elapsed;job_us+=elapsed;render_samples+=job->progress-first;++render_slices;
     if(elapsed>max_slice_us)max_slice_us=elapsed;
@@ -137,6 +165,9 @@ uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
             render_us=0;render_samples=render_jobs=render_slices=job_us=max_job_us=max_slice_us=0;
             spectrum_m3_put32(job->output,SPECTRUM_M3_PCM_MAGIC);spectrum_m3_put32(job->output+4,0);
             job->output[7]=10;
+#if SPECTRUM_M3_STEP_BUDGET_US
+            job->output[7]|=16;
+#endif
 #if defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT
             job->output[6]=SPECTRUM_M3_FAST_INIT;job->output[7]|=5;
 #endif
@@ -159,6 +190,11 @@ uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
         if(job->input[7]&1)event_cursor+=(job->input[5]+7)/8;
         if(job->input[7]&2)event_cursor+=job->input[5];
         if(job->input[7]&4)event_cursor+=job->input[5];
+#if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
+        second_idle=true;
+        for(unsigned at=event_cursor;at<job->input_bytes;at+=3)
+            if(job->input[at+1]>=16){second_idle=false;break;}
+#endif
         job_us=0;
 #if defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT
         if(job->input[5]<=SPECTRUM_M3_FAST_INIT)return render_measured(api,job,true);

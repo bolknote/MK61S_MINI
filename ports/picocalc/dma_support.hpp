@@ -7,9 +7,13 @@ struct Statistics { u32 waits[2],sleep_us[2],timeouts,crc32_calls,crc_fallbacks;
 // IRQs send an event, so a completed transfer cannot race the following WFE.
 void enable_irq(unsigned channel);
 bool wait(unsigned first,int second=-1);
+using Progress=void(*)();
+// With progress, service between busy checks instead of using an SDK alarm.
+bool wait(unsigned first,int second,Progress progress);
 bool begin_crc(unsigned channel,bool crc32);
 u32 end_crc();
 u32 crc32(const u8* bytes,unsigned count);
+u32 crc32(const u8* bytes,unsigned count,Progress progress);
 Statistics statistics();
 }
 #endif

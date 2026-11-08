@@ -15,16 +15,22 @@ def field(text,key):
     if len(set(values))!=1:raise ValueError('Conflicting native field '+key)
     return values[0]
 
-def qualify(wire,before,after,mode='remote',minimum_frames=590):
+def qualify(wire,before,after,mode='remote',minimum_frames=590,run_frames=None):
+    if run_frames is not None and (type(run_frames) is not int or not 600<=run_frames<=30000):
+        raise ValueError('run_frames must be an integer in 600..30000')
     rows=re.findall(r'(?m)^SP3 RESULT mode=(\d+) frames=(\d+) cycles=(\d+) us=(\d+) starved=(\d+)\r?$',wire)
     frame=re.findall(r'(?m)^SP3 FRAME min_us=(\d+) max_us=(\d+) late_1ms=(\d+) max_lag_us=(\d+) strict_fault=(\d+)\r?$',wire)
     policy=re.findall(r'(?m)^SP3 POLICY remote_only=(\d+)\r?$',wire)
     if len(rows)!=1 or len(frame)!=1 or len(policy)!=1:raise ValueError('Missing/ambiguous finite game records')
     engine,frames,cycles,elapsed,starved=map(int,rows[0]);fmin,fmax,late,lag,fault=map(int,frame[0])
     expected=2 if mode=='remote'else 1
-    timing_valid=0<frames<=3100 and 0<cycles<=122500000 and 0<elapsed<=35000000
+    frame_limit=3100 if run_frames is None else run_frames
+    elapsed_limit=35000000 if run_frames is None else max(35000000,run_frames*22000+5000000)
+    cycle_limit=elapsed_limit*7//2
+    required_frames=minimum_frames if run_frames is None else max(minimum_frames,run_frames-2)
+    timing_valid=0<frames<=frame_limit and 0<cycles<=cycle_limit and 0<elapsed<=elapsed_limit
     checks={'selected_backend':engine==expected,'strict_remote_policy':int(policy[0])==(mode=='remote'),
-            'complete_run':timing_valid and frames>=minimum_frames,
+            'complete_run':timing_valid and frames>=required_frames,
             'no_probe_fault':not fault and 'SP3 FAULT'not in wire,'producer_not_starved':starved==0,
             # Accept only the actual one-microsecond timestamp uncertainty;
             # 3.4998MHz over a multi-second run does not pass this predicate.
@@ -78,9 +84,10 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--wire',type=Path,required=True);ap.add_argument('--before',type=Path,required=True)
     ap.add_argument('--after',type=Path,required=True);ap.add_argument('--mode',choices=['remote','local'],default='remote')
+    ap.add_argument('--run-frames',type=int,help='Expected fixture length for a continuous 600..30000-frame run')
     ap.add_argument('--output',type=Path,required=True);args=ap.parse_args()
     if args.output.exists():raise SystemExit('Refusing to replace an existing qualification')
-    try:result=qualify(args.wire.read_text(),args.before.read_text(),args.after.read_text(),args.mode)
+    try:result=qualify(args.wire.read_text(),args.before.read_text(),args.after.read_text(),args.mode,run_frames=args.run_frames)
     except ValueError as error:result={'status':'HOLD','error':str(error),'physical_io':False}
     args.output.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
     return 0 if result['status']=='PASS'else 1

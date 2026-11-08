@@ -2,6 +2,7 @@
 #define MK61_PICOCALC_M3_WIRE_HPP
 #include <cstdint>
 #include <cstring>
+#include <array>
 namespace picocalc::m3 {
 /* Async counterpart of the qualified stm3_client protocol. One request is
  * outstanding. TX stays pinned until its owner releases DMA; RX decodes in
@@ -14,15 +15,32 @@ struct Wire {
     unsigned tx_bytes=0,rx_bytes=0,reply_bytes=0;
     uint32_t started=0,timeout=0;
     int result=0;
+    const uint32_t* crc_values=nullptr;
     bool pending=false,complete=false,overflow=false;
     static uint32_t get32(const uint8_t* p) {
         return uint32_t(p[0])|uint32_t(p[1])<<8|uint32_t(p[2])<<16|uint32_t(p[3])<<24;
     }
     static void put32(uint8_t* p,uint32_t v) {for(unsigned i=0;i<4;++i)p[i]=uint8_t(v>>(8*i));}
-    static uint32_t crc(const uint8_t* p,unsigned n) {
+    static const uint32_t* crc_table() {
+        static constexpr auto table=[] {
+            std::array<uint32_t,256> values{};
+            for(unsigned i=0;i<256;++i) {
+                uint32_t value=i;
+                for(unsigned bit=0;bit<8;++bit)value=(value>>1)^((value&1)?0xedb88320u:0u);
+                values[i]=value;
+            }
+            return values;
+        }();
+        return table.data();
+    }
+    static uint32_t crc_with_table(const uint8_t* p,unsigned n,const uint32_t* table) {
         uint32_t v=~0u;
-        while(n--){v^=*p++;for(unsigned i=0;i<8;++i)v=(v>>1)^(0xedb88320u&(0u-(v&1)));}
+        while(n--)v=(v>>8)^table[(v^*p++)&255u];
         return ~v;
+    }
+    static uint32_t crc(const uint8_t* p,unsigned n) {return crc_with_table(p,n,crc_table());}
+    uint32_t checksum(const uint8_t* p,unsigned n) const {
+        return crc_with_table(p,n,crc_values?crc_values:crc_table());
     }
     static unsigned encode(const uint8_t* in,unsigned n,uint8_t* out) {
         unsigned at=1,code_at=0;uint8_t code=1;
@@ -51,7 +69,7 @@ struct Wire {
         frame[0]=1;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
         frame[4]=uint8_t(payload);frame[5]=uint8_t(payload>>8);frame[6]=frame[7]=0;
         if(prefix)put32(frame+8,offset);
-        put32(frame+8+payload,crc(frame,8+payload));
+        put32(frame+8+payload,checksum(frame,8+payload));
         tx[0]=0;const unsigned bytes=encode(frame,12+payload,tx+1);
         tx[bytes+1]=0;tx_bytes=bytes+2;pending=true;return true;
     }
@@ -66,7 +84,7 @@ struct Wire {
         const unsigned payload=first_n+second_n;
         frame[0]=1;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
         frame[4]=uint8_t(payload);frame[5]=uint8_t(payload>>8);frame[6]=frame[7]=0;
-        put32(frame+8+payload,crc(frame,8+payload));
+        put32(frame+8+payload,checksum(frame,8+payload));
         tx[0]=0;const unsigned bytes=encode(frame,12+payload,tx+1);
         tx[bytes+1]=0;tx_bytes=bytes+2;pending=true;return true;
     }
@@ -89,7 +107,7 @@ struct Wire {
         const unsigned payload=unsigned(frame[4])|(unsigned(frame[5])<<8);
         if(frame[0]!=1 || frame[1]!=(command|128u) ||
            (unsigned(frame[2])|(unsigned(frame[3])<<8))!=sequence || frame[6] || frame[7] ||
-           payload<4 || payload>256 || n!=12+payload || get32(frame+n-4)!=crc(frame,n-4)) {fail(FRAME);return;}
+           payload<4 || payload>256 || n!=12+payload || get32(frame+n-4)!=checksum(frame,n-4)) {fail(FRAME);return;}
         const uint32_t status=get32(frame+8);
         if(status>9){fail(FRAME);return;}
         result=int(status);reply_bytes=status?0:payload-4;pending=false;complete=true;

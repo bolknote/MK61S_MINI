@@ -9,6 +9,10 @@ sound_flags=()
 if [[ "${SPECTRUM_M3_FAST_INIT:-0}" != 0 ]]; then
     sound_flags=(-DEMU2149_M3_AUDIO=1 "-DSPECTRUM_M3_FAST_INIT=$SPECTRUM_M3_FAST_INIT")
 fi
+sound_flags+=("-DSPECTRUM_M3_SLICE_SAMPLES=${SPECTRUM_M3_SLICE_SAMPLES:-16}")
+sound_flags+=("-DSPECTRUM_M3_STEP_BUDGET_US=${SPECTRUM_M3_STEP_BUDGET_US:-0}")
+sound_flags+=("-DSPECTRUM_M3_INIT_BUDGET_US=${SPECTRUM_M3_INIT_BUDGET_US:-100}")
+sound_flags+=("-DSPECTRUM_M3_SILENT_BATCH=${SPECTRUM_M3_SILENT_BATCH:-0}")
 clang -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined \
     -fno-sanitize-recover=all -fno-omit-frame-pointer \
     "${sound_flags[@]}" \

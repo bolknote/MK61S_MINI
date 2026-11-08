@@ -5,6 +5,10 @@ static const mk61_app_services* observed_services(const mk61_app_api*,uint32_t);
 static uint32_t observed_run(spectrum*,uint32_t);
 static void observed_end(spectrum*);
 static enum spectrum_error observed_load(spectrum*,const spectrum_source*);
+#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
+static void observed_paced(spectrum*,uint32_t,uint32_t,uint32_t,bool);
+#define SPECTRUM_HIL_PACED observed_paced
+#endif
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
 static void observed_video(const spectrum*,uint8_t*,uint8_t*);
 #define spectrum_video8 observed_video
@@ -22,6 +26,7 @@ static void observed_video(const spectrum*,uint8_t*,uint8_t*);
 #undef spectrum_sound_end
 #undef spectrum_load_z80
 #undef spectrum_video8
+#undef SPECTRUM_HIL_PACED
 #ifndef S3_GAME_FRAMES
 #define S3_GAME_FRAMES 600u
 #endif
@@ -38,10 +43,46 @@ static void (*original_recover)(void*);
 #endif
 static uint32_t clock_us(void){return *(volatile uint32_t*)(uintptr_t)0x40054028;}
 static void report(const char* line){original->call(MK61_SERVICE_DEBUG_WRITE,strlen(line),0,0,(void*)line);}
+#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
+static struct { uint32_t target,now;int32_t ready;uint16_t frame,phase; } frame_trace[64];
+static unsigned frame_trace_count;
+static bool first_slice_pending;
+static uint32_t paced_count,paced_previous,paced_min=UINT32_MAX,paced_max,paced_late,paced_max_late,paced_resyncs;
+static void observed_paced(spectrum* s,uint32_t target,uint32_t now,uint32_t ready,bool resynced) {
+    first_slice_pending=true;
+    if(paced_count++) {
+        const uint32_t delta=now-paced_previous;
+        if(delta<paced_min)paced_min=delta;
+        if(delta>paced_max)paced_max=delta;
+    }
+    paced_previous=now;const uint32_t late=now-target;
+    if(late>paced_max_late)paced_max_late=late;
+    if(late>1000)++paced_late;
+    if(resynced)++paced_resyncs;
+    if(frame_trace_count<sizeof(frame_trace)/sizeof(frame_trace[0])) {
+        const unsigned i=frame_trace_count++;
+        frame_trace[i].target=target;frame_trace[i].now=now;frame_trace[i].ready=(int32_t)(ready-target);
+        frame_trace[i].frame=(uint16_t)s->frames;frame_trace[i].phase=(uint16_t)s->frame_tstates;
+    }
+}
+static void frame_report(void) {
+    char line[144];
+    mk61_app_snprintf(original,line,sizeof(line),"SP3 PACING frames=%lu min_us=%lu max_us=%lu late_1ms=%lu max_late_us=%lu resyncs=%lu\n",
+        (unsigned long)paced_count,(unsigned long)(paced_count>1?paced_min:0),(unsigned long)paced_max,
+        (unsigned long)paced_late,(unsigned long)paced_max_late,(unsigned long)paced_resyncs);report(line);
+    for(unsigned i=0;i<frame_trace_count;++i) {
+        mk61_app_snprintf(original,line,sizeof(line),"SP3 DEADLINE frame=%u target_us=%lu ready_us=%ld late_us=%lu phase=%u\n",
+            frame_trace[i].frame,(unsigned long)(frame_trace[i].target-frame_trace[0].target),(long)frame_trace[i].ready,
+            (unsigned long)(frame_trace[i].now-frame_trace[i].target),frame_trace[i].phase);report(line);
+    }
+}
+#endif
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
 enum { PROF_CPU,PROF_SERVICE,PROF_KEYS,PROF_BUFFER,PROF_COLOR,PROF_PRESENT,PROF_PALETTE,PROF_MICROS,PROF_VIDEO,PROF_OTHER,PROF_COUNT };
 static struct { uint32_t calls,us,max; } profile[PROF_COUNT];
 static uint32_t cpu_end,cpu_gap,cpu_first,cpu_cycles;
+static bool inside_cpu;
+static uint32_t cpu_service_calls,cpu_service_us;
 #if defined(S3_PRODUCER_TRACE) && S3_PRODUCER_TRACE
 static struct { uint16_t at,us,produced,consumed; } trace[192];
 static unsigned trace_count;
@@ -56,6 +97,7 @@ static void profile_add(unsigned slot,uint32_t begin) {
 static void profiled_service(void) {
     const uint32_t begin=clock_us();original_api->service();
     if(mode && !measured)profile_add(PROF_SERVICE,begin);
+    if(inside_cpu){++cpu_service_calls;cpu_service_us+=clock_us()-begin;}
 }
 static void observed_video(const spectrum* s,uint8_t* bitmap,uint8_t* tiles) {
     const uint32_t begin=clock_us();spectrum_video8(s,bitmap,tiles);
@@ -71,6 +113,8 @@ static void profile_report(void) {
         mk61_app_snprintf(original,line,sizeof(line),"SP3 PROF %s calls=%lu us=%lu max_us=%lu\n",names[i],
             (unsigned long)profile[i].calls,(unsigned long)profile[i].us,(unsigned long)profile[i].max);report(line);
     }
+    mk61_app_snprintf(original,line,sizeof(line),"SP3 CPU_SERVICE calls=%lu us=%lu\n",
+        (unsigned long)cpu_service_calls,(unsigned long)cpu_service_us);report(line);
 #if defined(S3_PRODUCER_TRACE) && S3_PRODUCER_TRACE
     for(unsigned i=0;i<trace_count;++i) {
         mk61_app_snprintf(original,line,sizeof(line),"SP3 TRACE at_us=%u cpu_us=%u produced=%u consumed=%u\n",
@@ -94,6 +138,9 @@ static void measurement(void) {
         (unsigned long)late_frames,(unsigned long)max_lag_us,strict_fault);report(line);
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
     profile_report();
+#endif
+#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
+    frame_report();
 #endif
 }
 #if !defined(S3_FORCE_LOCAL) || !S3_FORCE_LOCAL
@@ -149,7 +196,13 @@ static uint32_t observed_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void*
         report(mode==2?"SP3 MODE=M3\n":"SP3 MODE=LOCAL\n");
     }
     if(op==MK61_SERVICE_KEYBOARD && a==MK61_SERVICE_KEY_BITMAP) {
-        if(mode && (uint32_t)(clock_us()-run_epoch)>35000000u)strict_fault=true;
+#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
+        // Exercise the actual production loop: input scanning must not take
+        // the first CPU/audio slice immediately after a pacing boundary.
+        if(first_slice_pending)strict_fault=true;
+#endif
+        const uint32_t deadline=S3_GAME_FRAMES>1200u?S3_GAME_FRAMES*22000u+5000000u:35000000u;
+        if(mode && (uint32_t)(clock_us()-run_epoch)>deadline)strict_fault=true;
         if(strict_fault && !fault_reported){report("SP3 FAULT remote_or_deadline\n");fault_reported=true;}
         if(strict_fault || (mode && machine.frames-start_frame>=S3_GAME_FRAMES))((uint8_t*)payload)[27/8]|=1u<<(27&7);
     }
@@ -166,6 +219,9 @@ static const mk61_app_services* observed_services(const mk61_app_api* api,uint32
     return &proxy;
 }
 static uint32_t observed_run(spectrum* s,uint32_t cycles) {
+#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
+    first_slice_pending=false;
+#endif
     if(s->frames!=seen) {
         seen=s->frames;const uint32_t now=clock_us();
         if(!first_set){first_set=true;first_us=now;first_cycles=(uint32_t)s->cpu.cyc;first_frame=s->frames;}
@@ -190,7 +246,7 @@ static uint32_t observed_run(spectrum* s,uint32_t cycles) {
 #endif
     }
     else if(begin-cpu_end>cpu_gap)cpu_gap=begin-cpu_end;
-    const uint32_t result=spectrum_run(s,cycles);
+    inside_cpu=true;const uint32_t result=spectrum_run(s,cycles);inside_cpu=false;
     cpu_cycles+=result;profile_add(PROF_CPU,begin);cpu_end=clock_us();
 #if defined(S3_PRODUCER_TRACE) && S3_PRODUCER_TRACE
     if(trace_count<sizeof(trace)/sizeof(trace[0]) && begin-cpu_first<=UINT16_MAX) {

@@ -329,7 +329,12 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     const auto descriptor=[&](unsigned index) {
         const auto next=lcd::Stream::prepare(rect,index,index&1?chained_scanlines:scanlines,
             [&](unsigned row,u16* out) {
-                if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+                if(color) {
+                    lcd::color_scanline(color_frame_,rect,row,out,color_palette_,[] {io_worker::service();});
+                    // Pixel expansion is CPU work too: keep M3 transport
+                    // serviced between rows, not only between 3-row strips.
+                    io_worker::service();
+                }
                 else lcd::scanline(previous_,rect,row,(u8*)out);
             });
         // Count first, trigger address last; a DMA race can only cause a
@@ -497,7 +502,7 @@ void Panel::transfer() {
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);
     last_rectangles_.store(windows,std::memory_order_relaxed);
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
-    frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_)),std::memory_order_relaxed);
+    frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_),[] {io_worker::service();}),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 
@@ -563,7 +568,7 @@ void Panel::transfer_color() {
     last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);
     last_rectangles_.store(update_.count+border_windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
-    frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes),std::memory_order_relaxed);
+    frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();}),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 

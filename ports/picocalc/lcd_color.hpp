@@ -40,8 +40,33 @@ inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigne
     }
     return f.palette[index];
 }
-inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,const uint16_t* palette64=nullptr) {
-    for(unsigned x=0;x<r.width;++x) out[x]=color_pixel(f,r.x-f.x+x,r.y-f.y+row,palette64);
+inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,
+                           const uint16_t* palette64=nullptr,void (*progress)()=nullptr) {
+    const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
+    if(format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8) {
+        const unsigned stride=f.width/8,y=r.y-f.y+row;
+        const uint8_t* pixels=f.pixels+y*stride;
+        const uint8_t* tiles=f.tiles+(y/8)*stride*(format==MK61_COLOR_TILE8?2:1);
+        // Load the bitmap/attributes and select two colors once per tile,
+        // rather than repeating view arithmetic for every output pixel.
+        unsigned x=r.x-f.x,left=r.width;
+        while(left) {
+            const unsigned tile=x/8,bit=x&7,span=left<8-bit?left:8-bit;
+            const uint8_t bits=pixels[tile];uint16_t paper,ink;
+            if(format==MK61_COLOR_TILE8) {
+                paper=palette64?palette64[tiles[2*tile]]:0;
+                ink=palette64?palette64[tiles[2*tile+1]]:0;
+            } else {const uint8_t pair=tiles[tile];paper=f.palette[pair>>4];ink=f.palette[pair&15];}
+            for(unsigned i=bit;i<bit+span;++i)*out++=(bits&(0x80U>>i))?ink:paper;
+            x+=span;left-=span;
+            if(progress && !(x&63))progress();
+        }
+        return;
+    }
+    for(unsigned x=0;x<r.width;++x) {
+        out[x]=color_pixel(f,r.x-f.x+x,r.y-f.y+row,palette64);
+        if(progress && !((x+1)&63))progress();
+    }
 }
 inline void append_color_rect(Update& u,const Rect& next) {
     // Search all live windows: two distant sprites can each continue down
@@ -91,13 +116,27 @@ inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_
             unsigned first=next.width,last=0;
             const unsigned rows=next.height-y<8?next.height-y:8;
             const bool tiled=format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8;
-            uint8_t changed[WIDTH/8]{};
+            alignas(uint32_t) uint8_t changed[WIDTH/8]{};
             if(tiled) {
                 // Walk the bitmap in row order and accumulate one byte per
                 // tile. No per-tile memcmp, division or strided inner walk.
                 const unsigned stride=next.width/8;
                 const auto* before=old.pixels+y*stride;const auto* after=next.pixels+y*stride;
-                for(unsigned row=0;row<rows;++row) {
+                if(!((uintptr_t(before)|uintptr_t(after)|stride)&3U)) {
+                    // Four tile columns per load on aligned bitmaps. Builtin
+                    // copies preserve byte-buffer aliasing; unaligned APP
+                    // buffers retain the byte path below on Cortex-M0+.
+                    for(unsigned row=0;row<rows;++row) {
+                        for(unsigned column=0;column<stride;column+=4) {
+                            uint32_t a,b,c;
+                            __builtin_memcpy(&a,__builtin_assume_aligned(before+column,4),4);
+                            __builtin_memcpy(&b,__builtin_assume_aligned(after+column,4),4);
+                            __builtin_memcpy(&c,changed+column,4);c|=a^b;
+                            __builtin_memcpy(changed+column,&c,4);
+                        }
+                        before+=stride;after+=stride;
+                    }
+                } else for(unsigned row=0;row<rows;++row) {
                     for(unsigned column=0;column<stride;++column)changed[column]|=before[column]^after[column];
                     before+=stride;after+=stride;
                 }

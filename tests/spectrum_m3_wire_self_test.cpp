@@ -26,7 +26,26 @@ struct Server {
     }
 };
 int main() {
-    Server server;Wire w;assert(w.begin(STM3_HELLO,nullptr,0,0));server.exchange(w);
+    { std::array<uint8_t,515> data{};uint32_t random=1234567;
+      for(auto& byte:data){random^=random<<13;random^=random>>17;random^=random<<5;byte=uint8_t(random);}
+      assert(Wire::crc(reinterpret_cast<const uint8_t*>("123456789"),9)==0xcbf43926u);
+      for(unsigned offset=0;offset<4;++offset)for(unsigned n=0;n<=512;++n) {
+          uint32_t reference=~0u;
+          for(unsigned i=0;i<n;++i) {
+              reference^=data[offset+i];
+              for(unsigned bit=0;bit<8;++bit)reference=(reference>>1)^((reference&1)?0xedb88320u:0u);
+          }
+          assert(Wire::crc(data.data()+offset,n)==~reference);
+          assert(stm3_crc32(data.data()+offset,n)==~reference);
+      } }
+    { Server wrap;Wire w;w.sequence=0xfffe;
+      for(unsigned expected:{0xffffu,0u,1u}) {
+          assert(w.begin(STM3_HELLO,nullptr,0,0) && w.sequence==expected);
+          wrap.exchange(w);assert(!w.result && w.reply_bytes==36);
+      } }
+    Server server;Wire w;std::array<uint32_t,256> fast_crc;
+    std::memcpy(fast_crc.data(),Wire::crc_table(),sizeof(fast_crc));w.crc_values=fast_crc.data();
+    assert(w.begin(STM3_HELLO,nullptr,0,0));server.exchange(w);
     assert(!w.result && w.reply_bytes==36 && Wire::get32(w.reply())==STM3_ABI);
     assert(Wire::get32(w.reply()+32)&STM3_TRANSPORT_START_RESULT_INPUT);
     assert(!w.begin(0,nullptr,0,0) && !w.begin(128,nullptr,0,0));

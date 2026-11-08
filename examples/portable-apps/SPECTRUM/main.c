@@ -360,17 +360,21 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #endif
     }
     while((int32_t)(now-target)<0) {
-        // A full keyboard bitmap is relatively costly. The outer CPU loop
-        // will scan it just after this boundary if fewer than 512 us remain.
-        const int key=target-now>512?poll_guest(blocked,keyboard_deadline,now):-1;
+        // A native keyboard/service turn can take almost 2 ms. Do not
+        // begin one inside that guard, and refresh time after keyboard I/O
+        // before deciding whether another service turn still fits.
+        const int key=target-now>2000?poll_guest(blocked,keyboard_deadline,now):-1;
         if(escape(key) || key==0x90) {
             if(key==0x90) started=false;
             return false;
         }
         // The resident millisecond delay already busy-pumps services.
         // Pump directly so it cannot carry us to the next millisecond.
-        if(target-now>512) mk61_api->service();
         now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+        if((int32_t)(target-now)>2000) {
+            mk61_api->service();
+            now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+        }
     }
 #ifdef SPECTRUM_HIL_PACED
     SPECTRUM_HIL_PACED(&machine,target,now,ready,resynced);
@@ -388,6 +392,19 @@ static void emulate(void) {
     }
     if(!spectrum_disk_cache_begin(&machine,scratch.pixels+7680)) {
         message("PSRAM I/O error\n\nPress any key");return;
+    }
+    // Resolve the first instruction/stack pages before starting real-time
+    // audio. These ordinary memory reads leave guest time and CPU registers
+    // untouched, and avoid a cold PSRAM page load in the first sound block.
+    if(machine.memory) {
+        (void)machine.cpu.read_byte(&machine,machine.cpu.pc);
+        (void)machine.cpu.read_byte(&machine,(uint16_t)(machine.cpu.pc+1));
+        (void)machine.cpu.read_byte(&machine,machine.cpu.sp);
+        (void)machine.cpu.read_byte(&machine,(uint16_t)(machine.cpu.sp-2));
+        if(machine.memory->fault) {
+            started=false;(void)spectrum_disk_cache_end(&machine);
+            message("PSRAM I/O error\n\nPress any key");return;
+        }
     }
     spectrum_display_fast(services);
     mk61_service_color_frame frame={0};
@@ -419,8 +436,12 @@ static void emulate(void) {
     // clocks start here, after that wait, rather than during its callbacks.
     spectrum_sound_clock(&machine,true);
     const char* error=NULL;
+    bool after_pace=false;
     for(;;) {
-        const int c=poll_guest(blocked,&keyboard_deadline,services->call(MK61_SERVICE_MICROS,0,0,0,NULL));
+        // The pacing guard already polled input. Produce the next CPU/audio
+        // slice before starting another potentially millisecond-long scan.
+        const int c=after_pace?-1:poll_guest(blocked,&keyboard_deadline,services->call(MK61_SERVICE_MICROS,0,0,0,NULL));
+        after_pace=false;
         if(escape(c) || c==0x90) {
             if(c==0x90) started=false;
             break;
@@ -444,6 +465,7 @@ static void emulate(void) {
         }
 paced:
         if(!pace_frame(blocked,&keyboard_deadline,&deadline)) goto done;
+        after_pace=true;
     }
     goto done;
 memory_error:
