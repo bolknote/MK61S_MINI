@@ -166,6 +166,8 @@ bool parse_code(const char *source, u8 out[PROGRAM_SIZE], unsigned &count) {
 }
 struct UI {
   explicit UI(const Host &h) : host(h), store(disk()), agent(s, store, model) {
+    auto memory_plan=model.execution();memory_plan.tile_rows=24;
+    model.execution(memory_plan);
     agent.clock(
         [](void *p) { return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS); },
         this);
@@ -422,7 +424,7 @@ struct UI {
   void configure_execution() {
     ComputeExecution e{};
     e.context = this;e.kernel = linear_kernel;e.filter_head = filter_head;
-    e.tile_rows = benchmarking && m3_core ? 64 : 8;
+    e.tile_rows = benchmarking && m3_core ? 64 : 24;
     e.prefetch = double_buffer;
     if (benchmarking) e.micros = [](void *p) {
       return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS);
@@ -2186,7 +2188,7 @@ unsigned UI::bench() {
 }
 unsigned UI::perf(const char *directory,const PerfConfig &config) {
   // Reserve the larger tiles only for this diagnostic, before workspace bind.
-  auto memory_plan=model.execution();memory_plan.tile_rows=config.cores==3?64:8;
+  auto memory_plan=model.execution();memory_plan.tile_rows=config.cores==3?64:24;
   model.execution(memory_plan);
   if(!ensure_model()) return 3;
   cancel=false;cancel_observed=cancel_return_us=0;
@@ -2481,7 +2483,7 @@ unsigned UI::perf(const char *directory,const PerfConfig &config) {
       config.kernel,config.arithmetic,config.cores,config.freeze,config.filter,config.mhz,config.prefill,
       config.decode,config.repeat,config.stress_ms,config.control,config.constrained);
   if(config.version==2) append(",\"prefetch\":%u",config.prefetch);
-  append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:8);
+  append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:24);
   append(
       "\"actual_hz\":%lu,\"restored_hz\":%lu,\"clocks_restored\":%s,\"matching_tokens\":%s,"
       "\"matching_checksums\":%s,\"matching_kv\":%s,\"valid_tool_prefix\":%s,\"model_status\":%u,\"results\":[",

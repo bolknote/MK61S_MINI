@@ -24,6 +24,7 @@ struct Runtime {
   bool pending = false, busy = false, refuse = false;
   int cancel_after = -1, fail_finish_after = -1;
   unsigned began = 0, finished = 0, overlapped = 0;
+  unsigned row_limit=8;
   void owner() const { assert(std::this_thread::get_id() == foreground); }
   static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
@@ -75,8 +76,9 @@ struct Runtime {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(r.pending);
     r.dma.join();r.pending = false;++r.finished;return !r.job.fail;
   }
-  explicit Runtime(const std::vector<std::uint8_t> &p) : package(p) {
+  explicit Runtime(const std::vector<std::uint8_t> &p,unsigned rows=8) : package(p),row_limit(rows) {
     assert(model.open({this, unsigned(p.size()), read, nullptr, begin, finish}) == ModelStatus::OK);
+    ComputeExecution plan{};plan.tile_rows=row_limit;model.execution(plan);
     workspace.resize((model.workspace_bytes() + 7) / 8 + 8);
     std::fill(workspace.end() - 8, workspace.end(), UINT64_C(0xb00f61a1b00f61a1));
     cache.resize(model.cache_bytes());
@@ -86,7 +88,7 @@ struct Runtime {
   }
   void configure(bool prefetch, bool filter = false) {
     ComputeExecution e{};e.context = this;e.kernel = LinearKernel::SRAM;
-    e.prefetch = prefetch;e.filter_head = filter;
+    e.prefetch = prefetch;e.filter_head = filter;e.tile_rows=row_limit;
     e.busy = [](void *p, bool active) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       assert(r.busy != active && !r.pending && r.began == r.finished);
@@ -125,7 +127,8 @@ bool sparse(void *p, std::uint16_t id) {
 int main(int argc, char **argv) {
   assert(argc == 2);std::ifstream stream(argv[1], std::ios::binary);
   const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(stream)), {});
-  Runtime control(bytes), candidate(bytes);control.configure(false);
+  Runtime control(bytes), candidate(bytes,24);control.configure(false);
+  assert(candidate.model.workspace_bytes()<=control.model.workspace_bytes()+16*sizeof(float));
   std::uint16_t tokens[64];unsigned count = 0;
   assert(control.model.encode("Задача: вычисли синус и проверь результат.", tokens, 64, count) == ModelStatus::OK && count > 2);
   const auto vocab = control.model.config().vocab;
@@ -145,6 +148,7 @@ int main(int argc, char **argv) {
     }
   };
   for (unsigned mode = 0; mode < 4; ++mode) compare(Arithmetic(mode), 2, true);
+  assert(candidate.model.compute_metrics().worker_jobs < control.model.compute_metrics().worker_jobs);
   compare(Arithmetic::LUT_FLOAT32, 64, false);
   assert(candidate.began > 0 && candidate.overlapped > 0);
   // Sparse/non-aligned spans and a refused backend retain the serial path.

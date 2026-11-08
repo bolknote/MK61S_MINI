@@ -193,7 +193,7 @@ std::size_t Model::workspace_bytes() const {
   const unsigned needed =
       4 * floats + raw + columns + 8 * (columns / 32) + 16 * columns +
       2 * (execution_.tile_rows==64?64U:8U) * (columns * 9 / 16) +
-      (execution_.tile_rows==64?64U:8U) * sizeof(float) + 16;
+      (execution_.tile_rows==64?64U:execution_.tile_rows==24?24U:8U) * sizeof(float) + 16;
   return std::max(needed, 6U * MAX_TEXT);
 }
 ModelStatus Model::bind(void *workspace, std::size_t n, Memory cache) {
@@ -266,8 +266,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   auto *input_sums = activation_scales + columns / 32;
   auto *lookup = input_sums + columns / 32;
   auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * columns);
-  const unsigned tile_rows = execution_.tile_rows==64?64U:8U;
-  const unsigned tile_bytes = tile_rows * columns * 9 / 16;
+  const unsigned tile_rows = execution_.tile_rows==64?64U:execution_.tile_rows==24?24U:8U;
+  const unsigned tile_bytes = (tile_rows==64?64U:8U) * columns * 9 / 16;
   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
   ModelStatus status = ModelStatus::OK;
   auto alive = [&]() {
@@ -364,7 +364,11 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     float maximum = -FLT_MAX;
     best = 0;
     if (execution_.kernel != LinearKernel::REFERENCE) {
-      const unsigned TILE = tile_rows;
+      // Narrow matrices fit more rows in the same two weight buffers.
+      // Keep sparse head tiles bounded to16 disjoint read spans.
+      const unsigned capacity=std::min<unsigned>(tile_rows,tile_bytes/(t.cols*9/16));
+      const unsigned TILE=head && execution_.filter_head && allowed && !logits?
+          std::min(8U,capacity):capacity;
       const unsigned bytes = t.cols * t.bits / 8, scales = t.cols / 16;
       auto kernel = execution_.kernel == LinearKernel::SRAM
                         ? linear_batch_sram : linear_batch_flash;
