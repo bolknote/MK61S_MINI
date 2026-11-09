@@ -1,6 +1,7 @@
 /* Pico H only. Stage the complete physical file before taking M3 offline. */
 #include "mk61_app.h"
 #include "pico_uart1.h"
+#include "stm3_client.h"
 #include "wire.h"
 #include <string.h>
 #ifndef REG
@@ -139,7 +140,7 @@ static int install(void) {
   if (!stm3_pico_uart1_begin(&uart, micros, 0, 48000000, 2250000))
     return -30;
   baud(2250000);
-  int error = request(1, 1, 0, 0, 100000);
+  int error = request(S3_WIRE_VERSION, 1, 0, 0, 100000);
   if (!error) {
     if (reply_bytes != 36 || m3b_get(reply) != 1 ||
         m3b_get(reply + 4) != 0x70301 || m3b_get(reply + 16) != 0 ||
@@ -150,7 +151,7 @@ static int install(void) {
     uint8_t enter[8];
     m3b_put(enter, M3B_ENTER_MAGIC);
     m3b_put(enter + 4, M3B_TARGET);
-    error = request(1, M3B_ENTER, enter, 8, 100000);
+    error = request(S3_WIRE_VERSION, M3B_ENTER, enter, 8, 100000);
     if (error > 0)
       goto done;
   }

@@ -8,6 +8,7 @@ namespace picocalc::m3 {
  * outstanding. TX stays pinned until its owner releases DMA; RX decodes in
  * place. The UART adapter owns all clocks, registers and DMA channels. */
 struct Wire {
+    static constexpr uint8_t VERSION=2;
     enum Error { TIMEOUT=-1,FRAME=-2,SIZE=-3,IO=-4 };
     uint8_t tx[272]{},frame[272]{};
     uint16_t sequence=0;
@@ -33,6 +34,9 @@ struct Wire {
         }();
         return table.data();
     }
+#if defined(PICO_ON_DEVICE)
+    __attribute__((noinline,section(".time_critical.m3_wire_crc")))
+#endif
     static uint32_t crc_with_table(const uint8_t* p,unsigned n,const uint32_t* table) {
         uint32_t v=~0u;
         while(n--)v=(v>>8)^table[(v^*p++)&255u];
@@ -50,11 +54,15 @@ struct Wire {
         }
         out[code_at]=code;return at;
     }
-    static unsigned decode(uint8_t* bytes,unsigned n) {
+#if defined(PICO_ON_DEVICE)
+    __attribute__((noinline,section(".time_critical.m3_wire_decode")))
+#endif
+    static unsigned decode(uint8_t* bytes,unsigned n,bool nonzero=false) {
         unsigned at=0,i=0;
         while(i<n) {
             const unsigned code=bytes[i++];if(!code || code-1>n-i)return 0;
-            for(unsigned j=1;j<code;++j){if(!bytes[i])return 0;bytes[at++]=bytes[i++];}
+            if(nonzero){std::memmove(bytes+at,bytes+i,code-1);at+=code-1;i+=code-1;}
+            else for(unsigned j=1;j<code;++j){if(!bytes[i])return 0;bytes[at++]=bytes[i++];}
             if(code!=255 && i<n)bytes[at++]=0;
         }
         return at;
@@ -66,7 +74,7 @@ struct Wire {
         rx_bytes=reply_bytes=0;result=0;complete=overflow=false;
         const unsigned payload=n+(prefix?4:0);
         if(n)std::memmove(frame+8+(prefix?4:0),input,n);
-        frame[0]=1;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
+        frame[0]=VERSION;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
         frame[4]=uint8_t(payload);frame[5]=uint8_t(payload>>8);frame[6]=frame[7]=0;
         if(prefix)put32(frame+8,offset);
         put32(frame+8+payload,checksum(frame,8+payload));
@@ -82,7 +90,7 @@ struct Wire {
         if(first_n)std::memmove(frame+8,first,first_n);
         if(second_n)std::memmove(frame+8+first_n,second,second_n);
         const unsigned payload=first_n+second_n;
-        frame[0]=1;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
+        frame[0]=VERSION;frame[1]=op;frame[2]=uint8_t(sequence);frame[3]=uint8_t(sequence>>8);
         frame[4]=uint8_t(payload);frame[5]=uint8_t(payload>>8);frame[6]=frame[7]=0;
         put32(frame+8+payload,checksum(frame,8+payload));
         tx[0]=0;const unsigned bytes=encode(frame,12+payload,tx+1);
@@ -102,15 +110,28 @@ struct Wire {
         }
         if(!rx_bytes && !overflow)return;
         if(overflow){fail(FRAME);return;}
-        const unsigned n=decode(frame,rx_bytes);
+        // feed stores only nonzero COBS bytes; copy entire runs using the
+        // resident memory routine instead of checking each byte again.
+        const unsigned n=decode(frame,rx_bytes,true);
         if(n<16){fail(FRAME);return;}
         const unsigned payload=unsigned(frame[4])|(unsigned(frame[5])<<8);
-        if(frame[0]!=1 || frame[1]!=(command|128u) ||
+        if(frame[0]!=VERSION || frame[1]!=(command|128u) ||
            (unsigned(frame[2])|(unsigned(frame[3])<<8))!=sequence || frame[6] || frame[7] ||
            payload<4 || payload>256 || n!=12+payload || get32(frame+n-4)!=checksum(frame,n-4)) {fail(FRAME);return;}
         const uint32_t status=get32(frame+8);
         if(status>9){fail(FRAME);return;}
         result=int(status);reply_bytes=status?0:payload-4;pending=false;complete=true;
+    }
+    void feed(const uint8_t* bytes,unsigned count) {
+        while(count && pending) {
+            const auto* zero=static_cast<const uint8_t*>(std::memchr(bytes,0,count));
+            const unsigned n=zero?unsigned(zero-bytes):count;
+            const unsigned copy=n<sizeof(frame)-rx_bytes?n:unsigned(sizeof(frame))-rx_bytes;
+            if(copy)std::memcpy(frame+rx_bytes,bytes,copy);
+            rx_bytes+=copy;if(copy!=n)overflow=true;
+            bytes+=n;count-=n;
+            if(zero){feed(0);++bytes;--count;}
+        }
     }
     void tick(uint32_t now) {if(pending && uint32_t(now-started)>=timeout)fail(TIMEOUT);}
     const uint8_t* reply() const {return frame+12;}

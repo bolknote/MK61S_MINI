@@ -26,6 +26,22 @@ struct Server {
     }
 };
 int main() {
+    { // DMA spans and byte-by-byte reception must accept/reject identically.
+      for(unsigned n=0;n<=252;++n)for(unsigned chunk:{1u,2u,7u,31u,272u}) {
+        Wire bytewise,bulk;assert(bytewise.begin(STM3_HELLO,nullptr,0,0));assert(bulk.begin(STM3_HELLO,nullptr,0,0));
+        uint8_t raw[268]{},encoded[272];raw[0]=Wire::VERSION;raw[1]=STM3_HELLO|128;raw[2]=1;
+        const unsigned payload=4+n;raw[4]=uint8_t(payload);raw[5]=uint8_t(payload>>8);
+        for(unsigned i=0;i<n;++i)raw[12+i]=uint8_t(i*73+n);
+        Wire::put32(raw+12+n,Wire::crc(raw,12+n));
+        const unsigned bytes=Wire::encode(raw,16+n,encoded);encoded[bytes]=0;
+        for(unsigned i=0;i<=bytes;++i)bytewise.feed(encoded[i]);
+        for(unsigned at=0;at<=bytes;at+=chunk)bulk.feed(encoded+at,bytes+1-at<chunk?bytes+1-at:chunk);
+        assert(bulk.complete && !bulk.pending && bulk.result==bytewise.result && !bulk.result && bulk.reply_bytes==n);
+        assert(!std::memcmp(bulk.reply(),bytewise.reply(),n));
+      }
+      Wire w;assert(w.begin(STM3_HELLO,nullptr,0,0));uint8_t overflow[301];std::memset(overflow,1,sizeof(overflow));overflow[300]=0;
+      w.feed(overflow,sizeof(overflow));assert(w.complete && w.result==Wire::FRAME && !w.reply_bytes);
+    }
     { std::array<uint8_t,515> data{};uint32_t random=1234567;
       for(auto& byte:data){random^=random<<13;random^=random>>17;random^=random<<5;byte=uint8_t(random);}
       assert(Wire::crc(reinterpret_cast<const uint8_t*>("123456789"),9)==0xcbf43926u);
@@ -97,13 +113,13 @@ int main() {
     assert(w.replay(100));server.exchange(w);assert(!w.result);
     for(unsigned noise=0;noise<6;++noise) {
         assert(w.begin(STM3_HELLO,nullptr,0,0));
-        uint8_t raw[52]{};raw[0]=1;raw[1]=STM3_HELLO|128;raw[2]=uint8_t(w.sequence);raw[3]=uint8_t(w.sequence>>8);raw[4]=40;
+        uint8_t raw[52]{};raw[0]=Wire::VERSION;raw[1]=STM3_HELLO|128;raw[2]=uint8_t(w.sequence);raw[3]=uint8_t(w.sequence>>8);raw[4]=40;
         Wire::put32(raw+48,Wire::crc(raw,48));
         if(noise==0)raw[2]^=1;else if(noise==1)raw[1]^=1;else if(noise==2)raw[6]=1;
-        else if(noise==3)raw[4]=0xff;else if(noise==4)raw[0]=2;else raw[51]^=1;
+        else if(noise==3)raw[4]=0xff;else if(noise==4)raw[0]=1;else raw[51]^=1;
         if(noise<5)Wire::put32(raw+48,Wire::crc(raw,48));
         uint8_t encoded[64];const unsigned n=Wire::encode(raw,sizeof(raw),encoded);
-        for(unsigned i=0;i<n;++i)w.feed(encoded[i]);w.feed(0);assert(w.complete && w.result==Wire::FRAME && !w.reply_bytes);
+        w.feed(encoded,n);w.feed(0);assert(w.complete && w.result==Wire::FRAME && !w.reply_bytes);
     }
     assert(w.begin(STM3_HELLO,nullptr,0,0));for(unsigned i=0;i<300;++i)w.feed(1);w.feed(0);assert(w.result==Wire::FRAME);
     std::puts("Async M3 wire: real compact server, full512B IO, maximum READs, replay at-most-once, CRC/sequence/bounds errors and timer wrap PASS");

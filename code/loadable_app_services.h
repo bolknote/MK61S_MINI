@@ -165,7 +165,10 @@ enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS
   /* Same request as PSG_OPEN, but requires the remote synth. Unavailable
    * hardware returns0; a failed stream closes without local fallback or a
    * CPU clock change. Older hosts reject this optional operation. */
-  MK61_AUDIO_PSG_ONLY_OPEN
+  MK61_AUDIO_PSG_ONLY_OPEN,
+  /* Optional v2 request: c=sizeof(mk61_service_audio_psg_config).
+   * Older residents reject it, allowing a correctly configured local synth. */
+  MK61_AUDIO_PSG_CONFIG_OPEN, MK61_AUDIO_PSG_CONFIG_ONLY_OPEN
 };
 typedef struct mk61_service_audio_synth {
   uint32_t (*sample)(void*);
@@ -192,6 +195,16 @@ typedef struct mk61_service_audio_psg {
    * context is local.context. Must not call resident services. */
   void (*recover)(void*);
 } mk61_service_audio_psg;
+enum mk61_psg_layout { MK61_PSG_MONO, MK61_PSG_ABC, MK61_PSG_ACB };
+enum mk61_psg_chip { MK61_PSG_AY, MK61_PSG_YM };
+typedef struct mk61_service_audio_psg_config {
+  mk61_service_audio_psg psg;
+  uint32_t layout,chip;
+  /* Six consumer-owned signed words, live until CLOSE: chip0 L/R rate
+   * converters, chip1 L/R, right DC input/output. Left DC uses psg's fields.
+   * Local and remote consumers share/export these exact filter states. */
+  int32_t* stereo;
+} mk61_service_audio_psg_config;
 typedef struct mk61_service_audio {
   const int16_t* samples;
   uint32_t count,rate,volume,queued,underruns;

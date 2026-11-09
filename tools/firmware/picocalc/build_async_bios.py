@@ -20,6 +20,7 @@ from bios_pmu_async import stage_async_pmu
 from bios_stm3_input import stage_stm3_input
 from bios_stm3_reply import stage_stm3_reply
 from bios_stm3_crc import stage_stm3_crc
+from bios_stm3_result import stage_stm3_result
 from elf32 import ELF
 
 
@@ -74,6 +75,7 @@ def main():
     delta.update(stage_stm3_input(source))
     delta.update(stage_stm3_reply(source))
     delta.update(stage_stm3_crc(source))
+    delta.update(stage_stm3_result(source))
     sources = {str(p.relative_to(source)): sha(p) for p in source.rglob("*")
                if p.is_file() and not p.is_relative_to(source / "Drivers") and not p.is_relative_to(source / "build")}
     output.mkdir(parents=True, exist_ok=True)

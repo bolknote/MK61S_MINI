@@ -1,0 +1,635 @@
+{
+  "schema": 1,
+  "date": "2026-11-09",
+  "test": "Cosmic Payback strict M3 stereo on stock Pico/M3 clocks",
+  "status": "FOUR_SHORT_PASS_LONG_FAIL",
+  "physical_hardware": true,
+  "uid": "E6657CD423721C35",
+  "clocks": {
+    "pico_hz": 125000000,
+    "m3_hz": 72000000,
+    "pico_peripheral_hz": 48000000,
+    "overclock": false
+  },
+  "audio": {
+    "sample_rate_hz": 25000,
+    "bits_per_channel": 8,
+    "channels": 2,
+    "block_frames": 118,
+    "block_budget_us": 4720,
+    "wire_version": 2,
+    "module_abi": 1,
+    "result_capability": 32,
+    "boot_capability": 16,
+    "compression": "lossless repeated stereo pairs with raw PWM2 fallback",
+    "analog_separation_verified": false
+  },
+  "pico": {
+    "build": "AE2AF595",
+    "crc": "DE0F4F49",
+    "source_sha256": "7c90e92d8e5eaa59c07003f5b950a5e097e4ee37e036c771b9615e13964cb121",
+    "uf2_sha256": "9c91a21e859290f772ccb62ad1680eb6f517e821ecaf099e84e210430262437d",
+    "image_bytes": 1790272,
+    "heap_capacity_bytes": 109008,
+    "minimum_heap_bytes": 108544
+  },
+  "m3": {
+    "m3u": {
+      "bytes": 29700,
+      "sha256": "b110eb5df355258ae8c8b415281a876a754218206e0aa38f2e950dd5d3baf8a4"
+    },
+    "bios_body": {
+      "bytes": 29668,
+      "sha256": "ff191b0c31bb755989731a8346f4882467b90742b2cf4f47ad68bf9acad6cafe"
+    },
+    "boot_unchanged": {
+      "bytes": 3248,
+      "sha256": "5440fa62bfd40fd2ea7e66205f4692510e3a92ec7ca8c07ed4bb54f6d179b175"
+    },
+    "global_ram_bytes": 10472,
+    "stack_reserved_bytes": 4096,
+    "arm_stack_high_water_bytes": 476,
+    "module_sha256": "0eb8b53d49ca0a231b95e8a82710058b9d106b073e9a888fc3d9443ed0fdaaa0",
+    "module_memory_bytes": 6080,
+    "module_memory_limit": 6144
+  },
+  "normal": {
+    "status": "PASS",
+    "ordinary_APP_starts": [
+      {
+        "heap_free": 12000,
+        "buffers": 1923072,
+        "external": 1892352
+      },
+      {
+        "heap_free": 12000,
+        "buffers": 1923072,
+        "external": 1892352
+      },
+      {
+        "heap_free": 12000,
+        "buffers": 1923072,
+        "external": 1892352
+      }
+    ],
+    "real_M3_open_close_cycles": [
+      {
+        "heap_free": 108216,
+        "samples": 300192,
+        "late_blocks": 0
+      },
+      {
+        "heap_free": 108216,
+        "samples": 300192,
+        "late_blocks": 0
+      },
+      {
+        "heap_free": 108216,
+        "samples": 300192,
+        "late_blocks": 0
+      }
+    ]
+  },
+  "short_cases": {
+    "AYABC": {
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4463,
+        "block_min_us": 1725,
+        "prime_us": 12788,
+        "min_queued": 84,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256893,
+        "transport_rx_bytes": 665685,
+        "native_render_us": 12432878,
+        "exchange_block_us": 19722853
+      },
+      "M3_late_blocks": 0,
+      "audio_underruns": 0,
+      "fallbacks": 0,
+      "ready_polls": 0,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-001.result/receipt.json",
+          "bytes": 6445,
+          "sha256": "3dad86239b8770b18d508fccebd4ccf9f7d95a97dfd37b6cfcce2b5f62e2b448"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-001.result/qualification.json",
+          "bytes": 2688,
+          "sha256": "1cea2ee0c57042526b919d19990f375ad727211102d8cb3dd2042272b668c047"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-001.result/wire.txt",
+          "bytes": 29631,
+          "sha256": "3fa9ac50f4e2563a8c50df1635f780d0c0e42b2eb2f5830d083b49f51f77a7a2"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-001.result/before.txt",
+          "bytes": 4863,
+          "sha256": "058dbaf27f62eab9943dab11f0ea487471e72768256992ae4b59e87df65e05e0"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-001.result/after.txt",
+          "bytes": 4867,
+          "sha256": "4e2ecf43642028be2da64f464ef331a93b0bcabfb4c9d61f02aab80173af1882"
+        }
+      }
+    },
+    "YMACB": {
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4422,
+        "block_min_us": 1729,
+        "prime_us": 12799,
+        "min_queued": 84,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256893,
+        "transport_rx_bytes": 590879,
+        "native_render_us": 12432736,
+        "exchange_block_us": 19293722
+      },
+      "M3_late_blocks": 0,
+      "audio_underruns": 0,
+      "fallbacks": 0,
+      "ready_polls": 0,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMACB-001.result/receipt.json",
+          "bytes": 6446,
+          "sha256": "a33da177d5b16300f59b3aaa07e7715f4334051b38dc6d8a75fe44d6b131450a"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMACB-001.result/qualification.json",
+          "bytes": 2688,
+          "sha256": "25715bd59cdfcfd1a1a869541c7d2178f1f8112d5826444c781542e2ff0da401"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMACB-001.result/wire.txt",
+          "bytes": 29648,
+          "sha256": "810316e346a9a0fff9adf27228e84bf47d6465ac6ca9f0bb22f826931784759d"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMACB-001.result/before.txt",
+          "bytes": 4871,
+          "sha256": "01cc0362dc6ec1d1b826526bc92cbe8087c1aa53261a4431f7b7545e38265c72"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMACB-001.result/after.txt",
+          "bytes": 4870,
+          "sha256": "dd8efc3516ebe20b791c0d720600ff2f057aa5b116cb72128ea4e7822a5a4e06"
+        }
+      }
+    },
+    "AYACB": {
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4275,
+        "block_min_us": 1716,
+        "prime_us": 14069,
+        "min_queued": 120,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106140,
+        "transport_rx_bytes": 232743,
+        "native_render_us": 4926407,
+        "exchange_block_us": 7619940
+      },
+      "M3_late_blocks": 0,
+      "audio_underruns": 0,
+      "fallbacks": 0,
+      "ready_polls": 0,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYACB-001.result/receipt.json",
+          "bytes": 6445,
+          "sha256": "9f9446b109e06ced1eeca8cbc72db5a8e15ec7794581ca3fd7fcb360056979ae"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYACB-001.result/qualification.json",
+          "bytes": 2686,
+          "sha256": "1b7bc30c80589e4d92631209b5e797b4c95cf3307947abf95facc6b6895962cb"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYACB-001.result/wire.txt",
+          "bytes": 29645,
+          "sha256": "3da4ebba14e428d423c6c50ad2845c567a76c0ec24d8abbb8f8ba56c1606e61d"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYACB-001.result/before.txt",
+          "bytes": 4874,
+          "sha256": "deba6f2552950a41dff38795439cdaa66197e057eaccbfa8cfce8f9da41ca20a"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYACB-001.result/after.txt",
+          "bytes": 4870,
+          "sha256": "9cdb02401761562c7ae3a0561f5b55c140055d5be33a5833a1ae358b14a6f1f2"
+        }
+      }
+    },
+    "YMABC": {
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4292,
+        "block_min_us": 1736,
+        "prime_us": 12791,
+        "min_queued": 96,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106140,
+        "transport_rx_bytes": 210594,
+        "native_render_us": 4926080,
+        "exchange_block_us": 7504672
+      },
+      "M3_late_blocks": 0,
+      "audio_underruns": 0,
+      "fallbacks": 0,
+      "ready_polls": 0,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMABC-001.result/receipt.json",
+          "bytes": 6443,
+          "sha256": "dc59de654b96e851afd1d536bce8a9646dee7cc84ac01401934011573b38d115"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMABC-001.result/qualification.json",
+          "bytes": 2685,
+          "sha256": "2b10be7fb189845ce97a1133824f4fd6595c70830bf8b9d6e7ce2213b8bacbb5"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMABC-001.result/wire.txt",
+          "bytes": 29649,
+          "sha256": "ace2238f1306b0959bb4df7961a17a498c004c5d7173759cc6c7288f453adb0c"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMABC-001.result/before.txt",
+          "bytes": 4875,
+          "sha256": "385e08377795dbd6c943733c0342e22499bea911558c612c1430025e24b0e5f2"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V2-YMABC-001.result/after.txt",
+          "bytes": 4871,
+          "sha256": "9c7e93281b8f55c20969647687ed14fbc8e271c6887fa622fcd67c3a07dd63a2"
+        }
+      }
+    }
+  },
+  "long_case": {
+    "status": "FAIL",
+    "requested_frames": 30000,
+    "failures": [
+      "zero_M3_LATE_BLOCKS"
+    ],
+    "metrics": {
+      "mode": 2,
+      "frames": 29998,
+      "cycles": 2150256504,
+      "elapsed_us": 614359001,
+      "timing_valid": true,
+      "mhz": 3.5000000008138565,
+      "fps": 48.82812809964837,
+      "starved": 0,
+      "frame_min_us": 19895,
+      "frame_max_us": 20549,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 543,
+      "samples": 15359588,
+      "blocks": 130166,
+      "block_max_us": 4765,
+      "block_min_us": 1716,
+      "prime_us": 12791,
+      "min_queued": 80,
+      "inline_requests": 60042,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 5014918,
+      "transport_rx_bytes": 13116516,
+      "native_render_us": 248282631,
+      "exchange_block_us": 393037414
+    },
+    "M3_late_blocks": 1,
+    "audio_underruns": 0,
+    "fallbacks": 0,
+    "ready_polls": 0,
+    "evidence": {
+      "receipt.json": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-LONG-001.result/receipt.json",
+        "bytes": 6545,
+        "sha256": "27fcb4680c7c3dad6343ea2253e5ba6166cb4dde2121411748b5a8cfba0f7387"
+      },
+      "qualification.json": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-LONG-001.result/qualification.json",
+        "bytes": 2731,
+        "sha256": "4e1bbe7884cecb877f00405064c880992abe75632ddf92bb02b52024862203bf"
+      },
+      "wire.txt": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-LONG-001.result/wire.txt",
+        "bytes": 30545,
+        "sha256": "65a90349374ebe4944afcb3cd9dc067043442e200bb0988d2dd8df2b93ba281a"
+      },
+      "before.txt": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-LONG-001.result/before.txt",
+        "bytes": 4875,
+        "sha256": "951d2b1d7394da4c9d99e2c7d5ed46326c0c381a5cdfd45ba842037cdd1708e5"
+      },
+      "after.txt": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V2-AYABC-LONG-001.result/after.txt",
+        "bytes": 5048,
+        "sha256": "6e4beaf88ae0a3b2b024dd2a9e234b83951f05afbbaf38f5b4ff640c27ceeb57"
+      }
+    }
+  },
+  "long_gate": {
+    "path": ".build/spectrum-stereo-20261108/STEREO-V2-LONG-GATE-001.json",
+    "bytes": 2091,
+    "sha256": "bec681758a0cf3a282d8fcbe72d30baf02149209d61de8bc26b39e96e75403c7"
+  },
+  "host_proof": {
+    "path": ".build/spectrum-stereo-20261108/result-v2-package-proof.json",
+    "bytes": 24060,
+    "sha256": "2bab6de54952f02ad88a92cce359d3860c39087182be68a208aa00d3904fe63c"
+  },
+  "thresholds_unchanged": true,
+  "live_C5_queries_during_audio": false,
+  "ROMCACHE_before_writes": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+  "Flash_backup_or_restore": false,
+  "hardware_window_closed": true,
+  "official_BIOS_pair_finalization": {
+    "status": "PASS",
+    "action": "clock",
+    "uid": "E6657CD423721C35",
+    "pid": 8920,
+    "phase_sha256": "96e07d32ae54029622ad6eb8d8d37ef4a51afecf5d40134079ec01b57298ba39",
+    "grant_sha256": "a063f1c9a974f7fd9c9835264d24c480d3a9303f78d843a13869533a3c2dc589",
+    "started_utc_epoch": 1794199454.34377,
+    "finished_utc_epoch": 1794199471.630257,
+    "error": null,
+    "events": [
+      {
+        "argv": [
+          "/usr/sbin/ioreg",
+          "-a",
+          "-r",
+          "-c",
+          "IOUSBHostDevice",
+          "-l"
+        ],
+        "returncode": 0,
+        "stdout": "os-001.stdout",
+        "stderr": "os-001.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/cu.usbmodem11301"
+        ],
+        "returncode": 1,
+        "stdout": "os-002.stdout",
+        "stderr": "os-002.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/tty.usbmodem11301"
+        ],
+        "returncode": 1,
+        "stdout": "os-003.stdout",
+        "stderr": "os-003.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/ioreg",
+          "-a",
+          "-r",
+          "-c",
+          "IOUSBHostDevice",
+          "-l"
+        ],
+        "returncode": 0,
+        "stdout": "os-004.stdout",
+        "stderr": "os-004.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/cu.usbmodem11301"
+        ],
+        "returncode": 1,
+        "stdout": "os-005.stdout",
+        "stderr": "os-005.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/tty.usbmodem11301"
+        ],
+        "returncode": 1,
+        "stdout": "os-006.stdout",
+        "stderr": "os-006.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/ioreg",
+          "-a",
+          "-r",
+          "-c",
+          "IOUSBHostDevice",
+          "-l"
+        ],
+        "returncode": 0,
+        "stdout": "os-007.stdout",
+        "stderr": "os-007.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/cu.usbmodem11301"
+        ],
+        "returncode": 0,
+        "stdout": "os-008.stdout",
+        "stderr": "os-008.stderr",
+        "child_waited": true
+      },
+      {
+        "argv": [
+          "/usr/sbin/lsof",
+          "-nP",
+          "-t",
+          "--",
+          "/dev/tty.usbmodem11301"
+        ],
+        "returncode": 1,
+        "stdout": "os-009.stdout",
+        "stderr": "os-009.stderr",
+        "child_waited": true
+      }
+    ],
+    "cdc_sessions": [
+      {
+        "number": 0,
+        "closed": true,
+        "binding": {
+          "uid": "E6657CD423721C35",
+          "cu": "/dev/cu.usbmodem11301",
+          "tty": "/dev/tty.usbmodem11301",
+          "usb_entry": 4295252289,
+          "location": 18022400,
+          "session": 11356926781572,
+          "cdc_entry": 4295252316,
+          "cu_rdev": 150994949,
+          "tty_rdev": 150994948
+        },
+        "errors": []
+      }
+    ],
+    "native_binding": {
+      "uid": "E6657CD423721C35",
+      "cu": "/dev/cu.usbmodem11301",
+      "tty": "/dev/tty.usbmodem11301",
+      "usb_entry": 4295252289,
+      "location": 18022400,
+      "session": 11356926781572,
+      "cdc_entry": 4295252316,
+      "cu_rdev": 150994949,
+      "tty_rdev": 150994948
+    },
+    "old_official_pair_verified": {
+      "BIOS.M3U": {
+        "bytes": 29516,
+        "sha256": "33354e01d456b55744212afc5cd50caf84a9105ca5a1df2315a22f51d9e9bcb5"
+      },
+      "BIOSUPD.APP": {
+        "bytes": 3845,
+        "sha256": "e0757e572f0fcafbfbe6cc19b82938c3ead93e16d4872f38e173a891ea7394b2"
+      }
+    },
+    "new_official_pair_readback": {
+      "BIOS.M3U": {
+        "path": "/Apps/BIOS/BIOS.M3U",
+        "bytes": 29700,
+        "sha256": "b110eb5df355258ae8c8b415281a876a754218206e0aa38f2e950dd5d3baf8a4"
+      },
+      "BIOSUPD.APP": {
+        "path": "/Apps/BIOS/BIOSUPD.APP",
+        "bytes": 3845,
+        "sha256": "c6e326ec8cce64d9c4019bd481ffd73077ae7deed36af8443959be81cbfdc047"
+      }
+    },
+    "removed_owned_test_files": [
+      "AY.S3M",
+      "AYABC.APP",
+      "AYABCLONG.APP",
+      "AYACB.APP",
+      "BIOS.M3U",
+      "OLDUPD.APP",
+      "S3PACB.APP",
+      "S3PAN.APP",
+      "SPECTRUM.APP",
+      "YMABC.APP",
+      "YMACB.APP"
+    ],
+    "retained_read_only_assets": [
+      "128-0.rom",
+      "128-1.rom",
+      "48.rom",
+      "COSMIC.ULP",
+      "COSMIC.Z80"
+    ],
+    "pico_flash_writes": 0,
+    "m3_flash_writes": 0,
+    "rom_cache_writes": 0,
+    "game_or_rom_writes": 0,
+    "cdc_descriptor_closed": true,
+    "port_close_errors": [],
+    "shared_lock_released": false,
+    "window_lease_pid": "6545"
+  },
+  "limitations": [
+    "Passing finite traces is not a proof of zero jitter for every Spectrum game.",
+    "Guest3.5MHz checks account for integer cycles and1us measurement resolution.",
+    "Analog speaker separation was not evaluated by these digital timing tests."
+  ]
+}

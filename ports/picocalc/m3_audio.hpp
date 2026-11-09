@@ -2,14 +2,18 @@
 #define MK61_PICOCALC_M3_AUDIO_HPP
 #include "loadable_app_services.h"
 namespace picocalc::m3_audio {
+struct LateBlock {
+    uint32_t index=0,elapsed=0,request_us=0,frames=0,input_bytes=0,queued=0,command=0;
+    uint32_t gap=0,pump=0,step=0,tx=0,compute=0,schedule=0;
+};
 struct Statistics {
-    bool active;int error;uint32_t blocks,samples,underruns,max_slice,requests,uart_errors,unload_failures;
+    LateBlock first_late;
+    bool active,profile_valid,inline_input;
+    int error;uint32_t blocks,samples,underruns,max_slice,requests,uart_errors,unload_failures;
     uint32_t max_render_us,starve_stage,starve_request_us;int32_t starve_ahead;
-    bool profile_valid;
     uint32_t render_samples,render_jobs,render_slices,max_job_us,render_max_slice_us;
     uint64_t render_us;
     uint32_t min_block_us,late_blocks,ready_polls,prime_us,min_queued;
-    bool inline_input;
     uint32_t transport_flags,inline_requests,stream_write_requests,tx_bytes,rx_bytes;
     uint64_t block_us;
     uint32_t max_service_gap_us;
@@ -17,7 +21,7 @@ struct Statistics {
 };
 #if defined(PICO_ON_DEVICE) || defined(MK61_TEST_M3_AUDIO_BACKEND)
 // Open/close/poll belong to core0. service and duty run only on core1.
-bool open(const mk61_service_audio_psg&,unsigned gain);
+bool open(const mk61_service_audio_psg&,unsigned gain,const mk61_service_audio_psg_config* config=nullptr);
 void close();
 void service();
 bool transport_active();
@@ -26,7 +30,7 @@ bool failed();
 void fault(int error);
 Statistics statistics();
 #else
-inline bool open(const mk61_service_audio_psg&,unsigned){return false;}
+inline bool open(const mk61_service_audio_psg&,unsigned,const mk61_service_audio_psg_config* =nullptr){return false;}
 inline void close(){}
 inline void service(){}
 inline bool transport_active(){return false;}

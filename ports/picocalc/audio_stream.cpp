@@ -335,10 +335,10 @@ uint32_t synth(const mk61_service_audio_synth& r,unsigned master) {
     if(!r.sample || r.rate!=25000 || r.volume>100 || master>10)return 0;
     close();script::tone(0,0);return start_generator(r,master,true,false);
 }
-uint32_t psg(const mk61_service_audio_psg& r,unsigned master,bool required) {
-    if(!psg_packets::valid(r) || !r.recover || master>10)return 0;
+uint32_t psg(const mk61_service_audio_psg& r,unsigned master,bool required,const mk61_service_audio_psg_config* config) {
+    if(!psg_packets::valid(r) || !psg_packets::valid(psg_packets::options(config)) || !r.recover || master>10)return 0;
     close();script::tone(0,0);
-    if(m3_audio::open(r,master*r.local.volume)) {
+    if(m3_audio::open(r,master*r.local.volume,config)) {
         recovery=r;recovery_master=master;remote=true;remote_only=required;
         const mk61_service_audio_synth output{m3_audio::duty,nullptr,25000,100};
         if(start_generator(output,master,false,true))return 2;

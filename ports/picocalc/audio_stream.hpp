@@ -14,7 +14,8 @@ struct SynthStatistics { bool dma;uint32_t blocks,underruns;bool coprocessor;uin
 SynthStatistics synth_statistics();
 uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master_volume);
 uint32_t synth(const mk61_service_audio_synth& request,unsigned master_volume);
-uint32_t psg(const mk61_service_audio_psg& request,unsigned master_volume,bool remote_only=false);
+uint32_t psg(const mk61_service_audio_psg& request,unsigned master_volume,bool remote_only=false,
+             const mk61_service_audio_psg_config* config=nullptr);
 void poll(); // Core0: complete a failed coprocessor stream's local fallback.
 }
 #endif

@@ -12,6 +12,7 @@ struct Server {
     uint32_t now=0,cost=0,generated=0,invocations=0,writes=0,legacy_jobs=0,completions=0,inline_completions=0;
     uint32_t request_wire_bytes=0,response_wire_bytes=0;
     uint16_t sequence=0;
+    bool stereo=false,timing=false,repeat=false;
     uint16_t sent_sequence=0;bool sent=false;
     Server() {
         stm3_backend backend{};backend.context=this;
@@ -24,16 +25,24 @@ struct Server {
             const unsigned n=job->input[5];
             assert(job->input_bytes>=11 && job->input[4]==1 && n && n<=AudioEngine::BLOCK);
             if(op==STM3_INIT) {
-                ++s.invocations;Wire::put32(job->output,0x314d5750u);
-                job->output[4]=uint8_t(n);job->output[5]=0;
-                job->output[6]=uint8_t(s.sequence);job->output[7]=uint8_t(s.sequence>>8);++s.sequence;
-                job->output_bytes=8+n;return STM3_MORE;
+                ++s.invocations;Wire::put32(job->output,s.stereo?picocalc::psg_packets::PWM_STEREO:picocalc::psg_packets::PWM);
+                job->output[4]=uint8_t(n);job->output[5]=s.timing?100:0;
+                job->output[6]=uint8_t(s.sequence);job->output[7]=s.timing?20:uint8_t(s.sequence>>8);++s.sequence;
+                job->output_bytes=8+n*(s.stereo?2:1);return STM3_MORE;
             }
             assert(op==STM3_STEP);
             unsigned end=job->progress+16;if(end>n)end=n;
-            for(unsigned i=job->progress;i<end;++i)job->output[8+i]=uint8_t(s.generated+i);
+            for(unsigned i=job->progress;i<end;++i) {
+                const uint8_t value=s.repeat?uint8_t(64+((s.generated+i)/16)%128):uint8_t(s.generated+i);
+                job->output[8+i*(s.stereo?2:1)]=value;
+                if(s.stereo)job->output[9+2*i]=uint8_t(value^0xa5);
+            }
             job->progress=end;
             if(end!=n)return STM3_MORE;
+            if(s.repeat && s.stereo) {
+                const unsigned used=stm3_pcm_repeat_encode(job->output+256,job->output+8,n);
+                if(used && used<2*n){std::memcpy(job->output+8,job->output+256,used);Wire::put32(job->output,picocalc::psg_packets::PWM_STEREO_REPEAT);job->output_bytes=8+used;}
+            }
             s.generated+=n;return STM3_DONE;
         };
         stm3_init(&runtime,&backend);
@@ -76,6 +85,88 @@ struct Producer {
     }
 };
 int main() {
+    {
+        // Actual pushed transport CRC/sequence, compressed payload, ring wrap,
+        // both PCM channels and both 16-bit sequence wraps remain exact.
+        Server s;s.stereo=s.repeat=true;AudioEngine e;Producer p;int32_t filters[6]{};
+        e.options={1,0,filters,true};e.repeat=true;e.module=s.load();e.request=p.request;e.inline_input=true;
+        e.sequence=s.sequence=65534;e.wire.sequence=65530;
+        const unsigned total=8*AudioEngine::STEREO_BLOCK;p.produced=total*140;unsigned consumed=0;
+        for(unsigned turn=0;turn<30000 && consumed<total;++turn) {
+            e.step(s.now);if(e.wire.pending)s.exchange(e.wire);if(!(turn%10))stm3_tick(&s.runtime);
+            s.now+=40;const uint32_t before=e.read.load();const uint32_t actual=e.sample(s.now);
+            if(e.read.load()!=before){const unsigned value=64+(consumed/16)%128;assert(actual==(value|((value^0xa5)<<16)));++consumed;}
+            if(e.error.load())std::fprintf(stderr,"repeat error=%d turn=%u consumed=%u blocks=%u seq=%u wire=%u result=%d\n",e.error.load(),turn,consumed,e.blocks,e.sequence,e.wire.sequence,e.wire.result);
+            assert(!e.error.load());
+        }
+        assert(consumed==total && e.blocks==8 && e.sequence==6 && !e.underruns && !e.ready_polls);
+        assert(s.response_wire_bytes<8*270);e.stopping.store(true);e.step(s.now);assert(e.stopped.load());
+    }
+    {
+        const auto check=[](const uint8_t* payload,unsigned bytes,unsigned frames,bool capability,bool valid) {
+            AudioEngine e;Producer p;int32_t filters[6]{};e.options={1,0,filters,true};e.request=p.request;
+            e.repeat=capability;e.stage=AudioEngine::RESULT;e.count=frames;e.wire.complete=true;e.wire.reply_bytes=16+bytes;
+            uint8_t* r=e.wire.frame+12;Wire::put32(r,1);Wire::put32(r+4,0);Wire::put32(r+8,picocalc::psg_packets::PWM_STEREO_REPEAT);
+            r[12]=uint8_t(frames);r[13]=r[14]=r[15]=0;std::memcpy(r+16,payload,bytes);e.step(100);
+            if(valid){assert(!e.error.load() && e.samples==frames && e.write.load()==frames);for(unsigned i=0;i<frames;++i)assert(e.duties[i]==0x8080);}
+            else assert(e.error.load()==-26 && !e.write.load());
+        };
+        const uint8_t correct[]={63,55},extra[]={63,55,0},truncated[]={64},escape[]={1,0},overrun[]={63};
+        check(correct,2,118,true,true);check(correct,2,118,false,false);check(extra,3,118,true,false);
+        check(truncated,1,1,true,false);check(escape,2,1,true,false);check(overrun,1,1,true,false);
+    }
+    {
+        Server s;s.stereo=s.timing=true;AudioEngine e;Producer p;int32_t filters[6]{};
+        e.options={1,0,filters,true};e.timing=true;e.module=s.load();e.request=p.request;e.inline_input=true;
+        e.sequence=s.sequence=300;p.produced=AudioEngine::STEREO_BLOCK*140;e.step(0);
+        for(unsigned turn=0;turn<100 && !e.wire.complete;++turn){s.exchange(e.wire);stm3_tick(&s.runtime);}
+        assert(e.wire.complete);e.step(6000);
+        assert(!e.error.load() && e.blocks==1 && e.first_late_index==1);
+        assert(e.first_late_compute_us==1600 && e.first_late_gap_us==320);
+        assert(e.samples==AudioEngine::STEREO_BLOCK && e.sequence==301);
+    }
+
+    for(unsigned layout=0;layout<=2;++layout) {
+        // CLOSE can stop PWM while the next input is already prepared.
+        // Drain that input once: producer cursors must match the exported
+        // oscillator state, and both results must fit without a consumer.
+        Server s;s.stereo=layout!=0;AudioEngine e;Producer p;int32_t filters[6]{};
+        e.options={layout,0,filters,true};e.module=s.load();e.wire.sequence=100;e.request=p.request;e.inline_input=true;
+        const unsigned block=layout?AudioEngine::STEREO_BLOCK:AudioEngine::BLOCK;
+        e.write.store(AudioEngine::CAPACITY-2*block);p.produced=10*block*140;
+        bool prefetched=false;
+        for(unsigned turn=0;turn<2000 && !e.stopped.load();++turn) {
+            e.step(s.now);
+            if(e.prepared_bytes) {
+                assert(e.stage==AudioEngine::RESULT && e.wire.pending && p.time==2*block*140);
+                prefetched=true;e.stopping.store(true);
+            }
+            if(e.wire.pending)s.exchange(e.wire);
+            if(!(turn%10))stm3_tick(&s.runtime);s.now+=40;
+            assert(!e.error.load());
+        }
+        assert(prefetched && e.stopped.load() && e.blocks==2 && s.invocations==2 && !e.prepared_bytes);
+        assert(e.queued()==AudioEngine::CAPACITY && p.time==e.samples*140 && !e.ready_polls && !s.legacy_jobs);
+    }
+    for(unsigned layout=1;layout<=2;++layout) {
+        Server s;s.stereo=true;AudioEngine e;Producer p;
+        int32_t filters[6]{};e.options={layout,layout-1,filters,true};
+        e.module=s.load();e.wire.sequence=100;e.request=p.request;e.inline_input=true;
+        e.read.store(0xfffffff0u);e.write.store(0xfffffff0u);
+        constexpr unsigned samples=80*AudioEngine::STEREO_BLOCK;p.produced=samples*140;unsigned consumed=0;
+        for(unsigned turn=0;turn<samples*8 && consumed<samples;++turn) {
+            e.step(s.now);if(e.wire.pending)s.exchange(e.wire);
+            if(!(turn%10))stm3_tick(&s.runtime);s.now+=40;
+            const uint32_t before=e.read.load(),sample=e.sample(s.now);
+            if(e.read.load()!=before) {
+                assert(sample==(uint8_t(consumed)|(uint32_t(uint8_t(consumed^0xa5))<<16)));++consumed;
+            }
+            assert(!e.error.load());
+        }
+        assert(consumed==samples && e.blocks==80 && e.samples==samples && !e.underruns && !e.ready_polls && !s.legacy_jobs);
+        assert(!s.writes && e.count==AudioEngine::STEREO_BLOCK && 8+2*e.count<=S3_RESULT_LIMIT);
+        e.stopping.store(true);e.step(s.now);assert(e.stopped.load());
+    }
     {
         Server s;AudioEngine e;Producer p;e.module=s.load();e.wire.sequence=100;e.request=p.request;e.inline_input=true;
         s.request_wire_bytes=s.response_wire_bytes=0;
@@ -140,6 +231,9 @@ int main() {
             s.now+=40;
         }
         assert(e.blocks==1 && e.late_blocks==1 && e.min_render_us>AudioEngine::BLOCK*40 && e.block_us==e.max_render_us);
+        assert(e.first_late_index==1 && e.first_late_us==e.max_render_us);
+        assert(e.first_late_count==AudioEngine::BLOCK && e.first_late_bytes>=11);
+        assert(e.first_late_request_us<=e.first_late_us && e.first_late_command==S3_START_RESULT);
         assert(!e.underruns && !e.error.load() && !e.ready_polls);
     }
     {

@@ -3,6 +3,7 @@
 #include "m3_wire.hpp"
 #include "psg_packets.hpp"
 #include "stm3_client.h"
+#include "pcm_repeat.h"
 #include <atomic>
 
 namespace picocalc::m3 {
@@ -10,20 +11,28 @@ namespace picocalc::m3 {
 // here. The hardware adapter keeps wire TX pinned through DMA completion.
 struct AudioEngine {
     static constexpr unsigned BLOCK=120,CAPACITY=512,PRIME_BLOCKS=3;
+    // START_RESULT returns at most244 module bytes. 118 stereo frames plus
+    // the8-byte header fit in one pushed response, with no extra READ RPC.
+    static constexpr unsigned STEREO_BLOCK=(S3_RESULT_LIMIT-8)/2;
     enum Stage { IDLE,WRITE,RESULT } stage=IDLE;
     Wire wire;
     mk61_service_audio_psg request{};
-    uint8_t packet[512]{},duties[CAPACITY]{},cached[11]{};
+    psg_packets::Options options;
+    uint8_t packet[512]{},cached[11]{};
+    uint16_t duties[CAPACITY]{};
     std::atomic<uint32_t> read{0},write{0};
     std::atomic<int> error{0};
     std::atomic<bool> stopping{false},stopped{false};
     uint32_t module=0,job=0,blocks=0,samples=0,max_slice=0,underruns=0;
     uint32_t render_started=0,max_render_us=0,starve_stage=0,starve_request_us=0;
     uint32_t min_render_us=UINT32_MAX,late_blocks=0,ready_polls=0,prime_started=0,prime_us=0,min_queued=CAPACITY;
+    uint32_t first_late_index=0,first_late_us=0,first_late_request_us=0,first_late_count=0,first_late_bytes=0,first_late_queued=0,first_late_command=0;
     uint64_t block_us=0;
     int32_t starve_ahead=0;
-    unsigned bytes=0,offset=0,inflight=0,count=0,missing=0;
+    unsigned bytes=0,offset=0,inflight=0,count=0,missing=0,prepared_bytes=0,prepared_count=0;
     uint16_t sequence=0;
+    bool timing=false,repeat=false;
+    uint32_t first_late_compute_us=0,first_late_gap_us=0;
     bool primed=false,cache_valid=false,prime_waiting=false,inline_input=false;
     unsigned queued() const { return write.load(std::memory_order_acquire)-read.load(std::memory_order_acquire); }
     void fail(int reason) {error.store(reason?reason:-20,std::memory_order_release);stopped.store(true,std::memory_order_release);}
@@ -38,7 +47,7 @@ struct AudioEngine {
     }
     void start(uint32_t now,bool with_input=false) {
         uint8_t args[16];Wire::put32(args,module);Wire::put32(args+4,bytes);Wire::put32(args+8,10);
-        Wire::put32(args+12,8+count);
+        Wire::put32(args+12,8+count*options.channels());
         job=0;stage=RESULT;
         const bool ok=with_input?
             wire.begin_pair(S3_START_RESULT_INPUT,args,sizeof(args),packet,bytes,now,12000):
@@ -48,7 +57,21 @@ struct AudioEngine {
     void step(uint32_t now) {
         if(error.load(std::memory_order_acquire))return;
         if(stage!=IDLE) {
-            if(!wire.complete)return;
+            if(!wire.complete) {
+                // START already copied its input into the pinned wire TX.
+                // Prepare the next event packet while M3 renders this one.
+                // Reserve ring space for both results, including on CLOSE
+                // after the PWM consumer has stopped. A prepared packet is
+                // always rendered before exporting the shared PSG state.
+                const unsigned block=options.layout?STEREO_BLOCK:BLOCK;
+                if(stage==RESULT && uint32_t(now-render_started)<500 && !prepared_bytes && !stopping.load(std::memory_order_acquire) &&
+                   queued()<=CAPACITY-count-block) {
+                    const int n=psg_packets::prepare(request,packet,block,block);
+                    if(n<0){fail(-28);return;}
+                    if(n){prepared_bytes=unsigned(n);prepared_count=packet[5];psg_packets::put32(packet,options.magic());}
+                }
+                return;
+            }
             wire.complete=false;
             if(wire.result){fail(wire.result);return;}
             const uint8_t* reply=wire.reply();unsigned n=wire.reply_bytes;
@@ -64,22 +87,47 @@ struct AudioEngine {
             const uint32_t slice=Wire::get32(reply+4);if(slice>max_slice)max_slice=slice;
             if(slice>2000){fail(8);return;}
             reply+=8;n-=8;
-            if(n!=8+count || Wire::get32(reply)!=psg_packets::PWM ||
-               reply[4]!=count || reply[5] || (unsigned(reply[6])|(unsigned(reply[7])<<8))!=sequence) {fail(-26);return;}
+            const bool packed=repeat && options.layout && n>=8 && Wire::get32(reply)==psg_packets::PWM_STEREO_REPEAT;
+            if((packed?(n>8+count*2):(n!=8+count*options.channels() || Wire::get32(reply)!=(options.layout?psg_packets::PWM_STEREO:psg_packets::PWM))) ||
+               reply[4]!=count || (!timing && reply[5]) || (unsigned(reply[6])|(timing?0u:unsigned(reply[7])<<8))!=(timing?(sequence&255u):sequence)) {fail(-26);return;}
             const uint32_t w=write.load(std::memory_order_relaxed),r=read.load(std::memory_order_acquire);
             const uint32_t elapsed=now-render_started;if(elapsed>max_render_us)max_render_us=elapsed;
             if(elapsed<min_render_us)min_render_us=elapsed;
-            block_us+=elapsed;if(elapsed>count*40)++late_blocks;
+            block_us+=elapsed;if(elapsed>count*40) {
+                if(!late_blocks) {
+                    first_late_compute_us=timing?unsigned(reply[5])*16:0;first_late_gap_us=timing?unsigned(reply[7])*16:0;
+                    first_late_index=blocks+1;first_late_us=elapsed;first_late_request_us=now-wire.started;
+                    first_late_count=count;first_late_bytes=bytes;first_late_queued=w-r;first_late_command=wire.command;
+                }
+                ++late_blocks;
+            }
             if(w-r>CAPACITY-count){fail(-27);return;}
-            for(unsigned i=0;i<count;++i)duties[(w+i)&(CAPACITY-1)]=reply[8+i];
+            const uint8_t* cursor=reply+8;const uint8_t* end=reply+n;stm3_pcm_repeat_state previous={0x8080,0};
+            for(unsigned i=0;i<count;++i) {
+                uint16_t duty;
+                if(packed) {
+                    if(!stm3_pcm_repeat_next(&cursor,end,&previous)){fail(-26);return;}
+                    duty=previous.previous;
+                } else {
+                    const unsigned at=8+i*options.channels();
+                    duty=uint16_t(reply[at])|uint16_t(reply[options.layout?at+1:at])<<8;
+                }
+                duties[(w+i)&(CAPACITY-1)]=duty;
+            }
+            if(packed && (cursor!=end || previous.remaining)){fail(-26);return;}
             write.store(w+count,std::memory_order_release);++sequence;++blocks;samples+=count;stage=IDLE;
         }
-        if(stopping.load(std::memory_order_acquire)){stopped.store(true,std::memory_order_release);return;}
-        if(queued()>CAPACITY-BLOCK)return;
-        const int n=psg_packets::prepare(request,packet,BLOCK,BLOCK);
-        if(n<0){fail(-28);return;}
-        if(!n)return;
-        bytes=unsigned(n);count=packet[5];offset=0;
+        if(stopping.load(std::memory_order_acquire) && !prepared_bytes){stopped.store(true,std::memory_order_release);return;}
+        const unsigned block=options.layout?STEREO_BLOCK:BLOCK;
+        if(queued()>CAPACITY-block)return;
+        if(prepared_bytes){bytes=prepared_bytes;count=prepared_count;prepared_bytes=0;}
+        else {
+            const int n=psg_packets::prepare(request,packet,block,block);
+            if(n<0){fail(-28);return;}
+            if(!n)return;
+            bytes=unsigned(n);count=packet[5];psg_packets::put32(packet,options.magic());
+        }
+        offset=0;
         render_started=now;
         if(bytes==sizeof(cached) && cache_valid && !std::memcmp(packet,cached,sizeof(cached))){start(now);return;}
         if(inline_input && bytes<=S3_START_RESULT_INPUT_LIMIT) {
@@ -94,7 +142,7 @@ struct AudioEngine {
         const uint32_t r=read.load(std::memory_order_relaxed),w=write.load(std::memory_order_acquire);
         if(!primed){
             if(!prime_waiting){prime_waiting=true;prime_started=now;}
-            if(w-r<PRIME_BLOCKS*BLOCK)return 0x00800080u;
+            if(w-r<PRIME_BLOCKS*(options.layout?STEREO_BLOCK:BLOCK))return 0x00800080u;
             primed=true;prime_us=now-prime_started;
         }
         if(r==w) {
@@ -108,7 +156,7 @@ struct AudioEngine {
         missing=0;const uint32_t duty=duties[r&(CAPACITY-1)];
         if(w-r-1<min_queued)min_queued=w-r-1;
         read.store(r+1,std::memory_order_release);
-        return duty|(duty<<16);
+        return (duty&255)|((duty>>8)<<16);
     }
 };
 }

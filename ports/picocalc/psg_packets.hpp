@@ -6,6 +6,21 @@
 namespace picocalc::psg_packets {
 constexpr unsigned CAPACITY=512,SAMPLES=120,BODY=132,STATE=8+2*BODY+11;
 constexpr uint32_t MAGIC=0x31594153u,PCM=0x314d4350u,PWM=0x314d5750u,STATE_MAGIC=0x31534153u;
+constexpr uint32_t MAGIC_V2=0x32594153u,PWM_STEREO=0x324d5750u,STATE_V2_MAGIC=0x32534153u;
+constexpr uint32_t PWM_STEREO_REPEAT=0x334d5750u;
+constexpr unsigned STATE_V2=STATE+24;
+struct Options {
+    unsigned layout=0,chip=0;int32_t* stereo=nullptr;bool extended=false;
+    unsigned state_bytes() const {return extended?STATE_V2:STATE;}
+    uint32_t magic() const {return extended?MAGIC_V2:MAGIC;}
+    unsigned channels() const {return layout?2:1;}
+};
+inline Options options(const mk61_service_audio_psg_config* c) {
+    return c?Options{c->layout,c->chip,c->stereo,true}:Options{};
+}
+inline bool valid(const Options& o) {
+    return !o.extended || (o.layout<=MK61_PSG_ACB && o.chip<=MK61_PSG_YM && o.stereo && !(uintptr_t(o.stereo)&3));
+}
 inline uint32_t get32(const uint8_t* p) {
     return uint32_t(p[0])|uint32_t(p[1])<<8|uint32_t(p[2])<<16|uint32_t(p[3])<<24;
 }
@@ -17,19 +32,28 @@ inline bool valid(const mk61_service_audio_psg& r) {
         r.read && r.write && r.produced && r.time && r.running && r.dac && r.dc_input && r.dc_output &&
         !(uintptr_t(r.read)&3) && !(uintptr_t(r.write)&3) && !(uintptr_t(r.produced)&3) && !(uintptr_t(r.time)&3);
 }
-inline unsigned config(const mk61_service_audio_psg& r,uint8_t* out,bool pwm=false,unsigned gain=1000) {
-    put32(out,MAGIC);put32(out+4,0);
+inline unsigned config(const mk61_service_audio_psg& r,uint8_t* out,bool pwm=false,unsigned gain=1000,const Options& o={}) {
+    put32(out,o.magic());put32(out+4,0);
     if(pwm){out[5]=1;out[6]=uint8_t(gain);out[7]=uint8_t(gain>>8);}
+    if(o.extended)out[5]|=uint8_t((o.layout<<1)|(o.chip<<3));
     std::memcpy(out+8,r.psg[0],BODY);std::memcpy(out+8+BODY,r.psg[1],BODY);
     put32(out+8+2*BODY,uint32_t(*r.dc_input));put32(out+12+2*BODY,uint32_t(*r.dc_output));
-    std::memcpy(out+16+2*BODY,r.dac,3);return STATE;
+    std::memcpy(out+16+2*BODY,r.dac,3);
+    if(o.extended)for(unsigned i=0;i<6;++i)put32(out+STATE+4*i,uint32_t(o.stereo[i]));
+    return o.state_bytes();
 }
-inline bool restore(const mk61_service_audio_psg& r,const uint8_t* in,unsigned n) {
-    if(n!=STATE || get32(in)!=STATE_MAGIC || get32(in+4)!=BODY || in[16+2*BODY]>1)return false;
+inline bool restore(const mk61_service_audio_psg& r,const uint8_t* in,unsigned n,const Options& o={}) {
+    if(n!=o.state_bytes() || get32(in)!=(o.extended?STATE_V2_MAGIC:STATE_MAGIC) || get32(in+4)!=BODY || in[16+2*BODY]>1)return false;
     const int32_t dc_in=int32_t(get32(in+8+2*BODY)),dc_out=int32_t(get32(in+12+2*BODY));
     if(dc_in < -131072 || dc_in>131072 || dc_out < -32768 || dc_out>32767)return false;
+    if(o.extended)for(unsigned i=0;i<6;++i) {
+        const int32_t value=int32_t(get32(in+STATE+4*i)),limit=i==4?131072:32768;
+        if(value < -limit || value>=limit)return false;
+    }
     std::memcpy(r.psg[0],in+8,BODY);std::memcpy(r.psg[1],in+8+BODY,BODY);
-    *r.dc_input=dc_in;*r.dc_output=dc_out;std::memcpy(r.dac,in+16+2*BODY,3);return true;
+    *r.dc_input=dc_in;*r.dc_output=dc_out;std::memcpy(r.dac,in+16+2*BODY,3);
+    if(o.extended)for(unsigned i=0;i<6;++i)o.stereo[i]=int32_t(get32(in+STATE+4*i));
+    return true;
 }
 inline const uint8_t* event(const mk61_service_audio_psg& r,uint32_t index) {
     return r.events+(index&(r.event_capacity-1))*8;
@@ -37,6 +61,12 @@ inline const uint8_t* event(const mk61_service_audio_psg& r,uint32_t index) {
 // AY music commonly leaves all three DACs constant for an entire block.
 // Walk only published events in that case, without two per-sample passes.
 // -2 asks the general encoder to handle changing DACs or a full packet.
+#if defined(PICO_ON_DEVICE)
+__attribute__((noinline,section(".time_critical.m3_prepare_sparse")))
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
+#endif
 inline int prepare_sparse(const mk61_service_audio_psg& r,uint8_t* out,unsigned limit,
                           uint32_t time,uint32_t start,uint32_t w) {
     unsigned at=11;uint32_t cursor=start;

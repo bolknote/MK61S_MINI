@@ -5,6 +5,9 @@ build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-spectrum-m3.XXXXXX")"
 trap 'rm -rf "$build"' EXIT
 python3 "$root/tests/spectrum_m3_runtime_fixture.py" --output "$build/runtime"
 python3 "$root/tests/spectrum_m3_game_probe_packaging_self_test.py"
+clang -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined \
+    -fno-sanitize-recover=all "$root/tests/pcm_repeat_self_test.c" -o "$build/repeat-codec"
+"$build/repeat-codec"
 sound_flags=()
 if [[ "${SPECTRUM_M3_FAST_INIT:-0}" != 0 ]]; then
     sound_flags=(-DEMU2149_M3_AUDIO=1 "-DSPECTRUM_M3_FAST_INIT=$SPECTRUM_M3_FAST_INIT")
@@ -42,12 +45,14 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined \
     -I"$root/ports/picocalc" -I"$build/runtime" \
     "$root/tests/spectrum_m3_wire_self_test.cpp" "$build/runtime.o" -o "$build/wire"
 "$build/wire"
+clang -std=c11 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-sanitize-recover=all \
+    -I"$root/sdk/coproc" -c "$root/sdk/coproc/stm3_client.c" -o "$build/client.o"
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined \
     -fno-sanitize-recover=all -fno-omit-frame-pointer \
     -I"$root/ports/picocalc" \
     -I"$build/runtime" \
     -I"$root/sdk/coproc" \
-    "$root/tests/spectrum_m3_completion_self_test.cpp" "$build/runtime.o" -o "$build/completion"
+    "$root/tests/spectrum_m3_completion_self_test.cpp" "$build/runtime.o" "$build/client.o" -o "$build/completion"
 "$build/completion"
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -fsanitize=address,undefined \
     -fno-sanitize-recover=all -fno-omit-frame-pointer \

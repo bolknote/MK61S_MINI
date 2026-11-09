@@ -11,6 +11,7 @@
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 #include <new>
+#include <cstdlib>
 #include <optional>
 
 namespace picocalc::m3_audio {
@@ -24,6 +25,8 @@ struct Clocks {
     static void clear1(uint32_t v){hw_clear_bits(&clocks_hw->sleep_en1,v);}
 };
 struct Context {
+    alignas(512) uint8_t receive[512]{};
+    void* allocation=nullptr;
     m3::AudioEngine engine;
     uint32_t crc_values[256];
     stm3_pico_uart1 uart{};
@@ -38,6 +41,8 @@ struct Context {
     uint32_t service_at=0,max_service_gap_us=0;
     uint32_t service_end=0,max_idle_gap_us=0,max_pump_us=0,max_step_us=0,max_tx_us=0;
     bool service_running=false;
+    LateBlock first_late{};
+    uint32_t trace_started=0,trace_gap=0,trace_pump=0,trace_step=0,trace_tx=0;
     Context() {
         // Only an active M3 stream leases this 1 KiB. Keep random CRC
         // lookups off XIP without reducing the resident APP heap budget.
@@ -45,12 +50,15 @@ struct Context {
         engine.wire.crc_values=crc_values;
     }
 };
-alignas(512) uint8_t receive[512];
 std::atomic<Context*> context{nullptr};
 Statistics last{};
 uint16_t last_sequence=0;
+void destroy(Context* c){void* memory=c->allocation;c->~Context();std::free(memory);}
 uint32_t micros(void*){return time_us_32();}
-void tx(Context& c) {
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
+void __noinline __not_in_flash_func(tx)(Context& c) {
     if(!c.engine.wire.pending)return;
     if(!c.tx_started){
         c.tx_started=true;c.tx_at=0;++c.requests;c.tx_bytes+=c.engine.wire.tx_bytes;
@@ -63,21 +71,27 @@ void tx(Context& c) {
     while(c.tx_at<c.engine.wire.tx_bytes && uart_is_writable(uart1))
         uart_get_hw(uart1)->dr=c.engine.wire.tx[c.tx_at++];
 }
+void __noinline receive_error(Context& c) {
+    ++c.uart.errors;
+    if(c.engine.wire.pending)c.engine.wire.fail(m3::Wire::IO);
+    if(c.streaming)c.engine.fail(m3::Wire::IO);
+}
 void pump(Context& c) {
     auto& wire=c.engine.wire;
     if(uart_get_hw(uart1)->rsr&15u) {
-        ++c.uart.errors;uart_get_hw(uart1)->rsr=0;
-        if(wire.pending)wire.fail(m3::Wire::IO);
-        if(c.streaming)c.engine.fail(m3::Wire::IO);
+        uart_get_hw(uart1)->rsr=0;receive_error(c);
     }
     const uint32_t head=UINT32_MAX-dma_hw->ch[c.rx].transfer_count;
     __dmb();
-    if(head-c.tail>sizeof(receive)) {
-        ++c.uart.errors;c.tail=head;
-        if(wire.pending)wire.fail(m3::Wire::IO);
-        if(c.streaming)c.engine.fail(m3::Wire::IO);
+    if(head-c.tail>sizeof(c.receive)) {
+        c.tail=head;receive_error(c);
     }
-    while(c.tail!=head){wire.feed(receive[c.tail&(sizeof(receive)-1)]);++c.tail;++c.rx_bytes;}
+    c.rx_bytes+=head-c.tail;
+    while(c.tail!=head) {
+        const unsigned at=c.tail&(sizeof(c.receive)-1);
+        const unsigned n=head-c.tail<sizeof(c.receive)-at?head-c.tail:unsigned(sizeof(c.receive))-at;
+        wire.feed(c.receive+at,n);c.tail+=n;
+    }
     wire.tick(time_us_32());
     if(wire.complete) {
         c.tx_started=false;
@@ -86,6 +100,7 @@ void pump(Context& c) {
 }
 void snapshot(Context& c) {
     const auto& e=c.engine;
+    last.first_late=c.first_late;
     last.active=c.streaming;last.error=e.error.load(std::memory_order_acquire);
     last.blocks=e.blocks;last.samples=e.samples;last.underruns=e.underruns;
     last.max_slice=e.max_slice;last.requests=c.requests;last.uart_errors=c.uart.errors;
@@ -131,7 +146,7 @@ bool setup(Context& c) {
         channel_config_set_transfer_data_size(&config,DMA_SIZE_8);
         channel_config_set_read_increment(&config,false);channel_config_set_write_increment(&config,true);
         channel_config_set_ring(&config,true,9);channel_config_set_dreq(&config,uart_get_dreq(uart1,false));
-        dma_channel_configure((unsigned)c.rx,&config,receive,&uart_get_hw(uart1)->dr,UINT32_MAX,false);
+        dma_channel_configure((unsigned)c.rx,&config,c.receive,&uart_get_hw(uart1)->dr,UINT32_MAX,false);
         uart_get_hw(uart1)->dmacr=1;dma_channel_start((unsigned)c.rx);
         c.engine.wire.sequence=uint16_t(last_sequence+1);
         context.store(&c,std::memory_order_release);*a.ready=true;
@@ -193,7 +208,7 @@ bool load(Context& c,const char* path,unsigned gain) {
     if(m3::Wire::get32(hello)!=1 || m3::Wire::get32(hello+4)!=0x70301 ||
        m3::Wire::get32(hello+8)!=6144 || m3::Wire::get32(hello+12)!=512 ||
        m3::Wire::get32(hello+16)!=0 || m3::Wire::get32(hello+28)!=2250000 ||
-       (transport&7)!=7)return false;
+       (transport&39)!=39)return false;
     c.transport_flags=transport;c.inline_input=(transport&S3_TRANSPORT_START_RESULT_INPUT)!=0;
     m3::Wire::put32(e.packet,entry.size);
     if(!rpc(c,2,e.packet,4))return false;c.owned=true;
@@ -204,15 +219,21 @@ bool load(Context& c,const char* path,unsigned gain) {
         at+=n;
     }
     if(!rpc(c,4,nullptr,0) || e.wire.reply_bytes!=4)return false;e.module=m3::Wire::get32(e.wire.reply());
-    psg_packets::config(e.request,e.packet,true,gain);
-    if(!job(c,psg_packets::STATE,8) || m3::Wire::get32(e.packet)!=psg_packets::PCM || !(e.packet[7]&2))return false;
-    c.capabilities=e.packet[7];return true;
+    const unsigned bytes=psg_packets::config(e.request,e.packet,true,gain,e.options);
+    if(!job(c,bytes,8) || m3::Wire::get32(e.packet)!=psg_packets::PCM || !(e.packet[7]&2) ||
+       (e.options.extended && !(e.packet[7]&32)))return false;
+    c.capabilities=e.packet[7];e.timing=(c.capabilities&64)!=0;e.repeat=(c.capabilities&128)!=0;return true;
 }
 }
 bool transport_active(){return context.load(std::memory_order_acquire)!=nullptr;}
 void service() {
     auto* c=context.load(std::memory_order_acquire);if(!c)return;
     const uint32_t begin=time_us_32();
+    if(c->trace_started!=c->engine.render_started) {
+        c->trace_started=c->engine.render_started;c->trace_gap=c->trace_pump=c->trace_step=c->trace_tx=0;
+    }
+    const uint32_t idle_gap=c->service_end?begin-c->service_end:0;
+    if(idle_gap>c->trace_gap)c->trace_gap=idle_gap;
     pump(*c);
     const uint32_t now=time_us_32();
     const bool running=c->streaming && !c->engine.stopping.load(std::memory_order_relaxed) &&
@@ -222,14 +243,29 @@ void service() {
         const uint32_t idle=begin-c->service_end;if(idle>c->max_idle_gap_us)c->max_idle_gap_us=idle;
     }
     c->service_running=running;c->service_at=now;
-    if(c->streaming && !c->control.load(std::memory_order_relaxed) && !c->tx_started) {
+    // Finish feeding the current request before preparing its successor.
+    // Packet preparation can take hundreds of microseconds; doing it with
+    // only part of a request in the FIFO starves UART TX and delays M3 INIT.
+    tx(*c);
+    const uint32_t sent=time_us_32();
+    if(c->streaming && !c->control.load(std::memory_order_relaxed) &&
+       (!c->engine.wire.pending || c->tx_at==c->engine.wire.tx_bytes)) {
         c->engine.step(now);
     }
     const uint32_t stepped=time_us_32();
     tx(*c);
     c->service_end=time_us_32();
+    const uint32_t trace_pump=now-begin,trace_step=stepped-sent,trace_tx=(sent-now)+(c->service_end-stepped);
+    if(trace_pump>c->trace_pump)c->trace_pump=trace_pump;
+    if(trace_step>c->trace_step)c->trace_step=trace_step;
+    if(trace_tx>c->trace_tx)c->trace_tx=trace_tx;
+    const auto& e=c->engine;
+    if(e.first_late_index && !c->first_late.index) {
+        c->first_late={e.first_late_index,e.first_late_us,e.first_late_request_us,e.first_late_count,
+            e.first_late_bytes,e.first_late_queued,e.first_late_command,c->trace_gap,c->trace_pump,c->trace_step,c->trace_tx,e.first_late_compute_us,e.first_late_gap_us};
+    }
     if(running) {
-        const uint32_t pump_us=now-begin,step_us=stepped-now,tx_us=c->service_end-stepped;
+        const uint32_t pump_us=now-begin,step_us=stepped-sent,tx_us=(sent-now)+(c->service_end-stepped);
         if(pump_us>c->max_pump_us)c->max_pump_us=pump_us;
         if(step_us>c->max_step_us)c->max_step_us=step_us;
         if(tx_us>c->max_tx_us)c->max_tx_us=tx_us;
@@ -238,11 +274,14 @@ void service() {
 uint32_t duty(void*){auto* c=context.load(std::memory_order_acquire);return c?c->engine.sample(time_us_32()):0x00800080u;}
 bool failed(){auto* c=context.load(std::memory_order_acquire);return c && c->engine.error.load(std::memory_order_acquire);}
 void fault(int error){auto* c=context.load(std::memory_order_acquire);if(c)c->engine.fail(error);}
-bool open(const mk61_service_audio_psg& request,unsigned gain) {
-    if(context.load(std::memory_order_acquire) || !psg_packets::valid(request) || !request.recover || gain>1000)return false;
-    auto* c=new(std::nothrow) Context;if(!c)return false;
-    c->engine.request=request;last={};
-    if(!setup(*c)){delete c;return false;}
+bool open(const mk61_service_audio_psg& request,unsigned gain,const mk61_service_audio_psg_config* config) {
+    const auto options=psg_packets::options(config);
+    if(context.load(std::memory_order_acquire) || !psg_packets::valid(request) || !psg_packets::valid(options) || !request.recover || gain>1000)return false;
+    void* memory=std::malloc(sizeof(Context)+alignof(Context)-1);if(!memory)return false;
+    const uintptr_t aligned=(uintptr_t(memory)+alignof(Context)-1)&~uintptr_t(alignof(Context)-1);
+    auto* c=new(reinterpret_cast<void*>(aligned)) Context;c->allocation=memory;
+    c->engine.request=request;c->engine.options=options;last={};
+    if(!setup(*c)){destroy(c);return false;}
     if(!load(*c,request.module_path,gain)){close();return false;}
     io_worker::invoke(c,[](void* raw) {
         auto& c=*(Context*)raw;c.engine.wire.complete=false;c.engine.inline_input=c.inline_input;c.streaming=true;
@@ -266,8 +305,9 @@ void close() {
             c->engine.job=m3::Wire::get32(c->engine.wire.reply());
         // Recover the exact oscillator/filter state before APP code resumes.
         if(!c->engine.error.load(std::memory_order_acquire) && c->engine.stopped.load(std::memory_order_acquire)) {
-            m3::Wire::put32(c->engine.packet,psg_packets::MAGIC);m3::Wire::put32(c->engine.packet+4,2);
-            if(!job(*c,8,psg_packets::STATE) || !psg_packets::restore(c->engine.request,c->engine.packet,psg_packets::STATE))c->engine.fail(-30);
+            const auto& options=c->engine.options;
+            m3::Wire::put32(c->engine.packet,options.magic());m3::Wire::put32(c->engine.packet+4,2);
+            if(!job(*c,8,options.state_bytes()) || !psg_packets::restore(c->engine.request,c->engine.packet,options.state_bytes(),options))c->engine.fail(-30);
         }
     }
     // A foreign module is never unloaded. For an owned module, HELLO first
@@ -291,7 +331,7 @@ void close() {
             // adding UART requests to the real-time path or replacing a fault.
             if((state==2 || state==4 || state==5) && (c->capabilities&8)) {
                 auto* p=c->engine.packet;
-                m3::Wire::put32(p,psg_packets::MAGIC);m3::Wire::put32(p+4,3);
+                m3::Wire::put32(p,c->engine.options.magic());m3::Wire::put32(p+4,3);
                 if(job(*c,8,32) && m3::Wire::get32(p)==0x31504153u) {
                     last.profile_valid=true;
                     last.render_samples=m3::Wire::get32(p+4);last.render_jobs=m3::Wire::get32(p+8);
@@ -305,7 +345,7 @@ void close() {
         }
         if(!empty)++last.unload_failures;
     }
-    io_worker::invoke(c,release);delete c;
+    io_worker::invoke(c,release);destroy(c);
 }
 Statistics statistics() {
     auto* c=context.load(std::memory_order_acquire);

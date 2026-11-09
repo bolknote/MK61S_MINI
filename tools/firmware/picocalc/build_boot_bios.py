@@ -80,9 +80,9 @@ def main():
       source_pins={str(p.relative_to(ROOT)):sha(p)for p in [*boot.iterdir(),Path(__file__),ROOT/'tools/firmware/picocalc/bios_boot.py',
         ROOT/'tools/firmware/picocalc/build_async_bios.py',ROOT/'tools/firmware/picocalc/bios_pmu_async.py',
         ROOT/'tools/firmware/picocalc/bios_stm3_input.py',ROOT/'tools/firmware/picocalc/bios_stm3_reply.py',
-        ROOT/'tools/firmware/picocalc/bios_stm3_crc.py',
+        ROOT/'tools/firmware/picocalc/bios_stm3_crc.py',ROOT/'tools/firmware/picocalc/bios_stm3_result.py',
         ROOT/'ports/picocalc/bios/stm3_crc_f103.h',
-        ROOT/'examples/portable-apps/BIOSUPD/main.c',ROOT/'sdk/coproc/pico_uart1.c']if p.is_file()})
+        ROOT/'examples/portable-apps/BIOSUPD/main.c',ROOT/'sdk/coproc/pico_uart1.c',ROOT/'sdk/coproc/stm3_client.h']if p.is_file()})
     # Archive the fully staged source, including the current coprocessor
     # extension. Rebuilding it does not rely on an old .build work directory.
     entries={}

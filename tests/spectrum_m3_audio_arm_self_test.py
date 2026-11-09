@@ -11,18 +11,32 @@ from pathlib import Path
 import struct
 import subprocess
 import sys
+import zipfile
 from spectrum_m3_runtime_fixture import prepare
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'sdk/coproc'),str(ROOT/'tools/firmware/picocalc')]
 from build_picocalc import compiler_bin
 vectors=None
+from unicorn.arm_const import UC_ARM_REG_SP
 
-def build_harness(folder):
+def build_harness(folder,resident_package=None):
     out=folder/'arm-harness';out.mkdir(parents=True,exist_ok=True)
     compiler=compiler_bin(None)/'arm-none-eabi-gcc'
     runtime=folder/'runtime'
     pins=prepare(runtime)
+    if resident_package:
+        manifest=json.loads((resident_package/'manifest.json').read_text())
+        archive=resident_package/'source.zip'
+        assert hashlib.sha256(archive.read_bytes()).hexdigest()==manifest['files']['source.zip']['sha256']
+        with zipfile.ZipFile(archive) as z:
+            for name in ['stm3_runtime.c','stm3_runtime.h','stm3_module.h','m3b_entry.h','protocol.h']:
+                member='source/Core/'+('Src/' if name.endswith('.c') else 'Inc/')+name
+                data=z.read(member);digest=hashlib.sha256(data).hexdigest()
+                assert digest==manifest['source_archive_entries'][member]
+                (runtime/name).write_bytes(data);pins['resident_package/'+member]=digest
+        with (runtime/'arm_harness.c').open('a') as f:f.write('\nvolatile uint8_t bios_update_requested;\n')
+        pins['resident_package/manifest.json']=hashlib.sha256((resident_package/'manifest.json').read_bytes()).hexdigest()
     inputs=[runtime/'stm3_runtime.c',runtime/'stm3_runtime.h',runtime/'arm_harness.c',runtime/'harness.ld',ROOT/'sdk/coproc/stm3_module.h']
     cmd=[str(compiler),'-mcpu=cortex-m3','-mthumb','-mfloat-abi=soft','-std=c11','-Os','-g',
          '-ffreestanding','-fno-builtin','-fno-common','-fno-stack-protector','-fno-unwind-tables',
@@ -32,12 +46,12 @@ def build_harness(folder):
     with (out/'build.log').open('w') as log:subprocess.run(cmd,check=True,stdout=log,stderr=subprocess.STDOUT)
     return out/'harness.elf',pins
 
-def deferred(t,module,packet,count,inline=False):
+def deferred(t,module,packet,count,inline=False,allow_short=False):
     t.seq=(t.seq+1)&65535
     payload=struct.pack('<IIII',module,len(packet),10,count)
     if inline:payload+=packet
     command=12 if inline else 11
-    raw=struct.pack('<BBHHH',1,command,t.seq,len(payload),0)+payload
+    raw=struct.pack('<BBHHH',2,command,t.seq,len(payload),0)+payload
     raw+=struct.pack('<I',binascii.crc32(raw));frame=b'\0'+vectors.encode(raw)+b'\0'
     response=t.send(frame)
     if not response:
@@ -52,11 +66,11 @@ def deferred(t,module,packet,count,inline=False):
     def decode(response):
         assert response.endswith(b'\0');decoded=vectors.decode(response[:-1])
         version,op,seq,n,flags=struct.unpack_from('<BBHHH',decoded)
-        assert (version,op,seq,flags)==(1,command|128,t.seq,0) and len(decoded)==12+n
+        assert (version,op,seq,flags)==(2,command|128,t.seq,0) and len(decoded)==12+n
         assert binascii.crc32(decoded[:-4])==struct.unpack_from('<I',decoded,len(decoded)-4)[0]
         assert struct.unpack_from('<I',decoded,8)[0]==0
         job,slice_us=struct.unpack_from('<II',decoded,12)
-        assert job and slice_us<=2000 and n==12+count
+        assert job and slice_us<=2000 and (12<=n<=12+count if allow_short else n==12+count)
         return job,decoded[20:-4]
     job,output=decode(response)
     assert t.send(frame)==response, 'Lost completion replay changed bytes or ran the job again'
@@ -66,10 +80,13 @@ def main():
     global vectors
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--build-dir',type=Path,default=ROOT/'.build/spectrum-m3-audio-20261107')
-    folder=ap.parse_args().build_dir.resolve()
+    ap.add_argument('--resident-package',type=Path,help='Execute exact archived runtime from a built boot-preserving BIOS package')
+    args=ap.parse_args();folder=args.build_dir.resolve()
+    module_options=json.loads((folder/'module/manifest.json').read_text())
+    timing=module_options.get('timing',False);repeat=module_options.get('repeat',False)
     raw=(folder/'arm-vectors.bin').read_bytes();magic,count=struct.unpack_from('<II',raw)
     assert magic==0x31564153 and count==32
-    harness,pins=build_harness(folder);checked_samples=0;instructions=0;render_instructions=Counter();fused_jobs=0
+    harness,pins=build_harness(folder,args.resident_package.resolve() if args.resident_package else None);checked_samples=0;instructions=0;render_instructions=Counter();fused_jobs=0;minimum_sp=0x20004ff0
     spec=importlib.util.spec_from_file_location('stm3_arm_vectors',folder/'runtime/arm_execution.py')
     vectors=importlib.util.module_from_spec(spec);spec.loader.exec_module(vectors)
     elf=vectors.ELF(folder/'module/AY.elf')
@@ -79,6 +96,8 @@ def main():
         t=vectors.Target(harness);module=t.load((folder/'module/AY.S3M').read_bytes())
         profile={'active':False}
         def executed(uc,address,size,unused):
+            nonlocal minimum_sp
+            minimum_sp=min(minimum_sp,uc.reg_read(UC_ARM_REG_SP))
             if not profile['active'] or not(t.module_range[0]<=address<t.module_range[1]):return
             linked=address-t.module_range[0]+0x20000000;i=bisect_right(starts,linked)-1
             if i>=0 and linked<functions[i][0]+functions[i][1]:render_instructions[functions[i][2]]+=1
@@ -86,7 +105,7 @@ def main():
         assert t.module_range[0]!=0x20000000
         hello=t.request(1);assert struct.unpack_from('<I',hello,32)[0]&12==12
         at=8
-        for _ in range(count):
+        for vector_index in range(count):
             n,out_n=struct.unpack_from('<II',raw,at);at+=8
             packet=raw[at:at+n];at+=n;expected=raw[at:at+out_n];at+=out_n
             profile['active']=packet[4]==1
@@ -95,8 +114,8 @@ def main():
                 if not inline:
                     for offset in range(0,n,252):t.request(5,struct.pack('<I',offset)+packet[offset:offset+252])
                 else:fused_jobs+=1
-                received=min(244,out_n);job,actual=deferred(t,module,packet,received,inline)
-                for offset in range(received,out_n,252):
+                received=min(244,out_n);job,actual=deferred(t,module,packet,received,inline,repeat and packet[4]==1)
+                for offset in range(received,out_n if len(actual)==received else received,252):
                     actual+=t.request(8,struct.pack('<III',job,offset,min(252,out_n-offset)))
             else:
                 for offset in range(0,n,252):t.request(5,struct.pack('<I',offset)+packet[offset:offset+252])
@@ -106,17 +125,44 @@ def main():
                     t.call('harness_tick')
                 else:raise AssertionError('Cooperative sound job did not complete')
                 status=struct.unpack('<7I',t.request(7,struct.pack('<I',job)))
-                assert status[1]==4 and status[2]==0 and status[4]==out_n
-                actual=b''.join(t.request(8,struct.pack('<III',job,offset,min(252,out_n-offset))) for offset in range(0,out_n,252))
-            assert actual==expected,'ARM PCM or state differs from verified local HOST vectors'
+                assert status[1]==4 and status[2]==0 and (status[4]<=out_n if repeat and packet[4]==1 else status[4]==out_n)
+                actual=b''.join(t.request(8,struct.pack('<III',job,offset,min(252,status[4]-offset))) for offset in range(0,status[4],252))
+            if repeat and packet[4]==0:
+                assert actual[7]&128
+                normalized=bytearray(actual);normalized[7]&=~128;actual=bytes(normalized)
+                normalized=bytearray(expected);normalized[7]&=~128;expected=bytes(normalized)
+            if repeat and packet[4]==1 and actual[:4]==b'PWM3':
+                frames=actual[4];cursor=8;remaining=0;previous=b'\x80\x80';decoded=bytearray(actual[:8]);decoded[:4]=b'PWM2'
+                for _ in range(frames):
+                    if remaining:remaining-=1
+                    else:
+                        token=actual[cursor];cursor+=1
+                        if token==1:previous=actual[cursor:cursor+2];assert len(previous)==2;cursor+=2
+                        elif token<64:remaining=token-1 if token else 0
+                        else:previous=bytes([token,actual[cursor]]);cursor+=1
+                    decoded+=previous
+                assert not remaining and cursor==len(actual) and len(decoded)==8+frames*2
+                actual=bytes(decoded)
+            if timing and packet[4] in (0,1):
+                normalized=bytearray(actual)
+                if packet[4]==0:normalized[7]&=~64
+                else:normalized[5]=expected[5];normalized[7]=expected[7]
+                actual=bytes(normalized)
+            assert actual==expected,('ARM PCM/state differs from HOST vector '+str(vector_index)+
+                ' command='+str(packet[4])+' first differences='+str([(i,a,b) for i,(a,b) in enumerate(zip(actual,expected)) if a!=b][:8]))
             profile['active']=False
             if packet[4]==1:checked_samples+=packet[5]
         assert at==len(raw)
         t.request(10);assert t.call('harness_empty')==1;instructions+=t.module_instructions
     result=dict(status='PASS',jobs=2*count,legacy_jobs=count,pushed_jobs=count,fused_input_jobs=fused_jobs,
+                module_sha256=hashlib.sha256((folder/'module/AY.S3M').read_bytes()).hexdigest(),
+                vectors_sha256=hashlib.sha256(raw).hexdigest(),
                 exact_PCM_samples=checked_samples,
                 module_instructions=instructions,real_relocated_Thumb2=True,real_compact_loader=True,
                 pushed_replay_byte_exact=True,pushed_readiness_polls=0,physical_hardware=False,source_pins=pins)
+    assert 0x20004ff0-minimum_sp<4096, 'Resident/module stack exceeds reserved stack'
+    result['resident_module_stack_high_water_bytes']=0x20004ff0-minimum_sp
+    result['stack_reserved_bytes']=4096
     result['render_instruction_counts']=dict(render_instructions.most_common())
     result['instruction_counts_are_not_cycle_timings']=True
     (folder/'arm-result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))

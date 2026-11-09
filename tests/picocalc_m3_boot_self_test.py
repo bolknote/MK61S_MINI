@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Real updater state machine, every Flash mutation interrupted, ASan/UBSan."""
 from pathlib import Path
-import hashlib,json,os,struct,subprocess,tempfile,zipfile,zlib
+import argparse,hashlib,json,os,struct,subprocess,tempfile,zipfile,zlib
 ROOT=Path(__file__).resolve().parents[1]
-def release():
+def release(folder):
     """The reviewed ROM image, SD payload and archived sources stay a set."""
-    folder=ROOT/'firmware/picocalc-m3-boot'
     manifest=json.loads((folder/'manifest.json').read_text())
     for name,info in manifest['files'].items():
         path=folder/'sd/Apps/BIOS/BIOSUPD.APP' if name=='BIOSUPD.APP' else folder/name
@@ -31,7 +30,9 @@ def release():
             assert manifest['files'][name]['sha256']==digest,name
     print('M3 release PASS: ROM bootstrap, BIOS/M3U, SD APP and source archive hashes')
 def main():
-    release()
+    ap=argparse.ArgumentParser(description=__doc__)
+    ap.add_argument('--release-dir',type=Path,default=ROOT/'firmware/picocalc-m3-boot')
+    release_folder=ap.parse_args().release_dir.resolve();release(release_folder)
     with tempfile.TemporaryDirectory(prefix='m3b-test-') as folder:
         binary=Path(folder)/'test'
         boot=ROOT/'ports/picocalc/bios/boot'
@@ -43,5 +44,8 @@ def main():
         appcmd[appcmd.index(str(ROOT/'tests/picocalc_m3_boot_self_test.c'))]=str(ROOT/'tests/picocalc_m3_updater_self_test.c')
         appcmd+=['-I'+str(ROOT/'sdk/portable/include'),'-I'+str(ROOT/'code'),'-I'+str(ROOT/'sdk/coproc')]
         subprocess.run(appcmd,check=True)
-        subprocess.run([str(binary)],check=True,env={**os.environ,'UBSAN_OPTIONS':'halt_on_error=1'})
+        for old_client in [False,True]:
+            if old_client:subprocess.run(appcmd+['-DTEST_OLD_CLIENT=1'],check=True)
+            subprocess.run([str(binary)],check=True,env={**os.environ,'UBSAN_OPTIONS':'halt_on_error=1',
+                'M3U_TEST_PACKAGE':str(release_folder/'BIOS.M3U')})
 if __name__=='__main__':main()

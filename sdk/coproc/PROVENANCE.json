@@ -25,13 +25,14 @@
     },
     "stm3_client.c": {
       "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.c",
-      "sha256": "5d8f866fb18fc571cee7dd0744220ce3f07385c4bef8edbb0be0d728fbd3c7b4"
+      "sha256": "189f672ef354fefe4da9fabdc576c196e17d1e0ebf13a58974dc4a3d49d0f833",
+      "local_extension": "Wire v2; commands11/12 return min(actual_output_bytes,result_ceiling); HELLO bit5(32); boot bit4(16) unchanged; module ABI1 unchanged. v1 frames rejected."
     },
     "stm3_client.h": {
       "source": "research/picocalc-stm32-runtime-20261107/pico/stm3_client.h",
-      "sha256": "2a6b0128369eb179816adb64bbfbe080611dabb24bf5a11bfee99e5ec32c0bf4",
+      "sha256": "284dbbc80d4381b4657587ed45837edf7d6ad7417b1b1b559cf8b5d72195edbd",
       "baseline_sha256": "d1270eabb51f5e5ba45ea49c3751e3b2c8676ceb72eeb5aceb5722481ab7af41",
-      "local_extension": "Optional START_RESULT11/START_RESULT_INPUT12 and HELLO capability bits2/3; existing command values and module ABI unchanged"
+      "local_extension": "Wire v2; commands11/12 return min(actual_output_bytes,result_ceiling); HELLO bit5(32); boot bit4(16) unchanged; module ABI1 unchanged. v1 frames rejected."
     }
   },
   "hardware_evidence": {
@@ -66,5 +67,26 @@
       "physical_hardware_verified": false,
       "evidence": ".build/spectrum-m3-audio-20261107/arm-result.json"
     }
-  ]
+  ],
+  "wire_version": 2,
+  "protocol_v2_hardware_evidence": {
+    "date": "2026-11-09",
+    "pico_build": "AE2AF595",
+    "pico_crc": "DE0F4F49",
+    "m3u_sha256": "b110eb5df355258ae8c8b415281a876a754218206e0aa38f2e950dd5d3baf8a4",
+    "wire_version": 2,
+    "module_abi": 1,
+    "stock_clocks_hz": {
+      "pico": 125000000,
+      "m3": 72000000
+    },
+    "normal_open_close": "3PASS",
+    "strict_short_cases": "4PASS",
+    "long_processed_blocks": 130166,
+    "long_transport_errors": 0,
+    "long_audio_underruns": 0,
+    "long_strict_timing": "FAIL: one block4765us versus4720us; no threshold change",
+    "measurement": "doc/measurements/picocalc-spectrum-stereo-20261109.json",
+    "current_clean_main_integration_hardware_tested": false
+  }
 }

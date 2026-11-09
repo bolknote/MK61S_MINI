@@ -42,7 +42,7 @@ for compiler-produced files, not an untrusted ELF validation boundary.
 
 Frames are COBS-encoded and zero-terminated; a leading zero is accepted for
 resynchronization. The decoded header is8 bytes:
-`version:u8=1, command:u8, sequence:u16, payload_bytes:u16, flags:u16=0`.
+`version:u8=2, command:u8, sequence:u16, payload_bytes:u16, flags:u16=0`.
 It is followed by up to256 payload bytes and a reflected CRC32 over header and
 payload (polynomial0xEDB88320, initial/final XOR0xFFFFFFFF). Responses use
 `command|0x80`; the first payload word is a status code. READ therefore returns
@@ -60,10 +60,14 @@ reply. A new sequence is for a new operation; retries reuse the original frame.
 An asynchronous backend must preserve these lifetimes and framing constraints.
 
 START_RESULT requires bit2 (`4`) in HELLO's transport flags. Its four input
-words are `module_id, input_bytes, deadline_ms, result_bytes`; the input buffer
+words are `module_id, input_bytes, deadline_ms, result_ceiling`; the input buffer
 is filled with WRITE as before. The module starts once. On completion the
 STM32 sends the single pending response: status, job ID, maximum slice time
-in microseconds and the requested prefix of output (at most244 bytes).
+in microseconds and `min(actual_output_bytes, result_ceiling)` bytes of output (at most244).
+A zero ceiling returns only job metadata. Wire version2 and HELLO bit5 (`32`)
+identify this single length contract; version1 frames are rejected before any
+module action. Module ABI1 is unchanged. Pico clients also reject version1
+responses. Update the resident and clients together.
 There is no initial acknowledgement and no STATUS/READ readiness polling.
 INIT/STEP/deadline failures return their original status instead of samples.
 The native2ms slice limit and keyboard processing between module calls remain.

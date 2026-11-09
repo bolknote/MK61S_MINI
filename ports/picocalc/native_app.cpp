@@ -739,16 +739,23 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     return host.present_color(a,payload);
   case MK61_SERVICE_AUDIO_STREAM:
 #if defined(PICO_ON_DEVICE)
-    if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN) {
-      if(b || c!=sizeof(mk61_service_audio_psg) || !payload)return 0;
-      auto request=*(const mk61_service_audio_psg*)payload;
+    if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN ||
+       a==MK61_AUDIO_PSG_CONFIG_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN) {
+      const bool extended=a==MK61_AUDIO_PSG_CONFIG_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN;
+      if(b || c!=(extended?sizeof(mk61_service_audio_psg_config):sizeof(mk61_service_audio_psg)) || !payload)return 0;
+      mk61_service_audio_psg_config config{};
+      if(extended)config=*(const mk61_service_audio_psg_config*)payload;
+      else config.psg=*(const mk61_service_audio_psg*)payload;
+      auto& request=config.psg;
       if(!request.module_path || strnlen(request.module_path,files::PATH_SIZE)>=files::PATH_SIZE)return 0;
       char name[files::PATH_SIZE],base[files::PATH_SIZE],path[files::PATH_SIZE];
       if(!utf8(request.module_path,name,sizeof(name)))return 0;
       std::snprintf(base,sizeof(base),"%s",s.path_);char* slash=std::strrchr(base,'/');
       if(!slash)std::strcpy(base,"/");else if(slash==base)slash[1]=0;else *slash=0;
       if(!script::normalize_path(base,name,path))return 0;
-      request.module_path=path;return audio_stream::psg(request,host.settings().volume,a==MK61_AUDIO_PSG_ONLY_OPEN);
+      request.module_path=path;
+      return audio_stream::psg(request,host.settings().volume,
+          a==MK61_AUDIO_PSG_ONLY_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN,extended?&config:nullptr);
     }
     if(a==MK61_AUDIO_SYNTH_OPEN) {
       if(b || c!=sizeof(mk61_service_audio_synth) || !payload) return 0;

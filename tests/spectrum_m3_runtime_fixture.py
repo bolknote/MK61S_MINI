@@ -11,6 +11,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools/firmware/picocalc'))
 from bios_stm3_input import stage_stm3_input
 from bios_stm3_crc import stage_stm3_crc
+from bios_stm3_result import stage_stm3_result
 FILES={
     'stm3_runtime.c':'source/Core/Src/stm3_runtime.c',
     'stm3_runtime.h':'source/Core/Inc/stm3_runtime.h',
@@ -41,6 +42,14 @@ def prepare(output):
     (staged/'Core/Src/stm3_runtime.c').write_bytes((output/'stm3_runtime.c').read_bytes())
     stage_stm3_input(staged)
     stage_stm3_crc(staged)
+    stage_stm3_result(staged)
+    # The archived execution helper is historical wire v1; execute the same
+    # harness against the staged, explicitly versioned wire v2 resident.
+    arm = (output/'arm_execution.py').read_text()
+    arm = arm.replace("struct.pack('<BBHHH',1,cmd", "struct.pack('<BBHHH',2,cmd")
+    arm = arm.replace('(1,cmd|128,self.seq,0)', '(2,cmd|128,self.seq,0)')
+    (output/'arm_execution.py').write_text(arm)
+    pins['staged/arm_execution.py']=hashlib.sha256((output/'arm_execution.py').read_bytes()).hexdigest()
     (output/'stm3_runtime.h').write_bytes((staged/'Core/Inc/stm3_runtime.h').read_bytes())
     (output/'stm3_runtime.c').write_bytes((staged/'Core/Src/stm3_runtime.c').read_bytes())
     pins['staged/Core/Inc/stm3_runtime.h']=hashlib.sha256((output/'stm3_runtime.h').read_bytes()).hexdigest()

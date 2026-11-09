@@ -37,7 +37,7 @@ namespace picocalc::script { void tone(unsigned,unsigned,unsigned=100);audio::Pl
 #include "../ports/picocalc/audio_stream.cpp"
 namespace picocalc::m3_audio {
 static bool available=false,opened=false,broken=false;
-bool open(const mk61_service_audio_psg&,unsigned){assert(!core1);opened=available;broken=false;return opened;}
+bool open(const mk61_service_audio_psg&,unsigned,const mk61_service_audio_psg_config*){assert(!core1);opened=available;broken=false;return opened;}
 void close(){assert(!core1);opened=false;broken=false;}
 bool failed(){return opened && broken;}
 void fault(int){broken=true;}

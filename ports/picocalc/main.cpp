@@ -154,6 +154,13 @@ void report(unsigned math_failures) {
     std::printf("M3_IDLE_GAP_US=%lu M3_PUMP_US=%lu M3_STEP_US=%lu M3_TX_US=%lu\n",
         (unsigned long)m3.max_idle_gap_us,(unsigned long)m3.max_pump_us,
         (unsigned long)m3.max_step_us,(unsigned long)m3.max_tx_us);
+    if(!m3.active && m3.first_late.index) {
+        const auto& l=m3.first_late;
+        std::printf("M3_FIRST_LATE index=%lu us=%lu request_us=%lu frames=%lu input=%lu queued=%lu command=%lu gap=%lu pump=%lu step=%lu tx=%lu compute=%lu schedule=%lu\n",
+            (unsigned long)l.index,(unsigned long)l.elapsed,(unsigned long)l.request_us,(unsigned long)l.frames,
+            (unsigned long)l.input_bytes,(unsigned long)l.queued,(unsigned long)l.command,(unsigned long)l.gap,
+            (unsigned long)l.pump,(unsigned long)l.step,(unsigned long)l.tx,(unsigned long)l.compute,(unsigned long)l.schedule);
+    }
     const auto heap=mallinfo();
     const auto heap_capacity=(uintptr_t)&__HeapLimit-(uintptr_t)&__end__;
     std::printf("HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu\n",

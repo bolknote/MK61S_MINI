@@ -42,7 +42,7 @@ static int exchange(stm3_client*c,void*out,unsigned*used,uint32_t timeout,int se
  if(overflow)return S3_FRAME;
  n=decode(c->rx,n);if(n<16)return S3_FRAME;
  const unsigned payload=(unsigned)c->rx[4]|(unsigned)c->rx[5]<<8;
- if(c->rx[0]!=1||c->rx[1]!=(c->command|128u)||
+ if(c->rx[0]!=S3_WIRE_VERSION||c->rx[1]!=(c->command|128u)||
     ((unsigned)c->rx[2]|(unsigned)c->rx[3]<<8)!=c->seq||c->rx[6]||c->rx[7]||
     payload<4||payload>256||n!=12+payload||stm3_get32(c->rx+n-4)!=crc(c->rx,n-4))return S3_FRAME;
  const uint32_t status=stm3_get32(c->rx+8);if(status)return status<=9?(int)status:S3_FRAME;
@@ -53,7 +53,7 @@ static int exchange(stm3_client*c,void*out,unsigned*used,uint32_t timeout,int se
 static int prepare_request(stm3_client*c,uint8_t command,const void*in,unsigned bytes){
  if(bytes>256||(bytes&&!in)||!command||command&128u)return S3_SIZE;
  ++c->seq;c->command=command;
- uint8_t*p=c->rx;p[0]=1;p[1]=command;p[2]=(uint8_t)c->seq;p[3]=(uint8_t)(c->seq>>8);
+ uint8_t*p=c->rx;p[0]=S3_WIRE_VERSION;p[1]=command;p[2]=(uint8_t)c->seq;p[3]=(uint8_t)(c->seq>>8);
  p[4]=(uint8_t)bytes;p[5]=(uint8_t)(bytes>>8);p[6]=p[7]=0;
  if(bytes)memcpy(p+8,in,bytes);
  stm3_put32(p+8+bytes,crc(p,8+bytes));

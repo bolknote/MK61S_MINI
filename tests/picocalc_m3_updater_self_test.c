@@ -2,9 +2,15 @@
  * services, register storage and the UART physical link are substituted. */
 #include "mk61_app.h"
 #include "pico_uart1.h"
+#include "stm3_client.h"
 #include "wire.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#ifdef TEST_OLD_CLIENT
+#undef S3_WIRE_VERSION
+#define S3_WIRE_VERSION 1u
+#endif
 #include <string.h>
 static uint32_t timer, fr = 16, reg;
 static volatile uint32_t *mock_reg(uint32_t at) {
@@ -18,7 +24,8 @@ static volatile uint32_t *mock_reg(uint32_t at) {
 #define main updater_main
 #include "../examples/portable-apps/BIOSUPD/main.c"
 #undef main
-static uint8_t flash_memory[65536], file[32 + 2200], staged[2200], queue[272],
+static unsigned file_size=32+2200;
+static uint8_t flash_memory[65536], file[32 + 0xd400], staged[0xd400], queue[272],
     input[272];
 static m3b_link link;
 static unsigned queued, queue_at, input_n;
@@ -92,7 +99,7 @@ int stm3_pico_uart1_send(void *p, const uint8_t *bytes, unsigned n,
         continue;
       unsigned size = m3b_decode(input, input_n);
       input_n = 0;
-      if (size < 12 || input[0] != 1)
+      if (size < 12 || input[0] != S3_WIRE_VERSION)
         continue;
       assert(m3b_crc(input, size - 4) == m3b_get(input + size - 4));
       uint8_t answer[40] = {0};
@@ -110,7 +117,7 @@ int stm3_pico_uart1_send(void *p, const uint8_t *bytes, unsigned n,
         bootmode = 1;
       } else
         assert(0);
-      queued = m3b_packet(1, (uint8_t)(op | 128), seq, answer, count, queue);
+      queued = m3b_packet(S3_WIRE_VERSION, (uint8_t)(op | 128), seq, answer, count, queue);
     }
   }
   return 1;
@@ -138,12 +145,12 @@ static uint32_t call_service(uint32_t op, uint32_t a, uint32_t b, uint32_t c,
     mk61_service_file_bytes *r = data;
     if (a == MK61_FILE_BYTES_STAT) {
       mk61_service_file_info *info = r->data;
-      info->size = sizeof(file);
+      info->size = file_size;
       info->directory = 0;
       return 1;
     }
     if (a == MK61_FILE_BYTES_READ) {
-      assert(r->offset <= sizeof(file) && r->size <= sizeof(file) - r->offset);
+      assert(r->offset <= file_size && r->size <= file_size - r->offset);
       memcpy(r->data, file + r->offset, r->size);
       return 1;
     }
@@ -152,7 +159,7 @@ static uint32_t call_service(uint32_t op, uint32_t a, uint32_t b, uint32_t c,
   if (op == MK61_SERVICE_BUFFER) {
     mk61_service_buffer *r = data;
     if (a == MK61_BUFFER_ACQUIRE) {
-      assert(r->size == sizeof(staged));
+      assert(r->size == (file_size-32));
       r->handle = 1;
       r->storage = MK61_BUFFER_PSRAM;
       return 1;
@@ -161,11 +168,11 @@ static uint32_t call_service(uint32_t op, uint32_t a, uint32_t b, uint32_t c,
       assert(r->handle == 1);
       return 1;
     }
-    assert(r->handle == 1 && r->offset <= sizeof(staged) &&
-           r->size <= sizeof(staged) - r->offset);
+    assert(r->handle == 1 && r->offset <= (file_size-32) &&
+           r->size <= (file_size-32) - r->offset);
     if (a == MK61_BUFFER_WRITE) {
       memcpy(staged + r->offset, r->data, r->size);
-      if (r->offset + r->size == sizeof(staged))
+      if (r->offset + r->size == (file_size-32))
         staged_ok = 1;
       return 1;
     }
@@ -223,8 +230,8 @@ static void setup(void) {
   bootmode = legacy = uart_claims = erases = programs = fail_after = drop_ack =
       staged_ok = cancelled = passed = 0;
   memset(flash_memory, 0x69, sizeof(flash_memory));
-  memset(file, 0, sizeof(file));
-  for (unsigned i = 32; i < sizeof(file); ++i)
+  memset(file, 0, file_size);
+  for (unsigned i = 32; i < file_size; ++i)
     file[i] = (uint8_t)i;
   m3b_put(file + 32, M3B_MAILBOX);
   m3b_put(file + 36, M3B_APP + 129);
@@ -232,12 +239,16 @@ static void setup(void) {
                    1,
                    M3B_TARGET,
                    M3B_APP,
-                   sizeof(file) - 32,
-                   m3b_crc(file + 32, sizeof(file) - 32),
+                   file_size - 32,
+                   m3b_crc(file + 32, file_size - 32),
                    1};
   for (unsigned i = 0; i < 7; ++i)
     m3b_put(file + 4 * i, h[i]);
   m3b_put(file + 28, m3b_crc(file, 28));
+  const char* package=getenv("M3U_TEST_PACKAGE");
+  if(package){FILE* f=fopen(package,"rb");assert(f);assert(!fseek(f,0,SEEK_END));
+    long n=ftell(f);assert(n>32&&n<=(long)sizeof(file));file_size=(unsigned)n;
+    rewind(f);assert(fread(file,1,file_size,f)==file_size);fclose(f);}
   const m3b_flash f = {0, model_read, model_erase, model_program};
   m3b_link_init(&link, &f);
 }
@@ -245,8 +256,8 @@ int main(void) {
   setup();
   drop_ack = 1;
   assert(updater_main() == MK61_APP_OK && passed && !uart.ready);
-  assert(erases == 4 && programs == 12 &&
-         !memcmp(flash_memory + 8192, file + 32, sizeof(file) - 32));
+  assert(erases > 0 && programs > 0 &&
+         !memcmp(flash_memory + 8192, file + 32, file_size - 32));
   for (unsigned i = 0; i < 8192; ++i)
     assert(flash_memory[i] == 0x69);
   for (unsigned i = 0xf800; i < 65536; ++i)
