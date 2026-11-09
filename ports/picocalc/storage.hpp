@@ -31,6 +31,9 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
 // Recursive operations include dotfiles, but never . / .. or the journal.
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more);
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used);
+// Missing optional resources return false without changing the diagnostic;
+// card, read and close failures retain the normal error reporting.
+bool read_optional(const char* path, u8* out, unsigned capacity, unsigned& used);
 bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used);
 bool read_text(const char* path, char* out, unsigned capacity, unsigned& used);
 bool read_text_stream(const char* path,bool (*write)(void*,const u8*,unsigned),

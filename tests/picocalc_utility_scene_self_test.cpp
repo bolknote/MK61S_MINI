@@ -11,11 +11,13 @@ int main(int argc,char** argv) {
     utility::Animation animation;
     animation.tick(1000,10,20);assert(animation.frame(utility::Mode::USB)==0);
     animation.tick(1500,10,20);assert(animation.frame(utility::Mode::USB)==0);
-    animation.tick(1600,11,20);assert((animation.frame(utility::Mode::USB)&7)!=0);
-    assert(!(animation.frame(utility::Mode::USB)&32));
-    animation.tick(1800,11,21);assert(animation.frame(utility::Mode::USB)&32);
-    animation.tick(2500,11,21);assert(!(animation.frame(utility::Mode::USB)&7));
-    animation.tick(3650,11,21);assert(animation.frame(utility::Mode::USB)==16);
+    animation.tick(1600,11,20);assert((animation.frame(utility::Mode::USB)&utility::PACKET_MASK)!=0);
+    assert(!(animation.frame(utility::Mode::USB)&utility::WRITING));
+    const auto position=animation.frame(utility::Mode::USB);
+    animation.tick(1632,11,20);assert(animation.frame(utility::Mode::USB)!=position);
+    animation.tick(1800,11,21);assert(animation.frame(utility::Mode::USB)&utility::WRITING);
+    animation.tick(2500,11,21);assert(!(animation.frame(utility::Mode::USB)&utility::PACKET_MASK));
+    animation.tick(3650,11,21);assert(animation.frame(utility::Mode::USB)==utility::BLINK);
     assert(animation.frame(utility::Mode::EJECTED)==0);
     animation.tick(4000,11,21);assert(animation.frame(utility::Mode::USB)==0);
     const u32 start=0xffffffffU-400;
@@ -31,9 +33,15 @@ int main(int argc,char** argv) {
     std::array<u8,12800+32> guarded{};
     for(auto mode:{utility::Mode::USB,utility::Mode::EJECTED,utility::Mode::UF2_CONFIRM,
                   utility::Mode::UF2_ENTERING,utility::Mode::UF2_READY}) {
-        for(unsigned phase=0;phase<64;++phase) {
+        std::array<u8,12800> incremental{};
+        assert(utility::draw(incremental.data(),mode,0));
+        for(unsigned phase=0;phase<128;++phase) {
             guarded.fill(0xa7);u8* frame=guarded.data()+16;std::memset(frame,0,12800);
             assert(utility::draw(frame,mode,phase));
+            if(mode==utility::Mode::USB || mode==utility::Mode::UF2_CONFIRM || mode==utility::Mode::UF2_ENTERING) {
+                assert(utility::redraw(incremental.data(),mode,phase));
+                assert(!std::memcmp(frame,incremental.data(),12800));
+            }
             if(mode==utility::Mode::UF2_CONFIRM)
                 for(unsigned y=152;y<154;++y)for(unsigned x=154;x<166;++x)
                     assert(!(frame[y*40+x/8]&(128U>>(x&7))));
@@ -43,6 +51,15 @@ int main(int argc,char** argv) {
                 for(unsigned x=0;x<40;++x)assert(frame[y*40+x]==0);
         }
     }
+    // Native one-pixel steps: no five/four-pixel jumps or 120-ms pauses.
+    utility::Animation smooth;smooth.begin_bootloader(100);
+    unsigned previous=0,changes=0;
+    for(unsigned ms=0;ms<960;ms+=20) {
+        smooth.tick(100+ms,0,0);const auto position=smooth.frame(utility::Mode::UF2_ENTERING);
+        assert(position>=previous && position<=previous+1);
+        changes+=position!=previous;previous=position;
+    }
+    assert(changes==27);
     if(argc==2) {
         struct Art { const char* name;const u8* bytes;unsigned size,raw; };
         #define ART(name,raw) Art{#name,utility_art::name,sizeof(utility_art::name),raw}

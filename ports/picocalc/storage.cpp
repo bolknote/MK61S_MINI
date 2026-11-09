@@ -260,12 +260,13 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more) {
     return list_impl(path,skip,out,capacity,used,more,nullptr,true);
 }
-bool read(const char* path, u8* out, unsigned capacity, unsigned& used) {
+static bool read_impl(const char* path, u8* out, unsigned capacity, unsigned& used,bool optional) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0;
     if(!available()) return false;
     FIL file;
     FRESULT result = f_open(&file, path, FA_READ);
+    if(optional && (result==FR_NO_FILE || result==FR_NO_PATH)) return false;
     if(result != FR_OK) return fail(result);
     if(f_size(&file) > capacity) {
         f_close(&file); std::snprintf(problem, sizeof(problem), "File exceeds editor capacity"); return false;
@@ -275,6 +276,12 @@ bool read(const char* path, u8* out, unsigned capacity, unsigned& used) {
     used = count;
     const FRESULT closed = f_close(&file);
     return fail(result == FR_OK ? closed : result);
+}
+bool read(const char* path, u8* out, unsigned capacity, unsigned& used) {
+    return read_impl(path,out,capacity,used,false);
+}
+bool read_optional(const char* path, u8* out, unsigned capacity, unsigned& used) {
+    return read_impl(path,out,capacity,used,true);
 }
 bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used) {
     if(out.data()) return read(path,out.data(),out.size(),used);

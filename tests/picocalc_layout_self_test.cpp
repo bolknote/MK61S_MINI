@@ -421,6 +421,18 @@ void picocalc_utility_test() {
             if(old!=screen.pixel(x,y)) {++changed;require(y>=118 && y<158,"USB animation changes only tiny face/packet region");}
         }
         require(changed && changed<300,"USB dirty areas stay bounded");
+        require(screen.partial_renders()==1,"USB phase reuses static raster and captions");
+        const auto exact=[&]() {
+            Screen reference=screen;reference.invalidate();reference.render({},true,&ui,&service);
+            require(!std::memcmp(reference.data(),screen.data(),Screen::BYTES),"incremental utility raster differs from forced full render");
+        };
+        exact();
+        const auto partial=screen.partial_renders();
+        for(unsigned phase=1;phase<=80;++phase) {
+            screen.animation_tick(1200+phase*32,1+phase,0);
+            require(screen.render({},true,&ui,&service),"one-pixel packet animation phase");exact();
+        }
+        require(screen.partial_renders()==partial+80,"all moving packet/blink phases use incremental RAM rendering");
         if(ru)preview(screen,"-usb-ru");else preview(screen,"-usb-en");
         if(ru) for(unsigned step=0;step<10;++step) {
             screen.animation_tick(1200+step*140,1+(step<5?step:4),step<5?0:step-4);
@@ -440,11 +452,14 @@ void picocalc_utility_test() {
         require(ui.input(0x1b,calc) && !ui.bootloader_confirmation() && ui.take_action()==Action::NONE,"UF2 Esc cancels without arming ROM");
         require(ui.input('\r',calc) && ui.input('\r',calc) && ui.take_action()==Action::BOOTLOADER,"UF2 Enter requests ROM");
         screen.begin_bootloader(4000);
-        for(unsigned step=0;step<8;++step) {
-            screen.animation_tick(4000+step*120,5,5);
+        const auto boot_partial=screen.partial_renders();
+        for(unsigned step=0;step<28;++step) {
+            screen.animation_tick(4000+step*35,5,5);
             require(screen.render({},true,&ui,&service),"cartridge insertion frame");
+            exact();
             if(ru) {char suffix[32];std::snprintf(suffix,sizeof(suffix),"-uf2-step%u",step);preview(screen,suffix);}
         }
+        require(screen.partial_renders()==boot_partial+27,"insertion reuses static chip/headers/captions");
         screen.animation_tick(4960,5,5);require(screen.render({},true,&ui,&service) && screen.bootloader_ready(),"final ROM instructions before handoff");
         require(ru?banner_matches(screen,utility_art::title_ready_ru):banner_matches(screen,utility_art::title_ready_en),"static ROM banner");
         if(ru)preview(screen,"-uf2-ready");

@@ -110,7 +110,7 @@ void Services::refresh() {
         char directory[files::PATH_SIZE],path[files::PATH_SIZE];
         if(!join(directory_,entries_[index].name,directory) || !join(directory,explorer_view::ICON_NAME,path)) continue;
         u8 bytes[explorer_view::MAX_ICON_FILE_BYTES];unsigned count=0;explorer_view::Icon icon{};
-        if(files::read(path,bytes,sizeof(bytes),count) && explorer_view::decode_icon(bytes,count,icon) &&
+        if(files::read_optional(path,bytes,sizeof(bytes),count) && explorer_view::decode_icon(bytes,count,icon) &&
            browser_icons_.write(index*explorer_view::ICON_BYTES,icon.pixels,sizeof(icon.pixels)))
             browser_icon_mask_|=(u16)(1U<<index);
     }

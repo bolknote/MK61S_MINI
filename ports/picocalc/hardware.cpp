@@ -169,7 +169,8 @@ void Panel::init() {
     if(dma() && dma_control_<0) dma_control_=dma_claim_unused_channel(false);
     // ST7365P specifies >=66 ns per write clock (<=15.15 MHz).
     // 12.5 MHz has an 80 ns cycle at the stock 125 MHz system clock.
-    spi_hz_ = spi_init(spi1, MK61_PICOCALC_LCD_SPI_HZ);
+    applied_spi_request_=MK61_PICOCALC_LCD_SPI_HZ;
+    spi_hz_ = spi_init(spi1, applied_spi_request_);
     color_spi_request_ = 0;
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
@@ -205,7 +206,8 @@ bool Panel::flush(const Screen& screen) {
     if(io_worker::frames_suspended()) return false;
     if(color_active_) return false;
     if(io_worker::frame_pending()) return false;
-    if(failed_.exchange(false,std::memory_order_acquire)) valid_=false;
+    if(take_failure()) valid_=false;
+    apply_clock();
     // The retained BASIC/APP image is usually identical. Avoid walking all
     // dirty tiles at every UI poll while a chess search is computing.
     if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return true;
@@ -221,8 +223,39 @@ bool Panel::flush(const Screen& screen) {
     update_.plan(previous_,screen.data(),force);
     if(!update_.count && !delta) return true;
     std::memcpy(previous_,screen.data(),Screen::BYTES);
+    if(input_at_ && (!frame_input_at_ || input_at_<frame_input_at_)) frame_input_at_=input_at_;
+    input_at_=0;
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
     return valid_;
+}
+u32 Panel::clock_request() const {
+    return color_spi_request_?color_spi_request_:
+        external_power_ && !auto_fast_failed_?24000000:MK61_PICOCALC_LCD_SPI_HZ;
+}
+bool Panel::clock_pending() const { return clock_request()!=applied_spi_request_; }
+void Panel::apply_clock() {
+    const u32 request=clock_request();
+    if(request!=applied_spi_request_ && !io_worker::frame_pending()) {
+        spi_hz_=spi_set_baudrate(spi1,request);applied_spi_request_=request;
+    }
+}
+bool Panel::take_failure() {
+    const bool failed=failed_.exchange(false,std::memory_order_acquire);
+    if(failed && !color_spi_request_ && applied_spi_request_==24000000 && !auto_fast_failed_) {
+        auto_fast_failed_=true;++clock_fallbacks_;
+    }
+    return failed;
+}
+void Panel::completed_input(u64 now) {
+    if(!frame_input_at_) return;
+    const u64 elapsed=now-frame_input_at_;
+    if(elapsed<=UINT32_MAX) {
+        response_us_.store((u32)elapsed,std::memory_order_relaxed);
+        if(elapsed>response_max_us_.load(std::memory_order_relaxed))
+            response_max_us_.store((u32)elapsed,std::memory_order_relaxed);
+        responses_.fetch_add(1,std::memory_order_relaxed);
+    }
+    frame_input_at_=0;
 }
 u32 Panel::color_palette(const u16* colors) {
     if(!colors) return 0;
@@ -234,12 +267,12 @@ u32 Panel::color_palette(const u16* colors) {
 }
 u32 Panel::color_clock(u32 hz) {
     if(hz && hz!=12000000 && hz!=24000000) return 0;
-    if(hz==color_spi_request_) return spi_hz_;
+    if(hz==color_spi_request_) { apply_clock();return spi_hz_; }
     // The previous frame belongs to core 1. Finish it before changing SPI;
     // the request never changes the shared peripheral or CPU clock.
     io_worker::drain();
-    spi_hz_=spi_set_baudrate(spi1,hz?hz:MK61_PICOCALC_LCD_SPI_HZ);
     color_spi_request_=hz;
+    apply_clock();
     return spi_hz_;
 }
 u32 Panel::color(u32 operation,const void* payload) {
@@ -255,6 +288,7 @@ u32 Panel::color(u32 operation,const void* payload) {
             io_worker::drain();color_active_=false;valid_=false;color_frame_={};
         }
         if(color_spi_request_) (void)color_clock(0);
+        else apply_clock();
         return 1;
     }
     if(operation!=MK61_COLOR_PRESENT || !payload) return 0;
@@ -262,7 +296,8 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(!lcd::valid_color(*frame)) return 0;
     if(io_worker::frames_suspended()) return 2;
     if(io_worker::frame_pending()) return 2;
-    const bool failed=failed_.exchange(false,std::memory_order_acquire);
+    const bool failed=take_failure();
+    apply_clock();
     const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);
     const bool force=geometry || ((frame->format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_TILE8 && palette_dirty_);
     color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || color_frame_.background!=frame->background);
@@ -501,6 +536,7 @@ void Panel::transfer() {
     last_pauses_.store(pauses,std::memory_order_relaxed);
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);
     last_rectangles_.store(windows,std::memory_order_relaxed);
+    completed_input(time_us_64());
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
     frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_),[] {io_worker::service();}),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);

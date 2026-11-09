@@ -385,6 +385,12 @@ void Screen::RenderKey::text(const char* value) { if(!value) value="";data(value
 bool Screen::RenderKey::same(const RenderKey& other) const {
     return !overflow && !other.overflow && used==other.used && !std::memcmp(bytes,other.bytes,used);
 }
+bool Screen::RenderKey::same_scene(const RenderKey& other) const {
+    return animation_at && animation_at==other.animation_at && !overflow && !other.overflow &&
+        used==other.used && animation_at+4<=used &&
+        !std::memcmp(bytes,other.bytes,animation_at) &&
+        !std::memcmp(bytes+animation_at+4,other.bytes+animation_at+4,used-animation_at-4);
+}
 utility::Mode Screen::utility_mode(const Ui& ui,const Services* services) const {
     if(animation_.bootloader_pending()) return animation_.boot_mode();
     if(services && services->usb_disk()) return files::usb_ejected()?utility::Mode::EJECTED:utility::Mode::USB;
@@ -460,13 +466,15 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
     RenderKey out;
     u8 settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,settings);out.data(settings,sizeof(settings));
     out.number((u32)battery.percent);out.number(battery.available);out.number(battery.power_status);
-    out.number(fonts::revision());out.number(files::revision());out.number(keyboard);
+    out.number(fonts::revision());out.number(keyboard);
     const auto mode=utility_mode(ui,services);out.number((u32)mode);
     if(mode!=utility::Mode::NONE) {
+        out.animation_at=out.used;
         out.number(animation_.frame(mode));
         if(services && services->usb_disk()) out.text(services->status());
         return out;
     }
+    out.number(files::revision());
     out.number((u32)ui.page());out.number((u32)ui.view());out.number(ui.offset());out.number(ui.selected());
     const bool active=services && services->active();out.number(active);
     if(active) {
@@ -523,10 +531,13 @@ bool Screen::render(const Snapshot& model,bool keyboard,const Ui* ui,const Servi
     static const Ui defaults;if(!ui) ui=&defaults;
     const auto next=key(model,keyboard,*ui,services,battery);
     if(key_valid_ && key_.same(next)) { ++skipped_;return false; }
-    paint(model,keyboard,ui,services,battery);
+    const bool partial=key_valid_ && key_.same_scene(next) &&
+        utility::redraw(pixels_,utility_mode(*ui,services),animation_.frame(utility_mode(*ui,services)));
+    if(partial) ++partial_renders_;
+    else paint(model,keyboard,ui,services,battery);
     // Rendering a custom console/graph can publish its completed canvas.
     // Remember that resulting generation, avoiding a second idle redraw.
-    key_=key(model,keyboard,*ui,services,battery);key_valid_=!key_.overflow;
+    key_=partial?next:key(model,keyboard,*ui,services,battery);key_valid_=!key_.overflow;
     present_pending_=true;++renders_;return true;
 }
 void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services, BatteryStatus battery) {

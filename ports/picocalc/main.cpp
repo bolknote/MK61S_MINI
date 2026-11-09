@@ -1,5 +1,6 @@
 #include "calculator.hpp"
 #include "hardware.hpp"
+#include "frame_schedule.hpp"
 #include "math_probe.hpp"
 #include "screen.hpp"
 #include "ui.hpp"
@@ -67,7 +68,6 @@ u64 save_at = 0, last_activity = 0;
 u64 last_usb_service = 0;
 u32 max_usb_gap = 0;
 unsigned math_failures = 0;
-constexpr u32 FRAME_INTERVAL_US=20000;
 constexpr u32 STACK_PATTERN = 0xD52AC37E;
 bool calculator_visible() {
     return !screen.bootloader_pending() && !services.active() && ui.page()==picocalc::Page::CALCULATOR && !m61_text::display_owned();
@@ -109,18 +109,24 @@ void begin_bootloader() {
 }
 void input(u8 code, bool physical) {
     if(screen.bootloader_pending()) return;
-    calculator.wake_core();
+    const u64 pressed_at=time_us_64();
+    // Moving the selection in an open menu does not need an idle ROM scan.
+    // Preserve wake semantics for calculator/services, active work and sleep.
+    const bool menu_navigation=!services.active() && !power.asleep() && calculator.parked() &&
+        ui.page()!=picocalc::Page::CALCULATOR && (code==0xB5 || code==0xB6);
+    if(!menu_navigation) calculator.wake_core();
     power.activity(time_us_64());
     if(power.asleep()) { wake(time_us_64());return; }
     const bool accepted = services.active() ? services.input(code) :
         (ui.page() == picocalc::Page::CALCULATOR && picocalc::script::input(code)) || ui.input(code, calculator) ||
         (!m61_text::calculator_suspended() && calculator.input(code));
     if(accepted) {
+        panel.note_input(pressed_at);
         last_activity = time_us_64();
         key_click();
         if(physical) { ++physical_keys; last_physical_key = code; }
     }
-    calculator.wake_core();
+    if(!menu_navigation) calculator.wake_core();
 }
 void save_settings() {
     if(!settings_dirty) return;
@@ -255,6 +261,9 @@ void report(unsigned math_failures) {
     std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu LCD_CHAIN=%u LCD_STRIPS=%lu LCD_CHAIN_PAUSES=%lu\n",
         panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
         (unsigned long)panel.last_us(),(unsigned long)panel.full_frames(),panel.chained_dma(),(unsigned long)panel.strips(),(unsigned long)panel.chain_pauses());
+    std::printf("LCD_EXTERNAL=%u LCD_CLOCK_FALLBACKS=%lu UI_PARTIAL=%lu LCD_RESPONSE_COUNT=%lu LCD_RESPONSE_US=%lu LCD_RESPONSE_MAX_US=%lu\n",
+        panel.external_power(),(unsigned long)panel.clock_fallbacks(),(unsigned long)screen.partial_renders(),
+        (unsigned long)panel.responses(),(unsigned long)panel.response_us(),(unsigned long)panel.response_max_us());
     const auto dma=picocalc::dma_support::statistics();
     const auto sd=picocalc::sd::statistics();
     const auto idle=picocalc::idle_statistics();
@@ -329,6 +338,9 @@ void report(unsigned math_failures) {
         (unsigned long)usb.active_read_bytes, (unsigned long)usb.active_read_lba);
 }
 void usb_service() {
+    // PMU covers the case USB-C; VBUS also detects power at Pico Micro-USB.
+    // This only caches intent. The panel changes SPI between completed frames.
+    panel.power_supply(keyboard.battery(),gpio_get(PICO_VBUS_PIN));
     if(!sleep_clocks.active())compute_clock::poll(millis());
     picocalc::diagnostics::Scope measure(picocalc::diagnostics::Point::USB);
     const u64 now=time_us_64();
@@ -372,8 +384,9 @@ bool service_pump(void*, u8& key) {
     // The color owner already prevents monochrome flushes. Avoid rendering
     // that hidden resident frame too; it otherwise consumes the APP's next
     // CPU/audio slice without putting a single pixel on the panel.
-    if(panel_ready && !panel.color_active() && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && now >= next) {
-        screen.render(display_snapshot(), keyboard.online(), &ui, &services,keyboard.battery()); if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented(); next = time_us_64() + FRAME_INTERVAL_US;
+    const u64 frame_started=time_us_64();
+    if(panel_ready && !panel.color_active() && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && frame_started >= next) {
+        screen.render(display_snapshot(), keyboard.online(), &ui, &services,keyboard.battery()); if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented(); next = picocalc::FrameSchedule::next(frame_started);
     }
     picocalc::KeyEvent event{};
     if(key_event(event) && event.pressed()) {
@@ -690,23 +703,23 @@ int main() {
             for(;;) tight_loop_contents();
         }
         if(power.due(time_us_64(),current.sleep_minutes,screen.bootloader_pending() || core_61::is_RUN() || !calculator.idle() || services.active() || m61_text::active() || picocalc::files::usb_active() || remote_screen.attached())) power.sleep();
-        if(now >= next_frame) {
+        const u64 frame_started=time_us_64();
+        if(frame_started >= next_frame) {
             const auto& usb=picocalc::usb::counters();
-            screen.animation_tick((u32)(time_us_64()/1000),usb.reads,usb.writes);
-            // Never delay a multi-sector SCSI READ for an animation. A retained
-            // phase key suppresses idle redraws; changed pixels use LCD DMA windows.
-            if(!picocalc::files::usb_active() || !usb.active_read_bytes) {
+            screen.animation_tick((u32)(frame_started/1000),usb.reads,usb.writes);
+            // LCD owns an immutable snapshot until completion. Prepare the
+            // newest frame when it is free; no hidden render or frame backlog.
+            if((!picocalc::files::usb_active() || !usb.active_read_bytes) && panel_ready &&
+               (!remote_screen.holds_frame() || screen.bootloader_pending()) && !picocalc::io_worker::frame_pending()) {
                 const auto model = display_snapshot();
                 if(calculator_visible() && std::strcmp(previous_indicator, model.indicator) != 0) {
                     std::memcpy(previous_indicator, model.indicator, sizeof(previous_indicator));
                     std::printf("X=[%s]\n", model.indicator);
                 }
-                if(panel_ready && (!remote_screen.holds_frame() || screen.bootloader_pending()) && !picocalc::io_worker::frame_pending()) {
-                    screen.render(model, keyboard.online(), &ui, &services,keyboard.battery());
-                    if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
-                }
+                screen.render(model, keyboard.online(), &ui, &services,keyboard.battery());
+                if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
+                next_frame = picocalc::FrameSchedule::next(frame_started);
             }
-            next_frame = time_us_64() + FRAME_INTERVAL_US;
         }
         if(screen.bootloader_pending() &&
            ((screen.bootloader_ready() && panel_ready && !screen.presentation_pending() && !picocalc::io_worker::frame_pending()) ||

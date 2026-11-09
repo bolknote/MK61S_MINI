@@ -42,7 +42,21 @@ public:
     u32 color(u32 operation,const void* payload=nullptr);
     u32 color_palette(const u16* colors);
     bool color_active() const { return color_active_; }
-    bool needs_refresh() const { return !valid_ || failed_.load(std::memory_order_acquire); }
+    // Cache power on core 0; only an idle flush/explicit APP request retunes SPI.
+    void external_power(bool powered) {
+        if(!powered) auto_fast_failed_=false;
+        external_power_=powered;
+    }
+    void power_supply(const BatteryStatus& state,bool pico_vbus) {
+        external_power(pico_vbus || state.external_power());
+    }
+    bool external_power() const { return external_power_; }
+    u32 clock_fallbacks() const { return clock_fallbacks_; }
+    void note_input(u64 when) { if(!input_at_) input_at_=when; }
+    u32 responses() const { return responses_.load(std::memory_order_relaxed); }
+    u32 response_us() const { return response_us_.load(std::memory_order_relaxed); }
+    u32 response_max_us() const { return response_max_us_.load(std::memory_order_relaxed); }
+    bool needs_refresh() const { return !valid_ || failed_.load(std::memory_order_acquire) || clock_pending(); }
     void sleep(bool enabled);
     u32 spi_hz() const { return spi_hz_; }
     u32 frames() const { return frames_.load(std::memory_order_relaxed); }
@@ -64,6 +78,10 @@ private:
     bool valid_ = false;
     u32 spi_hz_ = 0;
     u32 color_spi_request_ = 0;
+    u32 applied_spi_request_ = 0,clock_fallbacks_=0;
+    bool external_power_=false,auto_fast_failed_=false;
+    u64 input_at_=0,frame_input_at_=0;
+    std::atomic<u32> responses_{0},response_us_{0},response_max_us_{0};
     std::atomic<u32> frames_{0},frame_crc_{0};
     std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
     std::atomic<u32> errors_{0};
@@ -84,6 +102,11 @@ private:
     std::atomic<u32> last_strips_{0},last_pauses_{0};
     void configure_dma(bool chain=true);
     u32 color_clock(u32 hz);
+    void apply_clock();
+    u32 clock_request() const;
+    bool clock_pending() const;
+    bool take_failure();
+    void completed_input(u64 now);
     lcd::Stream stream_;
     bool transfer_chain(const lcd::Rect& rect,u32& pauses,bool color=false);
     bool transfer_fill(u16 color,unsigned width,unsigned height);

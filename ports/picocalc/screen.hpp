@@ -24,6 +24,7 @@ public:
     void presented() { present_pending_=false; }
     u32 renders() const { return renders_; }
     u32 skipped() const { return skipped_; }
+    u32 partial_renders() const { return partial_renders_; }
     void animation_tick(u32 now_ms,u32 reads=0,u32 writes=0) { animation_.tick(now_ms,reads,writes); }
     void begin_bootloader(u32 now_ms) { animation_.begin_bootloader(now_ms);invalidate(); }
     bool bootloader_pending() const { return animation_.bootloader_pending(); }
@@ -39,15 +40,16 @@ private:
     // Exact visible inputs, not a lossy hash of them. A probe is much cheaper
     // than clearing the raster, decoding glyphs and planning LCD windows.
     struct RenderKey {
-        u8 bytes[1536]{};unsigned used=0;bool overflow=false;
+        u8 bytes[1536]{};unsigned used=0,animation_at=0;bool overflow=false;
         void data(const void* value,unsigned size);
         void number(u32 value);
         void text(const char* value);
         bool same(const RenderKey& other) const;
+        bool same_scene(const RenderKey& other) const;
     } key_;
     bool key_valid_=false;
     bool present_pending_=true;
-    u32 renders_=0,skipped_=0;
+    u32 renders_=0,skipped_=0,partial_renders_=0;
     RenderKey key(const Snapshot&,bool,const Ui&,const Services*,BatteryStatus) const;
     void paint(const Snapshot&,bool,const Ui*,const Services*,BatteryStatus);
     u8 pixels_[BYTES] = {};

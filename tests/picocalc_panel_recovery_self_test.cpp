@@ -98,7 +98,8 @@ u32 spi_set_baudrate(int,u32 requested) {
     return hardware_spi_hz;
 }
 u16 scanlines[lcd::STRIP_ROWS*lcd::WIDTH]{};
-u64 time_us_64() { static u64 now=0;return ++now; }
+u64 clock_now=0;
+u64 time_us_64() { return ++clock_now; }
 void busy_wait_us(unsigned) {}
 void gpio_put(unsigned,bool) {}
 void spi_set_format(int,unsigned,int,int,int) {}
@@ -306,6 +307,7 @@ void color_session(bool chain) {
 void color_clock_session() {
     controller=Controller{};Panel panel;Screen mono;
     panel.spi_hz_=hardware_spi_hz=12000000;clock_changes=0;
+    panel.applied_spi_request_=MK61_PICOCALC_LCD_SPI_HZ;
     const auto clock=[&](u32 hz) {
         // Native services allow an unaligned request; the driver must copy it.
         u8 bytes[8]{};std::memcpy(bytes+1,&hz,sizeof(hz));
@@ -329,6 +331,74 @@ void color_clock_session() {
     const auto changes=clock_changes;
     require(panel.color(MK61_COLOR_END)==1 && clock_changes==changes,"repeated END is harmless");
     std::puts("Panel actual color clock: in-flight drain, repeated/invalid/unaligned request, 12/24/default and early/normal END restore PASS");
+}
+void external_clock_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    panel.spi_hz_=hardware_spi_hz=12000000;
+    panel.applied_spi_request_=MK61_PICOCALC_LCD_SPI_HZ;clock_changes=0;
+    BatteryStatus battery;battery.available=true;battery.percent=100;
+    for(const u8 state:{0U,0xA0U,0xB1U}) {
+        battery.power_status=state;panel.power_supply(battery,false);
+        panel.flush(mono);if(controller.pending) controller.run();
+        require(!panel.external_power() && hardware_spi_hz==12000000,"unknown/battery/100 percent never infers external power");
+    }
+    for(const u8 state:{0xB7U,0xBBU,0xB3U}) {
+        battery.power_status=state;panel.power_supply(battery,false);
+        if(hardware_spi_hz!=24000000) require(panel.needs_refresh(),"clock-only change wakes an otherwise unchanged resident frame");
+        panel.flush(mono);
+        require(panel.external_power() && hardware_spi_hz==24000000,"charging/DONE/external all accelerate native UI");
+    }
+    mono.pixels[0]^=1;panel.flush(mono);require(controller.pending,"accelerated frame in flight");
+    battery.clear_power();panel.power_supply(battery,false);
+    require(panel.needs_refresh(),"power loss requests service without pixel changes");
+    const auto changes=clock_changes;
+    require(!panel.flush(mono) && controller.pending && clock_changes==changes,"power loss never retunes or drains in-flight DMA");
+    controller.run();panel.flush(mono);
+    require(hardware_spi_hz==12000000 && !controller.pending,"power loss restores normal clock even when pixels identical");
+    panel.power_supply(battery,true);panel.flush(mono);
+    require(hardware_spi_hz==24000000,"Pico VBUS supplies external power without PMU telemetry");
+    mono.pixels[1]^=1;controller.fail_completion=true;panel.flush(mono);controller.run();
+    require(panel.flush(mono) && controller.pending && hardware_spi_hz==12000000 && panel.clock_fallbacks()==1,
+            "failed automatic fast transfer retries complete frame at normal clock");
+    controller.run();panel.power_supply(battery,true);panel.flush(mono);
+    require(hardware_spi_hz==12000000,"failed fast clock stays disabled throughout same power session");
+    panel.power_supply(battery,false);panel.flush(mono);panel.power_supply(battery,true);panel.flush(mono);
+    require(hardware_spi_hz==24000000,"new external-power session may retry fast clock");
+    const u32 slow=12000000,fast=24000000;
+    require(panel.color(MK61_COLOR_SPI_HZ,&slow)==12000000,"explicit APP slow request has priority");
+    require(panel.color(MK61_COLOR_END)==1 && hardware_spi_hz==24000000,"APP END restores powered UI clock");
+    panel.power_supply(battery,false);
+    require(panel.color(MK61_COLOR_SPI_HZ,&fast)==24000000,"existing explicit APP fast ABI remains available");
+    require(panel.color(MK61_COLOR_END)==1 && hardware_spi_hz==12000000,"APP END restores current battery UI clock");
+    panel.power_supply(battery,true);
+    require(panel.color(MK61_COLOR_END)==1 && hardware_spi_hz==24000000,"END also refreshes automatic policy without an explicit APP override");
+    std::array<u8,32> bits{};std::array<u8,4> tiles{};
+    mk61_service_color_frame frame{};frame.pixels=bits.data();frame.tiles=tiles.data();
+    frame.pixel_bytes=bits.size();frame.tile_bytes=tiles.size();frame.width=frame.height=16;frame.format=MK61_COLOR_TILE1;
+    require(panel.color(MK61_COLOR_PRESENT,&frame)==1,"automatic fast paletted frame queued");
+    panel.power_supply(battery,false);
+    require(panel.color(MK61_COLOR_PRESENT,&frame)==2 && hardware_spi_hz==24000000,"paletted DMA not disturbed by power loss");
+    controller.run();
+    require(panel.color(MK61_COLOR_PRESENT,&frame)==1 && hardware_spi_hz==12000000,"automatic paletted clock follows power even for identical pixels");
+    panel.color(MK61_COLOR_END);
+    puts("Panel powered UI: PMU/VBUS/unknown, hot unplug during DMA, same pixels, sticky error fallback and APP clock priority PASS");
+}
+void input_response_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    panel.flush(mono);controller.run();require(!panel.responses(),"untagged frames do not count as key response");
+    const auto first=time_us_64();panel.note_input(first);clock_now+=5000;
+    mono.pixels[0]^=1;panel.flush(mono);clock_now+=8000;
+    const auto second=time_us_64();panel.note_input(second);controller.run();
+    require(panel.responses()==1 && panel.response_us()>=13000 && panel.response_us()<13100,
+            "response spans input, preparation and actual LCD completion");
+    mono.pixels[1]^=1;panel.flush(mono);clock_now+=3000;controller.run();
+    require(panel.responses()==2 && panel.response_us()>=3000 && panel.response_us()<3100 && panel.response_max_us()>=13000,
+            "input during DMA belongs to next snapshot");
+    panel.note_input(time_us_64());clock_now+=1000;mono.pixels[2]^=1;
+    controller.fail_completion=true;panel.flush(mono);controller.run();require(panel.responses()==2,"failed frame is not a visible response");
+    clock_now+=2000;panel.flush(mono);controller.run();
+    require(panel.responses()==3 && panel.response_us()>=3000,"retry preserves original input timestamp");
+    puts("Panel response timing: actual completion, in-flight next input and failed-transfer retry PASS");
 }
 }
 int main() {
@@ -354,5 +424,7 @@ int main() {
         try { color_session(chain); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
     }
     try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
+    try { external_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel power clock FAIL: %s\n",error.what()); }
+    try { input_response_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel input timing FAIL: %s\n",error.what()); }
     return failed?1:0;
 }

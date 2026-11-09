@@ -12,6 +12,7 @@
 #include <vector>
 
 extern u64 picocalc_host_read_count();
+extern void picocalc_host_fail_read(int);
 namespace {
 using namespace picocalc;
 unsigned find(const Services& service,const char* name) {
@@ -34,6 +35,21 @@ void preview(const Screen& screen) {
 }
 void picocalc_explorer_test() {
     using namespace picocalc;
+    {
+        // Ordinary user folders need no custom icon. This is also the same
+        // refresh path used by APP result -> Esc -> browser -> Esc -> closed.
+        assert(files::mkdir("/NoIcon"));
+        Calculator calc;calc.init();Ui view;view.init(Settings{});
+        Services service;service.set_ui(view);service.open(Action::EXPLORER,true,calc);
+        std::fprintf(stderr,"Optional folder icon diagnostic: [%s]\n",files::error());
+        assert(!files::error()[0]);
+        assert(service.enter_directory("/NoIcon",false));
+        assert(service.input(0x1B) && service.active());
+        assert(!files::error()[0]);
+        assert(service.input(0x1B) && !service.active());
+        assert(!files::error()[0]);
+        assert(files::remove("/NoIcon"));
+    }
     assert(files::mkdir("/ExplorerNative"));
     for(const char* name:{"/ExplorerNative/IconOnly","/ExplorerNative/Bad","/ExplorerNative/Launcher"}) assert(files::mkdir(name));
     for(unsigned i=0;i<12;++i) {
@@ -45,6 +61,28 @@ void picocalc_explorer_test() {
     assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",bytes,sizeof(bytes)));
     bytes[2]=31;assert(files::write("/ExplorerNative/Bad/autoexec.wbmp",bytes,sizeof(bytes)));bytes[2]=32;
     assert(files::write_text("/ExplorerNative/Launcher/autoexec.m61","invalid on purpose",18));
+    {
+        u8 copy[132]{};unsigned count=99;
+        assert(!files::read_optional("/ExplorerNative/Launcher/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!count && !files::error()[0]);
+        assert(!files::read_optional("/NoSuchParent/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!count && !files::error()[0]);
+        assert(files::read_optional("/ExplorerNative/IconOnly/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(count==sizeof(copy) && !std::memcmp(copy,bytes,sizeof(copy)) && !files::error()[0]);
+        // Invalidate FatFs's sector cache before injecting a real disk error.
+        assert(files::mount());picocalc_host_fail_read(0);
+        assert(!files::read_optional("/ExplorerNative/IconOnly/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!count && std::strstr(files::error(),"I/O error (1)"));
+        const std::string fault=files::error();
+        assert(!files::read_optional("/ExplorerNative/Launcher/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!count && files::error()==fault); // Missing art cannot hide a prior real fault.
+        assert(files::read_optional("/ExplorerNative/IconOnly/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!files::error()[0]);
+        assert(!files::read("/ExplorerNative/Launcher/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(std::strstr(files::error(),"not found (4)")); // Required reads retain their contract.
+        assert(files::read("/ExplorerNative/IconOnly/autoexec.wbmp",copy,sizeof(copy),count));
+        assert(!files::error()[0]);
+    }
     Calculator calculator;calculator.init();Ui ui;ui.init(Settings{});
     static constexpr usize external_bytes=8192;
     static std::vector<u8> external(external_bytes);
