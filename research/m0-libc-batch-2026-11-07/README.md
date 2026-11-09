@@ -1,9 +1,11 @@
 The grouped Cortex-M0+ campaign covers `strlen`, `strcmp`, `strncmp`,
 `memcmp`, `strnlen`, `strcpy`, `strncpy` and `strncat`. All 672 matrix jobs
-are exported. Production defaults select the measured native/SDK winners;
-the final installed-image guard is still pending after transfer to Spectrum.
+are exported. Production defaults select the measured native/SDK winners.
+Installed main `F8996B0A` / `C315F42E` passed two timer qualifications and all
+16 final standalone/shared Flash guard runs. ROMCACHE was restored and fully
+read back, the test namespace was removed, and the coordinator accepted CLOSED.
 See [MEASUREMENTS.md](MEASUREMENTS.md) for the role-specific decisions,
-regressions, evidence hashes and remaining hardware work.
+regressions, evidence hashes and final hardware acceptance.
 
 The six same-place controls are C, byte1/2/4 and word1/2. Four ordinary SDK
 APPs cover standalone/shared runtime and SRAM/Flash candidate code. Each

@@ -1,5 +1,5 @@
 {
-  "status": "MEASURED_ROLE_DEFAULTS_SELECTED_FINAL_INSTALLED_IMAGE_GUARD_PENDING",
+  "status": "MEASURED_ROLE_DEFAULTS_INSTALLED_GUARD_PASS_INDEPENDENT_CLOSED",
   "date": "2026-11-09",
   "architecture": "ARMv6-M / RP2040 Cortex-M0+",
   "compiler": "GCC14.2.1",
@@ -372,7 +372,9 @@
       "ports/picocalc/memory.c"
     ],
     "text_bytes_added_vs_superseded_all_byte4_policy": 32,
-    "installed": false
+    "installed": false,
+    "role": "Historical AE2-based HOST comparison",
+    "superseded_by_installed_main": "d4b63fff9939fd08d3f620993bf01972adb97f2e"
   },
   "evidence": {
     "raw_analysis": {
@@ -414,16 +416,183 @@
       "path": ".build/m0-libc-batch-20261107-v1/final-preparation/ROLE-BUDGET-001.json",
       "bytes": 567,
       "sha256": "6d2bd5499e0b792bf52cb53338bdf2e28bb0fe37ce85e8179f36082e631191b1"
+    },
+    "installed_manifest": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/firmware/manifest.json",
+      "bytes": 1666,
+      "sha256": "f6c942643d4ae04b3daa57de2ce9dcecfa43da178cc07ec0d87ff614816c28f1"
+    },
+    "installed_main_source": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/MAIN-SOURCE.json",
+      "bytes": 1448,
+      "sha256": "2d41519cdf35298c49ea32618adda074b0f1b20509f549991aa478c76446b591"
+    },
+    "installed_native_bodies": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/NATIVE-BODIES.json",
+      "bytes": 6285,
+      "sha256": "124ebea73493c4b8e548fa2ddfc41db7958098c07e9d29c1e6f377f536132ea7"
+    },
+    "final_main_packed_HOST": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/packed-HOST-002/RESULT.json",
+      "bytes": 8744,
+      "sha256": "7f73b3fccf7588c56cb5734b03685addb3474f841b630d82f1d9a4b92768fee6"
+    },
+    "final_guard_audit": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/GUARD-AUDIT.json",
+      "bytes": 16989,
+      "sha256": "ba9e4bbdc571ce8c89ba00b2c74062377aed33e6544b6a2d296344e9e7a4cfc3"
+    },
+    "final_qualification": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/qualification-001/execution/result/QUALIFICATION.json",
+      "bytes": 1083,
+      "sha256": "37f7ccf90ee1e06aa4cc7389f1a3390bb4ca9de704956659cebfb8e3c8bef8cf"
+    },
+    "original_install_HOLD": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/production-001/execution/result/receipt.json",
+      "bytes": 19917,
+      "sha256": "fcfce8a880123f21f083b7a185d7018f1fbe2a2890854948102dd98478280ab0"
+    },
+    "original_readonly_sleep_HOLD": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/completion-v1/execution/result/receipt.json",
+      "bytes": 3873,
+      "sha256": "b4dd660cab4a09ad33c57f02c6b161cb68f87d239d1ff9a3bdc8ef9fe1ee426e"
+    },
+    "postflash_completion": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/completion-v2/execution/result/receipt.json",
+      "bytes": 13066,
+      "sha256": "b429d2c403384f1c07f635cb07ed631c211ae36a8f7070adf715f6cf8c32297e"
+    },
+    "own_namespace_cleanup": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/cleanup-001/execution/result/receipt.json",
+      "bytes": 14439,
+      "sha256": "90c3ae2ba2c78549c0d1b1bc902c4bdcd0ea0f2d19afb20c826ae0fd2fa2ec95"
+    },
+    "ROMCACHE_restore": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/cache-v2/execution/result/receipt.json",
+      "bytes": 24532,
+      "sha256": "d177c2852875fce8323633ebb404f3fdcbfc710fd3451c0125f826c0fea92fda"
+    },
+    "ROMCACHE_full_readback": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/cache-v2/execution/result/new-ROMCACHE-readback.bin",
+      "bytes": 77824,
+      "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+    },
+    "final_CLOSED_handoff": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/CLOSED-HANDOFF-001.json",
+      "bytes": 11872,
+      "sha256": "8a516575d77c3a857f354d78fb65be54174a3407dab99f71ae69aef57c5703f7"
+    },
+    "independent_Root_CLOSED": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-main-v1/ROOT-CLOSED-001.json",
+      "bytes": 1050,
+      "sha256": "2d3c7e1546276e2f8b876a1b1c2b159079426bae0bf5d39b709b3c2ecf766877"
     }
   },
-  "remaining": [
-    "Fresh coordinator device window and actual image/clock/UI binding",
-    "Exact final composite install/readback and fresh route timer qualification",
-    "16 standalone/shared Flash short+long guard APP launches",
-    "Valid ROMCACHE provisioning/readback, owned namespace cleanup and independent CLOSED"
-  ],
+  "remaining": [],
   "Spectrum_foreign_source_in_this_commit": false,
-  "hardware_slot": "Spectrum",
+  "hardware_slot": "Released after independent CLOSED; handed to PicoCalc UI via coordinator",
   "RTC_setters": 0,
-  "old_state_capture_restore": false
+  "old_state_capture_restore": false,
+  "optimization_code_commit": "66a384e774ca6d78c4340f3dfb2f026792eded8e",
+  "installed_production": {
+    "main_commit": "d4b63fff9939fd08d3f620993bf01972adb97f2e",
+    "optimization_code_commit": "66a384e774ca6d78c4340f3dfb2f026792eded8e",
+    "BUILD": "F8996B0A",
+    "CRC": "C315F42E",
+    "source_sha256": "5e8c65f5a43acf56e7e0527c93487756c90f71c6059b4e495a86504b65458353",
+    "BIN_SHA256": "de7a2c0e24a072984ee820ec924b9f767f20bb853860964277fdba32f99f93a1",
+    "UF2_SHA256": "19e9e0be2b49db60f3d1341fb88cbfaa5b21fa35edff8103d8cd1e69aec16323",
+    "image_bytes": 1790272,
+    "static_RAM_bytes": 120384,
+    "heap": {
+      "minimum_heap_bytes": 108544,
+      "heap_capacity_bytes": 108992
+    },
+    "installed": true,
+    "actual_native_bodies_match_measured_leaves": true,
+    "runtime26_direct_slots": [
+      19,
+      20,
+      21,
+      25
+    ]
+  },
+  "final_hardware_validation": {
+    "date": "2026-11-09",
+    "qualifications": 2,
+    "guard_APP_launches": 16,
+    "physical_case_rows": 3024,
+    "raw_timer_intervals": 177548,
+    "routes": [
+      "standalone-flash",
+      "shared-flash"
+    ],
+    "batches": [
+      0,
+      22,
+      78,
+      133,
+      137,
+      138,
+      144,
+      167
+    ],
+    "all_eight_functions_short_and_long": true,
+    "all_seven_raw_groups_retained": true,
+    "separate_validation_stratum": true,
+    "selection_metrics_recomputed": false,
+    "original_campaign_replayed": false,
+    "first_install_and_readonly_HOLDs_preserved": true,
+    "firmware_fixture_full_readbacks_equal": true,
+    "own_namespace_removed": true,
+    "ROMCACHE_valid_at_CLOSED": true,
+    "ROMCACHE_readback_bytes": 77824,
+    "ROMCACHE_readback_SHA256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+    "fixture_valid_at_CLOSED": false,
+    "independent_CLOSED": true,
+    "final_fields": {
+      "BUILD": "F8996B0A",
+      "ACTUAL": "C315F42E",
+      "IMAGE": "1790272",
+      "BOOTS": "1",
+      "RESET_REASON": "00010001",
+      "BOOT_WATCHDOG": "0",
+      "CRASH": "NONE",
+      "HEAP_BYTES": "108992",
+      "KBD": "OK",
+      "PANEL_INIT": "1",
+      "LCD_DMA": "1",
+      "LCD_CHAIN": "1",
+      "PHYSICAL_KEYS": "0",
+      "SYS_HZ": "125000000",
+      "PERI_HZ": "48000000",
+      "PLL_MASK": "3",
+      "POWER_MODE": "RUN",
+      "M3_AUDIO": "0",
+      "M3_ERROR": "0",
+      "M3_LATE_BLOCKS": "0",
+      "SYNTH_UNDERRUNS": "0",
+      "M3_TRANSPORT_FLAGS": "0",
+      "MATH_TEST": "OK",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "RUN": "0",
+      "UI": "CALCULATOR",
+      "SD": "OK",
+      "MODE": "QPI"
+    },
+    "all_processes_reaped": true,
+    "all_CDC_closed": true,
+    "existing_Root_lease_released": true,
+    "Flash_writes": 3,
+    "reset_commands": 4,
+    "RTC_setters": 0,
+    "old_state_capture_restore": false
+  },
+  "execution_checkout": {
+    "retained": true,
+    "reason": "Coordinator defers worktree/ref removal until separate passive-pin archive acceptance",
+    "device_IO_after_CLOSED": 0,
+    "automation": false
+  }
 }
