@@ -1,6 +1,8 @@
-/* All eight M0+ candidates are opt-in until the grouped hardware verdict.
- * 0 keeps the existing implementation; 1/2/4 are ordered byte unrolls;
- * 8/16 select checked, naturally aligned word candidates for all eight.
+/* Per-function native/SDK policy from the grouped M0+ measurements.
+ * Native strlen uses word2 to avoid the byte4 long-input regression;
+ * standalone SDK strlen keeps byte4 for its short-input improvement.
+ * A nonzero MK61_M0_LIBC_UNROLL selects a diagnostic profile.
+ * An explicit per-function selector of 0 keeps its fallback implementation.
  * This is one shared body source for native, SDK and isolated controls. */
 #ifndef MK61_MEMORY_LIBC_M0_H
 #define MK61_MEMORY_LIBC_M0_H
@@ -21,8 +23,12 @@
 #ifndef MK61_M0_STRLEN_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 1
 #define MK61_M0_STRLEN_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRLEN_IMPL MK61_M0_LIBC_UNROLL
+#elif defined(MK61_M0_LIBC_NATIVE)
+#define MK61_M0_STRLEN_IMPL 16
+#else
+#define MK61_M0_STRLEN_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRLEN_IMPL != 0 && MK61_M0_STRLEN_IMPL != 1 && MK61_M0_STRLEN_IMPL != 2 && MK61_M0_STRLEN_IMPL != 4 && MK61_M0_STRLEN_IMPL != 8 && MK61_M0_STRLEN_IMPL != 16
@@ -48,8 +54,10 @@ size_t strlen(const char* text __attribute__((unused))) {
 #ifndef MK61_M0_STRCMP_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 0
 #define MK61_M0_STRCMP_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRCMP_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRCMP_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRCMP_IMPL != 0 && MK61_M0_STRCMP_IMPL != 1 && MK61_M0_STRCMP_IMPL != 2 && MK61_M0_STRCMP_IMPL != 4 && MK61_M0_STRCMP_IMPL != 8 && MK61_M0_STRCMP_IMPL != 16
@@ -79,8 +87,10 @@ int strcmp(const char* left __attribute__((unused)),const char* right __attribut
 #ifndef MK61_M0_STRNCMP_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 1
 #define MK61_M0_STRNCMP_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRNCMP_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRNCMP_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRNCMP_IMPL != 0 && MK61_M0_STRNCMP_IMPL != 1 && MK61_M0_STRNCMP_IMPL != 2 && MK61_M0_STRNCMP_IMPL != 4 && MK61_M0_STRNCMP_IMPL != 8 && MK61_M0_STRNCMP_IMPL != 16
@@ -110,8 +120,10 @@ int strncmp(const char* left __attribute__((unused)),const char* right __attribu
 #ifndef MK61_M0_MEMCMP_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 1
 #define MK61_M0_MEMCMP_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_MEMCMP_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_MEMCMP_IMPL 16
 #endif
 #endif
 #if MK61_M0_MEMCMP_IMPL != 0 && MK61_M0_MEMCMP_IMPL != 1 && MK61_M0_MEMCMP_IMPL != 2 && MK61_M0_MEMCMP_IMPL != 4 && MK61_M0_MEMCMP_IMPL != 8 && MK61_M0_MEMCMP_IMPL != 16
@@ -137,8 +149,10 @@ int memcmp(const void* left __attribute__((unused)),const void* right __attribut
 #ifndef MK61_M0_STRNLEN_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 0
 #define MK61_M0_STRNLEN_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRNLEN_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRNLEN_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRNLEN_IMPL != 0 && MK61_M0_STRNLEN_IMPL != 1 && MK61_M0_STRNLEN_IMPL != 2 && MK61_M0_STRNLEN_IMPL != 4 && MK61_M0_STRNLEN_IMPL != 8 && MK61_M0_STRNLEN_IMPL != 16
@@ -168,8 +182,10 @@ size_t strnlen(const char* text __attribute__((unused)),size_t maximum __attribu
 #ifndef MK61_M0_STRCPY_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 0
 #define MK61_M0_STRCPY_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRCPY_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRCPY_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRCPY_IMPL != 0 && MK61_M0_STRCPY_IMPL != 1 && MK61_M0_STRCPY_IMPL != 2 && MK61_M0_STRCPY_IMPL != 4 && MK61_M0_STRCPY_IMPL != 8 && MK61_M0_STRCPY_IMPL != 16
@@ -199,8 +215,10 @@ char* strcpy(char* destination __attribute__((unused)),const char* source __attr
 #ifndef MK61_M0_STRNCPY_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 0
 #define MK61_M0_STRNCPY_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRNCPY_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRNCPY_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRNCPY_IMPL != 0 && MK61_M0_STRNCPY_IMPL != 1 && MK61_M0_STRNCPY_IMPL != 2 && MK61_M0_STRNCPY_IMPL != 4 && MK61_M0_STRNCPY_IMPL != 8 && MK61_M0_STRNCPY_IMPL != 16
@@ -230,8 +248,10 @@ char* strncpy(char* destination __attribute__((unused)),const char* source __att
 #ifndef MK61_M0_STRNCAT_IMPL
 #if defined(MK61_APP_SHARED_RUNTIME) && 1
 #define MK61_M0_STRNCAT_IMPL 0
-#else
+#elif MK61_M0_LIBC_UNROLL != 0
 #define MK61_M0_STRNCAT_IMPL MK61_M0_LIBC_UNROLL
+#else
+#define MK61_M0_STRNCAT_IMPL 4
 #endif
 #endif
 #if MK61_M0_STRNCAT_IMPL != 0 && MK61_M0_STRNCAT_IMPL != 1 && MK61_M0_STRNCAT_IMPL != 2 && MK61_M0_STRNCAT_IMPL != 4 && MK61_M0_STRNCAT_IMPL != 8 && MK61_M0_STRNCAT_IMPL != 16

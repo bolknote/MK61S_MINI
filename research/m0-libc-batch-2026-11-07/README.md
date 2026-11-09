@@ -1,7 +1,9 @@
-This branch prepares one grouped Cortex-M0+ libc campaign for `strlen`,
-`strcmp`, `strncmp`, `memcmp`, `strnlen`, `strcpy`, `strncpy` and `strncat`.
-All replacements are implemented together. Production defaults remain zero
-until the physical measurements select winners separately for each function.
+The grouped Cortex-M0+ campaign covers `strlen`, `strcmp`, `strncmp`,
+`memcmp`, `strnlen`, `strcpy`, `strncpy` and `strncat`. All 672 matrix jobs
+are exported. Production defaults select the measured native/SDK winners;
+the final installed-image guard is still pending after transfer to Spectrum.
+See [MEASUREMENTS.md](MEASUREMENTS.md) for the role-specific decisions,
+regressions, evidence hashes and remaining hardware work.
 
 The six same-place controls are C, byte1/2/4 and word1/2. Four ordinary SDK
 APPs cover standalone/shared runtime and SRAM/Flash candidate code. Each
@@ -32,14 +34,14 @@ at most 4096 bytes at a time. Each raw page and the global header have separate
 CRCs, job/nonce correlation and completeness counts. A first fault preserves
 earlier pages and its partial page, stops, and is never replayed.
 
-The planned executor uses the existing qualified CDC/ROM gate and supervisor.
+The original executor plan used the existing qualified CDC/ROM gate and supervisor.
 It requires one fresh Root campaign Go, exact source/artifact pins, an existing
-coordinator lease and a complete fixed Flash reserve audit. It then executes
+coordinator lease and a complete fixed Flash reserve audit. It defined
 45 bounded phases: fixture installation, four timer/APP qualifications, all
 672 grouped timing jobs and release. No old firmware/state/RTC is saved or
 restored; no RTC setter, clock change or explicit error clearing exists.
 
-Per-function decisions will use the frozen inverse-(length+1) workload with
+Per-function decisions use the frozen inverse-(length+1) workload with
 equal case weight inside a length, with equal-length and inverse-work
 sensitivity and full short/long regression maps. Different contexts remain
 separate. A HOST pass or a compact function size is not a hardware winner.

@@ -25,6 +25,9 @@ def compile_package(tc,out):
             folder=out/('%s-%d'%(route,profile));folder.mkdir();obj=folder/'body.o';elf=folder/'body.elf'
             source=R/'control.c' if route=='control' else core if route=='core' else ROOT/('sdk/portable/memory.c' if route in ('sdk','sdk-baseline') else 'ports/picocalc/memory.c')
             extra=['-DMK61_M0_LIBC_UNROLL='+str(profile)]+(['-DPICO_ON_DEVICE=1'] if route=='native' else [])
+            # Keep the historical SDK control after production defaults change.
+            if route=='sdk-baseline':
+                extra+=['-DMK61_M0_'+name.upper()+'_IMPL=0' for name in FUNCTIONS]
             run([cc,*flags,*extra,'-c',source,'-o',obj])
             run([cc,*flags,'-nostdlib','-Wl,--gc-sections,--build-id=none,-Ttext=0x10002000,-e,strlen',*['-Wl,-u,'+name for name in FUNCTIONS],obj,'-lc','-lgcc','-o',elf])
             e=ElfImage(elf);bodies={name:dict(entry=e.symbols[name],bytes=len(body(e,name)),sha256=hashlib.sha256(body(e,name)).hexdigest()) for name in FUNCTIONS}
@@ -33,12 +36,29 @@ def compile_package(tc,out):
     for profile in (1,2,4,8,16):
         equal=[p for p in products if p['profile']==profile]
         for name in FUNCTIONS:assert len({p['functions'][name]['sha256'] for p in equal})==1,(profile,name,'native/SDK/core body drift')
+    # Verify the actual production roles against independently forced leaves.
+    # This does not repeat the semantic campaign: the selected bytes must be
+    # exactly the bytes already covered by those candidate tests.
+    default_policy=[]
+    for role,source in [('native',ROOT/'ports/picocalc/memory.c'),('SDK',ROOT/'sdk/portable/memory.c')]:
+        folder=out/('default-'+role);folder.mkdir();obj=folder/'body.o';elf=folder/'body.elf'
+        extra=['-DMK61_M0_LIBC_UNROLL=0']+(['-DPICO_ON_DEVICE=1'] if role=='native' else [])
+        run([cc,*flags,*extra,'-c',source,'-o',obj])
+        run([cc,*flags,'-nostdlib','-Wl,--gc-sections,--build-id=none,-Ttext=0x10002000,-e,strlen',*['-Wl,-u,'+name for name in FUNCTIONS],obj,'-lc','-lgcc','-o',elf])
+        e=ElfImage(elf);checked={}
+        for name in FUNCTIONS:
+            selected=16 if name=='memcmp' or role=='native' and name=='strlen' else 4
+            reference=next(v for v in products if v['profile']==selected and v['route']=='core')['functions'][name]
+            raw=body(e,name)
+            assert raw and len(raw)==reference['bytes'] and hashlib.sha256(raw).hexdigest()==reference['sha256'],(role,name,'production role/default drift')
+            checked[name]=dict(selected=selected,bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())
+        default_policy.append(dict(role=role,ELF=pin(elf),functions=checked))
     baseline=Path('/Users/bolk/Projects/MK61S_MINI/.build/spectrum-lcd-app-20261107/firmware/mk61s-picocalc-pico-h.elf')
     e=ElfImage(baseline)
     products.append(dict(profile=0,route='actual-native-baseline',ELF=pin(baseline),functions={name:dict(entry=e.symbols[name],bytes=len(body(e,name)),sha256=hashlib.sha256(body(e,name)).hexdigest()) for name in FUNCTIONS}))
     pointer=out/'pointer.c';pointer.write_text('#include <stdint.h>\nuintptr_t* batch_runtime;\n')
     run([cc,*flags,'-DMK61_RUNTIME_POINTER=batch_runtime','-nostdlib','-Wl,--gc-sections,--build-id=none,-Ttext=0x20024000,--section-start=.bss=0x20026000,-e,strlen',*['-Wl,-u,'+name for name in ['strlen','strncmp','strncat','memcmp']],ROOT/'sdk/portable/system/runtime.S',pointer,'-o',out/'runtime.elf'])
-    result=dict(status='COMPILED_ALL_EIGHT_CANDIDATES_NOT_SEMANTICALLY_RUN',physical_IO=0,hardware_winner=None,functions=list(FUNCTIONS),profiles=[0,1,2,4,8,16],products=products,runtime=pin(out/'runtime.elf'),source_pins=[pin(ROOT/p) for p in ['code/memory_libc_m0.h','code/libc_m0_byte.inc','code/libc_m0_strlen_word.inc','code/libc_m0_memcmp_word.inc','code/libc_m0_compare.h','code/libc_m0_copy_words.h','ports/picocalc/memory.c','sdk/portable/memory.c','sdk/portable/system/runtime.S','code/loadable_system_runtime.def','tests/m0_libc_batch_self_test.py']]+[pin(R/n) for n in ['generate.py','control.c','cases.py']])
+    result=dict(status='COMPILED_ALL_EIGHT_CANDIDATES_NOT_SEMANTICALLY_RUN',physical_IO=0,hardware_winner=None,functions=list(FUNCTIONS),profiles=[0,1,2,4,8,16],products=products,default_policy=default_policy,runtime=pin(out/'runtime.elf'),source_pins=[pin(ROOT/p) for p in ['code/memory_libc_m0.h','code/libc_m0_byte.inc','code/libc_m0_strlen_word.inc','code/libc_m0_memcmp_word.inc','code/libc_m0_compare.h','code/libc_m0_copy_words.h','ports/picocalc/memory.c','sdk/portable/memory.c','sdk/portable/system/runtime.S','code/loadable_system_runtime.def','tests/m0_libc_batch_self_test.py']]+[pin(R/n) for n in ['generate.py','control.c','cases.py']])
     save(out/'BUILD.json',result);return result
 
 def run_semantics(build,out,smoke=False,reuse=None):

@@ -1,0 +1,429 @@
+{
+  "status": "MEASURED_ROLE_DEFAULTS_SELECTED_FINAL_INSTALLED_IMAGE_GUARD_PENDING",
+  "date": "2026-11-09",
+  "architecture": "ARMv6-M / RP2040 Cortex-M0+",
+  "compiler": "GCC14.2.1",
+  "clock_hz": 125000000,
+  "peripheral_clock_hz": 48000000,
+  "hardware_jobs": 672,
+  "physical_rows": 140448,
+  "raw_intervals": 8897560,
+  "isolated_semantics_only_jobs": [
+    588,
+    639
+  ],
+  "intervals_excluded_from_controlled_selection": 24990,
+  "unit": "RP2040 qualified raw1us intervals; no overhead subtraction",
+  "workload": "Per-function inverse(logical length+1); normalize cases within each length. Equal-length, inverse-work and ternary sensitivity retained.",
+  "independent_SDK_baseline": true,
+  "primary_complete_F0_routes": [
+    1,
+    2
+  ],
+  "absolute_times_not_pooled_across_strata": true,
+  "selection": "Resolved gain first. Primary gaps inside the larger observed quantization/spread envelope are unresolved. When available, prefer a tied candidate avoiding aggregate losses across short/sensitivity regimes, then short behavior and code size; not a statistical confidence interval.",
+  "functions": {
+    "strlen": {
+      "native": {
+        "profile": 16,
+        "candidate": "word2",
+        "code_bytes": 72,
+        "weighted_gain_percent": 13.546302499244945,
+        "short_le16_gain_percent": 12.713316717592704,
+        "sensitivity_gain_percent": {
+          "equal-length": 20.268274387345475,
+          "inverse-work": 13.546302499244955,
+          "ternary": 19.006439842438905
+        },
+        "resolved_regression_cases": 15,
+        "resolved_short_regression_cases": 15,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strlen-F0-native-flash-word2-regressions.json",
+          "bytes": 5263,
+          "sha256": "bd6910760666e16c8163787e43ce6c7310611a4cedc7d70a8a580480ff9a3cbd"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 40,
+        "weighted_gain_percent": 24.952152757014712,
+        "short_le16_gain_percent": 15.020966714595918,
+        "sensitivity_gain_percent": {
+          "equal-length": 39.16518730331775,
+          "inverse-work": 24.952152757014712,
+          "ternary": 17.198053941723934
+        },
+        "resolved_regression_cases": 8,
+        "resolved_short_regression_cases": 8,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strlen-F0-SDK-byte4-regressions.json",
+          "bytes": 2871,
+          "sha256": "06222e4d709b0dc6a0607bf79a1fb1a95ef682a481d8b8ebc3ed933a71195d3a"
+        }
+      }
+    },
+    "strcmp": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 58,
+        "weighted_gain_percent": 20.596180381123162,
+        "short_le16_gain_percent": 25.137938839366434,
+        "sensitivity_gain_percent": {
+          "equal-length": 8.08780518963459,
+          "inverse-work": 21.171588456451673,
+          "ternary": 23.34854669814279
+        },
+        "resolved_regression_cases": 372,
+        "resolved_short_regression_cases": 84,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strcmp-F0-native-flash-byte4-regressions.json",
+          "bytes": 127819,
+          "sha256": "e52542d2b6597c1ecb279e21e07589d773f893564a554a8e8f3bf70e3ae38ed1"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 58,
+        "weighted_gain_percent": 12.838501717403549,
+        "short_le16_gain_percent": 13.754153337157737,
+        "sensitivity_gain_percent": {
+          "equal-length": 10.541038212735298,
+          "inverse-work": 14.021503325971253,
+          "ternary": 12.358415300909364
+        },
+        "resolved_regression_cases": 0,
+        "resolved_short_regression_cases": 0,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strcmp-F0-SDK-byte4-regressions.json",
+          "bytes": 138,
+          "sha256": "fa6dfeafa5b81e2c3e00d6c7480aca5611a43827f9ac6a2688b7598a83ffad0c"
+        }
+      }
+    },
+    "strncmp": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 86,
+        "weighted_gain_percent": 13.184869988104408,
+        "short_le16_gain_percent": 15.802019984160298,
+        "sensitivity_gain_percent": {
+          "equal-length": 3.470374529050302,
+          "inverse-work": 14.048842975370345,
+          "ternary": 14.532976658110375
+        },
+        "resolved_regression_cases": 912,
+        "resolved_short_regression_cases": 156,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncmp-F0-native-flash-byte4-regressions.json",
+          "bytes": 311496,
+          "sha256": "9eacc8a8d297f0793bcca2a0fc5d36a2e904ee0d271aaa961ce4c6b97fdb1acc"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 86,
+        "weighted_gain_percent": 13.164180301898142,
+        "short_le16_gain_percent": 15.775644186641424,
+        "sensitivity_gain_percent": {
+          "equal-length": 3.467493626574669,
+          "inverse-work": 14.038867060675852,
+          "ternary": 14.496858892752973
+        },
+        "resolved_regression_cases": 912,
+        "resolved_short_regression_cases": 156,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncmp-F0-SDK-byte4-regressions.json",
+          "bytes": 311611,
+          "sha256": "fd9603df0357f602f48df3111aee263c69845ebfcaeb358616dbb424cbd6b8ee"
+        }
+      }
+    },
+    "memcmp": {
+      "native": {
+        "profile": 16,
+        "candidate": "word2",
+        "code_bytes": 834,
+        "weighted_gain_percent": 37.27897245323991,
+        "short_le16_gain_percent": 16.404034410306956,
+        "sensitivity_gain_percent": {
+          "equal-length": 72.18131010412188,
+          "inverse-work": 25.116442377366287,
+          "ternary": 26.25278285459126
+        },
+        "resolved_regression_cases": 259,
+        "resolved_short_regression_cases": 256,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/memcmp-F0-native-flash-word2-regressions.json",
+          "bytes": 88443,
+          "sha256": "13a28dee1264f4d645ec9f073b0c8db798a359a7cc958f95018a00d7969c5827"
+        }
+      },
+      "SDK": {
+        "profile": 16,
+        "candidate": "word2",
+        "code_bytes": 834,
+        "weighted_gain_percent": 36.92995695885719,
+        "short_le16_gain_percent": 10.906434436184831,
+        "sensitivity_gain_percent": {
+          "equal-length": 74.27921787794244,
+          "inverse-work": 21.311886165589634,
+          "ternary": 23.70499040466504
+        },
+        "resolved_regression_cases": 1100,
+        "resolved_short_regression_cases": 1100,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/memcmp-F0-SDK-word2-regressions.json",
+          "bytes": 375150,
+          "sha256": "fa4fb9d652c0e86057529292a3d4aa9c4949c361035e1f6914e9cadb2f37aad6"
+        }
+      }
+    },
+    "strnlen": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 64,
+        "weighted_gain_percent": 16.520682532277874,
+        "short_le16_gain_percent": 18.183054030364044,
+        "sensitivity_gain_percent": {
+          "equal-length": 12.977991637564967,
+          "inverse-work": 19.76982310570764,
+          "ternary": 17.779126822367843
+        },
+        "resolved_regression_cases": 0,
+        "resolved_short_regression_cases": 0,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strnlen-F0-native-flash-byte4-regressions.json",
+          "bytes": 149,
+          "sha256": "10e7defa590b9398896fda70e45c69d807224c7654772fd9252466427609f43c"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 64,
+        "weighted_gain_percent": 16.50430566900202,
+        "short_le16_gain_percent": 18.157770084717452,
+        "sensitivity_gain_percent": {
+          "equal-length": 12.98437232578744,
+          "inverse-work": 19.744188404280617,
+          "ternary": 17.751146898850056
+        },
+        "resolved_regression_cases": 0,
+        "resolved_short_regression_cases": 0,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strnlen-F0-SDK-byte4-regressions.json",
+          "bytes": 148,
+          "sha256": "005629b03ba1dbf60e2c9030f62b1025abee2cff2427ae7629e9cdef734eaa3d"
+        }
+      }
+    },
+    "strcpy": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 42,
+        "weighted_gain_percent": 16.573695028385018,
+        "short_le16_gain_percent": 12.918033544937535,
+        "sensitivity_gain_percent": {
+          "equal-length": 21.75185574289422,
+          "inverse-work": 17.75036572978688,
+          "ternary": 13.402994632289566
+        },
+        "resolved_regression_cases": 0,
+        "resolved_short_regression_cases": 0,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strcpy-F0-native-flash-byte4-regressions.json",
+          "bytes": 148,
+          "sha256": "ed5d748445f360a9f624681f7a74b0e9037f7b67d790b8fec4a92ffccf0322b5"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 42,
+        "weighted_gain_percent": 16.538468655792972,
+        "short_le16_gain_percent": 12.859396737196105,
+        "sensitivity_gain_percent": {
+          "equal-length": 21.747714164043973,
+          "inverse-work": 17.72134638447911,
+          "ternary": 13.357513471160809
+        },
+        "resolved_regression_cases": 0,
+        "resolved_short_regression_cases": 0,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strcpy-F0-SDK-byte4-regressions.json",
+          "bytes": 148,
+          "sha256": "ed5d748445f360a9f624681f7a74b0e9037f7b67d790b8fec4a92ffccf0322b5"
+        }
+      }
+    },
+    "strncpy": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 118,
+        "weighted_gain_percent": 26.305001680361606,
+        "short_le16_gain_percent": 28.882974793906925,
+        "sensitivity_gain_percent": {
+          "equal-length": 19.270726206028034,
+          "inverse-work": 31.591754545919002,
+          "ternary": 27.401898651021362
+        },
+        "resolved_regression_cases": 120,
+        "resolved_short_regression_cases": 30,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncpy-F0-native-flash-byte4-regressions.json",
+          "bytes": 41174,
+          "sha256": "93fa2c49f02c8a575337f72e34c42900e3fb07bb04be659afb1ef8941d7bd56b"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 118,
+        "weighted_gain_percent": 26.2955843516226,
+        "short_le16_gain_percent": 28.871762929963506,
+        "sensitivity_gain_percent": {
+          "equal-length": 19.267599117220215,
+          "inverse-work": 31.555181318005012,
+          "ternary": 27.394351618579392
+        },
+        "resolved_regression_cases": 120,
+        "resolved_short_regression_cases": 30,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncpy-F0-SDK-byte4-regressions.json",
+          "bytes": 41140,
+          "sha256": "c333aee4af97477ce22aa3cf53ccf19957afe1354ed1005fe3a4b992b2e5079a"
+        }
+      }
+    },
+    "strncat": {
+      "native": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 126,
+        "weighted_gain_percent": 26.675973552207754,
+        "short_le16_gain_percent": 25.8433219290671,
+        "sensitivity_gain_percent": {
+          "equal-length": 29.81187589079951,
+          "inverse-work": 28.229403928691333,
+          "ternary": 26.860246212591065
+        },
+        "resolved_regression_cases": 128,
+        "resolved_short_regression_cases": 128,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncat-F0-native-flash-byte4-regressions.json",
+          "bytes": 43949,
+          "sha256": "47a44fb38d462d2e4d0a19be7da74e109c2e9cc956e6c09759c01b1bd8eff20d"
+        }
+      },
+      "SDK": {
+        "profile": 4,
+        "candidate": "byte4",
+        "code_bytes": 126,
+        "weighted_gain_percent": 26.68076833825691,
+        "short_le16_gain_percent": 25.849606592163898,
+        "sensitivity_gain_percent": {
+          "equal-length": 29.813267182310767,
+          "inverse-work": 28.24214029059373,
+          "ternary": 26.863905521860655
+        },
+        "resolved_regression_cases": 128,
+        "resolved_short_regression_cases": 128,
+        "regression_map": {
+          "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/strncat-F0-SDK-byte4-regressions.json",
+          "bytes": 43954,
+          "sha256": "967e4c76139bc27f4a6e370de30a1fc11679b973b3fadf4476d42ef0125ebf93"
+        }
+      }
+    }
+  },
+  "native_placement": "Flash; no resolved SRAM placement benefit",
+  "native_RAM_delta": 0,
+  "main_HOST_compatibility": {
+    "BUILD": "e41e9231",
+    "heap": {
+      "minimum_heap_bytes": 108544,
+      "heap_capacity_bytes": 109032
+    },
+    "not_for_installation": true
+  },
+  "accepted_composite": {
+    "base_BUILD": "AE2AF595",
+    "base_source_sha256": "7c90e92d8e5eaa59c07003f5b950a5e097e4ee37e036c771b9615e13964cb121",
+    "BUILD": "5dc48c46",
+    "CRC": "e4529c63",
+    "source_sha256": "ea345c2cadd361b3402be70c66f44cf81fa0c33223ec24bb864cec20f63f4fac",
+    "BIN_SHA256": "245728806fd947c047bcd0c1eb64f4d5e25d436dd236f91d29349742f1eba528",
+    "image_bytes": 1790272,
+    "static_RAM_bytes": 120368,
+    "heap": {
+      "minimum_heap_bytes": 108544,
+      "heap_capacity_bytes": 109008
+    },
+    "production_source_delta": [
+      "code/memory_libc_m0.h",
+      "ports/picocalc/memory.c"
+    ],
+    "text_bytes_added_vs_superseded_all_byte4_policy": 32,
+    "installed": false
+  },
+  "evidence": {
+    "raw_analysis": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-analysis-002/RESULT.json",
+      "bytes": 765044,
+      "sha256": "b76e555056a8d1a57569084c011a61eb42d091d2dfbb4013d1eaa8e7fc87a43d"
+    },
+    "closed_handoff": {
+      "path": ".build/m0-libc-batch-20261107-v1/amendment-v10/ALL672-SPECTRUM-HANDOFF-001.json",
+      "bytes": 11387,
+      "sha256": "e115df8d9a3d8fe281313029174b0bb3be79f5441726ada921cc10e98b206524"
+    },
+    "baseline_rebuild": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/ACCEPTED-BASE-REPROOF-001.json",
+      "bytes": 2547,
+      "sha256": "a95afcb126f1b13035693321ec7efe942e1a74ee490c35cc4a13708ba1412c0f"
+    },
+    "native_body_proof": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/COMPOSITE-ROLE-NATIVE-BODIES-001.json",
+      "bytes": 6323,
+      "sha256": "b36a5745335608a678c72829705df75784618764995adf2e377ba50030e7ea9e"
+    },
+    "main_native_body_proof": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/MAIN-ROLE-NATIVE-BODIES-001.json",
+      "bytes": 6337,
+      "sha256": "7b8d48d06a834b2cc3e655987abe110f2dfa3c519a5cf376ceb5a415ba08f0bb"
+    },
+    "SDK_body_proof": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/SDK-ROLE-BODIES-001/RESULT.json",
+      "bytes": 8349,
+      "sha256": "d8a92ee6f71598b50515f4b80cc10c9547b986d961411063b724a6d9c426bac8"
+    },
+    "M4_identity": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/M4-ROLE-IDENTITY-001.json",
+      "bytes": 2503,
+      "sha256": "6c79bb0ba89f2f46b999d2512979fcb9d1a18e289329e01dca45f73398099141"
+    },
+    "budget": {
+      "path": ".build/m0-libc-batch-20261107-v1/final-preparation/ROLE-BUDGET-001.json",
+      "bytes": 567,
+      "sha256": "6d2bd5499e0b792bf52cb53338bdf2e28bb0fe37ce85e8179f36082e631191b1"
+    }
+  },
+  "remaining": [
+    "Fresh coordinator device window and actual image/clock/UI binding",
+    "Exact final composite install/readback and fresh route timer qualification",
+    "16 standalone/shared Flash short+long guard APP launches",
+    "Valid ROMCACHE provisioning/readback, owned namespace cleanup and independent CLOSED"
+  ],
+  "Spectrum_foreign_source_in_this_commit": false,
+  "hardware_slot": "Spectrum",
+  "RTC_setters": 0,
+  "old_state_capture_restore": false
+}
