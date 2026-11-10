@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+from picocalc_frame_trace_fixture import production_scope
 ROOT=Path(__file__).resolve().parents[1]
 source=(ROOT/'ports/picocalc/hardware.cpp').read_text()
 setup=source[source.index('void Panel::configure_dma(bool chain) {'):source.index('void Panel::abort_dma() {')]
@@ -12,7 +13,7 @@ worker=(ROOT/'ports/picocalc/io_worker.cpp').read_text()
 wait=worker[worker.index('void wait_for_progress() {'):worker.index('void drain() {')]
 with tempfile.TemporaryDirectory(prefix='picocalc-lcd-dma-') as directory:
     work=Path(directory);(work/'picocalc_lcd_dma_production.inc').write_text(
-        'namespace io_worker {\n'+wait+'}\n'+setup+finish)
+        production_scope(ROOT,'now')+'namespace io_worker {\n'+wait+'}\n'+setup+finish)
     command=[os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',
              '-I'+str(work),'-I'+str(ROOT/'ports/picocalc'),'-I'+str(ROOT/'code')]
     if os.environ.get('MK61_TEST_SANITIZERS')=='1':command+=['-fsanitize=address,undefined','-fno-omit-frame-pointer']

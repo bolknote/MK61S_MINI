@@ -6,6 +6,8 @@ struct Statistics { u32 waits[2],sleep_us[2],timeouts,crc32_calls,crc_fallbacks;
 // Call on the channel's owning core before starting a transfer. Completion
 // IRQs send an event, so a completed transfer cannot race the following WFE.
 void enable_irq(unsigned channel);
+// Release only an idle channel owned by this core before unclaim/reuse.
+void disable_irq(unsigned channel);
 bool wait(unsigned first,int second=-1);
 using Progress=void(*)();
 // With progress, service between busy checks instead of using an SDK alarm.

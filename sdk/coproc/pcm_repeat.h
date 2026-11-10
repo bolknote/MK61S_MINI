@@ -41,4 +41,34 @@ static inline int stm3_pcm_repeat_next(const uint8_t** cursor,const uint8_t* end
     }
     *cursor=p;return 1;
 }
+
+/* Decode exactly one independently seeded block directly into a power-of-two
+ * duty ring. Repeated pairs cost one parse per run; partial output remains
+ * unpublished when malformed input is rejected. No heap or temporary block. */
+static inline int stm3_pcm_repeat_decode_ring(uint16_t* ring,unsigned capacity,unsigned start,
+                                              const uint8_t* input,unsigned bytes,unsigned frames) {
+    if(!capacity || (capacity&(capacity-1)) || frames>capacity)return 0;
+    const uint8_t* p=input;const uint8_t* end=input+bytes;
+    uint16_t previous=0x8080;unsigned remaining=frames;
+    while(remaining) {
+        if(p==end)return 0;
+        const unsigned left=*p++;
+        if(left>=64) {
+            if(p==end)return 0;
+            previous=(uint16_t)(left|(unsigned)*p++<<8);
+        } else if(left==1) {
+            if(end-p<2)return 0;
+            previous=(uint16_t)((unsigned)p[0]|(unsigned)p[1]<<8);p+=2;
+        } else {
+            unsigned run=left?left:1;
+            if(run>remaining)return 0;
+            remaining-=run;
+            do {ring[start++&(capacity-1)]=previous;}while(--run);
+            continue;
+        }
+        ring[start++&(capacity-1)]=previous;--remaining;
+    }
+    return p==end;
+}
+
 #endif

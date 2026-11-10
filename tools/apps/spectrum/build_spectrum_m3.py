@@ -16,7 +16,7 @@ from elf32 import ELF
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 
 
-def build(output,toolchain=None,optimization='-Os',fast_init=0,slice_samples=16,step_budget_us=0,init_budget_us=100,lto=False,silent_batch=False):
+def build(output,toolchain=None,optimization='-Os',fast_init=0,slice_samples=16,step_budget_us=0,init_budget_us=100,lto=False,silent_batch=False,timing=False,repeat=False):
     if not 1<=slice_samples<=40:raise ValueError('M3 slice must be 1..40 samples')
     if not 0<=step_budget_us<=1250 or (step_budget_us>1000 and slice_samples>16):
         raise ValueError('M3 STEP budget must be 0..1250 us; above 1000 us requires chunks <=16 samples')
@@ -31,12 +31,15 @@ def build(output,toolchain=None,optimization='-Os',fast_init=0,slice_samples=16,
            '-ffreestanding','-fno-builtin','-fno-common','-fno-stack-protector','-fno-unwind-tables',
            '-fno-asynchronous-unwind-tables','-ffunction-sections','-fdata-sections','-Wall','-Wextra',
            '-I'+str(RUNTIME)]
-    if fast_init:flags+=['-DEMU2149_M3_AUDIO=1','-DSPECTRUM_M3_FAST_INIT='+str(fast_init)]
+    flags+=['-DEMU2149_M3_AUDIO=1','-DEMU2149_M3_FIXED_RATE=1']
+    if fast_init:flags+=['-DSPECTRUM_M3_FAST_INIT='+str(fast_init)]
     flags+=['-DSPECTRUM_M3_SLICE_SAMPLES='+str(slice_samples)]
     flags+=['-DSPECTRUM_M3_STEP_BUDGET_US='+str(step_budget_us)]
     flags+=['-DSPECTRUM_M3_INIT_BUDGET_US='+str(init_budget_us)]
     if lto:flags+=['-flto']
     if silent_batch:flags+=['-DSPECTRUM_M3_SILENT_BATCH=1']
+    if timing:flags+=['-DSPECTRUM_M3_TIMING=1']
+    if repeat:flags+=['-DSPECTRUM_M3_REPEAT=1']
     elf=output/'AY.elf'
     command=[tool('gcc'),*flags,'-nostdlib',*map(str,sources),'-Wl,-T,'+str(RUNTIME/'module.ld'),
              '-Wl,--emit-relocs,--gc-sections,-Map='+str(output/'AY.map'),'-o',str(elf)]
@@ -61,15 +64,15 @@ def build(output,toolchain=None,optimization='-Os',fast_init=0,slice_samples=16,
            512,512,512,2000,zlib.crc32(payload),0,0x70301]
     header=struct.pack('<15I',*words);header+=struct.pack('<I',zlib.crc32(header))
     package=output/'AY.S3M';package.write_bytes(header+payload)
-    inputs=[*sources,app/'m3_audio_protocol.h',RUNTIME/'stm3_module.h',RUNTIME/'module.ld',Path(__file__)]
+    inputs=[*sources,ROOT/'third_party/emu2149/emu2149.h',app/'m3_audio_protocol.h',RUNTIME/'stm3_module.h',RUNTIME/'pcm_repeat.h',RUNTIME/'module.ld',Path(__file__)]
     sha=lambda path:hashlib.sha256(Path(path).read_bytes()).hexdigest()
     result=dict(package=str(package),sha256=sha(package),image_bytes=len(image),bss_bytes=bss,
                 memory_bytes=memory,memory_limit=6144,package_bytes=package.stat().st_size,
                 relocations=relocs,entry_offset=e.entry-0x20000000,sample_rate=25000,
                 maximum_samples_per_job=120,fast_init_samples=fast_init,slice_samples=slice_samples,
-                step_budget_us=step_budget_us,init_budget_us=init_budget_us,optimization=optimization,lto=lto,silent_batch=silent_batch,
-                output='mono signed16 PCM1 or exact final PWM8 PWM1, selected in CONFIG',
-                synthesizer='shared emu2149 AY8910/TurboSound + beeper/Covox/SpecDrum + DC filter',
+                step_budget_us=step_budget_us,init_budget_us=init_budget_us,optimization=optimization,lto=lto,silent_batch=silent_batch,timing=timing,repeat=repeat,
+                output='mono PCM1/PWM1 or stereo interleaved PCM2/PWM2, selected in SAY2 CONFIG',
+                synthesizer='single-pass emu2149 AY/YM, mono/ABC/ACB, TurboSound + centred beeper/Covox/SpecDrum + per-output DC filters',
                 source_sha256={str(p.relative_to(ROOT)):sha(p)for p in inputs},hardware_verified=False)
     (output/'manifest.json').write_text(json.dumps(result,indent=2)+'\n')
     return result
@@ -84,6 +87,8 @@ if __name__=='__main__':
     ap.add_argument('--slice-samples',type=int,choices=[16,24,32,40],default=16)
     ap.add_argument('--step-budget-us',type=int,choices=[0,500,750,900,1000,1250],default=0)
     ap.add_argument('--init-budget-us',type=int,choices=[100,250,500,750,1000,1250],default=100)
+    ap.add_argument('--repeat',action='store_true',help='Lossless repeated PWM8 stereo pairs; requires repeat-aware Pico')
+    ap.add_argument('--timing',action='store_true',help='Diagnostic per-job16us render/gap header; requires timing-aware Pico')
     ap.add_argument('--lto',action='store_true',help='Optimize synthesis and the module together at link time')
     ap.add_argument('--silent-batch',action='store_true',help='Advance a silent event-free second PSG in sample groups')
-    args=ap.parse_args();print(json.dumps(build(args.build_dir,args.arm_toolchain_bin,'-'+args.optimization,args.fast_init,args.slice_samples,args.step_budget_us,args.init_budget_us,args.lto,args.silent_batch),indent=2))
+    args=ap.parse_args();print(json.dumps(build(args.build_dir,args.arm_toolchain_bin,'-'+args.optimization,args.fast_init,args.slice_samples,args.step_budget_us,args.init_budget_us,args.lto,args.silent_batch,args.timing,args.repeat),indent=2))

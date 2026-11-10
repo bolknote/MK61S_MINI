@@ -17,6 +17,7 @@ struct Statistics {
     uint32_t transport_flags,inline_requests,stream_write_requests,tx_bytes,rx_bytes;
     uint64_t block_us;
     uint32_t max_service_gap_us;
+    uint32_t tx_dma_requests,tx_fifo_requests;
     uint32_t max_idle_gap_us,max_pump_us,max_step_us,max_tx_us;
 };
 #if defined(PICO_ON_DEVICE) || defined(MK61_TEST_M3_AUDIO_BACKEND)
@@ -26,6 +27,7 @@ void close();
 void service();
 bool transport_active();
 uint32_t duty(void*);
+void fill_duties(uint32_t*,unsigned);
 bool failed();
 void fault(int error);
 Statistics statistics();
@@ -35,6 +37,7 @@ inline void close(){}
 inline void service(){}
 inline bool transport_active(){return false;}
 inline uint32_t duty(void*){return 0x00800080u;}
+inline void fill_duties(uint32_t* out,unsigned n){for(unsigned i=0;i<n;++i)out[i]=0x00800080u;}
 inline bool failed(){return false;}
 inline void fault(int){}
 inline Statistics statistics(){return {};}

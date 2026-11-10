@@ -1,4 +1,6 @@
 #include "m3_audio.hpp"
+#include "m3_tx.hpp"
+#include "m3_rx.hpp"
 #include "m3_audio_engine.hpp"
 #include "io_worker.hpp"
 #include "storage.hpp"
@@ -31,13 +33,13 @@ struct Context {
     uint32_t crc_values[256];
     stm3_pico_uart1 uart{};
     std::optional<SleepClockLease<Clocks>> clocks;
-    int rx=-1;
+    int rx=-1,tx_dma=-1;
+    m3::Transmit transmitter;
     uint32_t tail=0,requests=0,transport_flags=0,inline_requests=0,stream_write_requests=0,tx_bytes=0,rx_bytes=0;
-    unsigned tx_at=0;
     uint8_t capabilities=0;
     bool inline_input=false;
     std::atomic<bool> control{false};
-    bool streaming=false,owned=false,tx_started=false;
+    bool streaming=false,owned=false;
     uint32_t service_at=0,max_service_gap_us=0;
     uint32_t service_end=0,max_idle_gap_us=0,max_pump_us=0,max_step_us=0,max_tx_us=0;
     bool service_running=false;
@@ -55,25 +57,35 @@ Statistics last{};
 uint16_t last_sequence=0;
 void destroy(Context* c){void* memory=c->allocation;c->~Context();std::free(memory);}
 uint32_t micros(void*){return time_us_32();}
+struct TxPort {
+    Context& c;
+    bool dma_available()const{return c.tx_dma>=0;}
+    void start(const uint8_t* data,unsigned count) {
+        dma_channel_set_read_addr((unsigned)c.tx_dma,data,false);
+        dma_channel_set_trans_count((unsigned)c.tx_dma,count,true);
+    }
+    bool busy()const{return c.tx_dma>=0 && dma_channel_is_busy((unsigned)c.tx_dma);}
+    void abort(){if(c.tx_dma>=0)dma_channel_abort((unsigned)c.tx_dma);}
+    bool writable()const{return uart_is_writable(uart1);}
+    void write(uint8_t byte){uart_get_hw(uart1)->dr=byte;}
+};
+void receive_error(Context& c);
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((optimize("Os")))
 #endif
 void __noinline __not_in_flash_func(tx)(Context& c) {
     if(!c.engine.wire.pending)return;
-    if(!c.tx_started){
-        c.tx_started=true;c.tx_at=0;++c.requests;c.tx_bytes+=c.engine.wire.tx_bytes;
+    if(!c.transmitter.active){
+        ++c.requests;c.tx_bytes+=c.engine.wire.tx_bytes;
         if(c.streaming && c.engine.wire.command==S3_START_RESULT_INPUT)++c.inline_requests;
         if(c.streaming && c.engine.wire.command==S3_WRITE)++c.stream_write_requests;
     }
-    // START_RESULT and constant-DAC packets fit the32-byte FIFO.
-    // Larger AY/DAC packets continue on later worker polls. Reserving no
-    // TX DMA leaves one of RP2040's12 channels for continuous PWM output.
-    while(c.tx_at<c.engine.wire.tx_bytes && uart_is_writable(uart1))
-        uart_get_hw(uart1)->dr=c.engine.wire.tx[c.tx_at++];
+    TxPort port{c};
+    if(!c.transmitter.pump(port,c.engine.wire.tx,c.engine.wire.tx_bytes,c.engine.wire.sequence))receive_error(c);
 }
 void __noinline receive_error(Context& c) {
     ++c.uart.errors;
-    if(c.engine.wire.pending)c.engine.wire.fail(m3::Wire::IO);
+    if(c.engine.wire.pending || !c.engine.wire.result)c.engine.wire.fail(m3::Wire::IO);
     if(c.streaming)c.engine.fail(m3::Wire::IO);
 }
 void pump(Context& c) {
@@ -81,20 +93,14 @@ void pump(Context& c) {
     if(uart_get_hw(uart1)->rsr&15u) {
         uart_get_hw(uart1)->rsr=0;receive_error(c);
     }
-    const uint32_t head=UINT32_MAX-dma_hw->ch[c.rx].transfer_count;
-    __dmb();
-    if(head-c.tail>sizeof(c.receive)) {
-        c.tail=head;receive_error(c);
-    }
-    c.rx_bytes+=head-c.tail;
-    while(c.tail!=head) {
-        const unsigned at=c.tail&(sizeof(c.receive)-1);
-        const unsigned n=head-c.tail<sizeof(c.receive)-at?head-c.tail:unsigned(sizeof(c.receive))-at;
-        wire.feed(c.receive+at,n);c.tail+=n;
-    }
+    const bool valid=m3::drain_receive<sizeof(c.receive)>(c.receive,c.tail,c.rx_bytes,[&c]{
+        const uint32_t head=UINT32_MAX-dma_hw->ch[c.rx].transfer_count;__dmb();return head;
+    },[&wire](const uint8_t* data,unsigned n){wire.feed(data,n);});
+    if(!valid)receive_error(c);
     wire.tick(time_us_32());
     if(wire.complete) {
-        c.tx_started=false;
+        TxPort port{c};
+        if(!c.transmitter.complete(port) && !wire.result){wire.fail(m3::Wire::IO);receive_error(c);}
         if(c.control.load(std::memory_order_relaxed))c.control.store(false,std::memory_order_release);
     }
 }
@@ -110,6 +116,7 @@ void snapshot(Context& c) {
     last.ready_polls=e.ready_polls;last.prime_us=e.prime_us;last.min_queued=e.primed?e.min_queued:0;
     last.inline_input=c.inline_input;last.transport_flags=c.transport_flags;last.inline_requests=c.inline_requests;
     last.stream_write_requests=c.stream_write_requests;last.tx_bytes=c.tx_bytes;last.rx_bytes=c.rx_bytes;
+    last.tx_dma_requests=c.transmitter.dma_requests;last.tx_fifo_requests=c.transmitter.fifo_requests;
     last.max_service_gap_us=c.max_service_gap_us;
     last.max_idle_gap_us=c.max_idle_gap_us;last.max_pump_us=c.max_pump_us;
     last.max_step_us=c.max_step_us;last.max_tx_us=c.max_tx_us;
@@ -117,13 +124,14 @@ void snapshot(Context& c) {
 void release(void* raw) {
     auto& c=*(Context*)raw;snapshot(c);last.active=false;
     context.store(nullptr,std::memory_order_release);
+    TxPort port{c};c.transmitter.cancel(port);
     uart_get_hw(uart1)->dmacr=0;
-    for(int channel:{c.rx})if(channel>=0){
+    for(int channel:{c.rx,c.tx_dma})if(channel>=0){
         dma_channel_set_irq0_enabled((unsigned)channel,false);dma_channel_set_irq1_enabled((unsigned)channel,false);
         dma_channel_abort((unsigned)channel);dma_channel_acknowledge_irq0((unsigned)channel);dma_channel_acknowledge_irq1((unsigned)channel);
         dma_channel_unclaim((unsigned)channel);
     }
-    c.rx=-1;stm3_pico_uart1_end(&c.uart);c.clocks.reset();
+    c.rx=c.tx_dma=-1;stm3_pico_uart1_end(&c.uart);c.clocks.reset();
     last_sequence=c.engine.wire.sequence;
 }
 bool setup(Context& c) {
@@ -134,7 +142,13 @@ bool setup(Context& c) {
         if(!stm3_pico_uart1_begin(&c.uart,micros,nullptr,clock_get_hz(clk_peri),2250000))return;
         c.rx=dma_claim_unused_channel(false);
         if(c.rx<0){stm3_pico_uart1_end(&c.uart);return;}
-        for(int channel:{c.rx}) {
+        // All12 channels may be used with two CRC owners. An idle USB-
+        // routed console can yield its TX channel; leave one for PWM DMA.
+        const bool console_idle=io_worker::release_idle_uart_dma();
+        unsigned available=0;for(unsigned channel=0;channel<NUM_DMA_CHANNELS;++channel)
+            if(!dma_channel_is_claimed(channel))++available;
+        if(console_idle && available>=2)c.tx_dma=dma_claim_unused_channel(false);
+        for(int channel:{c.rx,c.tx_dma})if(channel>=0) {
             dma_channel_set_irq0_enabled((unsigned)channel,false);dma_channel_set_irq1_enabled((unsigned)channel,false);
             dma_channel_acknowledge_irq0((unsigned)channel);dma_channel_acknowledge_irq1((unsigned)channel);
         }
@@ -147,7 +161,14 @@ bool setup(Context& c) {
         channel_config_set_read_increment(&config,false);channel_config_set_write_increment(&config,true);
         channel_config_set_ring(&config,true,9);channel_config_set_dreq(&config,uart_get_dreq(uart1,false));
         dma_channel_configure((unsigned)c.rx,&config,c.receive,&uart_get_hw(uart1)->dr,UINT32_MAX,false);
-        uart_get_hw(uart1)->dmacr=1;dma_channel_start((unsigned)c.rx);
+        if(c.tx_dma>=0) {
+            auto tx_config=dma_channel_get_default_config((unsigned)c.tx_dma);
+            channel_config_set_transfer_data_size(&tx_config,DMA_SIZE_8);
+            channel_config_set_read_increment(&tx_config,true);channel_config_set_write_increment(&tx_config,false);
+            channel_config_set_dreq(&tx_config,uart_get_dreq(uart1,true));
+            dma_channel_configure((unsigned)c.tx_dma,&tx_config,&uart_get_hw(uart1)->dr,nullptr,0,false);
+        }
+        uart_get_hw(uart1)->dmacr=1u|(c.tx_dma>=0?2u:0u);dma_channel_start((unsigned)c.rx);
         c.engine.wire.sequence=uint16_t(last_sequence+1);
         context.store(&c,std::memory_order_release);*a.ready=true;
     });
@@ -249,7 +270,7 @@ void service() {
     tx(*c);
     const uint32_t sent=time_us_32();
     if(c->streaming && !c->control.load(std::memory_order_relaxed) &&
-       (!c->engine.wire.pending || c->tx_at==c->engine.wire.tx_bytes)) {
+       (!c->engine.wire.pending || c->transmitter.queued())) {
         c->engine.step(now);
     }
     const uint32_t stepped=time_us_32();
@@ -272,6 +293,11 @@ void service() {
     }
 }
 uint32_t duty(void*){auto* c=context.load(std::memory_order_acquire);return c?c->engine.sample(time_us_32()):0x00800080u;}
+void fill_duties(uint32_t* out,unsigned n) {
+    auto* c=context.load(std::memory_order_acquire);
+    if(c)c->engine.fill_samples(out,n,[]{return time_us_32();});
+    else for(unsigned i=0;i<n;++i)out[i]=0x00800080u;
+}
 bool failed(){auto* c=context.load(std::memory_order_acquire);return c && c->engine.error.load(std::memory_order_acquire);}
 void fault(int error){auto* c=context.load(std::memory_order_acquire);if(c)c->engine.fail(error);}
 bool open(const mk61_service_audio_psg& request,unsigned gain,const mk61_service_audio_psg_config* config) {

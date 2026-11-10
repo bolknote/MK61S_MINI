@@ -46,7 +46,7 @@ Spectrum 48K, Pentagon 512K или Pentagon 1024K. `P` открывает нас
 Игра и её меню запрашивают LCD SPI24 МГц через необязательный сервис
 прошивки. После выхода восстанавливается базовая частота LCD.
 На старой прошивке эмулятор продолжает работать с прежней частотой.
-Частота эмулируемого Z80 остаётся3,5 МГц.
+Частота эмулируемого Z80 остаётся 3,5 МГц.
 
 В выборе файлов стрелки меняют запись, Enter открывает файл/каталог,
 Backspace поднимается к родителю, Esc отменяет. Пути относятся к каталогу
@@ -182,7 +182,16 @@ AY работает на 1,75 МГц. TurboSound добавляет второй
 выбирают первый/второй чип. Covox: OUT FB, SpecDrum: OUT DF — unsigned
 8-bit, 128 означает тишину. Beeper FE смешивается с чипами, DC удаляется.
 
-Выход — моно signed 16-bit, 25 кГц на оба динамика через PWM GPIO26/27.
+В Options доступны `Sound chip` (`C`: AY-3-8912 / YM2149) и `Stereo`
+(`S`: Mono / ABC / ACB). По умолчанию — AY и ABC. В ABC канал A слева,
+B по центру, C справа; в ACB по центру C, справа B. Для каждого чипа
+TurboSound применяется та же раскладка. Beeper, Covox и SpecDrum звучат
+по центру. Выбор сохраняется при паузе, сбросе машины и загрузке снимка
+до выхода из APP. Смена чипа не сбрасывает игру или её регистры.
+
+Локальный синтезатор выдаёт signed16 L/R, 25 кГц; M3 сразу считает
+готовые unsigned8 L/R для PWM GPIO26/27. Оба пути используют один проход
+генераторов на отсчёт и независимые фильтры левого и правого выходов.
 Громкость регулируется колёсиком PicoCalc. При паузе динамики выключаются,
 состояния чипов сохраняются. Часы звука запускаются после открытия
 нативного потока, с начальным запасом 2 мс. При задержке CPU AY продолжает
@@ -194,15 +203,51 @@ AY работает на 1,75 МГц. TurboSound добавляет второй
 
 ### Синтезатор STM32 M3
 
-Сборщик добавляет рядом с APP модуль `AY.S3M`. Сервис `AUDIO_PSG_OPEN`
-загружает его в SRAM совместимого Southbridge, передаёт состояния двух AY
+Сборщик добавляет рядом с APP модуль `AY.S3M`. Сервис `AUDIO_PSG_CONFIG_OPEN`
+загружает его в SRAM совместимого Southbridge, передаёт выбор AY/YM,
+раскладку и состояния двух чипов
 и очередь событий. Модуль считает AY/TurboSound, beeper, Covox, SpecDrum
-и DC-фильтр; выдаёт готовые 8-битные PWM-отсчёты. PWM GPIO26/27 остаётся
+и DC-фильтры; выдаёт готовые 8-битные стерео PWM-отсчёты. PWM GPIO26/27 остаётся
 на Pico: один непрерывный DMA-канал обслуживает кольцо из 64 отсчётов.
-UART RX занимает ещё один DMA-канал; короткие запросы TX идут через FIFO.
+UART RX и TX используют отдельные DMA-каналы. Передача запросов не
+останавливается при заполнении FIFO; RX догоняет байты, пришедшие во время декодирования.
 Модуль не обращается к периферии STM32 и не меняет его Flash.
 
-Cosmic Payback прошёл строгую непрерывную проверку на Pico 125 / STM32 72 МГц
+Стереоблок содержит 118 кадров L/R (236 байт звука, 4,72 мс при 25 кГц).
+Он вместе с заголовком помещается в единственный ответ `START_RESULT`;
+дополнительного `READ` в звуковом потоке нет. Протокол SAY2 сохраняет
+оба фильтра и стереосостояния при остановке и возобновлении. Прежние
+моно-запросы SAY1 и `AUDIO_PSG_OPEN` поддерживаются. Если старая прошивка
+не понимает новый сервис, APP использует локальный синтез с выбранными
+AY/YM и раскладкой, не заменяя стерео на моно незаметно.
+
+Pico готовит следующий пакет событий в том же буфере, пока M3 считает
+предыдущий блок. Для обоих результатов заранее резервируется место в
+кольце; при закрытии подготовленный пакет досчитывается до экспорта
+состояния чипа. UART RX принимает непрерывные COBS-участки через штатные
+быстрые процедуры памяти, сохраняя проверку длины, номера и CRC.
+
+Стерео прошло строгую квалификацию на Pico 125 / STM32 72 МГц:
+четыре сочетания AY/YM и ABC/ACB, затем 30 000 кадров Cosmic Payback
+(614,359 с). Из 130 166 блоков ни один не превысил 4,72 мс;
+максимум — 4,588 мс. Пропущенных PWM-отсчётов и задержек кадров больше
+1 мс нет; темп Z80 — 3,500000 МГц. Порог не ослаблялся: при проверке
+частоты учитывается только разрешение таймера 1 мкс.
+
+Для этого результата нужны обновлённая прошивка Pico и M3 BIOS KEY25:
+поиск состояний клавиш больше не обходит десять слотов при каждом из
+152 чтений GPIO. Все чтения, порядок событий и повторы сохранены.
+Готовый воспроизводимый BIOS находится в `firmware/picocalc-m3-boot`.
+Короткие и длинный прогоны, хеши и границы проверки:
+[измерения 10 ноября](../../../doc/measurements/picocalc-spectrum-stock-stereo-20261110.json).
+
+Предыдущая серия с редкими поздними блоками сохранена как исторический
+HOLD в [измерениях 8 ноября](../../../doc/measurements/picocalc-spectrum-stereo-20261108.json).
+Раздельные GPIO26/27 подтверждены чтением реального PWM: в боковом тоне
+неактивная сторона остаётся на 128, центральный тон даёт одинаковые L/R.
+Разделение динамиков на слух пока не подтверждено.
+
+Моно-версия Cosmic Payback прошла строгую непрерывную проверку на Pico 125 / STM32 72 МГц
 длительностью 30 000 кадров (результаты ниже). При отсутствии совместимого
 M3 или ошибке обмена включается локальный синтезатор Pico 200 МГц.
 Иностранный модуль на STM32 не выгружается. Старые прошивки без нового
@@ -417,3 +462,29 @@ SPECTRUM_DEVICE_ASSETS=.build/spectrum-app/devices MK61_TEST_SANITIZERS=1 bash t
 `tools/apps/spectrum/fetch_spectrum_devices.py --output DIR` проверяет закреплённые SHA-256.
 `tools/apps/spectrum/spectrum_media.py blank.trd` создаёт TRD; с `--esxdos ZIP` создаёт
 FAT16 SD-образ с файлами указанного релиза esxDOS.
+
+### Stereo transport candidate (2026-11-08)
+
+The lossless PWM3 repeat-pair codec is a HOST-qualified candidate, not yet
+hardware-qualified. It keeps 118 stereo frames per block, 8-bit channels and
+25 kHz, with a raw PWM2 fallback whenever compression would grow a block.
+The resident and both Pico clients use wire version 2. Commands 11/12 now
+return `min(actual_output_bytes, result_ceiling)` bytes; there are no alternate
+legacy commands. HELLO bit32 identifies that contract; bit16 still denotes
+entry to the unchanged recovery loader. Module ABI1 is unchanged.
+
+Upgrade the BIOS with the existing updater/recovery loader before installing
+the new Pico client and BIOSUPD.APP. The candidate install target is the
+boot-preserving BIOS.M3U, not the unrelocated async BIOS binary. Mixed wire
+versions fail before a module job can execute. HOST/ARM checks pass, including
+exact PCM and PSG state, replay, actual package readback and recovery models.
+Four Cosmic traces predict 62–70% less reply traffic; physical strict tests at
+125/72 MHz remain pending. All four short cases must pass before the long run.
+
+On 2026-11-09 all four short strict Cosmic tests passed at 125/72 MHz. The
+30000-frame run still failed the unchanged zero-late-block condition: one of
+130166 blocks took 4765 us,45 us above4720. No underruns, protocol errors,
+fallbacks or frames delayed over1 ms occurred. See
+[`picocalc-spectrum-stereo-20261109.json`](../../../doc/measurements/picocalc-spectrum-stereo-20261109.json).
+The next HOST-qualified candidate moves the bounded PWM decoder to244 bytes
+of SRAM code; its hardware timing improvement has not been measured.

@@ -27,6 +27,7 @@ alignas(4) u16 scanlines[lcd::STRIP_ROWS*Screen::WIDTH] __attribute__((section("
 alignas(4) u16 chained_scanlines[lcd::STRIP_ROWS*Screen::WIDTH];
 
 void command(u8 op, const u8* data = nullptr, unsigned size = 0) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
     gpio_put(DC, 0);
     gpio_put(CS, 0);
     busy_wait_us(1);
@@ -312,6 +313,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     return 1;
 }
 void Panel::configure_dma(bool chain) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
     const bool use_chain=chain && chained_dma();
     if(!dma_irq_ready_ || dma_chain_configured_!=use_chain) {
         // Transfer runs on core 1, independently of the core which claimed
@@ -359,9 +361,11 @@ void Panel::abort_dma() {
     dma_irq_ready_=false;
 }
 bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
     configure_dma();stream_.reset(rect);
     const auto descriptor=[&](unsigned index) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         const auto next=lcd::Stream::prepare(rect,index,index&1?chained_scanlines:scanlines,
             [&](unsigned row,u16* out) {
                 if(color) {
@@ -432,12 +436,14 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     return true;
 }
 bool Panel::finish_scanline() {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     if(!dma()) return true;
     if(!dma_support::wait((unsigned)dma_tx_,dma_rx_)) return false;
     while(spi_is_busy(spi1)) tight_loop_contents();
     return true;
 }
 bool Panel::transfer_fill(u16 color,unsigned width,unsigned height) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     if(!dma()) {
         for(unsigned x=0;x<width;++x) scanlines[x]=color;
         for(unsigned row=0;row<height;++row) {
@@ -531,6 +537,7 @@ void Panel::transfer() {
         configured_region_=physical;configured_start_=start_row;scroll_configured_=true;
     }
     if(pending_scroll_rows_) { scrolls_.fetch_add(1);scrolled_rows_.fetch_add(pending_scroll_rows_); }
+    io_worker::FrameDeadlineScope publish_trace(WorkerDeadlineTrace::LCD_PUBLISH);
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);
     last_pauses_.store(pauses,std::memory_order_relaxed);
@@ -538,11 +545,14 @@ void Panel::transfer() {
     last_rectangles_.store(windows,std::memory_order_relaxed);
     completed_input(time_us_64());
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
+    { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
     frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_),[] {io_worker::service();}),std::memory_order_relaxed);
+    }
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 
 bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
     const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
     const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
     const u8 rows[]={(u8)(rect.y>>8),(u8)rect.y,(u8)(bottom>>8),(u8)bottom};
@@ -552,6 +562,7 @@ bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strip
     busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
     spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     const auto prepare=[&](unsigned row) {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         u16* out=scanlines+(row&1U)*Screen::WIDTH;
         if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
         else lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
@@ -600,11 +611,14 @@ void Panel::transfer_color() {
     }
     for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false,strips,pauses);
     if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
+    io_worker::FrameDeadlineScope publish_trace(WorkerDeadlineTrace::LCD_PUBLISH);
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);
     last_rectangles_.store(update_.count+border_windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
+    { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
     frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();}),std::memory_order_relaxed);
+    }
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 

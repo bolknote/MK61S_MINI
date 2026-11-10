@@ -15,3 +15,32 @@ including register writes, period changes and mute/unmute transitions.
 The ultrasonic-tone mute applies only when tone output is enabled. This
 preserves amplitude DAC output when both tone and noise are disabled, and
 clears a previously audible output when ultrasonic tone becomes muted.
+
+`PSG_calcStereo` advances tone/noise/envelope generators once and mixes
+ABC or ACB with two exact integer rate-converter states supplied by the
+caller. The mono PSG body and its serialized132-byte ABI remain unchanged.
+Outer channels have gain2 and the centre gain1 in each speaker, preserving
+the mono level when A/B/C have equal amplitudes. Both AY and YM DAC tables
+are selectable. Tests compare every PSG/stereo state against the independent
+serial-tick reference, including isolated-channel routing and fast envelopes.
+
+The native SRAM module alone enables `EMU2149_M3_FIXED_RATE`: its CONFIG
+validates all clock/rate/quality/phase preconditions before calling the
+8/9-tick weighted kernel. No command can change that configuration. The
+general library retains the original fallback for other rates and states.
+
+On M3, weighted channel contributions are accumulated once and panned after
+the internal ticks, including changing envelopes. For noise periods above
+one, masks span the actual LFSR shifts instead of looping over every tick;
+out-of-range imported phases retain the serial fallback. The mono output,
+both stereo filters and all oscillator/envelope/LFSR states remain exact.
+The private M3 build stores the two0..255 DAC tables as bytes; the pointer
+width and serialized PSG body do not change. A fully disabled noise mixer
+advances only the noise state. At the validated fixed rate, the8/9-tick
+phase update uses exact comparisons/additions instead of division. Only
+this private build asserts that PSG, DAC table and stereo filter storage
+are disjoint; the ordinary library keeps its general entry points.
+Stereo uses the validated phase update directly; the silent mono batch
+retains the general tick counter. Zero LFSR shifts return without work.
+The module's unity PWM gain uses exact signed division by512; other gains
+retain the original mapping, including truncation of negative samples.

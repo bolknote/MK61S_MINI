@@ -1,0 +1,1421 @@
+{
+  "schema": 1,
+  "date": "2026-11-08",
+  "test": "Spectrum M3 8-bit stereo, AY/YM and ABC/ACB at stock clocks",
+  "status": "HOLD",
+  "reason": "Functional stereo routing is verified; rare block exchange deadlines still fail strict qualification. Long stereo run not started.",
+  "clocks": {
+    "pico_hz": 125000000,
+    "pico_peripheral_hz": 48000000,
+    "stm32_hz": 72000000,
+    "uart_baud": 2250000
+  },
+  "audio": {
+    "sample_rate": 25000,
+    "bits_per_channel": 8,
+    "channels": 2,
+    "stereo_frames_per_block": 118,
+    "module_output_bytes_per_block": 244,
+    "block_deadline_us": 4720,
+    "startup_limit_us": 20000,
+    "native_slice_limit_us": 2000,
+    "initial_buffer_frames": 354,
+    "no_readiness_polling": true
+  },
+  "pico": {
+    "build": "D1752771",
+    "crc32": "AD0AD899",
+    "flash_bytes": 1786868,
+    "uf2_sha256": "c2e3b4efe600f732732a3e092653d7f232b2446b7e41df8adbdbf9675f1fd7d6",
+    "combined_image_note": "Includes owner AI Flash clock fix: stock125MHz/div4, AI270MHz/div6, restore125MHz/div4; only audio CRC/COBS decode execute in Pico SRAM.",
+    "image_ends_before_romcache": true,
+    "manifest": {
+      "path": ".build/spectrum-stereo-20261108/firmware-combined/manifest.json",
+      "sha256": "e879f18d7ff74a3b5e5a1c9c4f506cfb755a1c02587f6f152c92ffb1301b7d1a"
+    },
+    "install_receipt": {
+      "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-INSTALL-001.result/receipt.json",
+      "sha256": "56c01d8cd6718d1d4e50c96e9c0d068904b66eb44ef94a644d09a8883aa36186"
+    }
+  },
+  "app": {
+    "path_on_SD": "/SpectrumStereo/SPECTRUM.APP",
+    "sha256": "316283a3397299b2efc9ccd35295ae2a00a9a2dcd5a7d1d6d74684dfb14d3da4",
+    "memory_bytes": 49144,
+    "memory_limit": 49152,
+    "default_chip": "AY",
+    "default_layout": "ABC",
+    "settings": "Options C: AY/YM; S: Mono/ABC/ACB; retained until APP exit",
+    "source_sha256": {
+      "examples/portable-apps/SPECTRUM/disk.h": "f85a3822747bdfbc28a7d24e0a774bc1a7fad44d9bbb926baf0aca65aef20147",
+      "examples/portable-apps/SPECTRUM/fdc.c": "830cce691fd1666744af4d4944263724c82d1e9c52d0aa982f2d853a57ffec79",
+      "examples/portable-apps/SPECTRUM/m3_audio_protocol.h": "c355dc61b5a2d69c7413eb26c68ce92e9cbe13ecb54347b60e9e0226ca22a844",
+      "examples/portable-apps/SPECTRUM/main.c": "050aaf72b8f5e0341519582aedf6ff592f99b67a6f2a3822f0ea69fa9bd09350",
+      "examples/portable-apps/SPECTRUM/mapper.c": "668a18a79ad2e5a1d9060c81351e22f720b2e9a27ad31b745f32a7d3f95b3bd2",
+      "examples/portable-apps/SPECTRUM/media.c": "fe949626c9d95ab1e9dc483da44fcdb793813ed54562cce63ea9e70529326840",
+      "examples/portable-apps/SPECTRUM/media.h": "b219fc4a02ad7a09d1c6ee25024952b3f88b6d767c742ea7b51020e53ab02f65",
+      "examples/portable-apps/SPECTRUM/memory.c": "bd2dedbc963d1fac1bf83570f7037de467ef4f2f6997f6566558f38b6b7bf78a",
+      "examples/portable-apps/SPECTRUM/memory.h": "4a62d6945ff336a613d4cbefaf5d3bfdb1202bddce8354a0307d28e36b729e8a",
+      "examples/portable-apps/SPECTRUM/peripherals.c": "84183622b8d4198e34eb72662e8b5d69b3388131f0b94bc2de4aa84539537a1c",
+      "examples/portable-apps/SPECTRUM/peripherals.h": "217063e10b7692a0f5e480df3654ea3d307b61456bd9e6e7b525f303e9ad299d",
+      "examples/portable-apps/SPECTRUM/rom_cache.c": "e30ada82d7bbeaf856c595654fe1c7d9a0865495f7556ec52a6b4930f20f5526",
+      "examples/portable-apps/SPECTRUM/rom_cache.h": "7caf462660e515e1747d1e0dab908147193251b7f5033ccad099f8f5a214c2b3",
+      "examples/portable-apps/SPECTRUM/spectrum.c": "f6074da733704f6e99f72e684d7700268b73f765a356212b35777537e910d1f1",
+      "examples/portable-apps/SPECTRUM/spectrum.h": "62de86c0be1c22abe388e2b6c29ff1992d1839dfa9fd7dcb635bcabd9798ecb5",
+      "examples/portable-apps/SPECTRUM/spi.c": "58d31557595651c3e0b550c3f22aa24b0b04148148a2dfb69eba9d5a84f19ba1",
+      "examples/portable-apps/SPECTRUM/ui.c": "7a5d723e53909f28a4cfc7d00f4c3065f72a3bcc46d02fb8413389ce66e1d95f",
+      "examples/portable-apps/SPECTRUM/ui.h": "6b36effed377586b2e00a66e0b15a7374ddc3ef86133ce9ed90f7a4532f98080",
+      "third_party/emu2149/emu2149.c": "5790d7f7b9ed1cce444d633809cb2e0e6c4c0005696dfda514766344b80c0424",
+      "third_party/emu2149/emu2149.h": "47dcc8722b60b55574deecd1d3d61df40c8152ef1c66f78b6f029a55b381906b",
+      "third_party/z80/z80.c": "1b729bc1135afcf1a9428948196c971b85ad7e70e833a6cbf7efe8431ae2c5c3",
+      "third_party/z80/z80.h": "d1c3ca5bd52e277f1374ac45a278f8f6483d8e2299525bc2c4e7eeb7fed0025c"
+    },
+    "manifest": {
+      "path": ".build/spectrum-stereo-20261108/production-final/manifest.json",
+      "sha256": "6efd05467d7485a1b09635303da0c3e92e2749d2f1ef157b23bbb9c1078088fd"
+    },
+    "prior_qualified_mono_folder": "/SpectrumM3",
+    "prior_mono_app_module_not_replaced": true
+  },
+  "m3": {
+    "sha256": "15ccc485e2b342059d34e0aa70009a1d9dea6afc2cd609c26f475b9a19d3124b",
+    "memory_bytes": 6080,
+    "memory_limit": 6144,
+    "sample_rate": 25000,
+    "slice_samples": 16,
+    "step_budget_us": 1250,
+    "init_budget_us": 1250,
+    "source_sha256": {
+      "examples/portable-apps/SPECTRUM/m3_audio_module.c": "251cb6760b3cda8ab1803c9c17da17f81a2b694a24da23b02cd2a3d29f2bf25c",
+      "examples/portable-apps/SPECTRUM/m3_audio_memory.c": "d50484afbbd817324b83886e4a7553ffefcdbaa3927d64cb0456c59700ee7e81",
+      "third_party/emu2149/emu2149.c": "5790d7f7b9ed1cce444d633809cb2e0e6c4c0005696dfda514766344b80c0424",
+      "third_party/emu2149/emu2149.h": "47dcc8722b60b55574deecd1d3d61df40c8152ef1c66f78b6f029a55b381906b",
+      "examples/portable-apps/SPECTRUM/m3_audio_protocol.h": "c355dc61b5a2d69c7413eb26c68ce92e9cbe13ecb54347b60e9e0226ca22a844",
+      "sdk/coproc/stm3_module.h": "1a2d6eca83aeb50010c2c8fca8d627440a965fd8d0bd8c6f956d0b1eaafd71d7",
+      "sdk/coproc/module.ld": "8b264403ad77b7d2dfec33f4e28c4638df04c46ec81955b3566c0077e0fc94e8",
+      "tools/apps/spectrum/build_spectrum_m3.py": "05ce382cbeec1a552786172947546ba9a2a2fdaebf55d3cc92f82bbce729e817"
+    },
+    "bios_flash_writes": 0,
+    "resident_loader_abi": "0x70301"
+  },
+  "final_short_cases": [
+    {
+      "tag": "STEREO-V8-AYABC-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 1499,
+      "cycles": 107449170,
+      "elapsed_us": 30699763,
+      "timing_valid": true,
+      "mhz": 3.4999999837132294,
+      "fps": 48.82773850729727,
+      "starved": 0,
+      "frame_min_us": 19922,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 543,
+      "samples": 767944,
+      "blocks": 6508,
+      "block_max_us": 4944,
+      "block_min_us": 2991,
+      "prime_us": 16599,
+      "min_queued": 162,
+      "inline_requests": 2988,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 256901,
+      "transport_rx_bytes": 1758423,
+      "native_render_us": 12642437,
+      "exchange_block_us": 25417312,
+      "late_blocks": 2,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2326,
+      "native_max_slice_us": 1564,
+      "max_service_gap_us": 836,
+      "max_idle_gap_us": 514,
+      "max_pump_us": 259,
+      "max_step_us": 671,
+      "max_tx_us": 216,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYABC-001.result/receipt.json",
+          "sha256": "e36d407626bfc346a9d7108a1c0d8fa3021c36422da8b41e12b00df579141a08"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYABC-001.result/before.txt",
+          "sha256": "63860997ae829c931dfc80c3671d4db5559b78d50def2f9bf9d70e70feb399b5"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYABC-001.result/after.txt",
+          "sha256": "e075605970f009efd9cc3792873f738edd21e2babc119ee179aa805b43059eab"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYABC-001.result/wire.txt",
+          "sha256": "30f88d435961187b60cd14e80a9757c047dc1acfaa3bc44bd303ce1e775940b7"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYABC-001.result/qualification.json",
+          "sha256": "a50e81a0682c01587bc4a466c9f94a5fb70b369d43718b5e50f24953a5a80fd6"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-V8-YMACB-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 1499,
+      "cycles": 107449170,
+      "elapsed_us": 30699763,
+      "timing_valid": true,
+      "mhz": 3.4999999837132294,
+      "fps": 48.82773850729727,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 542,
+      "samples": 767944,
+      "blocks": 6508,
+      "block_max_us": 4767,
+      "block_min_us": 2988,
+      "prime_us": 16602,
+      "min_queued": 162,
+      "inline_requests": 2988,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 256901,
+      "transport_rx_bytes": 1758423,
+      "native_render_us": 12642545,
+      "exchange_block_us": 25407875,
+      "late_blocks": 2,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2336,
+      "native_max_slice_us": 1564,
+      "max_service_gap_us": 902,
+      "max_idle_gap_us": 549,
+      "max_pump_us": 272,
+      "max_step_us": 711,
+      "max_tx_us": 210,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMACB-001.result/receipt.json",
+          "sha256": "5be1f51f7c75b28184a2992cf9c7aa828be4cd2c11b7acae612a00932b60259d"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMACB-001.result/before.txt",
+          "sha256": "ee88cc0bc51ee690025d7c97ee6f16eb060027a4d4506c6e34bb2a10d606d23a"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMACB-001.result/after.txt",
+          "sha256": "270b736770648c984cf1710c1c67d97be9251b56c79e770b39d6c5b061297bd6"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMACB-001.result/wire.txt",
+          "sha256": "aebfa75141ccbf59abd74172cd872987900af070c5a3ce477ef6da15dc730860"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMACB-001.result/qualification.json",
+          "sha256": "0de3247de9c7c5dc8df777b31bd8108db700eba82481d737a9f0ef6f3a355b4b"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-V8-AYACB-001",
+      "receipt_status": "PASS",
+      "qualification_status": "PASS",
+      "failures": [],
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 541,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 4657,
+      "block_min_us": 2987,
+      "prime_us": 16642,
+      "min_queued": 164,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 106148,
+      "transport_rx_bytes": 704073,
+      "native_render_us": 5011099,
+      "exchange_block_us": 10107733,
+      "late_blocks": 0,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2336,
+      "native_max_slice_us": 1564,
+      "max_service_gap_us": 701,
+      "max_idle_gap_us": 562,
+      "max_pump_us": 513,
+      "max_step_us": 640,
+      "max_tx_us": 242,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYACB-001.result/receipt.json",
+          "sha256": "ad2681013dcd4b551f3f08793671a7f515fb2d8c8e92edabb61b50afc0792f40"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYACB-001.result/before.txt",
+          "sha256": "7e5d3801fedb85e93b0a244bf4506434e32b72624929e5059d9fdf4018227bc5"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYACB-001.result/after.txt",
+          "sha256": "63eaba8464c31f1bc4caa5cf7c912de74481f92db3ff3e2eaced4a2a121c5258"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYACB-001.result/wire.txt",
+          "sha256": "b9bee3383979d7e483719dcd9462a3f33eba3ddfe4df0bacdcbc1f044fb7fd8c"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-AYACB-001.result/qualification.json",
+          "sha256": "aea043b2cb25602285418ec01fa8010ec7d81c271dff731854155b718a5bd858"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-V8-YMABC-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 5022,
+      "block_min_us": 2967,
+      "prime_us": 16655,
+      "min_queued": 172,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 106148,
+      "transport_rx_bytes": 704073,
+      "native_render_us": 5011259,
+      "exchange_block_us": 10116110,
+      "late_blocks": 1,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2328,
+      "native_max_slice_us": 1571,
+      "max_service_gap_us": 845,
+      "max_idle_gap_us": 454,
+      "max_pump_us": 361,
+      "max_step_us": 806,
+      "max_tx_us": 196,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMABC-001.result/receipt.json",
+          "sha256": "8e49bf585a6e4115fba14da9b5fda016a79ce8d3a1f9c536fa8f2ffa91cf3314"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMABC-001.result/before.txt",
+          "sha256": "d767fba4094ea13a4adfcb9f97454f964574849a837a3a4fd6361d74de8b548b"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMABC-001.result/after.txt",
+          "sha256": "b83b6e16d19ca98a2a36c9c3a3b464799a77c61a6019e3695a6b4a509d8fd71c"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMABC-001.result/wire.txt",
+          "sha256": "9a6463de4cd276e6992fef728ddbf58ee3a3592b3e43c4cec0cbc6ee520bf7ea"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-V8-YMABC-001.result/qualification.json",
+          "sha256": "55b00724f4344692d46f87187ecc94dd00c59f9a5502537e94b4927d2bf864e2"
+        }
+      }
+    }
+  ],
+  "earlier_combined_v6_cases": [
+    {
+      "tag": "STEREO-COMBINED-AYABC-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 1499,
+      "cycles": 107449170,
+      "elapsed_us": 30699763,
+      "timing_valid": true,
+      "mhz": 3.4999999837132294,
+      "fps": 48.82773850729727,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 767944,
+      "blocks": 6508,
+      "block_max_us": 4728,
+      "block_min_us": 2967,
+      "prime_us": 16670,
+      "min_queued": 170,
+      "inline_requests": 2988,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 256806,
+      "transport_rx_bytes": 1758401,
+      "native_render_us": 12781597,
+      "exchange_block_us": 25545864,
+      "late_blocks": 1,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2339,
+      "native_max_slice_us": 1529,
+      "max_service_gap_us": 862,
+      "max_idle_gap_us": 626,
+      "max_pump_us": 244,
+      "max_step_us": 777,
+      "max_tx_us": 185,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYABC-001.result/receipt.json",
+          "sha256": "43fb61146bf8cf34af1308eb0889a680dc2f9e45b9820eee562c0926e57e3af7"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYABC-001.result/before.txt",
+          "sha256": "90705842ad6fb83611784fbfd848f8c78adb83c62da5f497f3a239bc6de2d8bd"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYABC-001.result/after.txt",
+          "sha256": "2182541d3b7c2e7d8964c5e21bc4439b8313033021bd0fe75604e8efb16c8adc"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYABC-001.result/wire.txt",
+          "sha256": "05bf148b0b234fd7e1d7029f11fcb0c402da8954cc940e8c53af03b4c579d1a2"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYABC-001.result/qualification.json",
+          "sha256": "ec7404d56b1dd82b2eae3d5a24ada84511af141a80adf62759a423b32ff2c2e7"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-COMBINED-YMACB-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 1499,
+      "cycles": 107449170,
+      "elapsed_us": 30699763,
+      "timing_valid": true,
+      "mhz": 3.4999999837132294,
+      "fps": 48.82773850729727,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 767944,
+      "blocks": 6508,
+      "block_max_us": 4782,
+      "block_min_us": 2963,
+      "prime_us": 16662,
+      "min_queued": 154,
+      "inline_requests": 2988,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 256806,
+      "transport_rx_bytes": 1758401,
+      "native_render_us": 12781568,
+      "exchange_block_us": 25564461,
+      "late_blocks": 1,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2338,
+      "native_max_slice_us": 1529,
+      "max_service_gap_us": 796,
+      "max_idle_gap_us": 530,
+      "max_pump_us": 256,
+      "max_step_us": 662,
+      "max_tx_us": 429,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMACB-001.result/receipt.json",
+          "sha256": "5cbc7a7375fa7a4b26b7048fb565efd066f8d02e8060789509dbbcd290afda82"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMACB-001.result/before.txt",
+          "sha256": "e1b6164648e0895127ad0c756554dba5f22156df5621492630d67ff669fe683b"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMACB-001.result/after.txt",
+          "sha256": "c69ce74bc9b0d14c6c91437d5b150029336cd6819a3b6c03f0f6fae0573a4a17"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMACB-001.result/wire.txt",
+          "sha256": "8268fbcc7b80023911b70bd1a28f43c29cb3e9d6c26d51a45a15760c47b0f617"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMACB-001.result/qualification.json",
+          "sha256": "d41130c3419e80456d3608a3d33f2b961003a9fc51b511c70042d089e9542c84"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-COMBINED-AYACB-001",
+      "receipt_status": "HOLD",
+      "qualification_status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19921,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 541,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 4784,
+      "block_min_us": 2971,
+      "prime_us": 16600,
+      "min_queued": 172,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 106053,
+      "transport_rx_bytes": 704051,
+      "native_render_us": 5068959,
+      "exchange_block_us": 10169986,
+      "late_blocks": 1,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2329,
+      "native_max_slice_us": 1519,
+      "max_service_gap_us": 836,
+      "max_idle_gap_us": 575,
+      "max_pump_us": 225,
+      "max_step_us": 798,
+      "max_tx_us": 208,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYACB-001.result/receipt.json",
+          "sha256": "9d6b699349c54e8e31847e295590ccc146cd093f0743e2c8f258a820db4b6eec"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYACB-001.result/before.txt",
+          "sha256": "2378c8a97f4c36e2a1a98e26ba6bd68e9054bafa53a70033df8b51d7dd392e1d"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYACB-001.result/after.txt",
+          "sha256": "567e0c703f812471f7ed2c69cdedb844ca376dc99327333d6b7d45f02f7b8393"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYACB-001.result/wire.txt",
+          "sha256": "fd62a2492f5637550c3d8331b4a79c2fa93ecffbcc886e5083a655901e227f19"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-AYACB-001.result/qualification.json",
+          "sha256": "767d9de69267eb5c5ec100a586d517b2d2f122603826c1ed996aa2ecbeb58202"
+        }
+      }
+    },
+    {
+      "tag": "STEREO-COMBINED-YMABC-001",
+      "receipt_status": "PASS",
+      "qualification_status": "PASS",
+      "failures": [],
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19922,
+      "frame_max_us": 20549,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 4720,
+      "block_min_us": 2972,
+      "prime_us": 16653,
+      "min_queued": 170,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 106053,
+      "transport_rx_bytes": 704051,
+      "native_render_us": 5069100,
+      "exchange_block_us": 10165241,
+      "late_blocks": 0,
+      "underruns": 0,
+      "dma_underruns": 0,
+      "native_max_job_us": 2336,
+      "native_max_slice_us": 1517,
+      "max_service_gap_us": 832,
+      "max_idle_gap_us": 525,
+      "max_pump_us": 233,
+      "max_step_us": 772,
+      "max_tx_us": 221,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMABC-001.result/receipt.json",
+          "sha256": "1a3ae57638e4a2832afc37996bfda551fc50406c30e881d011fce1497706c79d"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMABC-001.result/before.txt",
+          "sha256": "b7db0dcb71309e0c471c6559bc7c321821712800d4e150344d7cca05282cfdc7"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMABC-001.result/after.txt",
+          "sha256": "07b5fcf0f406d3e71d0fd8819be4abfad477642ae35d08b7417219cf76d1a391"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMABC-001.result/wire.txt",
+          "sha256": "e8da8977d829a0821c08eab4e1f9a0651a4776dedf8ddd483895d04c1b536970"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-YMABC-001.result/qualification.json",
+          "sha256": "da2b44015728ab210a53304d1f9bd8ad9f161590f7cce1a41958e269699e899d"
+        }
+      }
+    }
+  ],
+  "PWM_routing": [
+    {
+      "layout": "ABC",
+      "chip": "AY",
+      "digital_PWM_routing": "PASS",
+      "strict_receipt_status": "HOLD",
+      "late_blocks": 1,
+      "block_max_us": 4821,
+      "underruns": 0,
+      "columns": [
+        "tone_A0_B1_C2",
+        "L_min",
+        "L_max",
+        "R_min",
+        "R_max",
+        "observations",
+        "unequal_L_R"
+      ],
+      "rows": [
+        [
+          0,
+          112,
+          144,
+          128,
+          128,
+          2500,
+          2490
+        ],
+        [
+          1,
+          120,
+          136,
+          120,
+          136,
+          2500,
+          0
+        ],
+        [
+          2,
+          128,
+          128,
+          112,
+          144,
+          2500,
+          2486
+        ]
+      ],
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ABC-001.result/receipt.json",
+          "sha256": "67f3d65df6ba65a1291897f2b48e1dedee1d0d182296e539c76d011325e3f302"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ABC-001.result/wire.txt",
+          "sha256": "7ce878b150ed4c1f04bb9ed782d7b0e1d5049f78c56c4d706204ddad0985bf3c"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ABC-001.result/after.txt",
+          "sha256": "ecdb0ff878bf8837e52ee62016bd9a731fdc009291c868a09879da35157b0aa2"
+        }
+      }
+    },
+    {
+      "layout": "ACB",
+      "chip": "YM",
+      "digital_PWM_routing": "PASS",
+      "strict_receipt_status": "PASS",
+      "late_blocks": 0,
+      "block_max_us": 4467,
+      "underruns": 0,
+      "columns": [
+        "tone_A0_B1_C2",
+        "L_min",
+        "L_max",
+        "R_min",
+        "R_max",
+        "observations",
+        "unequal_L_R"
+      ],
+      "rows": [
+        [
+          0,
+          112,
+          144,
+          128,
+          128,
+          2500,
+          2490
+        ],
+        [
+          1,
+          128,
+          128,
+          112,
+          144,
+          2500,
+          2492
+        ],
+        [
+          2,
+          120,
+          136,
+          120,
+          136,
+          2500,
+          0
+        ]
+      ],
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ACB-001.result/receipt.json",
+          "sha256": "2c374bfd071cc091af297c6a71a01df9cc90938a378351c8852d77e9396e5902"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ACB-001.result/wire.txt",
+          "sha256": "b83b72cb21145a39c87f5f33c4d7750934552eb944048abdaba63a001305b550"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-stereo-20261108/STEREO-PWM-ACB-001.result/after.txt",
+          "sha256": "69f37110ce28ad612113fce81d967ff8be292d0c0ec082801ef3a337a807c5c8"
+        }
+      }
+    }
+  ],
+  "analog_speaker_separation": {
+    "status": "NOT_CONFIRMED",
+    "user_heard_three_tones": true,
+    "user_not_sure_of_direction": true,
+    "digital_measurement_does_not_verify_analogue_wiring_or_acoustics": true
+  },
+  "ordinary_APP_starts": [
+    {
+      "tag": "STEREO-COMBINED-NORMAL-001",
+      "status": "PASS",
+      "starts": [
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        },
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        },
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        }
+      ],
+      "evidence": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-COMBINED-NORMAL-001.result/receipt.json",
+        "sha256": "910b7ffc5871bf556eadc756603d25fc4688ce2aebf722cb741fb6acfa7b0259"
+      }
+    },
+    {
+      "tag": "STEREO-V8-NORMAL-001",
+      "status": "PASS",
+      "starts": [
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        },
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        },
+        {
+          "heap_free": 11968,
+          "buffers": 1923072,
+          "external": 1892352
+        }
+      ],
+      "evidence": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V8-NORMAL-001.result/receipt.json",
+        "sha256": "16aa4b976adc8a27fe9e662bac3a9faf9e566e298d4561d9809dd182340610aa"
+      }
+    }
+  ],
+  "host_ASan_UBSan": {
+    "v8-tests.log": {
+      "path": ".build/spectrum-stereo-20261108/v8-tests.log",
+      "sha256": "801be4b9ba4359dabde85f5ab416694cee45e49837299d05526d574de3d3a31a"
+    },
+    "spectrum-final-tests.log": {
+      "path": ".build/spectrum-stereo-20261108/spectrum-final-tests.log",
+      "sha256": "4f8faf8aead46b4657e6853afa9b3654735c3cb1f33329fdfa1a50d54a73e305"
+    },
+    "main-hardware-host-tests.log": {
+      "path": ".build/spectrum-stereo-20261108/main-hardware-host-tests.log",
+      "sha256": "b3d8b30049f01d5a3c9173dc78b4a10feb885cf59f60cab85deee70b255a2df8"
+    }
+  },
+  "relocated_ARM": {
+    "arm-v8": {
+      "status": "PASS",
+      "jobs": 64,
+      "legacy_jobs": 32,
+      "pushed_jobs": 32,
+      "fused_input_jobs": 8,
+      "module_sha256": "15ccc485e2b342059d34e0aa70009a1d9dea6afc2cd609c26f475b9a19d3124b",
+      "vectors_sha256": "6a9794949e9c414a684f3dd33a6134a81a87b5a25117cf6e23eaa561abb19708",
+      "exact_PCM_samples": 3584,
+      "module_instructions": 1930720,
+      "real_relocated_Thumb2": true,
+      "real_compact_loader": true,
+      "pushed_replay_byte_exact": true,
+      "pushed_readiness_polls": 0,
+      "physical_hardware": false,
+      "source_pins": {
+        "source/Core/Src/stm3_runtime.c": "bd57ab7c6460192e3a3492baabc66cd7c2e873dcc5d543fcd9fea9f35aea3a67",
+        "source/Core/Inc/stm3_runtime.h": "b28e3ae7e5e5cd799af84db37947bbca496af7d341ac6a7561d2987a90f2cfcb",
+        "source/Core/Inc/stm3_module.h": "1a2d6eca83aeb50010c2c8fca8d627440a965fd8d0bd8c6f956d0b1eaafd71d7",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/arm_harness.c": "b0f815607dc85c8787a7480e97b25f68ed7d87d87adf073febcc824dc67c7f16",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/harness.ld": "cc56e5176c41f90cac6b4650b2c80d46d478d53843133033fafa49864ccce6ce",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/arm_execution.py": "ab1a294e5df225590f2315d953a6bbfd0f26be0f906b97975bf7c7611aea7bd3",
+        "staged/Core/Inc/stm3_runtime.h": "84cfe8d724eb14e29eff60c513991ebadeb158fc53f8f0c8453b8c78d63c6bc3",
+        "staged/Core/Src/stm3_runtime.c": "bbad8b123fcdaac2f5c7adfc359334ce95e08b7fadd899d0fc39b6662c5d22d0"
+      },
+      "render_instruction_counts": {
+        "calc_weighted": 1119278,
+        "render_measured": 402692,
+        "advance_counter.part.0": 119644,
+        "PSG_calcStereo": 87520,
+        "advance_envelope": 46932,
+        "advance_state": 45078,
+        "PSG_writeReg.part.0": 16554,
+        "render_valid": 12480,
+        "module_entry": 10352,
+        "advance_silent_second": 5040,
+        "PSG_calc": 4144,
+        "PSG_writeReg": 2688
+      },
+      "instruction_counts_are_not_cycle_timings": true
+    },
+    "legacy-arm-v8": {
+      "status": "PASS",
+      "jobs": 64,
+      "legacy_jobs": 32,
+      "pushed_jobs": 32,
+      "fused_input_jobs": 21,
+      "module_sha256": "15ccc485e2b342059d34e0aa70009a1d9dea6afc2cd609c26f475b9a19d3124b",
+      "vectors_sha256": "e4e7c0b9af3fa47662f6f25ebbecdf03e09482a64036a82748bcf4af710708fc",
+      "exact_PCM_samples": 2400,
+      "module_instructions": 1527054,
+      "real_relocated_Thumb2": true,
+      "real_compact_loader": true,
+      "pushed_replay_byte_exact": true,
+      "pushed_readiness_polls": 0,
+      "physical_hardware": false,
+      "source_pins": {
+        "source/Core/Src/stm3_runtime.c": "bd57ab7c6460192e3a3492baabc66cd7c2e873dcc5d543fcd9fea9f35aea3a67",
+        "source/Core/Inc/stm3_runtime.h": "b28e3ae7e5e5cd799af84db37947bbca496af7d341ac6a7561d2987a90f2cfcb",
+        "source/Core/Inc/stm3_module.h": "1a2d6eca83aeb50010c2c8fca8d627440a965fd8d0bd8c6f956d0b1eaafd71d7",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/arm_harness.c": "b0f815607dc85c8787a7480e97b25f68ed7d87d87adf073febcc824dc67c7f16",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/harness.ld": "cc56e5176c41f90cac6b4650b2c80d46d478d53843133033fafa49864ccce6ce",
+        "recipe/repository/research/picocalc-stm32-runtime-20261107/tests/arm_execution.py": "ab1a294e5df225590f2315d953a6bbfd0f26be0f906b97975bf7c7611aea7bd3",
+        "staged/Core/Inc/stm3_runtime.h": "84cfe8d724eb14e29eff60c513991ebadeb158fc53f8f0c8453b8c78d63c6bc3",
+        "staged/Core/Src/stm3_runtime.c": "bbad8b123fcdaac2f5c7adfc359334ce95e08b7fadd899d0fc39b6662c5d22d0"
+      },
+      "render_instruction_counts": {
+        "calc_weighted": 724380,
+        "render_measured": 209310,
+        "advance_counter.part.0": 172042,
+        "advance_state": 128664,
+        "PSG_calc": 110848,
+        "advance_envelope": 100718,
+        "advance_silent_second": 4390,
+        "module_entry": 2840,
+        "render_valid": 1090,
+        "PSG_writeReg.part.0": 260,
+        "PSG_writeReg": 30
+      },
+      "instruction_counts_are_not_cycle_timings": true
+    }
+  },
+  "diagnostic_observation": {
+    "tag": "STEREO-V8-OBSERVE-001",
+    "excluded_from_qualification": true,
+    "reason": "Read-only C5 status during playback stalls the guest producer; it induced one frame delay and M3 underruns, so this is not an unperturbed gameplay result.",
+    "observation": "Live snapshot before CLOSE already showed2 late blocks. Late count is not solely a shutdown measurement artifact.",
+    "evidence": {
+      "receipt.json": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V8-OBSERVE-001.result/receipt.json",
+        "sha256": "99dd272e891c0649d1168049b1690651ac5b7e9e435877b8fe1009b38dd10b98"
+      },
+      "live-final-second.txt": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V8-OBSERVE-001.result/live-final-second.txt",
+        "sha256": "fe804113057e427b616839d1f5c0900990faf47b47b51283f4f66e53be88cecc"
+      },
+      "after.txt": {
+        "path": ".build/spectrum-stereo-20261108/STEREO-V8-OBSERVE-001.result/after.txt",
+        "sha256": "76c733be31e101221745adb7f658ab7dbd972bb1bede6cd4df242e88421f0829"
+      }
+    }
+  },
+  "deferred_long_run": {
+    "frames": 30000,
+    "status": "NOT_RUN",
+    "gate": "All four unperturbed short cases must strictly pass first; qualifier thresholds unchanged."
+  },
+  "limitations": [
+    "Only Cosmic Payback short gameplay was tested with all4 stereo/chip combinations; this is not qualification of arbitrary two-active-chip TurboSound software.",
+    "Stock-clock whole-block timing still has rare outliers, even though buffered playback did not underrun in any unperturbed short case.",
+    "Local200MHz stereo fallback is covered by exact host tests, but no new physical local-fallback game run is claimed here."
+  ],
+  "resource_handoff": {
+    "status": "PASS",
+    "parent_closed": {
+      "pid": 99201,
+      "parent_fd_closed": true,
+      "elapsed_s": 3283
+    },
+    "final_admission_receipt_sha256": "03bc5b63c649d8063cfad5e658954e8514fcbe7c71152ee49965066ee79c0765",
+    "holders": {
+      "/dev/cu.usbmodem11301": [],
+      "/dev/tty.usbmodem11301": [],
+      ".build/m0-libc-batch-20261107-v1/ROOT-PICO-LEASE-001.json": []
+    },
+    "shared_flock_available": true,
+    "usb_msc_closed": true,
+    "firmware": {
+      "build": "D1752771",
+      "crc": "AD0AD899",
+      "bytes": 1786868
+    },
+    "window_released": true
+  },
+  "next_work": "Bound Pico event-packet preparation, request transmission and worker service gaps; retain exact PCM, stock clocks and current strict thresholds.",
+  "subsequent_diagnostic_runs": [
+    {
+      "tag": "STEREO-TX-AYABC-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 540,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4857,
+        "block_min_us": 2976,
+        "prime_us": 16638,
+        "min_queued": 154,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256901,
+        "transport_rx_bytes": 1758423,
+        "native_render_us": 12641865,
+        "exchange_block_us": 25522093
+      },
+      "late_blocks": 2,
+      "first_late": []
+    },
+    {
+      "tag": "STEREO-TX-YMACB-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19921,
+        "frame_max_us": 20548,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 540,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4972,
+        "block_min_us": 3007,
+        "prime_us": 16605,
+        "min_queued": 154,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256901,
+        "transport_rx_bytes": 1758423,
+        "native_render_us": 12642049,
+        "exchange_block_us": 25501840
+      },
+      "late_blocks": 3,
+      "first_late": []
+    },
+    {
+      "tag": "STEREO-TX-AYACB-001.result",
+      "status": "PASS",
+      "failures": [],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 543,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4717,
+        "block_min_us": 3011,
+        "prime_us": 16632,
+        "min_queued": 162,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106148,
+        "transport_rx_bytes": 704073,
+        "native_render_us": 5010669,
+        "exchange_block_us": 10152563
+      },
+      "late_blocks": 0,
+      "first_late": []
+    },
+    {
+      "tag": "STEREO-TX-YMABC-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267987,
+        "timing_valid": true,
+        "mhz": 3.5000002037824136,
+        "fps": 48.8262662815016,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 541,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4721,
+        "block_min_us": 2978,
+        "prime_us": 16656,
+        "min_queued": 162,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106148,
+        "transport_rx_bytes": 704073,
+        "native_render_us": 5011178,
+        "exchange_block_us": 10158247
+      },
+      "late_blocks": 1,
+      "first_late": []
+    },
+    {
+      "tag": "STEREO-LATE-AYABC-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4842,
+        "block_min_us": 2970,
+        "prime_us": 16656,
+        "min_queued": 168,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256901,
+        "transport_rx_bytes": 1758423,
+        "native_render_us": 12642372,
+        "exchange_block_us": 25323580
+      },
+      "late_blocks": 4,
+      "first_late": [
+        "M3_FIRST_LATE index=224 us=4726 request_us=4726 frames=118 input=11 queued=266 command=11 gap=335 pump=206 step=375 tx=27"
+      ]
+    },
+    {
+      "tag": "STEREO-EARLY-AYABC-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 541,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4944,
+        "block_min_us": 3003,
+        "prime_us": 16605,
+        "min_queued": 170,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256901,
+        "transport_rx_bytes": 1758423,
+        "native_render_us": 12642253,
+        "exchange_block_us": 25409710
+      },
+      "late_blocks": 4,
+      "first_late": [
+        "M3_FIRST_LATE index=2427 us=4911 request_us=4911 frames=118 input=11 queued=188 command=12 gap=252 pump=74 step=98 tx=20"
+      ]
+    },
+    {
+      "tag": "STEREO-EARLY-YMACB-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4999,
+        "block_min_us": 2976,
+        "prime_us": 16681,
+        "min_queued": 166,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256901,
+        "transport_rx_bytes": 1758423,
+        "native_render_us": 12642127,
+        "exchange_block_us": 25409698
+      },
+      "late_blocks": 3,
+      "first_late": [
+        "M3_FIRST_LATE index=537 us=4853 request_us=4853 frames=118 input=26 queued=240 command=12 gap=318 pump=65 step=322 tx=43"
+      ]
+    },
+    {
+      "tag": "STEREO-EARLY-AYACB-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19921,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 540,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4904,
+        "block_min_us": 2968,
+        "prime_us": 16660,
+        "min_queued": 170,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106148,
+        "transport_rx_bytes": 704073,
+        "native_render_us": 5011137,
+        "exchange_block_us": 10109718
+      },
+      "late_blocks": 5,
+      "first_late": [
+        "M3_FIRST_LATE index=225 us=4904 request_us=4904 frames=118 input=26 queued=288 command=12 gap=235 pump=74 step=75 tx=21"
+      ]
+    },
+    {
+      "tag": "STEREO-EARLY-YMABC-001.result",
+      "status": "FAIL",
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4742,
+        "block_min_us": 3013,
+        "prime_us": 16657,
+        "min_queued": 170,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106148,
+        "transport_rx_bytes": 704073,
+        "native_render_us": 5011227,
+        "exchange_block_us": 10110393
+      },
+      "late_blocks": 1,
+      "first_late": [
+        "M3_FIRST_LATE index=760 us=4742 request_us=4742 frames=118 input=23 queued=218 command=12 gap=77 pump=48 step=126 tx=39"
+      ]
+    }
+  ],
+  "latest_hardware_candidate": {
+    "build": "BB1B90AF",
+    "crc": "A43CED01",
+    "status": "HOLD",
+    "long_run": "NOT_RUN",
+    "finding": "Early-prefetch cap did not eliminate late blocks. First-late gap/pump/step/TX maxima do not yet separate M3 render time from resident scheduling and serial transit."
+  },
+  "per_job_timing_run": {
+    "tag": "STEREO-JOB-AYABC-001",
+    "build": "F73B20D0",
+    "crc": "8EA8C660",
+    "module_sha256": "97836286c222ccfb62a2fa1b7686cf03763dc3d4b5a5d73181a58fef30df1b4a",
+    "status": "FAIL",
+    "metrics": {
+      "mode": 2,
+      "frames": 1499,
+      "cycles": 107449170,
+      "elapsed_us": 30699763,
+      "timing_valid": true,
+      "mhz": 3.4999999837132294,
+      "fps": 48.82773850729727,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 767944,
+      "blocks": 6508,
+      "block_max_us": 4964,
+      "block_min_us": 2969,
+      "prime_us": 16663,
+      "min_queued": 172,
+      "inline_requests": 2988,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 256937,
+      "transport_rx_bytes": 1758423,
+      "native_render_us": 12480462,
+      "exchange_block_us": 25273976
+    },
+    "late_blocks": 1,
+    "first_late": {
+      "index": 5848,
+      "elapsed_us": 4964,
+      "request_us": 4964,
+      "frames": 118,
+      "input_bytes": 26,
+      "queued": 250,
+      "command": 12,
+      "Pico_idle_gap_max_us": 184,
+      "Pico_pump_max_us": 77,
+      "Pico_step_max_us": 353,
+      "Pico_tx_max_us": 204,
+      "M3_render_call_wall_us_rounded_up": 2064,
+      "M3_between_call_wall_us_rounded_up": 512
+    },
+    "timing_resolution_us": 16,
+    "saturated_marker_us": 4080,
+    "note": "Render wall time includes interrupt preemption inside calls; scheduling time is measured between calls. Neither marker saturated in the retained block. No extra wire bytes or live polling."
+  },
+  "pending_SRAM_candidate": {
+    "status": "HOST_READY_NOT_HARDWARE_TESTED",
+    "build": "E2A36C80",
+    "crc": "81766785",
+    "uf2_sha256": "f4dcfba74321b9c405a7d7121ef983da546caa83789479e20abe223f902b24fa",
+    "manifest_sha256": "1da647dea7520ef1e24cd26e4fd52ff9c519d78dde46b5c6d599a636ae9db097",
+    "heap_capacity": 109264,
+    "minimum_heap": 108544,
+    "SRAM_functions": {
+      "UART_TX": "0x200006ec",
+      "sparse_packetizer": "0x2000084c"
+    },
+    "allocation_change": "512-byte-aligned UART RX ring is owned and freed with the active M3 Context; no permanent resident ring.",
+    "hardware_dependency": "Awaiting completion of Coordinator-assigned Harness cold AI window."
+  },
+  "result_protocol_v2_host": {
+    "status": "HOST_PASS_HARDWARE_PENDING",
+    "wire_version": 2,
+    "module_abi": 1,
+    "commands": [
+      11,
+      12
+    ],
+    "result_length": "min(actual_output_bytes, requested_ceiling)",
+    "legacy_commands_removed": true,
+    "pico_heap_capacity_bytes": 109008,
+    "m3_image_bytes": 29668,
+    "m3_global_ram_bytes": 10472,
+    "m3_reserved_stack_bytes": 4096,
+    "m3_arm_stack_high_water_bytes": 476,
+    "m3_unallocated_ram_bytes": 5880,
+    "module_memory_bytes": 6080,
+    "module_memory_limit_bytes": 6144,
+    "exact_arm_pcm_samples": 3584,
+    "raw_or_packed_output_max_bytes": 244,
+    "block_stereo_frames": 118,
+    "clock_hz": {
+      "pico": 125000000,
+      "m3": 72000000
+    },
+    "hardware_tested": false,
+    "game_trace_savings": {
+      "AYABC": {
+        "raw_wire_bytes": 1757160,
+        "packed_wire_bytes": 664422
+      },
+      "YMACB": {
+        "raw_wire_bytes": 1757160,
+        "packed_wire_bytes": 589616
+      },
+      "AYACB": {
+        "raw_wire_bytes": 702810,
+        "packed_wire_bytes": 231480
+      },
+      "YMABC": {
+        "raw_wire_bytes": 702810,
+        "packed_wire_bytes": 209331
+      }
+    },
+    "savings_are_host_predictions": true,
+    "evidence": ".build/spectrum-stereo-20261108/result-v2-host-tests.log",
+    "hello_result_capability": 32,
+    "hello_boot_capability": 16,
+    "install_target": "BIOS.M3U",
+    "pico_build_id": "AE2AF595",
+    "pico_crc": "DE0F4F49",
+    "boot_protocol_unchanged": true,
+    "legacy_wire_rejected": true
+  },
+  "latest_SRAM_hardware_result": {
+    "pico_build": "87321134",
+    "pico_crc": "E7B6428E",
+    "normal_APP_menu_starts": 3,
+    "normal_real_M3_audio_reopens": 3,
+    "heap_free_each": 108216,
+    "normal_status": "PASS",
+    "strict_case": "AYABC1500",
+    "strict_status": "FAIL_ZERO_M3_LATE_BLOCKS",
+    "late_blocks": 3,
+    "blocks": 6508,
+    "maximum_block_us": 5047,
+    "deadline_us": 4720,
+    "first_late_index": 1787,
+    "first_late_compute_wall_us": 1968,
+    "first_late_inter_step_gap_us": 512,
+    "other_three_cases": "NOT_RUN_AFTER_FAIL",
+    "long_run": "NOT_RUN_AFTER_FAIL",
+    "errors": 0,
+    "underruns": 0,
+    "readiness_polls": 0,
+    "fallback": 0
+  }
+}

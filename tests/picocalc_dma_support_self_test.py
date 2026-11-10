@@ -15,6 +15,9 @@ namespace endpoint {
 inline uint64_t now=0,complete[12]{};
 inline bool stuck[12]{};
 inline unsigned core=0,aborts=0,services=0,max_gap=0;
+inline bool irq0_enabled[12]{},irq1_enabled[12]{};
+inline unsigned ack0[12]{},ack1[12]{};
+inline void(*handlers[2])()={};
 inline uint64_t serviced=0;
 inline bool available=true,locked=false;
 inline uint32_t accumulator=0;
@@ -46,10 +49,12 @@ inline void best_effort_wfe_or_timeout(uint64_t deadline) {
 inline bool dma_channel_is_busy(unsigned c) {return endpoint::stuck[c] || endpoint::now<endpoint::complete[c];}
 inline void dma_channel_abort(unsigned c) {endpoint::stuck[c]=false;endpoint::complete[c]=0;++endpoint::aborts;}
 inline int dma_claim_unused_channel(bool) {return endpoint::available?2:-1;}
-inline void dma_channel_set_irq0_enabled(unsigned,bool) {}
-inline void dma_channel_set_irq1_enabled(unsigned,bool) {}
+inline void dma_channel_set_irq0_enabled(unsigned n,bool on) {endpoint::irq0_enabled[n]=on;}
+inline void dma_channel_acknowledge_irq0(unsigned n) {registers.ints0&=~(1u<<n);++endpoint::ack0[n];}
+inline void dma_channel_set_irq1_enabled(unsigned n,bool on) {endpoint::irq1_enabled[n]=on;}
+inline void dma_channel_acknowledge_irq1(unsigned n) {registers.ints1&=~(1u<<n);++endpoint::ack1[n];}
 inline constexpr unsigned DMA_IRQ_0=0,DMA_IRQ_1=1,PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY=0;
-inline void irq_add_shared_handler(unsigned,void(*)(),unsigned) {}
+inline void irq_add_shared_handler(unsigned n,void(*handler)(),unsigned) {endpoint::handlers[n]=handler;}
 inline void irq_set_enabled(unsigned,bool) {}
 struct mutex_t {};
 #define auto_init_mutex(name) mutex_t name
@@ -101,6 +106,15 @@ int main() {
     assert(crc32(data.data(),data.size(),progress)==crc(data.data(),data.size()));
     assert(services==(data.size()+255)/256 && !locked);
     const auto s=statistics();assert(s.timeouts==1 && s.crc32_calls==2 && s.crc_fallbacks==1);
+    // Relinquishing an idle channel must remove its old handler mask:
+    // another owner may claim it and use a different completion handler.
+    core=0;enable_irq(7);enable_irq(8);registers.ints0=(1u<<7)|(1u<<8);
+    disable_irq(7);assert(!irq0_enabled[7] && irq0_enabled[8] && ack0[7]==1);
+    registers.ints0=(1u<<7)|(1u<<8)|(1u<<11);handlers[0]();assert(registers.ints0==(1u<<8));
+    core=1;enable_irq(7);enable_irq(9);disable_irq(7);
+    assert(!irq1_enabled[7] && irq1_enabled[9] && ack1[7]==1);
+    registers.ints1=(1u<<7)|(1u<<9)|(1u<<11);handlers[1]();assert(registers.ints1==(1u<<9));
+    enable_irq(7);registers.ints1=1u<<7;handlers[1]();assert(registers.ints1==(1u<<7));
     std::puts("Production DMA: 50-us service, completion, bounded abort, exact CRC, serviced contention/no-channel fallback PASS");
 }
 '''

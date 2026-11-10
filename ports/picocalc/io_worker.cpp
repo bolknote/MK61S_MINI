@@ -7,11 +7,14 @@
 #include "i2c_transfer.hpp"
 #include "worker_job_slot.hpp"
 #include "m3_audio.hpp"
+#include "selective_irq_mask.hpp"
+#include "worker_deadline_trace.hpp"
 #include "hardware/clocks.h"
 #include "hardware/dma.h"
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
 #include "hardware/timer.h"
+#include "hardware/structs/nvic.h"
 #include "hardware/uart.h"
 #include "pico/flash.h"
 #include "pico/multicore.h"
@@ -49,6 +52,23 @@ struct WorkerClockRegisters {
 std::optional<SleepClockLease<WorkerClockRegisters>> i2c_sleep_clocks;
 I2cTransfer i2c_transfer;
 int i2c_alarm=-1;
+WorkerDeadlineTrace deadline_trace;
+struct DeadlineClock {u32 operator()()const{return time_us_32();}};
+using DeadlineScope=WorkerDeadlineTrace::Scope<DeadlineClock>;
+struct I2cIrqPort {
+    u32 enabled()const{return nvic_hw->iser;}
+    void disable(u32 mask){nvic_hw->icer=mask;__dsb();__isb();}
+    // SDK irq_set_mask_enabled(true) also clears pending IRQs. These are
+    // existing STOP/timeout events; preserve them with a direct ISER write.
+    void enable(u32 mask){nvic_hw->iser=mask;}
+} i2c_irq_port;
+u32 i2c_irq_mask() {
+    return (1u<<I2C1_IRQ)|(i2c_alarm<0?0u:1u<<(TIMER_IRQ_0+(unsigned)i2c_alarm));
+}
+bool set_i2c_alarm(u64 target) {
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::ALARM,DeadlineClock{});
+    return hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(target));
+}
 struct I2cBus {
     void prepare(bool read) {
         auto* hw=i2c_get_hw(i2c1);
@@ -73,6 +93,7 @@ struct I2cBus {
         // A timed-out/stretched bus must not hold a job alive or leave FIFO
         // bytes for the next one. Reset only this dedicated master instance.
         if(failed) {
+            deadline_trace.reset_controller();
             i2c_init(i2c1,10000);
             // Reset restores TX_EMPTY's interrupt mask too. Keep the idle
             // master silent until prepare() enables this job's sources.
@@ -81,6 +102,7 @@ struct I2cBus {
     }
 } i2c_bus;
 void finish_i2c() {
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::FINISH,DeadlineClock{});
     if(i2c.stage.load(std::memory_order_acquire)!=WORKING ||
        !i2c_transfer.step(i2c_bus,time_us_64())) return;
     if(i2c_alarm>=0) hardware_alarm_cancel((unsigned)i2c_alarm);
@@ -93,13 +115,17 @@ void finish_i2c() {
     i2c_sleep_clocks.reset();
     i2c.stage.store(DONE,std::memory_order_release);__sev();
 }
-void i2c_irq() { i2c_irqs.fetch_add(1,std::memory_order_relaxed);finish_i2c(); }
+void i2c_irq() {
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::IRQ,DeadlineClock{});
+    i2c_irqs.fetch_add(1,std::memory_order_relaxed);finish_i2c();
+}
 void i2c_timeout(unsigned) {
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::IRQ,DeadlineClock{});
     finish_i2c();
     // A short worker wake may precede the bus timeout. Keep the original
     // deadline armed even if audio stops before the next timed wait.
     if(i2c.stage.load(std::memory_order_acquire)==WORKING &&
-       hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(i2c_transfer.deadline())))finish_i2c();
+       set_i2c_alarm(i2c_transfer.deadline()))finish_i2c();
     // Retain an event if the IRQ runs just before the caller's WFE. Without
     // it, an idle I2C alarm can be lost until the next 1280us audio refill.
     __sev();
@@ -133,9 +159,7 @@ auto uart_clocks() {
 
 void drain_uart() {
 #if LIB_PICO_STDIO_UART
-    static bool attempted=false;
-    if(!attempted) {
-        attempted=true;
+    if(uart_dma_channel.load(std::memory_order_relaxed)<0 && !uart_queue.empty()) {
         const int channel=dma_claim_unused_channel(false);
         if(channel>=0) dma_support::enable_irq((unsigned)channel);
         uart_dma_channel.store(channel,std::memory_order_release);
@@ -232,13 +256,14 @@ void timed_wait(unsigned us) {
     if(get_core_num()!=1 || i2c_alarm<0) {
         best_effort_wfe_or_timeout(make_timeout_time_us(us));return;
     }
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::PACE,DeadlineClock{});
     // The SDK default alarm pool belongs to core0. Repeated 50us audio
     // waits there interrupt the Z80 core. Reuse this core's existing alarm,
     // keeping an in-flight I2C deadline earlier than the polling deadline.
     u64 target=time_us_64()+us;
     if(i2c.stage.load(std::memory_order_acquire)==WORKING && i2c_transfer.deadline()<target)
         target=i2c_transfer.deadline();
-    if(!hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(target)))__wfe();
+    if(!set_i2c_alarm(target))__wfe();
 }
 void worker() {
     flash_safe_execute_core_init();
@@ -252,10 +277,12 @@ void worker() {
     for(;;) {
         service();
         if(frame.load(std::memory_order_acquire)) {
+            DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::FRAME,DeadlineClock{});
             frame_transfer(frame_context);
             frame.store(false,std::memory_order_release);__sev();
         }
         if(compute.queued()) {
+            DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::COMPUTE,DeadlineClock{});
             const u64 started=time_us_64();
             compute.run();
             const u32 elapsed=(u32)(time_us_64()-started);
@@ -332,11 +359,33 @@ void suspend_frames(bool suspended) {
     display_suspended.store(suspended,std::memory_order_release);
 }
 bool frames_suspended() { return display_suspended.load(std::memory_order_acquire); }
+bool release_idle_uart_dma() {
+#if LIB_PICO_STDIO_UART
+    if(get_core_num()!=1 || uart_active.load(std::memory_order_acquire) || uart_inflight || !uart_queue.empty())return false;
+    const int channel=uart_dma_channel.load(std::memory_order_relaxed);
+    if(channel<0)return true;
+    if(dma_channel_is_busy((unsigned)channel) ||
+       (uart_get_hw(uart_default)->fr&UART_UARTFR_BUSY_BITS))return false;
+    dma_support::disable_irq((unsigned)channel);
+    dma_channel_abort((unsigned)channel);
+    dma_channel_acknowledge_irq0((unsigned)channel);dma_channel_acknowledge_irq1((unsigned)channel);
+    uart_dma_channel.store(-1,std::memory_order_release);dma_channel_unclaim((unsigned)channel);return true;
+#else
+    return true;
+#endif
+}
 void service(bool allow_i2c) {
-    drain_uart();
-    m3_audio::service();
+    {
+        DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::UART,DeadlineClock{});
+        drain_uart();
+    }
+    {
+        DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::M3,DeadlineClock{});
+        m3_audio::service();
+    }
     (void)allow_i2c; // Starting the FIFO is bounded even for tiny LCD windows.
-    const u32 interrupts=save_and_disable_interrupts();
+    DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::SERVICE,DeadlineClock{});
+    SelectiveIrqMask<I2cIrqPort> irqs(i2c_irq_port,i2c_irq_mask());
     finish_i2c();
     if(i2c.stage.load(std::memory_order_acquire)==QUEUED) {
         i2c.stage.store(WORKING,std::memory_order_release);
@@ -344,10 +393,12 @@ void service(bool allow_i2c) {
         // until STOP/error cleanup, before publishing DONE to clock changes.
         i2c_sleep_clocks.emplace(CLOCKS_SLEEP_EN0_CLK_SYS_I2C1_BITS,0);
         if(i2c_sleep_clocks->temporary()) i2c_sleep_holds.fetch_add(1,std::memory_order_relaxed);
-        i2c_transfer.begin(i2c_bus,i2c.read,i2c.bytes,i2c.length,time_us_64());
-        if(i2c_alarm>=0) hardware_alarm_set_target((unsigned)i2c_alarm,from_us_since_boot(i2c_transfer.deadline()));
+        {
+            DeadlineScope begin(deadline_trace,WorkerDeadlineTrace::BEGIN,DeadlineClock{});
+            i2c_transfer.begin(i2c_bus,i2c.read,i2c.bytes,i2c.length,time_us_64());
+        }
+        if(i2c_alarm>=0) set_i2c_alarm(i2c_transfer.deadline());
     }
-    restore_interrupts(interrupts);
 }
 void wait_for_progress() {
     service();
@@ -395,4 +446,14 @@ Statistics statistics() {
         compute_us.load(std::memory_order_relaxed),compute_max_us.load(std::memory_order_relaxed),
         display_frames.load(std::memory_order_relaxed),display_refused.load(std::memory_order_relaxed)};
 }
+FrameDeadlineScope::FrameDeadlineScope(WorkerDeadlineTrace::Step site):site_(get_core_num()==1?site:WorkerDeadlineTrace::Step(0)) {
+    if(site_)previous_=deadline_trace.enter(site_,time_us_32());
+}
+FrameDeadlineScope::~FrameDeadlineScope() {
+    if(site_)deadline_trace.leave(site_,previous_,time_us_32());
+}
+DeadlineStatistics deadline_statistics() {
+    return {deadline_trace.resets.load(),deadline_trace.fault_site.load(),deadline_trace.fault_age_us.load()};
+}
+void note_audio_deadline(){deadline_trace.audio_fault(time_us_32());}
 }

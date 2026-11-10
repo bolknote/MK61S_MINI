@@ -18,6 +18,12 @@ static unsigned check(const uint8_t* input,unsigned frames) {
             decoded[2*i]=(uint8_t)previous.previous;decoded[2*i+1]=(uint8_t)(previous.previous>>8);
         }
         assert(cursor==coded+8+used && !previous.remaining);
+        uint16_t guarded[130];for(unsigned i=0;i<130;++i)guarded[i]=0xa55a;
+        const unsigned start=random_word();
+        assert(stm3_pcm_repeat_decode_ring(guarded+1,128,start,coded+8,used,frames));
+        assert(guarded[0]==0xa55a && guarded[129]==0xa55a);
+        for(unsigned i=0;i<frames;++i)assert(guarded[1+((start+i)&127)]==
+            (uint16_t)((unsigned)input[2*i]|(unsigned)input[2*i+1]<<8));
     } else {memcpy(decoded,input,frames*2);++raw_fallbacks;}
     assert(!memcmp(decoded,input,frames*2));frames_checked+=frames;return used;
 }
@@ -55,7 +61,22 @@ int main(void) {
         uint8_t bytes[240];const unsigned n=random_word()%241;
         for(unsigned i=0;i<n;++i)bytes[i]=(uint8_t)random_word();
         const uint8_t* cursor=bytes;stm3_pcm_repeat_state previous={0x8080,0};
-        for(unsigned frames=0;frames<118;++frames){if(!stm3_pcm_repeat_next(&cursor,bytes+n,&previous))break;assert(cursor<=bytes+n);}
+        uint16_t expected[118],guarded[514];int valid=1;
+        for(unsigned frames=0;frames<118;++frames){if(!stm3_pcm_repeat_next(&cursor,bytes+n,&previous)){valid=0;break;}expected[frames]=previous.previous;assert(cursor<=bytes+n);}
+        valid=valid && cursor==bytes+n && !previous.remaining;
+        const unsigned start=random_word();guarded[0]=0xbeef;guarded[513]=0xface;
+        assert(stm3_pcm_repeat_decode_ring(guarded+1,512,start,bytes,n,118)==valid);
+        assert(guarded[0]==0xbeef && guarded[513]==0xface);
+        if(valid)for(unsigned i=0;i<118;++i)assert(guarded[1+((start+i)&511)]==expected[i]);
     }
+    uint16_t ring[128];const uint8_t one_run[]={63};
+    assert(!stm3_pcm_repeat_decode_ring(ring,0,0,one_run,1,1));
+    assert(!stm3_pcm_repeat_decode_ring(ring,3,0,one_run,1,1));
+    assert(!stm3_pcm_repeat_decode_ring(ring,128,0,one_run,1,129));
+    assert(!stm3_pcm_repeat_decode_ring(ring,128,0,one_run,1,62));
+    assert(!stm3_pcm_repeat_decode_ring(ring,128,0,one_run,1,64));
+    assert(stm3_pcm_repeat_decode_ring(ring,128,127,one_run,1,63));
+    assert(stm3_pcm_repeat_decode_ring(ring,128,0,one_run,0,0));
+    assert(!stm3_pcm_repeat_decode_ring(ring,128,0,one_run,1,0));
     printf("Repeat codec: %lu exact stereo frames, all65536 pairs,0..120/118 boundaries, raw fallback=%lu, canaries/truncation/bounded fuzz PASS\n",frames_checked,raw_fallbacks);
 }

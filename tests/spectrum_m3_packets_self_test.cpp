@@ -25,7 +25,23 @@ struct Producer {
     }
 };
 int main() {
+    for(int32_t delta=-1000;delta<=int32_t(SAMPLES*140);++delta)
+        assert(bounded_sample_index(delta)==(delta<=0?0:(unsigned(delta)-1)/140));
     std::array<uint8_t,512> packet{};
+    for(unsigned chip=0;chip<2;++chip)for(unsigned layout=0;layout<3;++layout) {
+        Producer p;std::array<int32_t,6> stereo{{-1,23,135,0,-4000,4999}};
+        const auto original=stereo;Options o{layout,chip,stereo.data(),true};assert(valid(o));
+        assert(config(p.request,packet.data(),true,731,o)==STATE_V2 && get32(packet.data())==MAGIC_V2);
+        assert(packet[4]==0 && packet[5]==(1|(layout<<1)|(chip<<3)) && packet[6]==(731&255) && packet[7]==(731>>8));
+        for(unsigned i=0;i<6;++i)assert(int32_t(get32(packet.data()+STATE+4*i))==original[i]);
+        put32(packet.data(),STATE_V2_MAGIC);put32(packet.data()+4,BODY);stereo.fill(42);
+        assert(restore(p.request,packet.data(),STATE_V2,o) && stereo==original);
+        const auto bytes=p.psg;put32(packet.data()+STATE+4*5,32768);
+        assert(!restore(p.request,packet.data(),STATE_V2,o) && stereo==original && p.psg==bytes);
+        auto bad=o;bad.layout=3;assert(!valid(bad));bad=o;bad.chip=2;assert(!valid(bad));
+        bad=o;bad.stereo=nullptr;assert(!valid(bad));
+        assert(!restore(p.request,packet.data(),STATE,o));
+    }
     { // Sparse AY blocks, repeated envelopes, exact edges, past/future
       // events and unchanged DAC writes, including both counter wraps.
       uint32_t random=12345;

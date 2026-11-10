@@ -5,10 +5,8 @@ static const mk61_app_services* observed_services(const mk61_app_api*,uint32_t);
 static uint32_t observed_run(spectrum*,uint32_t);
 static void observed_end(spectrum*);
 static enum spectrum_error observed_load(spectrum*,const spectrum_source*);
-#if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
 static void observed_paced(spectrum*,uint32_t,uint32_t,uint32_t,bool);
 #define SPECTRUM_HIL_PACED observed_paced
-#endif
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
 static void observed_video(const spectrum*,uint8_t*,uint8_t*);
 #define spectrum_video8 observed_video
@@ -38,17 +36,41 @@ static mk61_app_services proxy;
 static uint32_t mode,seen,first_us,last_us,first_cycles,last_cycles,first_frame,last_frame,start_frame;
 static uint32_t previous_us,min_frame_us=UINT32_MAX,max_frame_us,late_frames,max_lag_us,run_epoch;
 static bool first_set,last_set,measured,strict_fault,fault_reported;
+static uint32_t raw_seen,first_run_us,last_run_us;
+static bool first_run_set,boundary_mismatch;
 #if !defined(S3_FORCE_LOCAL) || !S3_FORCE_LOCAL
 static void (*original_recover)(void*);
 #endif
 static uint32_t clock_us(void){return *(volatile uint32_t*)(uintptr_t)0x40054028;}
 static void report(const char* line){original->call(MK61_SERVICE_DEBUG_WRITE,strlen(line),0,0,(void*)line);}
+static void capture_frame(spectrum* s,uint32_t now) {
+    // This is the real MICROS value already sampled by production pacing,
+    // not its target. Do not charge our own trace/return/branch work to the
+    // emulated interval by sampling a second clock in observed_run().
+    if(s->frames==seen)return;
+    seen=s->frames;
+    if(!first_set){first_set=true;first_us=now;first_cycles=(uint32_t)s->cpu.cyc;first_frame=s->frames;}
+    else {
+        const uint32_t delta=now-previous_us,period=spectrum_frame_cycles(s)*2/7;
+        if(delta<min_frame_us)min_frame_us=delta;
+        if(delta>max_frame_us)max_frame_us=delta;
+        if(delta>period+1000)++late_frames;
+        const int32_t lag=(int32_t)((now-first_us)-(s->frames-first_frame)*period);
+        if(lag>0 && (uint32_t)lag>max_lag_us)max_lag_us=(uint32_t)lag;
+        last_us=now;last_cycles=(uint32_t)s->cpu.cyc;last_frame=s->frames;last_set=true;
+    }
+    previous_us=now;
+}
 #if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
-static struct { uint32_t target,now;int32_t ready;uint16_t frame,phase; } frame_trace[64];
+#ifndef S3_FRAME_TRACE_LIMIT
+#define S3_FRAME_TRACE_LIMIT 64u
+#endif
+static struct { uint32_t target,now;int32_t ready;uint16_t frame,phase; } frame_trace[S3_FRAME_TRACE_LIMIT];
 static unsigned frame_trace_count;
 static bool first_slice_pending;
 static uint32_t paced_count,paced_previous,paced_min=UINT32_MAX,paced_max,paced_late,paced_max_late,paced_resyncs;
 static void observed_paced(spectrum* s,uint32_t target,uint32_t now,uint32_t ready,bool resynced) {
+    capture_frame(s,now);
     first_slice_pending=true;
     if(paced_count++) {
         const uint32_t delta=now-paced_previous;
@@ -75,6 +97,10 @@ static void frame_report(void) {
             frame_trace[i].frame,(unsigned long)(frame_trace[i].target-frame_trace[0].target),(long)frame_trace[i].ready,
             (unsigned long)(frame_trace[i].now-frame_trace[i].target),frame_trace[i].phase);report(line);
     }
+}
+#else
+static void observed_paced(spectrum* s,uint32_t target,uint32_t now,uint32_t ready,bool resynced) {
+    (void)target;(void)ready;(void)resynced;capture_frame(s,now);
 }
 #endif
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
@@ -133,6 +159,10 @@ static void measurement(void) {
         (unsigned long)(last_set?last_cycles-first_cycles:0),(unsigned long)(last_set?last_us-first_us:0),
         (unsigned long)atomic_load(&machine.sound.starved));report(line);
     mk61_app_snprintf(original,line,sizeof(line),
+        "SP3 TIMER_PAIR first=%lu last=%lu run_first=%lu run_last=%lu complete=%u same_cycles=%u\n",
+        (unsigned long)first_us,(unsigned long)last_us,(unsigned long)first_run_us,(unsigned long)last_run_us,
+        first_run_set && last_set && raw_seen==last_frame,!boundary_mismatch);report(line);
+    mk61_app_snprintf(original,line,sizeof(line),
         "SP3 FRAME min_us=%lu max_us=%lu late_1ms=%lu max_lag_us=%lu strict_fault=%u\n",
         (unsigned long)(frames?min_frame_us:0),(unsigned long)max_frame_us,
         (unsigned long)late_frames,(unsigned long)max_lag_us,strict_fault);report(line);
@@ -159,16 +189,16 @@ static uint32_t observed_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void*
         memcpy(r->data,path,sizeof(path));return 1;
     }
 #if defined(S3_FORCE_LOCAL) && S3_FORCE_LOCAL
-    if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_PSG_OPEN)return 0;
+    if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_CONFIG_OPEN))return 0;
 #else
     if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_SYNTH_OPEN){strict_fault=true;return 0;}
-    if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_PSG_OPEN) {
+    if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_CONFIG_OPEN)) {
         mk61_service_audio_psg* request=payload;
 #ifdef S3_GAME_MODULE
         request->module_path=S3_GAME_MODULE;
 #endif
         original_recover=request->recover;request->recover=strict_recover;
-        a=MK61_AUDIO_PSG_ONLY_OPEN;run_epoch=clock_us();
+        a=a==MK61_AUDIO_PSG_CONFIG_OPEN?MK61_AUDIO_PSG_CONFIG_ONLY_OPEN:MK61_AUDIO_PSG_ONLY_OPEN;run_epoch=clock_us();
     }
 #endif
     if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_CLOSE && mode) {
@@ -189,9 +219,11 @@ static uint32_t observed_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void*
         profile_add(slot,begin);
     }
 #endif
-    if(op==MK61_SERVICE_AUDIO_STREAM && a==MK61_AUDIO_PSG_ONLY_OPEN && result!=2)strict_fault=true;
-    if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_SYNTH_OPEN || a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN) && result) {
-        mode=result;seen=start_frame=machine.frames;first_us=last_us=0;
+    if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_PSG_ONLY_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN) && result!=2)strict_fault=true;
+    if(op==MK61_SERVICE_AUDIO_STREAM && (a==MK61_AUDIO_SYNTH_OPEN || a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN ||
+        a==MK61_AUDIO_PSG_CONFIG_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN) && result) {
+        mode=result;raw_seen=seen=start_frame=machine.frames;first_us=last_us=0;
+        first_run_us=last_run_us=0;first_run_set=boundary_mismatch=false;
         first_set=last_set=measured=false;run_epoch=clock_us();
         report(mode==2?"SP3 MODE=M3\n":"SP3 MODE=LOCAL\n");
     }
@@ -222,20 +254,11 @@ static uint32_t observed_run(spectrum* s,uint32_t cycles) {
 #if defined(S3_FRAME_TRACE) && S3_FRAME_TRACE
     first_slice_pending=false;
 #endif
-    if(s->frames!=seen) {
-        seen=s->frames;const uint32_t now=clock_us();
-        if(!first_set){first_set=true;first_us=now;first_cycles=(uint32_t)s->cpu.cyc;first_frame=s->frames;}
-        else {
-            const uint32_t delta=now-previous_us,period=spectrum_frame_cycles(s)*2/7;
-            if(delta<min_frame_us)min_frame_us=delta;
-            if(delta>max_frame_us)max_frame_us=delta;
-            if(delta>period+1000)++late_frames;
-            const int32_t lag=(int32_t)((now-first_us)-(s->frames-first_frame)*period);
-            if(lag>0 && (uint32_t)lag>max_lag_us)max_lag_us=(uint32_t)lag;
-            last_us=now;last_cycles=(uint32_t)s->cpu.cyc;last_frame=s->frames;
-            last_set=true;
-        }
-        previous_us=now;
+    if(first_set && s->frames!=raw_seen) {
+        raw_seen=s->frames;const uint32_t now=clock_us();
+        if(!first_run_set){first_run_set=true;first_run_us=now;}
+        last_run_us=now;
+        if((uint32_t)s->cpu.cyc!=(last_set?last_cycles:first_cycles))boundary_mismatch=true;
     }
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE
     const uint32_t begin=clock_us();
@@ -266,6 +289,11 @@ static void observed_end(spectrum* s) {
 }
 static enum spectrum_error observed_load(spectrum* s,const spectrum_source* source) {
     const enum spectrum_error error=spectrum_load_z80(s,source);if(error)return error;
+#ifdef S3_SOUND_LAYOUT
+    spectrum_sound_configure(s,S3_SOUND_CHIP,S3_SOUND_LAYOUT);
+    char line[80];mk61_app_snprintf(original,line,sizeof(line),"SP3 SOUND chip=%s layout=%s\n",
+        s->sound_chip==SPECTRUM_YM?"YM":"AY",s->sound_layout==SPECTRUM_ABC?"ABC":s->sound_layout==SPECTRUM_ACB?"ACB":"MONO");report(line);
+#endif
     uint8_t palette[65];mk61_service_file_bytes r={S3_GAME_FOLDER "/COSMIC.ULP",palette,0,sizeof(palette)};
     if(!original->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(r),&r) || palette[0]>1)return SPECTRUM_IO;
     s->ulaplus_mode=palette[0];memcpy(s->ulaplus_palette,palette+1,64);return SPECTRUM_OK;

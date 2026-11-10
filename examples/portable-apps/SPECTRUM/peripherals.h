@@ -5,6 +5,8 @@
 #include <stdint.h>
 struct spectrum;
 enum { SPECTRUM_TURBOSOUND=1, SPECTRUM_COVOX=2, SPECTRUM_SPECDRUM=4, SPECTRUM_ULAPLUS=8 };
+enum { SPECTRUM_MONO, SPECTRUM_ABC, SPECTRUM_ACB };
+enum { SPECTRUM_AY, SPECTRUM_YM };
 #define SPECTRUM_SOUND_QUEUE_EVENTS 256U
 #define SPECTRUM_SOUND_START_SAMPLES 50U /* 2 ms at the native 25 kHz rate. */
 typedef struct { uint32_t time;uint8_t device,reg,value,reserved; } spectrum_sound_event;
@@ -18,6 +20,7 @@ typedef struct {
     uint8_t latest_dac[3];
     bool asynchronous;
     int32_t input,output;
+    int32_t stereo[6];
     void (*yield)(void*);
     void* yield_context;
 } spectrum_sound;
@@ -29,4 +32,6 @@ void spectrum_sound_end(struct spectrum*);
 void spectrum_sound_recover(void*);
 uint32_t spectrum_sound_render(void*);
 void spectrum_sound_publish(struct spectrum*);
+/* Change only while the sound consumers are stopped; keeps guest registers. */
+void spectrum_sound_configure(struct spectrum*,unsigned chip,unsigned layout);
 #endif

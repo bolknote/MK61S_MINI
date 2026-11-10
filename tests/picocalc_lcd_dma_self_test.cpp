@@ -1,3 +1,4 @@
+#include "worker_deadline_trace.hpp"
 // Production DMA configuration/fill methods, with a paced host SPI endpoint.
 #include "rust_types.h"
 #include "lcd_update.hpp"

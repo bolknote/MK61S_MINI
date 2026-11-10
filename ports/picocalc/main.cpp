@@ -151,7 +151,13 @@ void report(unsigned math_failures) {
     const auto synth=picocalc::audio_stream::synth_statistics();
     std::printf("SYNTH_DMA=%u SYNTH_BLOCKS=%lu SYNTH_UNDERRUNS=%lu\n",
         synth.dma,(unsigned long)synth.blocks,(unsigned long)synth.underruns);
+    std::printf("PWM_REFILL_US=%lu PWM_REFILL_STAGE=%lu PWM_REFILL_BEFORE=%lu PWM_REFILL_AFTER=%lu PWM_REFILL_FILLED=%lu PWM_REFILL_CORE=%lu PWM_REFILL_PRIO=%lu PWM_IRQ_RESTORED=%lu\n",
+        (unsigned long)synth.refill.max_us,(unsigned long)synth.refill.late_stage,(unsigned long)synth.refill.head_before,
+        (unsigned long)synth.refill.head_after,(unsigned long)synth.refill.filled,(unsigned long)synth.refill.core,(unsigned long)synth.refill.priority,(unsigned long)synth.refill.restored);
     const auto m3=picocalc::m3_audio::statistics();
+    std::printf("PWM_IRQ_PC=%08lX PWM_IRQ_CONTEXT=%08lX PWM_IRQ_DISPATCH_US=%lu PWM_IRQ_ENTRY_PC=%08lX\n",
+        (unsigned long)synth.refill.irq_pc,(unsigned long)synth.refill.irq_context,(unsigned long)synth.refill.irq_dispatch_us,(unsigned long)synth.refill.irq_entry_pc);
+    picocalc::audio_stream::report_alarm_trace();
     std::printf("M3_AUDIO=%u M3_ERROR=%d M3_BLOCKS=%lu M3_SAMPLES=%lu M3_UNDERRUNS=%lu M3_MAX_SLICE_US=%lu M3_REQUESTS=%lu M3_UART_ERRORS=%lu M3_UNLOAD_FAILURES=%lu M3_FALLBACKS=%lu\n",
         synth.coprocessor,m3.error,(unsigned long)m3.blocks,(unsigned long)m3.samples,
         (unsigned long)m3.underruns,(unsigned long)m3.max_slice,(unsigned long)m3.requests,
@@ -187,6 +193,8 @@ void report(unsigned math_failures) {
         (unsigned long)m3.transport_flags,m3.inline_input,
         (unsigned long)m3.inline_requests,(unsigned long)m3.stream_write_requests,
         (unsigned long)m3.tx_bytes,(unsigned long)m3.rx_bytes);
+    std::printf("M3_TX_DMA_REQUESTS=%lu M3_TX_FIFO_REQUESTS=%lu\n",
+        (unsigned long)m3.tx_dma_requests,(unsigned long)m3.tx_fifo_requests);
     const auto settings_storage=picocalc::settings_storage_statistics();
     std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
         (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,
@@ -295,6 +303,9 @@ void report(unsigned math_failures) {
     std::printf("I2C_IRQ=1 I2C_IRQS=%lu I2C_TIMEOUTS=%lu I2C_ABORTS=%lu I2C_BUSY_US=%lu I2C_SLEEP_HOLDS=%lu\n",
         (unsigned long)io.i2c_irqs,(unsigned long)io.i2c_timeouts,(unsigned long)io.i2c_aborts,(unsigned long)io.i2c_busy_us,
         (unsigned long)io.i2c_sleep_holds);
+    const auto deadline=picocalc::io_worker::deadline_statistics();
+    std::printf("IO_DIAGNOSTIC_MAXIMA=omitted IO_I2C_RESETS=%lu IO_AUDIO_FAULT_SITE=%lu IO_AUDIO_FAULT_AGE_US=%lu\n",
+        (unsigned long)deadline.resets,(unsigned long)deadline.fault_site,(unsigned long)deadline.fault_age_us);
     std::printf("UART_WAIT_US=%lu UART_FLUSH_US=%lu UART_FLUSHES=%lu\n",
         (unsigned long)io.uart_wait_us,(unsigned long)io.uart_flush_us,(unsigned long)io.uart_flushes);
     std::printf("UART_DMA=%u IO_IDLE_US=%lu UART_EVENT_WAITS=%lu UART_SLEEP_HOLDS=%lu UART_BAUD=%lu\n",io.uart_dma,(unsigned long)io.idle_us,

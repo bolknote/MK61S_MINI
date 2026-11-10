@@ -102,19 +102,12 @@ struct AudioEngine {
                 ++late_blocks;
             }
             if(w-r>CAPACITY-count){fail(-27);return;}
-            const uint8_t* cursor=reply+8;const uint8_t* end=reply+n;stm3_pcm_repeat_state previous={0x8080,0};
-            for(unsigned i=0;i<count;++i) {
-                uint16_t duty;
-                if(packed) {
-                    if(!stm3_pcm_repeat_next(&cursor,end,&previous)){fail(-26);return;}
-                    duty=previous.previous;
-                } else {
-                    const unsigned at=8+i*options.channels();
-                    duty=uint16_t(reply[at])|uint16_t(reply[options.layout?at+1:at])<<8;
-                }
-                duties[(w+i)&(CAPACITY-1)]=duty;
+            if(packed) {
+                if(!stm3_pcm_repeat_decode_ring(duties,CAPACITY,w,reply+8,n-8,count)){fail(-26);return;}
+            } else for(unsigned i=0;i<count;++i) {
+                const unsigned at=8+i*options.channels();
+                duties[(w+i)&(CAPACITY-1)]=uint16_t(reply[at])|uint16_t(reply[options.layout?at+1:at])<<8;
             }
-            if(packed && (cursor!=end || previous.remaining)){fail(-26);return;}
             write.store(w+count,std::memory_order_release);++sequence;++blocks;samples+=count;stage=IDLE;
         }
         if(stopping.load(std::memory_order_acquire) && !prepared_bytes){stopped.store(true,std::memory_order_release);return;}
@@ -136,6 +129,26 @@ struct AudioEngine {
             start(now,true);return;
         }
         stage=WRITE;chunk(now);
+    }
+    // Foreground producer and IRQ consumer both belong to core1. During
+    // an IRQ the published write cursor cannot change, so copy a ready
+    // block with one read publication. Stop/error flags remain per-sample.
+    // Priming, short queues and faults retain the exact scalar slow path.
+    template<class Clock> void fill_samples(uint32_t* out,unsigned n,Clock clock) {
+        if(!n)return;
+        uint32_t r=read.load(std::memory_order_relaxed);
+        const uint32_t w=write.load(std::memory_order_acquire),available=w-r;
+        if(!primed || available<n || available>CAPACITY ||
+           !__atomic_load_n(request.running,__ATOMIC_ACQUIRE) || error.load(std::memory_order_acquire)) {
+            for(unsigned i=0;i<n;++i)out[i]=sample(clock());
+            return;
+        }
+        const uint32_t first=r;
+        for(unsigned i=0;i<n;++i) {
+            if(!__atomic_load_n(request.running,__ATOMIC_ACQUIRE) || error.load(std::memory_order_acquire))out[i]=0x00800080u;
+            else {const uint32_t duty=duties[r++&(CAPACITY-1)];out[i]=(duty&255)|((duty>>8)<<16);}
+        }
+        if(r!=first){missing=0;if(w-r<min_queued)min_queued=w-r;read.store(r,std::memory_order_release);}
     }
     uint32_t sample(uint32_t now=0) {
         if(!__atomic_load_n(request.running,__ATOMIC_ACQUIRE) || error.load(std::memory_order_acquire))return 0x00800080u;

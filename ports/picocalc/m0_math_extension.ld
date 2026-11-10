@@ -9,6 +9,18 @@ SECTIONS {
         *(.m0_math_extension_data)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
+    /* Diagnostic-only arm/fire records use an otherwise empty Flash gap.
+     * No math slot or ROMCACHE boundary is moved. */
+    .audio_alarm_diagnostics 0x10148000 : {
+        *(.audio_alarm_diagnostics)
+        *(.audio_alarm_diagnostics.*)
+        *(.audio_alarm_diagnostics_data)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.m0_math_extension) + SIZEOF(.m0_math_extension) <= ADDR(.audio_alarm_diagnostics),
+           "M0 math overlaps audio alarm diagnostics")
+    ASSERT(ADDR(.audio_alarm_diagnostics) + SIZEOF(.audio_alarm_diagnostics) <= 0x1014d800,
+           "Audio diagnostics exceed existing Flash gap")
     /* Keep these leaf product helpers disjoint from the fixed log10
      * hot path in cache index space. Grouping the unchanged bodies also
      * decouples their placement from future platform text growth. */

@@ -9,11 +9,13 @@ ROOT=Path(__file__).resolve().parents[1]
 source=(ROOT/'ports/picocalc/io_worker.cpp').read_text()
 wait=source[source.index('void timed_wait(unsigned us) {'):source.index('void worker() {')]
 callback=source[source.index('void i2c_timeout(unsigned) {'):source.index('std::atomic<u32> uart_wait_us')]
+alarm=source[source.index('bool set_i2c_alarm(u64 target) {'):source.index('struct I2cBus {')]
 TEST=r'''
 #include <atomic>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include "worker_deadline_trace.hpp"
 using u64=uint64_t;
 enum {IDLE,WORKING,DONE};
 struct {std::atomic<unsigned> stage{IDLE};} i2c;
@@ -21,6 +23,10 @@ struct {u64 limit=0;u64 deadline()const{return limit;}} i2c_transfer;
 int i2c_alarm=2;
 unsigned core=1,sdk_waits=0,waits=0,sets=0,finishes=0,events=0;
 u64 now=0,target=0;bool early=false,race=false,callback_before_wait=false,event_pending=false;
+picocalc::WorkerDeadlineTrace deadline_trace;
+struct DeadlineClock {uint32_t operator()()const{return (uint32_t)now;}};
+using WorkerDeadlineTrace=picocalc::WorkerDeadlineTrace;
+using DeadlineScope=WorkerDeadlineTrace::Scope<DeadlineClock>;
 void i2c_timeout(unsigned);
 unsigned get_core_num(){return core;}
 u64 time_us_64(){return now;}
@@ -61,9 +67,9 @@ int main(){
 }
 '''
 with tempfile.TemporaryDirectory(prefix='picocalc-worker-wait-') as directory:
-    folder=Path(directory);(folder/'production.inc').write_text(wait+callback)
+    folder=Path(directory);(folder/'production.inc').write_text(alarm+wait+callback)
     (folder/'test.cpp').write_text(TEST)
     subprocess.run([os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',
-                    '-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+str(folder),
+                    '-fsanitize=address,undefined','-fno-sanitize-recover=all','-I'+str(folder),'-I'+str(ROOT/'ports/picocalc'),
                     str(folder/'test.cpp'),'-o',str(folder/'test')],check=True)
     subprocess.run([str(folder/'test')],check=True)

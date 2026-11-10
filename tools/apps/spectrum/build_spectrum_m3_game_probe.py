@@ -43,16 +43,25 @@ def main():
     ap.add_argument('--producer-profile',action='store_true',help='Measure Z80, API, video and producer gaps')
     ap.add_argument('--producer-trace',action='store_true',help='Also capture the first 65 ms of producer/consumer progress')
     ap.add_argument('--frame-trace',action='store_true',help='Record real pacing deadlines and the first 64 boundaries')
+    ap.add_argument('--frame-trace-limit',type=int,default=64,help='Number of initial diagnostic boundary rows,1..64')
     ap.add_argument('--module-name',default='AY.S3M',help='Relative 8.3 module basename for an isolated A/B probe')
+    ap.add_argument('--sound-layout',choices=['mono','ABC','ACB'],default='ABC')
+    ap.add_argument('--sound-chip',choices=['AY','YM'],default='AY')
+    ap.add_argument('--snapshot-only',action='store_true',help='Omit media mounting from the fixed-checkpoint probe')
     args=ap.parse_args()
     # 30,000 Pentagon frames take about ten minutes and keep the unsigned
     # 32-bit cycle/time differences unambiguous (2.15 billion cycles).
     if not 60<=args.frames<=30000:ap.error('frames must be60..30000')
+    if not 1<=args.frame_trace_limit<=64:ap.error('frame-trace-limit must be1..64')
     for local in (False,True):
         folder=args.build_dir.resolve()/('local' if local else 'remote');folder.mkdir(parents=True,exist_ok=True)
         wrapper=folder/'game.c';wrapper.write_text('#define S3_PRODUCER_PROFILE '+str(int(args.producer_profile or args.producer_trace))+
             '\n#define S3_PRODUCER_TRACE '+str(int(args.producer_trace))+
             '\n#define S3_FRAME_TRACE '+str(int(args.frame_trace))+
+            '\n#define S3_FRAME_TRACE_LIMIT '+str(args.frame_trace_limit)+
+            '\n#define S3_SOUND_LAYOUT '+str(['mono','ABC','ACB'].index(args.sound_layout))+
+            '\n#define S3_SOUND_CHIP '+str(['AY','YM'].index(args.sound_chip))+
+            ('\n#define SPECTRUM_HIL_SNAPSHOT_ONLY 1' if args.snapshot_only else '')+
             '\n#define S3_GAME_MODULE '+json.dumps(args.module_name)+
             '\n#define S3_FORCE_LOCAL '+str(int(local))+
             '\n#define S3_GAME_FOLDER '+json.dumps(args.fixture_dir)+'\n#define S3_GAME_FRAMES '+str(args.frames)+'u\n#include "'+str(ROOT/'tests/spectrum_m3_game_probe.c')+'"\n')
@@ -70,7 +79,10 @@ def main():
         meta.update(app=str(folder/'app/S3GAME.APP'),sha256=sha(folder/'app/S3GAME.APP'),frames=args.frames,
                     producer_profile=args.producer_profile or args.producer_trace,producer_trace=args.producer_trace,
                     frame_trace=args.frame_trace,
+                    frame_trace_limit=args.frame_trace_limit,
                     module_name=args.module_name,
+                    sound_layout=args.sound_layout,sound_chip=args.sound_chip,
+                    snapshot_only=args.snapshot_only,
                     runtime_files=runtime,source_pins={str(p):sha(p)for p in inputs})
         (folder/'manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
         print(('local' if local else 'M3')+': '+str(meta['memory_bytes'])+'/49152bytes')

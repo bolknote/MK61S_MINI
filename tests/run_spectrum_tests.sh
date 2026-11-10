@@ -6,6 +6,7 @@ trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 python3 "$root/tests/spectrum_rom_cache_self_test.py"
+python3 "$root/tests/spectrum_m3_observer_self_test.py"
 clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/sdk/portable/include" -I"$root/code" \
     "$root/tests/spectrum_display_self_test.c" -o "$build/display"

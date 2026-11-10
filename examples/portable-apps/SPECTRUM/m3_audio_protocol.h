@@ -7,9 +7,13 @@
 /* Little-endian, pointer-free packets, independent of the S3M1 loader ABI.
  * Both processors use the same integer PSG core and sample boundaries. */
 #define SPECTRUM_M3_AUDIO_MAGIC 0x31594153u /* SAY1 */
+#define SPECTRUM_M3_AUDIO_V2_MAGIC 0x32594153u /* SAY2: chip/layout and stereo state */
 #define SPECTRUM_M3_PCM_MAGIC 0x314d4350u   /* PCM1 */
 #define SPECTRUM_M3_PWM_MAGIC 0x314d5750u   /* PWM1: exact existing 8-bit duty */
+#define SPECTRUM_M3_STEREO_PCM_MAGIC 0x324d4350u /* PCM2: interleaved L/R signed16 */
+#define SPECTRUM_M3_STEREO_PWM_MAGIC 0x324d5750u /* PWM2: interleaved L/R unsigned8 */
 #define SPECTRUM_M3_STATE_MAGIC 0x31534153u /* SAS1 */
+#define SPECTRUM_M3_STATE_V2_MAGIC 0x32534153u /* SAS2 */
 #define SPECTRUM_M3_PROFILE_MAGIC 0x31504153u /* SAP1 */
 #define SPECTRUM_M3_PROFILE_BYTES 32u
 #define SPECTRUM_M3_AUDIO_SAMPLES 120u
@@ -34,10 +38,18 @@
 #define SPECTRUM_M3_AUDIO_IO 512u
 #define SPECTRUM_M3_PSG_BYTES (offsetof(PSG,ch_out)+sizeof(((PSG*)0)->ch_out)-offsetof(PSG,reg))
 #define SPECTRUM_M3_STATE_BYTES (8u+2u*SPECTRUM_M3_PSG_BYTES+8u+3u)
+#define SPECTRUM_M3_STATE_V2_BYTES (SPECTRUM_M3_STATE_BYTES+6u*4u)
 enum { SPECTRUM_M3_CONFIG=0,SPECTRUM_M3_RENDER=1,SPECTRUM_M3_EXPORT=2,SPECTRUM_M3_PROFILE=3 };
 enum { SPECTRUM_M3_BEEPER_ARRAY=1,SPECTRUM_M3_COVOX_ARRAY=2,SPECTRUM_M3_SPECDRUM_ARRAY=4 };
 
-/* CONFIG: 8-byte header, two PSG bodies (no voltbl pointer/padding),
+/* SAY2 extends SAY1 without changing the132-byte PSG bodies. CONFIG byte5:
+ * bit0 PWM8 (otherwise PCM16), bits1..2 layout0 mono/1 ABC/2 ACB,
+ * bit3 chip0 AY/1 YM. SAS2/CONFIG append six signed words to the SAY1 state:
+ * chip0 L/R rate-converter states, chip1 L/R, right DC input/output.
+ * CONFIG capability bit5 acknowledges SAY2. PWM2/PCM2 replies interleave
+ * complete L/R frames; count is frames, not bytes. The resident uses118
+ * PWM2 frames so244 module bytes fit the244-byte pushed-result limit.
+ * CONFIG: 8-byte header, two PSG bodies (no voltbl pointer/padding),
  * signed DC input/output words, beeper/covox/specdrum bytes.
  * CONFIG header bytes5=0 for PCM16,1 for PWM8; bytes6..7=PWM gain0..1000.
  * RENDER: magic/op/samples/extensions/array_flags, three constant DAC bytes,

@@ -6,6 +6,7 @@ python3 "$(dirname "$0")/picocalc_pmu_async_self_test.py"
 python3 "$(dirname "$0")/picocalc_stm3_reply_self_test.py"
 python3 "$(dirname "$0")/picocalc_stm3_crc_self_test.py"
 python3 "$(dirname "$0")/picocalc_m3_boot_self_test.py"
+python3 "$(dirname "$0")/picocalc_keyboard_index_self_test.py"
 python3 "$(dirname "$0")/picocalc_utility_scene_self_test.py"
 python3 "$(dirname "$0")/picocalc_frame_schedule_self_test.py"
 python3 "$(dirname "$0")/picocalc_battery_poll_self_test.py"
@@ -20,6 +21,7 @@ python3 "$(dirname "$0")/picocalc_panel_recovery_self_test.py"
 python3 "$(dirname "$0")/picocalc_lcd_dma_self_test.py"
 python3 "$(dirname "$0")/picocalc_dma_support_self_test.py"
 python3 "$(dirname "$0")/picocalc_worker_wait_self_test.py"
+python3 "$(dirname "$0")/picocalc_i2c_audio_deadline_self_test.py"
 python3 "$(dirname "$0")/picocalc_file_handler_self_test.py"
 python3 "$(dirname "$0")/picocalc_audio_self_test.py"
 python3 "$(dirname "$0")/cosmic_clock_self_test.py"
@@ -45,3 +47,20 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" "$root/tests/picocalc_i2c_sd_self_test.cpp" -o "$build/i2c-sd"
 "$build/i2c-sd"
+
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" "$root/tests/picocalc_m3_uart_self_test.cpp" -o "$build/m3-uart"
+"$build/m3-uart"
+
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" -I"$root/code" -I"$root/sdk/coproc" \
+    "$root/tests/picocalc_m3_fill_self_test.cpp" -o "$build/m3-fill"
+"$build/m3-fill"
+
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" "$root/tests/picocalc_audio_irq_entry_self_test.cpp" -o "$build/irq-entry"
+"$build/irq-entry"
+
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" "$root/tests/picocalc_audio_diagnostic_storage_self_test.cpp" -o "$build/audio-diagnostics"
+"$build/audio-diagnostics"

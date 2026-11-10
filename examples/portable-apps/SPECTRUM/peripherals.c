@@ -6,6 +6,17 @@ static void apply(spectrum* s,unsigned device,unsigned reg,unsigned value) {
     else if(device==3) s->sound.covox=(uint8_t)value;
     else if(device==4) s->sound.specdrum=(uint8_t)value;
 }
+void spectrum_sound_configure(spectrum* s,unsigned chip,unsigned layout) {
+    if(chip>SPECTRUM_YM || layout>SPECTRUM_ACB || s->sound.asynchronous)return;
+    if(s->sound_chip==chip && s->sound_layout==layout)return;
+    s->sound_chip=(uint8_t)chip;s->sound_layout=(uint8_t)layout;
+    PSG_setVolumeMode(&s->ay,chip==SPECTRUM_YM?1:2);
+    PSG_setVolumeMode(&s->ay2,chip==SPECTRUM_YM?1:2);
+    /* Filter histories belong to the previous mix/table. Oscillator phases,
+     * envelopes, RAM and guest registers are intentionally preserved. */
+    s->ay.out=s->ay2.out=0;s->sound.input=s->sound.output=0;
+    memset(s->sound.stereo,0,sizeof(s->sound.stereo));
+}
 void spectrum_sound_reset(spectrum* s) {
     memset(&s->sound,0,sizeof(s->sound));
     atomic_init(&s->sound.read,0);atomic_init(&s->sound.write,0);
@@ -57,11 +68,12 @@ void spectrum_sound_recover(void* context) {
      * producer registers, discard its stale queue, then resume locally. */
     for(unsigned i=0;i<2;++i) {
         PSG* p=i?&s->ay2:&s->ay;memset(p,0,sizeof(*p));p->quality=1;p->rate=25000;
-        PSG_setVolumeMode(p,2);PSG_setClock(p,1750000);PSG_reset(p);
+        PSG_setVolumeMode(p,s->sound_chip==SPECTRUM_YM?1:2);PSG_setClock(p,1750000);PSG_reset(p);
         for(unsigned reg=0;reg<16;++reg)PSG_writeReg(p,reg,q->regs[i][reg]);
     }
     q->beeper=q->latest_dac[0];q->covox=q->latest_dac[1];q->specdrum=q->latest_dac[2];
-    q->input=q->output=0;q->time=(uint32_t)s->cpu.cyc;q->startup_samples=SPECTRUM_SOUND_START_SAMPLES;
+    q->input=q->output=0;memset(q->stereo,0,sizeof(q->stereo));
+    q->time=(uint32_t)s->cpu.cyc;q->startup_samples=SPECTRUM_SOUND_START_SAMPLES;
     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
     atomic_store_explicit(&q->produced,q->time,memory_order_release);
 }
@@ -95,13 +107,28 @@ uint32_t spectrum_sound_render(void* context) {
         const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];apply(s,e.device,e.reg,e.value);++r;
     }
     atomic_store_explicit(&q->read,r,memory_order_release);q->time=next;
-    int32_t sample=PSG_calc(&s->ay);
-    if(s->extensions&SPECTRUM_TURBOSOUND) sample+=PSG_calc(&s->ay2);
-    else sample*=2;
-    sample+=q->beeper?8192:0;
-    if(s->extensions&SPECTRUM_COVOX) sample+=((int32_t)q->covox-128)*64;
-    if(s->extensions&SPECTRUM_SPECDRUM) sample+=((int32_t)q->specdrum-128)*64;
-    int32_t output=sample-q->input+(q->output*255)/256;q->input=sample;
-    if(output>32767) output=32767;else if(output < -32768) output=-32768;
-    q->output=output;return (uint16_t)output|((uint32_t)(uint16_t)output<<16);
+    int32_t left,right;
+    if(s->sound_layout) {
+        PSG_calcStereo(&s->ay,q->stereo,s->sound_layout);
+        left=q->stereo[0];right=q->stereo[1];
+        if(s->extensions&SPECTRUM_TURBOSOUND) {
+            PSG_calcStereo(&s->ay2,q->stereo+2,s->sound_layout);left+=q->stereo[2];right+=q->stereo[3];
+        } else {left*=2;right*=2;}
+    } else {
+        left=PSG_calc(&s->ay);
+        if(s->extensions&SPECTRUM_TURBOSOUND)left+=PSG_calc(&s->ay2);else left*=2;
+        right=left;
+    }
+    int32_t common=q->beeper?8192:0;
+    if(s->extensions&SPECTRUM_COVOX)common+=((int32_t)q->covox-128)*64;
+    if(s->extensions&SPECTRUM_SPECDRUM)common+=((int32_t)q->specdrum-128)*64;
+    left+=common;right+=common;
+    int32_t l=left-q->input+(q->output*255)/256;q->input=left;
+    if(l>32767)l=32767;else if(l < -32768)l=-32768;q->output=l;
+    int32_t right_output=l;
+    if(s->sound_layout) {
+        right_output=right-q->stereo[4]+(q->stereo[5]*255)/256;q->stereo[4]=right;
+        if(right_output>32767)right_output=32767;else if(right_output < -32768)right_output=-32768;q->stereo[5]=right_output;
+    }
+    return (uint16_t)l|((uint32_t)(uint16_t)right_output<<16);
 }

@@ -1,26 +1,36 @@
 /* Native Cortex-M3 module; no peripherals, heap, Flash writes or host pointers. */
 #include "m3_audio_protocol.h"
 #include "stm3_module.h"
+#include "pcm_repeat.h"
 #include <stdbool.h>
 #include <string.h>
+#if defined(__GNUC__) && !defined(__clang__)
+#define M3_COLD __attribute__((optimize("Os")))
+#else
+#define M3_COLD
+#endif
 
-static PSG chips[2];
-static int32_t filter_input,filter_output;
-static uint8_t beeper,covox,specdrum;
-static uint16_t sequence;
-static uint16_t gain;
-static uint8_t pwm8;
-static bool configured;
-static uint64_t render_us;
-static uint32_t render_samples,render_jobs,render_slices,job_us,max_job_us,max_slice_us;
-static unsigned event_cursor;
+typedef struct {
+    PSG chips[2];
+    int32_t filter_input,filter_output,stereo[6];
+    uint16_t sequence,gain;
+    uint8_t beeper,covox,specdrum,pwm8,layout,chip_mode;
+    bool configured,extended,second_idle;
+    uint64_t render_us;
+    uint32_t render_samples,render_jobs,render_slices,job_us,max_job_us,max_slice_us;
+    unsigned event_cursor;
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+    uint32_t timing_end,timing_gap;
+#endif
+} sound_state;
+static sound_state synth;
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
-static bool second_idle;
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((noinline,optimize("Os")))
 #endif
 static bool advance_silent_second(unsigned samples) {
-    PSG* p=&chips[1];
+    PSG* p=&synth.chips[1];
+    if(synth.layout && (synth.stereo[2] || synth.stereo[3]))return false;
     if(p->out || (p->volume[0]|p->volume[1]|p->volume[2]))return false;
     // Valid phases do not wrap their narrow counters before a period edge.
     // Keep unusual imported states on the ordinary per-sample path.
@@ -33,31 +43,32 @@ static bool advance_silent_second(unsigned samples) {
 }
 #endif
 
-static void state_export(uint8_t* out) {
-    spectrum_m3_put32(out,SPECTRUM_M3_STATE_MAGIC);
+static M3_COLD void state_export(uint8_t* out) {
+    spectrum_m3_put32(out,synth.extended?SPECTRUM_M3_STATE_V2_MAGIC:SPECTRUM_M3_STATE_MAGIC);
     spectrum_m3_put32(out+4,SPECTRUM_M3_PSG_BYTES);
     for(unsigned i=0;i<2;++i)memcpy(out+8+i*SPECTRUM_M3_PSG_BYTES,
-        (const uint8_t*)&chips[i]+offsetof(PSG,reg),SPECTRUM_M3_PSG_BYTES);
+        (const uint8_t*)&synth.chips[i]+offsetof(PSG,reg),SPECTRUM_M3_PSG_BYTES);
     out+=8+2*SPECTRUM_M3_PSG_BYTES;
-    spectrum_m3_put32(out,(uint32_t)filter_input);spectrum_m3_put32(out+4,(uint32_t)filter_output);
-    out[8]=beeper;out[9]=covox;out[10]=specdrum;
+    spectrum_m3_put32(out,(uint32_t)synth.filter_input);spectrum_m3_put32(out+4,(uint32_t)synth.filter_output);
+    out[8]=synth.beeper;out[9]=synth.covox;out[10]=synth.specdrum;
+    if(synth.extended)for(unsigned i=0;i<6;++i)spectrum_m3_put32(out+11+4*i,(uint32_t)synth.stereo[i]);
 }
 
-static bool state_valid(const uint8_t* bytes) {
+static M3_COLD bool state_valid(const uint8_t* bytes) {
     /* Validate in-place through a byte copy into the existing BSS, before
-     * publishing configured. The volume table always belongs to this image. */
+     * publishing synth.configured. The volume table always belongs to this image. */
     for(unsigned i=0;i<2;++i) {
-        memset(&chips[i],0,sizeof(chips[i]));PSG_setVolumeMode(&chips[i],2);
-        memcpy((uint8_t*)&chips[i]+offsetof(PSG,reg),bytes+i*SPECTRUM_M3_PSG_BYTES,SPECTRUM_M3_PSG_BYTES);
-        if(chips[i].clk!=1750000 || chips[i].rate!=25000 || chips[i].quality!=1 ||
-           chips[i].clk_div || chips[i].base_incr!=(1u<<24) || chips[i].realstep!=1750000 ||
-           chips[i].psgstep!=200000 || chips[i].psgtime>=200000 || chips[i].env_ptr>=32 ||
-           chips[i].out < -32768 || chips[i].out>32767) return false;
+        memset(&synth.chips[i],0,sizeof(synth.chips[i]));PSG_setVolumeMode(&synth.chips[i],synth.chip_mode?1:2);
+        memcpy((uint8_t*)&synth.chips[i]+offsetof(PSG,reg),bytes+i*SPECTRUM_M3_PSG_BYTES,SPECTRUM_M3_PSG_BYTES);
+        if(synth.chips[i].clk!=1750000 || synth.chips[i].rate!=25000 || synth.chips[i].quality!=1 ||
+           synth.chips[i].clk_div || synth.chips[i].base_incr!=(1u<<24) || synth.chips[i].realstep!=1750000 ||
+           synth.chips[i].psgstep!=200000 || synth.chips[i].psgtime>=200000 || synth.chips[i].env_ptr>=32 ||
+           synth.chips[i].out < -32768 || synth.chips[i].out>32767) return false;
     }
     return true;
 }
 
-static bool render_valid(const stm3_job* job) {
+static M3_COLD bool render_valid(const stm3_job* job) {
     const uint8_t* p=job->input;
     const unsigned n=p[5],flags=p[7];
     if(!n || n>SPECTRUM_M3_AUDIO_SAMPLES || (p[6]&~15u) || (flags&~7u) || p[8]>1)return false;
@@ -65,7 +76,7 @@ static bool render_valid(const stm3_job* job) {
     if(flags&SPECTRUM_M3_BEEPER_ARRAY)at+=(n+7)/8;
     if(flags&SPECTRUM_M3_COVOX_ARRAY)at+=n;
     if(flags&SPECTRUM_M3_SPECDRUM_ARRAY)at+=n;
-    if(at>job->input_bytes || (job->input_bytes-at)%3 || job->output_capacity<8+(pwm8?1:2)*n)return false;
+    if(at>job->input_bytes || (job->input_bytes-at)%3 || job->output_capacity<8+(synth.pwm8?1:2)*(synth.layout?2:1)*n)return false;
     unsigned previous=0;
     for(;at<job->input_bytes;at+=3) {
         if(p[at]>=n || p[at]<previous || p[at+1]>=32)return false;
@@ -74,50 +85,112 @@ static bool render_valid(const stm3_job* job) {
     return true;
 }
 
-static uint32_t render_step(stm3_job* job) {
-    const uint8_t* p=job->input;
+static inline uint8_t pwm_duty(int32_t sample,unsigned gain) {
+    // The physical volume wheel leaves digital gain at unity. Keep exact
+    // truncation toward zero, including negative PCM, for legacy gains too.
+#if (defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING) || (defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT)
+    return (uint8_t)(128+(sample*(int32_t)gain)/512000);
+#else
+    return (uint8_t)(128+(gain==1000?sample/512:(sample*(int32_t)gain)/512000));
+#endif
+}
+
+static uint32_t render_step(stm3_job* restrict job) {
+    // Resident input/output arenas and module state are disjoint. Keeping
+    // this contract explicit lets M3 retain mixer constants across stores.
+    const uint8_t* restrict p=job->input;
+    uint8_t* restrict output_bytes=job->output;
     const unsigned n=p[5],flags=p[7],first=job->progress;
     const uint8_t* bits=NULL;const uint8_t* cv=NULL;const uint8_t* sd=NULL;
     unsigned at=11;
     if(flags&1){bits=p+at;at+=(n+7)/8;}
     if(flags&2){cv=p+at;at+=n;}
     if(flags&4){sd=p+at;at+=n;}
-    at=event_cursor;
+    at=synth.event_cursor;
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
     const unsigned span=n-first<SPECTRUM_M3_SLICE_SAMPLES?n-first:SPECTRUM_M3_SLICE_SAMPLES;
-    const bool silent=(p[6]&1) && second_idle && advance_silent_second(span);
+    const bool silent=(p[6]&1) && synth.second_idle && advance_silent_second(span);
 #endif
     /* A bounded sample slice per cooperative turn. No state changes while
      * validating a render packet, and no callbacks into the loaded APP. */
     for(unsigned i=first;i<n && i<first+SPECTRUM_M3_SLICE_SAMPLES;++i) {
         while(at<job->input_bytes && p[at]<i)at+=3;
         while(at<job->input_bytes && p[at]==i) {
-            PSG_writeReg(&chips[p[at+1]>>4],p[at+1]&15,p[at+2]);at+=3;
+            PSG_writeReg(&synth.chips[p[at+1]>>4],p[at+1]&15,p[at+2]);at+=3;
         }
-        beeper=bits?((bits[i/8]>>(i&7))&1):p[8];covox=cv?cv[i]:p[9];specdrum=sd?sd[i]:p[10];
-        int32_t sample=PSG_calc(&chips[0]);
+        synth.beeper=bits?((bits[i/8]>>(i&7))&1):p[8];synth.covox=cv?cv[i]:p[9];synth.specdrum=sd?sd[i]:p[10];
+        int32_t left,right;
+        if(synth.layout){PSG_calcStereo(&synth.chips[0],synth.stereo,synth.layout);left=synth.stereo[0];right=synth.stereo[1];}
+        else left=right=PSG_calc(&synth.chips[0]);
         if(p[6]&1) {
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
-            if(!silent)
+            if(!silent) {
 #endif
-            sample+=PSG_calc(&chips[1]);
-        } else sample*=2;
-        sample+=beeper?8192:0;
-        if(p[6]&2)sample+=((int32_t)covox-128)*64;
-        if(p[6]&4)sample+=((int32_t)specdrum-128)*64;
-        int32_t output=sample-filter_input+(filter_output*255)/256;filter_input=sample;
-        if(output>32767)output=32767;else if(output < -32768)output=-32768;
-        filter_output=output;
-        if(pwm8)job->output[8+i]=(uint8_t)(128+(output*gain)/512000);
-        else {job->output[8+2*i]=(uint8_t)output;job->output[9+2*i]=(uint8_t)((uint32_t)output>>8);}
+                if(synth.layout){PSG_calcStereo(&synth.chips[1],synth.stereo+2,synth.layout);left+=synth.stereo[2];right+=synth.stereo[3];}
+                else {const int32_t value=PSG_calc(&synth.chips[1]);left+=value;right+=value;}
+#if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
+            }
+#endif
+        } else {left*=2;right*=2;}
+        int32_t common=synth.beeper?8192:0;
+        if(p[6]&2)common+=((int32_t)synth.covox-128)*64;
+        if(p[6]&4)common+=((int32_t)synth.specdrum-128)*64;
+        left+=common;right+=common;
+        int32_t output=left-synth.filter_input+(synth.filter_output*255)/256;synth.filter_input=left;
+        if(output>32767)output=32767;else if(output < -32768)output=-32768;synth.filter_output=output;
+        int32_t right_output=output;
+        if(synth.layout) {
+            right_output=right-synth.stereo[4]+(synth.stereo[5]*255)/256;synth.stereo[4]=right;
+            if(right_output>32767)right_output=32767;else if(right_output < -32768)right_output=-32768;synth.stereo[5]=right_output;
+        }
+        const unsigned offset=8+i*(synth.layout?2:1)*(synth.pwm8?1:2);
+        if(synth.pwm8) {
+            output_bytes[offset]=pwm_duty(output,synth.gain);
+            if(synth.layout)output_bytes[offset+1]=pwm_duty(right_output,synth.gain);
+        } else {
+            output_bytes[offset]=(uint8_t)output;output_bytes[offset+1]=(uint8_t)((uint32_t)output>>8);
+            if(synth.layout){output_bytes[offset+2]=(uint8_t)right_output;output_bytes[offset+3]=(uint8_t)((uint32_t)right_output>>8);}
+        }
         job->progress=i+1;
     }
-    event_cursor=at;
+    synth.event_cursor=at;
     return job->progress==n?STM3_DONE:STM3_MORE;
 }
 
-static uint32_t render_measured(const stm3_api* api,stm3_job* job,bool inline_init) {
+#if defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+static void pack_repeat(stm3_job* job) {
+    const unsigned n=job->input[5];
+    if(!synth.pwm8 || !synth.layout || job->output_capacity<256+2*n)return;
+    const unsigned used=stm3_pcm_repeat_encode(job->output+256,job->output+8,n);
+    if(used && used<2*n) {
+        memcpy(job->output+8,job->output+256,used);
+        spectrum_m3_put32(job->output,0x334d5750u);job->output_bytes=8+used;
+    }
+}
+#endif
+
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+static M3_COLD void timing_export(stm3_job* job) {
+    unsigned compute=(synth.job_us+15)/16,gap=(synth.timing_gap+15)/16;
+    job->output[5]=(uint8_t)(compute>255?255:compute);
+    job->output[7]=(uint8_t)(gap>255?255:gap);
+}
+#endif
+
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+#define M3_TIMING_COLD M3_COLD
+#else
+#define M3_TIMING_COLD
+#endif
+static M3_TIMING_COLD uint32_t render_measured(const stm3_api* api,stm3_job* job,bool inline_init) {
     const uint32_t begin=api->micros?api->micros(api->context):0;
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+    if(inline_init)synth.timing_gap=0;
+    else synth.timing_gap+=begin-synth.timing_end;
+#endif
     const unsigned first=job->progress;
     uint32_t result;
     const uint32_t budget=inline_init?SPECTRUM_M3_INIT_BUDGET_US:SPECTRUM_M3_STEP_BUDGET_US;
@@ -125,46 +198,73 @@ static uint32_t render_measured(const stm3_api* api,stm3_job* job,bool inline_in
     while(result==STM3_MORE && budget &&
           (api->micros?api->micros(api->context)-begin<budget:inline_init));
     const uint32_t elapsed=api->micros?api->micros(api->context)-begin:0;
-    render_us+=elapsed;job_us+=elapsed;render_samples+=job->progress-first;++render_slices;
-    if(elapsed>max_slice_us)max_slice_us=elapsed;
-    if(result==STM3_DONE){++render_jobs;if(job_us>max_job_us)max_job_us=job_us;}
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+    synth.timing_end=begin+elapsed;
+#endif
+    synth.render_us+=elapsed;synth.job_us+=elapsed;synth.render_samples+=job->progress-first;++synth.render_slices;
+    if(elapsed>synth.max_slice_us)synth.max_slice_us=elapsed;
+    if(result==STM3_DONE){++synth.render_jobs;if(synth.job_us>synth.max_job_us)synth.max_job_us=synth.job_us;}
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+    if(result==STM3_DONE)timing_export(job);
+#endif
+#if defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT
+    if(result==STM3_DONE)pack_repeat(job);
+#endif
     return result;
 }
 
-static void profile_export(uint8_t* out) {
+static M3_COLD void profile_export(uint8_t* out) {
     spectrum_m3_put32(out,SPECTRUM_M3_PROFILE_MAGIC);
-    spectrum_m3_put32(out+4,render_samples);spectrum_m3_put32(out+8,render_jobs);
-    spectrum_m3_put32(out+12,render_slices);
-    spectrum_m3_put32(out+16,(uint32_t)render_us);spectrum_m3_put32(out+20,(uint32_t)(render_us>>32));
-    spectrum_m3_put32(out+24,max_job_us);spectrum_m3_put32(out+28,max_slice_us);
+    spectrum_m3_put32(out+4,synth.render_samples);spectrum_m3_put32(out+8,synth.render_jobs);
+    spectrum_m3_put32(out+12,synth.render_slices);
+    spectrum_m3_put32(out+16,(uint32_t)synth.render_us);spectrum_m3_put32(out+20,(uint32_t)(synth.render_us>>32));
+    spectrum_m3_put32(out+24,synth.max_job_us);spectrum_m3_put32(out+28,synth.max_slice_us);
 }
 
 #if defined(__arm__) || defined(__thumb__)
 __attribute__((section(".text.module_entry"),used))
 #endif
-uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
+M3_COLD uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
     if(!api || api->abi!=STM3_ABI || api->size!=sizeof(*api) || !job)return STM3_INVALID;
-    if(op==STM3_FINI){configured=false;return STM3_DONE;}
+    if(op==STM3_FINI){synth.configured=false;return STM3_DONE;}
     if(op==STM3_CANCEL)return STM3_DONE;
     if(!job->input || job->input_bytes<8 || job->input_bytes>SPECTRUM_M3_AUDIO_IO ||
-       !job->output || spectrum_m3_get32(job->input)!=SPECTRUM_M3_AUDIO_MAGIC)return STM3_INVALID;
+       !job->output || (spectrum_m3_get32(job->input)!=SPECTRUM_M3_AUDIO_MAGIC &&
+                       spectrum_m3_get32(job->input)!=SPECTRUM_M3_AUDIO_V2_MAGIC))return STM3_INVALID;
     const unsigned command=job->input[4];
     if(op==STM3_INIT) {
         job->output_bytes=job->progress=0;
         if(command==SPECTRUM_M3_CONFIG) {
-            configured=false;
+            synth.configured=false;
+            synth.extended=spectrum_m3_get32(job->input)==SPECTRUM_M3_AUDIO_V2_MAGIC;
+            const unsigned format=job->input[5];
+            synth.layout=synth.extended?((format>>1)&3):0;synth.chip_mode=synth.extended?((format>>3)&1):0;
             const unsigned requested_gain=(unsigned)job->input[6]|(unsigned)job->input[7]<<8;
-            if(job->input_bytes!=SPECTRUM_M3_STATE_BYTES || job->input[5]>1 || requested_gain>1000 ||
+            if(job->input_bytes!=(synth.extended?SPECTRUM_M3_STATE_V2_BYTES:SPECTRUM_M3_STATE_BYTES) ||
+               format>(synth.extended?15u:1u) || synth.layout>2 || requested_gain>1000 ||
                job->output_capacity<8 || !state_valid(job->input+8))return STM3_INVALID;
             const uint8_t* tail=job->input+8+2*SPECTRUM_M3_PSG_BYTES;
-            filter_input=(int32_t)spectrum_m3_get32(tail);filter_output=(int32_t)spectrum_m3_get32(tail+4);
-            if(filter_input < -131072 || filter_input>131072 ||
-               filter_output < -32768 || filter_output>32767 || tail[8]>1)return STM3_INVALID;
-            beeper=tail[8];covox=tail[9];specdrum=tail[10];sequence=0;
-            pwm8=job->input[5];gain=(uint16_t)requested_gain;configured=true;
-            render_us=0;render_samples=render_jobs=render_slices=job_us=max_job_us=max_slice_us=0;
+            synth.filter_input=(int32_t)spectrum_m3_get32(tail);synth.filter_output=(int32_t)spectrum_m3_get32(tail+4);
+            if(synth.filter_input < -131072 || synth.filter_input>131072 ||
+               synth.filter_output < -32768 || synth.filter_output>32767 || tail[8]>1)return STM3_INVALID;
+            synth.beeper=tail[8];synth.covox=tail[9];synth.specdrum=tail[10];synth.sequence=0;
+            memset(synth.stereo,0,sizeof(synth.stereo));
+            if(synth.extended)for(unsigned i=0;i<6;++i) {
+                synth.stereo[i]=(int32_t)spectrum_m3_get32(tail+11+4*i);
+                const int32_t limit=i==4?131072:32768;
+                if(synth.stereo[i]<-limit || synth.stereo[i]>=limit)return STM3_INVALID;
+            }
+            synth.pwm8=format&1;synth.gain=(uint16_t)requested_gain;synth.configured=true;
+            synth.render_us=0;synth.render_samples=synth.render_jobs=synth.render_slices=synth.job_us=synth.max_job_us=synth.max_slice_us=0;
             spectrum_m3_put32(job->output,SPECTRUM_M3_PCM_MAGIC);spectrum_m3_put32(job->output+4,0);
             job->output[7]=10;
+#if defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT
+            job->output[7]|=128;
+#endif
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+            job->output[7]|=64;
+#endif
+            if(synth.extended)job->output[7]|=32;
 #if SPECTRUM_M3_STEP_BUDGET_US
             job->output[7]|=16;
 #endif
@@ -173,35 +273,41 @@ uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
 #endif
             job->output_bytes=8;return STM3_DONE;
         }
-        if(!configured)return STM3_INVALID;
+        if(!synth.configured || (spectrum_m3_get32(job->input)==SPECTRUM_M3_AUDIO_V2_MAGIC)!=synth.extended)return STM3_INVALID;
         if(command==SPECTRUM_M3_EXPORT) {
-            if(job->input_bytes!=8 || job->output_capacity<SPECTRUM_M3_STATE_BYTES)return STM3_INVALID;
-            state_export(job->output);job->output_bytes=SPECTRUM_M3_STATE_BYTES;return STM3_DONE;
+            const unsigned size=synth.extended?SPECTRUM_M3_STATE_V2_BYTES:SPECTRUM_M3_STATE_BYTES;
+            if(job->input_bytes!=8 || job->output_capacity<size)return STM3_INVALID;
+            state_export(job->output);job->output_bytes=size;return STM3_DONE;
         }
         if(command==SPECTRUM_M3_PROFILE) {
             if(job->input_bytes!=8 || job->output_capacity<SPECTRUM_M3_PROFILE_BYTES)return STM3_INVALID;
             profile_export(job->output);job->output_bytes=SPECTRUM_M3_PROFILE_BYTES;return STM3_DONE;
         }
         if(command!=SPECTRUM_M3_RENDER || job->input_bytes<11 || !render_valid(job))return STM3_INVALID;
-        spectrum_m3_put32(job->output,pwm8?SPECTRUM_M3_PWM_MAGIC:SPECTRUM_M3_PCM_MAGIC);
-        job->output[4]=job->input[5];job->output[5]=0;job->output[6]=(uint8_t)sequence;job->output[7]=(uint8_t)(sequence>>8);++sequence;
-        job->output_bytes=8+(pwm8?1:2)*job->input[5];
-        event_cursor=11;
-        if(job->input[7]&1)event_cursor+=(job->input[5]+7)/8;
-        if(job->input[7]&2)event_cursor+=job->input[5];
-        if(job->input[7]&4)event_cursor+=job->input[5];
+        spectrum_m3_put32(job->output,synth.layout?(synth.pwm8?SPECTRUM_M3_STEREO_PWM_MAGIC:SPECTRUM_M3_STEREO_PCM_MAGIC):
+                                                     (synth.pwm8?SPECTRUM_M3_PWM_MAGIC:SPECTRUM_M3_PCM_MAGIC));
+        job->output[4]=job->input[5];job->output[5]=0;job->output[6]=(uint8_t)synth.sequence;job->output[7]=(uint8_t)(synth.sequence>>8);++synth.sequence;
+        job->output_bytes=8+(synth.pwm8?1:2)*(synth.layout?2:1)*job->input[5];
+        synth.event_cursor=11;
+        if(job->input[7]&1)synth.event_cursor+=(job->input[5]+7)/8;
+        if(job->input[7]&2)synth.event_cursor+=job->input[5];
+        if(job->input[7]&4)synth.event_cursor+=job->input[5];
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
-        second_idle=true;
-        for(unsigned at=event_cursor;at<job->input_bytes;at+=3)
-            if(job->input[at+1]>=16){second_idle=false;break;}
+        synth.second_idle=true;
+        for(unsigned at=synth.event_cursor;at<job->input_bytes;at+=3)
+            if(job->input[at+1]>=16){synth.second_idle=false;break;}
 #endif
-        job_us=0;
+        synth.job_us=0;
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
+        synth.timing_gap=0;synth.timing_end=api->micros?api->micros(api->context):0;
+#endif
 #if defined(SPECTRUM_M3_FAST_INIT) && SPECTRUM_M3_FAST_INIT
         if(job->input[5]<=SPECTRUM_M3_FAST_INIT)return render_measured(api,job,true);
 #endif
         return STM3_MORE;
     }
-    if(op!=STM3_STEP || command!=SPECTRUM_M3_RENDER || !configured ||
+    if(op!=STM3_STEP || command!=SPECTRUM_M3_RENDER || !synth.configured ||
+       (spectrum_m3_get32(job->input)==SPECTRUM_M3_AUDIO_V2_MAGIC)!=synth.extended ||
        !render_valid(job) || job->progress>=job->input[5])return STM3_INVALID;
     return render_measured(api,job,false);
 }

@@ -26,7 +26,7 @@ typedef struct spectrum {
     PSG ay2;
     spectrum_sound sound;
     spectrum_disk disk;
-    uint8_t extensions,joystick_mode;
+    uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,ulaplus_palette[64];
     uint32_t sample_rate,sample_phase;
     int32_t audio_input,audio_output;

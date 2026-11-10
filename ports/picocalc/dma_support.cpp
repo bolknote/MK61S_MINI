@@ -38,6 +38,12 @@ void enable_irq(unsigned channel) {
     if(core) dma_channel_set_irq1_enabled(channel,true);
     else dma_channel_set_irq0_enabled(channel,true);
 }
+void disable_irq(unsigned channel) {
+    const unsigned core=get_core_num();
+    if(core){dma_channel_set_irq1_enabled(channel,false);dma_channel_acknowledge_irq1(channel);}
+    else {dma_channel_set_irq0_enabled(channel,false);dma_channel_acknowledge_irq0(channel);}
+    masks[core].fetch_and(~(1U<<channel));
+}
 bool wait(unsigned first,int second) {
     return wait(first,second,nullptr);
 }
@@ -105,6 +111,7 @@ Statistics statistics() {
 #else
 namespace picocalc::dma_support {
 void enable_irq(unsigned) {}
+void disable_irq(unsigned) {}
 bool wait(unsigned,int) { return true; }
 bool wait(unsigned,int,Progress progress) { if(progress)progress();return true; }
 bool begin_crc(unsigned,bool) { return false; }

@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import time
 
+from picocalc_frame_trace_fixture import production_scope
 ROOT=Path(__file__).resolve().parents[1]
 
 def run(args, build):
@@ -23,7 +24,7 @@ def run(args, build):
     flush=source[source.index(first):source.index(after)]
     body=source[source.index(transfer):source.index(end)]
     extracted=build/'picocalc_panel_production.inc'
-    extracted.write_text(flush+'\n'+body)
+    extracted.write_text(production_scope(args.source_root.resolve(),'clock_now')+flush+'\n'+body)
     command=[os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',
              '-DMK61_PICOCALC_LCD_COLOR_CHAIN=1','-DMK61_PICOCALC_LCD_SPI_HZ=12500000',
              '-I'+str(build),'-I'+str(args.source_root.resolve()/'ports/picocalc'),

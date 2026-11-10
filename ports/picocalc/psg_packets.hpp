@@ -61,6 +61,11 @@ inline const uint8_t* event(const mk61_service_audio_psg& r,uint32_t index) {
 // AY music commonly leaves all three DACs constant for an entire block.
 // Walk only published events in that case, without two per-sample passes.
 // -2 asks the general encoder to handle changing DACs or a full packet.
+// Exact for positive deltas through SAMPLES*140; all callers first
+// bound events by the current block end. This product fits uint32_t.
+inline unsigned bounded_sample_index(int32_t delta) {
+    return delta<=0?0:((uint32_t(delta)-1)*7490u)>>20;
+}
 #if defined(PICO_ON_DEVICE)
 __attribute__((noinline,section(".time_critical.m3_prepare_sparse")))
 #if defined(__GNUC__) && !defined(__clang__)
@@ -77,7 +82,7 @@ inline int prepare_sparse(const mk61_service_audio_psg& r,uint8_t* out,unsigned 
         if(e[4]<2) {
             if(e[5]>15)return -1;
             if(at+3>CAPACITY)return -2;
-            out[at++]=uint8_t(delta<=0?0:(unsigned(delta)-1)/140);
+            out[at++]=uint8_t(bounded_sample_index(delta));
             out[at++]=uint8_t(e[4]*16+e[5]);out[at++]=e[6];
         } else if(e[4]<=4) {
             if(e[4]==2 && e[6]>1)return -1;
@@ -110,7 +115,7 @@ inline int prepare_runs(const mk61_service_audio_psg& r,uint8_t* out,unsigned li
     while(cursor!=w) {
         const auto* e=event(r,cursor);const int32_t delta=int32_t(get32(e)-time);
         if(delta>int32_t(limit*140))break;
-        const unsigned sample=delta<=0?0:(unsigned(delta)-1)/140;
+        const unsigned sample=bounded_sample_index(delta);
         const uint32_t until=time+(sample+1)*140;
         do {
             e=event(r,cursor);
@@ -133,7 +138,7 @@ inline int prepare_runs(const mk61_service_audio_psg& r,uint8_t* out,unsigned li
     unsigned from=0;cursor=start;std::memcpy(dac,r.dac,3);
     while(cursor!=accepted) {
         const auto* e=event(r,cursor);const int32_t delta=int32_t(get32(e)-time);
-        const unsigned sample=delta<=0?0:(unsigned(delta)-1)/140;
+        const unsigned sample=bounded_sample_index(delta);
         sample_run(beep,covox,specdrum,from,sample,dac);from=sample;
         const uint32_t until=time+(sample+1)*140;
         do {
@@ -157,7 +162,7 @@ inline int prepare(const mk61_service_audio_psg& r,uint8_t* out,unsigned minimum
     if(ahead<140)return 0;
     const uint32_t start=__atomic_load_n(r.read,__ATOMIC_RELAXED),w=__atomic_load_n(r.write,__ATOMIC_ACQUIRE);
     if(w-start>r.event_capacity || r.dac[0]>1)return -1;
-    unsigned limit=unsigned(ahead)/140;if(limit>maximum)limit=maximum;
+    unsigned limit=maximum;if(unsigned(ahead)<maximum*140)limit=unsigned(ahead)/140;
     // Wait for a useful block, but always drain a full producer ring.
     if(limit<minimum && w-start<r.event_capacity)return 0;
     const int sparse=prepare_sparse(r,out,limit,time,start,w);

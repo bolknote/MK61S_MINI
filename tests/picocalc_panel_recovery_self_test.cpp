@@ -1,3 +1,5 @@
+#include "worker_deadline_trace.hpp"
+#include "pwm_duty_ring.hpp"
 // HOST-only controller boundary. Panel::flush/transfer are included verbatim
 // from production hardware.cpp by picocalc_panel_recovery_self_test.py.
 #include "rust_types.h"
@@ -35,6 +37,10 @@ void require(bool condition,const char* message) {
     if(!condition) throw std::runtime_error(message);
 }
 struct Command { u8 op;std::vector<u8> data; };
+void traced_frame_transfer(void(*transfer)(void*),void* context);
+void injected_crc_work();
+bool inject_crc_work=false,mask_crc_irq=false;
+audio_stream::DutyRing::Result injected_pwm_result=audio_stream::DutyRing::EARLY;
 struct Controller {
     std::array<u8,lcd::BYTES> gram{};
     std::array<u16,lcd::WIDTH*lcd::HEIGHT> colors{};
@@ -85,7 +91,7 @@ struct Controller {
     }
     void run() {
         require(pending && transfer,"queued actual Panel transfer");
-        transfer(context);pending=false;
+        traced_frame_transfer(transfer,context);pending=false;
     }
 } controller;
 constexpr unsigned DC=0,CS=1;
@@ -125,6 +131,7 @@ void drain() { if(controller.pending) controller.run(); }
 namespace dma_support {
 u32 crc32(const u8* bytes,unsigned size,void (*progress)()) {
     if(progress)progress();
+    injected_crc_work();
     u32 result=0;for(unsigned i=0;i<size;++i) result=result*33U+bytes[i];return result;
 }
 }
@@ -155,6 +162,27 @@ bool Panel::transfer_fill(u16 color,unsigned width,unsigned height) {
 }
 
 #include "picocalc_panel_production.inc"
+namespace {
+void traced_frame_transfer(void(*transfer)(void*),void* context) {
+    io_worker::FrameDeadlineScope frame(WorkerDeadlineTrace::FRAME);transfer(context);
+}
+void injected_crc_work() {
+    if(!inject_crc_work)return;
+    inject_crc_work=false;
+    using audio_stream::DutyRing;
+    DutyRing ring;std::array<u32,64> samples{};
+    ring.prime_block(samples.data(),[](u32* out,unsigned n){for(unsigned i=0;i<n;++i)out[i]=i;});
+    const u64 first=clock_now,dma_start=first-1260;
+    // Boundary model only: inject750us of work at the real Panel CRC call.
+    // A pending highest-priority IRQ is delayed only in the masked control.
+    clock_now=first+(mask_crc_irq?750:20);
+    injected_pwm_result=ring.refill_block(samples.data(),[&]{return u32((clock_now-dma_start)/40);},
+        [&](u32* out,unsigned n){for(unsigned i=0;i<n;++i)out[i]=i;clock_now+=100;});
+    if(injected_pwm_result==DutyRing::LATE)io_worker::deadline_trace.audio_fault(u32(clock_now));
+    if(!mask_crc_irq)clock_now+=730;
+}
+}
+
 }
 
 namespace {
@@ -401,6 +429,43 @@ void input_response_session() {
     puts("Panel response timing: actual completion, in-flight next input and failed-transfer retry PASS");
 }
 }
+void frame_deadline_session() {
+    using namespace picocalc;
+    using audio_stream::DutyRing;
+    auto& trace=io_worker::deadline_trace;
+    for(u64 origin:{1000000ULL,0xfffffff0ULL})for(bool masked:{false,true})
+    for(bool color:{false,true})for(bool chain:{false,true}) {
+        controller=Controller{};Panel panel;Screen mono;
+        trace.mark=trace.fault_site=trace.fault_age_us=0;
+        clock_now=origin;mask_crc_irq=masked;inject_crc_work=true;
+        if(chain){panel.dma_tx_=0;panel.dma_rx_=1;panel.dma_control_=2;}
+        std::array<u8,6144> bits{};std::array<u8,768> tiles{};tiles.fill(0x12);
+        if(color) {
+            mk61_service_color_frame f{};f.pixels=bits.data();f.tiles=tiles.data();
+            f.pixel_bytes=bits.size();f.tile_bytes=tiles.size();f.width=256;f.height=192;
+            f.x=32;f.y=64;f.format=MK61_COLOR_TILE1;f.background=0x1234;
+            f.palette[1]=0x001f;f.palette[2]=0xf800;
+            require(panel.color(MK61_COLOR_PRESENT,&f)==1,"fault-vector color frame accepted");
+        }else {for(auto& byte:mono.pixels)byte=0x69;require(panel.flush(mono),"fault-vector mono frame accepted");}
+        controller.run();
+        require(!inject_crc_work && !trace.mark,"actual frame restored outer publication");
+        require(injected_pwm_result==(masked?DutyRing::LATE:DutyRing::REFILLED),"750us IRQ mask is observable; enabled work can preempt");
+        require(trace.fault_site==(masked?WorkerDeadlineTrace::LCD_CRC:0),"nested CRC identifies exact injected boundary");
+        require(!masked || trace.fault_age_us>=750,"record IRQ delay without changing timestamp");
+        if(color) {
+            for(unsigned y=0;y<320;++y)for(unsigned x=0;x<320;++x)
+                require(controller.colors[y*320+x]==(x>=32 && x<288 && y>=64 && y<256?0x001f:0x1234),"injected boundary preserves every color pixel");
+        }else require(controller.visible(mono),"injected boundary preserves every mono pixel");
+    }
+    trace.mark=trace.fault_site=trace.fault_age_us=0;clock_now=1000000;
+    {io_worker::FrameDeadlineScope parent(WorkerDeadlineTrace::FRAME);
+     io_worker::frame_trace_core=0;
+     {io_worker::FrameDeadlineScope ignored(WorkerDeadlineTrace::LCD_CRC);clock_now+=50;
+      trace.audio_fault(u32(clock_now));require(trace.fault_site==WorkerDeadlineTrace::FRAME,"core0 cannot replace core1 marker");}
+     io_worker::frame_trace_core=1;}
+    require(!trace.mark,"ignored core0 scope leaves core1 publication alone");
+    std::puts("Actual Panel frame diagnostics:16 mono/color/chain/wrap vectors preserve every pixel; enabled750us work preempts, masked750us remains LATE at nested CRC; core0 never changes core1 trace PASS");
+}
 int main() {
     unsigned failed=0;
     for(auto region:{picocalc::lcd::Region{40,240},picocalc::lcd::Region{42,238},picocalc::lcd::Region{0,320}}) {
@@ -426,5 +491,6 @@ int main() {
     try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
     try { external_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel power clock FAIL: %s\n",error.what()); }
     try { input_response_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel input timing FAIL: %s\n",error.what()); }
+    try {frame_deadline_session();}catch(const std::exception& error){++failed;std::fprintf(stderr,"Frame IRQ diagnostics FAIL: %s\n",error.what());}
     return failed?1:0;
 }

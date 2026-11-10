@@ -1,0 +1,556 @@
+{
+  "schema": 1,
+  "date": "2026-11-10",
+  "test": "Spectrum AY/YM 8-bit M3 stereo at stock clocks, four strict short cases plus 30000-frame Cosmic Payback",
+  "status": "PASS",
+  "clocks": {
+    "Pico_hz": 125000000,
+    "Pico_peripheral_hz": 48000000,
+    "STM32_hz": 72000000,
+    "UART_baud": 2250000,
+    "overclocked": false
+  },
+  "limits": {
+    "Z80_hz": 3500000,
+    "timer_quantization_us": 1,
+    "M3_block_deadline_us": 4720,
+    "PWM_refill_guard_us": 640,
+    "frame_lag_limit_us": 1000,
+    "sample_rate": 25000,
+    "channels": 2,
+    "bits_per_channel": 8,
+    "stereo_frames_per_block": 118
+  },
+  "Pico": {
+    "build": "BF688EAA",
+    "crc32": "6B892B8A",
+    "image_bytes": 1790272,
+    "UF2_sha256": "229dc7e3a65be22bd34d2591ed9666eeda87d903bbe515521f743db90440a1e7",
+    "ELF_sha256": "da5742f8062a12029a8a2c6b7c5bd8eadd8428ccbf8344293d56d0005fffa1a0",
+    "heap_capacity_bytes": 108672,
+    "required_heap_bytes": 108544,
+    "ROMCACHE_unchanged": true
+  },
+  "M3_BIOS": {
+    "name": "KEY25",
+    "body_bytes": 29844,
+    "body_crc32": "3BE158B4",
+    "body_sha256": "4c65bec8684ce551eb993cd9253b8a5704e92737553da94ffba99919c8ae233f",
+    "package_sha256": "b87f4aee723e576085b57d9259cbb7073dfc6991f278268138c0a73739221675",
+    "full_body_readback_verified": true,
+    "boot_crc32_preserved": "2144A584",
+    "settings_write_range_excluded": true,
+    "globals_bytes": 10472,
+    "stack_reserved_bytes": 4096,
+    "per_scan_index_stack_bytes": 68,
+    "new_persistent_RAM_bytes": 0
+  },
+  "native_modules": {
+    "production_sha256": "0eb8b53d49ca0a231b95e8a82710058b9d106b073e9a888fc3d9443ed0fdaaa0",
+    "tested_timing_sha256": "bd7fb21cb6bed9e27e0e4ac079552e312f95058fe40b25bbfa9f5679e91fc3c1",
+    "timing_quantization_us": 16,
+    "timing_excludes": "Final packing and pre/post-synthesis transport; instruction counts are not physical cycle timings."
+  },
+  "changes": [
+    "TX DMA removes gaps from short M3 UART requests; RX catches up to newly arrived bytes",
+    "Bounded event sample-index arithmetic and lossless bulk PWM8 repeat decoding directly into ring",
+    "Bulk PWM refill, full64-frame prime and owned core1 alarm priority",
+    "I2C service masks only its own completion/wakeup IRQs; other IRQs and pending state are preserved",
+    "Bounded nested frame/IRQ arm/fire fault records reuse inactive DMA storage",
+    "APP samples the actual Pico TIMERAWL pacing clock; observer records actual same-cycle endpoints",
+    "M3 keyboard inverts ten key slots once per scan, preserving all152 GPIO reads and ordered callbacks"
+  ],
+  "keyboard_HOST_equivalence": {
+    "frames": 25000,
+    "exact_GPIO_reads": 3329256,
+    "exact_trace_events": 5676496,
+    "sanitizers": [
+      "ASan",
+      "UBSan"
+    ],
+    "scope": "Actual archived and indexed C; logical GPIO/read-time model; no reentrant keyboard callbacks",
+    "linked_ARM_idle_instructions_before_after": [
+      15225,
+      4806
+    ],
+    "linked_ARM_all_pressed_instructions_before_after": [
+      25104,
+      15183
+    ],
+    "instruction_counts_are_not_cycle_or_wall_time": true
+  },
+  "cases": [
+    {
+      "case": "NAYABC",
+      "chip": "AY",
+      "layout": "ABC",
+      "configured_frames": 1500,
+      "status": "PASS",
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4432,
+        "block_min_us": 1734,
+        "prime_us": 12804,
+        "min_queued": 88,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256905,
+        "transport_rx_bytes": 665685,
+        "native_render_us": 12489246,
+        "exchange_block_us": 19733583
+      },
+      "M3_late_blocks": 0,
+      "PWM_underruns": 0,
+      "playback": [
+        {
+          "dma_requests": 6546,
+          "fifo_requests": 0,
+          "refill_max_us": 287,
+          "core": 1,
+          "active_priority": 0,
+          "prior_priority_restored": true,
+          "legacy_maxima": "omitted",
+          "current_fault_publication": true,
+          "IRQ_wrapper_exercised": true,
+          "I2C_recovery": {
+            "before": 59,
+            "after": 59,
+            "new_resets": 0,
+            "cumulative_boot_counter": true
+          }
+        }
+      ],
+      "clock_pair": {
+        "paced_us": 30699763,
+        "following_run_us": 30699764,
+        "first_observer_cost_us": 1,
+        "last_observer_cost_us": 2,
+        "same_guest_cycles": true,
+        "complete": true
+      },
+      "all_strict_checks_pass": true,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYABC-001.result/receipt.json",
+          "sha256": "34bf9f80ebe70902dde526b38a559d4f8e1d882adc9fc7281b6059c433dd4944"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYABC-001.result/qualification.json",
+          "sha256": "cd664103efb1e7cfe9d45398a4e5335b4e94699668c237e6c7a69cb7097b09c9"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYABC-001.result/before.txt",
+          "sha256": "3cc49ae5feab51c4f2e2c540431f507931c79a1aef09db640744ca6dbade17ee"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYABC-001.result/after.txt",
+          "sha256": "2831ae33fda32790dd953e70060c9126d8c64a262ce3c4125bcb8d995c67792c"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYABC-001.result/wire.txt",
+          "sha256": "85ca42f3fc1979752ff814988720cae41249d309ad78c9c03fb5d1826d9dbbc3"
+        }
+      }
+    },
+    {
+      "case": "NYMACB",
+      "chip": "YM",
+      "layout": "ACB",
+      "configured_frames": 1500,
+      "status": "PASS",
+      "metrics": {
+        "mode": 2,
+        "frames": 1499,
+        "cycles": 107449170,
+        "elapsed_us": 30699763,
+        "timing_valid": true,
+        "mhz": 3.4999999837132294,
+        "fps": 48.82773850729727,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 767944,
+        "blocks": 6508,
+        "block_max_us": 4196,
+        "block_min_us": 1763,
+        "prime_us": 12804,
+        "min_queued": 84,
+        "inline_requests": 2988,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 256905,
+        "transport_rx_bytes": 590879,
+        "native_render_us": 12489041,
+        "exchange_block_us": 19299350
+      },
+      "M3_late_blocks": 0,
+      "PWM_underruns": 0,
+      "playback": [
+        {
+          "dma_requests": 6546,
+          "fifo_requests": 0,
+          "refill_max_us": 283,
+          "core": 1,
+          "active_priority": 0,
+          "prior_priority_restored": true,
+          "legacy_maxima": "omitted",
+          "current_fault_publication": true,
+          "IRQ_wrapper_exercised": true,
+          "I2C_recovery": {
+            "before": 59,
+            "after": 59,
+            "new_resets": 0,
+            "cumulative_boot_counter": true
+          }
+        }
+      ],
+      "clock_pair": {
+        "paced_us": 30699763,
+        "following_run_us": 30699764,
+        "first_observer_cost_us": 1,
+        "last_observer_cost_us": 2,
+        "same_guest_cycles": true,
+        "complete": true
+      },
+      "all_strict_checks_pass": true,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMACB-001.result/receipt.json",
+          "sha256": "b1531fcb5cc23542056c871ee701fd368856c3183117ff52656171bf799dd3ef"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMACB-001.result/qualification.json",
+          "sha256": "6d2ec762a21f45e85ab7dc53f82c59f8d8a157d843ce68c89deeb52ea856c200"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMACB-001.result/before.txt",
+          "sha256": "4936a9f3c5068305203aee2063c9b0624187f0d2fa1ae5b0f704ad46610975bd"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMACB-001.result/after.txt",
+          "sha256": "4ee082bff31937d9e82a9a5e7a942f9c242330e4b68af1737540e2d41c783830"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMACB-001.result/wire.txt",
+          "sha256": "6829a3dd134acff2b143b7a6747d77c6028d6d208c58458bec0921f65ff52852"
+        }
+      }
+    },
+    {
+      "case": "NAYACB",
+      "chip": "AY",
+      "layout": "ACB",
+      "configured_frames": 600,
+      "status": "PASS",
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4057,
+        "block_min_us": 1757,
+        "prime_us": 12817,
+        "min_queued": 96,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106152,
+        "transport_rx_bytes": 232743,
+        "native_render_us": 4948337,
+        "exchange_block_us": 7632515
+      },
+      "M3_late_blocks": 0,
+      "PWM_underruns": 0,
+      "playback": [
+        {
+          "dma_requests": 2641,
+          "fifo_requests": 0,
+          "refill_max_us": 300,
+          "core": 1,
+          "active_priority": 0,
+          "prior_priority_restored": true,
+          "legacy_maxima": "omitted",
+          "current_fault_publication": true,
+          "IRQ_wrapper_exercised": true,
+          "I2C_recovery": {
+            "before": 59,
+            "after": 59,
+            "new_resets": 0,
+            "cumulative_boot_counter": true
+          }
+        }
+      ],
+      "clock_pair": {
+        "paced_us": 12267988,
+        "following_run_us": 12267989,
+        "first_observer_cost_us": 1,
+        "last_observer_cost_us": 2,
+        "same_guest_cycles": true,
+        "complete": true
+      },
+      "all_strict_checks_pass": true,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYACB-001.result/receipt.json",
+          "sha256": "6ef23a07ec85e74b94539291d2fcc3994ef44a67f5e601061db628f4b2e4b749"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYACB-001.result/qualification.json",
+          "sha256": "0678f1f8efefa5b1b6fbf4a00534a66ab0012ccb6a43080a9a30e4aa8724fa32"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYACB-001.result/before.txt",
+          "sha256": "6d349e176a2bfb27443de4fd539a32a3acfad7fc380315d27a41fb49447b4785"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYACB-001.result/after.txt",
+          "sha256": "05dd08342fc035c1d6908a5095a4067b89f085dd89f229e2cd8d03c7f4101bd9"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NAYACB-001.result/wire.txt",
+          "sha256": "374e209833c460d41072fe256217f849fafef7a79171125f1c32c14f878b4253"
+        }
+      }
+    },
+    {
+      "case": "NYMABC",
+      "chip": "YM",
+      "layout": "ABC",
+      "configured_frames": 600,
+      "status": "PASS",
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4026,
+        "block_min_us": 1743,
+        "prime_us": 12787,
+        "min_queued": 96,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 106152,
+        "transport_rx_bytes": 210594,
+        "native_render_us": 4948569,
+        "exchange_block_us": 7504441
+      },
+      "M3_late_blocks": 0,
+      "PWM_underruns": 0,
+      "playback": [
+        {
+          "dma_requests": 2641,
+          "fifo_requests": 0,
+          "refill_max_us": 322,
+          "core": 1,
+          "active_priority": 0,
+          "prior_priority_restored": true,
+          "legacy_maxima": "omitted",
+          "current_fault_publication": true,
+          "IRQ_wrapper_exercised": true,
+          "I2C_recovery": {
+            "before": 59,
+            "after": 59,
+            "new_resets": 0,
+            "cumulative_boot_counter": true
+          }
+        }
+      ],
+      "clock_pair": {
+        "paced_us": 12267988,
+        "following_run_us": 12267989,
+        "first_observer_cost_us": 1,
+        "last_observer_cost_us": 2,
+        "same_guest_cycles": true,
+        "complete": true
+      },
+      "all_strict_checks_pass": true,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMABC-001.result/receipt.json",
+          "sha256": "64bf0afb2a5a684b200066221518bc11785689af734524fc8e5158c3edf480df"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMABC-001.result/qualification.json",
+          "sha256": "b882133bf72e910a94522573fada4f905e536d203fba2357bec82f6cb35ad569"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMABC-001.result/before.txt",
+          "sha256": "d1283173504179b5d7b995b9bc9fb16a0e6980e3f2c5f4f929d7a11b6335012c"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMABC-001.result/after.txt",
+          "sha256": "061129449b6c8b3ad6285c43f8ac2db5ed36e0f506537f2079cacffc5038048e"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-NYMABC-001.result/wire.txt",
+          "sha256": "5e1c9e201c6a3060e08f196ac1aa08cf2ed9e57607b02ff49ad657e43bdb3ad3"
+        }
+      }
+    },
+    {
+      "case": "LONG",
+      "chip": "AY",
+      "layout": "ABC",
+      "configured_frames": 30000,
+      "status": "PASS",
+      "metrics": {
+        "mode": 2,
+        "frames": 29998,
+        "cycles": 2150256504,
+        "elapsed_us": 614359001,
+        "timing_valid": true,
+        "mhz": 3.5000000008138565,
+        "fps": 48.82812809964837,
+        "starved": 0,
+        "frame_min_us": 19895,
+        "frame_max_us": 20549,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 543,
+        "samples": 15359588,
+        "blocks": 130166,
+        "block_max_us": 4588,
+        "block_min_us": 1729,
+        "prime_us": 12787,
+        "min_queued": 78,
+        "inline_requests": 60042,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 5014930,
+        "transport_rx_bytes": 13116516,
+        "native_render_us": 249403106,
+        "exchange_block_us": 393181237
+      },
+      "M3_late_blocks": 0,
+      "PWM_underruns": 0,
+      "playback": [
+        {
+          "dma_requests": 130204,
+          "fifo_requests": 0,
+          "refill_max_us": 330,
+          "core": 1,
+          "active_priority": 0,
+          "prior_priority_restored": true,
+          "legacy_maxima": "omitted",
+          "current_fault_publication": true,
+          "IRQ_wrapper_exercised": true,
+          "I2C_recovery": {
+            "before": 59,
+            "after": 59,
+            "new_resets": 0,
+            "cumulative_boot_counter": true
+          }
+        }
+      ],
+      "clock_pair": {
+        "paced_us": 614359001,
+        "following_run_us": 614359002,
+        "first_observer_cost_us": 1,
+        "last_observer_cost_us": 2,
+        "same_guest_cycles": true,
+        "complete": true
+      },
+      "all_strict_checks_pass": true,
+      "evidence": {
+        "receipt.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-LONG-001.result/receipt.json",
+          "sha256": "445831d92c3f953dfe7bef42bd2214bf459484e6c2673d73dbedc4a261589134"
+        },
+        "qualification.json": {
+          "path": ".build/spectrum-latency-20261109/KEY26-LONG-001.result/qualification.json",
+          "sha256": "4432e499549c7a16ee2f1b34daf9a975c0e833c9ace4bbc0c5af907853ea0221"
+        },
+        "before.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-LONG-001.result/before.txt",
+          "sha256": "ad235933ec0c95e6992e304896534ab6e5619c2b5b86419007d0e6b0f835a510"
+        },
+        "after.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-LONG-001.result/after.txt",
+          "sha256": "b2596db5faacacc1579526f9ba58b7f09a5087767dc04cb3c27e34fa3b28c902"
+        },
+        "wire.txt": {
+          "path": ".build/spectrum-latency-20261109/KEY26-LONG-001.result/wire.txt",
+          "sha256": "0714b4d4188dc3c77322e18ef0d7bc25f2f008c8cd7d2af68ae4def63cd52344"
+        }
+      }
+    }
+  ],
+  "historical_negatives_preserved": {
+    "stereo_20261108": "picocalc-spectrum-stereo-20261108.json",
+    "ALARM24_long": {
+      "M3_late_blocks": 2,
+      "max_us": 4898,
+      "evidence": {
+        "path": ".build/spectrum-latency-20261109/CLOSED-ALARM24-HANDOFF-001.json",
+        "sha256": "f94e120bc3b9cdbe2e89fdb06f3d0f661e4c8292e39e6feaf58669601ee4038f"
+      }
+    },
+    "KEY25_controller": {
+      "status": "HOLD",
+      "reason": "Absolute IO_I2C_RESETS==0 rejected planned M3-update counter59, despite no increase during normal tests. Receipt remains HOLD. KEY26 compares exact fresh before/after values and fixes all CORE+IO counters for its entire window.",
+      "evidence": {
+        "path": ".build/spectrum-latency-20261109/CLOSED-KEY25-HANDOFF-001.json",
+        "sha256": "17a071847673b87c3454048c02619b0e033e78355031aa94e4a512bb92f1379d"
+      }
+    }
+  },
+  "I2C_counter": {
+    "planned_M3_update_aborts": 59,
+    "normal_and_strict_series_before_after": [
+      59,
+      59
+    ],
+    "new_recoveries_during_tests": 0
+  },
+  "closure": {
+    "status": "CLOSED",
+    "CRASH": "NONE",
+    "CDC_closed": true,
+    "shared_lease_released": true,
+    "old_SD_files_verified": 61,
+    "new_updater_files_verified": 2,
+    "games_ROM_and_existing_files_unchanged": true,
+    "BIOS_left_installed": true,
+    "BOOT_count": 11,
+    "physical_key_count_before_after": [
+      1,
+      1
+    ],
+    "evidence": {
+      "path": ".build/spectrum-latency-20261109/CLOSED-KEY26-HANDOFF-001.json",
+      "sha256": "cda3f408690fe295eed10b51d62fb400624971e7a69a43fa5765ffab55cbb40c"
+    }
+  },
+  "scope": "One complete finite strict series on this hardware at stock clocks. PWM speaker separation was measured electrically in prior stereo probes; subjective stereo separation remains unconfirmed. Raw game images, ROM and raw CDC payloads are not included."
+}

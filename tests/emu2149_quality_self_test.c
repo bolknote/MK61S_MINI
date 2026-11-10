@@ -5,6 +5,36 @@ static uint32_t random_state=0x5114a0b3;
 static unsigned random_word(void){random_state^=random_state<<13;random_state^=random_state>>17;random_state^=random_state<<5;return random_state;}
 static void init(PSG* p,unsigned rate,unsigned mode){memset(p,0,sizeof(*p));PSG_setVolumeMode(p,mode);p->quality=1;p->rate=rate;PSG_setClock(p,1750000);PSG_reset(p);}
 static unsigned comparisons,weighted;
+static void stereo_quality(void) {
+    PSG a,b;unsigned checked=0;
+    for(unsigned mode=1;mode<=2;++mode)for(unsigned layout=1;layout<=2;++layout)
+    for(unsigned scenario=0;scenario<32;++scenario) {
+        init(&a,25000,mode);b=a;int32_t actual[2]={0,0},expected[2]={0,0};
+        for(unsigned sample=0;sample<4096;++sample) {
+            if(!(sample%19))for(unsigned reg=0;reg<14;++reg) {
+                unsigned value=random_word()&255;
+                if(reg==6)value=scenario&31;
+                if(reg>=8 && reg<=10)value=scenario%3?16:random_word()&15;
+                if(reg==11)value=scenario%4?0:value;
+                PSG_writeReg(&a,reg,value);PSG_writeReg(&b,reg,value);
+            }
+            if(!(sample%83)){unsigned mask=random_word()&7;PSG_setMask(&a,mask);PSG_setMask(&b,mask);}
+            PSG_calcStereo(&a,actual,layout);PSG_calcStereo_reference(&b,expected,layout);
+            assert(!memcmp(&a,&b,sizeof(a)) && !memcmp(actual,expected,sizeof(actual)));++checked;
+        }
+        // Independent constant-channel routing oracle, beyond the serial DSP reference.
+        for(unsigned channel=0;channel<3;++channel) {
+            init(&a,25000,mode);PSG_writeReg(&a,7,63);PSG_writeReg(&a,8+channel,15);
+            actual[0]=actual[1]=0;for(unsigned i=0;i<8;++i)PSG_calcStereo(&a,actual,layout);
+            const int32_t amplitude=(int32_t)(a.voltbl[31]<<4);
+            const unsigned centre=layout==2?2:1;
+            if(!channel){assert(actual[0]>=2*amplitude-1 && !actual[1]);}
+            else if(channel==centre){assert(actual[0]>=amplitude-1 && actual[0]==actual[1]);}
+            else {assert(!actual[0] && actual[1]>=2*amplitude-1);}
+        }
+    }
+    printf("AY/YM stereo: %u exact stereo samples, ABC/ACB isolated A/centre/right, changing envelopes/noise and complete mono PSG states PASS\n",checked);
+}
 static void equal_sample(PSG* a,PSG* b,unsigned scenario,unsigned sample) {
     if(a->quality && a->base_incr==(1U<<GETA_BITS) && (a->volume[0]|a->volume[1]|a->volume[2])) {
         PSG phase=*a;const unsigned n=output_ticks(&phase);
@@ -17,6 +47,21 @@ static void equal_sample(PSG* a,PSG* b,unsigned scenario,unsigned sample) {
     ++comparisons;
 }
 int main(void) {
+    stereo_quality();
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+    // CONFIG accepts every sub-tick phase below200000, including imported
+    // phases outside the usual four positions of the fixed-rate stream.
+    for(unsigned mode=1;mode<=2;++mode)for(unsigned layout=1;layout<=2;++layout)
+    for(unsigned phase=0;phase<200000;++phase) {
+        PSG a,b;init(&a,25000,mode);a.psgtime=phase;
+        for(unsigned reg=0;reg<14;++reg)PSG_writeReg(&a,reg,(phase+13*reg)&255);
+        b=a;int32_t out[2]={123,-456},reference[2]={123,-456};
+        PSG_calcStereo(&a,out,layout);PSG_calcStereo_reference(&b,reference,layout);
+        assert(!memcmp(&a,&b,sizeof(a)) && !memcmp(out,reference,sizeof(out)));
+    }
+    puts("M3 fixed rate: all200000 accepted phases, both chips/layouts and exact full states PASS");
+    return 0;
+#endif
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
     /* Independent serial LFSR reference, every 17-bit state, all bulk sizes. */
     for(uint32_t seed=0;seed<(1u<<17);++seed) {

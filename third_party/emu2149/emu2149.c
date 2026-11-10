@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include "emu2149.h"
 
-static uint32_t voltbl[2][32] = {
+static PSG_volume_t voltbl[2][32] = {
   /* YM2149 - 32 steps */
   {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09,
    0x0B, 0x0D, 0x0F, 0x12,
@@ -389,13 +389,13 @@ static void advance_envelope(PSG* psg,unsigned ticks)
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
 static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t seed,unsigned shifts)
 {
-  do {
+  while(shifts) {
     /* During these shifts feedback cannot reach the consumed low bits.
      * Advance both taps of x^17+x^14+1 together, including overlaps via XOR. */
     const unsigned n=shifts>8?8:shifts;
     const uint32_t feedback=seed&((1u<<n)-1);
     seed=(seed>>n)^(feedback<<(17-n))^(feedback<<(14-n));shifts-=n;
-  } while(shifts);
+  }
   return seed;
 }
 #endif
@@ -416,8 +416,22 @@ static void advance_state(PSG* psg,unsigned ticks)
 #endif
   advance_envelope(psg,ticks);
 }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+static inline __attribute__((always_inline)) unsigned fixed_output_ticks(PSG* psg)
+{
+  // CONFIG validates this fixed rate; stereo never batches silent samples.
+  if(psg->psgtime<150000u){psg->psgtime+=50000u;return 9;}
+  psg->psgtime-=150000u;return 8;
+}
+#endif
 static unsigned output_ticks(PSG* psg)
 {
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  if(psg->realstep==1750000u) {
+    // Validated fixed rate: the exact8/9-tick phase has four positions.
+    return fixed_output_ticks(psg);
+  }
+#endif
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
   /* Cortex-M3 has UDIV: replace the internal-tick loop by its exact count. */
   const unsigned ticks=psg->realstep>psg->psgtime?
@@ -490,6 +504,13 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
   unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  if(psg->nmask[0] && psg->nmask[1] && psg->nmask[2]) {
+    // Noise disabled by all three mixers: preserve its exact state, but
+    // do not construct a bit mask which none of the channels will use.
+    uint32_t phase=count;const unsigned edges=advance_counter(&phase,period,ticks);
+    seed=advance_noise(seed,(edges+(scaler?0:1))/2);
+    psg->noise_count=(uint8_t)phase;psg->noise_scaler=(uint8_t)(scaler^(edges&1));psg->noise_seed=seed;return 0;
+  }
   if(period<=1 && (!period || !count)) {
     /* The next eight LFSR low bits precede any feedback bit. Spread them
      * to two ticks each; no per-tick noise branches or output stores. */
@@ -503,6 +524,20 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
     seed=advance_noise(seed,shifts);
     psg->noise_count=0;psg->noise_scaler=(uint8_t)(scaler^(ticks&1));psg->noise_seed=seed;return bits&all;
   }
+  if(period>1 && count<period) {
+    /* Only an LFSR shift can change the noise output. Build whole spans
+     * between those edges instead of revisiting every internal tick. */
+    bits=(seed&1)?all:0;
+    const unsigned first=period-count-1+(scaler?period:0);
+    uint32_t phase=count;
+    const unsigned edges=advance_counter(&phase,period,ticks);
+    for(unsigned at=first;at<ticks;at+=2*period) {
+      const unsigned previous=seed&1;
+      seed=advance_noise(seed,1);
+      if(previous!=(seed&1))bits^=all<<at;
+    }
+    psg->noise_count=(uint8_t)phase;psg->noise_scaler=(uint8_t)(scaler^(edges&1));psg->noise_seed=seed;return bits&all;
+  }
 #endif
   if(count<period && period-count>ticks) {count=(uint8_t)(count+ticks);bits=(seed&1)?all:0;}
   else for(unsigned i=0;i<ticks;++i) {
@@ -514,14 +549,23 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   }
   psg->noise_count=count;psg->noise_scaler=(uint8_t)scaler;psg->noise_seed=seed;return bits;
 }
-static int16_t calc_weighted(PSG* psg,unsigned ticks)
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+#define PSG_INTERNAL_RESTRICT restrict
+#else
+#define PSG_INTERNAL_RESTRICT
+#endif
+static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32_t* PSG_INTERNAL_RESTRICT stereo,unsigned layout)
 {
+  const PSG_volume_t* PSG_INTERNAL_RESTRICT volumes=psg->voltbl;
   const uint32_t all=(1U<<ticks)-1,noise=noise_mask(psg,ticks,all);
   int32_t sum=psg->out;
+  int32_t left=stereo?stereo[0]:0,right=stereo?stereo[1]:0;
+  const unsigned centre=layout==2?2:1;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
   const bool changing=((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
     (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks);
   uint32_t envelopes[3]={0,0,0};
+  int32_t channels[3]={0,0,0};
 #endif
   for(unsigned i=0;i<3;++i) {
     uint32_t bits=tone_mask(psg,i,ticks,all);
@@ -531,8 +575,19 @@ static int16_t calc_weighted(PSG* psg,unsigned ticks)
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
     if(changing && (psg->volume[i]&32)){envelopes[i]=bits;continue;}
 #endif
-    const unsigned amplitude=psg->voltbl[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
-    sum+=(int32_t)(amplitude*bits);psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
+    const unsigned amplitude=volumes[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
+    const int32_t weighted=(int32_t)(amplitude*bits);
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+    channels[i]=weighted;
+#else
+    sum+=weighted;
+    if(stereo) {
+      if(i==0)left+=2*weighted;
+      else if(i==centre){left+=weighted;right+=weighted;}
+      else right+=2*weighted;
+    }
+#endif
+    psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
   }
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
   if(changing) {
@@ -555,34 +610,94 @@ static int16_t calc_weighted(PSG* psg,unsigned ticks)
           }
         }
       }
-      const unsigned gates=((envelopes[0]>>tick)&1)+((envelopes[1]>>tick)&1)+((envelopes[2]>>tick)&1);
-      sum+=(int32_t)((psg->voltbl[ptr]<<4)*(gates<<tick));
+      /* Accumulate each channel once; pan only after all internal ticks.
+       * Mono and both stereo outputs then share these exact IIR weights. */
+      const int32_t amplitude=(int32_t)((volumes[ptr]<<4)<<tick);
+      if(envelopes[0]&(1u<<tick))channels[0]+=amplitude;
+      if(envelopes[1]&(1u<<tick))channels[1]+=amplitude;
+      if(envelopes[2]&(1u<<tick))channels[2]+=amplitude;
     }
     psg->env_count=count;psg->env_ptr=(uint8_t)ptr;psg->env_face=(uint8_t)face;psg->env_pause=(uint8_t)pause;
     for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
-      psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(psg->voltbl[psg->env_ptr]<<4):0;
+      psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(volumes[psg->env_ptr]<<4):0;
   } else
 #endif
   advance_envelope(psg,ticks);
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  sum+=channels[0]+channels[1]+channels[2];
+  if(stereo){left+=2*channels[0]+channels[centre];right+=2*channels[3-centre]+channels[centre];}
+#endif
+  if(stereo){stereo[0]=left>>ticks;stereo[1]=right>>ticks;}
   psg->out=sum>>ticks;return (int16_t)psg->out;
 }
+#if !defined(EMU2149_M3_FIXED_RATE) || !EMU2149_M3_FIXED_RATE
 static int16_t calc_quality(PSG* psg,unsigned ticks)
 {
-  if(weighted_eligible(psg,ticks))return calc_weighted(psg,ticks);
+  if(weighted_eligible(psg,ticks))return calc_weighted(psg,ticks,NULL,0);
   while(ticks--) { update_output(psg);psg->out=(psg->out+mix_output(psg))>>1; }
   return psg->out;
 }
+#endif
 int16_t PSG_calc(PSG* psg)
 {
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  /* Only the native module uses this entry: CONFIG validates quality=1,
+   * base_incr=1<<24, realstep=1750000, psgstep=200000 and psgtime<200000.
+   * No module command changes the rate/clock. Every call has8 or9 ticks,
+   * a built-in volume table and a bounded output/envelope state. */
+  const unsigned ticks=output_ticks(psg);
+  if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);
+  return calc_weighted(psg,ticks,NULL,0);
+#else
   if(psg->quality && psg->base_incr==(1U<<GETA_BITS)) {
     const unsigned ticks=output_ticks(psg);if(!ticks)return (int16_t)psg->out;
     if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);
     return calc_quality(psg,ticks);
   }
   return calc_reference(psg);
+#endif
 }
 /* Host equivalence checks; linker discards this unused entry from APPs. */
 int16_t PSG_calc_reference(PSG* psg) { return calc_reference(psg); }
+
+static void stereo_tick(PSG* psg,int32_t stereo[2],unsigned layout,bool filtered)
+{
+  const unsigned centre=layout==2?2:1,outer=3-centre;
+  update_output(psg);
+  const int32_t left=2*psg->ch_out[0]+psg->ch_out[centre];
+  const int32_t right=2*psg->ch_out[outer]+psg->ch_out[centre];
+  psg->out=filtered?(psg->out+mix_output(psg))>>1:mix_output(psg);
+  stereo[0]=filtered?(stereo[0]+left)>>1:left;
+  stereo[1]=filtered?(stereo[1]+right)>>1:right;
+}
+void PSG_calcStereo_reference(PSG* psg,int32_t stereo[2],unsigned layout)
+{
+  if(!psg->quality){stereo_tick(psg,stereo,layout,false);return;}
+  while(psg->realstep>psg->psgtime) {
+    psg->psgtime+=psg->psgstep;stereo_tick(psg,stereo,layout,true);
+  }
+  psg->psgtime-=psg->realstep;
+}
+void PSG_calcStereo(PSG* psg,int32_t stereo[2],unsigned layout)
+{
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  const unsigned ticks=fixed_output_ticks(psg);
+#else
+  if(!psg->quality || psg->base_incr!=(1U<<GETA_BITS)) {
+    PSG_calcStereo_reference(psg,stereo,layout);return;
+  }
+  const unsigned ticks=output_ticks(psg);if(!ticks)return;
+#endif
+  if(!(psg->volume[0]|psg->volume[1]|psg->volume[2])) {
+    (void)calc_silent(psg,ticks);stereo[0]>>=ticks<31?ticks:31;stereo[1]>>=ticks<31?ticks:31;return;
+  }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  (void)calc_weighted(psg,ticks,stereo,layout);
+#else
+  if(weighted_eligible(psg,ticks)){(void)calc_weighted(psg,ticks,stereo,layout);return;}
+  for(unsigned i=0;i<ticks;++i)stereo_tick(psg,stereo,layout,true);
+#endif
+}
 
 void
 PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)

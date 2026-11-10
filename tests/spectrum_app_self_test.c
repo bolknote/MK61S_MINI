@@ -42,11 +42,13 @@ static unsigned psram_bytes,action;
 static bool released=true;
 static unsigned held_key,held_scans;
 static unsigned graphics_ends;
+static bool saw_ym,saw_acb;
 static mk61_service_audio_synth generator;
 typedef struct { const char* screen;unsigned key,frames; } action_item;
 static const action_item script[]={
     {"Spectrum",13,0},{NULL,27,80},
     {"Spectrum",'p',0},{"Options",'j',0},
+    {"Options",'c',0},{"Options",'s',0},
     {"Options",'1',0},{"Options",'1',0},
     {"Options",'d',0},{"Beta Disk",13,0},
     {"Options",'w',0},{"Options",27,0},
@@ -67,7 +69,12 @@ bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectru
 }
 void spectrum_ui_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,
                         const char* const* labels,unsigned count,unsigned selected) {
-    (void)u;(void)x;(void)y;(void)width;(void)labels;assert(selected<=count);
+    (void)u;(void)x;(void)y;(void)width;assert(selected<=count);
+    if(!strcmp(title,"Options")) {
+        assert(count==10);
+        if(!strcmp(labels[6],"Sound chip: YM2149"))saw_ym=true;
+        if(!strcmp(labels[7],"Stereo: ACB"))saw_acb=true;
+    }
     snprintf(ui,sizeof(ui),"%s",title);
 }
 void spectrum_ui_footer(spectrum_ui* u,const char* text) { (void)u;(void)text; }
@@ -177,8 +184,9 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         return frames_shown%3?1:2;
     }
     if(op==MK61_SERVICE_AUDIO_STREAM) {
-        if(a==MK61_AUDIO_PSG_OPEN)return 0; // Older resident: use SYNTH_OPEN.
+        if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_CONFIG_OPEN)return 0; // Older resident: use SYNTH_OPEN.
         if(a==MK61_AUDIO_SYNTH_OPEN) {
+            if(saw_ym && saw_acb)assert(machine.sound_chip==SPECTRUM_YM && machine.sound_layout==SPECTRUM_ACB);
             generator=*(mk61_service_audio_synth*)payload;assert(generator.rate==25000);++audio_opens;
             // Exercise callbacks during a slow native open, before the CPU clock starts.
             for(unsigned i=0;i<500;++i) { assert(!generator.sample(generator.context));micros_now+=40; }
@@ -237,7 +245,7 @@ int main(int argc,char** argv) {
             assert(audio_opens==1 && audio_closes==1 && frames_shown>=12);
             if(suffix(opened_name,".sna") || suffix(opened_name,".z80") || suffix(opened_name,".scl"))assert(selected_reads);
         }
-    } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1);
+    } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1 && saw_ym && saw_acb);
     assert(lcd_clock_requests>=audio_opens && lcd_clock==12000000);
     if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
     if(opened_name) printf("Actual FILE_OPEN %s: external path, %s, held Enter blocked, readonly media, complete cleanup PASS\n",opened_name,open_error?"error handled":"started and F10 exited");

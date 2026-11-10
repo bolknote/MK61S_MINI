@@ -6,6 +6,16 @@
 #include <string.h>
 
 static const mk61_app_services* services;
+static inline uint32_t pacing_clock_us(void) {
+#if defined(MK61_TARGET_PICOCALC) && defined(__ARM_ARCH_6M__)
+    // Pico H's native MICROS service reads the same monotonic TIMERAWL.
+    // Poll locally in APP SRAM during the final pacing guard, avoiding
+    // indirect calls and contention for the resident's XIP cache lines.
+    return *(volatile uint32_t*)(uintptr_t)0x40054028u;
+#else
+    return services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+#endif
+}
 static spectrum* active_machine;
 #define machine (*active_machine)
 static uint8_t keys[32],previous_keys[32];
@@ -297,18 +307,23 @@ static void settings(void) {
     unsigned selected=0;
     for(;;) {
         const char* joysticks[]={"Kempston","Sinclair 1","Sinclair 2"};
-        char values[6][28];const char* labels[10];
+        char values[8][28];const char* labels[10];
         const char* devices[]={"TurboSound","Covox","SpecDrum","ULAplus"};
         for(unsigned i=0;i<4;++i) { mk61_app_snprintf(services,values[i],28,"%s: %s",devices[i],machine.extensions&(1U<<i)?"On":"Off");labels[i]=values[i]; }
         mk61_app_snprintf(services,values[4],28,"Joystick: %s",joysticks[machine.joystick_mode]);labels[4]=values[4];
         const bool readonly=machine.disk.mode==1?machine.disk.fdc.io.readonly:machine.disk.spi.io.readonly;
         mk61_app_snprintf(services,values[5],28,"Write protect: %s",readonly?"On":"Off");labels[5]=values[5];
-        labels[6]="Eject disk";labels[7]="Back";
-        const int choice=menu_pick("Options",labels,8,&selected,true,"1234jwu di");
-        if(choice<0 || choice==7) return;
-        const char actions[]="1234jwu di";const int c=actions[choice];
+        const char* layouts[]={"Mono","ABC","ACB"};
+        mk61_app_snprintf(services,values[6],28,"Sound chip: %s",machine.sound_chip==SPECTRUM_YM?"YM2149":"AY-3-8912");labels[6]=values[6];
+        mk61_app_snprintf(services,values[7],28,"Stereo: %s",layouts[machine.sound_layout]);labels[7]=values[7];
+        labels[8]="Eject disk";labels[9]="Back";
+        const int choice=menu_pick("Options",labels,10,&selected,true,"1234jwcsu di");
+        if(choice<0 || choice==9) return;
+        const char actions[]="1234jwcsu di";const int c=actions[choice];
         if(c>='1' && c<='4') machine.extensions^=1U<<(c-'1');
         else if(c=='j' || c=='J') machine.joystick_mode=(machine.joystick_mode+1)%3;
+        else if(c=='c') spectrum_sound_configure(&machine,machine.sound_chip^1,machine.sound_layout);
+        else if(c=='s') spectrum_sound_configure(&machine,machine.sound_chip,(machine.sound_layout+1)%3);
         else if(c=='d' || c=='D') mount_media(SPECTRUM_DISK_BETA);
         else if(c=='i' || c=='I') mount_media(SPECTRUM_DISK_DIVMMC);
         else if(c=='u' || c=='U') { (void)spectrum_disk_mode(&machine,0);spectrum_reset(&machine);started=false; }
@@ -346,7 +361,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
     *deadline+=spectrum_frame_cycles(&machine)*2/7;
     const uint32_t phase_us=machine.frame_tstates*2/7;
     uint32_t target=*deadline+phase_us;
-    uint32_t now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+    uint32_t now=pacing_clock_us();
 #ifdef SPECTRUM_HIL_PACED
     const uint32_t ready=now;
     bool resynced=false;
@@ -370,10 +385,10 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
         }
         // The resident millisecond delay already busy-pumps services.
         // Pump directly so it cannot carry us to the next millisecond.
-        now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+        now=pacing_clock_us();
         if((int32_t)(target-now)>2000) {
             mk61_api->service();
-            now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);
+            now=pacing_clock_us();
         }
     }
 #ifdef SPECTRUM_HIL_PACED
@@ -423,7 +438,11 @@ static void emulate(void) {
     psg.produced=(const volatile uint32_t*)&sound->produced;psg.time=&sound->time;
     psg.running=(const volatile uint8_t*)&sound->clock_running;psg.dac=&sound->beeper;
     psg.dc_input=&sound->input;psg.dc_output=&sound->output;psg.recover=spectrum_sound_recover;
-    uint32_t audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_PSG_OPEN,0,sizeof(psg),&psg);
+    mk61_service_audio_psg_config config={0};config.psg=psg;
+    config.layout=machine.sound_layout;config.chip=machine.sound_chip;config.stereo=sound->stereo;
+    uint32_t audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_PSG_CONFIG_OPEN,0,sizeof(config),&config);
+    if(!audio_mode && !machine.sound_layout && !machine.sound_chip)
+        audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_PSG_OPEN,0,sizeof(psg),&psg);
     if(!audio_mode)audio_mode=services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_SYNTH_OPEN,0,sizeof(audio),&audio);
     if(!audio_mode) {
         spectrum_sound_end(&machine);(void)spectrum_disk_cache_end(&machine);
@@ -532,6 +551,7 @@ static int app_run(uint32_t file_id) {
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
     else { memset(&machine,0,sizeof(machine));machine.ram=guest_blocks[0];machine.rom=mapped_roms?mapped_rom[0]:rom.data;
         machine.extensions=SPECTRUM_TURBOSOUND|SPECTRUM_COVOX|SPECTRUM_SPECDRUM|SPECTRUM_ULAPLUS; }
+    spectrum_sound_configure(&machine,SPECTRUM_AY,SPECTRUM_ABC);
     if(!select_model(true)) {
         if(!select_model(false)) return 0;
     }

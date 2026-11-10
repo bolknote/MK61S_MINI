@@ -11,11 +11,17 @@ extern "C"
 {
 #endif
 
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  typedef uint8_t PSG_volume_t;
+#else
+  typedef uint32_t PSG_volume_t;
+#endif
+
   typedef struct __PSG
   {
 
     /* Volume Table */
-    uint32_t *voltbl;
+    PSG_volume_t *voltbl;
 
     uint8_t reg[0x20];
     int32_t out;
@@ -79,6 +85,11 @@ extern "C"
   uint8_t PSG_readIO (PSG * psg);
   int16_t PSG_calc (PSG *);
   int16_t PSG_calc_reference (PSG *);
+  /* One oscillator pass; stereo[0/1] retain the two rate-converter states.
+   * layout 1 = ABC (B centre), 2 = ACB (C centre). The centre has unit gain
+   * and each outer channel gain two, matching mono for equal A/B/C levels. */
+  void PSG_calcStereo (PSG *, int32_t stereo[2], unsigned layout);
+  void PSG_calcStereo_reference (PSG *, int32_t stereo[2], unsigned layout);
   void PSG_setVolumeMode (PSG * psg, int type);
   uint32_t PSG_setMask (PSG *, uint32_t mask);
   uint32_t PSG_toggleMask (PSG *, uint32_t mask);

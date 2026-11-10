@@ -98,7 +98,7 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     }
 }
 static void reset_ay(spectrum* s) {
-    memset(&s->ay,0,sizeof(s->ay));PSG_setVolumeMode(&s->ay,2);
+    memset(&s->ay,0,sizeof(s->ay));PSG_setVolumeMode(&s->ay,s->sound_chip==SPECTRUM_YM?1:2);
     s->ay.quality=1;s->ay.rate=s->sample_rate?s->sample_rate:25000;
     PSG_setClock(&s->ay,1750000);PSG_reset(&s->ay);
     s->ay2=s->ay;spectrum_sound_reset(s);
