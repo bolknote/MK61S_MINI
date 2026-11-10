@@ -2,6 +2,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 "$root/tests/picocalc_key_delivery_self_test.py"
+python3 "$root/tests/picocalc_power_button_self_test.py"
 build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-pico-console.XXXXXX")"
 trap 'rm -rf "$build"' EXIT
 flags=()

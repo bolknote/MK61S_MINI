@@ -2,6 +2,8 @@
 #define MK61_PICOCALC_POWER_HPP
 #include "rust_types.h"
 namespace picocalc {
+// Southbridge emits one press for the PMU button, without a release event.
+constexpr u8 POWER_BUTTON = 0x91;
 struct IdleStatistics { u32 waits;u64 wait_us; };
 void idle_until(u64 deadline,bool watch_input=true);
 IdleStatistics idle_statistics();
@@ -29,6 +31,8 @@ private:
 class SleepPolicy {
 public:
   bool asleep() const { return asleep_; }
+  void note_button() { ++button_presses_; }
+  u32 button_presses() const { return button_presses_; }
   void sleep() { asleep_ = true; }
   bool wake(u64 now) {
     const bool was = asleep_;
@@ -44,6 +48,7 @@ public:
 
 private:
   bool asleep_ = false;
+  u32 button_presses_ = 0;
   u64 activity_ = 0;
 };
 } // namespace picocalc

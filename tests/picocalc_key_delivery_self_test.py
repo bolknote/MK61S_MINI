@@ -11,6 +11,7 @@ fixture=r'''
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include "power.hpp"
 using u8=uint8_t;using u32=uint32_t;using u64=uint64_t;
 namespace picocalc {
 enum class Page {CALCULATOR,MAIN};
@@ -25,7 +26,7 @@ struct {
     bool input(u8){++inputs;if(accept)park=false;return accept;}
 } calculator;
 struct {bool pending=false;bool bootloader_pending(){return pending;}}screen;
-struct {bool sleeping=false;unsigned activities=0;bool asleep(){return sleeping;}void activity(u64){++activities;}}power;
+struct {bool sleeping=false;unsigned activities=0,buttons=0;void note_button(){++buttons;}unsigned button_presses(){return buttons;}bool asleep(){return sleeping;}void activity(u64){++activities;}void sleep(){sleeping=true;}}power;
 struct {bool opened=false,accept=false;unsigned calls=0;bool active(){return opened;}bool input(u8){++calls;return accept;}}services;
 struct {
     picocalc::Page value=picocalc::Page::MAIN;bool accept=true;unsigned calls=0;
@@ -38,6 +39,15 @@ void key_click(){++clicks;}void wake(u64){++wakes;power.sleeping=false;}
 @INPUT@
 void reset(){calculator={};screen={};power={};services={};ui={};panel={};clicks=wakes=physical_keys=0;last_physical_key=0;last_activity=0;picocalc::script::accept=false;picocalc::script::calls=0;m61_text::suspended=false;}
 int main(){
+    for(bool physical:{false,true})for(bool active:{false,true}) {
+        reset();services.opened=active;
+        input(picocalc::POWER_BUTTON,physical);
+        assert(power.sleeping && power.button_presses()==1 && !calculator.wakes && !calculator.inputs);
+        assert(!services.calls && !ui.calls && !panel.notes && !clicks && !physical_keys);
+        input(picocalc::POWER_BUTTON,physical); // BIOS sends no release between presses.
+        assert(!power.sleeping && power.button_presses()==2 && wakes==1);
+        assert(!calculator.wakes && !calculator.inputs && !services.calls && !ui.calls && !clicks);
+    }
     reset();input(0xb6,true);input(0xb6,true);input(0xb5,true);
     assert(calculator.park && !calculator.wakes && !calculator.inputs && ui.calls==3);
     assert(panel.notes==3 && clicks==3 && physical_keys==3 && last_physical_key==0xb5 && last_activity==10000);
@@ -69,5 +79,5 @@ fixture='#include <initializer_list>\n'+fixture
 with tempfile.TemporaryDirectory(prefix='picocalc-key-delivery-') as directory:
     root=Path(directory);p=root/'test.cpp';p.write_text(fixture);binary=root/'test'
     flags=['-fsanitize=address,undefined','-fno-omit-frame-pointer'] if os.environ.get('MK61_TEST_SANITIZERS')=='1' else []
-    subprocess.run([os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',*flags,str(p),'-o',str(binary)],check=True)
+    subprocess.run([os.environ.get('CXX','clang++'),'-std=c++17','-O2','-Wall','-Wextra','-Werror',*flags,'-I'+str(ROOT/'ports/picocalc'),'-I'+str(ROOT/'code'),str(p),'-o',str(binary)],check=True)
     subprocess.run([str(binary)],check=True)

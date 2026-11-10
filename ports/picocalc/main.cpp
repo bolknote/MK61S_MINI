@@ -110,6 +110,12 @@ void begin_bootloader() {
 void input(u8 code, bool physical) {
     if(screen.bootloader_pending()) return;
     const u64 pressed_at=time_us_64();
+    if(code==picocalc::POWER_BUTTON) {
+        power.note_button();
+        if(power.asleep()) wake(pressed_at);
+        else { power.activity(pressed_at);power.sleep(); }
+        return;
+    }
     // Moving the selection in an open menu does not need an idle ROM scan.
     // Preserve wake semantics for calculator/services, active work and sleep.
     const bool menu_navigation=!services.active() && !power.asleep() && calculator.parked() &&
@@ -331,11 +337,11 @@ void report(unsigned math_failures) {
         (unsigned long)usb.writes, (unsigned long)usb.read_errors, (unsigned long)usb.write_errors,
         (unsigned long)usb.last_lba, usb.last_scsi);
     std::printf("USB_MAX_GAP_US=%lu\n",(unsigned long)max_usb_gap);
-    std::printf("POWER_MODE=%s SYS_HZ=%lu PERI_HZ=%lu PLL_MASK=%u SLEEP_ENTRIES=%lu BATTERY_SLEEPS=%lu SLEEP_CLOCK0=%08lX SLEEP_CLOCK1=%08lX\n",
-        sleep_clocks.active() ? sleep_clocks.usb_available() ? "SLEEP_USB" : "SLEEP_BATTERY" : "RUN",
+    std::printf("POWER_MODE=%s SYS_HZ=%lu PERI_HZ=%lu PLL_MASK=%u SLEEP_ENTRIES=%lu BATTERY_SLEEPS=%lu SLEEP_CLOCK0=%08lX SLEEP_CLOCK1=%08lX SLEEP_APPLIED=%u POWER_BUTTONS=%lu\n",
+        sleep_clocks.active() ? sleep_clocks.usb_available() ? "SLEEP_USB" : "SLEEP_BATTERY" : power.asleep() && sleep_applied ? "SLEEP_SERVICE" : "RUN",
         (unsigned long)clock_get_hz(clk_sys), (unsigned long)clock_get_hz(clk_peri), sleep_clocks.pll_mask(),
         (unsigned long)sleep_clocks.entries(), (unsigned long)sleep_clocks.battery_entries(),
-        (unsigned long)clocks_hw->sleep_en0,(unsigned long)clocks_hw->sleep_en1);
+        (unsigned long)clocks_hw->sleep_en0,(unsigned long)clocks_hw->sleep_en1,sleep_applied,(unsigned long)power.button_presses());
     const auto date=picocalc::clock::get();
     std::printf("RUNTIME=%s USB_SCREEN=%s SCREEN_FRAMES=%lu SCREEN_ERRORS=%lu SLEEP=%u RTC=%04d-%02d-%02dT%02d:%02d:%02d RTC_SET=%u RTC_PPM=%d\n",
         services.runtime_name(),remote_screen.attached()?"ATTACHED":remote_screen.enabled()?"OFFER":"OFF",
@@ -375,12 +381,79 @@ void usb_service() {
         while(picocalc::clock::take_alarm(alarm)) { wake(now);notification_tone(1000);std::printf("RTC_ALARM=%c\n",'A'+alarm); }
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
 bool key_event(picocalc::KeyEvent& event) {
-    if(keyboard.poll(event)) { physical_event=true;picocalc::controls::event(event);return true; }
-    if(remote_screen.key(event)) { physical_event=false;picocalc::controls::event(event,picocalc::controls::Source::REMOTE);return true; }
-    return false;
+    if(keyboard.poll(event)) physical_event=true;
+    else if(remote_screen.key(event)) physical_event=false;
+    else return false;
+    // PMU keys have no release. Never latch one in an APP's held-key bitmap,
+    // or deliver it to an editor, running script or calculator key queue.
+    if(event.code==picocalc::POWER_BUTTON) {
+        if(event.pressed()) input(event.code,physical_event);
+        return false;
+    }
+    picocalc::controls::event(event,physical_event?picocalc::controls::Source::PHYSICAL:picocalc::controls::Source::REMOTE);
+    return true;
+}
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+bool apply_sleep() {
+    if(power.asleep()==sleep_applied || !panel_ready || keyboard.transaction_pending()) return false;
+    sleep_applied=power.asleep();
+    if(sleep_applied) {
+        save_settings();picocalc::script::tone(0,0);picocalc::script::led_stop();
+        panel.sleep(true);keyboard.backlight(0,0);keyboard.idle(true);
+        // A cooperative APP can own timer/DMA callbacks; USB export can own
+        // an SD transfer. Pause foreground execution without reclocking those
+        // live peripherals or cancelling their state/ownership.
+        if(!services.running() && !picocalc::files::usb_active() && !picocalc::audio_stream::active()) sleep_clocks.enter();
+        keyboard.clock_changed();
+    } else {
+        sleep_clocks.leave();keyboard.clock_changed();keyboard.idle(false);
+        panel.sleep(false);screen.invalidate();keyboard.backlight(ui.settings().lcd_backlight,ui.settings().key_backlight);
+    }
+    return true;
+}
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+void wait_for_wake() {
+    // Keep the caller's APP/VM stack and buffers in place. Only system I/O,
+    // RTC wake and keyboard polling run until the wake event is consumed.
+    while(power.asleep()) {
+        if(sleep_clocks.refresh()) keyboard.clock_changed();
+        usb_service();
+        if(!power.asleep()) break;
+        picocalc::KeyEvent event{};
+        if(key_event(event) && event.pressed()) input(event.code,physical_event);
+        if(!power.asleep()) break;
+        const bool exclusive=terminal.input_active();
+        int c=picocalc::console::read(exclusive,sleep_clocks.usb_available());
+        if(c>=0 && picocalc::console::input_usb()) c=remote_screen.receive((u8)c,millis());
+        if(c>=0 && picocalc::console::accept(c,exclusive)) {
+            if(c==5) report(math_failures);
+            else {
+                terminal.input_source(picocalc::console::input_usb());
+                const int key=terminal.receive((u8)c);
+                if(key>=0 && !picocalc::console::routing.skip_lf(c)) input((u8)key,false);
+                else if(c<0x1D || c>0x1F) { power.activity(time_us_64());wake(time_us_64()); }
+            }
+        }
+        (void)apply_sleep();
+        if(power.asleep()) {
+            const u64 now=time_us_64();
+            u64 deadline=now+(sleep_clocks.usb_available()?1000:80000);
+            if(keyboard.next_poll()>now && keyboard.next_poll()<deadline) deadline=keyboard.next_poll();
+            picocalc::idle_until(deadline);
+        }
+    }
+    (void)apply_sleep();
 }
 bool service_pump(void*, u8& key) {
+    if(power.asleep()) { wait_for_wake();return false; }
     const u64 entered=time_us_64();
     static u64 next_service=0;
     // The VM offers a poll every 32 instructions. Device work needs a
@@ -405,6 +478,7 @@ bool service_pump(void*, u8& key) {
         key_click();
         if(physical_event) { ++physical_keys;last_physical_key=key; } last_activity=now;power.activity(now);return true;
     }
+    if(power.asleep()) { wait_for_wake();return false; }
     const bool exclusive=terminal.input_active();
     int c = picocalc::console::read(exclusive,sleep_clocks.usb_available());
     if(c>=0 && picocalc::console::input_usb()) c=remote_screen.receive((u8)c,(u32)(now/1000));
@@ -416,6 +490,7 @@ bool service_pump(void*, u8& key) {
     if(c != PICO_ERROR_TIMEOUT) {
         const bool skip=picocalc::console::routing.skip_lf(c);
         if(!skip) {
+            if(c==picocalc::POWER_BUTTON) { input((u8)c,false);wait_for_wake();return false; }
             key=(u8)c;picocalc::controls::pulse(key,(u32)(now/1000));power.activity(now);
             return true;
         }
@@ -613,7 +688,10 @@ int main() {
                 terminal.input_source(picocalc::console::input_usb());
                 const int key=terminal.receive((u8)c);
                 const bool skip=picocalc::console::routing.skip_lf(c);
-                if(key>=0 && !skip) { picocalc::controls::pulse((u8)key,millis());input((u8)key,false); }
+                if(key>=0 && !skip) {
+                    if(key!=picocalc::POWER_BUTTON) picocalc::controls::pulse((u8)key,millis());
+                    input((u8)key,false);
+                }
                 else if(c<0x1D || c>0x1F) { power.activity(time_us_64());if(power.asleep()) wake(time_us_64()); }
             }
             if(c>=0x1D && c<=0x1F) break;
@@ -621,17 +699,7 @@ int main() {
         }
         terminal.tick();
         const u64 now = time_us_64();
-        if(power.asleep()!=sleep_applied && panel_ready && !keyboard.transaction_pending()) {
-            sleep_applied=power.asleep();
-            if(sleep_applied) {
-                save_settings();picocalc::script::tone(0,0);picocalc::script::led_stop();
-                panel.sleep(true);keyboard.backlight(0,0);
-                keyboard.idle(true);sleep_clocks.enter();keyboard.clock_changed();
-            } else {
-                sleep_clocks.leave();keyboard.clock_changed();keyboard.idle(false);
-                panel.sleep(false);screen.invalidate();keyboard.backlight(ui.settings().lcd_backlight,ui.settings().key_backlight);next_frame=0;
-            }
-        }
+        if(apply_sleep()) next_frame=0;
         if(power.asleep()) {
             u64 deadline=time_us_64()+(sleep_clocks.usb_available()?1000:80000);
             if(keyboard.next_poll()>time_us_64() && keyboard.next_poll()<deadline) deadline=keyboard.next_poll();

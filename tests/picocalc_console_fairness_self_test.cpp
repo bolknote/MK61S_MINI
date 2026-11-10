@@ -2,6 +2,7 @@
 #include "usb_screen.hpp"
 #include "terminal_core.hpp"
 #include "clock.hpp"
+#include "power.hpp"
 #include <cassert>
 #include <cstdio>
 #include <vector>
@@ -32,14 +33,15 @@ struct MainInputFixture {
     InputBackend backend;
     int forced=INT_MAX;
     unsigned reads=0,reports=0;
+    std::vector<u8> system_keys;
     struct Terminal {
-        bool raw_mode=false,source_usb=false;
+        bool raw_mode=false,source_usb=false,decode_raw=false;
         std::vector<u8> bytes;
         bool raw() const {return raw_mode;}
         bool input_active() const {return false;}
         bool pending() const {return false;}
         void input_source(bool usb) {source_usb=usb;}
-        int receive(u8 byte) {bytes.push_back(byte);return -1;}
+        int receive(u8 byte) {bytes.push_back(byte);return decode_raw?byte:-1;}
     } terminal;
     struct Screen {
         UsbScreen actual;
@@ -79,7 +81,7 @@ namespace {
 u32 millis() {return 10;}
 u64 time_us_64() {return 10000;}
 void report(u32) {++main_input->reports;}
-void input(u8,bool) {assert(false);}
+void input(u8 code,bool physical) {assert(code==POWER_BUTTON && !physical);main_input->system_keys.push_back(code);}
 void wake(u64) {main_input->power.sleeping=false;++main_input->power.wakes;}
 void begin_bootloader() {
     auto& power=main_input->power;auto& screen=main_input->boot_screen;
@@ -147,6 +149,14 @@ bool main_input_regression() {
         }
     }
     assert(cases==24);
+    for(Channel channel:{Channel::USB,Channel::UART}) {
+        MainInputFixture fixture;select_input(fixture,channel,true);fixture.terminal.decode_raw=true;
+        (channel==Channel::USB?fixture.backend.usb:fixture.backend.uart).push_back(POWER_BUTTON);
+        production_main_input(fixture);
+        assert(fixture.system_keys==std::vector<u8>{POWER_BUTTON});
+        assert(fixture.terminal.bytes==std::vector<u8>{POWER_BUTTON});
+        // controls::pulse asserts on any call: a system button must not latch.
+    }
     for(Channel channel:{Channel::USB,Channel::UART}) {
         MainInputFixture fixture;select_input(fixture,channel,true);
         fixture.power.sleeping=channel==Channel::USB;
