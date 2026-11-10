@@ -2,6 +2,7 @@
 #include "mk61_ai_kernels.h"
 #include "mk61_ai_half_product.hpp"
 #include "mk61_ai_exact_fp32.hpp"
+#include "mk61_ai_math.hpp"
 #include <cmath>
 #include <cstring>
 #if defined(PICO_ON_DEVICE)
@@ -132,8 +133,13 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
             }
           }
         }
+#if MK61_AI_FAST_MATH
+        value = math::add(value,math::mul(
+            half_scaled_q4_dot(sum,scale_bits),b.activation_scales[g]));
+#else
         value = exact_fp32::sum(value, exact_fp32::product(
             half_scaled_q4_dot(sum,scale_bits), b.activation_scales[g]));
+#endif
       }
     }
     if (!std::isfinite(value)) {

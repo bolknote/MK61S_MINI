@@ -109,6 +109,8 @@ def main():
     parser.add_argument("--ai-overclock-diagnostic", action="store_true", help="AI diagnostic at qualified270MHz; stock voltage")
     parser.add_argument("--ai-fast-clock", action=argparse.BooleanOptionalAction, default=True,
                         help="Enable qualified270MHz during ordinary AI generation")
+    parser.add_argument("--ai-fast-math", action=argparse.BooleanOptionalAction, default=True,
+                        help="Use measured AI-only math backends with the project runtime")
     parser.add_argument("--ai-psram-late-read", action="store_true",
                         help="Experimental33.3MHz PSRAM reads with later PIO sampling; not hardware qualified")
     parser.add_argument("--audio-clock", action=argparse.BooleanOptionalAction, default=True,
@@ -155,6 +157,8 @@ def main():
         if args.cosmic_clock_diagnostic: source_hash.update(b"cosmic-clock-diagnostic=1\0")
         ai_clock_support=args.ai_fast_clock or args.ai_overclock_diagnostic
         if ai_clock_support: source_hash.update(b"ai-clock270=1\0")
+        ai_fast_math = args.ai_fast_math and not args.compiler_runtime
+        source_hash.update(f"ai-fast-math={int(ai_fast_math)}\0".encode())
         if args.ai_psram_late_read: source_hash.update(b"ai-psram-late-read=1\0")
         if args.audio_clock and not args.cosmic_clock_diagnostic and not ai_clock_support: source_hash.update(b"audio-clock=200\0")
         if args.audio_dma: source_hash.update(b"audio-dma=1\0")
@@ -173,6 +177,7 @@ def main():
              f"-DMK61_PICOCALC_BUILD_ID={build_id}",
              f"-DMK61_PICOCALC_COSMIC_CLOCK_DIAG={'ON' if args.cosmic_clock_diagnostic else 'OFF'}",
              f"-DMK61_PICOCALC_AI_OVERCLOCK={'ON' if ai_clock_support else 'OFF'}",
+             f"-DMK61_PICOCALC_AI_FAST_MATH={'ON' if ai_fast_math else 'OFF'}",
              f"-DMK61_PICOCALC_AI_PSRAM_LATE_READ={'ON' if args.ai_psram_late_read else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_CLOCK={'ON' if args.audio_clock else 'OFF'}",
              f"-DMK61_PICOCALC_AUDIO_DMA={'ON' if args.audio_dma else 'OFF'}",
@@ -228,6 +233,7 @@ def main():
             "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic and not ai_clock_support else None,
             "ai_overclock_diagnostic": args.ai_overclock_diagnostic,
             "ai_fast_clock": ai_clock_support,
+            "ai_fast_math": ai_fast_math,
             "ai_psram_late_read": args.ai_psram_late_read,
             "block_audio_dma": args.audio_dma,
             "m0_libc_candidate": args.m0_libc_candidate,

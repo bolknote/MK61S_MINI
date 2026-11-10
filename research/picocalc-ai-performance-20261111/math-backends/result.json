@@ -1,0 +1,22 @@
+{
+  "status": "PASS_RETAINED",
+  "cpu_hz": 270000000,
+  "build": "7C38C634",
+  "crc": "8A17554E",
+  "reference_seconds_per_token": 0.606,
+  "seconds_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "mean_seconds_per_token": 0.43534125,
+  "less_time_percent": [
+    29.417244224422447,
+    26.905775577557755
+  ],
+  "mean_less_time_percent": 28.16150990099009,
+  "romcache_sha256_before": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+  "romcache_sha256_after": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+  "scalar_source": "scalar-timings.json",
+  "inference_source": "inference-timings.json",
+  "release": "inference-receipt.json"
+}

@@ -2,6 +2,7 @@
 #define MK61_AI_ATTENTION_HPP
 #include "mk61_ai_model.hpp"
 #include "mk61_ai_exact_fp32.hpp"
+#include "mk61_ai_math.hpp"
 #if defined(PICO_ON_DEVICE)
 #define MK61_ATTENTION_CODE __attribute__((section(".ai_attention_extension"),noinline))
 #else
@@ -25,7 +26,7 @@ struct AttentionBatch {
       }
     } else {
       for(unsigned t=0;t<b.rows;++t) {
-        const float factor=b.scores[t]/b.sum;
+        const float factor=math::div(b.scores[t],b.sum);
         for(unsigned j=0;j<b.width;++j) b.output[j]=exact_fp32::sum(b.output[j],exact_fp32::product(factor,b.values[t*b.width+j]));
       }
     }

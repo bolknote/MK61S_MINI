@@ -4,7 +4,17 @@
 .cpu cortex-m0plus
 .thumb
 .macro function name
+#if defined(MK61_AI_FAST_MATH) && MK61_AI_FAST_MATH
+ // The AI-only sqrtf was previously discarded. Give its code/table the
+ // bounded AI Flash gap rather than shifting the measured M0 load images.
+ .ifc \name,mk61_m0_sqrtf
+ .section .ai_math_extension,"ax",%progbits
+ .else
  .section .text.\name,"ax",%progbits
+ .endif
+#else
+ .section .text.\name,"ax",%progbits
+#endif
  .global \name
  .type \name,%function
  .thumb_func

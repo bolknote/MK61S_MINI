@@ -1,0 +1,804 @@
+{
+  "status": "DEVICE_MEASURED",
+  "cpu_hz": 270000000,
+  "clock_restored_hz": 125000000,
+  "operations": [
+    {
+      "operation": "dadd",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 1.575927734375,
+          "cycles_per_call": 425.50048828125,
+          "samples_us_per_call": [
+            1.56201171875,
+            1.60693359375,
+            1.57568359375,
+            1.572265625,
+            1.6298828125,
+            1.576171875
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.46435546875,
+          "cycles_per_call": 125.3759765625,
+          "samples_us_per_call": [
+            0.46533203125,
+            0.46337890625,
+            0.46435546875,
+            0.4638671875,
+            0.46630859375,
+            0.46435546875
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 15,
+          "first_bad_index": 128,
+          "first_expected": "0x80000001",
+          "first_actual": "0x0",
+          "maximum_ulp": 2,
+          "differences_vs_current_resident": 15,
+          "us_per_call": 0.31298828125,
+          "cycles_per_call": 84.5068359375,
+          "samples_us_per_call": [
+            0.31103515625,
+            0.31298828125,
+            0.3134765625,
+            0.310546875,
+            0.31298828125,
+            0.31396484375
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.454345703125,
+          "cycles_per_call": 122.67333984375,
+          "samples_us_per_call": [
+            0.45458984375,
+            0.45361328125,
+            0.455078125,
+            0.45361328125,
+            0.4541015625,
+            0.45556640625
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.484375,
+          "cycles_per_call": 130.78125,
+          "samples_us_per_call": [
+            0.484375,
+            0.484375,
+            0.48388671875,
+            0.48486328125,
+            0.484375,
+            0.48388671875
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 12,
+          "first_bad_index": 140,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0x7f800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 12,
+          "us_per_call": 0.933837890625,
+          "cycles_per_call": 252.13623046875,
+          "samples_us_per_call": [
+            0.93505859375,
+            0.93359375,
+            0.93408203125,
+            0.9345703125,
+            0.93310546875,
+            0.93212890625
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "dsub",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 1.581787109375,
+          "cycles_per_call": 427.08251953125,
+          "samples_us_per_call": [
+            1.57666015625,
+            1.58349609375,
+            1.580078125,
+            1.583984375,
+            1.5556640625,
+            1.59912109375
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.472900390625,
+          "cycles_per_call": 127.68310546875,
+          "samples_us_per_call": [
+            0.47314453125,
+            0.47265625,
+            0.47119140625,
+            0.4736328125,
+            0.4736328125,
+            0.47216796875
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 18,
+          "first_bad_index": 128,
+          "first_expected": "0x1",
+          "first_actual": "0x0",
+          "maximum_ulp": 2,
+          "differences_vs_current_resident": 18,
+          "us_per_call": 0.322998046875,
+          "cycles_per_call": 87.20947265625,
+          "samples_us_per_call": [
+            0.32275390625,
+            0.3232421875,
+            0.322265625,
+            0.3232421875,
+            0.32421875,
+            0.322265625
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.46337890625,
+          "cycles_per_call": 125.1123046875,
+          "samples_us_per_call": [
+            0.4638671875,
+            0.46337890625,
+            0.462890625,
+            0.46337890625,
+            0.462890625,
+            0.4638671875
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.49365234375,
+          "cycles_per_call": 133.2861328125,
+          "samples_us_per_call": [
+            0.49365234375,
+            0.49267578125,
+            0.49365234375,
+            0.49462890625,
+            0.494140625,
+            0.4931640625
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 12,
+          "first_bad_index": 140,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0x7f800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 12,
+          "us_per_call": 0.9521484375,
+          "cycles_per_call": 257.080078125,
+          "samples_us_per_call": [
+            0.95458984375,
+            0.9501953125,
+            0.9521484375,
+            0.953125,
+            0.9521484375,
+            0.95068359375
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "dmul",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 1.599853515625,
+          "cycles_per_call": 431.96044921875,
+          "samples_us_per_call": [
+            1.59375,
+            1.6103515625,
+            1.59912109375,
+            1.60546875,
+            1.6005859375,
+            1.5986328125
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.502197265625,
+          "cycles_per_call": 135.59326171875,
+          "samples_us_per_call": [
+            0.49951171875,
+            0.50244140625,
+            0.50048828125,
+            0.501953125,
+            0.50244140625,
+            0.50439453125
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 27,
+          "first_bad_index": 129,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0xff800000",
+          "maximum_ulp": 1082130429,
+          "differences_vs_current_resident": 27,
+          "us_per_call": 0.249755859375,
+          "cycles_per_call": 67.43408203125,
+          "samples_us_per_call": [
+            0.25146484375,
+            0.24853515625,
+            0.24951171875,
+            0.25,
+            0.2509765625,
+            0.2490234375
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.390625,
+          "cycles_per_call": 105.46875,
+          "samples_us_per_call": [
+            0.38916015625,
+            0.3896484375,
+            0.390625,
+            0.39111328125,
+            0.390625,
+            0.390625
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.603271484375,
+          "cycles_per_call": 162.88330078125,
+          "samples_us_per_call": [
+            0.60400390625,
+            0.603515625,
+            0.6025390625,
+            0.6025390625,
+            0.60302734375,
+            0.60498046875
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 15,
+          "first_bad_index": 129,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0xff800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 15,
+          "us_per_call": 1.1826171875,
+          "cycles_per_call": 319.306640625,
+          "samples_us_per_call": [
+            1.1845703125,
+            1.18212890625,
+            1.18310546875,
+            1.18310546875,
+            1.1806640625,
+            1.1796875
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "ddiv",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 4.29443359375,
+          "cycles_per_call": 1159.4970703125,
+          "samples_us_per_call": [
+            4.30810546875,
+            4.29296875,
+            4.29345703125,
+            4.31005859375,
+            4.29541015625,
+            4.29296875
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 4.333740234375,
+          "cycles_per_call": 1170.10986328125,
+          "samples_us_per_call": [
+            4.32958984375,
+            4.32763671875,
+            4.3369140625,
+            4.33837890625,
+            4.33056640625,
+            4.34130859375
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 27,
+          "first_bad_index": 128,
+          "first_expected": "0x80000000",
+          "first_actual": "0xff800000",
+          "maximum_ulp": 2139095040,
+          "differences_vs_current_resident": 27,
+          "us_per_call": 0.297607421875,
+          "cycles_per_call": 80.35400390625,
+          "samples_us_per_call": [
+            0.29833984375,
+            0.2978515625,
+            0.29736328125,
+            0.296875,
+            0.29736328125,
+            0.2998046875
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.4384765625,
+          "cycles_per_call": 118.388671875,
+          "samples_us_per_call": [
+            0.4384765625,
+            0.4375,
+            0.43896484375,
+            0.4384765625,
+            0.4384765625,
+            0.4384765625
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 1.69482421875,
+          "cycles_per_call": 457.6025390625,
+          "samples_us_per_call": [
+            1.6962890625,
+            1.69580078125,
+            1.693359375,
+            1.6962890625,
+            1.693359375,
+            1.69384765625
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 12,
+          "first_bad_index": 140,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0xff800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 12,
+          "us_per_call": 1.301513671875,
+          "cycles_per_call": 351.40869140625,
+          "samples_us_per_call": [
+            1.2998046875,
+            1.2998046875,
+            1.30126953125,
+            1.3017578125,
+            1.30224609375,
+            1.3017578125
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "sqrt",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 5.3466796875,
+          "cycles_per_call": 1443.603515625,
+          "samples_us_per_call": [
+            5.353515625,
+            5.35400390625,
+            5.34619140625,
+            5.3330078125,
+            5.34716796875,
+            5.341796875
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.298095703125,
+          "cycles_per_call": 80.48583984375,
+          "samples_us_per_call": [
+            0.2978515625,
+            0.29638671875,
+            0.29833984375,
+            0.2958984375,
+            0.298828125,
+            0.29833984375
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 35,
+          "first_bad_index": 130,
+          "first_expected": "0x1a3504f3",
+          "first_actual": "0x0",
+          "maximum_ulp": 536870911,
+          "differences_vs_current_resident": 35,
+          "us_per_call": 0.267822265625,
+          "cycles_per_call": 72.31201171875,
+          "samples_us_per_call": [
+            0.26904296875,
+            0.2685546875,
+            0.26708984375,
+            0.267578125,
+            0.267578125,
+            0.26806640625
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.345703125,
+          "cycles_per_call": 93.33984375,
+          "samples_us_per_call": [
+            0.3447265625,
+            0.3447265625,
+            0.345703125,
+            0.345703125,
+            0.35009765625,
+            0.345703125
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 3.06298828125,
+          "cycles_per_call": 827.0068359375,
+          "samples_us_per_call": [
+            3.0791015625,
+            3.06591796875,
+            3.06298828125,
+            3.06298828125,
+            3.0625,
+            3.0615234375
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 29,
+          "first_bad_index": 131,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0xff800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 29,
+          "us_per_call": 1.066162109375,
+          "cycles_per_call": 287.86376953125,
+          "samples_us_per_call": [
+            1.0673828125,
+            1.06591796875,
+            1.06689453125,
+            1.06640625,
+            1.0654296875,
+            1.06591796875
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "exp",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 18,
+          "first_bad_index": 16,
+          "first_expected": "0x3a74e5ff",
+          "first_actual": "0x3a74e5fe",
+          "maximum_ulp": 1,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 41.82568359375,
+          "cycles_per_call": 11292.9345703125,
+          "samples_us_per_call": [
+            41.85205078125,
+            41.89599609375,
+            41.80615234375,
+            41.80859375,
+            41.8427734375,
+            41.80322265625
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 18,
+          "us_per_call": 3.047119140625,
+          "cycles_per_call": 822.72216796875,
+          "samples_us_per_call": [
+            3.03076171875,
+            3.06640625,
+            3.0634765625,
+            3.0654296875,
+            3.001953125,
+            3.00146484375
+          ]
+        },
+        {
+          "variant": "ROM32",
+          "failures_vs_MPFR": 36,
+          "first_bad_index": 1,
+          "first_expected": "0x355f4cc9",
+          "first_actual": "0x355f4cc8",
+          "maximum_ulp": 4320708,
+          "differences_vs_current_resident": 42,
+          "us_per_call": 1.97607421875,
+          "cycles_per_call": 533.5400390625,
+          "samples_us_per_call": [
+            1.9765625,
+            1.9755859375,
+            1.97900390625,
+            1.97607421875,
+            1.97607421875,
+            1.97607421875
+          ]
+        },
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 26,
+          "first_bad_index": 1,
+          "first_expected": "0x355f4cc9",
+          "first_actual": "0x355f4cc8",
+          "maximum_ulp": 1,
+          "differences_vs_current_resident": 32,
+          "us_per_call": 2.040771484375,
+          "cycles_per_call": 551.00830078125,
+          "samples_us_per_call": [
+            2.044921875,
+            2.0400390625,
+            2.04150390625,
+            2.04052734375,
+            2.041015625,
+            2.0400390625
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 18,
+          "first_bad_index": 16,
+          "first_expected": "0x3a74e5ff",
+          "first_actual": "0x3a74e5fe",
+          "maximum_ulp": 1,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 13.340087890625,
+          "cycles_per_call": 3601.82373046875,
+          "samples_us_per_call": [
+            13.34716796875,
+            13.33984375,
+            13.34033203125,
+            13.33837890625,
+            13.34423828125,
+            13.3388671875
+          ]
+        },
+        {
+          "variant": "ROM64",
+          "failures_vs_MPFR": 4,
+          "first_bad_index": 162,
+          "first_expected": "0x7fc00000",
+          "first_actual": "0x7f800000",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 22,
+          "us_per_call": 3.431396484375,
+          "cycles_per_call": 926.47705078125,
+          "samples_us_per_call": [
+            3.43017578125,
+            3.42822265625,
+            3.43310546875,
+            3.4326171875,
+            3.4306640625,
+            3.43212890625
+          ]
+        }
+      ]
+    },
+    {
+      "operation": "round",
+      "variants": [
+        {
+          "variant": "resident",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.13330078125,
+          "cycles_per_call": 35.9912109375,
+          "samples_us_per_call": [
+            0.13330078125,
+            0.134765625,
+            0.1328125,
+            0.1328125,
+            0.1337890625,
+            0.13330078125
+          ]
+        },
+        {
+          "variant": "own-inline-or-kernel",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.167236328125,
+          "cycles_per_call": 45.15380859375,
+          "samples_us_per_call": [
+            0.1669921875,
+            0.1669921875,
+            0.16748046875,
+            0.16650390625,
+            0.16748046875,
+            0.16796875
+          ]
+        },
+        null,
+        {
+          "variant": "ROM32-guarded",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.16650390625,
+          "cycles_per_call": 44.9560546875,
+          "samples_us_per_call": [
+            0.16650390625,
+            0.16650390625,
+            0.1669921875,
+            0.16748046875,
+            0.16650390625,
+            0.166015625
+          ]
+        },
+        {
+          "variant": "GCC-newlib-local",
+          "failures_vs_MPFR": 0,
+          "first_bad_index": 4294967295,
+          "first_expected": "0x0",
+          "first_actual": "0x0",
+          "maximum_ulp": 0,
+          "differences_vs_current_resident": 0,
+          "us_per_call": 0.167236328125,
+          "cycles_per_call": 45.15380859375,
+          "samples_us_per_call": [
+            0.16748046875,
+            0.16845703125,
+            0.16748046875,
+            0.16552734375,
+            0.16552734375,
+            0.1669921875
+          ]
+        },
+        null
+      ]
+    }
+  ]
+}

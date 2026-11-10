@@ -1,0 +1,29 @@
+{
+  "base_commit": "e8b706dbe54ce04f2cd515ca71e1b0b5832195d7",
+  "production_changes": [
+    "code/mk61_ai_math.hpp",
+    "ports/picocalc/ai_math.cpp",
+    "code/mk61_ai_model.cpp",
+    "code/mk61_ai_linear.cpp",
+    "ports/picocalc/CMakeLists.txt",
+    "tools/firmware/picocalc/build_picocalc.py",
+    "code/mk61_ai_attention.hpp",
+    "code/native_eabi_m0.S",
+    "ports/picocalc/m0_math_extension.ld"
+  ],
+  "root_WIP_imported": false,
+  "AI_only_math": true,
+  "PSRAM_late_read": false,
+  "four_features_retained": true,
+  "pins": {
+    "code/mk61_ai_math.hpp": "034b7eaee7a94c708e52711197fbbc40f27ee993f22fc5d4ed8eb25caeddb895",
+    "ports/picocalc/ai_math.cpp": "d084b4157982d5535db07b0f6ab5ab940806032632cdf0bca9b45462d82a2327",
+    "code/mk61_ai_model.cpp": "85fa4c5477290f615261e5e92714fed9b6848f1815cacaa18a8504cfa17be268",
+    "code/mk61_ai_linear.cpp": "e9311e0425aa55ce5fa1d577dc70689d1d4b5c750588db451549f0129ca57515",
+    "ports/picocalc/CMakeLists.txt": "b79e16faa2d316994f80f9187a9166f39271aac507299cf33bd4133efcb20f88",
+    "tools/firmware/picocalc/build_picocalc.py": "c376813e58a82af5880f2a94580a40fad4985fcbee695837ca486be114eef0e7",
+    "code/mk61_ai_attention.hpp": "190f5d4d4d9dacbf147b035c354807e0879a628843af0ede163a7cedc1103898",
+    "code/native_eabi_m0.S": "9f09cad1440d6dea0acdc9da6a80d0191f6d1f50924c75991bdc423f921d6265",
+    "ports/picocalc/m0_math_extension.ld": "8d8bc87a3a8b9326409e19db6084da9413c81ccdfe8332afcc2374f3282fdee8"
+  }
+}

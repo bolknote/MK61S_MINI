@@ -50,6 +50,10 @@ endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
+include(CMakeDependentOption)
+cmake_dependent_option(MK61_PICOCALC_AI_FAST_MATH "Measured AI-only IEEE math backends"
+    ON "MK61_PICOCALC_M0_EABI" OFF)
+add_compile_definitions(MK61_AI_FAST_MATH=$<BOOL:${MK61_PICOCALC_AI_FAST_MATH}>)
 set(MK61_PICOCALC_M0_LIBC_CANDIDATE "0" CACHE STRING "Diagnostic-only eight-function M0 libc batch; 0 keeps measured defaults")
 if(NOT MK61_PICOCALC_M0_LIBC_CANDIDATE MATCHES "^(0|1|2|4|8|16)$")
     message(FATAL_ERROR "Unknown M0 libc candidate")
@@ -60,7 +64,7 @@ endif()
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
 option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing control" ON)
 add_executable(mk61s-picocalc-pico-h
-    main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp
+    main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp ai_math.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
     dma_support.cpp psram.cpp external_cache.cpp buffers.cpp audio_stream.cpp m3_audio.cpp
     "${MK61_ROOT}/sdk/coproc/pico_uart1.c"
@@ -154,6 +158,7 @@ set_source_files_properties("${MK61_ROOT}/code/mk61emu_core.cpp"
 # Keep the typed arithmetic ABI separate from the APP table's erased function
 # declarations, including in builds where the user enables global LTO.
 # On Thumb-1, -Os also avoids the extra spills seen in the -O3 runtime build.
+set_source_files_properties(ai_math.cpp PROPERTIES COMPILE_OPTIONS "-O3;-fno-lto")
 set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
     PROPERTIES COMPILE_OPTIONS "-Os;-fno-lto")
 set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0_cr.cpp"

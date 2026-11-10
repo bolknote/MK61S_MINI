@@ -1,4 +1,5 @@
 #include "mk61_ai_model.hpp"
+#include "mk61_ai_math.hpp"
 #include "mk61_ai_attention.hpp"
 #include "mk61_ai_kv_stream.hpp"
 #include "mk61_ai_kernels.h"
@@ -91,6 +92,7 @@ bool Model::tensor(unsigned index, Tensor &t) const {
   return read(header_[15] + index * 32, &t, sizeof(t));
 }
 ModelStatus Model::open(Memory package, bool verify) {
+  math::initialize();
   package_ = package;
   workspace_ = nullptr;
   bound_ = 0;
@@ -346,12 +348,12 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           status = ModelStatus::NUMERIC;
           return false;
         }
-        const float scale = maximum / 127.0f;
+        const float scale = math::div(maximum,127.0f);
         activation_scales[g] = scale;
         std::int32_t activation_sum=0;
         for (unsigned j = 0; j < 32; ++j) {
           quant[g * 32 + j] =
-              scale ? std::int8_t(std::round(input[g * 32 + j] / scale)) : 0;
+              scale ? std::int8_t(math::round(math::div(input[g * 32 + j],scale))) : 0;
           activation_sum+=quant[g * 32 + j];
         }
         // INT8 does not need the LUT; reuse its existing storage for exact
@@ -734,15 +736,15 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       float sum = 0;
       for (unsigned j = 0; j < width; ++j) {
         const float value = input[g * width + j];
-        sum += value * value;
+        sum = math::add(sum,math::mul(value,value));
       }
-      const float factor = 1.0f / std::sqrt(sum / float(width) + c.epsilon);
+      const float factor = math::div(1.0f,math::sqrt(math::add(math::div(sum,float(width)),c.epsilon)));
       if (!std::isfinite(factor)) {
         status = ModelStatus::NUMERIC;
         return false;
       }
       for (unsigned j = 0; j < width; ++j)
-        dest[g * width + j] = (input[g * width + j] * factor) * weights[j];
+        dest[g * width + j] = math::mul(math::mul(input[g * width + j],factor),weights[j]);
     }
     return true;
   };
@@ -770,8 +772,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           float &right = values[h * c.head_dim + j + c.head_dim / 2];
           const float old = left, cosine = rotary[2 * j],
                       sine = rotary[2 * j + 1];
-          left = old * cosine - right * sine;
-          right = right * cosine + old * sine;
+          left = math::sub(math::mul(old,cosine),math::mul(right,sine));
+          right = math::add(math::mul(right,cosine),math::mul(old,sine));
         }
     }
     const auto attention_started=forward_stamp();
@@ -780,7 +782,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         !transfer(cache_, layer_offset + position_ * kn * 8 + kn * 4, v, kn * 4,
                   true))
       return ModelStatus::IO;
-    const float attention_scale = 1.0f / std::sqrt(float(c.head_dim));
+    const float attention_scale = math::div(1.0f,math::sqrt(float(c.head_dim)));
     auto read_attention=[&](unsigned offset,float *out,unsigned bytes) {
       compute_metrics_.attention_read_bytes+=bytes;
       ++compute_metrics_.attention_read_transactions;
@@ -803,7 +805,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         maximum = std::max(maximum, scores[t]);
       }
       for (unsigned t = 0; t <= position_; ++t) {
-        scores[t] = std::exp(scores[t] - maximum);
+        scores[t] = math::exp(math::sub(scores[t],maximum));
         sum += scores[t];
       }
       if (!std::isfinite(sum) || sum <= 0)
@@ -846,7 +848,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         for(unsigned lane=0;lane<lanes;++lane) {
           for(unsigned t=0;t<=position_;++t) {
             float &score=scores[lane*c.context+t];
-            score=std::exp(score-maximum[lane]);sum[lane]+=score;
+            score=math::exp(math::sub(score,maximum[lane]));sum[lane]=math::add(sum[lane],score);
           }
           if(!std::isfinite(sum[lane]) || sum[lane]<=0) return ModelStatus::NUMERIC;
           const unsigned h=kh*queries+first+lane;
@@ -874,16 +876,16 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     if (!linear(base + 6, a, o, false))
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)
-      x[j] += o[j];
+      x[j] = math::add(x[j],o[j]);
     if (!normalize(base + 7, x, n, 1, c.hidden) ||
         !linear(base + 8, n, gate, false) || !linear(base + 9, n, up, false,true))
       return status;
     for (unsigned j = 0; j < c.intermediate; ++j)
-      gate[j] = (gate[j] / (1.0f + std::exp(-gate[j]))) * up[j];
+      gate[j] = math::mul(math::div(gate[j],math::add(1.0f,math::exp(-gate[j]))),up[j]);
     if (!linear(base + 10, gate, o, false))
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)
-      x[j] += o[j];
+      x[j] = math::add(x[j],o[j]);
   }
   const auto classifier_started = forward_stamp();
   compute_metrics_.layers_us = classifier_started - layers_started;

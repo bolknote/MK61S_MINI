@@ -1,0 +1,43 @@
+{
+  "status": "PASS",
+  "actual_candidate_elf": true,
+  "actual_ROM3": true,
+  "FP32_ROM_lookup_initialized": true,
+  "operations": [
+    {
+      "function": "_ZN6mk61ai4math3addEff",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "_ZN6mk61ai4math3subEff",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "_ZN6mk61ai4math3mulEff",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "_ZN6mk61ai4math3divEff",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "_ZN6mk61ai4math4sqrtEf",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "_ZN6mk61ai4math3expEf",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    },
+    {
+      "function": "roundf",
+      "cases": 192,
+      "MPFR_mismatches": 0
+    }
+  ]
+}

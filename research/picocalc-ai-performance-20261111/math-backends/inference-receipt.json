@@ -1,0 +1,58 @@
+{
+  "status": "PASS_RETAINED",
+  "reference_seconds_per_token": 0.606,
+  "historical_control_rerun": false,
+  "model_rewritten": false,
+  "reference_kind": "independent HOST model using actual selected ARM exp; old greedy tokens retained, new bit checksums",
+  "entry": {
+    "build": "5D0A3631",
+    "crc": "B836FE58",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "firmware_flashed": true,
+  "candidate_ready": {
+    "build": "7C38C634",
+    "crc": "8A17554E",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "seconds_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "faster_than_reference": true,
+  "stress_iterations": 9479,
+  "tokens_match_historical": true,
+  "candidate_checksums_match_HOST": true,
+  "prior_perf_files_restored": 3,
+  "owned_temp_removed": true,
+  "final": {
+    "build": "7C38C634",
+    "crc": "8A17554E",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "CDC_closed": true,
+  "lease_closed": true
+}

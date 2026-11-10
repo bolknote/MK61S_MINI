@@ -175,5 +175,14 @@ SECTIONS {
            "M0 pow hot path overlaps refinement")
     ASSERT(SIZEOF(.m0_pow_refine_extension) <= 0x18000,
            "M0 pow refinement overlaps comparison reference")
+    /* Newly live AI-only float sqrt code/table: fixed free Flash space. */
+    .ai_math_extension 0x101b5400 : {
+        *(.ai_math_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.ai_fp32_extension) + SIZEOF(.ai_fp32_extension) <= ADDR(.ai_math_extension),
+           "AI FP32 helpers overlap AI math")
+    ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= 0x101c0000,
+           "AI math overlaps persistent ROMCACHE")
 }
 INSERT AFTER .flash_end;
