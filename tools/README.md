@@ -1,17 +1,19 @@
 # Инструменты MK61S
 
-В корне находятся две пользовательские команды:
+В корне находятся три пользовательские команды:
 
 | Команда | Назначение |
 | --- | --- |
 | `mkc.cmd` | Файловый менеджер: копирование, просмотр и работа с файлами устройства |
 | `mk61-firmware.cmd` | Выбор профиля, сборка прошивки, DFU-загрузка STM32 и установка программ |
+| `games.cmd` | Выбор, проверенное скачивание сторонних игр и сборка игровых APP |
 
 Лаунчеры работают на Windows и macOS/Linux. Без `--target` сборщик открывает
 привычное меню STM32. Для PicoCalc выберите `--target picocalc-pico-h`.
 
 ```sh
 ./tools/mkc.cmd --help
+./tools/games.cmd
 ./tools/mk61-firmware.cmd --list-targets
 ./tools/mk61-firmware.cmd --mcu f411 --profile classic-v3 --build
 ./tools/mk61-firmware.cmd --target picocalc-pico-h --build --fetch-sdk
@@ -38,6 +40,7 @@ PowerShell. Другие программы должны освободить п
 | Каталог | Инструменты и назначение |
 | --- | --- |
 | `mkc/` | `mkc.sh`, `mkc.ps1` — клиенты; `m8_codec.pl` — M8-кодек Bash-клиента |
+| `games/` | `games.sh` + `manager.py` — macOS/Linux; нативный `games.ps1` — Windows без Python; `catalog.json` — общий каталог, SHA-256 и команды игровых APP |
 | `firmware/cli/` | Bash- и PowerShell-меню пользовательского сборщика |
 | `firmware/stm32/` | `build-gcc.cmd`, `build.ps1` — прямая GCC-сборка; `build-standalone.py` — CLI/CI-сборка; `build_f401_bundle.sh` — native-комплект с System и пользовательскими APP-манифестами; `install_gcc_dependencies.py`, `.ps1` — установка закреплённого GCC; CMake, SDK, compile policy и проверки Flash/RAM |
 | `firmware/picocalc/` | `firmware.py` — общий вход; `build_picocalc.py` — прошивка; `package_picocalc.py` — проверка и упаковка комплекта |

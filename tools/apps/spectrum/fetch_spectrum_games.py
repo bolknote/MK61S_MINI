@@ -47,7 +47,12 @@ def download_package(package, entries, cache):
     if package['id'] == 'ianna':
         data = fetch(package['download_url'], package['sha256'], package['title'])
     elif package['id'] == 'cosmic-payback':
-        tap = fetch(package['download_url'], package['download_sha256'], 'Cosmic Payback TAP')
+        upstream = cache / 'Cosmic-Payback.tap'
+        if upstream.exists():
+            tap = checked(upstream.read_bytes(), package['download_sha256'], str(upstream))
+        else:
+            tap = fetch(package['download_url'], package['download_sha256'], 'Cosmic Payback TAP')
+            upstream.write_bytes(tap)
         notice = (LIBRARY / 'cosmic-payback/LICENSE.TXT').read_bytes()
         data = package_zip({'COSMIC.TAP': tap, 'LICENSE.TXT': notice})
     else:
@@ -86,13 +91,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--cache', type=Path, default=LIBRARY.parents[1] / '.build/spectrum-downloads')
     parser.add_argument('--archives-only', action='store_true', help='download packages without building GAMES.img')
+    parser.add_argument('--package', action='append', dest='packages', metavar='ID',
+                        help='download only this catalog package; may be repeated')
     args = parser.parse_args()
     args.cache.mkdir(parents=True, exist_ok=True)
     catalog = json.loads((LIBRARY / 'catalog.json').read_text())
-    for package in catalog['packages']:
+    available = {package['id']: package for package in catalog['packages']}
+    selected = args.packages or list(available)
+    unknown = [package_id for package_id in selected if package_id not in available]
+    if unknown:
+        parser.error('unknown package: ' + ', '.join(unknown))
+    for package_id in dict.fromkeys(selected):
+        package = available[package_id]
         entries = [e for e in catalog['entries'] if e['package'] == package['id']]
         download_package(package, entries, args.cache)
     if not args.archives_only:
+        if set(selected) != set(available):
+            parser.error('building GAMES.img requires every package; use --archives-only for a subset')
         source = SOURCES['esxdos089.zip']
         esxdos = args.cache / 'esxdos089.zip'
         if not esxdos.exists():
