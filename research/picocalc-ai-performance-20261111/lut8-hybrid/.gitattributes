@@ -1,0 +1,4 @@
+# Preserve the exact serial evidence and its recorded SHA256 hashes.
+hardware-002/serial.bin binary
+**/*.txt -text -whitespace
+*.log -text -whitespace

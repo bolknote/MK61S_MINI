@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/lut8-hybrid-20261111/run-hardware.py", line 116, in execute
+    assert digest and digest[1].decode() in plan['accepted_model_sha256'] and b'ERROR' not in reply
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

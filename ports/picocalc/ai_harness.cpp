@@ -176,7 +176,7 @@ bool parse_code(const char *source, u8 out[PROGRAM_SIZE], unsigned &count) {
 }
 struct UI {
   explicit UI(const Host &h) : host(h), store(disk()), agent(s, store, model) {
-    auto memory_plan=model.execution();memory_plan.tile_rows=28;
+    auto memory_plan=model.execution();memory_plan.tile_rows=28;memory_plan.lut8=true;
     model.execution(memory_plan);
     agent.clock(
         [](void *p) { return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS); },
@@ -492,6 +492,10 @@ struct UI {
   static bool package_read_finish(void *p) {
     return static_cast<UI *>(p)->package.read_finish();
   }
+  static bool package_write(void *p,std::uint32_t at,const void *data,unsigned n) {
+    auto& u=*static_cast<UI*>(p);u.psram_writes+=n;
+    return u.package.write(at,data,n);
+  }
   static bool cache_read_begin(void *p,const block_io::ReadSpan *spans,unsigned count) {
     auto &u=*static_cast<UI*>(p);
     if(!u.cache.read_begin(spans,count)) return false;
@@ -510,6 +514,7 @@ struct UI {
     e.context = this;e.kernel = linear_kernel;e.filter_head = filter_head;
     e.tile_rows = benchmarking && m3_core ? 64 : 28;
     e.prefetch = double_buffer;
+    e.lut8 = true;
     e.micros = [](void *p) {
       return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS);
     };
@@ -758,10 +763,17 @@ AI_COLD_CODE bool UI::ensure_model() {
   read_package();
   profile_stage("model-open");
   ModelStatus status = ModelStatus::MEMORY;
+  auto open_package=[&]() {
+    status=model.open({this,info.size,package_read,package_write,
+                       package_read_begin,package_read_finish});
+    if(status==ModelStatus::OK) {
+      profile_stage("model-repack");
+      status=model.repack_lut8(service,this);
+    }
+    return status==ModelStatus::OK;
+  };
   if (ok) {
-    status = model.open({this, info.size, package_read, nullptr,
-                         package_read_begin, package_read_finish});
-    ok = status == ModelStatus::OK;
+    ok=open_package();
   }
   if (ok) {
     profile_stage("cache-allocate");
@@ -778,9 +790,7 @@ AI_COLD_CODE bool UI::ensure_model() {
                          shared_memory::BufferAccess::EXTERNAL_ONLY);
       read_package();
       if(ok) {
-        status=model.open({this,info.size,package_read,nullptr,
-                           package_read_begin,package_read_finish});
-        ok=status==ModelStatus::OK && model.cache_bytes()==cache_bytes;
+        ok=open_package() && model.cache_bytes()==cache_bytes;
       }
     }
     if (ok) {
@@ -2538,6 +2548,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
     std::uint64_t decode_layers_us=0,decode_classifier_us=0;
     std::uint64_t decode_presentation_us=0,decode_service_us=0;
     std::uint32_t decode_service_calls=0,decode_kv_reads=0,decode_kv_batches=0;
+    std::uint32_t lut8_preparations=0,lut8_reuses=0,lut8_rows=0;
     std::uint32_t remote_jobs=0,remote_rows=0,remote_fallbacks=0;
     std::uint64_t remote_prepare_us=0,remote_submit_us=0,remote_wait_us=0;
     ai_m3::Statistics m3{};
@@ -2638,6 +2649,8 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
       result.matmul_us+=model.compute_metrics().matmul_us;
       result.wait_us+=model.compute_metrics().wait_us;
       const auto &metrics=model.compute_metrics();
+      result.lut8_preparations+=metrics.lut8_preparations;
+      result.lut8_reuses+=metrics.lut8_reuses;result.lut8_rows+=metrics.lut8_rows;
       result.remote_jobs+=metrics.remote_jobs;
       result.remote_rows+=metrics.remote_rows;
       result.remote_fallbacks+=metrics.remote_fallbacks;
@@ -2894,7 +2907,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
         "\"max_step_us\":%lu,\"rows\":%lu,\"skipped_rows\":%lu,\"worker_jobs\":%lu,\"worker_rows\":%lu,"
         "\"prefetches\":%lu,\"prefetched_bytes\":%lu,\"read_us\":%llu,\"matmul_us\":%llu,\"wait_us\":%llu,"
         "\"decode_layers_us\":%llu,\"decode_classifier_us\":%llu,"
-        "\"decode_presentation_us\":%llu,\"decode_service_us\":%llu,\"decode_service_calls\":%lu,\"decode_kv_reads\":%lu,\"decode_kv_batches\":%lu,\"next\":[",
+        "\"decode_presentation_us\":%llu,\"decode_service_us\":%llu,\"decode_service_calls\":%lu,\"decode_kv_reads\":%lu,\"decode_kv_batches\":%lu,",
         i>(archived?1U:0U)?",":"",i,r.prefill,(unsigned long long)r.prefill_us,r.decode,(unsigned long long)r.decode_us,
         (unsigned long)r.max_step_us,(unsigned long)r.rows,(unsigned long)r.skipped,(unsigned long)r.jobs,
         (unsigned long)r.worker_rows,(unsigned long)r.prefetches,(unsigned long)r.prefetched_bytes,
@@ -2902,6 +2915,8 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
         (unsigned long long)r.decode_layers_us,(unsigned long long)r.decode_classifier_us,
         (unsigned long long)r.decode_presentation_us,(unsigned long long)r.decode_service_us,
         (unsigned long)r.decode_service_calls,(unsigned long)r.decode_kv_reads,(unsigned long)r.decode_kv_batches);
+    append("\"lut8_preparations\":%lu,\"lut8_reuses\":%lu,\"lut8_rows\":%lu,\"next\":[",
+        (unsigned long)r.lut8_preparations,(unsigned long)r.lut8_reuses,(unsigned long)r.lut8_rows);
     for(unsigned j=0;j<r.completed;++j) append("%s%u",j?",":"",unsigned(r.next[j]));
     append("],\"checksums\":[");
     for(unsigned j=0;j<r.completed;++j) append("%s\"%08lx\"",j?",":"",(unsigned long)r.checksum[j]);

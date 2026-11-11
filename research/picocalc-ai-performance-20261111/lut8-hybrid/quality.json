@@ -1,0 +1,35 @@
+{
+  "status": "HOST_AND_DEVICE_QUALIFIED",
+  "reference_seconds_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "source_model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "hybrid_model_sha256": "caa18a78aea45027d5e5857f1ab91d22c7790a802f39c6549243698508025798",
+  "hybrid_model_tag": "MKA-681C0371-2093896",
+  "context_positions": 512,
+  "KV_bytes": 2621440,
+  "all_logits_bit_exact": true,
+  "all_KV_bit_exact": true,
+  "workspace_growth_bytes": 2064,
+  "SRAM_code_growth_bytes": 768,
+  "heap_capacity_bytes": 108924,
+  "native_ARM_real_tiles": 24,
+  "native_ARM_stack_bytes": 216,
+  "activation_LUT_prepared_once_and_reused": true,
+  "normal_chat_fast_mode": true,
+  "DMA_prefetch_preserved": true,
+  "shared_batched_parallel_KV_preserved": true,
+  "LCD_freeze_pause_cancel_preserved": true,
+  "host_logs": {
+    "prefetch-hybrid.log": "cf929c8e6fab85f2c5043eb8e696f4be55a51265066c4b72454a31205daa5dc1",
+    "full.log": "06be3257dc767658bf32ebd641a19b4693f063fb09f13ba7d27b8dbc2834a6b0",
+    "repack.log": "f25f2ff0e317e9dc983d13ce35e8e1f3b238e87ab6152ba91e3356de1fca3c9b",
+    "native-ui.log": "d2d2d6fffdc90935e6b72141aadccb369c19a7d56f6b0e2b5e4a3ce27042139e",
+    "repack-native.log": "e158d2597381680576e1f0be8848337dd7f005e0717352bfa6755a634c87f1be"
+  },
+  "firmware_manifest_sha256": "0b15c3de98e4029eaa30ab982b602ad49cbaf706aec98121469bbd4065a7ef67",
+  "firmware_build": "C99DE0AF",
+  "firmware_crc32": "528F4874",
+  "device_summary": "summary.json"
+}

@@ -1,0 +1,72 @@
+{
+  "status": "MEASURED",
+  "firmware_flashes": 1,
+  "inference_runs": 1,
+  "M3_writes": 0,
+  "global_model_writes": 0,
+  "reference_seconds_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "historical_baseline_rerun": false,
+  "entry_counters": {
+    "BOOTS": "19",
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "I2C_TIMEOUTS": "9",
+    "IO_I2C_RESETS": "9",
+    "keyboard_errors": "9"
+  },
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "post_flash_counters": {
+    "BOOTS": "20",
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "I2C_TIMEOUTS": "0",
+    "IO_I2C_RESETS": "0",
+    "keyboard_errors": "0"
+  },
+  "ambient_post_flash_telemetry": {
+    "I2C_TIMEOUTS": "0",
+    "IO_I2C_RESETS": "0",
+    "keyboard_errors": "0",
+    "I2C_ABORTS": "0"
+  },
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "seconds_per_token": [
+    0.4123725,
+    0.4285335
+  ],
+  "faster_than_reference": false,
+  "prior_perf_restored": [
+    "PERF.CFG",
+    "PERF.JSON",
+    "PERF.REF"
+  ],
+  "temporary_removed": true,
+  "counters_after": {
+    "BOOTS": "20",
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "I2C_TIMEOUTS": "0",
+    "IO_I2C_RESETS": "0",
+    "keyboard_errors": "0"
+  },
+  "CDC_closed": true,
+  "lease_closed": true
+}

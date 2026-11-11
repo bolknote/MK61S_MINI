@@ -1,0 +1,179 @@
+{
+  "status": "NATIVE_ARM_ROM_PASS",
+  "physical_io": false,
+  "cases": [
+    {
+      "id": 0,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 1,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 2,
+      "columns": 384,
+      "rows": 8,
+      "kernel": "direct",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 3,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 4,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 5,
+      "columns": 128,
+      "rows": 16,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 6,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 7,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 8,
+      "columns": 384,
+      "rows": 8,
+      "kernel": "direct",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 9,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 10,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 11,
+      "columns": 128,
+      "rows": 16,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 12,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 13,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 14,
+      "columns": 384,
+      "rows": 8,
+      "kernel": "direct",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 15,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 16,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 17,
+      "columns": 128,
+      "rows": 16,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 18,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 19,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 20,
+      "columns": 384,
+      "rows": 8,
+      "kernel": "direct",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 21,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 22,
+      "columns": 128,
+      "rows": 28,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    },
+    {
+      "id": 23,
+      "columns": 128,
+      "rows": 16,
+      "kernel": "LUT8",
+      "whole_and_split_bit_exact": true
+    }
+  ],
+  "whole_and_split_checks": 48,
+  "maximum_kernel_stack_bytes": 216,
+  "firmware_sha256": "4139bcb17c802288c93c2ab6efa5248f996166874ffb0b2b7bf20f8a18c88bb0",
+  "fixtures_sha256": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+  "new_kernel_and_prepare_in_SRAM": true
+}

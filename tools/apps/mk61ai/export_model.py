@@ -127,7 +127,8 @@ def export(weights, tokenizer, output, layout='linear', vocab_limit=None):
             if codes != shape[0]*shape[1]*bits//8 or len(chunk)-codes != shape[0]*shape[1]//16:
                 raise ValueError("Invalid matrix group sizes")
             packed=chunk[:codes]
-            if layout=='lut':
+            planes=layout=='lut' or (layout=='hybrid' and bits==4 and shape[1]==128)
+            if planes:
                 reordered=bytearray(codes)
                 for group in range(shape[0]*shape[1]//32):
                     original=packed[group*4*bits:(group+1)*4*bits]
@@ -137,7 +138,7 @@ def export(weights, tokenizer, output, layout='linear', vocab_limit=None):
                             index=sum(((values[quartet*4+j]>>bit)&1)<<j for j in range(4))
                             reordered[group*4*bits+bit*4+quartet//2]|=index<<(4*(quartet%2))
                 packed=bytes(reordered)
-            record = (*shape,bits,(0 if bits==4 else 1)|(256 if layout=='lut' else 0),append(packed),append(chunk[codes:]),codes,len(chunk)-codes)
+            record = (*shape,bits,(0 if bits==4 else 1)|(256 if planes else 0),append(packed),append(chunk[codes:]),codes,len(chunk)-codes)
         struct.pack_into("<8I",blob,tensor_offset+32*i,*record)
     vocab = tok["model"]["vocab"]
     if len(vocab) != cfg["vocab_size"] or set(vocab.values()) != set(range(len(vocab))):
@@ -219,7 +220,7 @@ def main():
     p.add_argument('--weights',type=Path,required=True)
     p.add_argument('--tokenizer',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--layout',choices=['linear','lut'],default='lut')
+    p.add_argument('--layout',choices=['linear','lut','hybrid'],default='lut')
     p.add_argument('--vocab-limit',type=int,help='Experimental prefix pruning; needs separate quality evaluation')
     a=p.parse_args();export(a.weights,a.tokenizer,a.output,a.layout,a.vocab_limit)
 

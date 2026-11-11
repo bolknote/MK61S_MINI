@@ -1,0 +1,26 @@
+Pico source fault recovery: partial bank writes/seek reads, retained unsaved edits, failed replacement, bounded SRAM and owner cleanup PASS
+Optional folder icon diagnostic: []
+Pico Explorer: 9 native tiles, zero SD reads on selection, revision/invalid icon fallback, paging, folder bypass and buffer lifetime PASS
+Opaque harness: all102400 pixels replaced exactly once; identical RGB565 over magenta/green previous frames PASS
+AI_CHAT_RESULT task=1 program=1 tokens=0 elapsed_ms=12 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=11000
+AI_CHAT_RESULT task=100 program=1 tokens=0 elapsed_ms=14 execution=1 X=12
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=1000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=7000
+AI_CHAT_RESULT task=150 program=1 tokens=0 elapsed_ms=10 execution=1 X=0.3746066
+AI_CHAT_PROFILE input=0 reused=0 prefill_us=0 decode_us=0 tool_us=2000 load_us=0 prompt_us=0 attention_us=0 attention_io_us=0 linear_read_us=0 matmul_us=0 wait_us=0 workers=0 heap_peak=0 stack_peak=0 service_gap_us=2000
+Native dark chat: journal paging, real core sine, zero fabricated model tokens, F1/F7 expansion and calculator isolation PASS
+PicoCalc native AI UI: real APP service, keyboard/forms, emulator tests, case edit invalidation, input angle, apply backup and session resume PASS
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.001s
+
+OK
+Firmware/ROMCACHE boundary: observed1836020-byte overlap rejected before packaging PASS
+AI Flash clock:125/div4 ->270/div6 ->125/div4; <=50MHz throughout100 cycles PASS
+Only270MHz AI QPI-read profile changes; divider461, PIO <=150000000Hz PASS
+Only270MHz AI QPI-read profile changes; divider346, PIO <=200000000Hz PASS

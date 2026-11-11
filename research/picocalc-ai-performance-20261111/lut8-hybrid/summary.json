@@ -1,0 +1,80 @@
+{
+  "status": "DEVICE_MEASURED_BOTH_CORRESPONDING_PASSES_FASTER",
+  "rows": [
+    {
+      "pass_number": 1,
+      "reference_seconds_per_token": 0.4277315,
+      "candidate_seconds_per_token": 0.4123725,
+      "wall_improvement_percent": 3.590804044125817,
+      "matmul_improvement_percent": 19.17713140102576,
+      "reference_dma_wait_us": 67321,
+      "candidate_dma_wait_us": 172333,
+      "reference_decode_presentation_us": 369,
+      "candidate_decode_presentation_us": 415
+    },
+    {
+      "pass_number": 2,
+      "reference_seconds_per_token": 0.442951,
+      "candidate_seconds_per_token": 0.4285335,
+      "wall_improvement_percent": 3.254874692686094,
+      "matmul_improvement_percent": 19.107298930973936,
+      "reference_dma_wait_us": 66402,
+      "candidate_dma_wait_us": 172269,
+      "reference_decode_presentation_us": 31413,
+      "candidate_decode_presentation_us": 31371
+    }
+  ],
+  "mean_wall_improvement_percent": 3.4199033516810085,
+  "actual_hz": 270000000,
+  "restored_hz": 125000000,
+  "clocks_restored": true,
+  "matching_tokens": true,
+  "matching_checksums": true,
+  "host_long_context_KV_bit_exact": true,
+  "initial_load_us": 9002242,
+  "reference_initial_load_us": 3901440,
+  "load_limit": "Automatic PSRAM repacking adds startup latency; prepacked hybrid MKA takes the no-write path.",
+  "stress_ms": 5000,
+  "stress_iterations": 9415,
+  "stress_reason": "none",
+  "heap_peak_bytes": 87268,
+  "heap_capacity_bytes": 108924,
+  "stack_peak_bytes": 25520,
+  "firmware_flashes": 1,
+  "inference_runs": 1,
+  "historical_baseline_rerun": false,
+  "raw_receipt_gate": false,
+  "raw_receipt_gate_limit": "Requires both passes below the single best historical pass; false since candidate pass2 includes31ms presentation, as did reference pass2. Raw receipt preserved.",
+  "after_flash_counter_deltas_zero": true,
+  "planned_boots": [
+    19,
+    20
+  ],
+  "retained_crash_preserved": true,
+  "temporary_removed": true,
+  "prior_perf_restored": [
+    "PERF.CFG",
+    "PERF.JSON",
+    "PERF.REF"
+  ],
+  "firmware_build": "C99DE0AF",
+  "firmware_crc32": "528F4874",
+  "CDC_closed": true,
+  "lease_closed": true,
+  "ROMCACHE_byte_identical": true,
+  "ROMCACHE_sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4",
+  "evidence_pins": {
+    "hardware-002/serial.bin": "1fa4c3e50c34f37eb20ee2b389f4909cff8c1c7ed8ea25cd6e29d4aac945614c",
+    "hardware-002/prior-perf-names.json": "9da0e51b9b4919db9e42a3b972c584169ad6680afc607a67806bd65350c40a45",
+    "hardware-002/handoff.json": "8dc50224033ce116c2341d60c97c58a5375aa4a8975a561c2541500b09e6d8eb",
+    "hardware-002/after-flash.txt": "5a1ea4e72cdfeebebab736462b1f783cd41af026ec86aa58f7e7b3627f385c93",
+    "hardware-002/final-status.txt": "fa20f45bdfe8f3b2ceee184e69be74efcbf644736f41d45261f5de7fc55e9b92",
+    "hardware-002/before.txt": "9e66eebb383664d806b05374aa17afa5b9a23cd3d8ba1126e33273a644b9d45c",
+    "hardware-002/progress.txt": "8428ddbdfaafa5bfe9656a3d08fdaa3d1af50ce0c79b84e2b591ac90eaa20e95",
+    "hardware-002/after-app.txt": "7eb210bf658f8de52676ab82ee54ccb14236ff34eff4e6a007ad1ec0fd65108d",
+    "hardware-002/flash-verification.txt": "6aa240d13822cbb67cef635da5c3915ed8cf63b3158909c1f89d0a28bafcb4e6",
+    "hardware-002/performance.json": "cbe87de45780ef147a95b1e66188b69ede86a012caf01ba2d8cd70c9b6f13fb2",
+    "hardware-002/model-sha.txt": "f1bc4a22a0112676f23fd51f2e0a0366ee9ee0374bccc5385e0225ad6fb8993d",
+    "hardware-002/receipt.json": "f8473a12b6c55c44325f8fb87e6a7be5d97417978d4a0052076fb381b51867e7"
+  }
+}

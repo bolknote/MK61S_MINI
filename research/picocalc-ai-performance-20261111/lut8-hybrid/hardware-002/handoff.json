@@ -1,0 +1,23 @@
+{
+  "decision": "GO",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "uid": "E6657CD423721C35",
+  "handoff_received": true,
+  "package_sha256": "a4c9c218c36e3c6b114360fe79e6259781178ba3ab128478a379e0c743de7d37",
+  "issued_utc_epoch": 1794401477.18538,
+  "finish_before_utc_epoch": 1794401897.18538,
+  "expected_counters": {
+    "BOOTS": "19",
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0"
+  },
+  "romcache_verified": true,
+  "romcache_verification_kind": "Pinned UF2 bounds below0x101c0000 and no intervening Flash writes; no new cache CRC claim.",
+  "source_cleanup_path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/lut8-hybrid-20261111/cleanup-001/receipt.json",
+  "source_cleanup_sha256": "16ee5eed26f1c0030668d6c86f9abad8448cab460be11483b6674eef52733402",
+  "coordinator_message": "Revision3reviewed; exactGOcreation+420s. OneflashC99DE0AF/528F4874, onePERF270. Privateinventory/SHAfirst, exactrestore.",
+  "allow_wake_calculator": true
+}

@@ -1,4 +1,14 @@
 #include "mk61_ai_kernels.h"
+#if defined(PICO_ON_DEVICE)
+#include "pico.h"
+#define LUT8_RAM(name) __not_in_flash_func(name)
+#define LUT8_OPT __attribute__((optimize("O3")))
+#define PACK_COLD __attribute__((section(".ai_diagnostic_extension"),noinline))
+#else
+#define LUT8_RAM(name) name
+#define LUT8_OPT
+#define PACK_COLD
+#endif
 
 /* Scalar adaptation of the bit-plane/table principle described in T-MAC:
  * https://arxiv.org/abs/2407.00088 (EuroSys 2025).
@@ -25,7 +35,7 @@ void mk61ai_prepare_lut32(const int8_t x[32], mk61ai_lut32 *table) {
   table->sum = (int16_t)total;
 }
 
-void mk61ai_prepare_lut8x32(const int8_t x[32], mk61ai_lut8x32 *table) {
+LUT8_OPT void LUT8_RAM(mk61ai_prepare_lut8x32)(const int8_t x[32], mk61ai_lut8x32 *table) {
   int32_t total = 0;
   for (unsigned g = 0; g < 4; ++g) {
     int16_t *t = table->subset[g];
@@ -40,7 +50,7 @@ void mk61ai_prepare_lut8x32(const int8_t x[32], mk61ai_lut8x32 *table) {
   table->sum = (int16_t)total;
 }
 
-int32_t mk61ai_dot_lut8_q4_a8_32(const uint8_t planes[16],
+LUT8_OPT int32_t LUT8_RAM(mk61ai_dot_lut8_q4_a8_32)(const uint8_t planes[16],
                                 const mk61ai_lut8x32 *table) {
   int32_t p0 = 0, p1 = 0, p2 = 0, p3 = 0;
   for (unsigned g = 0; g < 4; ++g) {
@@ -119,6 +129,6 @@ static void pack_planes(const uint8_t *codes, uint8_t *planes, unsigned bits) {
 void mk61ai_pack_q2_planes32(const uint8_t codes[8], uint8_t planes[8]) {
   pack_planes(codes, planes, 2);
 }
-void mk61ai_pack_q4_planes32(const uint8_t codes[16], uint8_t planes[16]) {
+PACK_COLD void mk61ai_pack_q4_planes32(const uint8_t codes[16], uint8_t planes[16]) {
   pack_planes(codes, planes, 4);
 }

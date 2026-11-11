@@ -1,0 +1,2 @@
+prefetch: PASS; 23 full-logit comparisons, 512-position KV exact, 324631 DMA requests, 324631 overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS
+KV gather: 343121 joined batches; bounded shared scratch, exact transactions/bytes, refusal and partial-write failure PASS

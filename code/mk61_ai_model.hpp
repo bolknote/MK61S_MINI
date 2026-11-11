@@ -5,8 +5,9 @@
 #include "block_read.hpp"
 
 namespace mk61ai {
-// All offsets are relative to an immutable MKA package. Backends may use
-// indirect PSRAM; no pointer into external memory is ever dereferenced.
+// Offsets refer to an MKA package, immutable during inference. Optional write
+// supports explicit lossless repacking before bind(). Backends may use indirect
+// PSRAM; no pointer into external memory is ever dereferenced.
 struct Memory {
   void *context = nullptr;
   std::uint32_t size = 0;
@@ -44,6 +45,7 @@ struct ComputeExecution {
   bool batch_kv = true; // Gather adjacent KV positions into bounded DMA reads.
   bool parallel_attention = true; // Independent query heads use both cores.
   bool share_kv = true; // Process up to two query heads per cached KV read.
+  bool lut8 = false; // Exact INT8 LUT8 for plane-packed128-column matrices.
   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
   // Optional coprocessor. prepare stages the immutable vector before PSRAM
   // prefetch and returns its row capacity. submit must leave no live job on
@@ -71,6 +73,7 @@ struct ComputeMetrics {
   std::uint32_t attention_read_transactions = 0, attention_batches = 0;
   std::uint32_t attention_worker_jobs = 0;
   std::uint32_t attention_us = 0, attention_io_us = 0;
+  std::uint32_t lut8_preparations = 0, lut8_reuses = 0, lut8_rows = 0;
 };
 struct ModelConfig {
   std::uint32_t layers, hidden, intermediate, heads, kv_heads, head_dim;
@@ -84,6 +87,9 @@ class Model {
 public:
   static constexpr unsigned MAX_TEXT = 2048;
   ModelStatus open(Memory package, bool verify_crc = true);
+  // Only before bind(), on a private writable exported package. On error the
+  // caller must discard the partial copy and reload its immutable source.
+  ModelStatus repack_lut8(bool (*service)(void *) = nullptr, void *context = nullptr);
   const ModelConfig &config() const { return config_; }
   std::size_t workspace_bytes() const;
   std::uint32_t cache_bytes() const;

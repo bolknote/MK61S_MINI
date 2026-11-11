@@ -29,6 +29,7 @@ struct Runtime {
   unsigned row_limit=8;
   unsigned layout_refusals=0;
   bool optimized=true;
+  bool lut8=false;
   void owner() const { assert(std::this_thread::get_id() == foreground); }
   static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
@@ -105,9 +106,9 @@ struct Runtime {
     auto &r = *static_cast<Runtime *>(p);r.owner();assert(r.pending);
     r.dma.join();r.pending = false;++r.finished;return !r.job.fail;
   }
-  explicit Runtime(const std::vector<std::uint8_t> &p,unsigned rows=8,bool optim=true) : package(p),row_limit(rows),optimized(optim) {
+  explicit Runtime(const std::vector<std::uint8_t> &p,unsigned rows=8,bool optim=true,bool lut=false) : package(p),row_limit(rows),optimized(optim),lut8(lut) {
     assert(model.open({this, unsigned(p.size()), read, nullptr, begin, finish}) == ModelStatus::OK);
-    ComputeExecution plan{};plan.tile_rows=row_limit;plan.share_kv=optimized;model.execution(plan);
+    ComputeExecution plan{};plan.tile_rows=row_limit;plan.share_kv=optimized;plan.lut8=lut8;model.execution(plan);
     workspace.resize((model.workspace_bytes() + 7) / 8 + 8);
     std::fill(workspace.end() - 8, workspace.end(), UINT64_C(0xb00f61a1b00f61a1));
     cache.resize(model.cache_bytes());
@@ -119,6 +120,7 @@ struct Runtime {
     ComputeExecution e{};e.context = this;e.kernel = LinearKernel::SRAM;
     e.prefetch = prefetch;e.filter_head = filter;e.tile_rows=row_limit;
     e.reuse_activations=optimized;e.share_kv=optimized;e.batch_kv=optimized;
+    e.lut8=lut8;
     e.busy = [](void *p, bool active) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       assert(r.busy != active && !r.pending && r.began == r.finished);
@@ -155,9 +157,11 @@ bool sparse(void *p, std::uint16_t id) {
 }
 }
 int main(int argc, char **argv) {
-  assert(argc == 2);std::ifstream stream(argv[1], std::ios::binary);
+  assert(argc == 2 || argc==3);std::ifstream stream(argv[1], std::ios::binary);
   const std::vector<std::uint8_t> bytes((std::istreambuf_iterator<char>(stream)), {});
-  Runtime control(bytes,8,false), candidate(bytes,28);control.configure(false);
+  auto packed=bytes;
+  if(argc==3) {std::ifstream input(argv[2],std::ios::binary);packed.assign(std::istreambuf_iterator<char>(input),{});}
+  Runtime control(bytes,8,false), candidate(packed,28,true,argc==3);control.configure(false);
   const auto large_plan=candidate.model.execution();
   auto small_plan=large_plan;small_plan.tile_rows=24;
   candidate.model.execution(small_plan);
@@ -165,6 +169,11 @@ int main(int argc, char **argv) {
   candidate.model.execution(large_plan);
   if(candidate.model.config().hidden==128 && candidate.model.config().intermediate==384)
     assert(candidate.model.workspace_bytes()==old_size+592);
+  if(candidate.lut8) {
+    auto no_table=large_plan;no_table.lut8=false;candidate.model.execution(no_table);
+    const auto small=candidate.model.workspace_bytes();candidate.model.execution(large_plan);
+    assert(candidate.model.workspace_bytes()==small+2064);
+  }
   std::uint16_t tokens[64];unsigned count = 0;
   assert(control.model.encode("Задача: вычисли синус и проверь результат.", tokens, 64, count) == ModelStatus::OK && count > 2);
   const auto vocab = control.model.config().vocab;
@@ -196,17 +205,35 @@ int main(int argc, char **argv) {
         assert(fast.activation_preparations==4*config.layers+(output?1:0));
         assert(fast.activation_reuses==3*config.layers);
       }
+      if(candidate.lut8 && mode==Arithmetic::INT8) {
+        assert(fast.lut8_preparations==3*config.layers+(output?1:0));
+        assert(fast.lut8_reuses==3*config.layers);
+        assert(fast.lut8_rows && fast.lut8_rows+config.hidden*config.layers==fast.rows);
+      } else assert(!fast.lut8_rows);
       if (output) { assert(left == right && !std::memcmp(a.data(), b.data(), vocab * sizeof(float)));++comparisons; }
       assert(!control.model.compute_metrics().prefetches);
       assert(candidate.model.compute_metrics().prefetches == 0 || candidate.overlapped > 0);
     }
   };
   for (unsigned mode = 0; mode < 4; ++mode) compare(Arithmetic(mode), 2, true);
+  if(candidate.lut8) {
+    // Unconverted files retain direct dispatch. The switch can also be
+    // disabled on a hybrid package for independent numerical comparison.
+    for(bool converted:{false,true}) {
+      Runtime fallback(converted?packed:bytes,28,true,!converted);
+      control.model.reset();
+      assert(control.forward(tokens[0],Arithmetic::INT8,left,a.data())==ModelStatus::OK);
+      assert(fallback.forward(tokens[0],Arithmetic::INT8,right,b.data())==ModelStatus::OK);
+      assert(!fallback.model.compute_metrics().lut8_rows && left==right);
+      assert(!std::memcmp(a.data(),b.data(),vocab*sizeof(float)));
+    }
+  }
   assert(candidate.model.compute_metrics().worker_jobs < control.model.compute_metrics().worker_jobs);
   compare(Arithmetic::LUT_FLOAT32, 64, false);
   unsigned context_checked=64;
   if(candidate.model.config().context>=256) {
-    compare(Arithmetic::INT8,256,false);context_checked=256;
+    const unsigned length=candidate.lut8?candidate.model.config().context:256;
+    compare(Arithmetic::INT8,length,false);context_checked=length;
   }
   assert(candidate.layout_refusals==0);
   assert(candidate.began > 0 && candidate.overlapped > 0);
@@ -219,17 +246,18 @@ int main(int argc, char **argv) {
     assert(left == right && control.model.compute_metrics().checksum == candidate.model.compute_metrics().checksum);
   }
   candidate.refuse = false;control.configure(false);candidate.configure(true);
+  const auto fault_mode=candidate.lut8?Arithmetic::INT8:Arithmetic::LUT_FLOAT32;
   for (int boundary : {0, 1, 20, 100}) {
     candidate.model.reset();candidate.cancel_after = boundary;
-    assert(candidate.forward(tokens[0], Arithmetic::LUT_FLOAT32, right) == ModelStatus::CANCELLED);
+    assert(candidate.forward(tokens[0], fault_mode, right) == ModelStatus::CANCELLED);
     assert(candidate.model.position() == 0);candidate.cancel_after = -1;
-    compare(Arithmetic::LUT_FLOAT32, 1, true);
+    compare(fault_mode, 1, true);
   }
   for (int boundary : {0, 1, 50}) {
     candidate.model.reset();candidate.fail_finish_after = boundary;
-    assert(candidate.forward(tokens[0], Arithmetic::LUT_FLOAT32, right) == ModelStatus::IO);
+    assert(candidate.forward(tokens[0], fault_mode, right) == ModelStatus::IO);
     assert(candidate.model.position() == 0);candidate.fail_finish_after = -1;
-    compare(Arithmetic::LUT_FLOAT32, 1, true);
+    compare(fault_mode, 1, true);
   }
   candidate.refuse_cache=true;compare(Arithmetic::INT8,3,true);candidate.refuse_cache=false;
   candidate.model.reset();
@@ -239,12 +267,12 @@ int main(int argc, char **argv) {
   assert(candidate.model.position()==1 && !candidate.cache_pending);candidate.fail_cache=false;
   compare(Arithmetic::INT8,3,true);
   // Numeric failure with a next-tile DMA in flight still joins both owners.
-  auto corrupted = bytes;Runtime bad(corrupted);
+  auto corrupted = packed;Runtime bad(corrupted,8,true,candidate.lut8);
   auto word = [&](unsigned at) { std::uint32_t n;std::memcpy(&n, corrupted.data() + at, 4);return n; };
   const unsigned projection = word(15 * 4) + 3 * 32;
   const unsigned scales = word(projection + 20), columns = word(projection + 4);
   corrupted[scales + 4 * columns / 16] = 1;corrupted[scales + 4 * columns / 16 + 1] = 0x7e;
-  assert(bad.forward(tokens[0], Arithmetic::LUT_FLOAT32, right) == ModelStatus::NUMERIC);
+  assert(bad.forward(tokens[0], fault_mode, right) == ModelStatus::NUMERIC);
   assert(bad.began && bad.model.position() == 0);
   std::printf("prefetch: PASS; %u full-logit comparisons, %u-position KV exact, %u DMA requests, %u overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n",
               comparisons, context_checked,candidate.began, candidate.overlapped);

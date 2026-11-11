@@ -1,0 +1,2 @@
+MKA repack PASS: 61 eligible tensors; 61 changed; all weights/scales/tokenizer/RoPE exact; Q2/Q3 roundtrip and corruption guards PASS
+Hybrid SHA256: caa18a78aea45027d5e5857f1ab91d22c7790a802f39c6549243698508025798

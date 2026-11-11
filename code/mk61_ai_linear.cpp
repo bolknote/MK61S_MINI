@@ -229,7 +229,32 @@ MK61_AI_INLINE void dispatch(LinearBatch &b) {
   }
   generic(b);
 }
+MK61_AI_INLINE void lut8(LinearBatch &b) {
+  b.status=ModelStatus::OK;
+  if(b.arithmetic!=Arithmetic::INT8 || b.columns!=128 || b.bits!=4 || b.grid!=256 ||
+     !b.lookup || !b.activation_scales || !b.weights || !b.scales || !b.output) {
+    b.status=ModelStatus::FORMAT;return;
+  }
+  const auto* tables=reinterpret_cast<const mk61ai_lut8x32*>(b.lookup);
+  for(unsigned r=0;r<b.rows;++r) {
+    float value=0;
+    for(unsigned g=0;g<4;++g) {
+      const auto* scale=b.scales+r*8+g*2;
+      const auto h=std::uint16_t(std::uint16_t(scale[0])|(std::uint16_t(scale[1])<<8));
+      const auto dot=mk61ai_dot_lut8_q4_a8_32(b.weights+r*64+g*16,tables+g);
+#if MK61_AI_FAST_MATH
+      value=math::add(value,math::mul(half_scaled_q4_dot(dot,h),b.activation_scales[g]));
+#else
+      value=exact_fp32::sum(value,exact_fp32::product(half_scaled_q4_dot(dot,h),b.activation_scales[g]));
+#endif
+    }
+    if(!std::isfinite(value)){b.status=ModelStatus::NUMERIC;return;}
+    b.output[r]=value;
+  }
+}
 } // namespace
 void linear_batch_flash(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
 void MK61_AI_RAM(linear_batch_sram)(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
+void linear_batch_lut8_flash(void *raw) { lut8(*static_cast<LinearBatch *>(raw)); }
+void MK61_AI_RAM(linear_batch_lut8_sram)(void *raw) { lut8(*static_cast<LinearBatch *>(raw)); }
 } // namespace mk61ai

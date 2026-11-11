@@ -19,6 +19,10 @@ unsigned weight_tile_bytes(unsigned columns,unsigned hidden,unsigned rows) {
   const unsigned elements=rows==28?std::max(8U*columns,28U*hidden):8U*columns;
   return elements*9/16;
 }
+unsigned lookup_bytes(unsigned columns,bool lut8) {
+  // Keep both following DMA tiles at their original alignment.
+  return (std::max(16U*columns,lut8?4U*unsigned(sizeof(mk61ai_lut8x32)):0U)+15U)&~15U;
+}
 std::uint32_t crc(const std::uint8_t *p, unsigned n,
                   std::uint32_t value = ~0U) {
   static constexpr std::uint32_t table[16] = {
@@ -193,6 +197,64 @@ std::uint32_t Model::cache_bytes() const {
   return 8 * config_.layers * config_.context * config_.kv_heads *
          config_.head_dim;
 }
+// Loading only: keep this out of the fixed inference instruction stream.
+#if defined(PICO_ON_DEVICE)
+__attribute__((section(".ai_diagnostic_extension"),noinline))
+#endif
+ModelStatus Model::repack_lut8(bool (*service)(void*),void* context) {
+  if(workspace_ || !package_.write || !config_.layers)return ModelStatus::MEMORY;
+  const unsigned count=2+11*config_.layers;
+  unsigned end=header_[15]+count*32;
+  const unsigned metadata=std::min(std::min(header_[16],header_[17]),
+      std::min(std::min(header_[19],header_[20]),std::min(std::min(header_[22],header_[24]),header_[26])));
+  bool change=false;
+  // Exported tensors are disjoint and precede tokenizer/RoPE data. Check the
+  // entire layout before the first write, so aliasing cannot corrupt metadata.
+  for(unsigned i=0;i<count;++i) {
+    Tensor t{};if(!tensor(i,t))return ModelStatus::IO;
+    if(t.data<end || t.data>metadata || t.bytes>metadata-t.data)return ModelStatus::FORMAT;
+    end=t.data+t.bytes;
+    if(t.scales) {
+      if(t.scale<end || t.scale>metadata || t.scales>metadata-t.scale)return ModelStatus::FORMAT;
+      end=t.scale+t.scales;
+    }
+    if(t.bits==4 && bool(t.grid&256)!=(t.cols==128))change=true;
+  }
+  if(!change)return ModelStatus::OK;
+  alignas(4) std::uint8_t block[1024],converted[16];
+  for(unsigned i=0;i<count;++i) {
+    Tensor t{};if(!tensor(i,t))return ModelStatus::IO;
+    if(t.bits!=4 || bool(t.grid&256)==(t.cols==128))continue;
+    for(unsigned at=0;at<t.bytes;) {
+      if(service && !service(context))return ModelStatus::CANCELLED;
+      const unsigned n=std::min<unsigned>(unsigned(sizeof(block)),t.bytes-at);
+      if(!read(t.data+at,block,n))return ModelStatus::IO;
+      for(unsigned g=0;g<n;g+=16) {
+        if(t.cols==128)mk61ai_pack_q4_planes32(block+g,converted);
+        else {
+          std::memset(converted,0,sizeof(converted));
+          for(unsigned j=0;j<32;++j)
+            converted[j/2]|=std::uint8_t(tensor_code(block+g,j,4,true)<<(4*(j&1)));
+        }
+        std::memcpy(block+g,converted,16);
+      }
+      if(!transfer(package_,t.data+at,block,n,true))return ModelStatus::IO;
+      at+=n;
+    }
+    t.grid=t.cols==128?256:0;
+    if(!transfer(package_,header_[15]+i*32,&t,sizeof(t),true))return ModelStatus::IO;
+  }
+  std::uint32_t checksum=~0U;
+  for(unsigned at=128;at<package_.size;) {
+    if(service && !service(context))return ModelStatus::CANCELLED;
+    const unsigned n=std::min<unsigned>(unsigned(sizeof(block)),package_.size-at);
+    if(!read(at,block,n))return ModelStatus::IO;
+    checksum=crc(block,n,checksum);at+=n;
+  }
+  header_[29]=~checksum;
+  header_[31]=~crc(reinterpret_cast<const std::uint8_t*>(header_),124);
+  return transfer(package_,0,header_,sizeof(header_),true)?ModelStatus::OK:ModelStatus::IO;
+}
 std::size_t Model::workspace_bytes() const {
   const auto &c = config_;
   const unsigned columns =
@@ -204,7 +266,7 @@ std::size_t Model::workspace_bytes() const {
       std::max<unsigned>(4 * std::max(c.hidden, c.head_dim), columns * 9 / 16);
   const unsigned rows=row_limit(execution_.tile_rows);
   const unsigned needed =
-      4 * floats + raw + columns + 8 * (columns / 32) + 16 * columns +
+      4 * floats + raw + columns + 8 * (columns / 32) + lookup_bytes(columns,execution_.lut8) +
       2 * weight_tile_bytes(columns,c.hidden,rows) + rows * sizeof(float) + 16;
   return std::max(needed, 6U * MAX_TEXT);
 }
@@ -277,7 +339,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       ~std::uintptr_t(3));
   auto *input_sums = activation_scales + columns / 32;
   auto *lookup = input_sums + columns / 32;
-  auto *tile = reinterpret_cast<std::uint8_t *>(lookup + 4 * columns);
+  auto *tile = reinterpret_cast<std::uint8_t *>(lookup)+lookup_bytes(columns,execution_.lut8);
   const unsigned tile_rows = row_limit(execution_.tile_rows);
   const unsigned tile_bytes = weight_tile_bytes(columns,c.hidden,tile_rows);
   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
@@ -322,6 +384,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   };
   const float *prepared_input=nullptr;
   unsigned prepared_columns=0;
+  bool lut8_ready=false;
   auto linear = [&](unsigned index, const float *input, float *dest,
                     bool head,bool reuse=false) -> bool {
     Tensor t{};
@@ -333,6 +396,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         arithmetic == Arithmetic::INT8 || arithmetic == Arithmetic::LUT_INT8;
     const bool tables = arithmetic == Arithmetic::LUT_INT8 ||
                         arithmetic == Arithmetic::LUT_FLOAT32;
+    const bool use_lut8=execution_.lut8 && arithmetic==Arithmetic::INT8 &&
+        execution_.kernel!=LinearKernel::REFERENCE && t.bits==4 && t.grid==256 && t.cols==128;
     const bool prepare=!execution_.reuse_activations || !reuse ||
         prepared_input!=input || prepared_columns!=t.cols;
     if(integer || tables) {
@@ -340,6 +405,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       else ++compute_metrics_.activation_reuses;
     }
     if (integer && prepare) {
+      lut8_ready=false;
       for (unsigned g = 0; g < t.cols / 32; ++g) {
         float maximum = 0;
         for (unsigned j = 0; j < 32; ++j)
@@ -356,9 +422,17 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
               scale ? std::int8_t(math::round(math::div(input[g * 32 + j],scale))) : 0;
           activation_sum+=quant[g * 32 + j];
         }
-        // INT8 does not need the LUT; reuse its existing storage for exact
-        // group sums. Table modes rebuild this storage below as usual.
-        reinterpret_cast<std::int32_t*>(lookup)[g]=activation_sum;
+        // INT8 has no floating input sums. Keep exact group sums here so
+        // building LUT8 cannot overwrite the direct kernel's correction.
+        reinterpret_cast<std::int32_t*>(input_sums)[g]=activation_sum;
+      }
+    }
+    if(use_lut8) {
+      if(lut8_ready) ++compute_metrics_.lut8_reuses;
+      else {
+        auto* exact=reinterpret_cast<mk61ai_lut8x32*>(lookup);
+        for(unsigned g=0;g<4;++g)mk61ai_prepare_lut8x32(quant+32*g,exact+g);
+        lut8_ready=true;++compute_metrics_.lut8_preparations;
       }
     }
     if (tables && prepare) {
@@ -401,6 +475,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       const unsigned bytes = t.cols * t.bits / 8, scales = t.cols / 16;
       auto kernel = execution_.kernel == LinearKernel::SRAM
                         ? linear_batch_sram : linear_batch_flash;
+      if(use_lut8)kernel=execution_.kernel==LinearKernel::SRAM?
+          linear_batch_lut8_sram:linear_batch_lut8_flash;
       struct Tile {
         std::uint8_t *data;
         std::uint16_t indices[64]{};
@@ -427,9 +503,9 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       shape.activation_scales = activation_scales;
       shape.input_sums = input_sums; shape.lookup = lookup;
       shape.quant_sums = arithmetic==Arithmetic::INT8?
-          reinterpret_cast<const std::int32_t*>(lookup):nullptr;
+          reinterpret_cast<const std::int32_t*>(input_sums):nullptr;
       unsigned remote_capacity = 0;
-      if (execution_.remote_prepare && execution_.remote_submit && execution_.remote_join) {
+      if (!use_lut8 && execution_.remote_prepare && execution_.remote_submit && execution_.remote_join) {
         const auto started = stamp();
         remote_capacity = std::min(2U, execution_.remote_prepare(execution_.context, &shape));
         compute_metrics_.remote_prepare_us += stamp() - started;
@@ -515,7 +591,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         first.activation_scales = activation_scales;
         first.input_sums = input_sums;first.lookup = lookup;
         first.quant_sums = arithmetic==Arithmetic::INT8?
-            reinterpret_cast<const std::int32_t*>(lookup):nullptr;
+            reinterpret_cast<const std::int32_t*>(input_sums):nullptr;
         first.weights = active.data;first.scales = active.data + active.count * bytes;
         first.output = tile_output;
         LinearBatch third = first;
@@ -582,6 +658,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           return false;
         }
         compute_metrics_.rows += count;
+        if(use_lut8)compute_metrics_.lut8_rows+=count;
         for (unsigned j = 0; j < count; ++j) {
           const unsigned at = active.indices[j];
           const float value = tile_output[j];

@@ -19,5 +19,9 @@ struct LinearBatch {
 };
 void linear_batch_flash(void *batch);
 void linear_batch_sram(void *batch);
+// INT8 scales and reduction order are unchanged. lookup holds four exact
+// mk61ai_lut8x32 tables, shared read-only until both output halves are joined.
+void linear_batch_lut8_flash(void *batch);
+void linear_batch_lut8_sram(void *batch);
 } // namespace mk61ai
 #endif

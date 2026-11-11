@@ -1,0 +1,26 @@
+{
+  "status": "HOLD",
+  "firmware_flashes": 0,
+  "inference_runs": 0,
+  "M3_writes": 0,
+  "global_model_writes": 0,
+  "reference_seconds_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "historical_baseline_rerun": false,
+  "entry_counters": {
+    "BOOTS": "19",
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "I2C_TIMEOUTS": "9",
+    "IO_I2C_RESETS": "9",
+    "keyboard_errors": "9"
+  },
+  "error": "AssertionError()",
+  "CDC_closed": true,
+  "lease_closed": true
+}
