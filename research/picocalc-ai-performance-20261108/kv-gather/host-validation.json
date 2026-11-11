@@ -1,0 +1,18 @@
+{
+  "all_model_tests": {
+    "sha256": "e30737e50b31ac4e74d608ecb41133a778ecf80dee897c39ed2fd377c4bc96e7",
+    "output": "PASS; full log retained in local build"
+  },
+  "gather": {
+    "sha256": "18d9b60d59964cc6db854af4f536bb7935e60ce42d0f4629954ea2e7bf6d6da8",
+    "output": "prefetch: PASS; 23 full-logit comparisons, 256-position KV exact, 188956 DMA requests, 188956 overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\nKV gather: 92881 joined batches; bounded shared scratch, exact transactions/bytes, refusal and partial-write failure PASS\n"
+  },
+  "native_ui": {
+    "sha256": "6a5956b936a01911a0bccd269612240b286fdb2e61296a72fd2c8a8e91faf8db",
+    "output": "PASS; full log retained in local build"
+  },
+  "spec": {
+    "sha256": "ff984f32888e241970cde11f10091009aecb20b6be5cfb92bb3fc9a66e6e6c83",
+    "output": "SPEC real-model case=1 input=489 output=12 commands=6 core-X=0.3746066 PASS\nSPEC real-model case=2 input=490 output=12 commands=7 core-X=-0.3746066 PASS\nSPEC real-model case=3 input=500 output=12 commands=8 core-X=0.49242357 PASS\nSPEC real-model case=4 input=555 output=24 commands=18 core-X=0.24124549 PASS\nSPEC real-model case=5 input=535 output=12 commands=9 core-X=-88 PASS\nSPEC real-model case=6 input=539 output=12 commands=10 core-X=0.99994788 PASS\nSPEC real-model case=7 input=519 output=12 commands=6 core-X=-0.14054082 PASS\nSPEC real-model case=8 input=552 output=18 commands=16 core-X=-0.06875 PASS\nSPEC: published prompts, real neural token streams, exact compiler, core execution and header pause/resume PASS\n"
+  }
+}

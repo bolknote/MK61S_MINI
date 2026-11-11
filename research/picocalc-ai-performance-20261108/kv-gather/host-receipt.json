@@ -1,0 +1,29 @@
+{
+  "status": "HOST_PASS_HARDWARE_CANCELLED_BEFORE_IO",
+  "physical_io": false,
+  "usb_opened": false,
+  "lease_acquired": false,
+  "firmware_written": false,
+  "sd_changed": false,
+  "benchmark_run": false,
+  "reason": "Coordinator relayed user priority: Spectrum first; cancel prepared KV-gather before I/O, no new AI window/base merge.",
+  "candidate_build": "E98DCB5B",
+  "candidate_crc": "D4E82FE1",
+  "candidate_base_commit": "95aa57473",
+  "current_main_requires_rebase": true,
+  "last_known_device_identity_from_coordinator": {
+    "build": "BAFAA088",
+    "crc": "B041AA0C"
+  },
+  "qualified_comparison_seconds_per_token": 0.717,
+  "qualified_commit": "95aa57473",
+  "host_tests": {
+    "full_model_512_and_prefetch_256": "PASS",
+    "gather_transactions_and_failure_cleanup": "PASS",
+    "spec_int8_cases": 8,
+    "native_ui_asan_ubsan": "PASS"
+  },
+  "controllers_running": false,
+  "cdc_closed": true,
+  "lease_closed": true
+}
