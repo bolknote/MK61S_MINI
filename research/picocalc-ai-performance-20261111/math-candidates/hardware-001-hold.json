@@ -1,0 +1,20 @@
+{
+  "status": "HOLD_WATCHDOG_REBOOT_NO_DURABLE_RESULT",
+  "test_runs": 1,
+  "physical_timing": null,
+  "boot_counter_before": 15,
+  "boot_counter_after": 16,
+  "post_reboot_counters_are_new_baseline_not_success": true,
+  "initial_APP_sha256": "69374effe13b2eaae4739beaf2dd93bc473b9f2a4a5797da234f433d6b64cd72",
+  "cleanup": "Owned /Apps/MATHCAND-20261111-001 removed; CDC and lease closed; no replay/reset/flash",
+  "reachable_bug": "Direct io_worker frame suspension left NativeHost::ai_frozen false: service/pump/flush/PRESENT BUSY/color_wait/pump cycle",
+  "failed_stage_known": false,
+  "revision_002": "Use existing NativeHost::ai_render gate; SETUP.BIN before PLL; stage/serial diagnostics; numerical ARM stack384B; qualification complete, not yet run on device",
+  "evidence": {
+    ".build/mk61ai/math-candidates-20261111/hardware-001/receipt.json": "eaf3d75ba6d06a09004269b060b42b75fe3585291ae196bae523a736308d413c",
+    ".build/mk61ai/math-candidates-20261111/hardware-001/before.txt": "5381ce844a92289c715e4fa1a3b549e2c19a9ab8b2be4b99c4569297c05a8d24",
+    ".build/mk61ai/math-candidates-20261111/hardware-001/after-app.txt": "e15cf3cfd939fe9b89f2c289ed488e1a7616725ab87122b4482269081eeaa818",
+    ".build/mk61ai/math-candidates-20261111/hardware-001/failed-final-status.txt": "6dd7137eb2bda3caaeba91c6212c8884c2c1f20a90914fb74d214ef427b09dd4",
+    ".build/mk61ai/math-candidates-20261111/hardware-001/error-trace.txt": "7a1790328e9f18702804d71252926aa8ed086babdfb6493712cea7c6d537dbc9"
+  }
+}

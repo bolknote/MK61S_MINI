@@ -1,0 +1,40 @@
+{
+  "revision": 5,
+  "uid": "E6657CD423721C35",
+  "build": "7C38C634",
+  "crc": "8A17554E",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/package.json": "a78ab5de911a733c32bbd48d0922671eb32beb67b029f8619d7137ac44b3139e",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/arm-results.json": "0a6539b7317af43e91bdc251be4c2aa2703c3fff5772970171d390c0002c93a0",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/cfg-results.json": "d6cc26f179d9b3aab2500ddfcb417f211f1e6d33c80c858bd82401ba1800657e",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/host-results.json": "be4f40f63d1eb0ee18dd3db5d58a7c319048f9e696259a3ea79e2054663802f3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/host.log": "ee9bfd298fc908f094b3db8df866621b7ec8a6a1cd4093df2c6762dfe728e5c4",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/app/MATHCAND.APP": "5be54b4a408309371eda378bf94a883471c32772ee6554b6261f4fbade91e74e",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/MATHCASE.BIN": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+    "/Users/bolk/Projects/MK61S_MINI/tests/prepare_mk61_ai_math_candidates.py": "1e08acfccbf185d41575def3d666a5be83eb68d114aaaba0e2ee89c947adf01a",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/run-benchmark.py": "ba6abe37d4b01234dfe4e6dc2a0553b7547d7b8ef533ac49ac5ed958a9d33601",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/controller/hil_mk61_ai.py": "a65887be22c04cba308623cb4c30dbd60a73f4c71274e6c7026dd87275793fa9",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/crash-read-003/crash.bin": "0f0e7067c59de0bc8c2c4f39af41302de5e5af627a5d701728057e093055e55d",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/crash-read-003/receipt.json": "2739c86891834e49297e6737e304e469f19c15c0e16e43809a335fec2dd8247b",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/hardware-003/receipt.json": "6c0c2404252a3d212e18837151962ffd6b6adbf026ace91909f120e070cccd43",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/run-hardware-005.py": "1d459a7cbf4af125d11ff8b99d3dcfe452737ed73d21c13a7c0a2d74dd8c1e83",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/hardware-004/before.txt": "8f296446f50f3e88fba762f545c4f2559255456e5db3f38470ebb1eedbd490af",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-candidates-20261111/hardware-004/receipt.json": "ccc25405fe1e660137f99355d79d770f8a9d35165f9362d8fc1c260a16e75cc0"
+  },
+  "finite_seconds": 180,
+  "maximum_lease_seconds": 150,
+  "minimum_window_seconds": 100,
+  "baseline_policy": "GO pins protected BOOTS19/settings/erase/RTC/I2C_ABORTS/IO_ERRORS0 and CRASHAVAILABLE/BOOT_WATCHDOG0. After exclusive lease, ambient I2C_TIMEOUTS/IO_I2C_RESETS/keyboard_errors captured once at entry, recorded and must remain exactly unchanged through own window. No reset/clear/auto-recapture.",
+  "scope": "One private APP, /Apps/MATHCAND-20261111-005;two M0+270MHz,24 SRAM tiles,six identical math variants. Fixed resident callback binding via local noipa adapters; guarded one-time join, stage markers and both-core ARM/CFG qualification.",
+  "diagnostics": "SETUP before PLL; stage1..7,60..63. Raw serial preserved; full durable timing report only after125MHz restoration and SRAM release. Numeric residue onlygreedy pruning; all-logits fallback exact.",
+  "cleanup": "One test_run only; no replay/reset/flash/settings/RTC/model/M3 writes. Restore125MHz in APP, join both cores, unfreeze via NativeHost gate, release buffers. Controller removes only its new owned directory after proven APP return/CLOSED. HOLD persists on any error.",
+  "previous_attempt": "hardware003 failed LTO callback binding. Exact old image reconstructed by same link; optimized tree has unreachable after stage5. Negative ARM replay matches hardware destination100600F5 and LR2001FB65, predicts R1=200203BD. No PLL failure attribution. old crash preserved.",
+  "preexisting_crash": "AVAILABLE",
+  "expected_boots": "19",
+  "last_observed_error_counters": {
+    "I2C_TIMEOUTS": "7",
+    "IO_I2C_RESETS": "7",
+    "keyboard_errors": "7"
+  },
+  "previous_admission": "Attempt004 test_runs0: external completed FASTLINK APP changed I2C/keyboard counters before entry; no wake/upload/run. Controller refused stale all0 GO, CDC/lease closed."
+}

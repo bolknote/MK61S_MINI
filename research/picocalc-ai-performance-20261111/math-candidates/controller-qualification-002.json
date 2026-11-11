@@ -1,0 +1,16 @@
+{
+  "status": "HOST_CONTROLLER_PASS",
+  "physical_io": false,
+  "checks": [
+    "wrong_uid rejected before lease or USB",
+    "wrong_package rejected before lease or USB",
+    "expired rejected before lease or USB",
+    "short_window rejected before lease or USB",
+    "missing_boot rejected before lease or USB",
+    "no_handoff rejected before lease or USB",
+    "serial retained across disconnect and data clear",
+    "reboot baseline distinguished from prior counters"
+  ],
+  "package_sha256": "ca3c73166685da9221867e4e6fca097ce6dd7293ef52883f4202d327c44e7008",
+  "controller_sha256": "38b3dbed05cdc96fde450ed04ca0cda589ca8e5c7d039d9aa7a63fb42a5965d0"
+}

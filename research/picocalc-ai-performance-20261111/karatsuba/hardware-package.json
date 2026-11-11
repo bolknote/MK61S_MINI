@@ -1,0 +1,20 @@
+{
+  "uid": "E6657CD423721C35",
+  "build": "7C38C634",
+  "crc": "8A17554E",
+  "authorization": "Direct user: забирай picocalc и тестируй",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/run-hardware.py": "861e70af82384d225c026bfb2c407ef4a62d06b6a9ef8792bc0dc8556d6d00e3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/package.json": "83ed6e2a0c1346a859e6281fcbbf80c40d25dbc961f105ccc171fe166e6ea756",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/host-results.json": "a426c5930599e9af07675bab6f15bccc6df9d817070e6836d7aaf24b1e191d8c",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/app/KARAMUL.APP": "74625c21b41a4e7f8c647e5f1ae9b08709eb2cc6b50191bfaa68f3594eb04062",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/app/KARAMUL.elf": "fb54a20d57a936bad8ac124bf784dd7a1fd26721a1021f747c344f62c1b078ca",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/karatsuba-20261111/app/KARAMUL.json": "010e57faf01896007599d33e20b0176ab39e1efddb3f5ef6331b3e09c2689603",
+    "/Users/bolk/Projects/MK61S_MINI/tests/m0_karatsuba_arm_self_test.py": "6b97ee75732e8776356cb4a6656af466f62f82dfa176001d3868da3168ac202a",
+    "/Users/bolk/Projects/MK61S_MINI/tests/build_m0_karatsuba_benchmark.py": "1fd64f4ec361ce68495d1dcc5a44b445197455593146cc3b5de3c5e4ac025d46",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/run-benchmark.py": "ba6abe37d4b01234dfe4e6dc2a0553b7547d7b8ef533ac49ac5ed958a9d33601",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/controller/hil_mk61_ai.py": "a65887be22c04cba308623cb4c30dbd60a73f4c71274e6c7026dd87275793fa9"
+  },
+  "scope": "One private APP-only comparison at270MHz, then125MHz and remove own fresh directory; no firmware/settings/model/M3 writes",
+  "finite_seconds": 180
+}

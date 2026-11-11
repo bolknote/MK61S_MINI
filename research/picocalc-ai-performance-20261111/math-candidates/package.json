@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "status": "BUILT_NOT_RUN_ON_DEVICE",
+  "resident_elf": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/firmware-candidate/mk61s-picocalc-pico-h.elf",
+  "resident_elf_sha256": "75ef19a5237b0ed25357424e1fd31da2aa64c69fa98683b4300dc7f553ffce16",
+  "model": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/swar-v5/MODEL-NIBBLE.MKA",
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "variants": [
+    "resident_direct",
+    "lut8_full",
+    "lut8_bounded",
+    "zero_skip",
+    "prune_half",
+    "prune_last"
+  ],
+  "cores": 2,
+  "cpu_hz": 270000000,
+  "source_pins": {
+    "code/mk61_ai_model.cpp": "85fa4c5477290f615261e5e92714fed9b6848f1815cacaa18a8504cfa17be268",
+    "code/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+    "code/mk61_ai_linear.cpp": "e9311e0425aa55ce5fa1d577dc70689d1d4b5c750588db451549f0129ca57515",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "code/mk61_ai_linear.hpp": "b59a980cae20bc204a4e5e52e819d3da16169ea988625ee92a24b743e4991a6c",
+    "code/mk61_ai_kernels.c": "30ad89131df9255def680f4541ee5a495b1aa62e0d62adfa6dd21d53a0ce242e",
+    "code/mk61_ai_kernels.h": "71d2dc047b17810549623d5deecccb6e896b5fa877aa23dc9f58e076b35cc194",
+    "code/mk61_ai_half_product.hpp": "d899684d6e5aa16527f007a47a89e26dab438c211e29d648b136ae4f306f2bd3",
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_math.hpp": "034b7eaee7a94c708e52711197fbbc40f27ee993f22fc5d4ed8eb25caeddb895",
+    "code/worker_job_slot.hpp": "2e8b8329db7bc59379ec780ed8a8307506025328c7df744c355c2636de746c2e",
+    "tests/mk61_ai_math_candidates_self_test.cpp": "bb83dd3505617c15f6f615640524c3237aa8ba9a8c46035c0ef1e158ff524ce7",
+    "tests/fixtures/mk61_ai_math_candidates.hpp": "177d5d60a6d10769d704729cf1cb266b5634daf15316e705b324b8ec860f49b2",
+    "tests/fixtures/mk61_ai_math_candidates_app.cpp": "22c014948a7387006ea26c8fecaa78e6eeb661d145f052e15ff7caee8dddab7a",
+    "tests/prepare_mk61_ai_math_candidates.py": "1e08acfccbf185d41575def3d666a5be83eb68d114aaaba0e2ee89c947adf01a",
+    "tests/mk61_ai_math_candidates_arm_self_test.py": "2c776275db43b37ab1fd6e475e62ae61947e3b060cf32efb433c43ae91555f27",
+    "tests/mk61_ai_math_candidates_cfg_self_test.py": "2b3aa706e0af01a7985669fd55b9e05ce5ce02d0f667aa57300d52607f7e7036",
+    "research/picocalc-ai-performance-20261111/math-candidates/regression-003/MATHCAND.elf": "852cc4e4aaa4b5d4a817cb0cd8f873bf3253a47407e01fe0ef6f2f6e657a49f0",
+    "research/picocalc-ai-performance-20261111/math-candidates/regression-003/MATHCAND.json": "7573d504cadfac041706d09776fde1b582b5d2846a893d6be6cd234d7e8e7cbe"
+  },
+  "generated": {
+    "MATHCASE.BIN": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+    "host-results.json": "be4f40f63d1eb0ee18dd3db5d58a7c319048f9e696259a3ea79e2054663802f3",
+    "host-source-pins.json": "365e5c0ca9e765384a0fceb4c88ff3dd4ba5998d0885182147759b8bc3f60013",
+    "math-candidate-addresses.hpp": "32435dcf739e52e1a12ccbf52b33a14dcf101fa7a460a95c3d4285da460c95bd",
+    "math-candidate-half.hpp": "6d71f286b246644db0eb2114cac48c249c7682fcc46cbdf77f2fb8686ba75014",
+    "candidate-kernels.c": "ace570200f1a36fa19df921487313e5de3bb106df889762f55cb79e3fca23bc8",
+    "app/MATHCAND.APP": "5be54b4a408309371eda378bf94a883471c32772ee6554b6261f4fbade91e74e",
+    "app/MATHCAND.elf": "15af9e67507bdb750be218278839642a9b1b6bcb901cb69ea015b2eec3433432",
+    "app/MATHCAND.json": "2c08c4c7f50cb058d1f2e871801a02e48b13397d0ae8ac36c748e69dc45bd013"
+  },
+  "cases": [
+    {
+      "id": 0,
+      "tensor": 3,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 1,
+      "tensor": 10,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false
+    },
+    {
+      "id": 2,
+      "tensor": 12,
+      "position": 0,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 3,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 4,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 5,
+      "tensor": 0,
+      "position": 0,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 6,
+      "tensor": 3,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 7,
+      "tensor": 10,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false
+    },
+    {
+      "id": 8,
+      "tensor": 12,
+      "position": 3,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 9,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 10,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 11,
+      "tensor": 0,
+      "position": 3,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 12,
+      "tensor": 3,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 13,
+      "tensor": 10,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false
+    },
+    {
+      "id": 14,
+      "tensor": 12,
+      "position": 0,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 15,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 16,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 17,
+      "tensor": 0,
+      "position": 0,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 18,
+      "tensor": 3,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 19,
+      "tensor": 10,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false
+    },
+    {
+      "id": 20,
+      "tensor": 12,
+      "position": 3,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false
+    },
+    {
+      "id": 21,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 22,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true
+    },
+    {
+      "id": 23,
+      "tensor": 0,
+      "position": 3,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true
+    }
+  ],
+  "scope": "private APP, real SRAM tiles, all setup separately timed; no firmware patch"
+}

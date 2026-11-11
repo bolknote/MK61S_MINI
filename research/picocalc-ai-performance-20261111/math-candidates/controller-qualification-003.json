@@ -1,0 +1,15 @@
+{
+  "status": "HOST_CONTROLLER_PASS",
+  "physical_io": false,
+  "checks": [
+    "wrong_uid rejected before lease/USB",
+    "old_package rejected before lease/USB",
+    "expired rejected before lease/USB",
+    "changed_boot rejected before lease/USB",
+    "changed_error rejected before lease/USB",
+    "missing_crash_evidence rejected before lease/USB",
+    "no_handoff rejected before lease/USB"
+  ],
+  "package_sha256": "30885e656760eec67a2d6dfbb80501c28043e9a4d146f4bb61952047da11e396",
+  "controller_sha256": "aa0c647b0c80b1d059d915a11f02635f0eef2cd1593da734c65b63bda787cd30"
+}

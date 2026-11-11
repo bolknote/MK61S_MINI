@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "authorization": "Direct user: \u0437\u0430\u0431\u0438\u0440\u0430\u0439 picocalc \u0438 \u0442\u0435\u0441\u0442\u0438\u0440\u0443\u0439",
+  "Flash_writes": 0,
+  "M3_writes": 0,
+  "test_runs": 1,
+  "owned_directory": "/Apps/KARAMUL-20261111-001",
+  "upload": {
+    "bytes": 6148,
+    "sha256": "74625c21b41a4e7f8c647e5f1ae9b08709eb2cc6b50191bfaa68f3594eb04062",
+    "upload_readback_seconds": 1.625978916999884
+  },
+  "owned_directory_removed": true,
+  "build": "7C38C634",
+  "crc": "8A17554E",
+  "restored_hz": 125000000,
+  "settings_and_RTC_unchanged": true,
+  "CDC_reconnects": 2,
+  "result": "results.json",
+  "cycles_per_call": {
+    "resident": 151.14990234375,
+    "baseline": 149.23828125,
+    "difference": 208.10302734375,
+    "sum_guarded": 195.2490234375
+  },
+  "CDC_closed": true,
+  "lease_closed": true
+}

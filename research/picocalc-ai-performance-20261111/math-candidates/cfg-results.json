@@ -1,0 +1,38 @@
+{
+  "status": "LINKED_CFG_AND_NEGATIVE_ARM_PASS",
+  "physical_io": false,
+  "app_sha256": "5be54b4a408309371eda378bf94a883471c32772ee6554b6261f4fbade91e74e",
+  "positive": {
+    "reachable_markers": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      60,
+      61,
+      62,
+      63
+    ],
+    "timed_two_core_submit_and_join": true,
+    "real_pair_probe_in_flow": true,
+    "flow_instructions": 1153
+  },
+  "negative": {
+    "status": "OLD_BINARY_INVALID_FALLTHROUGH_REPRODUCED",
+    "actual_old_elf_sha256": "852cc4e4aaa4b5d4a817cb0cd8f873bf3253a47407e01fe0ef6f2f6e657a49f0",
+    "modeled_only": "snprintf/debug output; real linked setup instructions and resident memcpy ABI",
+    "stopped_before_invalid_write": true,
+    "observed": {
+      "destination": "0x100600f5",
+      "LR": "0x2001fb65",
+      "source": "0x20020384",
+      "bytes": "0x39",
+      "r4": "0x100600f5"
+    },
+    "matches_hardware_LR_and_r4": true,
+    "predicted_postcopy_r1": "0x200203bd"
+  }
+}

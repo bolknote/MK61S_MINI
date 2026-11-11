@@ -1,0 +1,20 @@
+{
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "sources": {
+    "code/mk61_ai_model.cpp": "85fa4c5477290f615261e5e92714fed9b6848f1815cacaa18a8504cfa17be268",
+    "code/mk61_ai_tokenizer.cpp": "d67843c474b91ae5e392814320a834a6a985bd51c4052db132d68003a01c50f6",
+    "code/mk61_ai_linear.cpp": "e9311e0425aa55ce5fa1d577dc70689d1d4b5c750588db451549f0129ca57515",
+    "code/mk61_ai_model.hpp": "8a66cb1d32bf7c0471146531432cbc9a2212330a760e0a1c288faa4c5f3f4901",
+    "code/mk61_ai_linear.hpp": "b59a980cae20bc204a4e5e52e819d3da16169ea988625ee92a24b743e4991a6c",
+    "code/mk61_ai_kernels.c": "30ad89131df9255def680f4541ee5a495b1aa62e0d62adfa6dd21d53a0ce242e",
+    "code/mk61_ai_kernels.h": "71d2dc047b17810549623d5deecccb6e896b5fa877aa23dc9f58e076b35cc194",
+    "code/mk61_ai_half_product.hpp": "d899684d6e5aa16527f007a47a89e26dab438c211e29d648b136ae4f306f2bd3",
+    "code/mk61_ai_exact_fp32.hpp": "25525774db33c97d07a41da8c41fbc2159e1d62e2817bf3c6dfea343c3ac95cb",
+    "code/mk61_ai_math.hpp": "034b7eaee7a94c708e52711197fbbc40f27ee993f22fc5d4ed8eb25caeddb895",
+    "code/worker_job_slot.hpp": "2e8b8329db7bc59379ec780ed8a8307506025328c7df744c355c2636de746c2e",
+    "tests/mk61_ai_math_candidates_self_test.cpp": "bb83dd3505617c15f6f615640524c3237aa8ba9a8c46035c0ef1e158ff524ce7",
+    "tests/fixtures/mk61_ai_math_candidates.hpp": "177d5d60a6d10769d704729cf1cb266b5634daf15316e705b324b8ec860f49b2"
+  },
+  "sanitizers": true,
+  "fp_contract": false
+}

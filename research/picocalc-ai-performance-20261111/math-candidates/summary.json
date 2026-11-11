@@ -1,0 +1,235 @@
+{
+  "status": "HARDWARE_PASS",
+  "cpu_hz": 270000000,
+  "cores": 2,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "cases": 24,
+  "clock_restored_hz": 125000000,
+  "BOOTS_before": 19,
+  "BOOTS_after": 19,
+  "CRASH": "AVAILABLE_PREEXISTING_PRESERVED",
+  "all_protected_counter_deltas_zero": true,
+  "ambient_before_and_after": {
+    "I2C_TIMEOUTS": 7,
+    "IO_I2C_RESETS": 7,
+    "keyboard_errors": 7
+  },
+  "observed_stages": [
+    1,
+    2,
+    4,
+    5,
+    6,
+    60
+  ],
+  "USB_stage_limit": "3/61..63/7 not captured during deliberate USB disconnect; durable header proves actual270/restored125 and all24 valid cases",
+  "retained_full_inference_reference_s_per_token": [
+    0.4277315,
+    0.442951
+  ],
+  "new_full_inference_timing": null,
+  "measurements": [
+    {
+      "tensor": 3,
+      "name": "Q projection",
+      "tile_rows": 28,
+      "columns": 128,
+      "fixture_count": 4,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "median_preparation_us": 2.0,
+          "median_compute_us": 209.125,
+          "median_total_us": 211.125,
+          "median_total_ratio": 1.0,
+          "median_compute_ratio": 1.0
+        },
+        {
+          "variant": "lut8_full",
+          "median_preparation_us": 189.5,
+          "median_compute_us": 141.1875,
+          "median_total_us": 330.625,
+          "median_total_ratio": 1.5685076995438285,
+          "median_compute_ratio": 0.676043207386491
+        },
+        {
+          "variant": "lut8_bounded",
+          "median_preparation_us": 1.875,
+          "median_compute_us": 327.9375,
+          "median_total_us": 329.875,
+          "median_total_ratio": 1.5595034488173907,
+          "median_compute_ratio": 1.565452093214359
+        },
+        {
+          "variant": "zero_skip",
+          "median_preparation_us": 16.5,
+          "median_compute_us": 268.625,
+          "median_total_us": 285.125,
+          "median_total_ratio": 1.3494841826409554,
+          "median_compute_ratio": 1.2833976068815547
+        }
+      ],
+      "LUT_full_median_break_even_rows": 78.48830121634549,
+      "estimated_full_matrix_arithmetic_ratio_with_one_LUT_preparation": 0.8746881302944736,
+      "estimate_limit": "Linear extrapolation of SRAM tiles, excluding DMA/KV/layout/storage effects; not measured full inference"
+    },
+    {
+      "tensor": 10,
+      "name": "FFN gate",
+      "tile_rows": 28,
+      "columns": 128,
+      "fixture_count": 4,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "median_preparation_us": 1.9375,
+          "median_compute_us": 209.1875,
+          "median_total_us": 211.0,
+          "median_total_ratio": 1.0,
+          "median_compute_ratio": 1.0
+        },
+        {
+          "variant": "lut8_full",
+          "median_preparation_us": 189.5,
+          "median_compute_us": 140.5,
+          "median_total_us": 329.875,
+          "median_total_ratio": 1.5642748170367695,
+          "median_compute_ratio": 0.671939829950482
+        },
+        {
+          "variant": "lut8_bounded",
+          "median_preparation_us": 2.0625,
+          "median_compute_us": 327.8125,
+          "median_total_us": 329.8125,
+          "median_total_ratio": 1.563092439204406,
+          "median_compute_ratio": 1.5670771507207752
+        },
+        {
+          "variant": "zero_skip",
+          "median_preparation_us": 17.5,
+          "median_compute_us": 293.8125,
+          "median_total_us": 311.3125,
+          "median_total_ratio": 1.4745411486086442,
+          "median_compute_ratio": 1.4027496290075399
+        }
+      ],
+      "LUT_full_median_break_even_rows": 77.29990443830962,
+      "estimated_full_matrix_arithmetic_ratio_with_one_LUT_preparation": 0.7379723369597042,
+      "estimate_limit": "Linear extrapolation of SRAM tiles, excluding DMA/KV/layout/storage effects; not measured full inference"
+    },
+    {
+      "tensor": 12,
+      "name": "FFN down",
+      "tile_rows": 8,
+      "columns": 384,
+      "fixture_count": 4,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "median_preparation_us": 1.9375,
+          "median_compute_us": 169.6875,
+          "median_total_us": 171.5625,
+          "median_total_ratio": 1.0,
+          "median_compute_ratio": 1.0
+        },
+        {
+          "variant": "lut8_full",
+          "median_preparation_us": 564.875,
+          "median_compute_us": 119.3125,
+          "median_total_us": 684.0625,
+          "median_total_ratio": 3.989091405201556,
+          "median_compute_ratio": 0.7046056894289408
+        },
+        {
+          "variant": "lut8_bounded",
+          "median_preparation_us": 2.0,
+          "median_compute_us": 701.625,
+          "median_total_us": 703.6875,
+          "median_total_ratio": 4.102412270457132,
+          "median_compute_ratio": 4.135295836265847
+        },
+        {
+          "variant": "zero_skip",
+          "median_preparation_us": 48.375,
+          "median_compute_us": 244.6875,
+          "median_total_us": 293.25,
+          "median_total_ratio": 1.7078416706304043,
+          "median_compute_ratio": 1.4408998114810943
+        }
+      ],
+      "LUT_full_median_break_even_rows": 90.14683109759511,
+      "estimated_full_matrix_arithmetic_ratio_with_one_LUT_preparation": 0.91264196914346,
+      "estimate_limit": "Linear extrapolation of SRAM tiles, excluding DMA/KV/layout/storage effects; not measured full inference"
+    },
+    {
+      "tensor": 0,
+      "name": "classifier",
+      "tile_rows": 28,
+      "columns": 128,
+      "fixture_count": 8,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "median_preparation_us": 1.875,
+          "median_compute_us": 208.375,
+          "median_total_us": 210.25,
+          "median_total_ratio": 1.0,
+          "median_compute_ratio": 1.0
+        },
+        {
+          "variant": "lut8_full",
+          "median_preparation_us": 189.5625,
+          "median_compute_us": 140.4375,
+          "median_total_us": 329.875,
+          "median_total_ratio": 1.5682531648779643,
+          "median_compute_ratio": 0.6737489419678788
+        },
+        {
+          "variant": "lut8_bounded",
+          "median_preparation_us": 2.0,
+          "median_compute_us": 328.25,
+          "median_total_us": 330.375,
+          "median_total_ratio": 1.5703250997368645,
+          "median_compute_ratio": 1.574429978869091
+        },
+        {
+          "variant": "zero_skip",
+          "median_preparation_us": 17.625,
+          "median_compute_us": 293.75,
+          "median_total_us": 311.4375,
+          "median_total_ratio": 1.4811417353117804,
+          "median_compute_ratio": 1.4080811536083968
+        },
+        {
+          "variant": "prune_half",
+          "median_preparation_us": 10.5625,
+          "median_compute_us": 230.25,
+          "median_total_us": 240.9375,
+          "median_total_ratio": 1.1435369665420365,
+          "median_compute_ratio": 1.1037488815106151
+        },
+        {
+          "variant": "prune_last",
+          "median_preparation_us": 10.5,
+          "median_compute_us": 191.8125,
+          "median_total_us": 202.3125,
+          "median_total_ratio": 0.954196022854384,
+          "median_compute_ratio": 0.9127508783836327
+        }
+      ],
+      "LUT_full_median_break_even_rows": 77.88623853211008,
+      "estimated_full_matrix_arithmetic_ratio_with_one_LUT_preparation": 0.6768508057041145,
+      "estimate_limit": "Linear extrapolation of SRAM tiles, excluding DMA/KV/layout/storage effects; not measured full inference"
+    }
+  ],
+  "pins": {
+    "MATHTEST.BIN": "5d66ae1455b26d6dba5b5ad18781892c7917a9f5538e3e1c666aef3a024c2368",
+    "results.json": "6815f6bfef6e0662c0ff46163008a075fce12ede569aa35d54f2062d0dd276f3",
+    "receipt.json": "b50f01869c375472e26f0cb7b2d2955c7d904e2a0df689b579598cdd95f884ac",
+    "before.txt": "e180b19d8b6bfc48156f05a2dc7152cd74fe324b78427f985c571638db9152d6",
+    "after-app.txt": "9e05e2fc3107d2c249452bf2f53e3ecd44727322931b21790e79505ebece893f",
+    "final-status.txt": "216ec4be79a5db05858a05c1371aa2c43615ce8f817d0c2049f22699db5546c0",
+    "SETUP.BIN": "2a613fa4d7bfbc8c51790824fafc69a46eef7c0f11f739cfa2c88940f16b703a",
+    "serial.bin": "377a5828ef150f89ced60a8482e5b85394b1fc0d4ad238c4a66cedbdd6199ca4"
+  }
+}

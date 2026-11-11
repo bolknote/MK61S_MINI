@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "status": "BUILT_NOT_RUN_ON_DEVICE",
+  "resident_elf": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/math-choice-20261111/firmware-candidate/mk61s-picocalc-pico-h.elf",
+  "resident_elf_sha256": "75ef19a5237b0ed25357424e1fd31da2aa64c69fa98683b4300dc7f553ffce16",
+  "runtime_source": "/Users/bolk/Projects/MK61S_MINI/code/native_eabi_m0.S",
+  "runtime_source_sha256": "9f09cad1440d6dea0acdc9da6a80d0191f6d1f50924c75991bdc423f921d6265",
+  "rp2040_source": "/Users/bolk/Projects/MK61S_MINI/code/native_eabi_m0_rp2040.S",
+  "rp2040_source_sha256": "6a01ebf5952eaf6ba10596a1cb293ce79ebd6a9e56fae1fcd53132c7d81bd569",
+  "variants": [
+    "baseline",
+    "difference",
+    "sum_guarded"
+  ],
+  "app_sha256": "74625c21b41a4e7f8c647e5f1ae9b08709eb2cc6b50191bfaa68f3594eb04062",
+  "app_bytes": 6148,
+  "output_file": "KARAOUT.BIN",
+  "cpu_hz": 270000000,
+  "rounds": 8,
+  "calls": 2048,
+  "timing": "microsecond timer; equal ABI loop control; rotated order",
+  "footprint": "private APP; no global arithmetic/firmware patch",
+  "files": {
+    "tests/build_m0_karatsuba_benchmark.py": "1fd64f4ec361ce68495d1dcc5a44b445197455593146cc3b5de3c5e4ac025d46",
+    "tests/fixtures/m0_karatsuba_blocks.inc": "c4d687e7387cc9048370655ee3d707d9c23fd77f3454a165a182a0bce0da2a38",
+    "tests/fixtures/m0_karatsuba_benchmark.cpp": "a6b9fb5fb8c4163ea3cf0cd7a785aeb7fa27342cc49d138cb250f5299e7d7a31"
+  },
+  "generated": {
+    "variants.S": "c47d846b7679f3ddf92bf918854b8f7deea93dcee82df2e89d097a7c987083ed",
+    "corpus.json": "c5423160739e7e21cdebd2440c28c0131b392d2aadf1ba15dc17a9922ea2cb5f",
+    "karatsuba-inputs.hpp": "14604c8cd449670123d5909d748d22895dbcc5f0e66b354526ee7dea47648dea",
+    "app/KARAMUL.elf": "fb54a20d57a936bad8ac124bf784dd7a1fd26721a1021f747c344f62c1b078ca",
+    "app/KARAMUL.json": "010e57faf01896007599d33e20b0176ab39e1efddb3f5ef6331b3e09c2689603"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "HOLD_NO_TIMING",
+  "test_runs": 1,
+  "physical_timing": null,
+  "BOOTS_before": 18,
+  "BOOTS_after": 19,
+  "CRASH": "AVAILABLE",
+  "BOOT_WATCHDOG": 0,
+  "cause": "Final LTO removed an object-held fixed-address callback call as unreachable; invalid fallthrough reused service callback pointer as Job pointer.",
+  "proven_layout": {
+    "APP_base": "2001E450",
+    "observed_PC": "2001FB64",
+    "observed_LR": "2001FB65",
+    "source_after_memcpy": "200203BD",
+    "bad_r4": "100600F5",
+    "native_service_call": "1005FE31",
+    "job_bytes": 708
+  },
+  "negative_ARM_replay": "Exact old ELF recreates bad memcpy destination100600F5 andLR2001FB65; stop before invalid write",
+  "stage_limit": "Only1/2 captured while USB reconnecting; missing stage3 is not proof of clock failure",
+  "fix": "Test-only local noipa adapters retain compiler-supported callback targets and direct pinned native calls; guarded join preserved",
+  "qualification": "288 scalar/two-core ARM probes, negative old-ELF replay, final linked CFG and HOST ownership regression PASS",
+  "cleanup": "Owned003 removed,125MHz/CLOSED/NONE,CDC/lease closed. No replay, no firmware/settings/RTC/model/M3 changes; crash preserved.",
+  "evidence": {
+    ".build/mk61ai/math-candidates-20261111/hardware-003/receipt.json": "6c0c2404252a3d212e18837151962ffd6b6adbf026ace91909f120e070cccd43",
+    ".build/mk61ai/math-candidates-20261111/hardware-003/serial.bin": "2fd10aed11ed36c7dd67b52ae8d64029bb0286ddb4fa0d209ea1cf931a5a2cdf",
+    ".build/mk61ai/math-candidates-20261111/hardware-003/SETUP.BIN": "2a613fa4d7bfbc8c51790824fafc69a46eef7c0f11f739cfa2c88940f16b703a",
+    ".build/mk61ai/math-candidates-20261111/hardware-003/failed-final-status.txt": "c2f64720d62e564ded4cac89f19379cfceb1a85be8e8fb8f902d88a64e12ac6f",
+    ".build/mk61ai/math-candidates-20261111/crash-read-003/crash.bin": "0f0e7067c59de0bc8c2c4f39af41302de5e5af627a5d701728057e093055e55d",
+    ".build/mk61ai/math-candidates-20261111/crash-read-003/receipt.json": "2739c86891834e49297e6737e304e469f19c15c0e16e43809a335fec2dd8247b",
+    ".build/mk61ai/math-candidates-20261111/cfg-results.json": "d6cc26f179d9b3aab2500ddfcb417f211f1e6d33c80c858bd82401ba1800657e"
+  }
+}

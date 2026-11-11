@@ -1,0 +1,18 @@
+{
+  "status": "HOST_SCOPED_POLICY_PASS",
+  "physical_io": false,
+  "checks": [
+    "stable nonzero ambient entry admitted and preserved",
+    "I2C_TIMEOUTS delta rejected",
+    "IO_I2C_RESETS delta rejected",
+    "keyboard_errors delta rejected",
+    "BOOTS mismatch rejected",
+    "SETTINGS_WRITES mismatch rejected",
+    "SETTINGS_ERASES mismatch rejected",
+    "RTC_SET mismatch rejected",
+    "I2C_ABORTS mismatch rejected",
+    "IO_ERRORS mismatch rejected"
+  ],
+  "package_sha256": "57e349ea377d0f74d0bdc70638c8717c4b03efa41fe3e0b15d8403f6877f9192",
+  "controller_sha256": "1d459a7cbf4af125d11ff8b99d3dcfe452737ed73d21c13a7c0a2d74dd8c1e83"
+}

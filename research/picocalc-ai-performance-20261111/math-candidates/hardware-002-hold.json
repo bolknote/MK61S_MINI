@@ -1,0 +1,49 @@
+{
+  "status": "HOLD_NO_DURABLE_TIMING",
+  "test_runs": 1,
+  "physical_timing": null,
+  "hardware_numerical_cases_ok": 24,
+  "last_confirmed_stage": 6,
+  "last_stage_scope": "All24 cases verified then cleanup entered; final unconditional join preceded clock restore/unfreeze",
+  "entry": {
+    "BOOTS": 16,
+    "I2C_TIMEOUTS": 7,
+    "IO_I2C_RESETS": 7,
+    "keyboard_errors": 7
+  },
+  "exit": {
+    "BOOTS": 18,
+    "CRASH": "AVAILABLE",
+    "BOOT_WATCHDOG": 0,
+    "I2C_TIMEOUTS": 0,
+    "IO_I2C_RESETS": 0,
+    "keyboard_errors": 0,
+    "SYS_HZ": 125000000,
+    "foreground": "CLOSED/NONE"
+  },
+  "proven_bug": "dispatch consumes DONE via join; final cleanup called join again on IDLE. WorkerJobSlot.join returns false for IDLE, so blocking io_worker.join_compute waits forever.",
+  "fix": "Remove unconditional cleanup join and use ComputeLease to join only accepted, unconsumed submission; HOST ownership regression added.",
+  "crash": {
+    "PC": "100DF58C",
+    "LR": "100DA589",
+    "decoded": "_exit BKPT0 called by SDK panic; original caller absent from retained frame",
+    "uptime_ms": 1163,
+    "sequence": 1,
+    "STATE": 0,
+    "DETAIL": 0,
+    "MSP": "20040D38",
+    "EXC_RETURN": "FFFFFFF9",
+    "sha256": "21314b5fb9ff3fbf99ff706a3cb0fe57199abb2a5204810478404158eab2de85",
+    "cleared": false
+  },
+  "reset_attribution": "The stage6 deadlock is proven; final BOOTS18/HardFault panic does not reveal why the intervening boot panicked. Do not call final reset a watchdog reset.",
+  "cleanup": "Only fresh owned APP directory removed; CDC/lease closed; no replay/reset/flash",
+  "evidence": {
+    ".build/mk61ai/math-candidates-20261111/hardware-002/receipt.json": "83cf887c5644ab433ea932008bcaeb11259db69d65608105b3c15e3096ec3e5b",
+    ".build/mk61ai/math-candidates-20261111/hardware-002/serial.bin": "041449c5aee1b1df41aac55a316e717dfe889cc19d9ba911c6b284896ee93b4c",
+    ".build/mk61ai/math-candidates-20261111/hardware-002/SETUP.BIN": "2a613fa4d7bfbc8c51790824fafc69a46eef7c0f11f739cfa2c88940f16b703a",
+    ".build/mk61ai/math-candidates-20261111/hardware-002/failed-final-status.txt": "d24a3df6206ec7d4d491cbd96355cfbeac3b06ba2c2eea369684692a78039d3d",
+    ".build/mk61ai/math-candidates-20261111/crash-read-002/crash.bin": "21314b5fb9ff3fbf99ff706a3cb0fe57199abb2a5204810478404158eab2de85",
+    ".build/mk61ai/math-candidates-20261111/crash-read-002/receipt.json": "10ec43936e7fbcfee045d1dc7cf8354c78a2228ac50b6b66bc2feb12affd5aa6"
+  }
+}

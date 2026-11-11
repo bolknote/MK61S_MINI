@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "Flash_writes": 0,
+  "M3_writes": 0,
+  "crash_clears": 0,
+  "preexisting_crash": "AVAILABLE",
+  "test_runs": 1,
+  "owned_directory": "/Apps/MATHCAND-20261111-005",
+  "counters_before": {
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "BOOTS": "19",
+    "I2C_TIMEOUTS": "7",
+    "IO_I2C_RESETS": "7",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "keyboard_errors": "7"
+  },
+  "ambient_entry_telemetry": {
+    "I2C_TIMEOUTS": "7",
+    "IO_I2C_RESETS": "7",
+    "keyboard_errors": "7"
+  },
+  "upload": {
+    "bytes": 9249,
+    "sha256": "5be54b4a408309371eda378bf94a883471c32772ee6554b6261f4fbade91e74e",
+    "upload_readback_seconds": 2.675162375002401
+  },
+  "fixtures_upload": {
+    "bytes": 96400,
+    "sha256": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+    "upload_readback_seconds": 27.229343917017104
+  },
+  "owned_directory_removed": true,
+  "build": "7C38C634",
+  "crc": "8A17554E",
+  "restored_hz": 125000000,
+  "counters_after": {
+    "SETTINGS_WRITES": "0",
+    "SETTINGS_ERASES": "0",
+    "RTC_SET": "0",
+    "BOOTS": "19",
+    "I2C_TIMEOUTS": "7",
+    "IO_I2C_RESETS": "7",
+    "I2C_ABORTS": "0",
+    "IO_ERRORS": "0",
+    "keyboard_errors": "7"
+  },
+  "CDC_reconnects": 3,
+  "result": "results.json",
+  "matrix_cases": 24,
+  "cores": 2,
+  "CDC_closed": true,
+  "lease_closed": true
+}

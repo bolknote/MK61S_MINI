@@ -1,0 +1,14 @@
+{
+  "status": "HOST_CONTROLLER_PASS",
+  "physical_io": false,
+  "checks": [
+    "wrong_uid rejected before lease/USB",
+    "old_package rejected before lease/USB",
+    "expired rejected before lease/USB",
+    "changed_boot rejected before lease/USB",
+    "changed_error rejected before lease/USB",
+    "missing_crash rejected before lease/USB",
+    "no_handoff rejected before lease/USB"
+  ],
+  "package_sha256": "c67ef14d21bcfefb051af46432765f8b25f4f1f4ff546944c0cf2ea37dcd2019"
+}

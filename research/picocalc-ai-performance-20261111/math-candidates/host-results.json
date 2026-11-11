@@ -1,0 +1,3 @@
+{
+"status":"PASS","matrix_calls":2272,"tiles":28576,"rows_bit_exact":671744,"classifier_rows":262144,"quant_values":372736,"quant_zeros":9138,"blocks8":46592,"zero_blocks8":0,"pruned_half":6980,"pruned_last":206605,"groups_evaluated_half":1034616,"bound_groups_half":524288,"hardware_cases":24,"physical_io":false
+}

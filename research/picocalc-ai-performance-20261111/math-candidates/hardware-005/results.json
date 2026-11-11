@@ -1,0 +1,3417 @@
+{
+  "status": "HARDWARE_MEASURED",
+  "cpu_hz": 270000000,
+  "cores": 2,
+  "workspace_bytes": 28700,
+  "matrix_tiles": [
+    {
+      "id": 0,
+      "tensor": 3,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 210.25,
+          "total_us": 212.125,
+          "prep_samples_us": [
+            1.5,
+            1.75,
+            1.5,
+            1.75,
+            1.75,
+            2.25
+          ],
+          "compute_samples_us": [
+            214.0,
+            210.75,
+            208.75,
+            209.75,
+            210.0,
+            210.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.375,
+          "compute_us": 140.625,
+          "total_us": 329.875,
+          "prep_samples_us": [
+            189.5,
+            189.25,
+            189.5,
+            189.25,
+            189.25,
+            189.5
+          ],
+          "compute_samples_us": [
+            141.0,
+            141.0,
+            139.75,
+            142.5,
+            140.25,
+            140.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.75,
+          "compute_us": 328.25,
+          "total_us": 330.25,
+          "prep_samples_us": [
+            1.75,
+            1.75,
+            2.25,
+            2.25,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            328.0,
+            326.25,
+            328.5,
+            325.75,
+            329.75,
+            332.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 16.75,
+          "compute_us": 275.625,
+          "total_us": 292.125,
+          "prep_samples_us": [
+            17.0,
+            16.5,
+            16.75,
+            16.75,
+            16.5,
+            17.0
+          ],
+          "compute_samples_us": [
+            281.25,
+            275.75,
+            274.75,
+            274.5,
+            275.5,
+            281.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 392
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "tensor": 10,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.875,
+          "compute_us": 209.625,
+          "total_us": 211.125,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            2.0,
+            1.75,
+            1.5,
+            1.5
+          ],
+          "compute_samples_us": [
+            213.5,
+            213.75,
+            208.5,
+            208.25,
+            209.75,
+            209.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.625,
+          "compute_us": 139.375,
+          "total_us": 328.75,
+          "prep_samples_us": [
+            189.25,
+            189.75,
+            189.5,
+            189.75,
+            189.25,
+            189.75
+          ],
+          "compute_samples_us": [
+            142.25,
+            139.75,
+            139.5,
+            137.5,
+            139.25,
+            138.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.125,
+          "compute_us": 327.375,
+          "total_us": 329.5,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            2.25,
+            1.5,
+            2.25,
+            2.0
+          ],
+          "compute_samples_us": [
+            328.0,
+            326.75,
+            337.5,
+            328.5,
+            326.75,
+            326.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 293.875,
+          "total_us": 311.5,
+          "prep_samples_us": [
+            17.75,
+            17.75,
+            17.75,
+            17.5,
+            17.75,
+            17.5
+          ],
+          "compute_samples_us": [
+            293.0,
+            293.25,
+            294.0,
+            293.75,
+            296.0,
+            295.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "tensor": 12,
+      "position": 0,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.625,
+          "compute_us": 171.375,
+          "total_us": 173.0,
+          "prep_samples_us": [
+            1.5,
+            1.5,
+            1.75,
+            2.0,
+            1.5,
+            2.25
+          ],
+          "compute_samples_us": [
+            169.75,
+            171.75,
+            171.0,
+            171.75,
+            172.0,
+            170.5
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 564.875,
+          "compute_us": 117.375,
+          "total_us": 682.125,
+          "prep_samples_us": [
+            565.0,
+            565.0,
+            564.75,
+            565.0,
+            564.75,
+            564.75
+          ],
+          "compute_samples_us": [
+            116.5,
+            117.5,
+            117.25,
+            116.75,
+            117.5,
+            118.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 701.125,
+          "total_us": 703.25,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            2.0,
+            2.5,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            701.0,
+            700.5,
+            699.25,
+            701.25,
+            701.75,
+            704.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 48.5,
+          "compute_us": 244.875,
+          "total_us": 293.375,
+          "prep_samples_us": [
+            48.25,
+            48.5,
+            48.5,
+            48.5,
+            48.5,
+            48.5
+          ],
+          "compute_samples_us": [
+            244.0,
+            244.75,
+            244.0,
+            245.25,
+            245.25,
+            245.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 104
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 211.25,
+          "total_us": 213.375,
+          "prep_samples_us": [
+            2.25,
+            1.5,
+            1.25,
+            2.0,
+            2.25,
+            2.0
+          ],
+          "compute_samples_us": [
+            211.75,
+            212.25,
+            213.75,
+            208.75,
+            210.75,
+            208.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.625,
+          "compute_us": 141.875,
+          "total_us": 331.75,
+          "prep_samples_us": [
+            189.25,
+            190.0,
+            189.75,
+            190.5,
+            189.5,
+            189.25
+          ],
+          "compute_samples_us": [
+            146.5,
+            141.5,
+            142.25,
+            142.5,
+            141.5,
+            139.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.125,
+          "compute_us": 328.0,
+          "total_us": 330.25,
+          "prep_samples_us": [
+            2.5,
+            2.0,
+            2.25,
+            2.25,
+            1.75,
+            1.5
+          ],
+          "compute_samples_us": [
+            327.75,
+            328.25,
+            327.25,
+            329.5,
+            330.25,
+            327.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.625,
+          "compute_us": 294.125,
+          "total_us": 311.75,
+          "prep_samples_us": [
+            17.25,
+            17.5,
+            17.75,
+            17.75,
+            17.5,
+            17.75
+          ],
+          "compute_samples_us": [
+            292.25,
+            293.5,
+            296.0,
+            293.75,
+            294.5,
+            297.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.5,
+          "compute_us": 230.5,
+          "total_us": 241.125,
+          "prep_samples_us": [
+            10.25,
+            10.5,
+            10.5,
+            10.75,
+            10.5,
+            10.75
+          ],
+          "compute_samples_us": [
+            232.5,
+            230.5,
+            229.5,
+            230.5,
+            230.25,
+            235.0
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 199.5,
+          "total_us": 210.125,
+          "prep_samples_us": [
+            10.75,
+            10.25,
+            10.75,
+            10.5,
+            10.5,
+            10.0
+          ],
+          "compute_samples_us": [
+            201.25,
+            199.25,
+            199.25,
+            199.75,
+            199.25,
+            200.75
+          ],
+          "groups": 112,
+          "bounded": 28,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 209.0,
+          "total_us": 211.0,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            2.25,
+            1.5
+          ],
+          "compute_samples_us": [
+            210.75,
+            207.25,
+            209.5,
+            208.5,
+            209.5,
+            208.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.375,
+          "compute_us": 140.125,
+          "total_us": 329.75,
+          "prep_samples_us": [
+            189.5,
+            189.25,
+            190.0,
+            189.5,
+            189.25,
+            189.25
+          ],
+          "compute_samples_us": [
+            142.75,
+            140.0,
+            140.25,
+            138.75,
+            142.5,
+            139.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.875,
+          "compute_us": 328.5,
+          "total_us": 330.5,
+          "prep_samples_us": [
+            1.5,
+            2.0,
+            1.75,
+            2.25,
+            1.75,
+            2.25
+          ],
+          "compute_samples_us": [
+            328.0,
+            329.5,
+            326.75,
+            329.0,
+            328.0,
+            329.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.625,
+          "compute_us": 293.375,
+          "total_us": 311.0,
+          "prep_samples_us": [
+            17.75,
+            17.5,
+            18.0,
+            17.5,
+            17.25,
+            17.75
+          ],
+          "compute_samples_us": [
+            293.25,
+            293.5,
+            293.0,
+            294.0,
+            293.0,
+            295.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.5,
+          "compute_us": 230.625,
+          "total_us": 241.25,
+          "prep_samples_us": [
+            10.5,
+            10.5,
+            10.75,
+            10.75,
+            10.5,
+            10.5
+          ],
+          "compute_samples_us": [
+            230.0,
+            231.25,
+            232.0,
+            230.25,
+            231.0,
+            230.0
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 183.5,
+          "total_us": 194.25,
+          "prep_samples_us": [
+            10.75,
+            11.0,
+            10.5,
+            10.5,
+            10.5,
+            10.5
+          ],
+          "compute_samples_us": [
+            183.75,
+            183.0,
+            184.5,
+            184.0,
+            181.0,
+            183.25
+          ],
+          "groups": 98,
+          "bounded": 28,
+          "pruned": 14,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "tensor": 0,
+      "position": 0,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.25,
+          "compute_us": 123.0,
+          "total_us": 125.0,
+          "prep_samples_us": [
+            2.25,
+            2.25,
+            2.25,
+            1.75,
+            2.25,
+            1.75
+          ],
+          "compute_samples_us": [
+            125.5,
+            122.0,
+            125.0,
+            121.5,
+            123.5,
+            122.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.375,
+          "compute_us": 82.75,
+          "total_us": 272.125,
+          "prep_samples_us": [
+            189.0,
+            189.25,
+            189.75,
+            189.25,
+            189.75,
+            189.5
+          ],
+          "compute_samples_us": [
+            82.75,
+            82.5,
+            89.25,
+            83.0,
+            82.75,
+            82.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 275.25,
+          "total_us": 277.125,
+          "prep_samples_us": [
+            1.75,
+            2.25,
+            2.0,
+            2.0,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            275.25,
+            274.25,
+            275.5,
+            275.5,
+            274.25,
+            275.25
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 171.125,
+          "total_us": 188.75,
+          "prep_samples_us": [
+            17.5,
+            17.75,
+            17.5,
+            17.5,
+            17.75,
+            17.25
+          ],
+          "compute_samples_us": [
+            171.0,
+            171.25,
+            171.75,
+            168.5,
+            171.75,
+            171.0
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 16
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.5,
+          "compute_us": 134.75,
+          "total_us": 145.25,
+          "prep_samples_us": [
+            10.5,
+            10.5,
+            10.5,
+            10.5,
+            10.75,
+            10.5
+          ],
+          "compute_samples_us": [
+            135.25,
+            134.25,
+            134.5,
+            135.0,
+            136.0,
+            132.0
+          ],
+          "groups": 64,
+          "bounded": 32,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 102.75,
+          "total_us": 113.25,
+          "prep_samples_us": [
+            10.75,
+            10.5,
+            10.5,
+            10.25,
+            10.0,
+            10.5
+          ],
+          "compute_samples_us": [
+            102.25,
+            102.0,
+            103.0,
+            104.75,
+            102.5,
+            103.0
+          ],
+          "groups": 56,
+          "bounded": 16,
+          "pruned": 8,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "tensor": 3,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 209.375,
+          "total_us": 211.375,
+          "prep_samples_us": [
+            2.0,
+            1.75,
+            2.0,
+            2.0,
+            1.5,
+            2.0
+          ],
+          "compute_samples_us": [
+            212.75,
+            210.75,
+            207.5,
+            208.75,
+            207.75,
+            210.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.625,
+          "compute_us": 141.875,
+          "total_us": 331.375,
+          "prep_samples_us": [
+            189.5,
+            189.25,
+            189.75,
+            189.75,
+            189.0,
+            189.75
+          ],
+          "compute_samples_us": [
+            143.75,
+            141.75,
+            139.0,
+            142.0,
+            138.5,
+            142.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.875,
+          "compute_us": 327.625,
+          "total_us": 329.5,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            1.75,
+            1.75,
+            2.0,
+            1.75
+          ],
+          "compute_samples_us": [
+            332.5,
+            329.25,
+            326.75,
+            326.75,
+            327.25,
+            328.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 16.25,
+          "compute_us": 262.125,
+          "total_us": 278.375,
+          "prep_samples_us": [
+            16.5,
+            16.25,
+            16.5,
+            16.0,
+            16.0,
+            16.25
+          ],
+          "compute_samples_us": [
+            262.0,
+            264.0,
+            261.5,
+            262.25,
+            263.75,
+            261.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 644
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "tensor": 10,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 208.75,
+          "total_us": 210.75,
+          "prep_samples_us": [
+            2.0,
+            1.75,
+            2.0,
+            2.0,
+            1.5,
+            2.25
+          ],
+          "compute_samples_us": [
+            212.25,
+            210.0,
+            208.0,
+            207.0,
+            208.25,
+            209.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 141.375,
+          "total_us": 330.75,
+          "prep_samples_us": [
+            189.5,
+            190.0,
+            189.25,
+            189.25,
+            189.5,
+            189.75
+          ],
+          "compute_samples_us": [
+            142.0,
+            142.5,
+            139.25,
+            140.75,
+            139.0,
+            142.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 328.125,
+          "total_us": 330.125,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            1.75
+          ],
+          "compute_samples_us": [
+            327.75,
+            328.25,
+            329.25,
+            329.75,
+            328.0,
+            328.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 294.375,
+          "total_us": 311.875,
+          "prep_samples_us": [
+            17.5,
+            18.0,
+            17.25,
+            17.25,
+            17.75,
+            17.5
+          ],
+          "compute_samples_us": [
+            294.75,
+            302.0,
+            294.25,
+            294.0,
+            294.5,
+            293.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "tensor": 12,
+      "position": 3,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 170.25,
+          "total_us": 172.0,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            2.0,
+            1.5,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            173.5,
+            168.25,
+            171.0,
+            171.0,
+            168.75,
+            169.5
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 564.875,
+          "compute_us": 119.875,
+          "total_us": 684.75,
+          "prep_samples_us": [
+            564.75,
+            564.75,
+            565.0,
+            564.75,
+            565.0,
+            565.0
+          ],
+          "compute_samples_us": [
+            121.25,
+            120.0,
+            119.5,
+            119.25,
+            119.75,
+            120.25
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 700.75,
+          "total_us": 702.625,
+          "prep_samples_us": [
+            2.25,
+            2.25,
+            1.5,
+            1.75,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            698.5,
+            700.25,
+            703.5,
+            700.75,
+            700.75,
+            700.75
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 48.375,
+          "compute_us": 244.5,
+          "total_us": 293.125,
+          "prep_samples_us": [
+            48.75,
+            48.0,
+            48.0,
+            48.25,
+            48.75,
+            48.5
+          ],
+          "compute_samples_us": [
+            244.75,
+            245.25,
+            243.25,
+            243.5,
+            244.25,
+            245.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 112
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 207.875,
+          "total_us": 209.625,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            1.5,
+            1.75,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            209.25,
+            208.75,
+            207.0,
+            204.25,
+            209.75,
+            204.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 140.5,
+          "total_us": 329.875,
+          "prep_samples_us": [
+            190.0,
+            189.25,
+            189.5,
+            189.75,
+            189.25,
+            189.5
+          ],
+          "compute_samples_us": [
+            141.25,
+            138.25,
+            137.75,
+            141.0,
+            140.5,
+            140.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.125,
+          "compute_us": 330.0,
+          "total_us": 332.125,
+          "prep_samples_us": [
+            2.25,
+            2.0,
+            1.5,
+            2.25,
+            2.0,
+            2.25
+          ],
+          "compute_samples_us": [
+            330.75,
+            329.25,
+            328.0,
+            328.75,
+            331.0,
+            331.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 294.25,
+          "total_us": 312.125,
+          "prep_samples_us": [
+            18.0,
+            17.75,
+            17.25,
+            17.75,
+            18.0,
+            17.75
+          ],
+          "compute_samples_us": [
+            293.25,
+            294.75,
+            293.25,
+            294.75,
+            294.5,
+            294.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.5,
+          "compute_us": 229.5,
+          "total_us": 239.75,
+          "prep_samples_us": [
+            10.75,
+            10.5,
+            10.5,
+            10.75,
+            10.0,
+            10.25
+          ],
+          "compute_samples_us": [
+            230.25,
+            232.75,
+            228.25,
+            228.75,
+            230.0,
+            229.0
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.375,
+          "compute_us": 199.25,
+          "total_us": 209.875,
+          "prep_samples_us": [
+            10.25,
+            10.5,
+            10.75,
+            10.75,
+            10.25,
+            10.25
+          ],
+          "compute_samples_us": [
+            201.25,
+            199.75,
+            199.0,
+            199.25,
+            199.25,
+            198.25
+          ],
+          "groups": 111,
+          "bounded": 28,
+          "pruned": 1,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.875,
+          "compute_us": 208.25,
+          "total_us": 209.75,
+          "prep_samples_us": [
+            2.25,
+            1.25,
+            1.5,
+            2.0,
+            2.0,
+            1.75
+          ],
+          "compute_samples_us": [
+            213.0,
+            208.75,
+            204.75,
+            209.25,
+            206.5,
+            207.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.75,
+          "compute_us": 141.75,
+          "total_us": 331.5,
+          "prep_samples_us": [
+            189.75,
+            189.25,
+            189.75,
+            190.0,
+            189.5,
+            189.75
+          ],
+          "compute_samples_us": [
+            143.25,
+            140.0,
+            141.5,
+            142.0,
+            138.25,
+            142.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 329.375,
+          "total_us": 331.375,
+          "prep_samples_us": [
+            1.5,
+            2.0,
+            2.25,
+            2.0,
+            1.5,
+            2.0
+          ],
+          "compute_samples_us": [
+            334.75,
+            330.5,
+            331.0,
+            325.75,
+            328.0,
+            328.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 293.0,
+          "total_us": 310.75,
+          "prep_samples_us": [
+            18.0,
+            17.25,
+            17.75,
+            17.5,
+            17.75,
+            17.75
+          ],
+          "compute_samples_us": [
+            293.5,
+            293.0,
+            293.0,
+            292.25,
+            294.25,
+            293.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.625,
+          "compute_us": 230.0,
+          "total_us": 240.75,
+          "prep_samples_us": [
+            10.75,
+            11.0,
+            10.5,
+            10.75,
+            10.25,
+            10.5
+          ],
+          "compute_samples_us": [
+            230.0,
+            230.25,
+            229.5,
+            230.0,
+            229.75,
+            231.5
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 160.5,
+          "total_us": 171.125,
+          "prep_samples_us": [
+            10.5,
+            10.5,
+            10.5,
+            10.5,
+            10.75,
+            10.25
+          ],
+          "compute_samples_us": [
+            161.0,
+            160.75,
+            160.25,
+            161.5,
+            160.25,
+            158.5
+          ],
+          "groups": 87,
+          "bounded": 28,
+          "pruned": 25,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "tensor": 0,
+      "position": 3,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 121.5,
+          "total_us": 123.375,
+          "prep_samples_us": [
+            1.75,
+            2.0,
+            1.5,
+            1.5,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            125.75,
+            121.25,
+            120.25,
+            122.0,
+            121.75,
+            120.25
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 82.625,
+          "total_us": 272.125,
+          "prep_samples_us": [
+            190.0,
+            189.5,
+            189.25,
+            189.25,
+            189.75,
+            189.5
+          ],
+          "compute_samples_us": [
+            82.25,
+            83.75,
+            82.75,
+            82.5,
+            83.0,
+            82.0
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 275.125,
+          "total_us": 277.0,
+          "prep_samples_us": [
+            2.0,
+            1.75,
+            2.0,
+            2.0,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            279.75,
+            274.25,
+            275.0,
+            275.25,
+            275.25,
+            274.25
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 170.625,
+          "total_us": 187.875,
+          "prep_samples_us": [
+            17.5,
+            17.5,
+            17.75,
+            17.0,
+            17.75,
+            17.25
+          ],
+          "compute_samples_us": [
+            170.75,
+            171.0,
+            169.75,
+            170.5,
+            169.0,
+            171.25
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 16
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.625,
+          "compute_us": 134.125,
+          "total_us": 144.75,
+          "prep_samples_us": [
+            10.5,
+            11.0,
+            10.75,
+            10.5,
+            10.75,
+            10.5
+          ],
+          "compute_samples_us": [
+            134.25,
+            135.75,
+            131.75,
+            133.75,
+            134.0,
+            135.25
+          ],
+          "groups": 64,
+          "bounded": 32,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 88.875,
+          "total_us": 99.125,
+          "prep_samples_us": [
+            10.0,
+            10.5,
+            10.75,
+            10.5,
+            10.5,
+            11.0
+          ],
+          "compute_samples_us": [
+            89.0,
+            88.5,
+            91.25,
+            88.5,
+            88.75,
+            91.5
+          ],
+          "groups": 48,
+          "bounded": 16,
+          "pruned": 16,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "tensor": 3,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 208.875,
+          "total_us": 210.875,
+          "prep_samples_us": [
+            1.75,
+            2.0,
+            2.0,
+            1.75,
+            2.0,
+            2.25
+          ],
+          "compute_samples_us": [
+            210.25,
+            213.75,
+            206.75,
+            209.5,
+            207.0,
+            208.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 141.75,
+          "total_us": 331.375,
+          "prep_samples_us": [
+            189.5,
+            190.0,
+            189.75,
+            189.5,
+            189.5,
+            189.25
+          ],
+          "compute_samples_us": [
+            144.0,
+            142.75,
+            140.75,
+            142.75,
+            140.5,
+            140.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.875,
+          "compute_us": 327.125,
+          "total_us": 329.0,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            2.0,
+            1.75,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            328.0,
+            326.75,
+            335.75,
+            326.0,
+            327.0,
+            327.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 16.75,
+          "compute_us": 275.125,
+          "total_us": 291.875,
+          "prep_samples_us": [
+            16.75,
+            16.75,
+            16.75,
+            17.0,
+            16.75,
+            16.75
+          ],
+          "compute_samples_us": [
+            275.25,
+            275.0,
+            275.0,
+            275.25,
+            277.5,
+            273.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 392
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "tensor": 10,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 209.5,
+          "total_us": 211.125,
+          "prep_samples_us": [
+            1.75,
+            2.0,
+            1.75,
+            1.25,
+            1.75,
+            1.5
+          ],
+          "compute_samples_us": [
+            214.25,
+            211.75,
+            207.0,
+            206.75,
+            209.75,
+            209.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 141.5,
+          "total_us": 331.125,
+          "prep_samples_us": [
+            189.75,
+            189.5,
+            189.75,
+            189.5,
+            189.5,
+            189.5
+          ],
+          "compute_samples_us": [
+            142.75,
+            142.75,
+            140.25,
+            140.25,
+            139.25,
+            143.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.125,
+          "compute_us": 328.0,
+          "total_us": 330.0,
+          "prep_samples_us": [
+            2.25,
+            2.25,
+            2.25,
+            2.0,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            330.25,
+            327.25,
+            328.25,
+            329.0,
+            326.75,
+            327.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 293.75,
+          "total_us": 311.125,
+          "prep_samples_us": [
+            17.75,
+            17.5,
+            17.25,
+            17.25,
+            17.5,
+            17.5
+          ],
+          "compute_samples_us": [
+            293.0,
+            293.0,
+            294.25,
+            293.75,
+            293.75,
+            294.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "tensor": 12,
+      "position": 0,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 169.125,
+          "total_us": 171.125,
+          "prep_samples_us": [
+            2.0,
+            1.5,
+            2.0,
+            2.0,
+            1.75,
+            2.25
+          ],
+          "compute_samples_us": [
+            173.75,
+            171.0,
+            168.0,
+            167.75,
+            169.5,
+            168.75
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 564.75,
+          "compute_us": 119.25,
+          "total_us": 684.0,
+          "prep_samples_us": [
+            564.5,
+            565.0,
+            564.75,
+            564.75,
+            564.75,
+            564.75
+          ],
+          "compute_samples_us": [
+            120.75,
+            118.5,
+            119.25,
+            119.25,
+            119.0,
+            120.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 703.125,
+          "total_us": 705.0,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            707.75,
+            701.25,
+            700.5,
+            708.25,
+            705.0,
+            700.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 48.375,
+          "compute_us": 244.5,
+          "total_us": 292.875,
+          "prep_samples_us": [
+            48.75,
+            48.25,
+            48.25,
+            48.5,
+            48.5,
+            48.25
+          ],
+          "compute_samples_us": [
+            244.5,
+            244.25,
+            244.5,
+            243.0,
+            245.0,
+            244.75
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 104
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 208.125,
+          "total_us": 210.0,
+          "prep_samples_us": [
+            2.0,
+            1.5,
+            2.0,
+            1.75,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            211.0,
+            209.5,
+            207.25,
+            206.75,
+            209.0,
+            204.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.625,
+          "compute_us": 140.375,
+          "total_us": 329.875,
+          "prep_samples_us": [
+            189.5,
+            189.25,
+            189.25,
+            189.75,
+            189.75,
+            189.75
+          ],
+          "compute_samples_us": [
+            144.0,
+            139.5,
+            139.5,
+            141.25,
+            138.0,
+            141.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.125,
+          "compute_us": 327.75,
+          "total_us": 330.0,
+          "prep_samples_us": [
+            1.75,
+            2.25,
+            2.25,
+            2.25,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            328.5,
+            328.0,
+            327.5,
+            327.25,
+            328.25,
+            326.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.625,
+          "compute_us": 293.375,
+          "total_us": 311.125,
+          "prep_samples_us": [
+            18.0,
+            17.75,
+            17.25,
+            17.5,
+            17.5,
+            18.0
+          ],
+          "compute_samples_us": [
+            293.25,
+            292.75,
+            292.25,
+            294.75,
+            293.5,
+            294.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.625,
+          "compute_us": 230.125,
+          "total_us": 240.75,
+          "prep_samples_us": [
+            10.75,
+            10.75,
+            10.25,
+            10.75,
+            10.5,
+            10.5
+          ],
+          "compute_samples_us": [
+            231.25,
+            229.75,
+            229.5,
+            229.5,
+            230.5,
+            230.5
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.75,
+          "compute_us": 199.875,
+          "total_us": 210.625,
+          "prep_samples_us": [
+            10.5,
+            10.75,
+            10.75,
+            10.75,
+            10.0,
+            10.75
+          ],
+          "compute_samples_us": [
+            199.0,
+            200.5,
+            200.5,
+            200.25,
+            199.5,
+            199.5
+          ],
+          "groups": 112,
+          "bounded": 28,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "tensor": 0,
+      "position": 0,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.875,
+          "compute_us": 209.25,
+          "total_us": 211.125,
+          "prep_samples_us": [
+            2.25,
+            2.0,
+            1.75,
+            1.75,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            211.5,
+            209.0,
+            210.25,
+            209.5,
+            208.75,
+            205.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 141.125,
+          "total_us": 330.75,
+          "prep_samples_us": [
+            189.25,
+            189.5,
+            189.5,
+            189.75,
+            189.75,
+            189.5
+          ],
+          "compute_samples_us": [
+            143.25,
+            138.0,
+            140.0,
+            142.25,
+            139.5,
+            143.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 327.625,
+          "total_us": 329.5,
+          "prep_samples_us": [
+            2.0,
+            2.25,
+            2.0,
+            1.5,
+            2.0,
+            2.25
+          ],
+          "compute_samples_us": [
+            329.75,
+            329.25,
+            326.75,
+            327.5,
+            326.75,
+            327.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 294.875,
+          "total_us": 312.625,
+          "prep_samples_us": [
+            17.75,
+            17.75,
+            18.0,
+            17.75,
+            17.75,
+            17.75
+          ],
+          "compute_samples_us": [
+            294.0,
+            295.75,
+            293.25,
+            296.75,
+            295.75,
+            293.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.5,
+          "compute_us": 230.375,
+          "total_us": 241.125,
+          "prep_samples_us": [
+            10.75,
+            10.75,
+            10.5,
+            10.0,
+            10.5,
+            10.25
+          ],
+          "compute_samples_us": [
+            230.5,
+            230.25,
+            228.5,
+            231.5,
+            232.25,
+            230.25
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 184.375,
+          "total_us": 195.0,
+          "prep_samples_us": [
+            10.75,
+            10.5,
+            10.25,
+            10.25,
+            10.5,
+            10.75
+          ],
+          "compute_samples_us": [
+            184.75,
+            184.5,
+            184.0,
+            182.75,
+            186.25,
+            184.25
+          ],
+          "groups": 98,
+          "bounded": 28,
+          "pruned": 14,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "tensor": 0,
+      "position": 0,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 123.125,
+          "total_us": 124.875,
+          "prep_samples_us": [
+            2.25,
+            1.75,
+            2.0,
+            1.75,
+            1.75,
+            1.75
+          ],
+          "compute_samples_us": [
+            127.0,
+            125.25,
+            121.25,
+            120.5,
+            123.25,
+            123.0
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 83.625,
+          "total_us": 273.125,
+          "prep_samples_us": [
+            189.25,
+            189.5,
+            189.5,
+            189.5,
+            189.5,
+            189.5
+          ],
+          "compute_samples_us": [
+            84.25,
+            83.75,
+            82.25,
+            85.75,
+            83.5,
+            83.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.875,
+          "compute_us": 275.25,
+          "total_us": 277.0,
+          "prep_samples_us": [
+            1.75,
+            2.0,
+            1.5,
+            2.25,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            279.25,
+            274.75,
+            275.75,
+            274.25,
+            276.0,
+            273.75
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 171.125,
+          "total_us": 188.875,
+          "prep_samples_us": [
+            17.5,
+            18.0,
+            17.75,
+            17.25,
+            17.75,
+            17.75
+          ],
+          "compute_samples_us": [
+            171.0,
+            171.5,
+            171.75,
+            169.25,
+            171.0,
+            171.25
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 16
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.625,
+          "compute_us": 134.75,
+          "total_us": 145.625,
+          "prep_samples_us": [
+            10.75,
+            11.0,
+            10.25,
+            11.0,
+            10.25,
+            10.5
+          ],
+          "compute_samples_us": [
+            134.5,
+            135.25,
+            132.0,
+            135.0,
+            136.25,
+            131.75
+          ],
+          "groups": 64,
+          "bounded": 32,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.375,
+          "compute_us": 103.0,
+          "total_us": 113.375,
+          "prep_samples_us": [
+            10.5,
+            10.25,
+            10.25,
+            10.75,
+            10.5,
+            10.25
+          ],
+          "compute_samples_us": [
+            102.0,
+            102.0,
+            104.5,
+            105.25,
+            102.5,
+            103.5
+          ],
+          "groups": 56,
+          "bounded": 16,
+          "pruned": 8,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "tensor": 3,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 208.125,
+          "total_us": 210.125,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            2.0,
+            1.25,
+            1.75,
+            2.0
+          ],
+          "compute_samples_us": [
+            211.5,
+            208.75,
+            208.0,
+            207.5,
+            208.0,
+            208.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 140.375,
+          "total_us": 329.75,
+          "prep_samples_us": [
+            189.5,
+            189.5,
+            189.5,
+            189.25,
+            189.0,
+            189.5
+          ],
+          "compute_samples_us": [
+            142.5,
+            139.0,
+            140.5,
+            140.25,
+            139.25,
+            141.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 328.875,
+          "total_us": 331.0,
+          "prep_samples_us": [
+            2.0,
+            2.5,
+            1.75,
+            2.0,
+            1.75,
+            2.25
+          ],
+          "compute_samples_us": [
+            326.0,
+            329.0,
+            329.25,
+            331.25,
+            328.5,
+            328.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 16.25,
+          "compute_us": 261.375,
+          "total_us": 277.75,
+          "prep_samples_us": [
+            16.5,
+            16.0,
+            16.75,
+            16.25,
+            16.25,
+            16.0
+          ],
+          "compute_samples_us": [
+            270.25,
+            263.25,
+            261.25,
+            259.75,
+            260.5,
+            261.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 672
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "tensor": 10,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 384,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 2.0,
+          "compute_us": 208.875,
+          "total_us": 210.875,
+          "prep_samples_us": [
+            1.75,
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            213.25,
+            212.5,
+            209.0,
+            207.5,
+            208.75,
+            207.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.375,
+          "compute_us": 139.625,
+          "total_us": 329.0,
+          "prep_samples_us": [
+            189.25,
+            189.75,
+            189.25,
+            189.5,
+            189.5,
+            189.25
+          ],
+          "compute_samples_us": [
+            142.25,
+            141.0,
+            139.75,
+            139.5,
+            139.25,
+            139.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 327.625,
+          "total_us": 329.625,
+          "prep_samples_us": [
+            1.75,
+            1.75,
+            1.75,
+            2.25,
+            2.5,
+            2.25
+          ],
+          "compute_samples_us": [
+            327.75,
+            327.5,
+            334.25,
+            328.0,
+            327.25,
+            327.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 293.125,
+          "total_us": 310.75,
+          "prep_samples_us": [
+            17.25,
+            17.75,
+            17.75,
+            17.5,
+            17.5,
+            17.25
+          ],
+          "compute_samples_us": [
+            293.75,
+            292.0,
+            293.25,
+            293.0,
+            294.75,
+            293.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 56
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "tensor": 12,
+      "position": 3,
+      "rows": 8,
+      "columns": 384,
+      "row_start": 0,
+      "total_rows": 128,
+      "classifier": false,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.875,
+          "compute_us": 169.0,
+          "total_us": 170.875,
+          "prep_samples_us": [
+            2.25,
+            1.75,
+            2.25,
+            1.75,
+            2.0,
+            1.75
+          ],
+          "compute_samples_us": [
+            169.75,
+            169.75,
+            167.0,
+            169.25,
+            168.75,
+            168.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 564.875,
+          "compute_us": 119.375,
+          "total_us": 684.125,
+          "prep_samples_us": [
+            565.0,
+            564.75,
+            564.75,
+            564.75,
+            565.0,
+            565.0
+          ],
+          "compute_samples_us": [
+            118.75,
+            119.25,
+            119.5,
+            119.5,
+            117.5,
+            119.75
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.25,
+          "compute_us": 702.125,
+          "total_us": 704.125,
+          "prep_samples_us": [
+            2.25,
+            2.25,
+            2.25,
+            2.0,
+            1.75,
+            2.5
+          ],
+          "compute_samples_us": [
+            701.75,
+            704.0,
+            702.75,
+            701.25,
+            702.5,
+            701.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 48.25,
+          "compute_us": 245.625,
+          "total_us": 293.875,
+          "prep_samples_us": [
+            48.0,
+            48.25,
+            48.25,
+            48.25,
+            48.25,
+            48.25
+          ],
+          "compute_samples_us": [
+            244.75,
+            246.75,
+            245.25,
+            246.25,
+            244.25,
+            246.0
+          ],
+          "groups": 96,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 96
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 0,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 208.375,
+          "total_us": 210.375,
+          "prep_samples_us": [
+            1.5,
+            2.25,
+            1.75,
+            1.75,
+            1.75,
+            1.5
+          ],
+          "compute_samples_us": [
+            212.25,
+            208.5,
+            208.25,
+            209.25,
+            207.75,
+            208.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.75,
+          "compute_us": 139.75,
+          "total_us": 329.5,
+          "prep_samples_us": [
+            189.75,
+            189.75,
+            189.75,
+            189.5,
+            189.5,
+            190.0
+          ],
+          "compute_samples_us": [
+            147.0,
+            140.0,
+            139.5,
+            141.0,
+            139.25,
+            138.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 328.0,
+          "total_us": 330.125,
+          "prep_samples_us": [
+            2.25,
+            2.0,
+            2.0,
+            2.0,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            328.0,
+            328.25,
+            325.0,
+            328.0,
+            329.25,
+            327.5
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 293.0,
+          "total_us": 310.625,
+          "prep_samples_us": [
+            17.5,
+            17.5,
+            17.75,
+            17.5,
+            17.75,
+            17.5
+          ],
+          "compute_samples_us": [
+            292.5,
+            293.0,
+            294.0,
+            293.75,
+            293.0,
+            293.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.625,
+          "compute_us": 229.375,
+          "total_us": 240.0,
+          "prep_samples_us": [
+            10.75,
+            10.25,
+            10.5,
+            11.0,
+            10.5,
+            10.75
+          ],
+          "compute_samples_us": [
+            228.75,
+            229.5,
+            230.0,
+            229.25,
+            228.75,
+            230.5
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.5,
+          "compute_us": 199.25,
+          "total_us": 209.625,
+          "prep_samples_us": [
+            10.5,
+            10.75,
+            11.0,
+            10.25,
+            10.5,
+            10.25
+          ],
+          "compute_samples_us": [
+            199.25,
+            199.5,
+            200.25,
+            199.25,
+            199.0,
+            197.75
+          ],
+          "groups": 111,
+          "bounded": 28,
+          "pruned": 1,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "tensor": 0,
+      "position": 3,
+      "rows": 28,
+      "columns": 128,
+      "row_start": 4088,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 208.375,
+          "total_us": 210.125,
+          "prep_samples_us": [
+            1.75,
+            1.75,
+            1.5,
+            1.75,
+            1.5,
+            2.0
+          ],
+          "compute_samples_us": [
+            213.0,
+            210.5,
+            208.0,
+            208.75,
+            206.5,
+            207.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.5,
+          "compute_us": 140.25,
+          "total_us": 329.875,
+          "prep_samples_us": [
+            189.5,
+            189.75,
+            189.5,
+            189.25,
+            189.5,
+            189.5
+          ],
+          "compute_samples_us": [
+            144.25,
+            140.25,
+            139.25,
+            140.75,
+            138.75,
+            140.25
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 2.0,
+          "compute_us": 329.25,
+          "total_us": 331.125,
+          "prep_samples_us": [
+            2.0,
+            2.0,
+            1.75,
+            2.25,
+            1.75,
+            2.25
+          ],
+          "compute_samples_us": [
+            329.5,
+            329.5,
+            327.25,
+            329.75,
+            329.0,
+            326.75
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.5,
+          "compute_us": 294.125,
+          "total_us": 311.75,
+          "prep_samples_us": [
+            17.75,
+            17.5,
+            17.5,
+            17.25,
+            17.75,
+            17.5
+          ],
+          "compute_samples_us": [
+            292.75,
+            294.25,
+            293.5,
+            295.0,
+            294.0,
+            295.0
+          ],
+          "groups": 112,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 28
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.75,
+          "compute_us": 230.375,
+          "total_us": 241.125,
+          "prep_samples_us": [
+            10.75,
+            10.75,
+            11.0,
+            10.5,
+            10.75,
+            10.75
+          ],
+          "compute_samples_us": [
+            230.25,
+            230.5,
+            232.5,
+            230.0,
+            229.0,
+            231.75
+          ],
+          "groups": 112,
+          "bounded": 56,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.75,
+          "compute_us": 154.125,
+          "total_us": 164.875,
+          "prep_samples_us": [
+            10.25,
+            10.75,
+            10.75,
+            10.5,
+            10.75,
+            11.0
+          ],
+          "compute_samples_us": [
+            153.5,
+            154.75,
+            156.5,
+            154.5,
+            152.5,
+            153.75
+          ],
+          "groups": 84,
+          "bounded": 28,
+          "pruned": 28,
+          "zero_products_skipped": 0
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "tensor": 0,
+      "position": 3,
+      "rows": 16,
+      "columns": 128,
+      "row_start": 8176,
+      "total_rows": 8192,
+      "classifier": true,
+      "variants": [
+        {
+          "variant": "resident_direct",
+          "prep_us": 1.75,
+          "compute_us": 122.25,
+          "total_us": 124.25,
+          "prep_samples_us": [
+            2.0,
+            1.75,
+            1.5,
+            1.5,
+            2.25,
+            1.75
+          ],
+          "compute_samples_us": [
+            126.25,
+            122.75,
+            119.25,
+            123.25,
+            121.75,
+            119.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_full",
+          "prep_us": 189.625,
+          "compute_us": 83.375,
+          "total_us": 272.75,
+          "prep_samples_us": [
+            189.25,
+            189.75,
+            189.75,
+            189.75,
+            189.25,
+            189.5
+          ],
+          "compute_samples_us": [
+            83.75,
+            82.25,
+            81.5,
+            86.0,
+            83.25,
+            83.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "lut8_bounded",
+          "prep_us": 1.875,
+          "compute_us": 274.625,
+          "total_us": 276.5,
+          "prep_samples_us": [
+            1.75,
+            2.25,
+            1.25,
+            1.75,
+            2.0,
+            2.0
+          ],
+          "compute_samples_us": [
+            274.75,
+            274.25,
+            274.0,
+            278.25,
+            274.5,
+            274.75
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "zero_skip",
+          "prep_us": 17.75,
+          "compute_us": 170.5,
+          "total_us": 188.0,
+          "prep_samples_us": [
+            17.75,
+            17.75,
+            18.0,
+            17.5,
+            17.75,
+            17.5
+          ],
+          "compute_samples_us": [
+            171.75,
+            170.25,
+            171.0,
+            170.5,
+            168.25,
+            170.5
+          ],
+          "groups": 64,
+          "bounded": 0,
+          "pruned": 0,
+          "zero_products_skipped": 16
+        },
+        {
+          "variant": "prune_half",
+          "prep_us": 10.75,
+          "compute_us": 134.25,
+          "total_us": 145.0,
+          "prep_samples_us": [
+            10.5,
+            10.5,
+            10.75,
+            10.75,
+            10.75,
+            10.75
+          ],
+          "compute_samples_us": [
+            134.0,
+            135.25,
+            132.5,
+            135.25,
+            134.25,
+            134.25
+          ],
+          "groups": 64,
+          "bounded": 32,
+          "pruned": 0,
+          "zero_products_skipped": 0
+        },
+        {
+          "variant": "prune_last",
+          "prep_us": 10.625,
+          "compute_us": 91.25,
+          "total_us": 101.875,
+          "prep_samples_us": [
+            10.75,
+            10.5,
+            10.75,
+            10.5,
+            10.5,
+            10.75
+          ],
+          "compute_samples_us": [
+            91.25,
+            90.75,
+            94.75,
+            91.25,
+            91.0,
+            92.5
+          ],
+          "groups": 49,
+          "bounded": 16,
+          "pruned": 15,
+          "zero_products_skipped": 0
+        }
+      ]
+    }
+  ],
+  "scope": "real SRAM matrix tiles, two cores, preparation included; not full inference"
+}

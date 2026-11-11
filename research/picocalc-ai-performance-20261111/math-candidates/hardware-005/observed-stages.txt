@@ -1,0 +1,147 @@
+AI_MATRIX stage=1
+AI_MATRIX stage=2
+AI_MATRIX case=4/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=5/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=6/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=7/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=8/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=9/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=10/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=11/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=12/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=13/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=14/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=15/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=16/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=17/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=18/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=19/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=20/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=21/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=22/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=23/24 ok=1
+AI_MATRIX stage=4
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX stage=5
+AI_MATRIX case=24/24 ok=1
+AI_MATRIX stage=6
+AI_MATRIX stage=60

@@ -1,0 +1,2 @@
+# Preserve the exact serial captures, including native CRLF and recorded hashes.
+*.txt -text whitespace=cr-at-eol
