@@ -15,4 +15,4 @@ The diagnostic now configures execution before stress, reports byte/status/CRC f
 
 The archived manifests, raw reports, patches and relevant source pins identify historical candidates. They were built on frozen87321134/E7B6428E including the then accepted Spectrum SRAM changes. Those unrelated working-tree changes are excluded from this commit. Historical `ready.json` files describe preparation at the time, not a current device lease or permission to flash.
 
-Next hardware step: qualify the flagged late-sampling build with the same private-buffer stress before any inference. Only a passing device run permits comparison against0.606s/token.
+Update2026-11-10: current-main candidate7BD2529E/41018F7C passed9201 private-stress iterations in5seconds, then measured0.624936/0.6248685s/token at270MHz with exact archived tokens/checksums. It did not beat0.606; the exact known-good5D image was restored and the production25MHz default remains unchanged. See the [hardware result](../../picocalc-ai-performance-20261110/psram-late-read/README.md).

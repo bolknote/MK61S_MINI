@@ -1,0 +1,31 @@
+{
+  "status": "FROZEN_HOST_ONLY",
+  "base_commit": "e8b706dbe54ce04f2cd515ca71e1b0b5832195d7",
+  "source": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/source",
+  "root_WIP_imported": false,
+  "production_source_edits": [],
+  "experimental_build_option": "--ai-psram-late-read",
+  "four_features_retained": true,
+  "reference_seconds_per_token": 0.606,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "relevant_source_pins": {
+    "ports/picocalc/ai_harness.cpp": "3af43342391402f197e09f8f4ff87ab11e36b032a15e665e8c00d8a01eeb4438",
+    "ports/picocalc/ai_clock.cpp": "93db8c08316602b10b7733df887588b8ad8b381e45cc2f8ed9643c7e6c98e207",
+    "ports/picocalc/ai_psram_read_clock.hpp": "215d308ed3cf3b6098f21252045a02712278f20004fd0ea44a33bcf4f87a839f",
+    "ports/picocalc/psram.cpp": "17f3c91ab7fdf7e8b1cbbac39c6928120dbfd237525480380f17b523fade5191",
+    "ports/picocalc/psram_qpi.pio": "8cc18c1d6426380af8fcdc744cb54e7af465de9fe62010c37a13f59085b0d60d",
+    "ports/picocalc/psram_qpi_late.pio": "30de3fd1112dd82897e999c2f4a3affdcc7c55b2e89eef02b4fbd0e179741b71",
+    "ports/picocalc/CMakeLists.txt": "4e26198258fc156e0d8e2da5050c712595e958834cef0347083fd505437fd97e",
+    "ports/picocalc/m3_audio.cpp": "578b424351d555551ff02b0294c05ee660f16b732d97df9058dc761a7f491494",
+    "ports/picocalc/compute_clock.cpp": "e33034b79695b1c40bed99c9ec4c6e86625588a4732594615361bbb6ef76a159",
+    "ports/picocalc/power.cpp": "bd0e6cc1f0e0531c024a79306e66c40a93072cd420e0d9310370aa9d5a5454d1",
+    "ports/picocalc/io_worker.cpp": "37e678a0c69b30277e0e0f6966efe167caadd7f89ed943b11a10a61debb95ded",
+    "code/mk61_ai_model.cpp": "9a5ceb60418399d57f7ff82f44b18c89f85fa7ff4a8d657d081ab095852674f0",
+    "code/mk61_ai_linear.cpp": "d6ef3d414bc074d56ec3fbc41b8f1821dc48b8aaf092ffa749b64a86c1bc972d",
+    "code/mk61_ai_kernels.c": "e9ad2d28851de4d4b958df5c5c3de7344f23937994898ae62e889af784e6f3df",
+    "code/mk61_ai_kernels.h": "d37acc36254d4fd409edb8c955ef52112f27870e4db7598e295a7dae12d99ded",
+    "code/mk61_ai_stress.hpp": "08309bb2aeeb8bd78e92032a3ad3046559d9d50b8cc620b6801940020b07ba3e",
+    "code/native_eabi_m0.cpp": "b27f845ea0728f01769979ac6e17455f288bfff9b5f274ff8cbdfaf0c6c633a4",
+    "ports/picocalc/memory.c": "3cf54768223c576dc598fbd833e90c3414d06f8eadec906b85f54cb850d3b3df"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "status": "HOLD",
+  "physical_io": true,
+  "control_rerun": false,
+  "reference_seconds_per_token": 0.606,
+  "save_or_restore": false,
+  "cores": 2,
+  "requested_hz": 270000000,
+  "error": "TimeoutError: previous C5 output did not become quiet",
+  "cdc_closed": true,
+  "lease_closed": true
+}

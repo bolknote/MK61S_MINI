@@ -1,0 +1,49 @@
+{
+  "status": "HOST_READY_PENDING_HANDOFF",
+  "base_commit": "e8b706dbe54ce04f2cd515ca71e1b0b5832195d7",
+  "build": "7BD2529E",
+  "crc": "41018F7C",
+  "UID": "E6657CD423721C35",
+  "port": "/dev/cu.usbmodem1301",
+  "pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/source-proof.json": "1cf7b65ae6ca644af1e2ed9cacc909cc72a67fcf720d94c11d6511fd8c2149d1",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai.py": "a65887be22c04cba308623cb4c30dbd60a73f4c71274e6c7026dd87275793fa9",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_finish.py": "3c6a812c272719eb4d6c809e0c2f76e9aef819490925daa81068358784694bbd",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_perf.py": "a0239afd78730c6a7ba1cd2ca47c0e1aaf378e2e80973330fd991c6b4db1f13c",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/manifest.json": "87e8723d331f822a36f8b79c3786ca2813efd18c90cfb46e4adef1e9d2cebb22",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.uf2": "9a3c6a24011a5dd018ddec2bb4f17594ea12de2526a47bc97416f5a5a1fdedbd",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.bin": "66e30c235fc0a982c4dec819ef6608f613d5d479870d12301a7fbbb49d687597",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-libc-batch-20261107-v1/final-preparation/tools/picotool-build-2.2.0/picotool": "d110d7210baeed7f7e78cb34a157f5f21c432b2662ce4179a9901eaec7732868",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/swar-v5/MODEL-NIBBLE.MKA": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/run270/AIBENCH/AIBENCH.APP": "c67d09c81561703d09f398e6218abf8da9bd0ece3570e7daae1c84c9ac66c782",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/paired-phase/AIHASH/AIHASH.APP": "cf2e5e19d4d9ed8180658593c0a97d141be89f81d39e496d3b0e1c55e9188ac5",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-STRESS.CFG": "9dde52bd4666e91ffcadbdbc95763609676e365b46af56da8441da88a9be7596",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/tile28-v20/PERF.REF": "6e4e1f61ba32195775f4a6a797da41b97d3ff5354e95a5f58bbe1b98147a2139",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-DECODE.CFG": "6d51d0fea0b2e40a19a3d45ae7c51925147260e6bc96488e2654598df533345a",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-power-button-20261110/firmware/mk61s-picocalc-pico-h.uf2": "13b84d8bd5c931c4c18b31ffcd47e58900cfbe01771dd275bde977cf670bfca3",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/run270-v3.py": "a3a26f8df8e6de18cc7339c6e1224ea098ca69fd307179c165f767e8dd20d615",
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/RUN270-v3.json": "6f23267b67b8c47aab062c1e37af478ad3c882a0e3046d70a33875f4b8643db7"
+  },
+  "physical_order": [
+    "acquire single immutable lease",
+    "only for exact5D and already finished Spectrum: single systemPOWER wake if asleep, then Esc to calculator; no file/settings/RTC change",
+    "verify5D0A3631/B836FE58 then flash late-sampling candidate belowROMCACHE",
+    "ROMCACHE hash before and after firmware write",
+    "hash benchmark model before270MHz",
+    "private5second stress only repeat0",
+    "only on stress PASS two2-prefill/2-decode archived-reference passes at270MHz",
+    "on data failure or no speed gain return exact known-good5D; no other experiment",
+    "close CDC and release lease"
+  ],
+  "reference_seconds_per_token": 0.606,
+  "return_known_good_only_on_failure_or_no_speed_gain": true,
+  "ROMCACHE": {
+    "begin": "0x101c0000",
+    "end": "0x101d3000",
+    "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+  },
+  "finite_controller": "SIGALRM360seconds; each serial/ROM/flash action also bounded; cleanup only after first failure",
+  "controller_namespace": "hardware270-v3; earlier preflight-only HOLD receipts retained",
+  "preflight_gate": "DIRTY0, exact5D/B836, RUNTIMEAPP, exactSpectrum path and finished result; otherwise refuse",
+  "preflight_drain": "maximum3seconds,quiet0.25seconds; validated with a silent host fixture"
+}

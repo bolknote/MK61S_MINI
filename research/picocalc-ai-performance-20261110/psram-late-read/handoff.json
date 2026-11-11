@@ -1,0 +1,23 @@
+{
+  "status": "COORDINATOR_EXPLICIT_HARDWARE_GO",
+  "coordinator_thread": "01a164b7-9caa-7011-90d1-807e9630921c",
+  "uid": "E6657CD423721C35",
+  "handoff_received": true,
+  "message": "PicoCalc is exclusively assigned to this finite v3 run. For exact 5D0A3631/B836FE58 only, drain stale CDC bytes with the reviewed bounded quiet interval, wake once with the existing system POWER event, and close the already-finished Spectrum result while preserving invariant counters. Then run private PSRAM stress; only after full stress PASS run two archived-reference measurements. On data failure or no speed gain, return exact known-good 5D0A3631/B836FE58. Close CDC and release the lease.",
+  "romcache_verified": true,
+  "expected_build": "5D0A3631",
+  "expected_crc": "B836FE58",
+  "allow_exit_finished_spectrum": true,
+  "package_sha256": "56e86a20c732dfcf9eb25e721d1653d93fd6d5936e2dbad1c4b99a9c55e98299",
+  "finish_before_utc_epoch": 1794344244,
+  "technical_review": {
+    "status": "ACCEPT",
+    "candidate_build": "7BD2529E",
+    "candidate_crc": "41018F7C",
+    "base_commit": "e8b706dbe54ce04f2cd515ca71e1b0b5832195d7",
+    "delta_from_v2": "Only run/package/output namespace and drain(maximum=3, quiet=0.25); silent HOST fixture exits in 0.259 seconds",
+    "preflight_scope": "Only exact finished /SpectrumStereo/SPECTRUM.APP with DIRTY=0 may be woken once and closed; any other state stops before Flash",
+    "experiment_scope": "One exact Pico image install, five-second private PSRAM stress, then at most two archived-reference measurements, conditional exact known-good return",
+    "write_limits": "No M3, ROM cache, root /AI/MODEL, settings, RTC, or unrelated SD writes"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "scope": "read-only verify after already performed exact return",
+  "firmware_writes": 0,
+  "test_runs": 0,
+  "status": "VERIFIED",
+  "build": "5D0A3631",
+  "crc": "B836FE58",
+  "sys_hz": 125000000,
+  "service": "CLOSED",
+  "runtime": "NONE",
+  "ui": "CALCULATOR",
+  "asleep": false,
+  "cdc_closed": true,
+  "lease_closed": true
+}

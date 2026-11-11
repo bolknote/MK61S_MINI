@@ -1,0 +1,97 @@
+{
+  "status": "MEASUREMENT_PASS",
+  "physical_io": true,
+  "control_rerun": false,
+  "reference_seconds_per_token": 0.606,
+  "save_or_restore": false,
+  "cores": 2,
+  "requested_hz": 270000000,
+  "entry": {
+    "build": "5D0A3631",
+    "crc": "B836FE58",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 157
+  },
+  "firmware_flashed": true,
+  "model_reused": true,
+  "model_sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b",
+  "transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "diagnostic_only": true,
+  "decode_not_run": false,
+  "stress_diagnostic": {
+    "reason": "none",
+    "iteration": 9200,
+    "address": 37888,
+    "first_bad_byte": 4294967295,
+    "expected_byte": 0,
+    "actual_byte": 0,
+    "write_status": 1,
+    "read_status": 1,
+    "expected_crc": 3288216680,
+    "actual_crc": 3288216680,
+    "crc_match": true,
+    "local_status": 0,
+    "remote_status": 0,
+    "math_bad_byte": 4294967295,
+    "math_expected": 0,
+    "math_actual": 0,
+    "busy_entered": true,
+    "busy_exited": true,
+    "stable_read": false,
+    "stable_match": false,
+    "stable_crc": 0
+  },
+  "stress_elapsed_ms": 5000,
+  "stress_iterations": 9201,
+  "stress_final": {
+    "build": "7BD2529E",
+    "crc": "41018F7C",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "performance_transport": {
+    "usb_reenumerations": 1,
+    "cancel_response_seconds": null,
+    "cancel_sent": false,
+    "app_error": false,
+    "prompt_recovered": true
+  },
+  "seconds_per_token": [
+    0.624936,
+    0.6248685
+  ],
+  "time_reduction_percent": [
+    -3.1247524752475275,
+    -3.1136138613861553
+  ],
+  "faster_than_reference": false,
+  "archive_tokens_checksums_match": true,
+  "final": {
+    "build": "7BD2529E",
+    "crc": "41018F7C",
+    "ready": true,
+    "service": "CLOSED",
+    "runtime": "NONE",
+    "ui": "CALCULATOR",
+    "run": 0,
+    "physical_key_events_since_boot": 0
+  },
+  "apps_removed": true,
+  "error": "ValueError: native ready predicates missing: ['BUILD=5D0A3631', 'KBD=OK', 'SD=OK', 'FIRMWARE_CRC=valid', 'EXPECTED=B836FE58', 'ACTUAL=B836FE58']",
+  "cdc_closed": true,
+  "lease_closed": true
+}

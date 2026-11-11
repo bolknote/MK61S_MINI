@@ -1,0 +1,22 @@
+[
+  {
+    "source": "hardware270-v3/romcache-before.bin",
+    "bytes": 77824,
+    "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+  },
+  {
+    "source": "hardware270-v3/romcache-after.bin",
+    "bytes": 77824,
+    "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+  },
+  {
+    "source": "hardware270-v3/return-known-good/romcache-before.bin",
+    "bytes": 77824,
+    "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+  },
+  {
+    "source": "hardware270-v3/return-known-good/romcache-after.bin",
+    "bytes": 77824,
+    "sha256": "4653714e321ded6d36ed31a9d9d85d17ca37af44f753db2b37543624645b43f4"
+  }
+]

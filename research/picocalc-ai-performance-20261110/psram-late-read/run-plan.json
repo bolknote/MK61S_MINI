@@ -1,0 +1,200 @@
+{
+  "schema": 1,
+  "status": "HOST_READY_FINISHED_SPECTRUM_GATE_WAIT_GO",
+  "physical_io": false,
+  "uid": "E6657CD423721C35",
+  "port": "/dev/cu.usbmodem1301",
+  "new_build": "7BD2529E",
+  "new_crc": "41018F7C",
+  "nonce": "HILV3-M3-9943AE8536E2",
+  "app_nonce": "HILV3-PSRAMLATE-V3-20261110",
+  "reference_seconds_per_token": 0.606,
+  "control_rerun": false,
+  "config": {
+    "kernel": 2,
+    "arithmetic": 1,
+    "cores": 2,
+    "freeze": 1,
+    "filter": 0,
+    "mhz": 270,
+    "prefill": 2,
+    "decode": 2,
+    "repeat": 0,
+    "stress_ms": 5000,
+    "control": 2,
+    "constrained": 0,
+    "prefetch": 1
+  },
+  "payloads": {
+    "firmware_manifest": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/manifest.json",
+      "bytes": 1665,
+      "sha256": "87e8723d331f822a36f8b79c3786ca2813efd18c90cfb46e4adef1e9d2cebb22"
+    },
+    "uf2": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.uf2",
+      "bytes": 3580928,
+      "sha256": "9a3c6a24011a5dd018ddec2bb4f17594ea12de2526a47bc97416f5a5a1fdedbd"
+    },
+    "bin": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.bin",
+      "bytes": 1790272,
+      "sha256": "66e30c235fc0a982c4dec819ef6608f613d5d479870d12301a7fbbb49d687597"
+    },
+    "picotool": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-libc-batch-20261107-v1/final-preparation/tools/picotool-build-2.2.0/picotool",
+      "bytes": 1746664,
+      "sha256": "d110d7210baeed7f7e78cb34a157f5f21c432b2662ce4179a9901eaec7732868"
+    },
+    "model": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/swar-v5/MODEL-NIBBLE.MKA",
+      "bytes": 2093896,
+      "sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b"
+    },
+    "benchmark": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/run270/AIBENCH/AIBENCH.APP",
+      "bytes": 311,
+      "sha256": "c67d09c81561703d09f398e6218abf8da9bd0ece3570e7daae1c84c9ac66c782"
+    },
+    "hashprobe": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/paired-phase/AIHASH/AIHASH.APP",
+      "bytes": 1643,
+      "sha256": "cf2e5e19d4d9ed8180658593c0a97d141be89f81d39e496d3b0e1c55e9188ac5"
+    },
+    "config": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-STRESS.CFG",
+      "bytes": 142,
+      "sha256": "9dde52bd4666e91ffcadbdbc95763609676e365b46af56da8441da88a9be7596"
+    },
+    "reference": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/tile28-v20/PERF.REF",
+      "bytes": 52,
+      "sha256": "6e4e1f61ba32195775f4a6a797da41b97d3ff5354e95a5f58bbe1b98147a2139"
+    },
+    "performance_config": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-DECODE.CFG",
+      "bytes": 139,
+      "sha256": "6d51d0fea0b2e40a19a3d45ae7c51925147260e6bc96488e2654598df533345a"
+    },
+    "return_uf2": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-power-button-20261110/firmware/mk61s-picocalc-pico-h.uf2",
+      "bytes": 3580928,
+      "sha256": "13b84d8bd5c931c4c18b31ffcd47e58900cfbe01771dd275bde977cf670bfca3"
+    }
+  },
+  "pins": {
+    "firmware_manifest": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/manifest.json",
+      "bytes": 1665,
+      "sha256": "87e8723d331f822a36f8b79c3786ca2813efd18c90cfb46e4adef1e9d2cebb22"
+    },
+    "uf2": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.uf2",
+      "bytes": 3580928,
+      "sha256": "9a3c6a24011a5dd018ddec2bb4f17594ea12de2526a47bc97416f5a5a1fdedbd"
+    },
+    "bin": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/firmware/mk61s-picocalc-pico-h.bin",
+      "bytes": 1790272,
+      "sha256": "66e30c235fc0a982c4dec819ef6608f613d5d479870d12301a7fbbb49d687597"
+    },
+    "picotool": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-libc-batch-20261107-v1/final-preparation/tools/picotool-build-2.2.0/picotool",
+      "bytes": 1746664,
+      "sha256": "d110d7210baeed7f7e78cb34a157f5f21c432b2662ce4179a9901eaec7732868"
+    },
+    "model": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/swar-v5/MODEL-NIBBLE.MKA",
+      "bytes": 2093896,
+      "sha256": "67aae98d9ffbd332bbea6e9a7dde9ec003f8213b99d92c555b523c794256d01b"
+    },
+    "benchmark": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/run270/AIBENCH/AIBENCH.APP",
+      "bytes": 311,
+      "sha256": "c67d09c81561703d09f398e6218abf8da9bd0ece3570e7daae1c84c9ac66c782"
+    },
+    "hashprobe": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/m3-int8/paired-phase/AIHASH/AIHASH.APP",
+      "bytes": 1643,
+      "sha256": "cf2e5e19d4d9ed8180658593c0a97d141be89f81d39e496d3b0e1c55e9188ac5"
+    },
+    "config": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-STRESS.CFG",
+      "bytes": 142,
+      "sha256": "9dde52bd4666e91ffcadbdbc95763609676e365b46af56da8441da88a9be7596"
+    },
+    "reference": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/tile28-v20/PERF.REF",
+      "bytes": 52,
+      "sha256": "6e4e1f61ba32195775f4a6a797da41b97d3ff5354e95a5f58bbe1b98147a2139"
+    },
+    "performance_config": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/PERF-DECODE.CFG",
+      "bytes": 139,
+      "sha256": "6d51d0fea0b2e40a19a3d45ae7c51925147260e6bc96488e2654598df533345a"
+    },
+    "return_uf2": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-power-button-20261110/firmware/mk61s-picocalc-pico-h.uf2",
+      "bytes": 3580928,
+      "sha256": "13b84d8bd5c931c4c18b31ffcd47e58900cfbe01771dd275bde977cf670bfca3"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/source-proof.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/source-proof.json",
+      "bytes": 2344,
+      "sha256": "1cf7b65ae6ca644af1e2ed9cacc909cc72a67fcf720d94c11d6511fd8c2149d1"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai.py",
+      "bytes": 30101,
+      "sha256": "a65887be22c04cba308623cb4c30dbd60a73f4c71274e6c7026dd87275793fa9"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_finish.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_finish.py",
+      "bytes": 13166,
+      "sha256": "3c6a812c272719eb4d6c809e0c2f76e9aef819490925daa81068358784694bbd"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_perf.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/controller/hil_mk61_ai_perf.py",
+      "bytes": 23759,
+      "sha256": "a0239afd78730c6a7ba1cd2ca47c0e1aaf378e2e80973330fd991c6b4db1f13c"
+    },
+    "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/run270-v3.py": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-read-late-20261110/run270-v3.py",
+      "bytes": 17290,
+      "sha256": "a3a26f8df8e6de18cc7339c6e1224ea098ca69fd307179c165f767e8dd20d615"
+    }
+  },
+  "expected_usb_reenumerations": 2,
+  "cancel_at": null,
+  "root_lease_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-libc-batch-20261107-v1/ROOT-PICO-LEASE-001.json",
+  "root_lease_inode": 289244874,
+  "host_tests": {
+    "architecture": "ARMv6-M",
+    "PIO_FIFO_stall_and_private_pattern": "PASS",
+    "fractional_PIO_phase_timing": "PASS",
+    "ARM_build": "PASS",
+    "four_features_unchanged_source": true,
+    "hardware_private_pattern_stress": "Pending coordinator GO;5seconds gates all inference",
+    "native_real_model_performance_and_freeze_lifecycle": "Inherited accepted tests; production AI sources identical to committed main"
+  },
+  "previous_best_seconds_per_token": 0.606,
+  "source_main": "e8b706dbe54ce04f2cd515ca71e1b0b5832195d7",
+  "read_divider256": 346,
+  "stress_order": "before both timed passes",
+  "finite_deadline_seconds": 360,
+  "performance_config": {
+    "kernel": 2,
+    "arithmetic": 1,
+    "cores": 2,
+    "freeze": 1,
+    "filter": 0,
+    "mhz": 270,
+    "prefill": 2,
+    "decode": 2,
+    "repeat": 2,
+    "stress_ms": 0,
+    "control": 2,
+    "constrained": 0,
+    "prefetch": 1
+  }
+}
