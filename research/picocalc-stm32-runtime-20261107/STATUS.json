@@ -1,0 +1,36 @@
+{
+  "task": "Port native STM32F103 module runtime to Southbridge, preserving keyboard and power",
+  "status": "STM32_DEPLOYED_UART_NATIVE_MODULE_DWT_TRANSPORT_HARDWARE_PASS",
+  "physical_io": "STM32 ROM write/readback; native Pico UART1 upload/run/unload and DWT/512B checks; scratch files removed",
+  "stm32_flashed": true,
+  "pico_firmware_changed": false,
+  "uart_nominal_baud": 2250000,
+  "module_package_bytes": 328,
+  "hardware_rate_tested": true,
+  "user_steering": "User selected Southbridge and authorized implementation",
+  "hardware_route": "USB UART1 bootloader requires DIP1; runtime UART3 PC10/PC11 via Pico GP8/GP9",
+  "programmer_port": "/dev/cu.usbserial-1120",
+  "pending": [
+    "Integrate reusable UART transport into product harness/audio backend; other agent owns Spectrum audio",
+    "Overclock and full LLM acceleration are separate experiments; current STM32 remains72MHz",
+    "Full cold-boot sequencing and physical key matrix coverage were not tested by these finite diagnostics"
+  ],
+  "southbridge": {
+    "upstream_commit": "1b649c826b213b460bca7172f696ec7619d93be0",
+    "flash_bytes": 25824,
+    "global_ram_bytes": 9700,
+    "stack_reserved_bytes": 4096,
+    "ram_unallocated_bytes": 6684,
+    "module_code_bss_limit_bytes": 6144,
+    "clock_hz": 72000000,
+    "tx_dma_copy_bytes": 0,
+    "option_byte_programming": false,
+    "review_packet": ".build/stm32-module-runtime-20261107/southbridge-runtime/review-packet.json",
+    "review_packet_sha256": "6b98cc802b83daf6467c0ab05f5089aac49cd6d6bf58d95153a81e18b0fb84c8",
+    "firmware_sha256": "f16f54f8eec954966a6a810be583a0dd61fb9cd16fb0a461529552dcf12b2069",
+    "write_verify_record": ".build/stm32-module-runtime-20261107/southbridge-runtime/write-verify.json",
+    "boot_confirmed": true,
+    "hardware_module_roundtrip_pass": true,
+    "summary": ".build/stm32-module-runtime-20261107/southbridge-runtime/hardware-summary.json"
+  }
+}

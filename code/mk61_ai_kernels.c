@@ -25,6 +25,34 @@ void mk61ai_prepare_lut32(const int8_t x[32], mk61ai_lut32 *table) {
   table->sum = (int16_t)total;
 }
 
+void mk61ai_prepare_lut8x32(const int8_t x[32], mk61ai_lut8x32 *table) {
+  int32_t total = 0;
+  for (unsigned g = 0; g < 4; ++g) {
+    int16_t *t = table->subset[g];
+    t[0] = 0;
+    for (unsigned lane = 0; lane < 8; ++lane) {
+      const unsigned half = 1U << lane;
+      for (unsigned mask = 0; mask < half; ++mask)
+        t[mask + half] = (int16_t)(t[mask] + x[8 * g + lane]);
+    }
+    total += t[255];
+  }
+  table->sum = (int16_t)total;
+}
+
+int32_t mk61ai_dot_lut8_q4_a8_32(const uint8_t planes[16],
+                                const mk61ai_lut8x32 *table) {
+  int32_t p0 = 0, p1 = 0, p2 = 0, p3 = 0;
+  for (unsigned g = 0; g < 4; ++g) {
+    const int16_t *t = table->subset[g];
+    p0 += t[planes[g]];
+    p1 += t[planes[4 + g]];
+    p2 += t[planes[8 + g]];
+    p3 += t[planes[12 + g]];
+  }
+  return p0 + 2 * p1 + 4 * p2 + 8 * p3 - 8 * (int32_t)table->sum;
+}
+
 int32_t mk61ai_dot_q2_a8_32(const uint8_t codes[8], const int8_t x[32]) {
   int32_t result = 0;
   for (unsigned i = 0; i < 8; ++i) {

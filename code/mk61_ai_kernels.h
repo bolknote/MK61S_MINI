@@ -19,6 +19,13 @@ typedef struct {
   int16_t sum;
 } mk61ai_lut32;
 
+/* Experimental g=8 tables. Same bit-plane weight bytes as g=4, eight times
+ * the table storage. Not selected by the production model dispatcher. */
+typedef struct {
+  int16_t subset[4][256];
+  int16_t sum;
+} mk61ai_lut8x32;
+
 void mk61ai_prepare_lut32(const int8_t x[32], mk61ai_lut32 *table);
 int32_t mk61ai_dot_q2_a8_32(const uint8_t codes[8], const int8_t x[32]);
 int32_t mk61ai_dot_q4_a8_32(const uint8_t codes[16], const int8_t x[32]);
@@ -26,6 +33,9 @@ int32_t mk61ai_dot_lut_q2_a8_32(const uint8_t planes[8],
                                 const mk61ai_lut32 *table);
 int32_t mk61ai_dot_lut_q4_a8_32(const uint8_t planes[16],
                                 const mk61ai_lut32 *table);
+void mk61ai_prepare_lut8x32(const int8_t x[32], mk61ai_lut8x32 *table);
+int32_t mk61ai_dot_lut8_q4_a8_32(const uint8_t planes[16],
+                                const mk61ai_lut8x32 *table);
 
 /* Offline repacking only; the device should load an already repacked file.
  * Each bit plane has eight 4-bit indices, packed low nibble first.

@@ -1,0 +1,32 @@
+{
+  "upstream": {
+    "repository": "https://github.com/clockworkpi/PicoCalc",
+    "commit": "fdcfe2c87a56b6dbcd540e91de1161d483872af9",
+    "source": "Code/picocalc_keyboard",
+    "files": {
+      "fifo.h": "13fa7985ae25c4106768a6c3a5aaa3a86955df609f792046110c0750ac9699ae",
+      "reg.ino": "2846f6bb66b3fb7675b682a9b4d1009b2db872d25692ae4cb6d4d01458c33904",
+      "reg.h": "29adb634aeb0632a2def6149e14146a1281c916d6da9a4d320291cd6e2d8fc6e",
+      "battery.h": "243cfba6bc80f673a2be0ca65693e40af608f45632d9044f5049935d31a73c41",
+      "fifo.ino": "7312b9037fbdcd9080aee3d460d38564521759506b2149a2f9f6e670c122e273",
+      "port.h": "4f4660e0b32b2b8529e4978a605ca60eeb9e6a60b1022e9d3bac24d375ed6ff9",
+      "pins.h": "22ccb03e545f66ac12b14e6c046a25dff68dc3aec615f371a7e3bcd7c199b489",
+      "README.md": "a432dd8bf47a4b9fc7e94de84410539054710ba6a9f6730cb20f6a3219494299",
+      "backlight.h": "0eb1f4c89b42cd0f66ad424697474150a2d6dec5fe45bb69a2223a0daf35698e",
+      "keyboard.h": "fe6ccbf3f819e952c0bc21aa7228c308685d4867efc5f48f5b3b493541f7b42f",
+      "picocalc_keyboard.ino": "7b2826a9957511bf4377b2b0086be99f533d8003447d68fb37973c163027f394",
+      "backlight.ino": "43b61555279c8b7cd91cfc13700fbafda1ee43d596d8fa73d7a683df25965b2b",
+      "keyboard.ino": "bdbce418137aa6b826fbc41fd89c4bac1607b4f7202e1f45780e29930bf8e2be",
+      "battery.ino": "a614c1c7bd233144d7abaadf0bdae934ce81f3e2758f5fd2a91ea2ea2cc835c2",
+      "conf_app.h": "69d58f3c004859863b39ec6055a9201d9c74a18c277c007c6b0f3f9fd783d466",
+      "port.ino": "725fe7cecd42fab19bf7f08f9c910b9c78493e7b010d2bf1717cb674b08ecedc"
+    }
+  },
+  "xpowers": {
+    "repository": "https://github.com/cuu/XPowersLib",
+    "branch": "stm32f103r8t6",
+    "commit": "4744c7e6a5fc57e72996dbae0cd3b1a7e5299bb6"
+  },
+  "arduino_core": "STMicroelectronics:stm32@2.12.0",
+  "hardware_io": false
+}
