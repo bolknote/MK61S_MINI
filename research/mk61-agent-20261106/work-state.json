@@ -1,13 +1,13 @@
 {
   "objective": "Evaluate a Russian small model for local PicoCalc MK-61 programming with bounded calculator tools",
-  "phase": "action_choice_training_complete",
+  "phase": "review_utility_training_complete",
   "candidate": "akanemind/Flourish-3M",
   "revision": "33b38dfec202c39c3698f7f2d1a9933a34a2de1a",
   "artifacts": ".build/mk61-agent-20261106",
   "training_started": true,
   "remote_training_jobs_started_by_this_experiment": 2,
   "original_tinytalk_experiment_modified": false,
-  "next_action": "Interpret action-selection gains separately from the frozen body; retain the preselected recommendation and use fresh tasks for further training decisions.",
+  "next_action": "Interpret measured review utility and paired retention; keep the preselected checkpoint and use an independent new test for subsequent decisions.",
   "limitations": [
     "Finite regression tests do not prove arbitrary MK-61 program correctness.",
     "Compact DIAG/action outputs do not demonstrate general natural-language reasoning.",
@@ -297,7 +297,7 @@
   "final_model_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/composition-v1/server-results/export/selected-budget/manifest.json",
   "final_export": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/codec-qat-v1/server-results/export",
   "selected_model": "composition-v1 small",
-  "completed_training_runs": 118,
+  "completed_training_runs": 119,
   "final_verification": {
     "integration_tests_passed": 13,
     "q4_reload_exact_models": [
@@ -855,7 +855,7 @@
   },
   "completed_training_runs_before_native": 21,
   "historical_optimizer_updates_before_native": 51600,
-  "total_accounted_optimizer_updates_lower_bound": 408558,
+  "total_accounted_optimizer_updates_lower_bound": 409358,
   "new_exports_native_device_execution_measured": false,
   "interrupted_warmup_runs": 2,
   "interrupted_warmup_extra_updates_not_fully_counted": true,
@@ -23898,6 +23898,49 @@
         "correct_starts_corrupted": 2,
         "context_overflows": 148,
         "abstained": 45
+      }
+    }
+  },
+  "latest_review_utility_training": {
+    "phase": "complete",
+    "directory": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/spec-review-utility-v1",
+    "optimizer_updates": 800,
+    "ledger_accounted": true,
+    "observed_completed_steps": 800,
+    "complete": true,
+    "selected_step": 0,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/REVIEW_UTILITY_TRAINING_RESULTS.md",
+    "native_streams": 35,
+    "closed": {
+      "working": {
+        "total": 512,
+        "passed": 243,
+        "correct_starts_completed": 148,
+        "wrong_starts_repaired": 95,
+        "false_DONE": 14,
+        "correct_starts_corrupted": 4,
+        "context_overflows": 146,
+        "abstained": 83
+      },
+      "parent": {
+        "total": 512,
+        "passed": 273,
+        "correct_starts_completed": 154,
+        "wrong_starts_repaired": 119,
+        "false_DONE": 16,
+        "correct_starts_corrupted": 7,
+        "context_overflows": 143,
+        "abstained": 51
+      },
+      "final": {
+        "total": 512,
+        "passed": 272,
+        "correct_starts_completed": 154,
+        "wrong_starts_repaired": 118,
+        "false_DONE": 16,
+        "correct_starts_corrupted": 7,
+        "context_overflows": 143,
+        "abstained": 52
       }
     }
   }
