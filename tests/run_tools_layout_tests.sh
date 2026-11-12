@@ -6,16 +6,16 @@ actual="$(
   find "$root/tools" -mindepth 1 -maxdepth 1 -type f ! -name '.*' \
     -exec basename {} \; | LC_ALL=C sort
 )"
-expected="$(printf '%s\n' README.md mk61-firmware.cmd mkc.cmd | LC_ALL=C sort)"
+expected="$(printf '%s\n' README.md games.cmd mk61-firmware.cmd mkc.cmd | LC_ALL=C sort)"
 
 if [[ "$actual" != "$expected" ]]; then
-  printf 'Only README.md, mkc.cmd and mk61-firmware.cmd belong in tools/.\n' >&2
+  printf 'Only README.md and the games.cmd, mkc.cmd and mk61-firmware.cmd launchers belong in tools/.\n' >&2
   diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") >&2 || true
   exit 1
 fi
 
 for directory in mkc firmware/cli firmware/stm32 firmware/picocalc firmware/dfu \
-    apps/portable apps/system apps/packer programs fonts arduino/compat device; do
+    apps/portable apps/system apps/packer programs fonts games arduino/compat device; do
   test -d "$root/tools/$directory"
 done
 test -f "$root/tools/apps/packer/mk61_module_pack.cpp"
@@ -25,6 +25,10 @@ test -f "$root/tools/apps/packer/Mk61AppPacker.cs"
 test -f "$root/tools/apps/system/build-terminal-help.ps1"
 test -f "$root/tools/fonts/package-ui-font-licenses.ps1"
 test -f "$root/tools/fonts/fmk_font.cpp"
+test -f "$root/tools/games/catalog.json"
+test -f "$root/tools/games/games.ps1"
+test -f "$root/tools/games/games.sh"
+test -f "$root/tools/games/manager.py"
 test -f "$root/dev/lib/.mk61-firmware-seal/mk61_firmware_seal.cpp"
 test ! -e "$root/tools/fmk_font"
 test ! -e "$root/tools/mk61_module_pack"
