@@ -9,7 +9,7 @@ constexpr u32 CAPACITY=8U*1024*1024;
 struct Statistics {
     bool ready,qpi;
     u32 id,hz,read_bytes,write_bytes,errors,qpi_fallbacks,read_batches,write_batches;
-    u32 tail_timeouts,tail_state;
+    u32 tail_timeouts,tail_state,burst_retries;
     BootProbe boot;
 };
 bool init();
@@ -28,6 +28,8 @@ bool read(u32 address,void* bytes,unsigned count);
 // The calling core owns the bus/destination until read_finish() returns.
 bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count);
 bool read_finish();
+// Opt in while the qualified 270 MHz CPU / 25 MHz QPI profile is active.
+bool diagnostic_read_burst(unsigned bytes);
 bool write(u32 address,const void* bytes,unsigned count);
 Statistics statistics();
 bool self_test(void (*service)()=nullptr);

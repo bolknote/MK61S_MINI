@@ -570,7 +570,14 @@ struct UI {
   void tick();
   unsigned run();
   unsigned bench();
-  unsigned perf(const char *directory,const PerfConfig &config);
+  unsigned perf(const char *directory,const PerfConfig &config,bool measure_bursts);
+#if defined(PICO_ON_DEVICE)
+  struct BurstResult {
+    unsigned bytes=0,elapsed[3]{},retries=0;
+    bool ok=false;
+  };
+  unsigned bench_read_bursts(shared_memory::Buffer &scratch,BurstResult (&results)[3]);
+#endif
   unsigned long_perf(const char *directory);
   void sample_memory();
   void begin_measurements();
@@ -2205,7 +2212,12 @@ AI_COLD_CODE unsigned UI::bench() {
     PerfConfig config;
     if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
        !parse_perf_config(config_text,config_size,config)) return 3;
-    return perf(directory,config);
+    std::snprintf(config_path,sizeof(config_path),"%s/BURST.CFG",directory);
+    const bool measure_bursts=files::exists(config_path);
+    if(measure_bursts &&
+       (!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
+        config_size!=9 || std::memcmp(config_text,"AIBURST1\n",9) || config.mhz!=270 || !config.repeat)) return 3;
+    return perf(directory,config,measure_bursts);
   }
   char state_path[128], json_path[128];
   std::snprintf(state_path, sizeof(state_path), "%s/BENCH.STATE", directory);
@@ -2528,7 +2540,59 @@ AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
   std::snprintf(path,sizeof(path),"%s/LONG.JSON",directory);
   return fits && files::write(path,reinterpret_cast<const u8*>(json.get()),used) && ok?0:3;
 }
-AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
+#if defined(PICO_ON_DEVICE)
+constexpr unsigned BURST_TRIALS=256,BURST_WEIGHTS=1792,BURST_SCALES=224;
+
+AI_COLD_CODE unsigned UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult (&results)[3]) {
+  constexpr unsigned source_bytes=4096,read_bytes=BURST_WEIGHTS+BURST_SCALES;
+  std::unique_ptr<u32[]> memory(new(std::nothrow) u32[(source_bytes+read_bytes)/4]);
+  if(!memory) return 0;
+  auto *source=reinterpret_cast<u8*>(memory.get());
+  auto *target=source+source_bytes;
+  u32 pattern=0xD84C1629U;
+  for(unsigned i=0;i<source_bytes;++i) {
+    pattern^=pattern<<13;pattern^=pattern>>17;pattern^=pattern<<5;
+    source[i]=u8(pattern);
+  }
+  if(!scratch.write(0,source,source_bytes)) return 0;
+  for(unsigned i=0;i<3;++i) { results[i].bytes=16U<<i;results[i].ok=true; }
+  // Rotate the order to reduce temperature and time-order effects. Both
+  // spans have the sizes of a 28-row weight tile in the reference model.
+  for(unsigned pass=0;pass<3;++pass) for(unsigned i=0;i<3;++i) {
+    auto &r=results[(i+pass)%3];
+    if(!r.ok) continue;
+    r.ok=psram::diagnostic_read_burst(r.bytes);
+    const auto before=psram::statistics().burst_retries;
+    for(unsigned j=0;r.ok && j<BURST_TRIALS;++j) {
+      if(!(j&31U) && !pump()) { cancel=true;return 0; }
+      const unsigned weights=(j*16)&1023U,scales=3072+((j*48)&511U);
+      const block_io::ReadSpan spans[]={{weights,target,BURST_WEIGHTS},
+          {scales,target+BURST_WEIGHTS,BURST_SCALES}};
+      const auto start=call(MK61_SERVICE_MICROS);
+      const bool read=scratch.read_begin(spans,2) && scratch.read_finish();
+      r.elapsed[pass]+=call(MK61_SERVICE_MICROS)-start;
+      r.ok=read && !std::memcmp(target,source+weights,BURST_WEIGHTS) &&
+          !std::memcmp(target+BURST_WEIGHTS,source+scales,BURST_SCALES);
+    }
+    r.retries+=psram::statistics().burst_retries-before;
+    r.ok=r.ok && !r.retries;
+  }
+  if(!results[0].ok) return 0;
+  unsigned winner=0,best=UINT32_MAX;
+  for(const auto &r:results) if(r.ok) {
+    const auto middle=r.elapsed[0]+r.elapsed[1]+r.elapsed[2]-
+        std::min({r.elapsed[0],r.elapsed[1],r.elapsed[2]})-
+        std::max({r.elapsed[0],r.elapsed[1],r.elapsed[2]});
+    if(middle<best) { best=middle;winner=r.bytes; }
+  }
+  return psram::diagnostic_read_burst(winner)?winner:0;
+}
+#endif
+
+AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bool measure_bursts) {
+#if !defined(PICO_ON_DEVICE)
+  if(measure_bursts) return 3;
+#endif
   // Reserve the larger tiles only for this diagnostic, before workspace bind.
   auto memory_plan=model.execution();memory_plan.tile_rows=config.cores==3?64:28;
   model.execution(memory_plan);
@@ -2709,7 +2773,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   // Stress only an owned external allocation. Never run the device-wide
   // PSRAM self-test while the model/KV or another cache is resident.
   shared_memory::Buffer scratch;
-  if(ok && config.stress_ms)
+  if(ok && (config.stress_ms || measure_bursts))
     ok=scratch.acquire(shared_memory::Owner::APPLICATION,65536,
                        shared_memory::BufferAccess::EXTERNAL_ONLY);
   float stress_input[32],stress_lookup[128],stress_sum=0,stress_output[4]{},stress_reference[4]{};
@@ -2748,6 +2812,15 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
     call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
   }
+#if defined(PICO_ON_DEVICE)
+  BurstResult bursts[3]{};
+  unsigned burst_winner=0,burst_inference_retries=0;
+  if(ok && measure_bursts) {
+    burst_winner=bench_read_bursts(scratch,bursts);
+    ok=burst_winner!=0;
+  }
+  const auto retries_before=psram::statistics().burst_retries;
+#endif
   // Validate an experimental read clock before any timed candidate pass.
   // pass0 is only the private-buffer stress; archived controls stay external.
   for(unsigned pass=0;ok && pass<=config.repeat;++pass) {
@@ -2821,6 +2894,10 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   }
 #if defined(PICO_ON_DEVICE)
   const unsigned psram_read_div=psram::diagnostic_clock_divider256();
+  if(measure_bursts) {
+    burst_inference_retries=psram::statistics().burst_retries-retries_before;
+    ok=psram::diagnostic_read_burst(burst_winner) && ok && !burst_inference_retries;
+  }
 #else
   const unsigned psram_read_div=0;
 #endif
@@ -2877,6 +2954,18 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config) {
   if(config.version==2) append(",\"prefetch\":%u",config.prefetch);
   append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:28);
   append("\"psram_read_divider256\":%u,",psram_read_div);
+#if defined(PICO_ON_DEVICE)
+  if(measure_bursts) {
+    append("\"psram_burst_winner\":%u,\"psram_burst_inference_retries\":%u,\"psram_burst_bytes_per_pass\":%u,\"psram_bursts\":[",
+        burst_winner,burst_inference_retries,BURST_TRIALS*(BURST_WEIGHTS+BURST_SCALES));
+    for(unsigned i=0;i<3;++i) {
+      const auto &r=bursts[i];
+      append("%s{\"bytes\":%u,\"ok\":%s,\"retries\":%u,\"us\":[%u,%u,%u]}",
+          i?",":"",r.bytes,r.ok?"true":"false",r.retries,r.elapsed[0],r.elapsed[1],r.elapsed[2]);
+    }
+    append("],");
+  }
+#endif
   append("\"stress_only\":%s,",config.repeat?"false":"true");
   append("\"stress_before_decode\":%s,\"stress_elapsed_ms\":%u,",
       stress_before_decode?"true":"false",stress_elapsed_ms);

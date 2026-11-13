@@ -17,9 +17,12 @@ def programs(source="psram_qpi.pio"):
             current['code'].append((m[1],int(m[2]),1+int(m[3] or 0)))
     return result
 
-def execute(program,packets,reply=(),stalls=False,sample_trace=None):
+def execute(program,packets,reply=(),stalls=False,sample_trace=None,burst=False,dropped=None):
     reading=bool(reply);size=len(packets[0]);word_count=(size+3)//4
-    sent=[int.from_bytes(p[i:i+4].ljust(4,b'\0'),'big') for p in packets for i in range(0,len(p),4)]
+    if burst:
+        sent=[(len(data)*2-1)<<24 | int.from_bytes(p[1:],'big') for p,data in zip(packets,reply)]
+    else:
+        sent=[int.from_bytes(p[i:i+4].ljust(4,b'\0'),'big') for p in packets for i in range(0,len(p),4)]
     source=[n for packet in reply for byte in packet for n in (byte>>4,byte&15)]
     tx=collections.deque();rx=collections.deque();output=[];frames=[]
     tx_at=0;read_at=0
@@ -58,16 +61,25 @@ def execute(program,packets,reply=(),stalls=False,sample_trace=None):
         elif op=='out pins, 4':
             assert out_bits<32
             value=(osr>>28)&15;osr=(osr<<4)&0xFFFFFFFF;out_bits+=4
+        elif op=='out x, 8':
+            x=osr>>24;osr=(osr<<8)&0xFFFFFFFF;out_bits+=8
         elif op=='in pins, 4':
             if sample_trace is not None:sample_trace.append((elapsed,read_at))
             assert dirs==0 and read_at<len(source)
             isr=((isr<<4)|source[read_at])&0xFFFFFFFF;read_at+=1;in_bits+=4
-            if in_bits==32:
+            if in_bits==32 and not burst:
                 assert len(rx)<4,('RX stall with CE# low',elapsed)
-                rx.append(isr);in_bits=0
+                rx.append(isr);isr=in_bits=0
+        elif op=='push iffull noblock':
+            if in_bits==32:
+                if len(rx)<4:rx.append(isr)
+                else:dropped.append(elapsed)
+                isr=in_bits=0
         elif op=='mov x, status':x=0xFFFFFFFF if (len(rx)<1 if reading else len(tx)<word_count) else 0
+        elif op=='mov y, status':y=0xFFFFFFFF if not rx else 0
         elif op=='mov x, isr':x=isr
         elif op.startswith('set pindirs, '):dirs=int(op.split(', ')[1])
+        elif op.startswith('set pins, '):value=int(op.split(', ')[1])
         elif op.startswith('set y, '):y=int(op.split(', ')[1])
         elif op.startswith('set x, '):x=int(op.split(', ')[1])
         elif op.startswith('jmp x-- '):
@@ -78,6 +90,8 @@ def execute(program,packets,reply=(),stalls=False,sample_trace=None):
             y=(y-1)&0xFFFFFFFF
         elif op.startswith('jmp !x '):
             if not x:next_pc=program['labels'][op.split()[-1]]
+        elif op.startswith('jmp !y '):
+            if not y:next_pc=program['labels'][op.split()[-1]]
         else:assert op=='nop',op
         pc=next_pc;advance(cycles)
     raise AssertionError(('PIO did not finish',elapsed,pc,len(frames),len(tx),len(rx),tx_at,len(sent)))
@@ -158,4 +172,35 @@ class QpiTests(unittest.TestCase):
         for source in ('psram_qpi.pio','psram_qpi_late.pio'):
             count=sum(len(p['code']) for p in programs(source).values())
             self.assertLessEqual(count+spi,32)
+            burst=programs('psram_qpi_burst.pio')['mk61_psram_qpi_burst']
+            self.assertEqual(len(burst['code']),spi+len(programs(source)['mk61_psram_qpi_read']['code']))
+
+    def test_variable_read_bursts_and_rx_starvation(self):
+        p=programs('psram_qpi_burst.pio')['mk61_psram_qpi_burst']
+        rng=random.Random(0x50494F)
+        sizes=(16,64,32,32,64,16)*9
+        addresses=(1008,1024,1120,0x7FFFE0,0x7FFFC0,0x7FFFF0)*9
+        headers=[b'\xeb'+at.to_bytes(3,'big') for at in addresses]
+        replies=[rng.randbytes(size) for size in sizes]
+        def ns(cycles,upper=False):
+            return ((cycles*461+(255 if upper else 0))//256)*1e9/270e6
+        for stalled in (False,True):
+            drops=[]
+            frames,words,low=execute(p,headers,replies,stalls=stalled,burst=True,dropped=drops)
+            self.assertEqual(len(words)+len(drops),sum(sizes)//4)
+            if stalled:self.assertTrue(drops)
+            else:
+                self.assertFalse(drops)
+                self.assertEqual(b''.join(w.to_bytes(4,'big') for w in words),b''.join(replies))
+            self.assertLess(ns(low,True),8000)
+            previous=None
+            for (edges,duration,end),header,size in zip(frames,headers,sizes):
+                self.assertEqual([v for _,_,v in edges[:8]],[n for b in header for n in (b>>4,b&15)])
+                self.assertEqual(len(edges),8+6+2*size)
+                self.assertTrue(all(d==15 for _,d,_ in edges[:8]))
+                self.assertTrue(all(d==0 for _,d,_ in edges[8:]))
+                self.assertTrue(all(b[0]-a[0]==6 for a,b in zip(edges[14:],edges[15:])))
+                self.assertGreaterEqual(ns(end-edges[-1][0]),20)
+                if previous is not None:self.assertGreaterEqual(ns(end-duration-previous),50)
+                previous=end
 if __name__=='__main__':unittest.main()

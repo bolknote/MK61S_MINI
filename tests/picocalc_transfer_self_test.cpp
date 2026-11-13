@@ -121,6 +121,28 @@ void pixels(){
   }
  }
 }
+void qpi_read_commands(){
+ using namespace picocalc::psram;
+ for(unsigned maximum:{16U,32U,64U})
+  for(unsigned start:{0U,16U,960U,976U,992U,1008U,1024U,0x7FF800U})
+   for(unsigned bytes:{16U,32U,48U,64U,224U,1792U,2048U}) {
+    std::array<u32,130> actual{};
+    actual.front()=actual.back()=0xDEADBEEFU;
+    const unsigned count=read_commands(actual.data()+1,start,bytes,maximum);
+    assert(count<=READ_PACKETS);
+    unsigned end=start;
+    for(unsigned i=1;i<=count;++i) {
+     const auto command=actual[i];
+     const unsigned n=maximum==16?16:((command>>24)+1)/2;
+     assert((command&0xFFFFFFU)==end && n<=maximum && !(n&15));
+     assert(n<=1024-(end&1023));end+=n;
+    }
+    assert(end==start+bytes);
+    if(maximum>16)assert(short_read_commands(actual.data()+1,count,bytes)==bytes/16);
+    for(unsigned i=0;i<bytes/16;++i)assert(actual[i+1]==(0xEB000000U|(start+16*i)));
+    assert(actual.front()==0xDEADBEEFU && actual.back()==0xDEADBEEFU);
+   }
+}
 void qpi_completion(){
  using picocalc::psram::stream_idle;
  constexpr unsigned ready=18;
@@ -187,7 +209,7 @@ void color_strips() {
  std::printf("LCD color strips: %u TILE1/TILE8/odd INDEX4 cases, offset windows, short tails and guard words PASS\n",cases);
 }
 }
-int main(){sd_test();events();pixels();qpi_completion();sleep_clocks();color_strips();
+int main(){sd_test();events();pixels();qpi_completion();qpi_read_commands();sleep_clocks();color_strips();
  using namespace picocalc::lcd;
  std::array<uint8_t,BYTES> frame{};
  for(unsigned i=0;i<BYTES;++i)frame[i]=(uint8_t)(i*73+i/11);

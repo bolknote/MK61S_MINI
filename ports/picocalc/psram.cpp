@@ -14,6 +14,7 @@
 #else
 #include "psram_qpi.pio.h"
 #endif
+#include "psram_qpi_burst.pio.h"
 #include "hardware/dma.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
@@ -25,16 +26,18 @@
 namespace picocalc::psram {
 namespace {
 Statistics state{};
-constexpr unsigned PREFETCH_BLOCK=16,PREFETCH_PACKETS=128;
 struct PendingRead {
-    u32 commands[PREFETCH_PACKETS];
+    u32 commands[READ_PACKETS];
     unsigned bytes=0;
     std::atomic<int> owner{-1};
-#if !defined(PICO_ON_DEVICE)
     u8* target=nullptr;
+#if defined(PICO_ON_DEVICE)
+    unsigned packets=0;
+    bool burst=false;
 #endif
 } pending;
 #if defined(PICO_ON_DEVICE)
+#define PSRAM_COLD __attribute__((section(".ai_diagnostic_extension"),noinline))
 constexpr unsigned CS=20,SCK=21,MOSI=2,MISO=3;
 PIO bus=pio1;
 #if MK61_PICOCALC_MANAGED_CLOCK
@@ -44,9 +47,40 @@ void configure_diagnostic_clock(pio_sm_config& config) {sm_config_set_clkdiv_int
 int sm=-1,tx=-1,rx=-1;
 unsigned program_offset=UINT32_MAX;
 unsigned qpi_write_offset=UINT32_MAX,qpi_read_offset=UINT32_MAX;
+unsigned read_burst_bytes=64;
+bool burst_loaded=false;
 auto_init_mutex(bus_mutex);
-void park_spi() {
+// The burst reader occupies the SPI and short-reader slots together. Keep
+// their SDK reservations throughout, and leave the writer loaded in PIO.
+static_assert(sizeof(mk61_psram_spi_program_instructions)+sizeof(mk61_psram_qpi_read_program_instructions)==
+    sizeof(mk61_psram_qpi_burst_program_instructions));
+void load_program(const pio_program_t& program,unsigned offset) {
+    for(unsigned i=0;i<program.length;++i) {
+        const unsigned instruction=program.instructions[i];
+        bus->instr_mem[offset+i]=instruction+((instruction&0xE000U)==pio_instr_bits_jmp?offset:0);
+    }
+}
+PSRAM_COLD void load_read_program(bool burst) {
+    if(burst) load_program(mk61_psram_qpi_burst_program,qpi_read_offset);
+    else {
+        load_program(mk61_psram_qpi_read_program,qpi_read_offset);
+        load_program(mk61_psram_spi_program,program_offset);
+    }
+    burst_loaded=burst;
+}
+void select_burst_program(bool burst) {
+    if(burst!=burst_loaded) load_read_program(burst);
+}
+unsigned active_read_burst() {
+#if MK61_PICOCALC_MANAGED_CLOCK && MK61_PICOCALC_AI_OVERCLOCK && !MK61_PICOCALC_AI_PSRAM_LATE_READ
+    if(read_burst_bytes>READ_BLOCK && clock_get_hz(clk_sys)==270000000 && diagnostic_divider256==692)
+        return read_burst_bytes;
+#endif
+    return READ_BLOCK;
+}
+PSRAM_COLD void park_spi() {
     pio_sm_set_enabled(bus,(unsigned)sm,false);
+    select_burst_program(false);
     pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,1,true);
     pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MISO,1,false);
     pio_sm_set_pins_with_mask(bus,(unsigned)sm,(1U<<4)|(1U<<5),(1U<<4)|(1U<<5));
@@ -123,9 +157,11 @@ bool quad_write(const u8* bytes,unsigned count) {
     for(unsigned i=0;i<count;++i) sent[i/4]|=u32(bytes[i])<<(24-8*(i%4));
     return quad_packets(sent,count,1);
 }
-void configure_quad_read(void* destination) {
+void configure_quad_read(void* destination,bool burst=false) {
     pio_sm_set_enabled(bus,(unsigned)sm,false);
-    auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
+    select_burst_program(burst);
+    auto config=burst?mk61_psram_qpi_burst_program_get_default_config(qpi_read_offset):
+        mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
 #if MK61_PICOCALC_MANAGED_CLOCK
     configure_diagnostic_clock(config);
 #if defined(MK61_PICOCALC_AI_OVERCLOCK) && MK61_PICOCALC_AI_OVERCLOCK
@@ -135,7 +171,7 @@ void configure_quad_read(void* destination) {
 #endif
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_in_pins(&config,MOSI);
     sm_config_set_set_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
-    sm_config_set_out_shift(&config,false,false,32);sm_config_set_in_shift(&config,false,true,32);
+    sm_config_set_out_shift(&config,false,false,32);sm_config_set_in_shift(&config,false,!burst,32);
     sm_config_set_mov_status(&config,STATUS_RX_LESSTHAN,1);
     pio_sm_init(bus,(unsigned)sm,qpi_read_offset,&config);
     pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
@@ -145,28 +181,63 @@ void configure_quad_read(void* destination) {
     channel_config_set_dreq(&receive,pio_get_dreq(bus,(unsigned)sm,false));
     channel_config_set_read_increment(&receive,false);channel_config_set_write_increment(&receive,true);
     channel_config_set_bswap(&receive,true);
+    channel_config_set_high_priority(&receive,burst);
     dma_channel_configure((unsigned)rx,&receive,destination,&bus->rxf[sm],0,false);
+}
+void start_quad_read(const u32* commands,unsigned packets,unsigned bytes) {
+    dma_channel_set_read_addr((unsigned)tx,commands,false);
+    dma_channel_set_trans_count((unsigned)tx,packets,false);
+    dma_channel_set_trans_count((unsigned)rx,bytes/4,false);
+    dma_start_channel_mask((1U<<tx)|(1U<<rx));
+    pio_sm_set_enabled(bus,(unsigned)sm,true);++state.read_batches;
+}
+bool wait_quad_read() {
+    return dma_support::wait((unsigned)rx,tx) && finish_stream(qpi_read_offset);
+}
+PSRAM_COLD bool recover_quad_read(u32* commands,unsigned packets,unsigned bytes,void* destination,bool burst) {
+    if(burst) {
+        dma_channel_abort((unsigned)tx);dma_channel_abort((unsigned)rx);
+        // With RX stopped, only an in-flight packet can finish. The next
+        // packet waits for the FIFO to drain. Let PIO raise CE# and hold it.
+        busy_wait_us_32(8);
+    }
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    dma_channel_abort((unsigned)tx);dma_channel_abort((unsigned)rx);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    const u32 overflow=1U<<(PIO_FDEBUG_RXSTALL_LSB+sm);
+    if(!burst || !(bus->fdebug&overflow)) return false;
+
+    ++state.burst_retries;
+    read_burst_bytes=READ_BLOCK;
+    configure_quad_read(destination);
+    const unsigned short_packets=short_read_commands(commands,packets,bytes);
+    start_quad_read(commands,short_packets,bytes);
+    if(wait_quad_read()) return true;
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    return false;
+}
+bool finish_quad_read(u32* commands,unsigned packets,unsigned bytes,void* destination,bool burst) {
+    const u32 overflow=1U<<(PIO_FDEBUG_RXSTALL_LSB+sm);
+    if((!burst || !(bus->fdebug&overflow)) && wait_quad_read() &&
+       (!burst || !(bus->fdebug&overflow))) return true;
+    return recover_quad_read(commands,packets,bytes,destination,burst);
 }
 bool quad_read(u32 address,u8* bytes,unsigned count) {
     if(!count || clock_get_hz(clk_sys)<100000000) return false;
-    constexpr unsigned BLOCK=16,BATCH=64;
-    u32 commands[BATCH],received[BATCH*BLOCK/4];
-    configure_quad_read(received);
+    constexpr unsigned BATCH=64,STAGING_BYTES=BATCH*READ_BLOCK;
+    u32 commands[BATCH],received[STAGING_BYTES/4];
+    unsigned maximum=active_read_burst();
+    configure_quad_read(received,maximum>READ_BLOCK);
     while(count) {
-        const unsigned skip=address&(BLOCK-1);
-        const unsigned n=count<BLOCK*BATCH-skip?count:BLOCK*BATCH-skip;
-        const unsigned packets=(skip+n+BLOCK-1)/BLOCK;
-        for(unsigned i=0;i<packets;++i) commands[i]=0xEB000000U|((address&~u32(BLOCK-1))+i*BLOCK);
-        dma_channel_set_read_addr((unsigned)tx,commands,false);
+        const unsigned skip=address&(READ_BLOCK-1);
+        const unsigned n=count<STAGING_BYTES-skip?count:STAGING_BYTES-skip;
+        const unsigned length=(skip+n+READ_BLOCK-1)&~(READ_BLOCK-1);
+        const unsigned packets=read_commands(commands,address-skip,length,maximum);
         dma_channel_set_write_addr((unsigned)rx,received,false);
-        dma_channel_set_trans_count((unsigned)tx,packets,false);
-        dma_channel_set_trans_count((unsigned)rx,packets*BLOCK/4,false);
-        dma_start_channel_mask((1U<<tx)|(1U<<rx));
-        pio_sm_set_enabled(bus,(unsigned)sm,true);++state.read_batches;
-        if(!dma_support::wait((unsigned)rx,tx) || !finish_stream(qpi_read_offset)) {
-            pio_sm_set_enabled(bus,(unsigned)sm,false);
-            pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false;
-        }
+        start_quad_read(commands,packets,length);
+        if(!finish_quad_read(commands,packets,length,received,maximum>READ_BLOCK)) return false;
+        if(read_burst_bytes==READ_BLOCK) maximum=READ_BLOCK;
         std::memcpy(bytes,((u8*)received)+skip,n);
         bytes+=n;address+=n;count-=n;diagnostics::feed_watchdog();
     }
@@ -275,6 +346,7 @@ bool init() {
     if(pending.owner>=0) return false;
     state={};
 #if defined(PICO_ON_DEVICE)
+    read_burst_bytes=64;
 #if MK61_PICOCALC_MANAGED_CLOCK
     if(const auto* plan=cosmic_clock::find(clock_get_hz(clk_sys)/1000000))
         diagnostic_divider256=plan->pio_div256;
@@ -299,11 +371,14 @@ bool init() {
             pio_sm_unclaim(bus,(unsigned)sm);sm=tx=rx=-1;return false;
         }
         dma_support::enable_irq((unsigned)tx);dma_support::enable_irq((unsigned)rx);
-        program_offset=pio_add_program(bus,&mk61_psram_spi_program);
         if(!pio_can_add_program(bus,&mk61_psram_qpi_write_program)) return abandon();
         qpi_write_offset=pio_add_program(bus,&mk61_psram_qpi_write_program);
+        if(!pio_can_add_program(bus,&mk61_psram_spi_program)) return abandon();
+        program_offset=pio_add_program(bus,&mk61_psram_spi_program);
         if(!pio_can_add_program(bus,&mk61_psram_qpi_read_program)) return abandon();
         qpi_read_offset=pio_add_program(bus,&mk61_psram_qpi_read_program);
+        if(qpi_read_offset+mk61_psram_qpi_read_program.length!=program_offset ||
+           program_offset+mk61_psram_spi_program.length!=qpi_write_offset) return abandon();
         auto config=mk61_psram_spi_program_get_default_config(program_offset);
 #if MK61_PICOCALC_MANAGED_CLOCK
     configure_diagnostic_clock(config);
@@ -423,6 +498,21 @@ bool read(u32 address,void* bytes,unsigned count) {
     if(ok) state.read_bytes+=count;else { ++state.errors;state.ready=false; }
     return ok;
 }
+#if defined(PICO_ON_DEVICE)
+PSRAM_COLD
+#endif
+bool diagnostic_read_burst(unsigned bytes) {
+#if defined(PICO_ON_DEVICE)
+    if((bytes!=READ_BLOCK && bytes!=32 && bytes!=64) || !state.ready || !state.qpi ||
+       !mutex_try_enter(&bus_mutex,nullptr)) return false;
+    read_burst_bytes=bytes;
+    const bool enabled=active_read_burst()==bytes;
+    if(!enabled) read_burst_bytes=READ_BLOCK;
+    mutex_exit(&bus_mutex);return enabled;
+#else
+    return bytes==READ_BLOCK;
+#endif
+}
 bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count) {
     if(!state.ready || pending.owner>=0 || !spans || !count || count>16 || base>CAPACITY) return false;
 #if defined(PICO_ON_DEVICE)
@@ -435,7 +525,7 @@ bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count) {
         const auto& s=spans[i];
         if(s.offset>CAPACITY-base || s.bytes>CAPACITY-base-s.offset ||
            ((base+s.offset)&15) || !s.bytes || (s.bytes&15) ||
-           s.bytes>PREFETCH_BLOCK*PREFETCH_PACKETS-total ||
+           s.bytes>READ_BLOCK*READ_PACKETS-total ||
            reinterpret_cast<uintptr_t>(s.destination)!=first+total) return false;
         total+=s.bytes;
     }
@@ -444,40 +534,36 @@ bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count) {
     // Keeping this lock until finish excludes other PSRAM clients and clock
     // changes while DMA reads the persistent command array and writes SRAM.
     if(!mutex_try_enter(&bus_mutex,nullptr)) return false;
+    const unsigned maximum=active_read_burst();
+#else
+    const unsigned maximum=READ_BLOCK;
 #endif
     unsigned packets=0;
     for(unsigned i=0;i<count;++i)
-        for(unsigned at=0;at<spans[i].bytes;at+=PREFETCH_BLOCK)
-            pending.commands[packets++]=0xEB000000U|(base+spans[i].offset+at);
+        packets+=read_commands(pending.commands+packets,base+spans[i].offset,spans[i].bytes,maximum);
     pending.bytes=total;
+    pending.target=static_cast<u8*>(spans[0].destination);
 #if defined(PICO_ON_DEVICE)
     pending.owner=(int)get_core_num();
-    configure_quad_read(spans[0].destination);
-    dma_channel_set_read_addr((unsigned)tx,pending.commands,false);
-    dma_channel_set_trans_count((unsigned)tx,packets,false);
-    dma_channel_set_trans_count((unsigned)rx,total/4,false);
-    dma_start_channel_mask((1U<<tx)|(1U<<rx));
-    pio_sm_set_enabled(bus,(unsigned)sm,true);++state.read_batches;
+    pending.packets=packets;
+    pending.burst=maximum>READ_BLOCK;
+    configure_quad_read(pending.target,pending.burst);
+    start_quad_read(pending.commands,packets,total);
 #else
-    pending.owner=0;pending.target=static_cast<u8*>(spans[0].destination);
+    pending.owner=0;
 #endif
     return true;
 }
 bool read_finish() {
 #if defined(PICO_ON_DEVICE)
     if(pending.owner!=(int)get_core_num()) return false;
-    const bool ok=dma_support::wait((unsigned)rx,tx) && finish_stream(qpi_read_offset);
-    if(!ok) {
-        pio_sm_set_enabled(bus,(unsigned)sm,false);
-        dma_channel_abort((unsigned)tx);dma_channel_abort((unsigned)rx);
-        pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
-    }
+    const bool ok=finish_quad_read(pending.commands,pending.packets,pending.bytes,pending.target,pending.burst);
     pending.owner=-1;mutex_exit(&bus_mutex);
 #else
     if(pending.owner<0) return false;
     // Deliberately defer the host copy until finish, exposing premature use.
-    for(unsigned i=0;i<pending.bytes/PREFETCH_BLOCK;++i)
-        std::memcpy(pending.target+i*PREFETCH_BLOCK,memory+(pending.commands[i]&0xFFFFFFU),PREFETCH_BLOCK);
+    for(unsigned i=0;i<pending.bytes/READ_BLOCK;++i)
+        std::memcpy(pending.target+i*READ_BLOCK,memory+(pending.commands[i]&0xFFFFFFU),READ_BLOCK);
     const bool ok=true;pending.owner=-1;pending.target=nullptr;
 #endif
     if(ok) state.read_bytes+=pending.bytes;else { ++state.errors;state.ready=false; }
@@ -506,6 +592,9 @@ Statistics statistics() {
 #endif
     return result;
 }
+#if defined(PICO_ON_DEVICE)
+PSRAM_COLD
+#endif
 bool self_test(void (*service)()) {
     if(!ready()) return false;
     u8 expected[1024],actual[1024];
