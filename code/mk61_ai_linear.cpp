@@ -19,6 +19,10 @@
 
 namespace mk61ai {
 namespace {
+MK61_AI_INLINE bool finite(float value) {
+  std::uint32_t encoded;std::memcpy(&encoded,&value,sizeof(encoded));
+  return (encoded&0x7fffffffU)<0x7f800000U;
+}
 MK61_AI_INLINE float half(std::uint16_t h) {
   const unsigned sign = h >> 15, exponent = (h >> 10) & 31, mantissa = h & 1023;
   if (exponent == 31)
@@ -142,7 +146,7 @@ MK61_AI_INLINE void fast_q4(LinearBatch &b) {
 #endif
       }
     }
-    if (!std::isfinite(value)) {
+    if (!finite(value)) {
       b.status = ModelStatus::NUMERIC;
       return;
     }
@@ -210,7 +214,7 @@ void generic(LinearBatch &b) {
                                : weighted - 8.0f * b.input_sums[g]) * scale;
       }
     }
-    if (!std::isfinite(value)) {
+    if (!finite(value)) {
       b.status = ModelStatus::NUMERIC;
       return;
     }
@@ -248,7 +252,7 @@ MK61_AI_INLINE void lut8(LinearBatch &b) {
       value=exact_fp32::sum(value,exact_fp32::product(half_scaled_q4_dot(dot,h),b.activation_scales[g]));
 #endif
     }
-    if(!std::isfinite(value)){b.status=ModelStatus::NUMERIC;return;}
+    if(!finite(value)){b.status=ModelStatus::NUMERIC;return;}
     b.output[r]=value;
   }
 }

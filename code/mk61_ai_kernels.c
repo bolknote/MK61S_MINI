@@ -50,7 +50,19 @@ LUT8_OPT void LUT8_RAM(mk61ai_prepare_lut8x32)(const int8_t x[32], mk61ai_lut8x3
   table->sum = (int16_t)total;
 }
 
-LUT8_OPT int32_t LUT8_RAM(mk61ai_dot_lut8_q4_a8_32)(const uint8_t planes[16],
+#if defined(PICO_ON_DEVICE) && defined(__ARM_ARCH_6M__) && defined(__GNUC__)
+/* Word loads are only valid for aligned plane bytes. The public API also
+ * accepts unaligned buffers. That uncommon scalar fallback stays in Flash
+ * to preserve SRAM for the shared LUT, APPs and inference workspace. */
+#define LUT8_SCALAR_NAME mk61ai_dot_lut8_q4_a8_32_unaligned
+#define LUT8_SCALAR_LINKAGE static __attribute__((used))
+#define LUT8_SCALAR_RAM(name) name
+#else
+#define LUT8_SCALAR_NAME mk61ai_dot_lut8_q4_a8_32
+#define LUT8_SCALAR_LINKAGE
+#define LUT8_SCALAR_RAM(name) LUT8_RAM(name)
+#endif
+LUT8_SCALAR_LINKAGE LUT8_OPT int32_t LUT8_SCALAR_RAM(LUT8_SCALAR_NAME)(const uint8_t planes[16],
                                 const mk61ai_lut8x32 *table) {
   int32_t p0 = 0, p1 = 0, p2 = 0, p3 = 0;
   for (unsigned g = 0; g < 4; ++g) {
@@ -62,6 +74,47 @@ LUT8_OPT int32_t LUT8_RAM(mk61ai_dot_lut8_q4_a8_32)(const uint8_t planes[16],
   }
   return p0 + 2 * p1 + 4 * p2 + 8 * p3 - 8 * (int32_t)table->sum;
 }
+#undef LUT8_SCALAR_NAME
+#undef LUT8_SCALAR_LINKAGE
+#undef LUT8_SCALAR_RAM
+
+#if defined(PICO_ON_DEVICE) && defined(__ARM_ARCH_6M__) && defined(__GNUC__)
+_Static_assert(sizeof(mk61ai_lut8x32)==2050,"Packed LUT8 layout");
+/* Four index bytes per word, exact signed int16 lookups, reverse Horner
+ * combination of planes. Same weight/table format and integer dot result.
+ * No SIO state, scratch allocation or change to FP32 reduction order. */
+__asm__(
+  ".pushsection .time_critical.mk61ai_dot_lut8_q4_a8_32,\"ax\",%progbits\n"
+  ".syntax unified\n.thumb\n.balign 4\n"
+  ".global mk61ai_dot_lut8_q4_a8_32\n"
+  ".type mk61ai_dot_lut8_q4_a8_32,%function\n.thumb_func\n"
+  "mk61ai_dot_lut8_q4_a8_32:\n"
+  "movs r2,#3\n"
+  "tst r0,r2\n"
+  "bne 2f\n"
+  "push {r4,r5,r6,r7,lr}\n"
+  "mov r12,r8\n"
+  "movs r6,#128\nlsls r6,r6,#2\n"
+  "adds r2,r1,r6\nadds r3,r2,r6\nadds r4,r3,r6\n"
+  "movs r7,#255\nlsls r7,r7,#1\n"
+  ".macro MK61_LUT8_PLANE offset,first=0\n"
+  "ldr r5,[r0,#\\offset]\n"
+  "lsls r6,r5,#1\nands r6,r7\nldrsh r6,[r1,r6]\nmov r8,r6\n"
+  "lsrs r6,r5,#7\nands r6,r7\nldrsh r6,[r2,r6]\nadd r8,r6\n"
+  "lsrs r6,r5,#15\nands r6,r7\nldrsh r6,[r3,r6]\nadd r8,r6\n"
+  "lsrs r6,r5,#23\nands r6,r7\nldrsh r6,[r4,r6]\nadd r8,r6\n"
+  ".if \\first\nmov lr,r8\n"
+  ".else\nadd lr,lr\nadd lr,r8\n.endif\n.endm\n"
+  "MK61_LUT8_PLANE 12,1\nMK61_LUT8_PLANE 8\n"
+  "MK61_LUT8_PLANE 4\nMK61_LUT8_PLANE 0\n"
+  "movs r5,#128\nlsls r5,r5,#4\nldrsh r1,[r1,r5]\nlsls r1,r1,#3\n"
+  "mov r0,lr\nsubs r0,r0,r1\nmov r8,r12\n"
+  "pop {r4,r5,r6,r7,pc}\n"
+  "2: ldr r2,=mk61ai_dot_lut8_q4_a8_32_unaligned\nbx r2\n"
+  ".ltorg\n.purgem MK61_LUT8_PLANE\n"
+  ".size mk61ai_dot_lut8_q4_a8_32,.-mk61ai_dot_lut8_q4_a8_32\n"
+  ".popsection\n");
+#endif
 
 int32_t mk61ai_dot_q2_a8_32(const uint8_t codes[8], const int8_t x[32]) {
   int32_t result = 0;

@@ -19,8 +19,8 @@ typedef struct {
   int16_t sum;
 } mk61ai_lut32;
 
-/* Experimental g=8 tables. Same bit-plane weight bytes as g=4, eight times
- * the table storage. Not selected by the production model dispatcher. */
+/* Exact g=8 tables. Used for128-column INT8 matrix inputs, shared read-only
+ * by both cores. Same bit-plane bytes as g=4, eight times the table storage. */
 typedef struct {
   int16_t subset[4][256];
   int16_t sum;
