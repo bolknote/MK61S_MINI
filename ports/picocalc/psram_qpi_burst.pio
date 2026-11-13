@@ -1,4 +1,4 @@
-; QPI EB reads at 25 MHz. The descriptor is (nibbles - 1):8, address:24.
+; QPI EB reads. The descriptor is (nibbles - 1):8, address:24.
 ; Wait for the previous RX words with CE# high. While CE# is low there
 ; are no blocking instructions. RXSTALL reports a lost word to the driver.
 .program mk61_psram_qpi_burst
@@ -27,7 +27,7 @@ burst_dummy:
     nop side 2 [2]
     jmp y-- burst_dummy side 0 [2]
     nop side 0
-burst_nibble:
+public burst_nibble:
     nop side 2 [1]
     in pins, 4 side 2
     push iffull noblock side 0

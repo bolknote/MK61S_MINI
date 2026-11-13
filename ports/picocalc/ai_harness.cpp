@@ -1,6 +1,7 @@
 #include "ai_harness.hpp"
 #include "ai_chat.hpp"
 #include "ai_clock.hpp"
+#include "ai_psram_read_clock.hpp"
 #include "ai_m3.hpp"
 #include "ai_presentation.hpp"
 #include "mk61_ai_perf.hpp"
@@ -46,6 +47,7 @@ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 namespace picocalc::ai {
 namespace {
 using namespace mk61ai;
+enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK };
 static constexpr char isa[] =
 #include "terminal_classic_isa.inc"
     ;
@@ -570,13 +572,15 @@ struct UI {
   void tick();
   unsigned run();
   unsigned bench();
-  unsigned perf(const char *directory,const PerfConfig &config,bool measure_bursts);
+  unsigned perf(const char *directory,const PerfConfig &config,ReadBenchmark read_benchmark);
 #if defined(PICO_ON_DEVICE)
   struct BurstResult {
-    unsigned bytes=0,elapsed[3]{},retries=0;
-    bool ok=false;
+    unsigned setting=0,elapsed[3]{},retries=0,verified=0;
+    std::uint32_t expected_crc=0,actual_crc=0;
+    bool ok=false,stress_failed=false;
   };
-  unsigned bench_read_bursts(shared_memory::Buffer &scratch,BurstResult (&results)[3]);
+  bool bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,bool clocks);
+  static unsigned fastest_burst(const BurstResult *results,unsigned count);
 #endif
   unsigned long_perf(const char *directory);
   void sample_memory();
@@ -2213,11 +2217,16 @@ AI_COLD_CODE unsigned UI::bench() {
     if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
        !parse_perf_config(config_text,config_size,config)) return 3;
     std::snprintf(config_path,sizeof(config_path),"%s/BURST.CFG",directory);
-    const bool measure_bursts=files::exists(config_path);
-    if(measure_bursts &&
-       (!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
-        config_size!=9 || std::memcmp(config_text,"AIBURST1\n",9) || config.mhz!=270 || !config.repeat)) return 3;
-    return perf(directory,config,measure_bursts);
+    ReadBenchmark read_benchmark=ReadBenchmark::NONE;
+    if(files::exists(config_path)) {
+      if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
+         config_size!=9 || config.mhz!=270 || !config.repeat) return 3;
+      if(!std::memcmp(config_text,"AIBURST1\n",9)) read_benchmark=ReadBenchmark::PACKET_SIZE;
+      else if(!std::memcmp(config_text,"AIBURST2\n",9) && config.stress_ms && config.control==2)
+        read_benchmark=ReadBenchmark::CLOCK;
+      else return 3;
+    }
+    return perf(directory,config,read_benchmark);
   }
   char state_path[128], json_path[128];
   std::snprintf(state_path, sizeof(state_path), "%s/BENCH.STATE", directory);
@@ -2543,53 +2552,72 @@ AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
 #if defined(PICO_ON_DEVICE)
 constexpr unsigned BURST_TRIALS=256,BURST_WEIGHTS=1792,BURST_SCALES=224;
 
-AI_COLD_CODE unsigned UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult (&results)[3]) {
+AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,bool clocks) {
   constexpr unsigned source_bytes=4096,read_bytes=BURST_WEIGHTS+BURST_SCALES;
   std::unique_ptr<u32[]> memory(new(std::nothrow) u32[(source_bytes+read_bytes)/4]);
-  if(!memory) return 0;
+  if(!memory) return false;
   auto *source=reinterpret_cast<u8*>(memory.get());
   auto *target=source+source_bytes;
   u32 pattern=0xD84C1629U;
-  for(unsigned i=0;i<source_bytes;++i) {
-    pattern^=pattern<<13;pattern^=pattern>>17;pattern^=pattern<<5;
-    source[i]=u8(pattern);
+  for(unsigned i=0;i<count;++i) {
+    results[i].setting=clocks?ai_psram_read_clock::burst_dividers[i]:16U<<i;
+    results[i].ok=true;
   }
-  if(!scratch.write(0,source,source_bytes)) return 0;
-  for(unsigned i=0;i<3;++i) { results[i].bytes=16U<<i;results[i].ok=true; }
   // Rotate the order to reduce temperature and time-order effects. Both
   // spans have the sizes of a 28-row weight tile in the reference model.
-  for(unsigned pass=0;pass<3;++pass) for(unsigned i=0;i<3;++i) {
-    auto &r=results[(i+pass)%3];
-    if(!r.ok) continue;
-    r.ok=psram::diagnostic_read_burst(r.bytes);
-    const auto before=psram::statistics().burst_retries;
-    for(unsigned j=0;r.ok && j<BURST_TRIALS;++j) {
-      if(!(j&31U) && !pump()) { cancel=true;return 0; }
-      const unsigned weights=(j*16)&1023U,scales=3072+((j*48)&511U);
-      const block_io::ReadSpan spans[]={{weights,target,BURST_WEIGHTS},
-          {scales,target+BURST_WEIGHTS,BURST_SCALES}};
-      const auto start=call(MK61_SERVICE_MICROS);
-      const bool read=scratch.read_begin(spans,2) && scratch.read_finish();
-      r.elapsed[pass]+=call(MK61_SERVICE_MICROS)-start;
-      r.ok=read && !std::memcmp(target,source+weights,BURST_WEIGHTS) &&
-          !std::memcmp(target+BURST_WEIGHTS,source+scales,BURST_SCALES);
+  for(unsigned pass=0;pass<3;++pass) {
+    for(unsigned i=0;i<source_bytes;++i) {
+      pattern^=pattern<<13;pattern^=pattern>>17;pattern^=pattern<<5;
+      source[i]=u8(pattern);
     }
-    r.retries+=psram::statistics().burst_retries-before;
-    r.ok=r.ok && !r.retries;
+    if(!scratch.write(0,source,source_bytes)) return false;
+    for(unsigned i=0;i<count;++i) {
+      auto &r=results[(i+pass)%count];
+      if(!r.ok) continue;
+      r.ok=(!clocks || psram::diagnostic_read_clock(r.setting)) &&
+          psram::diagnostic_read_burst(clocks?64:r.setting);
+      const auto before=psram::statistics().burst_retries;
+      for(unsigned j=0;r.ok && j<BURST_TRIALS;++j) {
+        if(!(j&31U) && !pump()) { cancel=true;return false; }
+        const unsigned weights=(j*16)&1023U,scales=3072+((j*48)&511U);
+        const block_io::ReadSpan spans[]={{weights,target,BURST_WEIGHTS},
+            {scales,target+BURST_WEIGHTS,BURST_SCALES}};
+        const auto start=call(MK61_SERVICE_MICROS);
+        const bool read=scratch.read_begin(spans,2) && scratch.read_finish();
+        r.elapsed[pass]+=call(MK61_SERVICE_MICROS)-start;
+        if(!read || (clocks && psram::diagnostic_clock_divider256()!=r.setting)) { r.ok=false;break; }
+        r.ok=!std::memcmp(target,source+weights,BURST_WEIGHTS) &&
+            !std::memcmp(target+BURST_WEIGHTS,source+scales,BURST_SCALES);
+        if(r.ok) ++r.verified;
+        else {
+          const auto crc=mk61_crc32::extend(mk61_crc32::INITIAL_STATE,source+weights,BURST_WEIGHTS);
+          r.expected_crc=mk61_crc32::finish(mk61_crc32::extend(crc,source+scales,BURST_SCALES));
+          r.actual_crc=diagnostic::StressDiagnostics::crc(target,read_bytes);
+        }
+      }
+      r.retries+=psram::statistics().burst_retries-before;
+      r.ok=r.ok && !r.retries;
+    }
   }
-  if(!results[0].ok) return 0;
+  return results[0].ok;
+}
+
+AI_COLD_CODE unsigned UI::fastest_burst(const BurstResult *results,unsigned count) {
   unsigned winner=0,best=UINT32_MAX;
-  for(const auto &r:results) if(r.ok) {
+  for(unsigned i=0;i<count;++i) {
+    const auto &r=results[i];
+    if(!r.ok) continue;
     const auto middle=r.elapsed[0]+r.elapsed[1]+r.elapsed[2]-
         std::min({r.elapsed[0],r.elapsed[1],r.elapsed[2]})-
         std::max({r.elapsed[0],r.elapsed[1],r.elapsed[2]});
-    if(middle<best) { best=middle;winner=r.bytes; }
+    if(middle<best) { best=middle;winner=r.setting; }
   }
-  return psram::diagnostic_read_burst(winner)?winner:0;
+  return winner;
 }
 #endif
 
-AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bool measure_bursts) {
+AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,ReadBenchmark read_benchmark) {
+  const bool measure_bursts=read_benchmark!=ReadBenchmark::NONE;
 #if !defined(PICO_ON_DEVICE)
   if(measure_bursts) return 3;
 #endif
@@ -2813,19 +2841,28 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bo
     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
   }
 #if defined(PICO_ON_DEVICE)
-  BurstResult bursts[3]{};
-  unsigned burst_winner=0,burst_inference_retries=0;
+  const bool sweep_clocks=read_benchmark==ReadBenchmark::CLOCK;
+  const unsigned burst_count=sweep_clocks?4:3;
+  BurstResult bursts[4]{};
+  unsigned burst_winner=0,clock_winner=0,burst_inference_retries=0,stress_burst_retries=0;
+  bool packet_clock_override=false;
+  auto select_burst=[&]() AI_COLD_CODE {
+    const unsigned winner=fastest_burst(bursts,burst_count);
+    burst_winner=sweep_clocks?64:winner;
+    clock_winner=sweep_clocks?winner:0;
+    return winner && (!sweep_clocks || psram::diagnostic_read_clock(winner)) &&
+        psram::diagnostic_read_burst(burst_winner);
+  };
   if(ok && measure_bursts) {
-    burst_winner=bench_read_bursts(scratch,bursts);
-    ok=burst_winner!=0;
+    if(!sweep_clocks)
+      packet_clock_override=psram::diagnostic_read_clock(ai_psram_read_clock::control_burst_divider);
+    ok=bench_read_bursts(scratch,bursts,burst_count,sweep_clocks) && select_burst();
   }
-  const auto retries_before=psram::statistics().burst_retries;
 #endif
-  // Validate an experimental read clock before any timed candidate pass.
-  // pass0 is only the private-buffer stress; archived controls stay external.
-  for(unsigned pass=0;ok && pass<=config.repeat;++pass) {
-    if(pass) { ok=run(pass);++passes;continue; }
-    if(!config.stress_ms) continue;
+  auto run_stress=[&]() AI_COLD_CODE {
+#if defined(PICO_ON_DEVICE)
+    const auto before=psram::statistics().burst_retries;
+#endif
     {
       char marker[96];const int n=std::snprintf(marker,sizeof(marker),
         "AI_PSRAM_STRESS begin ms=%u hz=%lu\r\n",config.stress_ms,(unsigned long)ai_clock::hz());
@@ -2883,6 +2920,10 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bo
       ++stress_iterations;
     }
     stress_elapsed_ms=host.api->millis_ms()-started;
+#if defined(PICO_ON_DEVICE)
+    stress_burst_retries=psram::statistics().burst_retries-before;
+    ok=ok && !stress_burst_retries;
+#endif
     stress_before_decode=ok && !passes && stress_elapsed_ms>=config.stress_ms;
     if(stress_execution.busy) stress_execution.busy(stress_execution.context,false);
     stress_diagnostic.busy_exited=stress_diagnostic.busy_entered && !computing && freeze_count==thaw_count;
@@ -2891,12 +2932,37 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bo
         "AI_PSRAM_STRESS end ok=%u iterations=%u\r\n",unsigned(ok),stress_iterations);
       call(MK61_SERVICE_DEBUG_WRITE,unsigned(n),0,0,marker);
     }
+  };
+  if(ok && config.stress_ms) run_stress();
+#if defined(PICO_ON_DEVICE)
+  // Fall back before forwarding any tokens if the winner fails under load.
+  while(sweep_clocks && !ok && clock_winner && !cancel &&
+        (stress_burst_retries || stress_diagnostic.failure==diagnostic::StressFailure::MEMORY_BYTES ||
+         stress_diagnostic.failure==diagnostic::StressFailure::MEMORY_CRC)) {
+    for(auto &r:bursts) if(r.setting==clock_winner) {
+      r.ok=false;r.stress_failed=true;
+      r.retries+=stress_burst_retries;
+      r.expected_crc=stress_diagnostic.expected_crc;r.actual_crc=stress_diagnostic.actual_crc;
+    }
+    ok=select_burst();
+    if(ok) {
+      stress_diagnostic={};stress_iterations=0;stress_elapsed_ms=0;
+      run_stress();
+    }
   }
+  const auto retries_before=psram::statistics().burst_retries;
+#endif
+  for(unsigned pass=1;ok && pass<=config.repeat;++pass) { ok=run(pass);++passes; }
 #if defined(PICO_ON_DEVICE)
   const unsigned psram_read_div=psram::diagnostic_clock_divider256();
-  if(measure_bursts) {
-    burst_inference_retries=psram::statistics().burst_retries-retries_before;
-    ok=psram::diagnostic_read_burst(burst_winner) && ok && !burst_inference_retries;
+  burst_inference_retries=psram::statistics().burst_retries-retries_before;
+  ok=ok && !burst_inference_retries;
+  if(sweep_clocks || packet_clock_override) {
+    const bool restored=psram::diagnostic_read_clock(ai_psram_read_clock::default_burst_divider);
+    // A real FIFO overflow has already switched the driver to the short reader.
+    const bool packets_restored=burst_inference_retries || stress_burst_retries ||
+        psram::diagnostic_read_burst(64);
+    ok=ok && restored && packets_restored && (!sweep_clocks || psram_read_div==clock_winner);
   }
 #else
   const unsigned psram_read_div=0;
@@ -2955,13 +3021,18 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,bo
   append("},\"reference_external\":%s,\"tile_rows\":%u,",archived?"true":"false",config.cores==3?64:28);
   append("\"psram_read_divider256\":%u,",psram_read_div);
 #if defined(PICO_ON_DEVICE)
+  append("\"psram_burst_inference_retries\":%u,",burst_inference_retries);
   if(measure_bursts) {
-    append("\"psram_burst_winner\":%u,\"psram_burst_inference_retries\":%u,\"psram_burst_bytes_per_pass\":%u,\"psram_bursts\":[",
-        burst_winner,burst_inference_retries,BURST_TRIALS*(BURST_WEIGHTS+BURST_SCALES));
-    for(unsigned i=0;i<3;++i) {
+    if(sweep_clocks) append("\"psram_clock_winner_divider256\":%u,",clock_winner);
+    append("\"psram_burst_winner\":%u,\"psram_burst_bytes_per_pass\":%u,\"psram_bursts\":[",
+        burst_winner,BURST_TRIALS*(BURST_WEIGHTS+BURST_SCALES));
+    for(unsigned i=0;i<burst_count;++i) {
       const auto &r=bursts[i];
-      append("%s{\"bytes\":%u,\"ok\":%s,\"retries\":%u,\"us\":[%u,%u,%u]}",
-          i?",":"",r.bytes,r.ok?"true":"false",r.retries,r.elapsed[0],r.elapsed[1],r.elapsed[2]);
+      append("%s{\"bytes\":%u,\"ok\":%s,\"retries\":%u,\"us\":[%u,%u,%u]",
+          i?",":"",sweep_clocks?64:r.setting,r.ok?"true":"false",r.retries,r.elapsed[0],r.elapsed[1],r.elapsed[2]);
+      if(sweep_clocks) append(",\"divider256\":%u,\"verified\":%u,\"stress_failed\":%s,\"expected_crc\":%lu,\"actual_crc\":%lu",
+          r.setting,r.verified,r.stress_failed?"true":"false",(unsigned long)r.expected_crc,(unsigned long)r.actual_crc);
+      append("}");
     }
     append("],");
   }

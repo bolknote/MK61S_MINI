@@ -28,8 +28,10 @@ bool read(u32 address,void* bytes,unsigned count);
 // The calling core owns the bus/destination until read_finish() returns.
 bool read_begin(u32 base,const block_io::ReadSpan* spans,unsigned count);
 bool read_finish();
-// Opt in while the qualified 270 MHz CPU / 25 MHz QPI profile is active.
+// Override the packet size for diagnostics in the 270 MHz AI profile.
 bool diagnostic_read_burst(unsigned bytes);
+// Affects only the long-packet QPI reader, in the active 270 MHz AI profile.
+bool diagnostic_read_clock(unsigned divider256);
 bool write(u32 address,const void* bytes,unsigned count);
 Statistics statistics();
 bool self_test(void (*service)()=nullptr);

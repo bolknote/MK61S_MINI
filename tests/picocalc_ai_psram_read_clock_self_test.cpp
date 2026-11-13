@@ -2,6 +2,13 @@
 #include <cassert>
 #include <cstdio>
 int main(){using picocalc::ai_psram_read_clock::divider256;
+using namespace picocalc::ai_psram_read_clock;
+static_assert(sweep_divider(461) && sweep_divider(419) && sweep_divider(384) && sweep_divider(346));
+static_assert(!sweep_divider(345) && !sweep_divider(385) && !sweep_divider(462));
+static_assert(!late_burst_sample(461) && late_burst_sample(419) && late_burst_sample(384) && late_burst_sample(346));
+static_assert(default_burst_divider==346 && late_burst_sample(default_burst_divider));
+static_assert(control_burst_divider==461 && !late_burst_sample(control_burst_divider));
+static_assert(ai_profile(270000000,692) && !ai_profile(125000000,320) && !ai_profile(270000000,461));
 #if MK61_PICOCALC_AI_PSRAM_LATE_READ
 constexpr unsigned selected=346,limit=200000000;
 #else

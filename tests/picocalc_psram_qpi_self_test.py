@@ -11,7 +11,7 @@ def programs(source="psram_qpi.pio"):
         if line.startswith('.program '):
             current={'code':[],'labels':{}};result[line.split()[1]]=current
         elif not line or line.startswith('.'):continue
-        elif line.endswith(':'):current['labels'][line[:-1]]=len(current['code'])
+        elif line.endswith(':'):current['labels'][line[:-1].split()[-1]]=len(current['code'])
         else:
             m=re.fullmatch(r'(.+?) side ([0-3])(?: \[(\d+)\])?',line);assert m,line
             current['code'].append((m[1],int(m[2]),1+int(m[3] or 0)))
@@ -203,4 +203,27 @@ class QpiTests(unittest.TestCase):
                 self.assertGreaterEqual(ns(end-edges[-1][0]),20)
                 if previous is not None:self.assertGreaterEqual(ns(end-duration-previous),50)
                 previous=end
+
+    def test_late_burst_timing(self):
+        p=programs('psram_qpi_burst.pio')['mk61_psram_qpi_burst']
+        late={'code':p['code'][:],'labels':p['labels']}
+        at=p['labels']['burst_nibble']
+        late['code'][at:at+4]=[('nop',2,3),('in pins, 4',0,1),
+                              ('push iffull noblock',0,1),('jmp x-- burst_nibble',0,1)]
+        headers=[bytes.fromhex('eb000400'),bytes.fromhex('eb000c00')]*3
+        replies=[bytes((i*23+j*7)&255 for j in range(64)) for i in range(len(headers))]
+        for stalled in (False,True):
+            early_samples,late_samples,drops,late_drops=[],[],[],[]
+            early=execute(p,headers,replies,stalls=stalled,sample_trace=early_samples,burst=True,dropped=drops)
+            delayed=execute(late,headers,replies,stalls=stalled,sample_trace=late_samples,burst=True,dropped=late_drops)
+            self.assertEqual(early,delayed)
+            self.assertEqual(late_drops,[t+1 for t in drops])
+            self.assertEqual(late_samples,[(t+1,i) for t,i in early_samples])
+            frames,_,longest=delayed
+            for div in (419,384,346):
+                self.assertLess((longest*div+255)//256,2160)  # CE# low < 8 us at 270 MHz.
+                for (edges,_,end) in frames:
+                    self.assertGreaterEqual((end-edges[-1][0])*div//256,6)
+                for (_,_,previous),(_,duration,end) in zip(frames,frames[1:]):
+                    self.assertGreaterEqual((end-duration-previous)*div//256,14)
 if __name__=='__main__':unittest.main()
