@@ -529,7 +529,9 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #endif
     return true;
 }
-static void emulate(void) {
+/* Keep display/audio locals out of the menu and SD paths. The timing
+ * probe uses this same frame even when LTO strips the unused menus. */
+static __attribute__((noinline)) void emulate(void) {
     uint8_t blocked[32];memcpy(blocked,keys,sizeof(blocked));
     uint32_t keyboard_deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);guest_keyboard(blocked);
     if(!mk61_api->graphics_begin()) return;
@@ -669,7 +671,9 @@ done:
     color(MK61_COLOR_END,NULL);
     if(error) message(error);
 }
-static int app_run(uint32_t file_id) {
+/* The Z80 state and cache are in run_app's frame. Keep OSD/SD locals here
+ * so their callees can reuse stack slots after their own return. */
+static __attribute__((noinline)) int app_run(uint32_t file_id) {
     /* These paths live for the complete foreground APP session. Keep them
      * in the resident stack reservation instead of enlarging the heap image
      * alongside the 32K/16K guest-memory leases. No I/O outlives main(). */

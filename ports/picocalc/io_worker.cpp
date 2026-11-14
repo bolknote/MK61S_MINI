@@ -455,5 +455,6 @@ FrameDeadlineScope::~FrameDeadlineScope() {
 DeadlineStatistics deadline_statistics() {
     return {deadline_trace.resets.load(),deadline_trace.fault_site.load(),deadline_trace.fault_age_us.load()};
 }
+void begin_audio_deadline(){deadline_trace.begin_audio();}
 void note_audio_deadline(){deadline_trace.audio_fault(time_us_32());}
 }

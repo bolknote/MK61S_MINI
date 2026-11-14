@@ -98,6 +98,44 @@ void format(BYTE type) {
     storage_journal::reset();f_mount(nullptr,"",0);disk.assign(disk.size(),0);trace.clear();changed.clear();
     MKFS_PARM options{};options.fmt=type;u8 work[4096];assert(f_mkfs("",&options,work,sizeof(work))==FR_OK);mount();
 }
+void staged_binary_cuts() {
+    constexpr unsigned window=32*1024;
+    constexpr const char* path="/checkpoint.szx";
+    constexpr const char* staged="/.MK61-0.TMP";
+    std::vector<u8> input(2*window+513),readback(input.size());
+    for(unsigned i=0;i<input.size();++i) input[i]=(u8)(i^(i>>10));
+    const auto before=disk;changed.clear();trace.clear();tracing=true;
+    auto* writer=files::begin_write(path,false,true);
+    assert(writer && files::append_write(writer,input.data(),input.size()) && files::commit_write(writer));
+    tracing=false;
+    const auto writes=trace;
+    std::vector<unsigned> markers;
+    for(unsigned i=0;i<writes.size();++i)
+        if(!std::memcmp(writes[i].bytes.data(),"MK61JNL1",8) && writes[i].bytes[16]==2) markers.push_back(i);
+    assert(markers.size()==3 && markers.back()+1==writes.size());
+    for(unsigned stage=0;stage<markers.size();++stage) for(unsigned committed=0;committed<2;++committed) {
+        restore_changed(before);
+        for(unsigned i=0;i<markers[stage]+committed;++i) save_sector(writes[i].sector,writes[i].bytes.data());
+        mount();
+        const bool published=stage==markers.size()-1 && committed;
+        assert(files::exists(path)==published);
+        unsigned size=0;
+        if(published) {
+            assert(!files::exists(staged));
+            assert(files::read(path,readback.data(),readback.size(),size) && size==input.size() && readback==input);
+        } else {
+            const unsigned synced=(stage+committed)*window;
+            assert(files::exists(staged)==(synced!=0));
+            if(synced) {
+                assert(files::read(staged,readback.data(),readback.size(),size) && size==synced);
+                assert(!std::memcmp(input.data(),readback.data(),size));
+            }
+        }
+        ++cuts;
+    }
+    assert(files::remove(path));
+    std::puts("PASS staged binary: cuts before and after both checkpoints and final publication");
+}
 void suite(BYTE type,const char* name) {
     format(type);
     // Exercise first-use provisioning independently of an already valid journal.
@@ -130,6 +168,7 @@ void suite(BYTE type,const char* name) {
         for(unsigned i=0;i<17;++i) if(!files::append_write(writer,(const u8*)next.data()+i*97,97)) { files::cancel_write(writer);return false; }
         return files::commit_write(writer);
     });
+    staged_binary_cuts();
     check("mkdir",[] { return files::mkdir("/Исходники/каталог"); });
     check("move/rename",[&] { return files::rename(path.c_str(),"/Исходники/каталог/после.bas"); });
     check("delete",[] { return files::remove("/Исходники/каталог/после.bas"); });

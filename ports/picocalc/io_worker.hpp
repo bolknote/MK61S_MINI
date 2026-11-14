@@ -55,6 +55,7 @@ struct DeadlineStatistics {u32 resets,fault_site,fault_age_us;};
 // Arm/fire diagnostics retain the nonblocking current/fault publication;
 // the older boot-lifetime maxima are intentionally omitted to save60B.
 DeadlineStatistics deadline_statistics();
+void begin_audio_deadline();
 void note_audio_deadline();
 }
 #endif

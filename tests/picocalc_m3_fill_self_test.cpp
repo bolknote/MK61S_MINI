@@ -69,6 +69,39 @@ static void irq_tests() {
     ring.prime_block(buffer.data(),[](uint32_t* p,unsigned n){for(unsigned i=0;i<n;++i)p[i]=0;});
     assert(ring.refill_block(buffer.data(),[&]{return now/40;},[&](uint32_t* p,unsigned n){for(unsigned i=0;i<n;++i)p[i]=1;now+=1280;})==DutyRing::LATE && !ring.filled);
 }
+static void refill_clock_test() {
+    for(int ppm:{-15,15}) {
+        DutyRing ring;
+        std::array<uint32_t,DutyRing::SIZE> buffer{};
+        uint32_t source=0;
+        const auto fill=[&](uint32_t* out,unsigned n){
+            for(unsigned i=0;i<n;++i) out[i]=source++;
+        };
+        ring.prime_block(buffer.data(),fill);
+        uint64_t scheduled=1280;
+        unsigned callbacks=0;
+        while(scheduled<615000000) {
+            assert(++callbacks<600000);
+            const uint64_t irq=scheduled+(callbacks%47==0?360:9);
+            const auto dma=[&](uint64_t time) {
+                return (uint32_t)(time*(1000000+ppm)/40000000u);
+            };
+            uint32_t played=dma(irq),checked=played,previous=ring.filled;
+            for(unsigned at=previous;at<played;++at)
+                assert(buffer[at%DutyRing::SIZE]==at);
+            const auto result=ring.refill_block(buffer.data(),[&]{return checked;},
+                [&](uint32_t* out,unsigned n){fill(out,n);checked=dma(irq+280);});
+            assert(result!=DutyRing::LATE);
+            if(result==DutyRing::REFILLED) {
+                for(unsigned at=previous+DutyRing::HALF;at<checked;++at)
+                    assert(buffer[at%DutyRing::SIZE]==at);
+            }
+            scheduled-=DutyRing::next_delay(result,played,previous);
+        }
+        assert(ring.filled>15000000);
+    }
+    puts("PWM refill follows the DMA head on either side of the timer clock, with delayed callbacks and no missed or reordered samples: PASS");
+}
 int main() {
     AudioEngine empty;empty.fill_samples(nullptr,0,[]{assert(false);return 0;});
     for(unsigned count=0;count<=64;++count)for(unsigned available=0;available<=512;++available)
@@ -77,4 +110,5 @@ int main() {
         for(unsigned layout=0;layout<3;++layout)for(bool primed:{false,true})for(unsigned state=0;state<4;++state)
             check(count,available,primed,layout,state,0xfffffff0+available);
     irq_tests();printf("PWM bulk consumer: %u exact scalar-equivalence states (%u fast), sample/clock/sequence bounds, prime/mute/underrun/wrap; IRQ preemption, restore/wrong-core and unchanged640us/overrun faults PASS\n",cases,fast);
+    refill_clock_test();
 }

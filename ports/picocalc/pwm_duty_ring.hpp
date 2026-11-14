@@ -2,13 +2,21 @@
 #define MK61_PICOCALC_PWM_DUTY_RING_HPP
 #include <cstdint>
 namespace picocalc::audio_stream {
-// Continuous single-channel DMA reads64 duties. A1.28ms alarm fills the
-// consumed32-sample half while the other half is on the wire. The sample
+// Continuous single-channel DMA reads 64 duties. A 1.28 ms alarm fills the
+// consumed 32-sample half while the other half is on the wire. The sample
 // source is the bounded M3 duty queue, never an arbitrary APP callback.
 struct DutyRing {
     static constexpr unsigned HALF=32,SIZE=64;
+    static constexpr int SAMPLE_US=40;
     uint32_t filled=0;
     enum Result { EARLY,REFILLED,LATE };
+    static int next_delay(Result result,uint32_t head,uint32_t previous_filled) {
+        if(result==EARLY) return -SAMPLE_US;
+        // A negative timer delay is relative to the last scheduled time.
+        // Remove the phase error measured by the actual DMA read position.
+        const unsigned late=head-previous_filled-HALF;
+        return -static_cast<int>(HALF-late)*SAMPLE_US;
+    }
     template<class Fill> void prime_block(uint32_t samples[SIZE],Fill fill) {
         filled=0;fill(samples,SIZE);
     }

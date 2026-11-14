@@ -18,6 +18,10 @@ struct WorkerDeadlineTrace {
         (void)site;(void)now;mark.store(previous,std::memory_order_release);
     }
     void reset_controller(){resets.store(resets.load(std::memory_order_relaxed)+1,std::memory_order_relaxed);}
+    void begin_audio() {
+        fault_site.store(0,std::memory_order_relaxed);
+        fault_age_us.store(0,std::memory_order_relaxed);
+    }
     void audio_fault(uint32_t now) {
         const uint32_t current=mark.load(std::memory_order_acquire);
         fault_site.store(current&15,std::memory_order_relaxed);

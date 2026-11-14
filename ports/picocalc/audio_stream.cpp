@@ -283,7 +283,7 @@ bool remote_tick(repeating_timer* alarm) {
         synth_underruns.fetch_add(1,std::memory_order_relaxed);m3_audio::fault(-31);
         remote_quiesce();remote_alarm_live=false;return false;
     }
-    alarm->delay_us=result==DutyRing::EARLY?-40:-1280;
+    alarm->delay_us=DutyRing::next_delay(result,before,filled);
     mk61_remote_alarm_trace.planned((int32_t)alarm->delay_us);
     if(result==DutyRing::REFILLED)synth_blocks.fetch_add(1,std::memory_order_relaxed);
     return true;
@@ -292,6 +292,7 @@ MK61_ALARM_DIAGNOSTIC_TEXT bool start_remote_dma() {
     const unsigned hz=clock_get_hz(clk_sys);
     if(!hz || hz%25000 || hz/25000>65535)return false;
     mk61_audio_dma_storage.begin_remote();
+    io_worker::begin_audio_deadline();
     synth_blocks.store(0,std::memory_order_relaxed);synth_underruns.store(0,std::memory_order_relaxed);
     remote_channel=dma_claim_unused_channel(false);
     if(remote_channel>=0)remote_pacer=dma_claim_unused_timer(false);
