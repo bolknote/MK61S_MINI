@@ -21,7 +21,7 @@ struct App {
 #if defined(MK61_TARGET_PICOCALC)
   mk61_service_buffer undo_buffer;
   uint16_t undo_count,undo_next;
-  bool color;
+  bool color, striped;
 #endif
   const mk61_app_api* api;
   const mk61_app_services* services;
@@ -738,9 +738,15 @@ uint32_t run(uint32_t file_id) {
         result=MK61_APP_UNSUPPORTED_DISPLAY;break;
       }
       app.frame=borrowed.pixels;
-      // Older Pico residents simply decline the optional theme operation.
+      // Probe the new backdrop command separately. The same APP can run
+      // with the older colored grid or on a monochrome Pico resident.
       mk61_service_frame_theme color_probe={};color_probe.base=MK61_FRAME_SOFT;
-      app.color=app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAME_THEME,
+      color_probe.count=1;
+      color_probe.rects[0]={0,0,1,1,0,1,MK61_FRAME_STRIPES};
+      app.striped=app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAME_THEME,
+          sizeof(color_probe),0,&color_probe)!=0;
+      color_probe.count=0;
+      app.color=app.striped || app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAME_THEME,
           sizeof(color_probe),0,&color_probe)!=0;
 #else
       if(!app.services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,FRAME_BYTES,&app.frame_lease)) {

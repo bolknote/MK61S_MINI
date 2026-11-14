@@ -527,12 +527,13 @@ enum mk61_service_display_operation {
 };
 enum mk61_service_frame_ink {
   MK61_FRAME_MONO, MK61_FRAME_WHITE, MK61_FRAME_SOFT,
-  MK61_FRAME_LINE, MK61_FRAME_OCHRE, MK61_FRAME_GREEN, MK61_FRAME_GRID
+  MK61_FRAME_LINE, MK61_FRAME_OCHRE, MK61_FRAME_GREEN, MK61_FRAME_GRID,
+  MK61_FRAME_STRIPES, MK61_FRAME_SELECTION
 };
 #define MK61_FRAME_THEME_COMMANDS 7U
 typedef struct mk61_service_frame_ink_rect {
   uint16_t x,y,width,height;
-  uint16_t column_width,row_pitch; /* Used only by MK61_FRAME_GRID. */
+  uint16_t column_width,row_pitch; /* Grid spacing or stripe height (row_pitch). */
   uint8_t ink;
 } mk61_service_frame_ink_rect;
 typedef struct mk61_service_frame_theme {

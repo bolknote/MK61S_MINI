@@ -112,12 +112,13 @@ def main():
                     raise RuntimeError(f"UI state missing: {expected}")
                 return state
 
-            ui_step(b"\t" + bytes([0xB5]) * 6, "UI=MAIN SELECT=0")
-            blocked = ui_step(b"123", "UI=MAIN SELECT=0")
+            ui_step(b"\t1", "UI=MAIN SELECT=0")
+            blocked = ui_step(b"789", "UI=MAIN SELECT=0")
             if x_value(blocked) != 0:
                 raise RuntimeError("Menu keys changed the calculator's X register")
             ui_cases.append("Menu owns input; X preserved")
-            ui_step(bytes([0xB6, 0xB6, 0x0A]), "UI=SETTINGS SELECT=0")
+            ui_step(bytes([0xB6]), "UI=MAIN SELECT=3")
+            ui_step(bytes([0xB5, 0xB7, 0xB7, 0x0A]), "UI=SETTINGS SELECT=0")
             base = ui_step(bytes([0xB6] * 4), "UI=SETTINGS SELECT=4")
             language = re.search(r"LANG=(RU|EN)", base)[1]
             other = "EN" if language == "RU" else "RU"

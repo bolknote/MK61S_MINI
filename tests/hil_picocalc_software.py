@@ -40,7 +40,7 @@ def calculator(p):
 
 def font(p,family,size,key=None):
     calculator(p)
-    raw(p,b'\t'+b'\xb5'*20+b'\xb6'*2+b'\r'+b'\xb5'*20+b'\xb6'*5+b'\r'+b'\xb5'*20+b'\xb6')
+    raw(p,b'\t3\r'+b'\xb5'*20+b'\xb6'*5+b'\r'+b'\xb5'*20+b'\xb6')
     p.expect('UI=FONTS')
     for _ in range(64):
         status=p.status()
@@ -228,7 +228,7 @@ def main():
             data=(f'poke X {value}\n' if kind=='m61' else f'10 .X={value}\n20 END\n').encode()
             write_file(p,directory+'/autoexec.'+kind,data)
             calculator(p)
-            raw(p,b'\t'+b'\xb5'*20+b'\xb6'*3+b'\r')
+            raw(p,b'\t4\r')
             p.expect('SERVICE=BROWSER');raw(p,b'/'+directory.encode()+b'\r')
             p.expect(f'X_RAW=[ {value/10:.7f}  01]')
             calculator(p)

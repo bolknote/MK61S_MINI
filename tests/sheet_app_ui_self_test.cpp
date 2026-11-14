@@ -35,7 +35,7 @@ size_t input_index;
 uint32_t ticks,revision,starts,ends,writes,acquires,releases;
 #if defined(MK61_TARGET_PICOCALC)
 uint8_t borrowed_frame[12800];
-bool framebuffer_ok=true,expose_ui_font=true,expose_theme=false;
+bool framebuffer_ok=true,expose_ui_font=true,expose_theme=false,expose_stripes=false;
 std::vector<mk61_service_frame_theme> themes;
 std::vector<mk61_service_frame_theme> presented_themes;
 #else
@@ -83,7 +83,10 @@ uint32_t call(uint32_t operation,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(a==MK61_SERVICE_DISPLAY_FRAME_THEME) {
       assert(b==sizeof(mk61_service_frame_theme) && !c && payload);
       if(!expose_theme) return 0;
-      themes.push_back(*(const mk61_service_frame_theme*)payload);return 1;
+      const auto& theme=*(const mk61_service_frame_theme*)payload;
+      for(unsigned i=0;i<theme.count;++i)
+        if(!expose_stripes && theme.rects[i].ink>MK61_FRAME_GRID) return 0;
+      themes.push_back(theme);return 1;
     }
     assert(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER && b==sizeof(mk61_service_framebuffer));
     auto& f=*(mk61_service_framebuffer*)payload;f={};
@@ -158,7 +161,8 @@ void reset(){
   input_index=ticks=starts=ends=writes=acquires=releases=0;leased=false;frames.clear();
   available=present_ok=save_ok=target_ok=true;choose_id=0;
 #if defined(MK61_TARGET_PICOCALC)
-  framebuffer_ok=expose_ui_font=true;expose_theme=false;themes.clear();presented_themes.clear();
+  framebuffer_ok=expose_ui_font=true;expose_theme=expose_stripes=false;
+  themes.clear();presented_themes.clear();
 #endif
   services={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(services),&keyboard_layout::ACTIVE,call,math_service,nullptr,nullptr};
   api={};api.magic=MK61_APP_API_MAGIC;api.version=MK61_APP_API_VERSION;api.struct_size=sizeof(api);
@@ -216,6 +220,18 @@ void native_checks(){
     if(r.ink==MK61_FRAME_OCHRE && r.width==312 && r.height==26) menu_selection=true;
   }
   assert(grid && selection && menu_selection);
+  reset();expose_theme=expose_stripes=true;inputs={RIGHT,USER,ESC,ESC};
+  assert(sheet_app_entry()==MK61_APP_OK);done();
+  bool stripes=false;
+  for(const auto& r:presented_themes.front().rects) {
+    assert(r.ink!=MK61_FRAME_GRID);
+    if(r.ink==MK61_FRAME_STRIPES) {stripes=true;assert(r.row_pitch==24 && r.height==192);}
+  }
+  const auto pixel_on=[&](unsigned x,unsigned y) {
+    return frames.front()[y/8*320+x]&(1U<<(y%8));
+  };
+  assert(stripes && pixel_on(4,4)); // Ochre header
+  assert(!pixel_on(31,100) && !pixel_on(130,103)); // No full grid
   if(const char* prefix=std::getenv("MK61_SHEET_COLOR_PREVIEW_PREFIX")) {
     assert(frames.size()==presented_themes.size());
     for(unsigned frame=0;frame<frames.size();++frame) {
@@ -224,16 +240,21 @@ void native_checks(){
       for(unsigned i=0;i<desc.count;++i) {
         const auto& r=desc.rects[i];
         if(r.ink==MK61_FRAME_GRID) assert(theme.add_grid(r.x,r.y,r.width,r.height,r.column_width,r.row_pitch));
+        else if(r.ink==MK61_FRAME_STRIPES) assert(theme.set_stripes(r.x,r.y,r.width,r.height,r.row_pitch));
+        else if(r.ink==MK61_FRAME_SELECTION) assert(theme.add(r.x,r.y,r.width,r.height,picocalc::lcd::Ink::SELECTION));
         else assert(theme.add(r.x,r.y,r.width,r.height,(picocalc::lcd::Ink)r.ink));
       }
       const std::string path=std::string(prefix)+std::to_string(frame)+".ppm";
       FILE* out=std::fopen(path.c_str(),"wb");assert(out);std::fprintf(out,"P6\n320 320\n255\n");
-      for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x) {
+      for(unsigned y=0;y<320;++y) {
+        uint16_t backdrop[320];theme.background_row(0,y,320,backdrop);
+        for(unsigned x=0;x<320;++x) {
         const bool on=frames[frame][y/8*320+x]&(1U<<(y%8));
-        const uint16_t c=on?picocalc::lcd::color(theme.at(x,y)):0;
+        const uint16_t c=on?picocalc::lcd::color(theme.at(x,y)):backdrop[x];
         const unsigned char rgb[3]={(unsigned char)(((c>>11)&31)*255/31),
             (unsigned char)(((c>>5)&63)*255/63),(unsigned char)((c&31)*255/31)};
         assert(std::fwrite(rgb,1,sizeof(rgb),out)==sizeof(rgb));
+        }
       }
       std::fclose(out);
     }

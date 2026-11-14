@@ -104,9 +104,11 @@ def main():
     ryu=directory/'licenses/ryu';ryu.mkdir(parents=True,exist_ok=True)
     for name in ('LICENSE-Apache2','LICENSE-Boost','README.md'):
         shutil.copy2(ROOT/'third_party/ryu'/name,ryu/name)
+    menu_license=directory/'licenses/LUCIDE.txt'
+    shutil.copy2(ROOT/'ports/picocalc/MENU_ICONS_LICENSE.txt',menu_license)
     shutil.copy2(ROOT/'tools/device/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
-        *font_files,*game_files,*(directory/name for name in licenses.FILES),
+        *font_files,*game_files,*(directory/name for name in licenses.FILES),menu_license,
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
     files=list(dict.fromkeys(files))
     spectrum=apps/'SPECTRUM'

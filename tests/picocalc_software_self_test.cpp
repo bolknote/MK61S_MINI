@@ -44,7 +44,7 @@ void native_status(const Screen& screen,const char* mode,const char* angle,const
     // Compare LCD pixels directly with the native Ark Pixel 16 strike,
     // independently of the 192x64 calculator face and its 5/3 scale.
     const ui_font::Face font{ui_font::Family::PIXEL,ui_font::Size::PX16};
-    const int baseline=40+ui_font::metrics(font).ascent;
+    const int baseline=41+ui_font::metrics(font).ascent;
     const char* labels[]={mode,angle,key};
     u8 expected[27][40]{};
     for(unsigned field=0;field<3;++field) {
@@ -65,7 +65,6 @@ void native_status(const Screen& screen,const char* mode,const char* angle,const
             if(right>=0) { assert(previous_right<0 || left>previous_right+1);previous_right=right; }
             pen+=glyph.advance;
         }
-        for(unsigned x=8+field*104;x<104+field*104;++x) expected[63-38][x/8]|=(u8)(0x80U>>(x%8));
     }
     for(unsigned y=0;y<27;++y) for(unsigned x=0;x<320;++x)
         assert(screen.pixel(x,38+y)==bool(expected[y][x/8]&(0x80U>>(x%8))));
@@ -108,7 +107,7 @@ void physical_face(const Screen& screen,const picocalc::Snapshot& model,bool cla
             for(unsigned x=0;x<16;++x) if(bits&(0x8000U>>x)) expected[y][left+x]=true;
         }
     }
-    for(unsigned y=0;y<35;++y) for(unsigned x=0;x<320;++x) if(screen.pixel(x,91+y)!=expected[y][x]) { std::fprintf(stderr,"native digit mismatch x=%u y=%u classic=%u segmented=%u text=[%s] expected=%u\n",x,y,classic,model.segmented,model.face_indicator,expected[y][x]);std::abort(); }
+    for(unsigned y=0;y<35;++y) for(unsigned x=0;x<320;++x) if(screen.pixel(x,78+y)!=expected[y][x]) { std::fprintf(stderr,"native digit mismatch x=%u y=%u classic=%u segmented=%u text=[%s] expected=%u\n",x,y,classic,model.segmented,model.face_indicator,expected[y][x]);std::abort(); }
 }
 void clock_header(const Screen& screen,const u32* rows=nullptr) {
     bool expected[32][320]{};
@@ -124,7 +123,7 @@ void clock_header(const Screen& screen,const u32* rows=nullptr) {
         }
     }
     for(unsigned y=0;y<32;++y) for(unsigned x=240;x<320;++x)
-        assert(screen.pixel(x,y)==expected[y][x]);
+        assert(screen.pixel(x,y)!=expected[y][x]); // Black text cut out of the ochre band.
 }
 void finish_script(Calculator& calculator) {
     for(unsigned i=0;i<2000 && m61_text::active();++i) { m61_text::service();calculator.tick(); }

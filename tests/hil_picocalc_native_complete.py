@@ -206,7 +206,7 @@ def main():
         passed('BASIC and FOCAL PRINT AT: identical full native glyphs at pixel coordinates, independent Ark oracle')
         heap_snapshot('after-basic-focal')
         # Real built-in source editor and save-name prompt, through BIOS codes.
-        raw(p,b'\t'+b'\xb5'*20+b'\xb6'*3+b'\r');p.expect('SERVICE=BROWSER')
+        raw(p,b'\t4\r');p.expect('SERVICE=BROWSER')
         raw(p,b'/'+directory.encode()+b'/wide.txt\r');p.expect('SERVICE=EDITOR')
         frame=picture('source-editor-wide');expected=bytearray(12800);ark.text(expected,'ЖЩЮ←',8,42)
         for x in range(8,15):ark.pixel(expected,x,57)

@@ -182,7 +182,7 @@ def main():
         report['screens'][name]=dict(sha256=hashlib.sha256(frame).hexdigest(),lcd_crc=crc,status=status)
         return frame
     def browse():
-        calculator(p);keys(b'\t'+b'\xb5'*32+b'\xb6'*explorer+b'\r')
+        calculator(p);keys(b'\t'+bytes([ord('1')+explorer])+b'\r')
         p.expect('SERVICE=BROWSER');keys(b'/');p.expect('SERVICE=PROMPT')
         keys(directory.encode()+b'\r');p.expect('SERVICE=BROWSER')
     try:

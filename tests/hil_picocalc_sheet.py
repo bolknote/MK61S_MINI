@@ -77,7 +77,7 @@ class SheetFont:
         if second:self.text(expected,second,8,304)
         return all(bool(frame[y//8*320+x]&(1<<(y%8)))==bool(expected[y//8*320+x]&(1<<(y%8)))
                    for y in range(284,320) for x in range(8,316))
-    def table(self,cells,selected='A1',compact=False,modified=False,top=0,left=0):
+    def table(self,cells,selected='A1',compact=False,modified=False,top=0,left=0,striped=False):
         f=bytearray(12800);status='DEG'+(' *' if modified else '')
         self.box(f,0,0,320,28);sx=312-self.width(status)
         self.text(f,'SHEET / '+selected,8,6,inverse=True,right=sx-4);self.text(f,status,sx,6,inverse=True)
@@ -89,10 +89,11 @@ class SheetFont:
                 self.text(f,'=',8,34);self.text(f,self.fit(caption,288),24,34)
             else:self.text(f,self.fit(value,304),8,34)
         cols,rows,pitch,size=(4,11,18,12) if compact else (3,8,24,16);cw=288//cols
-        self.box(f,0,56,320,pitch)
+        if striped:self.box(f,32,56+pitch-1,288,1)
+        else:self.box(f,0,56,320,pitch)
         for col in range(cols):
             label=chr(65+left+col)
-            self.text(f,label,32+col*cw+(cw-self.width(label,size))//2,56+(pitch-size)//2,size,True)
+            self.text(f,label,32+col*cw+(cw-self.width(label,size))//2,56+(pitch-size)//2,size,not striped)
         for row in range(rows):
             number=top+row+1;y=56+(row+1)*pitch;ty=y+(pitch-size)//2
             self.text(f,str(number),28-self.width(str(number),size),ty,size)
@@ -102,8 +103,9 @@ class SheetFont:
                 if address in cells:
                     kind,source,value=cells[address];value=self.fit(value,cw-8,size)
                     self.text(f,value,x+4 if kind==2 else x+cw-4-self.width(value,size),ty,size,active,x+cw-4)
-                self.box(f,x,y+pitch-1,cw,1)
-        for col in range(cols+1):self.box(f,31+col*cw,56,1,(rows+1)*pitch)
+                if not striped:self.box(f,x,y+pitch-1,cw,1)
+        if not striped:
+            for col in range(cols+1):self.box(f,31+col*cw,56,1,(rows+1)*pitch)
         self.box(f,0,282,320,1)
         self.text(f,'Enter:ПРАВКА  Tab:МЕНЮ',8,286);self.text(f,'←→:СТОЛБЕЦ  ↑↓:СТРОКА',8,304)
         return bytes(f)
@@ -134,6 +136,7 @@ def main():
     for name in ('port','uid','build-id'):ap.add_argument('--'+name,required=True)
     ap.add_argument('--app',type=Path,required=True);ap.add_argument('--output',type=Path,required=True)
     ap.add_argument('--directory',default='/MK61S-PicoCalc-0.8');ap.add_argument('--install',action='store_true',required=True)
+    ap.add_argument('--legacy-grid',action='store_true',help='Check the old monochrome SHEET and resident')
     args=ap.parse_args();assert re.fullmatch(r'[0-9A-Fa-f]{16}',args.uid) and re.fullmatch(r'[0-9A-Fa-f]{8}',args.build_id)
     assert re.fullmatch(r'/[A-Za-z0-9.-]+',args.directory)
     args.output.mkdir(parents=True,exist_ok=False);app_path=args.directory+'/SHEET.APP';path=args.directory+'/SHEET320.mks'
@@ -175,7 +178,7 @@ def main():
             frame=p.frames[-1];png(frame,args.output/(name+'.png'));(args.output/(name+'.bin')).write_bytes(frame)
             result['screens'][name]=hashlib.sha256(frame).hexdigest();return frame
         def grid(name,**options):
-            expected=font.table(cells,**options);frame=shot(name,lambda f:f==expected)
+            expected=font.table(cells,striped=not args.legacy_grid,**options);frame=shot(name,lambda f:f==expected)
             deadline=time.monotonic()+8
             while time.monotonic()<deadline:
                 status=p.status()
@@ -243,7 +246,7 @@ def main():
                 parsed=cells_in(sample)
                 view={a:(k,s,s if k==2 else (values[a] if name=='BUDGET' else '#ЦИКЛ' if k==3 else '42'))
                       for a,(k,s) in parsed.items()}
-                expected=font.table(view);start=len(p.text);p.open(sample_path);p.expect('RUNTIME=APP')
+                expected=font.table(view,striped=not args.legacy_grid);start=len(p.text);p.open(sample_path);p.expect('RUNTIME=APP')
                 shot(name.lower(),lambda f:f==expected);keys([ESC]);ended(start)
                 assert read_file(p,sample_path)==sample
             passed('existing BUDGET/CYCLE documents: exact native pixels, calculated values/errors and unchanged S1 files')

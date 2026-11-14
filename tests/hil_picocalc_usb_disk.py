@@ -69,7 +69,7 @@ def main():
         status = query()
         if 'MK61S PICOCALC PICO-H' not in status or 'UI=CALCULATOR' not in status or 'SERVICE=CLOSED' not in status:
             raise RuntimeError('Start on PicoCalc calculator screen')
-        step(b'\t'+bytes([0xB5])*20+bytes([0xB6])+b'\n', 'SERVICE=USB_DISK')
+        step(b'\t2\n', 'SERVICE=USB_DISK')
         whole = None
         end = time.monotonic()+45
         while time.monotonic()<end and not whole:
@@ -123,7 +123,7 @@ def main():
         if result.returncode:
             raise RuntimeError('Safe SD eject failed; leave USB disk active')
         step(b'\n', 'SERVICE=CLOSED')
-        step(bytes([0xB6])*2+b'\n', 'SERVICE=BROWSER')  # USB item 1 -> Explorer 3.
+        step(b'4\n', 'SERVICE=BROWSER')
         step(b'/', 'SERVICE=PROMPT')
         step(name.encode('ascii')+b'\n', f'PATH=[/{name}]')
         status = query()

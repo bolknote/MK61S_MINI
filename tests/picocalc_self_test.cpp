@@ -159,10 +159,14 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     calc.init();
     feed(calc, "42");
     require(ui.input('\t', calc) && ui.page() == Page::MAIN, "Tab opens main menu");
-    for(unsigned i = 0; i < 20; ++i) ui.input(0xB5, calc);
-    require(ui.selected() == 0, "main up clamp");
-    for(unsigned i = 0; i < 20; ++i) ui.input(0xB6, calc);
-    require(ui.selected() == 5, "all six main menu items");
+    require(ui.input(0xB5,calc) && ui.input(0xB4,calc) && ui.selected()==0,"main grid upper/left clamp");
+    require(ui.input(0xB6,calc) && ui.selected()==3,"down retains the column");
+    require(ui.input(0xB7,calc) && ui.selected()==4,"right moves one column");
+    require(ui.input(0xB5,calc) && ui.selected()==1,"up retains the column");
+    require(ui.input(0xB7,calc) && ui.input(0xB7,calc) && ui.selected()==2,"right clamps at last column");
+    require(ui.input(0xB6,calc) && ui.input(0xB6,calc) && ui.selected()==5,"down clamps at last row");
+    require(ui.input('4',calc) && ui.selected()==3 && ui.take_action()==Action::NONE,
+        "number shortcut selects a tile and waits for Enter");
     ui.input(0xB1, calc);
     equal_x(42);
     require(ui.page() == Page::CALCULATOR && calc.idle(), "menu exit preserves X and input queue");
@@ -182,7 +186,7 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
         char path[512]; std::snprintf(path, sizeof(path), "%s.menu.pbm", preview_path);
         preview(menu, path);
     }
-    ui.input(0xB6, calc); ui.input(0xB6, calc); ui.input('\n', calc);
+    ui.input(0xB7, calc); ui.input(0xB7, calc); ui.input('\n', calc);
     require(ui.page() == Page::SETTINGS, "Settings action");
     require(ui.count() == 11, "Pico settings include compute clock and omit the periodic idle beep");
     ui.input(0xB7, calc);
@@ -200,7 +204,7 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     ui.input(0xB7, calc);
     require(ui.settings().russian == 0, "language changed to English");
     ui.row(4, label);
-    require(std::strcmp(label, "Language EN") == 0, "live English menu text");
+    require(std::strcmp(label, "Language English") == 0, "live English menu text");
     ui.row(0, label);
     require(std::strcmp(label, "Key sound OFF") == 0, "English key sound label replaces volume");
     ui.input(0xB7, calc);
@@ -236,9 +240,9 @@ void ui_test(picocalc::Calculator& calc, const char* preview_path) {
     require(ui.page() == Page::CONFIRM && ui.take_action() == Action::NONE, "bootloader requires confirmation");
     ui.input(0xB1, calc);
     require(ui.page() == Page::MAIN && ui.take_action() == Action::NONE, "bootloader cancel");
-    ui.input(0xB6, calc); ui.input('\n', calc);
+    ui.input(0xB7, calc); ui.input('\n', calc);
     require(ui.page() == Page::MAIN && ui.take_action() == Action::USB_DISK, "USB menu opens storage service");
-    ui.input(0xB5, calc); ui.input('\n', calc); ui.input('\n', calc);
+    ui.input(0xB4, calc); ui.input('\n', calc); ui.input('\n', calc);
     require(ui.take_action() == Action::BOOTLOADER && ui.take_action() == Action::NONE, "confirmed action consumed once");
     calc.init();
 }

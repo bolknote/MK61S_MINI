@@ -71,13 +71,21 @@ private:
     void clear_pixel(unsigned x, unsigned y);
     void fill_rect(unsigned x,unsigned y,unsigned width,unsigned height);
     void text(unsigned x, unsigned y, const char* value, unsigned height = 14, unsigned right=WIDTH-8, bool erase=false);
+    unsigned text_width(const char* value,unsigned height) const;
+    void text_center(unsigned left,unsigned width,unsigned top,const char* value,
+                     unsigned height,bool inverse=false);
+    void rounded_label(unsigned left,unsigned top,unsigned width,unsigned height);
+    void header(const char* title,bool keyboard_online,const Snapshot* calculator=nullptr);
+    void main_menu(const Ui& ui,bool keyboard_online);
+    void settings_menu(const Ui& ui);
+    void calculator_tabs(const Ui& ui);
     void status_field(unsigned left, unsigned width, const char* value);
     void line(unsigned y);
     void bitmap(const u8* frame,unsigned width,unsigned height,unsigned left=0,unsigned top=0);
     void native_bitmap(const u8* frame);
     void segment_row(unsigned left,unsigned top,const u8 masks[12]);
     void calculator(const Snapshot& model, const Ui& ui);
-    void browser(const Services& services);
+    void browser(const Services& services,bool keyboard_online);
 };
 
 } // namespace picocalc

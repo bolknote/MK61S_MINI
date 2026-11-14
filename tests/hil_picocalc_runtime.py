@@ -52,7 +52,7 @@ class Pico(ScreenPort):
         self.raw(keys);self.pump(.15)
         return self.expect(*expected,timeout=timeout)
     def menu(self,index):
-        self.step(b'\t'+bytes([0xB5])*6+bytes([0xB6])*index+b'\r',
+        self.step(b'\t'+bytes([ord('1')+index])+b'\r',
                   'UI=SYSTEM' if index==5 else 'SERVICE=USB_DISK' if index==1 else 'SERVICE=BROWSER')
     def system(self,index,*expected):
         self.menu(5)

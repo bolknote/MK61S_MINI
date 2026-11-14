@@ -46,10 +46,11 @@ void fit(char* value,int maximum,int pixels,bool mark=true) {
   value[at]=0;
 }
 void header(const char* label,const char* status=nullptr) {
-  if(!app.color) box(0,0,320,28);
+  const bool inverse=!app.color || app.striped;
+  if(inverse) box(0,0,320,28);
   const int right=status?312-width(status):316;
-  text(8,6,label,!app.color,16,right-4);
-  if(status) text(right,6,status,!app.color);
+  text(8,6,label,inverse,16,right-4);
+  if(status) text(right,6,status,inverse);
 }
 void footer(const char* first,const char* second=nullptr) {
   box(0,FOOTER-4,320,1);text(8,FOOTER,first);
@@ -128,10 +129,11 @@ void table() {
       fit(value,maximum,pixels);
       text(is_label?x+4:right-width(value,pixels),ty,value,active,pixels,right);
       if(picking && position==app.origin) box(x+1,y+1,cell_width-2,height-2,false);
-      box(x,y+height-1,cell_width,1);
+      if(!app.striped) box(x,y+height-1,cell_width,1);
     }
   }
-  for(int col=0;col<=count;++col) box(LEFT+col*cell_width-1,GRID_TOP,1,(row_count+1)*height);
+  if(!app.striped)
+    for(int col=0;col<=count;++col) box(LEFT+col*cell_width-1,GRID_TOP,1,(row_count+1)*height);
   const char* first=app.mode==Mode::REFERENCE?M8("Enter:ВСТАВИТЬ  Tab:ФИКСАЦИЯ  Esc:НАЗАД"):
       (picking?M8("Enter:ЗАПИСАТЬ  Esc:НАЗАД"):M8("Enter:ПРАВКА  Tab:МЕНЮ"));
   if(app.message!=Error::OK) first=error_label(app.message);
@@ -238,7 +240,7 @@ bool publish_theme() {
     r.width=(uint16_t)w;r.height=(uint16_t)h;r.ink=ink;
     r.column_width=(uint16_t)column;r.row_pitch=(uint16_t)row;return true;
   };
-  add(0,0,320,28,MK61_FRAME_WHITE);
+  add(0,0,320,28,app.striped?MK61_FRAME_OCHRE:MK61_FRAME_WHITE);
   add(0,FOOTER-4,320,1,MK61_FRAME_LINE);
   const bool grid=app.mode==Mode::TABLE || app.mode==Mode::REFERENCE ||
       app.mode==Mode::COPY || app.mode==Mode::FILL;
@@ -246,12 +248,15 @@ bool publish_theme() {
     const int height=pitch(),cell_width=288/columns();
     add(0,34,320,GRID_TOP+height-34,MK61_FRAME_OCHRE);
     add(0,GRID_TOP+height,LEFT-1,rows()*height,MK61_FRAME_OCHRE);
-    add(LEFT-1,GRID_TOP,320-(LEFT-1),(rows()+1)*height,MK61_FRAME_GRID,cell_width,height);
+    if(app.striped) {
+      add(LEFT,GRID_TOP+height-1,288,1,MK61_FRAME_LINE);
+      add(LEFT,GRID_TOP+height,288,rows()*height,MK61_FRAME_STRIPES,0,height);
+    } else add(LEFT-1,GRID_TOP,320-(LEFT-1),(rows()+1)*height,MK61_FRAME_GRID,cell_width,height);
     const int col=(int)(app.selected%sheet::COLUMNS)-(int)app.left_column;
     const int row=(int)(app.selected/sheet::COLUMNS)-(int)app.top_row;
     if(col>=0 && col<columns() && row>=0 && row<rows())
       add(LEFT+col*cell_width+1,GRID_TOP+(row+1)*height+1,
-          cell_width-2,height-2,MK61_FRAME_OCHRE);
+          cell_width-2,height-2,app.striped?MK61_FRAME_SELECTION:MK61_FRAME_OCHRE);
   } else if(app.mode==Mode::EDIT) {
     add(4,36,312,1,MK61_FRAME_LINE);add(4,201,312,1,MK61_FRAME_LINE);
     add(4,36,1,166,MK61_FRAME_LINE);add(315,36,1,166,MK61_FRAME_LINE);

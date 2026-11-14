@@ -9,6 +9,7 @@ namespace picocalc {
 namespace {
 bool back(u8 code) { return code == 0x1B || code == 0xB1 || code == 0x08; }
 bool enter(u8 code) { return code == '\n' || code == '\r'; }
+static_assert(menu_model::MAIN_COUNT==2*Ui::MENU_COLUMNS);
 } // namespace
 void Ui::init(const Settings &value) {
   (void)fonts::select(Settings{});
@@ -112,6 +113,12 @@ bool Ui::input(u8 code, Calculator &calculator) {
     }
     return false;
   }
+  if(page_==Page::MAIN && code>='1' && code<'1'+count()) {
+    // Choose a tile by its reading order. Like an arrow, this waits for Enter
+    // before invoking the item.
+    selected_[(unsigned)page_]=code-'1';
+    return true;
+  }
   if (back(code)) {
     switch (page_) {
     case Page::MAIN:
@@ -154,6 +161,18 @@ bool Ui::input(u8 code, Calculator &calculator) {
   }
   if (page_ == Page::INFO || page_ == Page::HARDWARE)
     return true;
+  if(page_==Page::MAIN && code>=0xB4 && code<=0xB7) {
+    const unsigned index=selected(),column=index%MENU_COLUMNS;
+    unsigned next=index;
+    switch(code) {
+    case 0xB4: if(column) --next; break;
+    case 0xB5: if(index>=MENU_COLUMNS) next-=MENU_COLUMNS; break;
+    case 0xB6: if(index+MENU_COLUMNS<count()) next+=MENU_COLUMNS; break;
+    case 0xB7: if(column+1<MENU_COLUMNS) ++next; break;
+    }
+    selected_[(unsigned)page_]=(u8)next;
+    return true;
+  }
   if (code == 0xB5 || code == 0xB6) {
     selected_[(unsigned)page_] =
         (u8)menu_model::step(selected(), count(), code == 0xB5 ? -1 : 1);
@@ -375,6 +394,49 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
   if (std::memcmp(&before, &settings_, sizeof(Settings)) != 0)
     ++settings_revision_;
 }
+unsigned Ui::first_setting() const {
+  return menu_model::firstVisible(selected(),count(),SETTINGS_ROWS);
+}
+const char* Ui::setting_label(unsigned index) const {
+  switch(index) {
+  case 0: return text("Key sound",M8("Звук клавиш"));
+  case 1: return text("Speed",M8("Скорость"));
+  case 2: return text("Memory",M8("Память"));
+  case 3: return text("Random",M8("К СЧ"));
+  case 4: return text("Language",M8("Язык"));
+  case 5: return text("Fonts",M8("Шрифты"));
+  case 6: return text("LCD backlight",M8("Подсветка экрана"));
+  case 7: return text("Keyboard light",M8("Подсветка клавиш"));
+  case 8: return text("Sleep after",M8("Сон через"));
+  case 9: return "RTC ppm";
+  case 10: return text("CPU frequency",M8("Частота процессора"));
+  default: return "";
+  }
+}
+void Ui::setting_value(unsigned index,char out[32]) const {
+  out[0]=0;
+  switch(index) {
+  case 0: std::snprintf(out,32,"%s",settings_.key_sound?text("ON",M8("ВКЛ")):text("OFF",M8("ВЫКЛ")));break;
+  case 1: std::snprintf(out,32,"%s",settings_.classic_speed?"CLASSIC":"MAXIMUM");break;
+  case 2: std::snprintf(out,32,"%s",settings_.memory==0?"105":settings_.memory==1?"112+F":text("AUTO",M8("АВТО")));break;
+  case 3: std::snprintf(out,32,"%s",settings_.random?"MK61S":"MK61");break;
+  case 4: std::snprintf(out,32,"%s",text("English",M8("Русский")));break;
+  case 6: std::snprintf(out,32,"%u",settings_.lcd_backlight);break;
+  case 7: std::snprintf(out,32,"%u",settings_.key_backlight);break;
+  case 8:
+    if(settings_.sleep_minutes)
+      std::snprintf(out,32,"%u %s",settings_.sleep_minutes,text("min",M8("мин")));
+    else std::snprintf(out,32,"%s",text("Off",M8("Выкл")));
+    break;
+  case 9: std::snprintf(out,32,"%+d",settings_.rtc_ppm);break;
+  case 10: {
+    const unsigned mhz=compute_clock::high_mhz(compute_clock::Platform::PICO,settings_.compute_profile);
+    std::snprintf(out,32,"%u %s%s",mhz,text("MHz",M8("МГц")),
+        settings_.compute_profile==compute_clock::active_profile()?"":text(" (restart)",M8(" (перезапуск)")));
+    break;
+  }
+  }
+}
 void Ui::row(unsigned index, char out[64]) const {
   out[0] = 0;
   if (count() && index >= count())
@@ -386,54 +448,9 @@ void Ui::row(unsigned index, char out[64]) const {
                       : menu_model::mainLabel((menu_model::MainItem)index,
                                               settings_.russian));
   } else if (page_ == Page::SETTINGS) {
-    switch (index) {
-    case 0:
-      std::snprintf(out, 64, "%s %s", text("Key sound", M8("Звук клавиш")),
-                    settings_.key_sound ? text("ON", M8("ВКЛ")) : text("OFF", M8("ВЫКЛ")));
-      break;
-    case 1:
-      std::snprintf(out, 64, "%s %s", text("Speed", M8("Скорость")),
-                    settings_.classic_speed ? "CLASSIC" : "MAXIMUM");
-      break;
-    case 2:
-      std::snprintf(out, 64, "%s %s", text("Memory", M8("Память")),
-                    settings_.memory == 0   ? "105"
-                    : settings_.memory == 1 ? "112+F"
-                                            : text("AUTO",M8("АВТО")));
-      break;
-    case 3:
-      std::snprintf(out, 64, "%s %s", text("Random", M8("К СЧ")),
-                    settings_.random ? "MK61S" : "MK61");
-      break;
-    case 4:
-      std::snprintf(out, 64, "%s", text("Language EN", M8("Язык рус")));
-      break;
-    case 5:
-      std::snprintf(out, 64, "%s", text("Fonts...", M8("Шрифты...")));
-      break;
-    case 6:
-      std::snprintf(out, 64, "%s %u",
-                    text("LCD backlight", M8("Подсветка экрана")),
-                    settings_.lcd_backlight);
-      break;
-    case 7:
-      std::snprintf(out, 64, "%s %u",
-                    text("Keyboard light", M8("Подсветка клавиш")),
-                    settings_.key_backlight);
-      break;
-    case 8:
-      std::snprintf(out, 64, "%s %u min", text("Sleep after", M8("Сон через")),
-                    settings_.sleep_minutes);
-      break;
-    case 9:
-      std::snprintf(out, 64, "RTC ppm: %+d", settings_.rtc_ppm);
-      break;
-    case 10:
-      std::snprintf(out,64,"%s %u MHz%s",text("CPU frequency",M8("Частота процессора")),
-          unsigned(compute_clock::high_mhz(compute_clock::Platform::PICO,settings_.compute_profile)),
-          settings_.compute_profile==compute_clock::active_profile()?"":text(" (restart)",M8(" (перезапуск)")));
-      break;
-    }
+    char value[32];
+    setting_value(index,value);
+    std::snprintf(out,64,"%s%s%s",setting_label(index),*value?" ":"",value);
   } else if (page_ == Page::FONTS) {
     if (index == 0)
       std::snprintf(out, 64, "%s: %s", text("Calculator", M8("Калькулятор")),
@@ -522,15 +539,15 @@ void Ui::sync_alarms() {
 }
 const char *Ui::footer() const {
   if (page_ == Page::CALCULATOR) {
-    if(view_==View::REGISTERS) return text(M8("Tab:menu ↑/↓:view"),M8("Tab:меню ↑/↓:вид"));
-    return text("Tab: menu   Up/Down: view", M8("Tab: меню   Up/Down: вид"));
+    return text(M8("Tab: menu   ↑/↓: view"),M8("Tab: меню   ↑/↓: вид"));
   }
-  if (page_ == Page::SETTINGS && selected() == 3)
+  if(page_==Page::MAIN)
+    return text(M8("↑ ↓ ← →: select   Enter: open"),M8("↑ ↓ ← →: выбор   Enter: открыть"));
+  if (page_ == Page::SETTINGS && selected() == 2)
     return text("Memory change resets calculator",
                 M8("Смена памяти сбрасывает калькулятор"));
   if (page_ == Page::SETTINGS || page_ == Page::FONTS)
-    return text("Left/Right: change   Esc: back",
-                M8("Left/Right: изменить   Esc: назад"));
+    return text(M8("←/→: change   Esc: back"),M8("←/→: изменить   Esc: назад"));
   return text("Up/Down  Enter: select  Esc: back",
               M8("Up/Down  Enter: выбор  Esc: назад"));
 }

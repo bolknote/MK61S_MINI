@@ -447,10 +447,15 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
         lcd::ShellTheme candidate;candidate.reset((lcd::Ink)request.base);
         for(unsigned i=0;i<request.count;++i) {
             const auto& r=request.rects[i];
-            if(r.ink>MK61_FRAME_GRID || !r.width || !r.height || r.x>=320 || r.y>=320 ||
+            if(r.ink>MK61_FRAME_SELECTION || !r.width || !r.height || r.x>=320 || r.y>=320 ||
                r.width>320-r.x || r.height>320-r.y) return 0;
             if(r.ink==MK61_FRAME_GRID) {
                 if(!candidate.add_grid(r.x,r.y,r.width,r.height,r.column_width,r.row_pitch)) return 0;
+            } else if(r.ink==MK61_FRAME_STRIPES) {
+                if(r.column_width || !candidate.set_stripes(r.x,r.y,r.width,r.height,r.row_pitch)) return 0;
+            } else if(r.ink==MK61_FRAME_SELECTION) {
+                if(r.column_width || r.row_pitch) return 0;
+                if(!candidate.add(r.x,r.y,r.width,r.height,lcd::Ink::SELECTION)) return 0;
             } else if(!candidate.add(r.x,r.y,r.width,r.height,(lcd::Ink)r.ink)) return 0;
         }
         staged_theme_=candidate;return 1;

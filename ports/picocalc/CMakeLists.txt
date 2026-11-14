@@ -114,6 +114,8 @@ target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/mk61_ai_tools.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp"
     "${MK61_ROOT}/code/mk61_ai_grammar.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp")
 set_source_files_properties("${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" PROPERTIES COMPILE_OPTIONS "-O3;-ffp-contract=off")
+# Keep shell layout and menu code within the main flash region.
+set_source_files_properties(screen.cpp ui.cpp PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
 # The chat and SD journal are cold UI paths. Keep them inside the main flash
 # region without changing inference kernels or the emulator's optimization.
 set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")

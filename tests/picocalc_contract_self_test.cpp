@@ -440,6 +440,14 @@ void themed_bitmap_contract() {
     request.rects[1].column_width=0;
     CHECK(!display.call(MK61_SERVICE_DISPLAY_FRAME_THEME,sizeof(request),0,&request));
     CHECK(theme->at(31,70)==lcd::Ink::LINE); // A rejected request is atomic.
+    request.rects[1]={32,80,288,192,0,24,MK61_FRAME_STRIPES};
+    request.rects[2]={33,105,94,22,0,0,MK61_FRAME_SELECTION};
+    CHECK(display.call(MK61_SERVICE_DISPLAY_FRAME_THEME,sizeof(request),0,&request));
+    CHECK(display.bitmap_present(canvas::frame(),canvas::BYTES));
+    uint16_t backdrop[100];
+    theme->background_row(32,109,100,backdrop);
+    CHECK(backdrop[0]!=0 && backdrop[1]==0 && backdrop[95]!=0);
+    CHECK(theme->at(40,109)==lcd::Ink::SELECTION);
     display.bitmap_end();CHECK(!NativeDisplay::published_theme());
     std::puts("Native bitmap theme: staged publication, grid colors and lifecycle PASS");
 }

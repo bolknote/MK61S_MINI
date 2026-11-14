@@ -1,10 +1,12 @@
 #include "screen.hpp"
 #include "canvas.hpp"
+#include "compute_clock.hpp"
 #include "display_symbols.hpp"
 #include "ui_font.hpp"
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "menu_model.hpp"
+#include "menu_icons.hpp"
 #include "services.hpp"
 #include "native_display.hpp"
 #include "builtin_font.hpp"
@@ -13,6 +15,8 @@
 #include "fonts.hpp"
 #include "clock.hpp"
 #include "rtc_idle_clock_core.hpp"
+#include "terminal_listing.hpp"
+#include "terminal_mnemonics.hpp"
 #include "diagnostics.hpp"
 #include "version.hpp"
 #include <cstdio>
@@ -20,6 +24,45 @@
 
 namespace picocalc {
 namespace {
+constexpr unsigned HEADER_HEIGHT=33;
+constexpr unsigned INDICATOR_TOP=78;
+constexpr unsigned CALCULATOR_TABS_TOP=124, TAB_HEIGHT=22;
+constexpr unsigned CALCULATOR_ROWS_TOP=154, CALCULATOR_ROW_PITCH=20;
+constexpr unsigned FOOTER_RULE=295;
+constexpr unsigned PROGRAM_ROWS=6;
+constexpr char PROGRAM_MNEMONICS[]=
+#include "terminal_classic_isa.inc"
+;
+
+struct ProgramRows {
+    u8 codes[PROGRAM_ROWS]{}, instructions[PROGRAM_ROWS]{};
+    unsigned count=0;
+};
+ProgramRows program_rows(unsigned first) {
+    constexpr unsigned capacity=terminal_listing::MAX_STEPS;
+    u8 page[capacity+3]{};
+    const unsigned steps=std::min((unsigned)core_61::program_steps(),capacity);
+    if(first>=steps) return {};
+    const unsigned end=std::min(first+PROGRAM_ROWS,steps);
+    for(unsigned i=0;i<std::min(end+3,steps);++i)
+        page[i]=core_61::get_code(core_61::get_ring_address(i));
+    const bool expanded=core_61::expanded_program_is_on();
+    ProgramRows rows;
+    unsigned next_instruction=0;
+    for(unsigned row=0;first+row<end;++row) {
+        const unsigned address=first+row;
+        while(next_instruction<address)
+            next_instruction+=terminal_listing::instruction_length(page,next_instruction,expanded);
+        rows.codes[row]=page[address];
+        if(next_instruction==address) {
+            rows.instructions[row]=1;
+            next_instruction+=terminal_listing::instruction_length(page,address,expanded);
+        }
+        ++rows.count;
+    }
+    return rows;
+}
+
 bool browser_glyph(void*,u8 size,u16 codepoint,explorer_view::Glyph& out) {
     if(size==8) {
         builtin_font::Raster glyph{};
@@ -46,7 +89,12 @@ void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
         std::snprintf(progress,sizeof(progress),"%u%s",services.browser_offset()/Services::BROWSER_PAGE_SIZE+1,
             services.browser_more()?" >":"");
     const bool ru=services.russian();
-    canvas.header(title,progress,ru?M8("Файл"):"File",services.browser_has_parent());
+    if(height==320) {
+        const bool parent=services.browser_has_parent();
+        if(parent) canvas.text(10,33,M8("←"),12,12);
+        canvas.text(parent?27:10,33,title,12,parent?235:252);
+        canvas.text(268,33,progress,12,42);
+    } else canvas.header(title,progress,ru?M8("Файл"):"File",services.browser_has_parent());
     if(services.browser_actions()) {
         for(unsigned row=0;row<services.selection_menu_rows();++row) {
             char value[Services::COLS+1];services.row(row,value);
@@ -152,8 +200,19 @@ void Screen::clear_pixel(unsigned x, unsigned y) {
     if(x < WIDTH && y < HEIGHT) pixels_[y * STRIDE + x / 8] &= (u8)~(0x80U >> (x % 8));
 }
 void Screen::fill_rect(unsigned x,unsigned y,unsigned width,unsigned height) {
-    for(unsigned dy=0;dy<height && y+dy<HEIGHT;++dy)
-        for(unsigned dx=0;dx<width && x+dx<WIDTH;++dx) set_pixel(x+dx,y+dy);
+    if(!width || !height || x>=WIDTH || y>=HEIGHT) return;
+    const unsigned right=std::min(x+width,WIDTH),bottom=std::min(y+height,HEIGHT);
+    const unsigned first=x/8,last=(right-1)/8;
+    const u8 left_mask=(u8)(0xffU>>(x&7)),right_mask=(u8)(0xffU<<(7-((right-1)&7)));
+    for(unsigned row=y;row<bottom;++row) {
+        u8* bytes=pixels_+row*STRIDE;
+        if(first==last) bytes[first]|=left_mask&right_mask;
+        else {
+            bytes[first]|=left_mask;
+            if(last>first+1) std::memset(bytes+first+1,0xff,last-first-1);
+            bytes[last]|=right_mask;
+        }
+    }
 }
 void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, unsigned right, bool erase) {
     auto choice=font_settings_?*font_settings_:Settings{};
@@ -174,6 +233,142 @@ void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, un
         x += glyph.advance;
     }
 }
+unsigned Screen::text_width(const char* value,unsigned height) const {
+    auto choice=font_settings_?*font_settings_:Settings{};
+    if(choice.ui_font_family==1) choice.ui_font_size=(u8)height;
+    return fonts::text_width(choice,value,(unsigned)std::strlen(value));
+}
+void Screen::text_center(unsigned left,unsigned width,unsigned top,const char* value,
+                         unsigned height,bool inverse) {
+    const unsigned measured=text_width(value,height);
+    const unsigned x=left+(measured<width?(width-measured)/2:0);
+    text(x,top,value,height,left+width,inverse);
+}
+void Screen::rounded_label(unsigned left,unsigned top,unsigned width,unsigned height) {
+    fill_rect(left+2,top,width-4,height);
+    fill_rect(left+1,top+1,width-2,height-2);
+    fill_rect(left,top+2,width,height-4);
+}
+void Screen::header(const char* title,bool keyboard_online,const Snapshot* calculator) {
+    const auto* saved=font_settings_;
+    Settings font{};
+    font.ui_font_family=1;
+    font.ui_font_size=16;
+    font_settings_=&font;
+    const bool clock_visible=calculator && manual_clock_visible(*calculator);
+    const unsigned right=clock_visible?(battery_.available?220:254):(battery_.available?278:WIDTH-8);
+    const unsigned left=keyboard_online?8:52;
+    fill_rect(0,0,WIDTH,HEADER_HEIGHT);
+    theme_.add(0,0,WIDTH,HEADER_HEIGHT,lcd::Ink::OCHRE);
+    const unsigned title_width=text_width(title,16);
+    const unsigned centered=title_width<WIDTH?(WIDTH-title_width)/2:0;
+    if(centered>=left && centered+title_width<=right) text(centered,8,title,16,right,true);
+    else text_center(left,right-left,8,title,16,true);
+    battery_icon(battery_,[this](unsigned x,unsigned y){clear_pixel(x,y);});
+    if(!keyboard_online) text(8,10,"KBD?",12,52,true);
+    if(clock_visible) {
+        const auto now=clock::get();
+        char time[6];
+        std::snprintf(time,sizeof(time),"%02u:%02u",now.hour,now.minute);
+        const unsigned time_right=WIDTH-(battery_.available?44:10);
+        text(time_right-text_width(time,16),9,time,16,time_right,true);
+    }
+    font_settings_=saved;
+}
+void Screen::main_menu(const Ui& ui,bool keyboard_online) {
+    header(ui.settings().russian?M8("МЕНЮ"):"MENU",keyboard_online);
+    const auto* saved=font_settings_;
+    Settings font{};
+    font.ui_font_family=1;
+    font.ui_font_size=14;
+    font_settings_=&font;
+    constexpr unsigned pitch=104,tile=52;
+    const bool ru=ui.settings().russian;
+    for(unsigned i=0;i<ui.count();++i) {
+        const unsigned center=56+(i%Ui::MENU_COLUMNS)*pitch,top=58+(i/Ui::MENU_COLUMNS)*106;
+        const unsigned left=center-tile/2;
+        theme_.add(left,top,tile,tile,lcd::Ink::TILE);
+        constexpr unsigned size=menu_icons::SIZE,stride=menu_icons::STRIDE;
+        const u8* raster=menu_icons::pixels[i];
+        for(unsigned y=0;y<size;++y) for(unsigned x=0;x<size;++x)
+            if(raster[y*stride+x/8]&(0x80U>>(x&7))) set_pixel(center-size/2+x,top+(tile-size)/2+y);
+        const auto item=(menu_model::MainItem)i;
+        const auto* label=item==menu_model::MainItem::BOOTLOADER?(ru?M8("Прошивка"):"Firmware"):
+            menu_model::mainLabel(item,ru);
+        const unsigned width=text_width(label,14)+14;
+        const unsigned label_top=top+59;
+        const bool active=i==ui.selected();
+        if(active) {
+            const unsigned x=center-width/2;
+            theme_.add(x,label_top-3,width,20,lcd::Ink::OCHRE);
+            rounded_label(x,label_top-3,width,20);
+        }
+        text_center(center-pitch/2,pitch,label_top,label,14,active);
+    }
+    line(FOOTER_RULE);
+    theme_.add(0,FOOTER_RULE,WIDTH,1,lcd::Ink::LINE);
+    text(10,302,ui.footer(),12);
+    font_settings_=saved;
+}
+void Screen::settings_menu(const Ui& ui) {
+    const auto* saved=font_settings_;
+    Settings font{};
+    font.ui_font_family=1;
+    font.ui_font_size=14;
+    font_settings_=&font;
+    const bool ru=ui.settings().russian;
+    constexpr unsigned left=8,width=304,top=54,pitch=29,right=left+width-12;
+    const unsigned first=ui.first_setting();
+    text(12,36,ru?M8("ОБЩИЕ"):"GENERAL",12);
+    theme_.set_stripes(left,top,width,Ui::SETTINGS_ROWS*pitch,pitch);
+    for(unsigned row=0;row<Ui::SETTINGS_ROWS && first+row<ui.count();++row) {
+        const unsigned index=first+row,y=top+row*pitch;
+        const bool active=index==ui.selected();
+        if(active) theme_.add(left,y,width,pitch-1,lcd::Ink::FOCUS);
+        char value[32];
+        ui.setting_value(index,value);
+        const auto* label=ui.setting_label(index);
+        unsigned label_right=right-10;
+        if(index==0) {
+            const bool on=ui.settings().key_sound;
+            constexpr unsigned track=24,x=right-track;
+            const unsigned t=y+8;
+            theme_.add(x,t,track,12,on?lcd::Ink::OCHRE:lcd::Ink::LINE);
+            rounded_label(x,t,track,12);
+            const unsigned dot=x+(on?14:3);
+            for(unsigned py=0;py<6;++py) for(unsigned px=0;px<6;++px) clear_pixel(dot+px,t+3+py);
+            label_right=x-8;
+        } else if(index==6 || index==7) {
+            const unsigned level=index==6?ui.settings().lcd_backlight:ui.settings().key_backlight;
+            constexpr unsigned track=58,x=right-track;
+            const unsigned t=y+14;
+            const unsigned pos=(level*(track-5)+120)/240;
+            theme_.add(x,y+9,track,10,active?lcd::Ink::SOFT:lcd::Ink::LINE);
+            fill_rect(x,t,track,2);
+            theme_.add(x,y+9,pos+5,10,lcd::Ink::OCHRE);
+            fill_rect(x+pos,t-3,5,8);
+            label_right=x-8;
+        } else if(index==5) {
+            text(right-8,y+6,">",14,right);
+        } else {
+            const unsigned value_width=text_width(value,14);
+            const unsigned label_width=text_width(label,14);
+            if(label_width+value_width+24>width) {
+                const unsigned small_width=text_width(value,12);
+                text(right-small_width,y+7,value,12,right);
+                label_right=right-small_width-8;
+            } else {
+                text(right-value_width,y+6,value,14,right);
+                label_right=right-value_width-8;
+            }
+        }
+        text(left+8,y+6,label,14,label_right);
+    }
+    theme_.add(0,FOOTER_RULE,WIDTH,1,lcd::Ink::LINE);
+    line(FOOTER_RULE);
+    text(10,302,ui.footer(),12);
+    font_settings_=saved;
+}
 void Screen::status_field(unsigned left,unsigned width,const char* value) {
     auto choice=font_settings_?*font_settings_:Settings{};
     if(choice.ui_font_family==1) choice.ui_font_size=16;
@@ -184,8 +379,7 @@ void Screen::status_field(unsigned left,unsigned width,const char* value) {
         if(advance+glyph.advance>width) break;
         label[length++]=*value;advance+=glyph.advance;
     }
-    text(left+(width-advance)/2,40,label,16);
-    for(unsigned x=left;x<left+width;++x) set_pixel(x,63);
+    text(left+(width-advance)/2,41,label,16);
 }
 void Screen::bitmap(const u8* frame,unsigned width,unsigned height,unsigned left,unsigned top) {
     if(width==WIDTH && height==HEIGHT && !left && !top) {
@@ -232,13 +426,35 @@ void Screen::segment_row(unsigned left,unsigned top,const u8 masks[12]) {
         if(mask&0x80) { set_pixel(x+9,top+11);set_pixel(x+9,top+12); }
     }
 }
+void Screen::calculator_tabs(const Ui& ui) {
+    const auto* saved=font_settings_;
+    Settings font{};
+    font.ui_font_family=1;
+    font.ui_font_size=12;
+    font_settings_=&font;
+    const bool ru=ui.settings().russian;
+    const char* labels[]={ru?M8("СТЕК"):"STACK",ru?M8("РЕГИСТРЫ"):"REGISTERS",
+                          ru?M8("ПРОГРАММА"):"PROGRAM",ru?M8("ПОМОЩЬ"):"HELP"};
+    constexpr unsigned width=WIDTH/4;
+    theme_.add(0,CALCULATOR_TABS_TOP,WIDTH,TAB_HEIGHT,lcd::Ink::TAB);
+    for(unsigned i=0;i<4;++i) {
+        const unsigned left=i*width;
+        const bool active=i==(unsigned)ui.view();
+        if(active) {
+            theme_.add(left,CALCULATOR_TABS_TOP,width,TAB_HEIGHT,lcd::Ink::SELECTION);
+            fill_rect(left,CALCULATOR_TABS_TOP,width,TAB_HEIGHT);
+        }
+        text_center(left,width,CALCULATOR_TABS_TOP+5,labels[i],12,active);
+    }
+    font_settings_=saved;
+}
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((optimize("Os", "no-jump-tables")))
 #endif
 void Screen::calculator(const Snapshot& model, const Ui& ui) {
-    theme_.add(0,63,WIDTH,1,lcd::Ink::LINE);
-    theme_.add(0,91,WIDTH,35,lcd::Ink::GREEN);
-    theme_.add(0,147,WIDTH,1,lcd::Ink::LINE);
+    theme_.add(0,INDICATOR_TOP,WIDTH,35,lcd::Ink::DIGIT);
+    calculator_tabs(ui);
+    theme_.set_stripes(0,CALCULATOR_ROWS_TOP-2,WIDTH,6*CALCULATOR_ROW_PITCH,CALCULATOR_ROW_PITCH);
     text_screen::Grid face_grid;
     face_grid.reset(2);
     char status[40];
@@ -262,7 +478,7 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     calculator_face::setSegmentFrame(nullptr);
     // Twelve 26-pixel slots fit the original 16x35 strike with no resampling.
     const auto digit=[&](unsigned slot,u8 mask,u16 token) {
-        const unsigned left=4+slot*26+5,top=91;
+        const unsigned left=4+slot*26+5,top=INDICATOR_TOP;
         if(token==display_symbol::uc1609::RT_ARROW) {
             for(unsigned x=0;x<10;++x) for(unsigned y=0;y<9;++y)
                 if(calculator_face::sourceArrowColumn(x)&(1U<<y)) set_pixel(left+3+x,top+12+y);
@@ -310,24 +526,18 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
                         face_[((top+y)/8)*192+left+x]|=(u8)(1U<<((top+y)%8));
                     }
         }
-        char time[6];std::snprintf(time,sizeof(time),"%02u:%02u",now.hour,now.minute);
-        Settings clock_font{};clock_font.ui_font_family=1;clock_font.ui_font_size=16;
-        const auto* saved=font_settings_;font_settings_=&clock_font;
-        text(WIDTH-(battery_.available?44:10)-fonts::text_width(clock_font,time,5),9,time,16);
-        font_settings_=saved;
     }
     const unsigned font_size = ui.settings().ui_font_size;
-    line(147);
     if(ui.view() == View::STACK) {
         auto font=ui.settings();if(font.ui_font_family==1) font.ui_font_size=16;
         const unsigned value_left=18+fonts::text_width(font,"X1",2)+8;
-        theme_.add(18,154,value_left-18-4,120,lcd::Ink::OCHRE);
+        theme_.add(18,CALCULATOR_ROWS_TOP,value_left-18-4,6*CALCULATOR_ROW_PITCH,lcd::Ink::OCHRE);
         static constexpr const char* labels[]={"X","Y","Z","T","X1","X2"};
         for(unsigned i = 0; i < 6; ++i) {
             char raw[INDICATOR_STRING_LENGTH];
             const char* number = i==0 ? read_stack_register(X,raw,nullptr) :
                 i<4 ? model.stack_values[i-1] : i==4 ? read_stack_register(X1,raw,nullptr) : raw;
-            const unsigned y=154+i*20;
+            const unsigned y=CALCULATOR_ROWS_TOP+i*CALCULATOR_ROW_PITCH;
             text(18,y,labels[i],16,value_left-4);
             if(i==5 && model.segmented) segment_row(value_left,y+1,model.segments);
             else {
@@ -348,8 +558,8 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     } else if(ui.view() == View::REGISTERS) {
         const auto style=register_style(ui.settings());
         const auto* saved=font_settings_;font_settings_=&style.font;
-        theme_.add(8,154,style.label_width+2,120,lcd::Ink::OCHRE);
-        theme_.add(168,154,style.label_width+2,120,lcd::Ink::OCHRE);
+        theme_.add(8,CALCULATOR_ROWS_TOP,style.label_width+2,6*CALCULATOR_ROW_PITCH,lcd::Ink::OCHRE);
+        theme_.add(168,CALCULATOR_ROWS_TOP,style.label_width+2,6*CALCULATOR_ROW_PITCH,lcd::Ink::OCHRE);
         for(unsigned n = 0; n < Ui::VISIBLE_REGISTERS; ++n) {
             const unsigned index = ui.offset() + n;
             char raw[INDICATOR_STRING_LENGTH],label[4];
@@ -358,20 +568,41 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
             std::snprintf(label,sizeof(label),"R%X",index);
             const unsigned left=8+(n/Ui::REGISTER_ROWS)*160;
             const unsigned value_left=left+style.label_width+6;
-            const unsigned y=154+(n%Ui::REGISTER_ROWS)*20;
+            const unsigned y=CALCULATOR_ROWS_TOP+(n%Ui::REGISTER_ROWS)*CALCULATOR_ROW_PITCH;
             text(left,y,label,style.font.ui_font_size,value_left-4);
             text(value_left,y,raw,style.font.ui_font_size,left+144);
         }
         font_settings_=saved;
     } else if(ui.view() == View::PROGRAM) {
-        theme_.add(18,154,44,120,lcd::Ink::OCHRE);
-        for(unsigned row = 0; row < 6; ++row) {
+        constexpr unsigned mnemonic_left=112;
+        const auto rows=program_rows(ui.offset());
+        theme_.add(mnemonic_left,CALCULATOR_ROWS_TOP,WIDTH-mnemonic_left,6*CALCULATOR_ROW_PITCH,lcd::Ink::WHITE);
+        int current_row=-1;
+        for(unsigned row=0;row<rows.count;++row) {
             const unsigned address = ui.offset() + row;
-            if(address >= core_61::program_steps()) break;
-            const unsigned code = core_61::get_code(core_61::get_ring_address(address));
-            std::snprintf(status, sizeof(status), "%c %02X   %02X", address == model.ip ? '>' : ' ', address, code);
-            text(18, 154 + row * 20, status, font_size);
+            const u8 code=rows.codes[row];
+            const unsigned y=CALCULATOR_ROWS_TOP+row*CALCULATOR_ROW_PITCH;
+            if(address==model.ip) {
+                current_row=(int)y;
+                theme_.add(0,y-2,WIDTH,CALCULATOR_ROW_PITCH,lcd::Ink::FOCUS);
+                fill_rect(0,y-2,3,CALCULATOR_ROW_PITCH);
+            }
+            char address_text[4],opcode[3],mnemonic[terminal_mnemonics::MAX_LENGTH+1];
+            std::snprintf(address_text,sizeof(address_text),"%02X",address);
+            terminal_mnemonics::hex(code,opcode);
+            text(14,y,address_text,font_size,57);
+            text(62,y,opcode,font_size,mnemonic_left-4);
+            // Addresses and prefix arguments are bytes, not opcodes.
+            if(rows.instructions[row]) {
+                if(russian) terminal_mnemonics::csv(PROGRAM_MNEMONICS,code,mnemonic);
+                else mnemonic[0]=0;
+                if(!mnemonic[0] || (mnemonic[0]=='?' && !mnemonic[1]))
+                    terminal_mnemonics::english(code,mnemonic);
+                text(mnemonic_left,y,mnemonic,font_size);
+            }
         }
+        theme_.add(13,CALCULATOR_ROWS_TOP,44,6*CALCULATOR_ROW_PITCH,lcd::Ink::OCHRE);
+        if(current_row>=0) theme_.add(0,(unsigned)current_row-2,3,CALCULATOR_ROW_PITCH,lcd::Ink::OCHRE);
     } else {
         const char* help_en[] = {"F1/F: F  F2/K: K  F3/R: S/P", "F4/G: GOTO  F5/C: CALL  B: RET",
             "E: EXP  N: +/-  X: X<>Y", "L: RECALL  S: STORE  Enter: B^",
@@ -379,13 +610,22 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         const char* help_ru[] = {M8("F1/F: F  F2/K: K  F3/R: С/П"),M8("F4/G: БП  F5/C: ПП  B: В/О"),
             M8("E: ВП  N: +/-  X: X<>Y"),M8("L: ИП  S: П  Enter: В↑"),
             M8("F E: ПРГ   F N: АВТ"),M8("D: Г   A: Р   T: ГРД")};
-        for(unsigned row = 0; row < 6; ++row) text(10, 154 + row * 20, russian?help_ru[row]:help_en[row], 12);
+        for(unsigned row=0;row<6;++row)
+            text(10,CALCULATOR_ROWS_TOP+row*CALCULATOR_ROW_PITCH,russian?help_ru[row]:help_en[row],12);
     }
-    if(ui.view()==View::REGISTERS) std::snprintf(status,sizeof(status),"%s",M8("Shift+↑/↓: R0-RE"));
-    else std::snprintf(status, sizeof(status), russian?M8("ШАГ %02X  %u шагов"):"IP %02X  %u steps", model.ip,
-        (unsigned)core_61::program_steps());
-    text(10, 280, status, 12);
+    const auto* saved=font_settings_;
+    Settings hint_font{};hint_font.ui_font_family=1;hint_font.ui_font_size=12;
+    font_settings_=&hint_font;
+    if(ui.view()==View::REGISTERS) text(10,280,M8("Shift+↑/↓: R0-RE"),12);
+    else {
+        std::snprintf(status,sizeof(status),russian?M8("ШАГ %02X  %u шагов"):"IP %02X  %u steps",
+            model.ip,(unsigned)core_61::program_steps());
+        text(10,280,status,12);
+    }
+    line(FOOTER_RULE);
+    theme_.add(0,FOOTER_RULE,WIDTH,1,lcd::Ink::LINE);
     text(10, 301, ui.footer(), 12);
+    font_settings_=saved;
 }
 void Screen::native_bitmap(const u8* frame) {
     const bool published=frame==script::native_frame();
@@ -552,8 +792,11 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
         if(ui.view()==View::REGISTERS) for(unsigned n=0;n<Ui::VISIBLE_REGISTERS && ui.offset()+n<Ui::REGISTER_COUNT;++n) {
             char text[INDICATOR_STRING_LENGTH];MK61Emu_ReadRegister(ui.offset()+n,text,nullptr);out.text(text);
         }
-        if(ui.view()==View::PROGRAM) for(unsigned n=0;n<6 && ui.offset()+n<core_61::program_steps();++n)
-            out.number(core_61::get_code(core_61::get_ring_address(ui.offset()+n)));
+        if(ui.view()==View::PROGRAM) {
+            const auto rows=program_rows(ui.offset());
+            out.data(rows.codes,rows.count);
+            out.data(rows.instructions,rows.count);
+        }
         out.number(clock::configured());
         if(manual_clock_visible(m)) {
             const auto date=clock::get();out.number(date.hour*60+date.minute);
@@ -561,6 +804,11 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
         out.text(ui.footer());
     } else {
         out.text(ui.title());out.text(ui.footer());out.number(ui.count());
+        if(ui.page()==Page::MAIN) return out;
+        if(ui.page()==Page::SETTINGS) {
+            out.number(compute_clock::active_profile());
+            return out;
+        }
         const unsigned first=menu_model::firstVisible(ui.selected(),ui.count(),8);
         for(unsigned row=0;row<8;++row) { char text[64]{};ui.row(first+row,text);out.text(text); }
     }
@@ -590,7 +838,7 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     if(!ui) ui = &default_ui;
     font_settings_=&ui->settings();battery_=battery;scroll_region_={};theme_.reset();
     const bool service_active=services && services->active();
-    if(service_active && services->browser_display()) {browser(*services);return;}
+    if(service_active && services->browser_display()) {browser(*services,keyboard_online);return;}
     const u8* graphics=service_active?services->graphics():nullptr;
     const u8* native=graphics?services->native_graphics():nullptr;
     if(native && !services->graphical_document()) {
@@ -609,18 +857,32 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     std::memset(pixels_, 0, sizeof(pixels_));
     const auto mode=utility_mode(*ui,services);
     if(mode!=utility::Mode::NONE) {utility_page(mode,animation_.frame(mode),*ui,services);return;}
-    theme_.add(0,0,WIDTH,32,lcd::Ink::WHITE);
-    theme_.add(0,32,WIDTH,1,lcd::Ink::LINE);
-    char heading[64];
-    if(services && services->active()) services->heading(heading);
-    else std::snprintf(heading, sizeof(heading), "%s", ui->title());
-    const bool clock_visible=!service_active && ui->page()==Page::CALCULATOR && manual_clock_visible(model);
-    const unsigned title_right=clock_visible?(battery_.available?220:254):(battery_.available?278:WIDTH-8);
-    text(10,9,heading,16,title_right);
-    battery_icon(battery_,[this](unsigned x,unsigned y){set_pixel(x,y);});
-    if(!keyboard_online) text(190, 10, "KBD?", 12);
-    line(32);
-    if(services && services->active()) {
+    if(!service_active && ui->page()==Page::MAIN) {main_menu(*ui,keyboard_online);return;}
+    if(!service_active && ui->page()==Page::CALCULATOR) {
+        if(m61_text::display_owned()) {
+            // M61 owns every pixel between BASIC parts, including blank ones.
+            theme_.reset(lcd::Ink::MONO);
+            if(const auto frame=script::native_frame()) bitmap(frame,320,320);
+            else bitmap(script::frame(),192,64,64,96);
+        } else {
+            header("MK-61S",keyboard_online,&model);
+            calculator(model,*ui);
+        }
+        return;
+    }
+    if(!service_active) {
+        header(ui->title(),keyboard_online);
+        if(ui->page()==Page::SETTINGS) {settings_menu(*ui);return;}
+    }
+    if(service_active) {
+        theme_.add(0,0,WIDTH,32,lcd::Ink::WHITE);
+        theme_.add(0,32,WIDTH,1,lcd::Ink::LINE);
+        char heading[64];
+        services->heading(heading);
+        text(10,9,heading,16,battery_.available?278:WIDTH-8);
+        battery_icon(battery_,[this](unsigned x,unsigned y){set_pixel(x,y);});
+        if(!keyboard_online) text(190,10,"KBD?",12);
+        line(32);
         const unsigned menu_rows=services->selection_menu_rows();
         const auto metrics=fonts::info(ui->settings());
         const unsigned measured_pitch=metrics.height+metrics.line_gap+8;
@@ -680,16 +942,6 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
         line(282); text(8, 297, services->footer(), 12);
         return;
     }
-    if(ui->page() == Page::CALCULATOR) {
-        if(m61_text::display_owned()) {
-            // M61 owns every pixel between BASIC parts, including blank ones.
-            theme_.reset(lcd::Ink::MONO);
-            std::memset(pixels_,0,sizeof(pixels_));
-            if(const auto native=script::native_frame()) bitmap(native,320,320);
-            else bitmap(script::frame(),192,64,64,96);
-        } else calculator(model,*ui);
-        return;
-    }
     const unsigned rows = 8;
     const unsigned first = menu_model::firstVisible(ui->selected(), ui->count(), rows);
     for(unsigned row = 0; row < rows; ++row) {
@@ -714,17 +966,16 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     line(280);
     text(10, 295, ui->footer(), 12);
 }
-void Screen::browser(const Services& services) {
+void Screen::browser(const Services& services,bool keyboard_online) {
     native_valid_=false;scroll_region_={};
     draw_browser(pixels_,sizeof(pixels_),explorer_view::Packing::ROW_MSB,WIDTH,HEIGHT,services);
-    theme_.add(0,0,WIDTH,31,lcd::Ink::WHITE);
-    theme_.add(0,31,WIDTH,1,lcd::Ink::LINE);
+    header(services.russian()?M8("ПРОВОДНИК"):"EXPLORER",keyboard_online);
     theme_.add(0,299,WIDTH,1,lcd::Ink::LINE);
     if(!services.browser_actions() && services.browser_mode()==explorer_view::Mode::ICONS) {
-        // One band per row colors the icons without spending a separate
-        // region on every file. Labels sit outside these bands.
-        for(unsigned row=0;row<3 && row*3<services.browser_count();++row)
-            theme_.add(0,43+row*86+9,WIDTH,32,lcd::Ink::OCHRE);
+        // The existing WBMP glyphs sit in charcoal tiles. Canvas still owns
+        // the positions of the files and the measured selection label.
+        for(unsigned i=0;i<services.browser_count() && i<Services::BROWSER_PAGE_SIZE;++i)
+            theme_.add(36+(i%3)*100,46+(i/3)*86,48,44,lcd::Ink::TILE);
         const unsigned slot=services.browser_selection();
         if(slot<services.browser_count() && slot<Services::BROWSER_PAGE_SIZE)
             theme_.add(10+(slot%3)*100,43+(slot/3)*86+48,100,18,lcd::Ink::OCHRE);

@@ -11,6 +11,7 @@ enum class View : u8 { STACK, REGISTERS, PROGRAM, HELP };
 
 class Ui {
 public:
+    static constexpr unsigned MENU_COLUMNS=3, SETTINGS_ROWS=8;
     static constexpr unsigned REGISTER_COUNT=15, REGISTER_ROWS=6, REGISTER_COLUMNS=2;
     static constexpr unsigned VISIBLE_REGISTERS=REGISTER_ROWS*REGISTER_COLUMNS;
     void init(const Settings& value = Settings{});
@@ -21,6 +22,9 @@ public:
     u8 offset() const { return offset_; }
     u8 selected() const { return selected_[(unsigned)page_]; }
     unsigned count() const;
+    unsigned first_setting() const;
+    const char* setting_label(unsigned index) const;
+    void setting_value(unsigned index,char out[32]) const;
     const Settings& settings() const { return settings_; }
     bool apply_settings(const Settings& value,bool persist=true);
     u32 settings_revision() const { return settings_revision_; }

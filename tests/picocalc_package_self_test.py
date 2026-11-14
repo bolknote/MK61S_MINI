@@ -46,6 +46,8 @@ class PackageTests(unittest.TestCase):
             with zipfile.ZipFile(archive) as reader:
                 prefix='mk61s-picocalc-pico-h/'
                 self.assertIsNone(reader.testzip())
+                self.assertEqual(reader.read(prefix+'licenses/LUCIDE.txt'),
+                                 (ROOT/'ports/picocalc/MENU_ICONS_LICENSE.txt').read_bytes())
                 self.assertFalse(any(name.startswith(prefix+'System/') for name in reader.namelist()))
                 self.assertFalse((target/'System/autoexec.wbmp').exists())
                 self.assertEqual(len(reader.namelist()),len(set(reader.namelist())))

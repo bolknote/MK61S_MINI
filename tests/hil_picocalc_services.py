@@ -73,7 +73,7 @@ def main():
             raise RuntimeError('Expected PicoCalc with mounted microSD')
         if 'UI=CALCULATOR' not in status or 'SERVICE=CLOSED' not in status:
             raise RuntimeError('Start this test from the calculator screen')
-        step(b'\t' + bytes([0xB5])*6 + bytes([0xB6])*4 + b'\n', 'SERVICE=DEVELOPMENT')
+        step(b'\t5\n', 'SERVICE=DEVELOPMENT')
         step(bytes([0xB6])*3 + b'\n', 'SERVICE=LANGUAGE')
         step(b'\n', 'SERVICE=EDITOR')
         basic = ('10 PRINT "PICO BASIC=!",2+3\n'

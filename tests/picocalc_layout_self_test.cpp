@@ -1,4 +1,5 @@
 #include "screen.hpp"
+#include "lcd_shell_update.hpp"
 #include "services.hpp"
 #include "fonts.hpp"
 #include "clock.hpp"
@@ -96,11 +97,14 @@ void preview(const Screen& screen,const char* suffix) {
     const std::string color_path=std::string(prefix)+suffix+".ppm";
     file=std::fopen(color_path.c_str(),"wb");require(file,"color preview output");
     std::fprintf(file,"P6\n320 320\n255\n");
-    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x) {
-        const uint16_t c=screen.pixel(x,y)?lcd::color(screen.color_theme().at(x,y)):0;
+    uint16_t scanline[320];
+    for(unsigned y=0;y<320;++y) {
+      lcd::shell_scanline(screen.data(),{0,(u16)y,320,1},0,screen.color_theme(),scanline);
+      for(const auto c:scanline) {
         const unsigned char rgb[3]={(unsigned char)(((c>>11)&31)*255/31),
             (unsigned char)(((c>>5)&63)*255/63),(unsigned char)((c&31)*255/31)};
         require(std::fwrite(rgb,1,sizeof(rgb),file)==sizeof(rgb),"color preview raster");
+      }
     }
     std::fclose(file);
 }
@@ -141,9 +145,9 @@ void check_choice(const Settings& settings,Calculator& calc) {
     Screen screen;BatteryStatus battery;battery.decode(0x0B,73);
     screen.render(model,true,&ui,nullptr,battery);
     unsigned indicator_pixels=0;
-    for(unsigned y=91;y<126;++y) for(unsigned x=0;x<320;++x)
+    for(unsigned y=74;y<121;++y) for(unsigned x=0;x<320;++x)
         if(screen.pixel(x,y)) {
-            require(screen.color_theme().at(x,y)==lcd::Ink::GREEN,"indicator pixels use emerald ink");
+            require(screen.color_theme().at(x,y)==lcd::Ink::DIGIT,"indicator pixels use warm white");
             ++indicator_pixels;
         }
     require(indicator_pixels>0,"indicator contains pixels");
@@ -210,8 +214,9 @@ void check_choice(const Settings& settings,Calculator& calc) {
         require(value_columns[1]-value_columns[0]==160,"both columns have equal width and label spacing");
         u8 current_settings[SETTINGS_PAGE_BYTES];encode_settings(ui.settings(),0,current_settings);
         require(!std::memcmp(current_settings,saved_settings,sizeof(saved_settings)),"local table font keeps saved settings unchanged");
-        require(Text(ui.settings(),M8("Shift+↑/↓: R0-RE"),12).matches(screen,10,280),"physical register paging keys and range fit");
-        require(Text(ui.settings(),ui.footer(),12).matches(screen,10,301),"Tab and view navigation hint fits without truncation");
+        const Settings native{};
+        require(Text(native,M8("Shift+↑/↓: R0-RE"),12).matches(screen,10,280),"physical register paging keys and range fit");
+        require(Text(native,ui.footer(),12).matches(screen,10,301),"Tab and view navigation hint fits without truncation");
         require(std::strstr(ui.footer(),"Tab")!=nullptr,"menu navigation stays discoverable");
         if(save && (offset==0 || offset==3)) preview(screen,offset?"-registers-last":"-registers");
         ui.input(0xD7,calc);
@@ -325,7 +330,7 @@ void clock_during_input() {
     const auto check=[&](const Snapshot& model,const char* time,unsigned hour,unsigned minute) {
         screen.render(model,true,&ui,nullptr,battery);
         const Text text(clock_font,time,16);
-        require(text.matches(screen,Screen::WIDTH-44-text.width,9),"native clock remains complete during press and release");
+        require(text.matches(screen,Screen::WIDTH-44-text.width,9,true),"native clock remains complete during press and release");
         u8 frame[1536];screen.logical_frame(ui,services,frame);
         u32 rows[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT];
         require(rtc_idle_clock::build_graphic_clock(hour,minute,rows),"clock oracle");
@@ -377,10 +382,72 @@ void power_indicator() {
         require(!screen.render(calc.snapshot(),true,&ui,nullptr,battery),"stable power status does not repaint");
         for(unsigned y=0;y<33;++y) for(unsigned x=0;x<278;++x)
             require(screen.pixel(x,y)==baseline.pixel(x,y),"power badge stays clear of title and clock");
-        require(screen.pixel(280,15)==battery.external_power(),"external power plug is independent of charge state");
+        require(screen.pixel(280,15)!=battery.external_power(),"external power plug is independent of charge state");
         preview(screen,names[i]);
     }
     require(clock::set(saved),"restore power clock fixture");
+}
+void menu_grid(Calculator& calc) {
+    Settings settings{};
+    settings.ui_font_family=1;
+    settings.ui_font_size=14;
+    const auto model=calc.snapshot();
+    for(bool ru:{false,true}) {
+        settings.russian=ru;
+        Ui ui;
+        ui.init(settings);
+        Screen screen;
+        ui.input('\t',calc);
+        ui.input('3',calc);
+        require(screen.render(model,true,&ui),"main menu displayed");
+        const char* labels[]={
+            ru?M8("Прошивка"):"Firmware",ru?M8("USB-диск"):"USB Disk",ru?M8("Настройки"):"Settings",
+            ru?M8("Проводник"):"Explorer",ru?M8("Разработка"):"Development",ru?M8("Система"):"System"
+        };
+        for(unsigned i=0;i<6;++i) {
+            const unsigned center=56+i%3*104,top=58+i/3*106;
+            const Text label(settings,labels[i],14);
+            require(label.matches(screen,center-label.width/2-(label.width%2),top+59,i==2),
+                "all six complete labels are centered below their icons");
+            uint16_t line_pixels[52];
+            const lcd::Rect rect{(u16)(center-26),(u16)(top+26),52,1};
+            lcd::shell_scanline(screen.data(),rect,0,screen.color_theme(),line_pixels);
+            require(line_pixels[0]==lcd::background(lcd::Ink::TILE),"menu tile has a background");
+        }
+        if(ru) preview(screen,"-menu");
+        ui.input('\r',calc);
+        require(ui.page()==Page::SETTINGS,"grid selection opens Settings");
+        screen.render(model,true,&ui);
+        if(ru) preview(screen,"-settings");
+        for(unsigned i=0;i<10;++i) ui.input(0xB6,calc);
+        screen.render(model,true,&ui);
+        require(ui.selected()==10 && ui.first_setting()==3,"last setting remains visible after scroll");
+        if(ru) preview(screen,"-settings-last");
+        ui.input('\t',calc);
+        ui.program_view();
+        screen.render(model,true,&ui);
+        if(ru) preview(screen,"-program");
+    }
+}
+void program_operands() {
+    Calculator calc;
+    calc.init();
+    Ui ui;
+    ui.init();
+    ui.program_view();
+    // Byte 0x50 normally has the С/П mnemonic. After БП it is a target.
+    MK61Emu_SetCode((int)core_61::get_ring_address(0),0x51);
+    MK61Emu_SetCode((int)core_61::get_ring_address(1),0x50);
+    ui.input(0xD7,calc);
+    Screen screen;
+    require(screen.render(calc.snapshot(),true,&ui),"scrolled program table");
+    require(Text(ui.settings(),"50",14).matches(screen,62,154),"operand hex value stays visible");
+    for(unsigned x=112;x<180;++x) for(unsigned y=154;y<168;++y)
+        require(!screen.pixel(x,y),"jump argument has no instruction label");
+    MK61Emu_SetCode((int)core_61::get_ring_address(0),0);
+    require(screen.render(calc.snapshot(),true,&ui),"an opcode outside the view changes visible operand roles");
+    require(Text(ui.settings(),M8("C/П"),14).matches(screen,112,154) ||
+            Text(ui.settings(),M8("С/П"),14).matches(screen,112,154),"the same byte now has an instruction label");
 }
 void explorer_hints(Calculator& calc) {
     require(files::mkdir("/ExplorerHints"),"Explorer hint fixture");
@@ -512,7 +579,7 @@ void picocalc_layout_self_test() {
         if(choice[0]==3) settings.ui_font_key=ui_font_catalog::name_key(("DejaVu-"+std::to_string(choice[1])+".FMK").c_str());
         check_choice(settings,calc);
     }
-    clock_during_input();published_x2();power_indicator();explorer_hints(calc);picocalc_utility_test();
+    clock_during_input();published_x2();power_indicator();menu_grid(calc);program_operands();explorer_hints(calc);picocalc_utility_test();
     std::printf("PicoCalc focused UI layout/navigation: PASS (%u assertions; 8 font choices, EN/RU)\n",checks);
 }
 #if defined(MK61_LAYOUT_STANDALONE)

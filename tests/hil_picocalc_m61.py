@@ -73,7 +73,7 @@ def main():
     def open_scenario(relative, unsaved=False):
         state=wait_for('SERVICE=CLOSED')
         if 'UI=MAIN ' not in state: step(b'\t','UI=MAIN')
-        step(bytes([0xB5])*6+bytes([0xB6])*3+b'\n','SERVICE=BROWSER')
+        step(b'4\n','SERVICE=BROWSER')
         step(b'/', 'SERVICE=PROMPT')
         step((name+'/'+relative).encode()+b'\n', 'SERVICE=EDITOR', 'DIRTY=0')
         if unsaved:
@@ -90,7 +90,7 @@ def main():
                 raise RuntimeError('Initial Pico state: missing ' + required)
         if not args.directory:
             before = set(disk_info('list', '-plist', 'external', 'physical')['WholeDisks'])
-            step(b'\t'+bytes([0xB5])*6+bytes([0xB6])+b'\n', 'SERVICE=USB_DISK')
+            step(b'\t2\n', 'SERVICE=USB_DISK')
             whole = mount = None
             end = time.monotonic()+60
             while time.monotonic() < end and mount is None:
