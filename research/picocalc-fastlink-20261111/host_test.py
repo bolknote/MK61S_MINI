@@ -93,6 +93,7 @@ class Machine:
     c=self.r(PC+12);self.gpio.append(((new>>8)&1)|((c>>10)&2)|((c>>8)&4))
    else:self.gpio.append((new>>9)&1)
  def write(self,u,access,at,size,value,unused):
+  assert not any(at<address+length and address<at+size for address,length in ((0x20000629,1),(0x2000062c,4),(0x20000640,2))),'Native M3 observation field was modified'
   if 0x20000000<=at<0x20005000:return
   allowed={PB+4,PB+16,PC+4,PC+16,I2C,I2C+4,UART+12,UART+20,DMA+0x30,
    DMA+4,CH7,CH7+4,CH7+8,CH7+12,RCC+28,0xe0001000,0xe0001004,0xe000edfc,
@@ -147,8 +148,9 @@ class Machine:
   return b''.join(v.to_bytes(3,'big') for v in fifo)
 
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('--kit',type=Path,default=ROOT/'.build/picocalc-fastlink-20261111/kit-010');a=ap.parse_args()
- package=(a.kit/'module.s3m').read_bytes();passed=[]
+ ap=argparse.ArgumentParser();ap.add_argument('--kit',type=Path,default=ROOT/'.build/picocalc-fastlink-20261111/kit-016')
+ ap.add_argument('--sender-kit',type=Path);ap.add_argument('--output',type=Path);a=ap.parse_args()
+ package=((a.sender_kit or a.kit)/'module.s3m').read_bytes();passed=[]
  for mode in (1,2,3):
   for n in ((3,24) if mode==3 else (3,24,96)):
    for rate in ((36,18,8,4) if mode==3 else (0,)):
@@ -163,6 +165,16 @@ def main():
  for mode in (1,2):
   m=Machine(package,mode);assert m.start(mode,24,8,6)==0;m.now+=500;assert m.call(1)==0
   assert m.decode(24)==pattern(24,6,0x9e3779b9);m.restored();passed.append((mode,24,8,6))
+ m3_observation_cases=0
+ for state,app,recovery,error in ((0x28,0,0,0),(0x2a,2,1,4)):
+  m=Machine(package,1)
+  m.u.mem_write(0x20000629,bytes([state]));m.u.mem_write(0x20000640,bytes([app,recovery]));m.w(0x2000062c,error)
+  assert m.start(1,24,0,0)==0;m.now+=500;assert m.call(1)==0
+  observed=words(m.u.mem_read(OUTPUT,128))
+  assert observed[24:29]==(m.initial[I2C],m.initial[I2C+4],m.initial[I2C],m.initial[I2C+4],m.initial[I2C+8])
+  assert observed[30]==state|(app<<8)|(recovery<<16) and observed[31]==error
+  assert m.u.mem_read(0x20000629,1)==bytes([state]) and m.u.mem_read(0x20000640,2)==bytes([app,recovery])
+  m.restored();m3_observation_cases+=1
  failures={}
  for fault in ('busy','timer_owned','dma_owned','clock','uart','pending_i2c','dma_error','dma_stall','timeout','restore_line'):
   mode=3 if fault.startswith('dma') or fault=='timer_owned' else 2
@@ -347,6 +359,7 @@ def main():
   for changed in ('I2C_TIMEOUTS','I2C_RESETS','I2C_ABORTS','KBD_ERRORS'):
    nh=Uc(UC_ARCH_ARM,UC_MODE_MCLASS|UC_MODE_THUMB)
    nh.mem_map(0x20000000,0x20000);nh.mem_map(0x40054000,4096)
+   nh.mem_map(0x40048000,4096);nh.mem_map(0xd0000000,4096)
    for seg in pe.segments:
     if seg['data']:nh.mem_write(seg['address'],seg['data'])
    def hw(at,value):nh.mem_write(at,pack(value))
@@ -368,17 +381,17 @@ def main():
     assert nh.reg_read(UC_ARM_REG_PC)==0x2001e000
     return nh.reg_read(UC_ARM_REG_R0)
    ncall('fl_native_start');assert ncall('fl_native_edge',boundary-1)==1
-   previous=nh.mem_read(hs('fl_native_previous'),40)
+   previous=nh.mem_read(hs('fl_native_previous'),64)
    hw(health_addresses[changed],hr(health_addresses[changed])+1)
    hw(health_addresses['I2C_STAGE'],3);hw(health_addresses['I2C_RESULT'],-2)
    assert ncall('fl_native_edge',boundary)==0 and hr(hs('fl_native_fault'))==boundary
-   assert nh.mem_read(hs('fl_native_fault_before'),40)==previous
+   assert nh.mem_read(hs('fl_native_fault_before'),64)==previous
    assert hr(hs('fl_native_fault_previous_edge'))==boundary-1
-   after=nh.mem_read(hs('fl_native_fault_after'),40)
+   after=nh.mem_read(hs('fl_native_fault_after'),64)
    assert words(after)[5:7]==(3,0xfffffffe)
    hw(health_addresses['I2C_STAGE'],0);assert ncall('fl_native_edge',boundary+10)==0
-   assert hr(hs('fl_native_fault'))==boundary and nh.mem_read(hs('fl_native_fault_after'),40)==after
-   assert words(nh.mem_read(hs('fl_native_baseline'),40))[1:5]==(7,7,0,7)
+   assert hr(hs('fl_native_fault'))==boundary and nh.mem_read(hs('fl_native_fault_after'),64)==after
+   assert words(nh.mem_read(hs('fl_native_baseline'),64))[1:5]==(7,7,0,7)
    health_cases.append({'boundary':boundary,'counter':changed,'first_fault_latched':True,'native_state_read_only':True})
  # Run the exact resident SDK allocators used by the APP. The spinlock
  # peripheral is modeled as uncontended; allocation masks/program-space
@@ -424,7 +437,7 @@ def main():
  at=sdk('pio_add_program',0x50200000,program);assert at==0;sdk_cases+=1
  assert sdk('pio_can_add_program',0x50200000,program)==0;sdk_cases+=1
  sdk('pio_remove_program',0x50200000,program,at)
- for borrowed,enabled,stuck in ((0,1,0),(1,1,0),(0,0,0),(1,1,1)):
+ for borrowed,enabled,stuck,reset_stuck in ((0,1,0,0),(1,1,0,0),(0,0,0,0),(1,1,1,0),(1,1,0,1)):
   u=Uc(UC_ARCH_ARM,UC_MODE_MCLASS|UC_MODE_THUMB)
   for at,n in ((0x20000000,0x20000),(0x40000000,0x60000)):u.mem_map(at,n)
   for seg in pe.segments:
@@ -435,23 +448,40 @@ def main():
   pw(sym('pins_active'),1);pw(sym('uart_borrowed'),borrowed)
   pw(sym('i2c_before'),enabled);pw(sym('uart_before'),0x301)
   saved_gpio=[0x1f,0x1f,2,2];saved_pad=[0x58,0x58,0x50,0x58]
+  offsets=[0,4,8,0x14,0x18,0x1c,0x20,0x30,0x38,0x3c,0x7c,0x88,0x8c,0x90,0x94,0xa0]
+  saved_config=[0x165,0x1f,0x55,40,47,5000,7500,0,0,0,38,3,0,0,100,468]
+  u.mem_write(sym('i2c_config_before'),struct.pack('<16I',*saved_config))
   u.mem_write(sym('gpio_before'),struct.pack('<4I',*saved_gpio))
   u.mem_write(sym('pad_before'),struct.pack('<4I',*saved_pad))
   for i in range(4):pw(0x40014004+8*(6+i),6);pw(0x4001c004+4*(6+i),0x48)
   pw(0x40038030,0 if borrowed else 0x301)
-  timer=[0]
+  timer=[0];reset_writes=[];latched=[True]
   def read(u,access,at,size,value,user):
    if at==0x40054028:timer[0]+=1;pw(at,timer[0])
    if at==0x4004809c:pw(at,0 if stuck else pr(0x4004806c)&1)
+   if at==0x4000c008:pw(at,0 if reset_stuck else 16)
+  def reset_write(uc,access,at,size,value,user):
+   if at in (0x4000e000,0x4000f000):
+    assert value==16,'Reset touched a peripheral other than I2C1';reset_writes.append(at)
+    if at==0x4000e000:
+     for off in offsets:pw(0x40048000+off,0)
+     pw(0x4004806c,0)
+    else:latched[0]=False
+   assert not any(at<start+length and start<at+size for start,length in native_regions),'Restore modified resident state'
   u.hook_add(UC_HOOK_MEM_READ,read)
+  u.hook_add(UC_HOOK_MEM_WRITE,reset_write)
   u.reg_write(UC_ARM_REG_SP,0x2001f000);u.reg_write(UC_ARM_REG_LR,0x2001e001)
   u.reg_write(UC_ARM_REG_XPSR,0x1000000)
   u.emu_start(sym('restore_pins')|1,0x2001e000,count=10000)
   assert u.reg_read(UC_ARM_REG_PC)==0x2001e000
-  expected=(-32)&0xffffffff if stuck else 0
+  expected=(-47 if reset_stuck else -32 if stuck else 0)&0xffffffff
   assert u.reg_read(UC_ARM_REG_R0)==expected
   for i in range(4):assert pr(0x40014004+8*(6+i))==saved_gpio[i] and pr(0x4001c004+4*(6+i))==saved_pad[i]
-  assert pr(0x40038030)==0x301 and pr(0x4004806c)==enabled
+  assert pr(0x40038030)==0x301 and pr(0x4004806c)==(0 if reset_stuck else enabled)
+  assert reset_writes==[0x4000e000,0x4000f000]and not latched[0]
+  if not reset_stuck:
+   assert [pr(0x40048000+off)for off in offsets]==saved_config,'I2C configuration not restored exactly'
+  assert timer[0]<=210,'Restore exceeded modeled finite wait cap'
   assert not pr(sym('pins_active')) and not pr(sym('uart_borrowed'))
   pico_checks+=1
  result=dict(status='PASS',physical_io=False,hardware_timing_measured=False,relocated_ARM_cases=len(passed),
@@ -460,8 +490,11 @@ def main():
   DBGMCU_zero_with_matching_body_accepted=True,actual_resident_sdk_allocator_cases=sdk_cases,idle_fence_cases=fence_results,
   full_take_pins_logical_cases=logical_results,
   native_health_boundary_cases=health_cases,
+  m3_read_only_observation_cases=m3_observation_cases,
   module_sha256=hashlib.sha256(package).hexdigest(),old_restore_latched_BUSY_reproduced_in_model=True,
   pico_app_sha256=hashlib.sha256((a.kit/'app/FASTLINK.APP').read_bytes()).hexdigest(),
+  sender_reference_only=a.sender_kit is not None,
   scope='actual Thumb-2 module and Pico restore; modeled MMIO/clock/DMA; independent bit-stream decoder')
- (a.kit/'host-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
+ output=a.output or a.kit/('host-shared-test.json'if a.sender_kit else'host-test.json')
+ output.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
 if __name__=='__main__':main()

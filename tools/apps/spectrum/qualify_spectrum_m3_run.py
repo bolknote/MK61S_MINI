@@ -15,9 +15,18 @@ def field(text,key):
     if len(set(values))!=1:raise ValueError('Conflicting native field '+key)
     return values[0]
 
-def qualify(wire,before,after,mode='remote',minimum_frames=590,run_frames=None):
+def qualify(wire,before,after,mode='remote',minimum_frames=590,run_frames=None,preserved_boot=None,require_nrz4=False):
     if run_frames is not None and (type(run_frames) is not int or not 600<=run_frames<=30000):
         raise ValueError('run_frames must be an integer in 600..30000')
+    if require_nrz4 and mode!='remote':raise ValueError('NRZ4 qualification requires remote audio')
+    # A documented crash predating this run must remain visible. Accept it
+    # only with an explicitly pinned complete boot tuple, checked at BOTH
+    # endpoints. Never infer a waiver from the observed crash flag itself.
+    if preserved_boot is not None:
+        if (not isinstance(preserved_boot,dict) or set(preserved_boot)!={'BOOTS','BOOT_WATCHDOG','RESET_REASON','CRASH'} or
+            preserved_boot['CRASH']!='AVAILABLE' or preserved_boot['BOOT_WATCHDOG']!='0' or
+            not all(isinstance(v,str) for v in preserved_boot.values())):
+            raise ValueError('preserved_boot must pin BOOTS, BOOT_WATCHDOG=0, RESET_REASON and CRASH=AVAILABLE')
     rows=re.findall(r'(?m)^SP3 RESULT mode=(\d+) frames=(\d+) cycles=(\d+) us=(\d+) starved=(\d+)\r?$',wire)
     frame=re.findall(r'(?m)^SP3 FRAME min_us=(\d+) max_us=(\d+) late_1ms=(\d+) max_lag_us=(\d+) strict_fault=(\d+)\r?$',wire)
     policy=re.findall(r'(?m)^SP3 POLICY remote_only=(\d+)\r?$',wire)
@@ -38,10 +47,13 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590,run_frames=None):
             'z80_paced':timing_valid and cycles*2000<=7007*elapsed,
             'no_frame_delays_over_1ms':timing_valid and late==0,'frame_lag_bounded':timing_valid and lag<=1000}
     for key,value in {'SYS_HZ':'125000000','PERI_HZ':'48000000','KBD':'OK','SD':'OK',
-                      'SERVICE':'CLOSED','RUNTIME':'NONE','UI':'CALCULATOR','CRASH':'NONE',
+                      'SERVICE':'CLOSED','RUNTIME':'NONE','UI':'CALCULATOR','CRASH':preserved_boot['CRASH']if preserved_boot else'NONE',
                       'FIRMWARE_CRC':'valid','APP_BUFFERS':'0','APP_BUFFER_BYTES':'0',
                       'APP_EXTERNAL_BYTES':'0','APP_WINDOWS':'0'}.items():
         checks['native_'+key]=field(after,key)==value
+    if preserved_boot:
+        for key,value in preserved_boot.items():
+            checks['preserved_boot_'+key]=field(before,key)==field(after,key)==value
     for key in ('BUILD','ACTUAL','EXPECTED','BOOTS',*COUNTERS):
         checks['unchanged_'+key]=field(before,key)==field(after,key)
     checks['no_dma_underruns']=int(field(after,'SYNTH_UNDERRUNS'))==0
@@ -76,8 +88,22 @@ def qualify(wire,before,after,mode='remote',minimum_frames=590,run_frames=None):
                        transport_rx_bytes=int(field(after,'M3_RX_BYTES')),
                        native_render_us=int(field(after,'M3_RENDER_US')),
                        exchange_block_us=int(field(after,'M3_BLOCK_TOTAL_US')))
+        if require_nrz4:
+            nrz_blocks=int(field(after,'M3_NRZ4_BLOCKS'));nrz_bytes=int(field(after,'M3_NRZ4_BYTES'))
+            nrz_returns=int(field(after,'M3_NRZ4_RETURNS'))
+            # Archived uncompressed PCM measurements at either wire rate.
+            checks.update(nrz4_capability=bool(int(field(after,'M3_TRANSPORT_FLAGS'))&(64|128)),
+                          nrz4_no_errors=int(field(after,'M3_NRZ4_ERRORS'))==0,
+                          nrz4_block_coverage=nrz_blocks>=blocks>0,
+                          nrz4_pcm_coverage=nrz_bytes>=samples>0,
+                          nrz4_all_pins_returned=nrz_returns==nrz_blocks)
+            metrics.update(nrz4_blocks=nrz_blocks,nrz4_bytes=nrz_bytes,nrz4_returns=nrz_returns,
+                           nrz4_restore_us=int(field(after,'M3_NRZ4_RESTORE_US')),
+                           nrz4_transport_us=int(field(after,'M3_NRZ4_TRANSPORT_US')),
+                           nrz4_wait_us=int(field(after,'M3_NRZ4_WAIT_US')),
+                           nrz4_hold_us=int(field(after,'M3_NRZ4_HOLD_US')))
     failures=[k for k,v in checks.items()if not v]
-    return dict(status='PASS'if not failures else'FAIL',mode=mode,checks=checks,failures=failures,
+    return dict(status='PASS'if not failures else'FAIL',mode=mode,checks=checks,failures=failures,preserved_boot=preserved_boot,
                 metrics=metrics,physical_io=False,source='captured hardware logs; no new device access')
 
 def main():
@@ -85,9 +111,12 @@ def main():
     ap.add_argument('--wire',type=Path,required=True);ap.add_argument('--before',type=Path,required=True)
     ap.add_argument('--after',type=Path,required=True);ap.add_argument('--mode',choices=['remote','local'],default='remote')
     ap.add_argument('--run-frames',type=int,help='Expected fixture length for a continuous 600..30000-frame run')
+    ap.add_argument('--preserved-boot',type=Path,help='JSON with the exact documented pre-existing BOOTS/BOOT_WATCHDOG/RESET_REASON/CRASH tuple; no crash clearing')
+    ap.add_argument('--require-nrz4',action='store_true',help='Qualify archived uncompressed NRZ4 PCM, with zero NRZ errors and every pin lease returned')
     ap.add_argument('--output',type=Path,required=True);args=ap.parse_args()
     if args.output.exists():raise SystemExit('Refusing to replace an existing qualification')
-    try:result=qualify(args.wire.read_text(),args.before.read_text(),args.after.read_text(),args.mode,run_frames=args.run_frames)
+    try:result=qualify(args.wire.read_text(),args.before.read_text(),args.after.read_text(),args.mode,run_frames=args.run_frames,
+                       preserved_boot=json.loads(args.preserved_boot.read_text())if args.preserved_boot else None,require_nrz4=args.require_nrz4)
     except ValueError as error:result={'status':'HOLD','error':str(error),'physical_io':False}
     args.output.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
     return 0 if result['status']=='PASS'else 1

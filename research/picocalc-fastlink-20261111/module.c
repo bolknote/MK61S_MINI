@@ -1,8 +1,17 @@
 /* Trusted diagnostic S3M, at stock 72MHz. No Flash, I2C2, TIM1/2/3 writes.
  * One <=1ms burst per job; IRQs remain enabled. All hardware is restored
  * before returning to the resident loop, including on a local timeout. */
+#include "experiment_config.h"
 #include "stm3_module.h"
 #include "link.h"
+#include "m3_diagnostic_pins.h"
+#ifdef FL_NRZ4_ONLY
+#ifdef FL_NRZ4_REFERENCE
+#include "fixtures/nrz4_reference.h"
+#else
+#include "nrz4_pack.h"
+#endif
+#endif
 #define R(a) (*(volatile uint32_t *)(uintptr_t)(a))
 #define PB 0x40010c00u
 #define PC 0x40011000u
@@ -11,19 +20,27 @@
 #define TIM 0x40000800u
 #define DMA 0x40020000u
 #define CH7 (DMA+0x80u)
+#define CH5 (DMA+0x58u)
 #define RCC 0x40021000u
 #define CYC R(0xe0001004u)
 #define CTRL R(0xe0001000u)
 #define DEMCR R(0xe000edfcu)
 static uint8_t payload[FL_MAX_BYTES];
+#ifdef FL_NRZ4_ONLY
+static uint32_t wave[2*FL_NRZ_SYMBOL_CAPACITY];
+static uint32_t saved_dma5[4];
+static uint32_t nrz_acquisitions,startup_cc3_cleanup,entry_timer_sr;
+static const unsigned tim_offsets[]={0,12,24,28,32,40,44,36,16,8,60};
+#else
 static uint32_t wave[2*FL_DMA_BYTES*8+1];
+static const unsigned tim_offsets[]={0,12,24,28,32,40,44,36,16,8};
+#endif
 static uint32_t started,phase,mode,size,rate,seed,pattern;
 static uint32_t prep_us,prep_cycles,burst_us,burst_cycles,wire_us,wire_cycles,work,checksum;
 static uint32_t saved_b,saved_c,saved_bo,saved_co,saved_i,saved_i2,saved_u1,saved_u3;
 static uint32_t saved_i_config[4],entry_flags,entry_sr1,entry_sr2,entry_idr,restore_flags,post_sr1,post_sr2;
-static uint32_t saved_clk,saved_tim[10],saved_dma[4];
+static uint32_t saved_clk,saved_tim[sizeof(tim_offsets)/sizeof(*tim_offsets)],saved_dma[4];
 static uint32_t saved_demcr,saved_ctrl,saved_cycles;
-static const unsigned tim_offsets[10]={0,12,24,28,32,40,44,36,16,8};
 static unsigned acquired;
 static void gpio(uint32_t port,uint32_t mask,uint32_t value) {
  R(port+16)=(value&mask)|((~value&mask)<<16);
@@ -38,27 +55,47 @@ static int acquire(void) {
   ((entry_sr1&0xff00u)?8u:0)|((R(0xe000e200u)&0x80000000u)?16u:0)|
   ((R(0xe000e204u)&1u)?32u:0)|((R(UART)&0x0fu)?64u:0)|(!(R(UART)&0x40u)?128u:0);
  if(entry_flags)return 10;
- if(mode==FL_DMA1 && ((R(RCC+28)&4u)||(R(CH7)&1u)||(R(DMA)&0x0f000000u)||
+ if(mode==FL_TIMER_MODE && ((R(RCC+28)&4u)||(R(CH7)&1u)||(R(DMA)&0x0f000000u)||
     (R(0xe000e100u)&(1u<<17))||(R(0xe000e200u)&(1u<<17))))return 11;
+#ifdef FL_NRZ4_ONLY
+ if(mode==FL_NRZ4 && ((R(CH5)&1u)||(R(DMA)&0x000f0000u)||
+    (R(0xe000e100u)&(1u<<15))||(R(0xe000e200u)&(1u<<15))))return 11;
+ /* Channel5 also shares request inputs with the PMU and other peripherals.
+  * Refuse their DMA requests; the stock PMU uses IRQs, not DMA. */
+ if(mode==FL_NRZ4 && ((R(0x40005804u)&(1u<<11))||(R(0x40013814u)&(1u<<6))||
+    (R(0x40003804u)&2u)||(R(0x40012c0cu)&(1u<<8))||(R(0x4000000cu)&(1u<<9))))return 14;
+#endif
  saved_b=R(PB+4)&0xffu;saved_bo=R(PB+12)&0x300u;
  saved_c=R(PC+4)&0xff00u;saved_co=R(PC+12)&0xc00u;
  saved_i=R(I2C);saved_i2=R(I2C+4);saved_u1=R(UART+12);saved_u3=R(UART+20);
  saved_i_config[0]=R(I2C+8);saved_i_config[1]=R(I2C+12);
  saved_i_config[2]=R(I2C+28);saved_i_config[3]=R(I2C+32);
- if(mode==FL_SOFT3 && ((R(DMA+0x1c)&1u)||(R(DMA+0x20))||
+ if(mode==FL_FOURWIRE_MODE && ((R(DMA+0x1c)&1u)||(R(DMA+0x20))||
                        !(R(DMA+0x30)&1u)))return 12;
  /* No active I2C transaction. Disable only this interface, not PMU/I2C2. */
  R(I2C+4)=saved_i2&~0x700u;R(I2C)=saved_i&~1u;
- if(mode==FL_SOFT3) {
+ if(mode==FL_FOURWIRE_MODE) {
   R(UART+20)=saved_u3&~(0xc0u);R(DMA+0x30)&=~1u;R(UART+12)=0;
   gpio(PC,0xc00u,0xc00u);R(PC+4)=(R(PC+4)&~0xff00u)|0x3300u;
  }
  gpio(PB,0x300u,0x300u);R(PB+4)=(R(PB+4)&~0xffu)|0x33u;
  acquired=1;
- if(mode==FL_DMA1) {
+ if(mode==FL_TIMER_MODE) {
   saved_clk=R(RCC+28)&4u;R(RCC+28)|=4u;
-  for(unsigned i=0;i<10;++i)saved_tim[i]=R(TIM+tim_offsets[i]);
+  for(unsigned i=0;i<sizeof(tim_offsets)/sizeof(*tim_offsets);++i)saved_tim[i]=R(TIM+tim_offsets[i]);
   for(unsigned i=0;i<4;++i)saved_dma[i]=R(CH7+4*i);
+#ifdef FL_NRZ4_ONLY
+  for(unsigned i=0;i<4;++i)saved_dma5[i]=R(CH5+4*i);
+  entry_timer_sr=saved_tim[8];
+  /* The previous failed diagnostic left exactly CC3IF with TIM4 stopped and
+   * its clock off. Admit that one known owned residue only on first acquire;
+   * subsequent jobs must restore a completely clean timer themselves. */
+  if(!nrz_acquisitions++&&saved_tim[8]==8u&&!saved_tim[0]&&!saved_tim[1]&&!saved_tim[2]&&
+     !saved_tim[3]&&!saved_tim[4]&&!saved_tim[10]&&!saved_dma5[0]&&!saved_dma[0]) {
+   R(TIM+16)=0;saved_tim[8]=0;startup_cc3_cleanup=1;
+  }
+  if(saved_tim[10]||saved_dma5[0])return 13;
+#endif
   if(saved_tim[0]||saved_tim[1]||saved_tim[2]||saved_tim[3]||saved_tim[4]||saved_tim[8]||saved_dma[0])return 13;
   acquired=2;
  }
@@ -71,10 +108,21 @@ static int level(const stm3_api *api,uint32_t mask,uint32_t wanted) {
 }
 static int release(const stm3_api *api) {
  if(!acquired)return 0;
- if(mode==FL_DMA1) {
+ if(mode==FL_TIMER_MODE) {
   R(TIM)=0;R(TIM+12)=0;R(CH7)=0;
   R(DMA+4)=0x0f000000u;
-  for(unsigned i=1;i<10;++i)R(TIM+tim_offsets[i])=saved_tim[i];
+#ifdef FL_NRZ4_ONLY
+  R(CH5)=0;R(DMA+4)=0x000f0000u;
+  for(unsigned i=1;i<4;++i)R(CH5+4*i)=saved_dma5[i];R(CH5)=saved_dma5[0];
+#endif
+#ifdef FL_NRZ4_ONLY
+  /* CCR3 can set CC3IF when it matches the restored CNT, even with CEN=0.
+   * Clear/restore SR only after all comparison registers are back. */
+  for(unsigned i=1;i<sizeof(tim_offsets)/sizeof(*tim_offsets);++i)if(i!=8)R(TIM+tim_offsets[i])=saved_tim[i];
+  R(TIM+16)=saved_tim[8];
+#else
+  for(unsigned i=1;i<sizeof(tim_offsets)/sizeof(*tim_offsets);++i)R(TIM+tim_offsets[i])=saved_tim[i];
+#endif
   R(TIM)=saved_tim[0];
   for(unsigned i=1;i<4;++i)R(CH7+4*i)=saved_dma[i];
   R(CH7)=saved_dma[0];R(RCC+28)=(R(RCC+28)&~4u)|saved_clk;
@@ -93,7 +141,7 @@ static int release(const stm3_api *api) {
  R(I2C)=1u<<15;R(I2C)=0;
  R(I2C+4)=saved_i2&~0x700u;R(I2C+8)=saved_i_config[0];R(I2C+12)=saved_i_config[1];
  R(I2C+28)=saved_i_config[2];R(I2C+32)=saved_i_config[3];
- if(mode==FL_SOFT3) {
+ if(mode==FL_FOURWIRE_MODE) {
   R(PC+4)=(R(PC+4)&~0xff00u)|saved_c;gpio(PC,0xc00u,saved_co);
   R(UART+12)=saved_u1;R(DMA+0x30)|=1u;R(UART+20)=saved_u3;
  }
@@ -103,9 +151,10 @@ static int release(const stm3_api *api) {
  return restore_flags||(R(PB+4)&0xffu)!=saved_b||(R(PB+12)&0x300u)!=saved_bo||R(I2C)!=saved_i||
   R(I2C+4)!=saved_i2||R(I2C+8)!=saved_i_config[0]||R(I2C+12)!=saved_i_config[1]||
   R(I2C+28)!=saved_i_config[2]||R(I2C+32)!=saved_i_config[3]||
-  (mode==FL_SOFT3 && ((R(PC+4)&0xff00u)!=saved_c||(R(PC+12)&0xc00u)!=saved_co||
+  (mode==FL_FOURWIRE_MODE && ((R(PC+4)&0xff00u)!=saved_c||(R(PC+12)&0xc00u)!=saved_co||
                      R(UART+12)!=saved_u1||R(UART+20)!=saved_u3));
 }
+#ifndef FL_NRZ4_ONLY
 static void delay(unsigned n) {while(n--)__asm__ volatile("nop");}
 static int soft(const stm3_api *api) {
  const uint32_t begin=api->micros(api->context),cycles=CYC;
@@ -147,30 +196,61 @@ static int dma(const stm3_api *api) {
  wire_cycles=CYC-cycles;wire_us=api->micros(api->context)-begin;
  return error?error:wire_us>=FL_BURST_US?21:(R(DMA)&(1u<<27))?22:0;
 }
+#else
+static int dma(const stm3_api *api) {
+ const unsigned symbols=size/4u*10u+1u;
+ R(TIM)=0;R(TIM+12)=0;R(TIM+24)=0;R(TIM+28)=0;R(TIM+32)=1u<<8;
+ R(TIM+40)=0;R(TIM+44)=rate-1;R(TIM+60)=1;R(TIM+36)=0;
+ R(TIM+20)=1;R(TIM+16)=0;R(TIM+36)=rate-1;
+ R(CH7)=0;R(CH7+4)=symbols;R(CH7+8)=PB+16;R(CH7+12)=(uint32_t)(uintptr_t)wave;
+ R(CH5)=0;R(CH5+4)=symbols;R(CH5+8)=PC+16;R(CH5+12)=(uint32_t)(uintptr_t)(wave+FL_NRZ_SYMBOL_CAPACITY);
+ R(DMA+4)=0x0f0f0000u;
+ R(CH7)=1u|16u|128u|512u|2048u|0x3000u;
+ R(CH5)=1u|16u|128u|512u|2048u|0x2000u;
+ R(TIM+12)=(1u<<8)|(1u<<11); /* TIM4_UP ch7 and CC3 ch5, one timer tick apart. */
+ const uint32_t begin=api->micros(api->context),cycles=CYC;int error=0;R(TIM)=1;
+ while((R(DMA)&0x02020000u)!=0x02020000u) {
+  if(R(DMA)&0x08080000u){error=22;break;}
+  for(unsigned i=0;i<16;++i){checksum=checksum*1664525u+1013904223u;checksum^=checksum>>13;}work+=16;
+  if(api->micros(api->context)-begin>=FL_BURST_US){error=21;break;}
+ }
+ wire_cycles=CYC-cycles;wire_us=api->micros(api->context)-begin;
+ return error?error:wire_us>=FL_BURST_US?21:0;
+}
+#endif
 __attribute__((section(".text.module_entry"),used))
 uint32_t module_entry(uint32_t op,const stm3_api *api,stm3_job *job) {
  if(!api||api->abi!=STM3_ABI||api->size!=sizeof(*api))return STM3_INVALID;
  if(op==STM3_CANCEL||op==STM3_FINI) {if(acquired)release(api);phase=0;return STM3_DONE;}
- if(job->output_capacity<96)return STM3_INVALID;
+ if(job->output_capacity<128)return STM3_INVALID;
  if(op==STM3_INIT) {
   if(job->input_bytes!=24||fl_get(job->input)!=FL_MAGIC||acquired)return STM3_INVALID;
   mode=fl_get(job->input+4);size=fl_get(job->input+8);rate=fl_get(job->input+12);
   pattern=fl_get(job->input+16);seed=fl_get(job->input+20);
+#ifdef FL_NRZ4_ONLY
+  if(!size||size>FL_NRZ_MAX_BYTES||size%4||pattern>6||(mode!=FL_NRZ4&&mode!=FL_UART)||
+     (mode==FL_NRZ4&&(rate!=72&&rate!=48&&rate!=36))||(mode==FL_UART&&rate))return STM3_INVALID;
+#else
   if(!size||size>FL_MAX_BYTES||size%3||pattern>6||
      (mode!=FL_SOFT1&&mode!=FL_SOFT3&&mode!=FL_DMA1&&mode!=FL_UART)||
      (mode==FL_DMA1&&(size>FL_DMA_BYTES||(rate!=36&&rate!=18&&rate!=8&&rate!=4)))||
      (mode!=FL_DMA1&&rate>8))return STM3_INVALID;
+#endif
   saved_demcr=DEMCR;saved_ctrl=CTRL;saved_cycles=CYC;
   DEMCR|=1u<<24;CTRL|=1u;
   const uint32_t u=api->micros(api->context),c=CYC;
   fl_pattern(payload,size,pattern,seed);work=checksum=wire_us=wire_cycles=0;
   entry_flags=entry_sr1=entry_sr2=entry_idr=restore_flags=post_sr1=post_sr2=0;
+#ifdef FL_NRZ4_ONLY
+  if(mode==FL_NRZ4)fl_nrz_pack(payload,size,wave);
+#else
   if(mode==FL_DMA1)for(unsigned i=0;i<size*8;++i) {
    uint32_t data=((payload[i/8]>>(7-(i&7)))&1u)<<9;
    wave[2*i]=(data&0x300u)|((~data&0x300u)<<16);
    wave[2*i+1]=1u<<8;
   }
   if(mode==FL_DMA1)wave[2*size*8]=0x1000000u|0x200u; /* finite idle tail */
+#endif
   prep_us=api->micros(api->context)-u;prep_cycles=CYC-c;
   CTRL=saved_ctrl;if(!(saved_ctrl&1u))CYC=saved_cycles;DEMCR=saved_demcr;
   started=api->micros(api->context);phase=1;return STM3_MORE;
@@ -183,7 +263,11 @@ uint32_t module_entry(uint32_t op,const stm3_api *api,stm3_job *job) {
   DEMCR|=1u<<24;CTRL|=1u;
   const uint32_t u=api->micros(api->context),c=CYC;
   if(mode!=FL_UART)error=acquire();
+#ifdef FL_NRZ4_ONLY
+  if(!error&&mode!=FL_UART)error=dma(api);
+#else
   if(!error&&mode!=FL_UART)error=mode==FL_DMA1?dma(api):soft(api);
+#endif
   burst_cycles=CYC-c;burst_us=api->micros(api->context)-u;
   int restored=release(api);CTRL=saved_ctrl;
   if(!(saved_ctrl&1u))CYC=saved_cycles;DEMCR=saved_demcr;
@@ -198,9 +282,22 @@ uint32_t module_entry(uint32_t op,const stm3_api *api,stm3_job *job) {
   fl_put(job->output+56,wire_cycles);fl_put(job->output+60,(uint32_t)restored);
   fl_put(job->output+64,entry_flags);fl_put(job->output+68,entry_sr1);fl_put(job->output+72,entry_sr2);
   fl_put(job->output+76,entry_idr);fl_put(job->output+80,restore_flags);
-  fl_put(job->output+84,post_sr1);fl_put(job->output+88,post_sr2);fl_put(job->output+92,1);
-  job->output_bytes=96;
-  if(mode==FL_UART){for(unsigned i=0;i<size;++i)job->output[96+i]=payload[i];job->output_bytes+=size;}
+  fl_put(job->output+84,post_sr1);fl_put(job->output+88,post_sr2);
+#ifdef FL_NRZ4_ONLY
+  fl_put(job->output+92,1u|(startup_cc3_cleanup<<16)|((entry_timer_sr&255u)<<24));
+#else
+  fl_put(job->output+92,1);
+#endif
+  fl_put(job->output+96,saved_i);fl_put(job->output+100,saved_i2);
+  fl_put(job->output+104,R(I2C));fl_put(job->output+108,R(I2C+4));fl_put(job->output+112,R(I2C+8));
+  fl_put(job->output+116,(R(0xe000e200u)>>31)|((R(0xe000e204u)&1u)<<1)|
+   ((R(0xe000e100u)>>31)<<2)|((R(0xe000e104u)&1u)<<3));
+  fl_put(job->output+120,*(volatile const uint8_t *)(uintptr_t)FL_M3_HAL_STATE|
+   ((uint32_t)*(volatile const uint8_t *)(uintptr_t)FL_M3_I2CS_STATE<<8)|
+   ((uint32_t)*(volatile const uint8_t *)(uintptr_t)FL_M3_I2CS_RECOVER<<16));
+  fl_put(job->output+124,R(FL_M3_HAL_ERROR));
+  job->output_bytes=128;
+  if(mode==FL_UART){for(unsigned i=0;i<size;++i)job->output[128+i]=payload[i];job->output_bytes+=size;}
   phase=2;return STM3_MORE;
  }
  if(api->micros(api->context)-started<FL_REPLY_US)return STM3_MORE;

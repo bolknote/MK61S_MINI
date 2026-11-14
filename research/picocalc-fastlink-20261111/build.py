@@ -10,11 +10,17 @@ from elf32 import ELF
 def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def main():
  ap=argparse.ArgumentParser(description=__doc__)
- ap.add_argument('--output',type=Path,default=ROOT/'.build/picocalc-fastlink-20261111/kit-010')
- ap.add_argument('--resident',type=Path,default=ROOT/'.build/mk61ai/math-choice-20261111/firmware-candidate')
+ ap.add_argument('--output',type=Path,default=ROOT/'.build/picocalc-fastlink-20261111/kit-017')
+ ap.add_argument('--cycles',type=int,choices=range(1,101),default=1)
+ ap.add_argument('--nrz4',action='store_true')
+ ap.add_argument('--reference-packer',action='store_true',help='Diagnostic A/B only: original hardware016 packing algorithm')
+ ap.add_argument('--resident',type=Path,default=ROOT/'.build/mk61ai/lut8-hybrid-20261111/firmware')
  ap.add_argument('--toolchain',type=Path,default=Path('/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin'))
  ap.add_argument('--pico-sdk',type=Path,default=ROOT/'.build/picocalc-deps/pico-sdk')
  a=ap.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
+ assert not a.reference_packer or a.nrz4
+ (out/'experiment_config.h').write_text(('#define FL_NRZ4_ONLY 1\n'if a.nrz4 else'')+
+  ('#define FL_NRZ4_REFERENCE 1\n'if a.reference_packer else'')+'#define FL_CYCLES %uu\n'%a.cycles)
  assert out.is_relative_to(ROOT/'.build')
  tool=lambda name:str(a.toolchain/('arm-none-eabi-'+name))
  def run(cmd,log):
@@ -25,7 +31,7 @@ def main():
   flags=['-mcpu=cortex-m3','-mthumb','-mfloat-abi=soft','-std=c11','-Os','-g',
    '-mword-relocations','-ffreestanding','-fno-builtin','-fno-common','-fno-stack-protector',
    '-fno-unwind-tables','-fno-asynchronous-unwind-tables','-fsection-anchors','-ffunction-sections',
-   '-Wall','-Wextra','-Werror','-Wno-misleading-indentation','-I'+str(ROOT/'sdk/coproc'),'-I'+str(HERE)]
+   '-Wall','-Wextra','-Werror','-Wno-misleading-indentation','-I'+str(ROOT/'sdk/coproc'),'-I'+str(HERE),'-I'+str(out)]
   source=HERE/('fixtures/'+stem+'.c'if stem=='legacy_module'else stem+'.c')
   run([tool('gcc'),*flags,'-nostdlib',source,'-Wl,-T,'+str(ROOT/'sdk/coproc/module.ld'),
     '-Wl,--emit-relocs,--gc-sections,-Map='+str(out/(stem+'.map')),'-o',elf],stem+'-build.log')
@@ -54,7 +60,9 @@ def main():
  (out/'packages.h').write_text(''.join(arrays))
  native=a.resident/'mk61s-picocalc-pico-h.elf';elf=ELF(native)
  manifest=json.loads((a.resident/'manifest.json').read_text())
- assert manifest['build_id']=='7c38c634' and manifest['firmware_integrity']['crc32']=='8a17554e'
+ verified={('7c38c634','8a17554e'):'75ef19a5237b0ed25357424e1fd31da2aa64c69fa98683b4300dc7f553ffce16',
+  ('c99de0af','528f4874'):'4139bcb17c802288c93c2ab6efa5248f996166874ffb0b2b7bf20f8a18c88bb0'}
+ assert sha(native)==verified[(manifest['build_id'],manifest['firmware_integrity']['crc32'])]
  names={'DMA_CLAIM':'dma_claim_unused_channel','DMA_UNCLAIM':'dma_channel_unclaim',
   'PIO_CLAIM':'pio_claim_unused_sm','PIO_UNCLAIM':'pio_sm_unclaim','PIO_ADD':'pio_add_program',
   'PIO_REMOVE':'pio_remove_program','PIO_INIT':'pio_sm_init','PIO_PINDIRS':'pio_sm_set_consecutive_pindirs',
@@ -64,7 +72,7 @@ def main():
    base=seg['address']
    if base<=at and at+n<=base+len(seg['data']):return seg['data'][at-base:at-base+n]
   raise ValueError(hex(at))
- probes=[];definitions=[]
+ probes=[];definitions=['#define FL_EXPECTED_BUILD_STRING "'+manifest['build_id'].upper()+'"\n']
  register_header=a.pico_sdk.resolve()/'src/rp2040/hardware_regs/include/hardware/regs/pio.h'
  register_source=register_header.read_text();registers={}
  for label in ('PIO_IRQ0_INTE','PIO_IRQ0_INTF','PIO_IRQ1_INTE','PIO_IRQ1_INTF'):
@@ -72,7 +80,10 @@ def main():
   assert len(matches)==1,label
   registers[label]=int(matches[0],16);definitions.append('#define FL_REG_'+label+' '+matches[0]+'u\n')
  i2c_header=register_header.with_name('i2c.h');i2c_source=i2c_header.read_text();i2c_registers={}
- for name in ('IC_INTR_MASK','IC_TXFLR','IC_RXFLR','IC_STATUS','IC_RAW_INTR_STAT','IC_ENABLE','IC_ENABLE_STATUS'):
+ reset_header=register_header.with_name('resets.h')
+ reset_matches=re.findall(r'^#define RESETS_RESET_I2C1_BITS\s+_u\((0x[0-9a-f]+)\)$',reset_header.read_text(),re.M)
+ assert reset_matches==['0x00000010'];definitions.append('#define FL_RESET_I2C1_BITS '+reset_matches[0]+'u\n')
+ for name in ('IC_INTR_MASK','IC_TXFLR','IC_RXFLR','IC_STATUS','IC_RAW_INTR_STAT','IC_ENABLE','IC_ENABLE_STATUS','IC_TX_ABRT_SOURCE'):
   matches=re.findall(r'^#define I2C_'+name+r'_OFFSET _u\((0x[0-9a-f]+)\)$',i2c_source,re.M)
   assert len(matches)==1,name
   i2c_registers[name]=int(matches[0],16);definitions.append('#define FL_REG_I2C_'+name+' '+matches[0]+'u\n')
@@ -122,13 +133,16 @@ def main():
   '--shared-runtime','--name','FASTLINK','--include',HERE,'--include',out,'--include',ROOT/'sdk/coproc',
   '--source',HERE/'pico.c','--source',ROOT/'sdk/coproc/stm3_client.c','--source',ROOT/'sdk/coproc/pico_uart1.c',
   '--arm-toolchain-bin',a.toolchain,'--output-dir',app],'pico-build.log')
- result=dict(status='COMPILED_NOT_HARDWARE_TESTED',pico_build='7C38C634',pico_crc='8A17554E',
+ result=dict(status='COMPILED_NOT_HARDWARE_TESTED',run_cycles=a.cycles,nrz4=a.nrz4,
+  nrz4_packer='reference'if a.reference_packer else'frames'if a.nrz4 else None,
+  pico_build=manifest['build_id'].upper(),pico_crc=manifest['firmware_integrity']['crc32'].upper(),
   resident_elf_path=str(native.resolve()),resident_elf_sha256=sha(native),pico_flash_bytes=manifest['flash_bytes'],pico_hz=125000000,m3_hz=72000000,
   modules=modules,app=json.loads((app/'FASTLINK.json').read_text()),
   app_sha256=sha(app/'FASTLINK.APP'),source_pins={str(p.relative_to(ROOT)):sha(p) for p in HERE.rglob('*') if p.is_file()and'__pycache__'not in p.parts},
   native_resource_functions={k:hex(elf.symbols[v]['value']) for k,v in names.items()},
   register_header=dict(path=str(register_header),sha256=sha(register_header),values=registers),
   i2c_header=dict(path=str(i2c_header),sha256=sha(i2c_header),values=i2c_registers),
+  reset_header=dict(path=str(reset_header),sha256=sha(reset_header),i2c1_bits=16),
   native_keyboard=dict(address=keyboard['value'],size=56,pending_offset=1,phase_offset=3,service_api_offset=16,layout_sha256=sha(out/'keyboard-layout.txt')),
   native_health=dict(addresses=health_addresses,layout_sha256=sha(out/'native-health-layout.txt')),
   flash_writes=0,hardware_timing_measured=False)

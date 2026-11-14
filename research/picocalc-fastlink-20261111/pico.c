@@ -1,5 +1,6 @@
 /* This diagnostic binds SDK resource allocators from one verified resident
  * image. It is deliberately not a public APP ABI or a production transport. */
+#include "experiment_config.h"
 #include "mk61_app.h"
 #include "stm3_client.h"
 #include "stm3_module.h"
@@ -29,13 +30,23 @@ static const mk61_app_services *svc;
 static stm3_client client;
 static stm3_pico_uart1 uart;
 static uint8_t request[256],answer[256],expected[FL_MAX_BYTES];
-static uint32_t received[FL_MAX_BYTES/3],module_id,job_id,cases,total_bytes;
-static int module_loaded;
-static int sm=-1,channel=-1,program_at=-1,sm_saved;
+#ifdef FL_NRZ4_ONLY
+static uint32_t received[FL_MAX_BYTES/2];
+static uint16_t instructions[8];
+static program code={instructions,8,-1,0};
+#else
+static uint32_t received[FL_MAX_BYTES/3];
 static uint16_t instructions[5];
 static program code={instructions,5,-1,0};
+#endif
+static uint32_t module_id,job_id,cases,total_bytes;
+static int module_loaded;
+static int sm=-1,channel=-1,program_at=-1,sm_saved;
 static uint32_t pio_reset,sm_before[5],dma_before[4];
 static uint32_t gpio_before[4],pad_before[4],i2c_before,uart_before;
+static const uint8_t i2c_config_offsets[]={0,4,8,0x14,0x18,0x1c,0x20,0x30,0x38,0x3c,0x7c,0x88,0x8c,0x90,0x94,0xa0};
+static uint32_t i2c_config_before[sizeof(i2c_config_offsets)];
+static uint32_t i2c_restarts,i2c_restore_max_us;
 static int pins_active,uart_borrowed;
 static fl_idle_snapshot idle_trace;
 static fl_logical_snapshot logical_trace;
@@ -111,7 +122,32 @@ static int remove_program(void) {
  ((void (*)(uint32_t,const program *,unsigned))(uintptr_t)FL_PIO_REMOVE)(PIO,&code,(unsigned)program_at);
  program_at=-1;return 0;
 }
-static int configure(unsigned mode,unsigned bytes) {
+#ifdef FL_NRZ4_ONLY
+static __attribute__((noinline,noclone,noipa)) int configure(unsigned mode,unsigned bytes,unsigned rate) {
+ (void)mode;remove_program();
+ /* Wide8N1: sample8nibbles at8PIOticks/symbol, then push the stop nibble. */
+ instructions[0]=0x2006u;instructions[1]=0xea27u;instructions[2]=0x4004u;instructions[3]=0x0642u;
+ instructions[4]=0x4004u;instructions[5]=0x8020u;instructions[6]=0x0080u;instructions[7]=0x0007u;
+ if(!((int (*)(uint32_t,const program *))(uintptr_t)FL_PIO_CAN_ADD)(PIO,&code))return -27;
+ program_at=(int)((unsigned (*)(uint32_t,const program *))(uintptr_t)FL_PIO_ADD)(PIO,&code);
+ if(rate!=72&&rate!=48&&rate!=36)return -29;
+ const uint32_t divider=rate==72?4000u:rate==48?2667u:2000u;
+ config c={divider<<8,
+  ((unsigned)(program_at+7)<<12)|((unsigned)program_at<<7),(1u<<16)|(1u<<19),6u<<15};
+ if(((int (*)(uint32_t,unsigned,unsigned,const config *))(uintptr_t)FL_PIO_INIT)(PIO,(unsigned)sm,(unsigned)program_at,&c)<0)return -28;
+ ((void (*)(uint32_t,unsigned,unsigned,unsigned,int))(uintptr_t)FL_PIO_PINDIRS)(PIO,(unsigned)sm,6,4,0);
+ R(PIO+0x10+4*(unsigned)sm)=bytes/4u-1u;R(SM+16)=0x80a0u;R(SM+16)=0x6040u;
+ R(SM+8)=c.shiftctrl|(1u<<31);
+ R(PIO+8)=(1u<<(unsigned)sm)|(1u<<(8+(unsigned)sm))|(1u<<(16+(unsigned)sm))|(1u<<(24+(unsigned)sm));
+ for(unsigned i=0;i<sizeof(received)/sizeof(*received);++i)((volatile uint32_t *)received)[i]=0xccccccccu;
+ R(CH+0x10)=((unsigned)channel<<11);R(CH)=PIO+0x20+4*(unsigned)sm;
+ R(CH+4)=(uint32_t)(uintptr_t)received;R(CH+8)=bytes/2u;
+ R(CH+12)=1u|8u|32u|((unsigned)channel<<11)|((4u+(unsigned)sm)<<15)|(1u<<21);
+ R(PIO+0x2000)=1u<<(unsigned)sm;return 0;
+}
+#else
+static int configure(unsigned mode,unsigned bytes,unsigned rate) {
+ (void)rate;
  remove_program();
  const unsigned clock=mode==FL_SOFT3?6:7,data=mode==FL_SOFT3?7:6,bits=mode==FL_SOFT3?3:1;
  instructions[0]=(uint16_t)(0x2000u|clock); /* WAIT 0 GPIO clock */
@@ -139,6 +175,7 @@ static int configure(unsigned mode,unsigned bytes) {
  R(CH+12)=1u|8u|32u|((unsigned)channel<<11)|((4u+(unsigned)sm)<<15)|(1u<<21);
  R(PIO+0x2000)=1u<<(unsigned)sm;return 0;
 }
+#endif
 static __attribute__((noinline,noclone,noipa)) int take_pins(void) {
  if(!fl_native_edge(FL_NATIVE_BEFORE_LOGICAL))return -45;
  const int logical=fl_finish_keyboard(mk61_api->service,&logical_trace);
@@ -151,16 +188,18 @@ static __attribute__((noinline,noclone,noipa)) int take_pins(void) {
  if(!physical)return -30;
  for(unsigned i=0;i<4;++i){gpio_before[i]=R(GPIO(6+i));pad_before[i]=R(PAD(6+i));}
  i2c_before=R(I2C+0x6c);uart_before=R(UART+0x30);pins_active=1;
+ for(unsigned i=0;i<sizeof(i2c_config_offsets);++i)i2c_config_before[i]=R(I2C+i2c_config_offsets[i]);
  R(I2C+0x6c)=0;
  const uint32_t u=micros(0);while(R(I2C+0x9c)&1u)if(micros(0)-u>100)return -31;
  for(unsigned i=0;i<2;++i){R(PAD(6+i))=(pad_before[i]&~0x8cu)|0x48u;R(GPIO(6+i))=(gpio_before[i]&~31u)|6u;}
  return 0;
 }
 static void native_snapshot(const char *name,const fl_native_snapshot *s) {
- char text[320];
+ char text[384];
  mk61_app_snprintf(svc,text,sizeof(text),
-  "FL NATIVE_%s at=%u timeouts=%u resets=%u aborts=%u errors=%u stage=%u result=%d pending=%u phase=%u online=%u\n",
-  name,s->at,s->timeouts,s->resets,s->aborts,s->errors,s->stage,(int32_t)s->result,s->pending,s->phase,s->online);line(text);
+  "FL NATIVE_%s at=%u timeouts=%u resets=%u aborts=%u errors=%u stage=%u result=%d pending=%u phase=%u online=%u pins=%02X status=%08X raw=%08X tx=%u rx=%u abort_source=%08X\n",
+  name,s->at,s->timeouts,s->resets,s->aborts,s->errors,s->stage,(int32_t)s->result,s->pending,s->phase,s->online,
+  s->pins,s->status,s->raw,s->tx,s->rx,s->abort_source);line(text);
 }
 static void native_fault(void) {
  if(!fl_native_fault)return;
@@ -191,9 +230,21 @@ static int restore_pins(void) {
  if(!pins_active)return 0;
  for(unsigned i=0;i<4;++i){R(GPIO(6+i))=gpio_before[i];R(PAD(6+i))=pad_before[i];}
  if(uart_borrowed){R(UART+4)=0;R(UART+0x30)=uart_before;uart_borrowed=0;}
+ /* GPIO multiplexing can leave the disabled DesignWare master with queued
+  * TX data but no bus activity on its next job. Restart only I2C1, after the
+  * physical pins are back, then restore its exact idle configuration. Native
+  * request state and software timeout/reset counters are never modified. */
+ const uint32_t restore_started=micros(0);
+ R(RESET+0x2000)=FL_RESET_I2C1_BITS;R(RESET+0x3000)=FL_RESET_I2C1_BITS;
+ while(!(R(RESET+8)&FL_RESET_I2C1_BITS))if(micros(0)-restore_started>=100u){pins_active=0;return -47;}
+ R(I2C+FL_REG_I2C_IC_INTR_MASK)=0;R(I2C+0x6c)=0;
+ for(unsigned i=0;i<sizeof(i2c_config_offsets);++i)R(I2C+i2c_config_offsets[i])=i2c_config_before[i];
  R(I2C+0x6c)=i2c_before;pins_active=0;
  const uint32_t u=micros(0);while((R(I2C+0x9c)&1u)!=(i2c_before&1u))if(micros(0)-u>100)return -32;
  for(unsigned i=0;i<4;++i)if(R(GPIO(6+i))!=gpio_before[i]||R(PAD(6+i))!=pad_before[i])return -33;
+ for(unsigned i=0;i<sizeof(i2c_config_offsets);++i)if(R(I2C+i2c_config_offsets[i])!=i2c_config_before[i])return -48;
+ ++i2c_restarts;const uint32_t restored_us=micros(0)-restore_started;
+ if(restored_us>i2c_restore_max_us)i2c_restore_max_us=restored_us;
  return R(UART+0x30)!=uart_before?-34:0;
 }
 static void stop_capture(void) {
@@ -222,21 +273,26 @@ static void finish_claim(void) {
 static int one(unsigned mode,unsigned bytes,unsigned rate,unsigned pattern,uint32_t seed) {
  unsigned n;int e=0,capture_error=0;uint32_t work=0,mix=1,first=0,last=0;
  fl_pattern(expected,bytes,pattern,seed);
- if(mode!=FL_UART){e=take_pins();if(e){fence_error(e);return e;}e=configure(mode,bytes);if(e)return e;}
+ if(mode!=FL_UART){e=take_pins();if(e){fence_error(e);return e;}e=configure(mode,bytes,rate);if(e)return e;}
  else if(!fl_native_edge(FL_NATIVE_BEFORE_LOGICAL))return -45;
  fl_put(request,module_id);fl_put(request+4,24);fl_put(request+8,1000);
- fl_put(request+12,mode==FL_UART?96+bytes:96);fl_put(request+16,FL_MAGIC);
+ fl_put(request+12,mode==FL_UART?128+bytes:128);fl_put(request+16,FL_MAGIC);
  fl_put(request+20,mode);fl_put(request+24,bytes);fl_put(request+28,rate);
  fl_put(request+32,pattern);fl_put(request+36,seed);
  const uint32_t start=micros(0);
  e=stm3_client_begin(&client,S3_START_RESULT_INPUT,request,40,250000);if(e)return e;
  while(R(UART+0x18)&8u)if(micros(0)-start>=500)return -35;
  const uint32_t sent=micros(0);
- if(mode==FL_SOFT3)borrow_uart();
+ if(mode==FL_FOURWIRE_MODE)borrow_uart();
  if(mode!=FL_UART) {
+#ifdef FL_NRZ4_ONLY
+  const unsigned capture_words=bytes/2u;
+#else
+  const unsigned capture_words=bytes/3u;
+#endif
   while(R(CH+8)&&micros(0)-sent<2200) {
    for(unsigned i=0;i<16;++i){mix=mix*1664525u+1013904223u;mix^=mix>>13;}work+=16;
-   unsigned left=R(CH+8);if(!first&&left<bytes/3)first=micros(0);
+   unsigned left=R(CH+8);if(!first&&left<capture_words)first=micros(0);
   }
   last=micros(0);capture_error=R(CH+8)?-36:(R(CH+12)&0x60000000u)?-37:0;
   if(R(PIO+8)&(1u<<(unsigned)sm))capture_error=-38;
@@ -249,7 +305,7 @@ static int one(unsigned mode,unsigned bytes,unsigned rate,unsigned pattern,uint3
  }
  n=sizeof(answer);e=stm3_client_finish(&client,answer,&n,250000);if(e)return e;
  if(fl_native_fault)return -45;
- if(n!=(mode==FL_UART?104+bytes:104)||fl_get(answer+8)!=FL_MAGIC||
+ if(n!=(mode==FL_UART?136+bytes:136)||fl_get(answer+8)!=FL_MAGIC||
     fl_get(answer+12)!=mode||fl_get(answer+16)!=bytes||fl_get(answer+20)!=rate)return -39;
  job_id=fl_get(answer);
  char text[768];mk61_app_snprintf(svc,text,sizeof(text),
@@ -260,11 +316,22 @@ static int one(unsigned mode,unsigned bytes,unsigned rate,unsigned pattern,uint3
  mk61_app_snprintf(svc,text,sizeof(text),
   "FL BUS i=%u entry_flags=%08X before_sr1=%08X before_sr2=%08X before_idr=%08X restore_flags=%08X after_sr1=%08X after_sr2=%08X\n",
   cases,fl_get(answer+72),fl_get(answer+76),fl_get(answer+80),fl_get(answer+84),fl_get(answer+88),fl_get(answer+92),fl_get(answer+96));line(text);
+ mk61_app_snprintf(svc,text,sizeof(text),
+  "FL I2C i=%u saved_cr1=%08X saved_cr2=%08X now_cr1=%08X now_cr2=%08X oar1=%08X irq=%08X hal_state=%08X hal_error=%08X startup_cc3_cleanup=%u timer_before_sr=%02X\n",
+  cases,fl_get(answer+104),fl_get(answer+108),fl_get(answer+112),fl_get(answer+116),fl_get(answer+120),
+  fl_get(answer+124),fl_get(answer+128),fl_get(answer+132),(fl_get(answer+100)>>16)&1u,fl_get(answer+100)>>24);line(text);
  if(fl_get(answer+24)||fl_get(answer+68)||fl_get(answer+4)>2000)return -40;
  if(capture_error)return capture_error;
  if(fl_get(answer+28)!=~fl_crc_step(~0u,expected,bytes))return -41;
+#ifdef FL_NRZ4_ONLY
+ if(mode==FL_NRZ4)for(unsigned i=0;i<bytes/4u;++i)if(received[2u*i+1u]!=15u)return -49;
+#endif
  for(unsigned i=0;i<bytes;++i) {
-  unsigned value=mode==FL_UART?answer[104+i]:(received[i/3]>>(16-8*(i%3)))&255u;
+#ifdef FL_NRZ4_ONLY
+  unsigned value=mode==FL_UART?answer[136+i]:(received[2u*(i/4u)]>>(24u-8u*(i%4u)))&255u;
+#else
+  unsigned value=mode==FL_UART?answer[136+i]:(received[i/3]>>(16-8*(i%3)))&255u;
+#endif
   if(value!=expected[i]){mk61_app_snprintf(svc,text,sizeof(text),"FL MISMATCH byte=%u expected=%02X actual=%02X\n",i,expected[i],value);line(text);return -42;}
  }
  mk61_api->service();if(!fl_native_edge(FL_NATIVE_POST_SERVICE))return -45;
@@ -276,7 +343,18 @@ static int run(void) {
  e=claim();if(e)return e;note("CLAIMED",0);
  e=load(link_package,sizeof(link_package));if(e)return e;
  /* Rate progression is explicit. The first failure ends the entire run. */
+#ifdef FL_NRZ4_ONLY
+ for(unsigned cycle=0;cycle<FL_CYCLES;++cycle) {
+  for(unsigned kind=0;kind<7;++kind){e=one(FL_UART,24,0,kind,0x9e3779b9u+cases*17u);if(e)return e;}
+  const unsigned rates[]={72,48,36};
+  for(unsigned r=0;r<3;++r)for(unsigned bytes=24;bytes<=FL_NRZ_MAX_BYTES;bytes+=24)for(unsigned kind=0;kind<7;++kind) {
+   e=one(FL_NRZ4,bytes,rates[r],kind,0x9e3779b9u+cases*17u);if(e)return e;
+   const int key=mk61_api->key_poll();if(!fl_native_edge(FL_NATIVE_POST_KEYPOLL))return -45;if(key==MK61_APP_KEY_ESC)return -43;
+  }
+ }
+#else
  const unsigned modes[]={FL_UART,FL_SOFT1,FL_SOFT3,FL_DMA1};
+ for(unsigned cycle=0;cycle<FL_CYCLES;++cycle) {
  for(unsigned m=0;m<4;++m) {
   const unsigned mode=modes[m];
   const unsigned count=mode==FL_DMA1?4:mode==FL_UART?1:3;
@@ -291,13 +369,15 @@ static int run(void) {
  for(unsigned mode=FL_SOFT1;mode<=FL_SOFT3;++mode)for(unsigned kind=0;kind<7;++kind) {
   e=one(mode,96,0,kind,0xa55a39c6u+cases*29u);if(e)return e;
  }
+ }
+#endif
  e=unload();if(e)return e;
  return identity();
 }
 int main(void) {
  svc=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_FORMAT|MK61_SERVICE_CAP_DEBUG_IO);
  if(!svc)return MK61_APP_RUNTIME_ERROR;
- line("FL BEGIN v=1 expected_build=7C38C634 pico_hz=125000000 m3_hz=72000000 ram_only=1\n");
+ line("FL BEGIN v=1 expected_build=" FL_EXPECTED_BUILD_STRING " pico_hz=125000000 m3_hz=72000000 ram_only=1\n");
  if(mk61_app_compute_hz(svc)!=125000000u||!fl_native_matches()){note("IDENTITY_FAIL",-50);return 0;}
  fl_native_start();
  if(!stm3_pico_uart1_begin(&uart,micros,0,48000000,2250000)){note("UART_FAIL",-51);return 0;}
@@ -310,6 +390,7 @@ int main(void) {
  if(!fl_native_edge(FL_NATIVE_CLEANUP)&&!error)error=-45;
  native_fault();
  char text[160];mk61_app_snprintf(svc,text,sizeof(text),"FL %s code=%d cases=%u bytes=%u uart_errors=%u resources_released=1\n",
-  error?"FAIL":"PASS",error,cases,total_bytes,uart.errors);line(text);
+  error?"FAIL":"PASS",error,cases,total_bytes,uart.errors);
+ char restore_text[128];mk61_app_snprintf(svc,restore_text,sizeof(restore_text),"FL RESTORE i2c_restarts=%u max_us=%u\n",i2c_restarts,i2c_restore_max_us);line(restore_text);line(text);
  return MK61_APP_OK;
 }

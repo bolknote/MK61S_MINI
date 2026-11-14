@@ -1,190 +1,239 @@
-# PicoCalc synchronous-link experiment
+# PicoCalc GPIO-link experiments
 
-This is a finite RAM diagnostic, not a replacement production transport.
-Pico runs at 125 MHz, STM32F103R8 at 72 MHz. Neither firmware is flashed.
-The APP requires the exact reviewed resident `7C38C634 / 8A17554E` because it
-binds that ELF's SDK resource-allocation functions. It checks the function
-bytes and firmware footer; the controller also verifies native firmware CRC.
+Finite RAM diagnostics at stock Pico125MHz / STM32F103R8 72MHz. These are
+transport experiments, not a replacement production audio backend. Neither
+MCU is flashed or reset. Generated binaries, raw receipts and grants stay in
+`.build`; checked-in `RESULTS.json` records compact outcomes and receipt hashes.
 
-The read-only identity module validates M3 metadata and calculates the BIOS
-body CRC in 128-byte cooperative steps. Pin changes are admitted only for
-the known `3BE158B4` BIOS and its stock clock configuration.
-The guard also requires the Cortex-M3 CPUID and 64-KiB factory Flash size.
-Zero `DBGMCU_IDCODE` is expected without a debugger on this chip, as described
-in ST ES096 Rev15 section 2.2.2; a readable conflicting device ID is rejected.
+The [game-audio results](../../doc/measurements/picocalc-spectrum-uart-20261114.md)
+use compressed UART. The [LCD DMA wait experiment](lcd-dma-wake.patch) is
+preserved for replay. Its NRZ4 candidate still missed a deadline and the
+wait change is inactive in the resident firmware.
 
-| Mode | Clock | Data | M3 work during transfer |
-| --- | --- | --- | --- |
-| UART reference | asynchronous | PC10 → GP9 | resident UART DMA |
-| Two-wire GPIO | PB8 → GP7 | PB9 → GP6 | software, interrupts enabled |
-| Four-wire GPIO | PB9 → GP6 | PB8/PC11/PC10 → GP7/GP8/GP9 | software, three bits per clock |
-| Two-wire timer/DMA | PB8 → GP7 | PB9 → GP6 | TIM4 update → DMA1 channel 7 → GPIOB BSRR |
+## Results
 
-PIO0 follows external clock edges and packs 24 bits into each RX FIFO word.
-An SDK-claimed DMA channel copies those words to SRAM. Pico does independent
-arithmetic while receiving. The M3 DMA variant similarly performs independent
-arithmetic while the peripheral sends its prepared waveform. These counters
-demonstrate available execution capacity; they are not CPU-utilization or
-energy measurements.
+| Run | Transport | Qualification | Native error delta | Result |
+| --- | --- | --- | --- | --- |
+| 013 | Clocked matrix | 91 cases, 3192 bytes, 84 GPIO leases | 0 | PASS |
+| 014 | Clocked matrix, 100 cycles | 9100 cases, 319200 bytes, 8400 GPIO leases, 271.617s | 0 | PASS |
+| 015 | First NRZ4 candidate | First NRZ block valid; next job refused dirty TIM4 state | 0 | HOLD |
+| 016 | Corrected NRZ4 | 91 cases, 5208 bytes, 84 GPIO leases | 0 | PASS |
+| 017a | Original NRZ4 packer, C99 resident | 91 cases, 5208 bytes, 84 GPIO leases | 0 | PASS |
+| 017b | Faster NRZ4 packer, same C99 resident | 91 cases, 5208 bytes, 84 GPIO leases | 0 | PASS |
+| 018 | Faster NRZ4, 100 cycles | 9100 cases, 520800 bytes, 8400 GPIO leases, 272.007s | 0 | PASS |
 
-The GPIO-DMA waveform uses two 32-bit BSRR writes per bit plus an idle tail:
-24 payload bytes require 1,540 waveform bytes. Encoding time is recorded
-separately. Timer targets of 1, 2, 4.5 and 9 Mbit/s are not measured rates:
-bus contention may stretch GPIO clock intervals. Hardware `wire_us` and
-`wire_cycles` cover the sender's transfer and completion observation. They
-provide a conservative effective payload rate, including observation cost.
+All successful cases pass byte-exact capture and CRC. Runs013/014 preserve
+I2C timeout/reset/keyboard-error counters at9; they are not cleared to zero.
+The earlier failed hardware runs remain failed. Runs013–016 preserve BOOTS19,
+watchdog0, RESET_REASON00010001 and the pre-existing CRASH=AVAILABLE.
+Harness separately installed C99DE0AF/528F4874 before017a, advancing BOOTS to20
+and restarting native error counters at0. Runs017a–018 preserve that new intake
+tuple and counters0→0; these diagnostics perform no Flash writes or MCU resets.
+Every run above removes its own SD file/directory and records native
+CALCULATOR/CLOSED/NONE, CDC closure and shared-lease closure.
 
-The fixture deliberately waits 500 µs before taking the pins, restores Pico
-by 2,500 µs and defers the M3 result until 4,000 µs. `total_us` includes those
-guards and must not be presented as production audio latency. A production
-candidate would additionally need bounded arbitration with keyboard I²C,
-waveform-memory accounting and an audio-load qualification.
+For96-byte NRZ4 blocks, measured useful rates are:
 
-Each M3 call restores its hardware before returning to the BIOS main loop.
-After GPIO use, I2C1 restoration follows the verified open-drain transition
-sequence in ST ES096 section 2.8.7, then applies I2C1 SWRST and restores the
-saved address/timing/control registers. Before/after status is returned in
-the diagnostic reply. This is a candidate recovery measure: the exact cause
-of the observed hardware timeout still requires the new status measurements.
-The local transfer budget is 1 ms, and the runtime slice limit is 2 ms.
-Interrupts stay enabled, so these limits detect overruns rather than making
-an unconditional execution-time guarantee against arbitrary interrupt load.
-TIM1/2/3, PMU I²C2, Flash and clock settings are untouched. Four-wire mode
-temporarily borrows the existing UART pins after the control request has
-finished transmitting. The first failed case stops the run.
+| Four-bit symbols/s | Useful payload rate | Waveform preparation |
+| --- | --- | --- |
+| 1million | 3.182–3.188Mbit/s | 242–265us |
+| 1.5million | 4.735–4.750Mbit/s | 243–262us |
+| 2million | 6.234–6.307Mbit/s | 242–263us |
+
+These rates use M3 DWT cycles for the transfer plus completion observation.
+They include start/stop framing but exclude preparation and ownership guards.
+The earlier two-wire timer/DMA transfer topped out around3Mbit/s. M3 UART at
+nominal2.25Mbaud8N1 has a theoretical payload ceiling1.8Mbit/s per direction.
+Preparation is still substantial; the wire improvement is not a claim of an
+end-to-end audio or battery improvement. Those preparation measurements are
+from016's original packer. Run018 now also qualifies NRZ4 over272.007s.
+
+### Faster waveform preparation
+
+The original packer recalculated the frame position for every symbol, including
+a division. The new `nrz4_pack.h` walks four-byte frames directly and uses a
+four-entry,16-byte BSRR lookup table. PortC words are PortB words shifted by2.
+The complete M3 module is5896/6144bytes,48bytes more than the reference.
+DMA scheduling, framing, receiver and interface restoration are unchanged.
+
+The A/B reference module rebuilt from `fixtures/nrz4_reference.h` is byte-exact
+to hardware016, SHA256 `d245744120a79d96a1daccf2b490f29d77624d1bbb035c02983a2755d7e568b6`.
+Both A/B APPs bind to the same verified C99 resident and run at125/72MHz.
+For96-byte blocks at2million four-bit symbols/s:
+
+| Measurement | Original017a | Faster017b |
+| --- | --- | --- |
+| Preparation, including fixture pattern generation | 243–264us | 109–128us |
+| Wire plus completion observation | 122–124us | 122–123us |
+| Preparation + wire, median useful rate | 2.066Mbit/s | 3.236Mbit/s |
+
+Paired active-time speedup is1.53–1.58×, median1.56×. The comparison excludes
+GPIO ownership and deliberate readiness/reply guards; it is not production audio
+throughput. Across all three short-test rates, preparation is241–265→109–129us.
+The long run completed9100 cases and8400 planned I2C returns, max7us each,
+with zero new I2C/UART/data errors. Its maximum M3 runtime slice was455us,
+under the2000us cap. At2million symbols/s, its96-byte preparation range is
+108–147us and wire range122–126us, including IRQ variation.
+
+## I2C failure and correction
+
+Runs011/012 localized the native timeout after a successful GPIO burst: the
+next keyboard register-select write sat in Pico's TX FIFO while the master
+reported no activity. Both physical lines were high. M3 had ACK/listen enabled,
+CR1=0x401, CR2=0x324, HAL LISTEN=0x28 and no HAL error. Thus it was not an M3
+slave holding the clock low. The controller stops at the first native delta.
+
+Simply restoring the GPIO mux and I2C enable bit did not restart this master.
+`restore_pins()` now returns the GPIO mux first, asserts/releases only Pico's
+I2C1 peripheral reset bit through atomic aliases, then restores16 saved idle
+configuration registers and the previous enable state. Both waits are bounded
+at100us. Native RAM/request fields and software error/reset counters are never
+patched. Planned interface restarts are counted separately in `FL RESTORE`.
+Run014 completed8400 such returns with a maximum measured8us and no new error.
+This is a peripheral restart, not an MCU reboot or a counter reset.
+
+Before each lease the APP also finishes the whole native keyboard transaction,
+including its16ms select/read gap, then observes physical idle for500us. A
+logical transaction is not complete merely because the hardware wires are idle.
+The APP reads ELF/DWARF-pinned pending/phase fields and calls normal service
+until both are zero, with a100ms cap. No service submits another keyboard job
+until the transfer and restoration are complete.
+
+Read-only snapshots cover native timeout/reset/abort/keyboard errors, worker
+stage/result, keyboard pending/phase/online, GPIO levels and passive I2C status.
+They bracket the first delta at before/inside/after logical fence, after physical
+fence, after restoration, after service/key polling, module load and cleanup.
+Snapshots are sequential across cores, not atomic captures of a bus edge.
+
+M3 restoration retains the verified open-drain START/STOP recovery followed by
+I2C1 SWRST and address/timing/control restore from ST ES096 section2.8.7.
+TIM1/2/3 and PMU I2C2 configuration are not changed. The M3 identity module
+calculates the known BIOS CRC in cooperative128-byte steps and requires the
+stock clocks, Cortex-M3 CPUID and64KiB factory Flash size. A zero DBGMCU ID is
+allowed only with those other checks, per ST ES096 section2.2.2.
+
+## Transport variants
+
+| Mode | Physical lines | Transfer engine |
+| --- | --- | --- |
+| UART reference | PC10→GP9 | Resident UART DMA |
+| Two-wire clocked | PB8→GP7 clock, PB9→GP6 data | Software or TIM4_UP/DMA1ch7→GPIOB_BSRR |
+| Four-wire clocked | PB9→GP6 clock, PB8/PC11/PC10→GP7/8/9 data | Three bits per software clock |
+| Four-wire NRZ | PB9/PB8/PC11/PC10→GP6/7/8/9 data | TIM4_UP/ch7 and TIM4_CC3/ch5, PIO receiver and RX DMA |
+
+NRZ4 uses common start0, eight MSB-first four-bit payload symbols and common
+stop15:32 payload bits per10 symbol periods. It is asynchronous start/stop
+framing, not unframed self-clocking NRZ. PIO samples at8 ticks per symbol,
+autopushes32 payload bits, then pushes the stop nibble. The receiver checks every
+stop nibble plus bytes/CRC and halts after the declared frame count. Precomputed
+PIO divisors avoid runtime division while configuring the receiver.
+
+M3's timer update and compare events are one72MHz timer tick apart, writing
+the two GPIO ports through separate DMA channels. An idle tail keeps the last
+stop symbol stable before restoring the pins. No per-symbol CPU servicing or
+global IRQ masking is used. The experiment checks both DMA channels and refuses
+other enabled request sources sharing channel5, including PMU I2C2 DMA.
+
+Run015 exposed a restoration-order bug: writing CCR3 after restoring SR could
+leave CC3IF set. The corrected code restores SR last. It acknowledges exactly
+one known inherited CC3IF=8 at first acquire only when TIM4 is stopped/unclocked
+and its configuration/DMA are otherwise pristine; it reports that cleanup and
+rejects later dirty state. Hardware016 observed that initial8, then zero before
+all later NRZ jobs. HOST regression reintroduces8 after the first job and requires
+refusal, rather than hiding repeated resource faults.
+
+The M3 burst limit is1ms and runtime slice limit2ms, with interrupts enabled.
+These detect overruns; they do not promise execution time under arbitrary IRQ
+load. The fixture starts after a500us readiness guard, returns Pico's pins by
+2500us and defers the M3 UART result until4000us. `total_us` includes those guards
+and must not be presented as production audio latency. Independent arithmetic
+counters show available execution while DMA runs, not CPU utilization or power.
 
 ## Reproducing HOST checks
 
-The controller-policy suite needs only Python 3 and the checked-in fixtures:
+Controller policy needs only Python3 and checked-in synthetic status/APP
+fixtures; it does not import archived hardware controllers or open a device:
 
 ```sh
 python3 research/picocalc-fastlink-20261111/controller_test.py
 ```
 
-It supplies a synthetic C5 status and APP plus an in-memory protocol backend
-to the real controller logic. It imports no archived hardware backend and
-opens no serial device. Its result is written under `.build`, not into Git.
-
-The ARM suite additionally needs ARM GCC 14.2.1, its matching GDB/objcopy,
-Unicorn 2.1.4, Pico SDK commit `a1438dff1d38bd9c65dbd693f0e5db4b9ae91779`,
-and the exact archived resident ELF plus `manifest.json` for build
-`7C38C634 / 8A17554E`. The ELF SHA-256 is
+ARM checks require ARM GCC14.2.1 with GDB/objcopy, Unicorn2.1.4, Pico SDK commit
+`a1438dff1d38bd9c65dbd693f0e5db4b9ae91779`, and the exact archived resident ELF
+plus manifest for the installed C99DE0AF/528F4874. Its ELF SHA256 is
+`4139bcb17c802288c93c2ab6efa5248f996166874ffb0b2b7bf20f8a18c88bb0`.
+Historical7C38C634/8A17554E is also supported with exact ELF SHA256
 `75ef19a5237b0ed25357424e1fd31da2aa64c69fa98683b4300dc7f553ffce16`.
-This firmware-specific suite requires that input; rebuilding a different
-resident from current `main` is not a substitute. The ELF/build outputs are
-local prerequisites and are not stored in this research directory.
+A different build from current main is not a substitute for this firmware-specific
+input. Supply paths with `--resident`, `--toolchain`, `--pico-sdk` to build.py;
+defaults refer to this local session. Use a Python environment with Unicorn for
+the ARM scripts. Sandboxed macOS may require the normal approved execution route
+for the repository's Unicorn prerequisite check.
+
+Use fresh output directories; do not overwrite a reviewed historical kit:
 
 ```sh
-python3 research/picocalc-fastlink-20261111/build.py \
-  --resident /absolute/path/to/firmware-candidate \
-  --toolchain /absolute/path/to/arm-toolchain/bin \
-  --pico-sdk /absolute/path/to/pico-sdk \
-  --output .build/picocalc-fastlink-20261111/kit-010
-python3 research/picocalc-fastlink-20261111/host_test.py \
-  --kit .build/picocalc-fastlink-20261111/kit-010
+python3 research/picocalc-fastlink-20261111/build.py --output .build/fastlink/reference
+python3 research/picocalc-fastlink-20261111/host_test.py --kit .build/fastlink/reference
+python3 research/picocalc-fastlink-20261111/build.py --nrz4 --output .build/fastlink/nrz
+python3 research/picocalc-fastlink-20261111/host_test.py --kit .build/fastlink/nrz --sender-kit .build/fastlink/reference
+python3 research/picocalc-fastlink-20261111/host_nrz4.py --kit .build/fastlink/nrz
+python3 research/picocalc-fastlink-20261111/controller_test.py --output .build/fastlink/nrz/controller-test.json
+python3 research/picocalc-fastlink-20261111/build.py --nrz4 --reference-packer --output .build/fastlink/nrz-reference
+python3 research/picocalc-fastlink-20261111/host_pack.py --kit .build/fastlink/nrz --reference-kit .build/fastlink/nrz-reference
 ```
 
-Use the Python environment with Unicorn installed for the last command.
-On sandboxed macOS the repository's Unicorn prerequisite check may require
-the normal approved execution route. HOST tests execute actual relocated
-M3 ARM code, independently decode modeled pin transitions, inject faults and
-execute Pico guards/restoration and the exact resident SDK allocators. Model
-time is not hardware time. The build records the supplied resident path/hash;
-the ARM suite reads that manifest rather than guessing another local ELF.
+`--sender-kit` tests the new APP's common Pico guards/restoration using a freshly
+built clocked reference sender; it explicitly writes `host-shared-test.json`.
+`host_nrz4.py` tests the actual new NRZ sender, executes the actual Pico configure
+function and sealed resident SDK, and writes canonical `host-test.json` bound to
+both new payload hashes. Its PIO instruction model checks phase, lane skew and
+clock error; those modeled timings are not physical measurements.
 
-`fixtures/legacy_module.c` is the historical failing restoration code, built
-only for the HOST regression. Its package SHA-256 must be
+Current NRZ HOST coverage:105 actual ARM sender cases,15 actual Pico configuration
+cases,1890 independent PIO cases,14 injected faults, seven invalid inputs, seven
+consecutive jobs and one-time startup-cleanup/repeated-dirty-state regression.
+Shared checks include identity/PIO/physical/logical guards,29 exact resident SDK
+allocator cases, native fault latching and five Pico restoration/failure cases.
+Controller checks cover11 admissions,14 authorizations,12 native frames and three
+faulted cleanup workflows. The controller suite also passes with all `.build`
+reads and CDC device opens denied by a Python audit hook.
+
+`host_pack.py` executes the actual relocated optimized ARM packer on760 inputs,
+checks every possible byte value, all valid block lengths, unchanged unused wave
+entries, guard words and callee-saved registers. Eight full ARM INIT comparisons
+check both modules against an independent encoder.96-byte INIT instruction
+counts fall8910→3523; instruction counts are not physical cycles or timing.
+
+The legacy failing M3 restoration fixture is compiled from
+`fixtures/legacy_module.c`; it is not embedded/uploaded. Its package SHA256 stays
 `245d2f7d09004d9977d0b14b99e39f84513bea440bad1a52e1ae5da231e8a84a`.
-It is never embedded in the APP or uploaded. No old `.build/kit-004` binary or
-old CDC log is needed for these HOST checks. The BIOS identity fixture uses
-the existing tracked `firmware/picocalc-m3-boot` binaries.
+No historical binary or CDC log is needed for HOST regression. Identity tests use
+the already tracked firmware/picocalc-m3-boot BIOS files. The diagnostic M3 HAL
+field addresses are tied to that exact BIOS body and short-enum ABI, read-only.
 
-## Session-specific hardware controller
+## Session-specific hardware control
 
-`hil.py --prepare` creates the hash-pinned package for coordinator review.
-Hardware mode requires a fresh grant for that exact package, holds the shared
-root lease continuously, writes only a new `/FLTEST20/FASTLINK.APP`, then
-checks and removes its own file and directory. Final health, counter deltas,
-CALCULATOR/CLOSED/NONE, termios, CDC and lease closure are recorded. It has no
-Flash, MCU-reset, ROM-mode or firmware-recovery action.
-An application failure or changed I2C/keyboard health remains a failed
-qualification; it does not prevent cleanup of the byte-exact owned SD file.
-A changed file or foreign foreground is preserved and reported.
-The current admission is scoped to the independently logged read-only Harness
-handoff: BOOTS=19, BOOT_WATCHDOG=0, RESET_REASON=00010001, CRASH=AVAILABLE.
-Those observed values are retained verbatim and must remain unchanged through
-final status; any new reset fails qualification. The pre-existing crash record
-is never cleared. The Harness receipt, before/after status, crash bytes and
-preceding failed-run provenance are hash-pinned in the package. Package 008's
-HOST-only admission change and package 009's Pico diagnostic instrumentation
-preserve both M3 modules byte for byte. Package 010 changes HOST test inputs
-and import/build paths only; its APP and current M3 modules are byte-identical
-to package 009.
+The HIL scripts retain this session's exact native firmware/UID/boot/crash
+admission, archived local current_hil/device_guard backend and continuous shared
+lease. They do not manufacture those prerequisites on a clean checkout. The
+current default SD scope is /FLTEST017; `--session 017a`, `017b` and `018` select
+separate proofs and temporary folders, with `--kit` selecting their exact APP.
+Only a new byte-verified owned APP is removed.
+Changed files and foreign foregrounds are preserved. cleanup.py records an older
+/FLTEST14 cleanup-only procedure and is not the controller for a new run.
 
-The HIL scripts require the archived local `current_hil.py`/`device_guard.py`
-backend, historical receipts and the existing root device lease referenced in
-`hil.py`. They deliberately do not manufacture that session's admission or
-grant on a clean checkout. `cleanup.py` preserves the earlier cleanup-only
-procedure for `/FLTEST14`; it is not the controller for a new test. Old grants
-are never reusable. Preparing a package is a HOST file operation; hardware
-access requires fresh review and a grant for its exact hashes.
+Preparation is HOST-only. Execution requires a fresh exact-hash one-shot grant,
+finite start/finish deadlines, native admission and an exclusive root lease.
+The user's direct request is honestly recorded as USER_EXPLICIT_HARDWARE_GO,
+not described as coordinator approval; its request/thread/clock/no-Flash scope
+must match the pinned proof. NRZ preparation also requires the completed long
+I2C qualification receipt. Source, configuration and payload hashes are checked
+before access. The first failed case or native delta ends the run; only resource
+restoration, draining an already pending reply, UNLOAD/HELLO and owned-file/UI/
+CDC/termios/lease cleanup follow. No Flash/ROM-mode/MCU-reset/crash-clear action
+exists in these controllers. Old receipts and grants are never relabeled/reused.
 
-Before borrowing I2C pins, the APP first lets ordinary native service complete
-the entire keyboard transaction, including the 16-ms gap between selecting a
-register and reading its response. Hardware BUSY=0 during that gap does not
-mean the logical transaction is finished. This diagnostic reads `pending_`
-and `io_phase_` at ELF/DWARF-pinned addresses of the exact resident build;
-it never writes those private fields. A 100-ms limit rejects an overrun before
-pin acquisition. After both fields reach zero, no service runs until the
-physical idle fence, transfer and complete restoration have finished.
-
-The native observer samples the exact ELF's timeout/reset/abort/keyboard-error
-counters plus worker stage/result and keyboard pending/phase/online. It only
-reads resident memory. A pre-existing nonzero counter is retained as baseline;
-the first change latches the previous and current snapshots, stops new cases,
-and is printed after resource restoration. The original pending UART reply is
-drained before unloading the module. There are no counter clears or new timing
-budgets. Boundaries are 1 before the logical fence, 2 after each service inside
-it, 3 after the logical fence, 4 after the physical fence, 5 after pin restoration
-before any service, 6 after the first post-restore service, 7 after key polling,
-8 during module-load service, and 9 after cleanup. The readout is sequential,
-not an atomic snapshot across cores; its first changed field brackets the
-fault between observation points rather than identifying an individual bus edge.
-
-## Measured result and remaining failure
-
-Hardware run 008 at stock 125/72 MHz verified all 91 transfers and 3,192 payload
-bytes, with zero capture/UART errors and correct CRCs. Its **overall result is
-HOLD**: native I2C timeout/reset counters and keyboard errors each grew 0→7.
-The logical fence did not solve this; it waited up to 19,234 µs, with service
-calls in seven cases. M3 entry/restore flags and before/after SR1/SR2 remained
-zero. Aggregate counters do not identify the exact failing boundary; the new
-read-only native observer has passed HOST tests but has not run on hardware.
-
-| Mode | Payload | Effective payload rate | M3 preparation |
-| --- | --- | --- | --- |
-| Software clock + one data line | 96 B | 1.240–1.244 Mbit/s | 44–65 µs |
-| Software clock + three data lines | 96 B | 1.582–1.588 Mbit/s | 45–66 µs |
-| Timer/DMA clock + one data line | 24 B | up to 3.121 Mbit/s | 108–115 µs |
-| UART reference, nominal 2.25 Mbaud 8N1 | any | 1.8 Mbit/s theoretical payload ceiling | not a measured GPIO interval |
-
-Raising the DMA timer target from 4.5 to 9 Mbit/s did not raise its measured
-ceiling above about 3.12 Mbit/s. Preparation and ownership-turnaround costs
-must be included before claiming an audio improvement over UART. No sustained
-audio-load or energy advantage has been demonstrated.
-
-Earlier failed runs remain failed: 001 rejected an allowed zero DBGMCU ID;
-002 misread normal raw PIO status as an interrupt reservation; 003 exhausted
-the original idle wait; 004 exposed a latched M3 I2C state and two native
-timeouts; 005 stopped at intake on a pre-existing watchdog tuple; 006 passed
-all data cases but added seven native timeouts. Package 007 was not run after
-its admission became stale. None of those results is relabeled as a pass.
-Run 008 removed its own SD directory, returned CALCULATOR/CLOSED/NONE and
-closed CDC and the root lease. Neither MCU was flashed or reset.
-
-Current HOST results: 100 relocated sender cases, 10 injected faults, 17 full
-pin-acquisition scenarios, 36 native-boundary/counter injections, 29 exact
-resident SDK allocator checks, plus identity/PIO/physical-idle/restoration
-checks. Controller policy passes 11 admission cases, 12 native-frame cases
-and three faulted cleanup workflows. These are model results, not a hardware
-qualification. The four-data-line NRZ proposal is not implemented here.
+Primary references: [RPi PIO UART receiver](https://github.com/raspberrypi/pico-examples/blob/master/pio/uart_rx/uart_rx.pio),
+[ST RM0008](https://www.st.com/resource/en/reference_manual/rm0008-stm32f103xx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf),
+[ST ES096](https://www.st.com/resource/en/errata_sheet/cd00190234-stm32f101x8-b-stm32f102x8-b-and-stm32f103x8-b-medium-density-device-limitations-stmicroelectronics.pdf).

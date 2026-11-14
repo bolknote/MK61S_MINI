@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise real controller cleanup after a fault with an in-memory device."""
 from pathlib import Path
-import argparse,json,re,shlex,sys,tempfile
+import argparse,copy,json,re,shlex,sys,tempfile,time
 import hil
 class ModelBackend:
  """Protocol fixture for the real controller; no device/OS backend imported."""
@@ -60,13 +60,40 @@ class Port:
 
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--output',type=Path,default=hil.KIT/'controller-test.json');args=ap.parse_args()
+ authorization_cases=0;original_proof,original_phase=hil.PROOF,hil.PHASE
+ try:
+  with tempfile.TemporaryDirectory(prefix='authorization-policy-')as tmp:
+   folder=Path(tmp);hil.PROOF=folder/'proof.json';hil.PHASE=folder/'phase.json'
+   pin=folder/'input.txt';pin.write_text('fixed input');hil.PHASE.write_text('{}')
+   hil.save(hil.PROOF,{'phase_sha256':hil.sha(hil.PHASE),'pins':{str(pin):hil.sha(pin)},'user_authorization':hil.USER_AUTHORIZATION})
+   now=time.time();grant=folder/'grant.json'
+   good={'status':'USER_EXPLICIT_HARDWARE_GO','uid':base.UID,'package_proof_sha256':hil.sha(hil.PROOF),
+    'authorization':hil.USER_AUTHORIZATION,'not_before_utc_epoch':now-1,'start_before_utc_epoch':now+30,'finish_before_utc_epoch':now+60}
+   for status in ('USER_EXPLICIT_HARDWARE_GO','COORDINATOR_EXPLICIT_HARDWARE_GO'):
+    item=copy.deepcopy(good);item['status']=status;hil.save(grant,item);hil.validate_go(grant);authorization_cases+=1
+   for key,value in [('status','UNKNOWN'),('uid','OTHER'),('package_proof_sha256','0'*64),('start_before_utc_epoch',now-1)]:
+    item=copy.deepcopy(good);item[key]=value;hil.save(grant,item)
+    try:hil.validate_go(grant);raise AssertionError('Invalid grant accepted '+key)
+    except base.Hold:pass
+    authorization_cases+=1
+   for key,value in [('source','agent'),('thread_id','other'),('request','unrelated'),('pico_hz',200000000),('m3_hz',80000000),('flash_writes',1),('reset_commands',1)]:
+    item=copy.deepcopy(good);item['authorization'][key]=value;hil.save(grant,item)
+    try:hil.validate_go(grant);raise AssertionError('Invalid user scope accepted '+key)
+    except base.Hold:pass
+    authorization_cases+=1
+   hil.save(grant,good);pin.write_text('changed input')
+   try:hil.validate_go(grant);raise AssertionError('Changed pin accepted')
+   except base.Hold:pass
+   authorization_cases+=1
+ finally:hil.PROOF,hil.PHASE=original_proof,original_phase
  native_frames=0
  for boundary,name in hil.NATIVE_BOUNDARIES.items():
   frame=(f'FL NATIVE_FAIL case=8 boundary={boundary} previous_boundary=1\n'
-   'FL NATIVE_BEFORE at=1 timeouts=7 resets=7 aborts=0 errors=7 stage=2 result=1 pending=0 phase=1 online=1\n'
-   'FL NATIVE_AFTER at=2 timeouts=8 resets=8 aborts=0 errors=8 stage=0 result=-2 pending=0 phase=0 online=0\n').encode()
+   'FL NATIVE_BEFORE at=1 timeouts=7 resets=7 aborts=0 errors=7 stage=2 result=1 pending=0 phase=1 online=1 pins=C0 status=00000023 raw=0000000A tx=1 rx=0 abort_source=00000000\n'
+   'FL NATIVE_AFTER at=2 timeouts=8 resets=8 aborts=0 errors=8 stage=0 result=-2 pending=0 phase=0 online=0 pins=C0 status=00000006 raw=00000000 tx=0 rx=0 abort_source=00000000\n').encode()
   found=hil.native_observation(frame);assert found['boundary_name']==name and found['after']['result']==-2
   assert found['before']['timeouts']==7 and found['after']['timeouts']==8;native_frames+=1
+  assert found['before']['pins']==0xc0 and found['before']['status']==0x23 and found['before']['raw']==10
  for bad in (frame.rsplit(b'FL NATIVE_AFTER',1)[0],frame+frame,frame.replace(b'boundary=9 ',b'boundary=99 ')):
   try:hil.native_observation(bad);raise AssertionError('Invalid native frame accepted')
   except base.Hold:pass
@@ -76,7 +103,7 @@ def main():
  admission_cases=1
  baseline={k:base.field(before,k)for k in ('BOOTS','BOOT_WATCHDOG','RESET_REASON','CRASH')}
  hil.native_health(before,baseline,closed=True);admission_cases+=1
- for key,value in (('BOOTS','18'),('BOOTS','20'),('BOOT_WATCHDOG','1'),('BOOT_WATCHDOG','2'),('RESET_REASON','00000000'),
+ for key,value in (('BOOTS','19'),('BOOTS','21'),('BOOT_WATCHDOG','1'),('BOOT_WATCHDOG','2'),('RESET_REASON','00000000'),
                    ('CRASH','NONE'),('CRASH','FAULT'),('ACTUAL','00000000'),('KBD','FAIL')):
   changed,count=re.subn(r'(?<![A-Za-z0-9_])'+key+r'=[^\s]+',key+'='+value,before)
   assert count==1
@@ -96,7 +123,7 @@ def main():
     hil.KIT=Path(tmp)/'kit';(hil.KIT/'app').mkdir(parents=True)
     (hil.KIT/'app/FASTLINK.APP').write_bytes(b'HOST-ONLY-SYNTHETIC-APP')
     class Gate:pass
-    g=Gate();g.out=Path(tmp);g.final={};g.corrupt=corrupt;g.bad_keyboard=bad_keys
+    g=Gate();g.out=Path(tmp);g.final={'expected_scope':{'case_count':91,'payload_bytes':3192,'gpio_restores':84,'completion_timeout_seconds':90}};g.corrupt=corrupt;g.bad_keyboard=bad_keys
     try:hil.run(g);raise AssertionError('Faulted test was incorrectly accepted')
     except base.Hold as exc:
      assert ('Owned APP changed' if corrupt else 'RAM link probe failed') in str(exc)
@@ -112,6 +139,7 @@ def main():
  assert 'current_hil'not in sys.modules and'device_guard'not in sys.modules
  result=dict(status='PASS',physical_io=False,synthetic_status_and_APP=True,negative_cleanup_cases=3,scoped_admission_cases=admission_cases,
   archived_hardware_backend_imported=False,
+  authorization_cases=authorization_cases,
   native_boundary_frame_cases=native_frames,
   original_watchdog_text_preserved=True,preexisting_crash_text_preserved=True,new_reset_rejected=True,
   counter_fault_stays_failure=True,owned_exact_cleanup_completes=True,changed_owned_file_preserved=True)

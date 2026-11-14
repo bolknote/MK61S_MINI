@@ -9,7 +9,16 @@
 #define FL_READY_US 500u
 #define FL_REPLY_US 4000u
 #define FL_BURST_US 1000u
-enum { FL_IDENTITY=0,FL_SOFT1=1,FL_SOFT3=2,FL_DMA1=3,FL_UART=4 };
+enum { FL_IDENTITY=0,FL_SOFT1=1,FL_SOFT3=2,FL_DMA1=3,FL_UART=4,FL_NRZ4=5 };
+#define FL_NRZ_MAX_BYTES 96u
+#define FL_NRZ_SYMBOL_CAPACITY (FL_NRZ_MAX_BYTES/4u*10u+1u)
+#ifdef FL_NRZ4_ONLY
+#define FL_TIMER_MODE FL_NRZ4
+#define FL_FOURWIRE_MODE FL_NRZ4
+#else
+#define FL_TIMER_MODE FL_DMA1
+#define FL_FOURWIRE_MODE FL_SOFT3
+#endif
 static inline uint32_t fl_get(const uint8_t *p) {
  return (uint32_t)p[0]|(uint32_t)p[1]<<8|(uint32_t)p[2]<<16|(uint32_t)p[3]<<24;
 }
@@ -33,5 +42,10 @@ static inline unsigned fl_group(const uint8_t *p,unsigned at) {
  unsigned result=0;
  for(unsigned k=0;k<3;++k) {unsigned bit=at*3+k;result=(result<<1)|((p[bit/8]>>(7-bit%8))&1u);}
  return result;
+}
+/* Common start0, eight MSB-first nibbles, common stop15. */
+static inline unsigned fl_nrz_symbol(const uint8_t *p,unsigned at) {
+ unsigned pos=at%10u;if(!pos)return 0;if(pos==9)return 15;
+ --pos;unsigned value=p[at/10u*4u+pos/2u];return (pos&1u?value:value>>4)&15u;
 }
 #endif

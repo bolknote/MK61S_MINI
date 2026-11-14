@@ -1,0 +1,151 @@
+{
+  "date": "2026-11-11",
+  "status": "HOST_PASS_HARDWARE_STAGING_PASS_NRZ4_HOLD",
+  "physical_io": true,
+  "hardware_timing_measured": true,
+  "pico": {
+    "build": "E9EB41B5",
+    "crc32": "A60BB421",
+    "installed": true,
+    "bytes": 1793244,
+    "elf_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+    "static_ram_bytes": 120484,
+    "heap_bytes": 108892,
+    "full_programmed_BIN_readback_verified": true
+  },
+  "m3": {
+    "body_crc32": "B89B1FE5",
+    "changed": false,
+    "stock_hz": 72000000
+  },
+  "pico_stock_hz": 125000000,
+  "proven": [
+    "Archived actual Keyboard::poll produces expired-selection wire0,0 after1.2s core0 pause and increments battery error without I2C bus failure",
+    "M3 documented UNKNOWN127/255 was rejected by old native BatteryStatus",
+    "Candidate renews pending selections at900ms, preserves already buffered keys, accepts UNKNOWN and records malformed replies"
+  ],
+  "not_proven": [
+    "The cause of the single observed SD staging BATTERY_ERRORS increase in short001",
+    "Real NRZ4 game-audio performance with this Pico candidate"
+  ],
+  "previous_hardware": {
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-001/receipt.json",
+    "status": "HOLD",
+    "cases_completed": 0,
+    "battery_errors_delta": 1,
+    "i2c_timeouts_delta": 0,
+    "i2c_aborts_delta": 0,
+    "raw_fault_bytes_available": false
+  },
+  "host": {
+    "keyboard_source": "ASan+UBSan PASS",
+    "keyboard_arm": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "reference_stale_read_and_unknown_errors_reproduced": true,
+      "actual_firmware_ARM_cases": 18,
+      "reference_sha256": "35ab658b42d5889e585ceb514d7bbdd6c61ac5bbbf77c485a7cbc38e2a6ba969",
+      "candidate_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+      "scope": "Actual sealed Pico Keyboard/request_register/fault ARM, DWARF-pinned objects, modeled I2C peer1s expiry and documented UNKNOWN, normal/guard/late/32bit rollover, malformed reply capture; no runtime or counter fields edited"
+    },
+    "nrz4_arm": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "normal_ARM_cases": 7,
+      "faults": [
+        "stop",
+        "crc",
+        "no_data",
+        "no_ready",
+        "no_ack_release",
+        "disable_stuck",
+        "reset_stuck",
+        "restore_enable_stuck",
+        "cancel_tx",
+        "cancel_rx",
+        "cancel_ack"
+      ],
+      "admission_cases": 10,
+      "actual_service_cleanup_cases": 10,
+      "elf_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+      "scope": "Actual Pico Nrz4 and SDK ARM instructions; modeled GPIO/UART/I2C/PIO/DMA; receiver setup, CRC/no publication on faults, bounded recovery, UART RX armed before ACK release, exact GPIO/I2C/UART restore and SDK release. Not electrical or physical timing validation."
+    },
+    "platform_suite": "MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh PASS",
+    "hil_controller": {
+      "status": "PASS",
+      "physical_io": false,
+      "controller_sha256": "3eb2dd41aaac3ba7f99d88ce31410c2c5e9b7fe871cf2745a57c08d229f37b0c",
+      "test_sha256": "d18382dc06522abae98c61e5ae5932219dee900c7cb64c1d62b4183acfe05b4e",
+      "scope": "In-memory CDC/SD/ROM tools only; actual Pico-only install PASS/readback-error/startup-error/preserved-crash-error with no replay; installed proof gates;4strict short passes; audio-first-fault stop after2; SD battery-first-fault stop before game; cleanup; long blocked without4PASS; startup raw UNKNOWN->two ready and immediate real-error stop. Not hardware qualification."
+    }
+  },
+  "package": {
+    "path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-006.json",
+    "sha256": "adbd8df47d6032968bd4c928cdc4f18ae21d11b315dc7ff6e2f61c63e43cfee5",
+    "user_approval_for_this_image": true,
+    "approval_question_call": "call_3c18cdaee66c47758e35f249d0add201"
+  },
+  "hardware_followup": {
+    "admission": "PASS",
+    "admission_receipt": ".build/spectrum-nrz4-audio-20261111/nrz-postboot-admit-003/receipt.json",
+    "short_receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-002/receipt.json",
+    "qualification": "HOLD",
+    "measured_cases": [
+      "AYABC"
+    ],
+    "remaining_short_cases_not_run": [
+      "AYACB",
+      "YMABC",
+      "YMACB"
+    ],
+    "long_not_run": true,
+    "staged_files": 10,
+    "battery_error_delta": 0,
+    "battery_first_error_phase": 0,
+    "i2c_timeout_delta": 0,
+    "i2c_abort_delta": 0,
+    "i2c_reset_delta": 0,
+    "native_M3_error": -46,
+    "stage": "Decoded stop nibbles accepted; Nrz4Result::valid rejected the frame. Header/sequence/count/status/CRC/padding not yet distinguished.",
+    "twenty_ms": "Bounded recovery AFTER rejected frame; not measured late M3 response",
+    "metrics": {
+      "mode": 2,
+      "frames": 4,
+      "cycles": 287060,
+      "elapsed_us": 101801,
+      "timing_valid": true,
+      "mhz": 2.8198151295173917,
+      "fps": 39.29234486891092,
+      "starved": 0,
+      "frame_min_us": 20480,
+      "frame_max_us": 40291,
+      "late_frames_1ms": 1,
+      "max_frame_lag_us": 19881,
+      "samples": 2124,
+      "blocks": 18,
+      "block_max_us": 3838,
+      "block_min_us": 3338,
+      "prime_us": 22951,
+      "min_queued": 204,
+      "inline_requests": 10,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 7300,
+      "transport_rx_bytes": 1412,
+      "native_render_us": 34817,
+      "exchange_block_us": 64200,
+      "nrz4_blocks": 18,
+      "nrz4_bytes": 4392,
+      "nrz4_returns": 19,
+      "nrz4_restore_us": 165,
+      "nrz4_transport_us": 1066,
+      "nrz4_wait_us": 5154,
+      "nrz4_hold_us": 20056
+    },
+    "CLOSED": true,
+    "CDC_closed": true,
+    "root_lease_closed": true,
+    "owned_sd_removed": true
+  }
+}

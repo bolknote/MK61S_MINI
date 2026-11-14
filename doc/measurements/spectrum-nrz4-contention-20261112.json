@@ -1,0 +1,4440 @@
+{
+  "date": "2026-11-12",
+  "status": "PACKED_RECEIVE_HARDWARE_ONE_LATE_BLOCK",
+  "stock_hz": {
+    "Pico": 125000000,
+    "M3": 72000000
+  },
+  "candidate": {
+    "build": "509B5A22",
+    "crc": "A8F361F8",
+    "bin_sha256": "fce39d03dfafbdcdb7f9dede911d0ef8c1647ccc41d2451a050f7fb742852ce6",
+    "uf2_sha256": "1ecdfafab47a297ef9232e68fcf1913c30c5b73a74c9dbca0daa9dd98fae039d",
+    "native_elf_sha256": "f432d7ccbcb87d415522fea8b891e02926a974b3aeb503a54bbae5716e4d360a",
+    "static_ram": 120516,
+    "heap": 108860,
+    "context_bytes": 5120
+  },
+  "capture_002": {
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-capture-002/receipt.json",
+    "status": "HOLD",
+    "engine_error": -29,
+    "nrz_error": 0,
+    "phase": "RX",
+    "wire_sequence": 235,
+    "audio_blocks": 160,
+    "nrz_blocks": 161,
+    "nrz_errors": 0,
+    "nrz_returns": 161,
+    "underruns": 38,
+    "max_gpio_wait_us": 12752,
+    "prime_us": 21710,
+    "block_max_us": 4598,
+    "late_blocks": 0,
+    "game_frames": 37,
+    "max_frame_lag_us": 530,
+    "late_game_frames_1ms": 0,
+    "I2C_errors": 0,
+    "battery_errors": 0,
+    "cleanup_complete": true,
+    "scope": "Captured active receiver with previous successfully decoded frame, not a stop/CRC fault. General controller HOLD label is preserved verbatim in original receipt."
+  },
+  "fix": {
+    "problem": "A completed I2C transfer retained software slot DONE until core0 consumed its reply, denying the audio GPIO lease after the bus was already physically idle.",
+    "change": "PINS_DONE retains the completed reply while audio owns physical pins. Atomic consume and return preserve both resources in either order. Queued, working, filling and active pin ownership remain exclusive.",
+    "host_regressions": "128 audio loans during a retained reply; both completion orders; 10000 concurrent I2C replies with exact data, no lost result or premature new request. Actual ARM admission, production reply copy and service paths.",
+    "hardware_causality": "Consistent with observed12752us wait; no claim it is the sole hardware starvation cause.",
+    "new_first_fault_diagnostic": "Own-SM FDEBUG cleared once per block; first fault retains time/phase/PIO FIFO flags+levels/DMAremaining/GPIO/SM PC/index. GPIO and protocol timing unchanged.",
+    "M3_changed": false,
+    "CPU_or_wire_clock_changed": false,
+    "criteria_relaxed": false,
+    "old_stop_fault": "Unresolved: short003 -45 remains failed. Capture002 had no NRZ errors; does not disprove intermittent framing fault."
+  },
+  "HOST": {
+    "status": "PASS",
+    "physical_io": false,
+    "commands": [
+      {
+        "command": "MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh",
+        "exit_code": 0,
+        "log": "host-platform.log",
+        "log_sha256": "793c544f917410372dcdf889492023442d259438215b763be92fca7363beb628"
+      },
+      {
+        "command": "bash tests/run_spectrum_m3_audio_tests.sh",
+        "exit_code": 0,
+        "log": "host-audio.log",
+        "log_sha256": "3a592cca14f154a19cd2cd2c52d6db80f734a962be8d94f3bb463b58a8316a12"
+      },
+      {
+        "command": "bash tests/run_spectrum_nrz4_tests.sh",
+        "exit_code": 0,
+        "log": "host-nrz4.log",
+        "log_sha256": "00f8a31cd6daee61d1c4ddabba7ac312aa76dcfec00efa8e4dcc405ef45a9946"
+      }
+    ],
+    "scope": "Observed host process exits; platform ASan/UBSan, synthesis/engine/output and codec/concurrent retained I2C reply regression. Not hardware qualification."
+  },
+  "package": {
+    "path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-013.json",
+    "sha256": "eab42d9545dd5a7d854eeab5b2191aa9a118b69b369a6824f2cd51474e25cad2",
+    "pins": 873,
+    "review": "Coordinator reviewed exact hash; no device window without next image approval."
+  },
+  "HOST_ARM": {
+    "arm-nrz4-test": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "normal_ARM_cases": 7,
+      "faults": [
+        "stop",
+        "crc",
+        "no_data",
+        "no_ready",
+        "no_ack_release",
+        "disable_stuck",
+        "reset_stuck",
+        "restore_enable_stuck",
+        "cancel_tx",
+        "cancel_rx",
+        "cancel_ack"
+      ],
+      "admission_cases": 12,
+      "first_fault_diagnostic_cases": 2,
+      "completed_reply_copy_cases": 3,
+      "actual_service_cleanup_cases": 10,
+      "elf_sha256": "f432d7ccbcb87d415522fea8b891e02926a974b3aeb503a54bbae5716e4d360a",
+      "scope": "Actual Pico Nrz4 and SDK ARM instructions; modeled GPIO/UART/I2C/PIO/DMA; receiver setup, CRC/no publication on faults, bounded recovery, UART RX armed before ACK release, exact GPIO/I2C/UART restore and SDK release. Not electrical or physical timing validation."
+    },
+    "arm-service-test": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "actual_ARM_cases": 8,
+      "reference_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+      "candidate_sha256": "f432d7ccbcb87d415522fea8b891e02926a974b3aeb503a54bbae5716e4d360a",
+      "records": {
+        "reference": {
+          "completed_result": {
+            "stage": 0,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "completed_result_done": {
+            "stage": 0,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 3,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "result_error": {
+            "stage": 2,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 4294967250,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "final_write_busy": {
+            "stage": 1,
+            "command": 0,
+            "pending": 0,
+            "complete": 1,
+            "error": 0,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 1,
+            "nrz_phase": 1,
+            "offset": 0
+          }
+        },
+        "candidate": {
+          "completed_result": {
+            "stage": 2,
+            "command": 14,
+            "pending": 1,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 5,
+            "nrz_phase": 3,
+            "offset": 0
+          },
+          "completed_result_done": {
+            "stage": 2,
+            "command": 14,
+            "pending": 1,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 6,
+            "nrz_phase": 3,
+            "offset": 0
+          },
+          "result_error": {
+            "stage": 2,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 4294967250,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "final_write_busy": {
+            "stage": 1,
+            "command": 0,
+            "pending": 0,
+            "complete": 1,
+            "error": 0,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 1,
+            "nrz_phase": 1,
+            "offset": 0
+          }
+        }
+      },
+      "scope": "Actual service/engine/lease/TX instructions; completed result publishes exactly once and admits next prepared job in same call with idle pins or an unconsumed I2C reply; real errors retained; final WRITE ack unchanged under busy I2C. Modeled MMIO, not hardware priming measurement."
+    },
+    "arm-keyboard-test": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "reference_stale_read_and_unknown_errors_reproduced": true,
+      "actual_firmware_ARM_cases": 18,
+      "reference_sha256": "35ab658b42d5889e585ceb514d7bbdd6c61ac5bbbf77c485a7cbc38e2a6ba969",
+      "candidate_sha256": "f432d7ccbcb87d415522fea8b891e02926a974b3aeb503a54bbae5716e4d360a",
+      "scope": "Actual sealed Pico Keyboard/request_register/fault ARM, DWARF-pinned objects, modeled I2C peer1s expiry and documented UNKNOWN, normal/guard/late/32bit rollover, malformed reply capture; no runtime or counter fields edited"
+    }
+  },
+  "combined_candidate": {
+    "build": "1BDB4385",
+    "crc": "161FEF7E",
+    "installed": false,
+    "package_path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-014.json",
+    "package_sha256": "0555973a2b2e9917b544a02d61b96d90af4a21dc36b02cc3f5cf72124dcdf4f5",
+    "pins": 1720,
+    "compiled_source_sha256": "f6b6607f4ddb239b25cb0e0131220cb61b9eab14ab60aa8175aeffe0f2a8fa51",
+    "native_elf_sha256": "8abddafabe3734c70df962b6184fe6deb23c0791e405a0fc90884d6b097e502f",
+    "scope": "Same Spectrum7paths plus exactly4 AI production changes,6 overlay files including2 tests. One combined Pico installation then Spectrum4short/firstfault at125/72, AI APP270 only after separate clean handoff.",
+    "static_ram": 120516,
+    "heap": 108860,
+    "standalone509_go_transferable": false,
+    "combined_arm_Nrz_service_keyboard_AI": "PASS exact combined ELF",
+    "physical_io": false,
+    "clean_start": {
+      "package_path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-015.json",
+      "package_sha256": "cc7ccd13c1019d91482afc5dccfce89e1cd347b5c62d5222be90813ef70b11d6",
+      "pins": 1724,
+      "old_crash_clear_commands": 1,
+      "old_crash_payload_reads": 0,
+      "old_Flash_backups": 0,
+      "old_state_comparisons": 0,
+      "rollback": false,
+      "new_image_readback": true,
+      "new_crash_policy": "Require NONE after boot and every test; do not clear fresh faults.",
+      "physical_io": false,
+      "cleanup": "Superseded packages and build inputs removed after successful complete Spectrum+AI cycle; existing source/provenance chain retained until then."
+    }
+  },
+  "physical_2026_11_13": {
+    "install": {
+      "status": "PASS",
+      "Pico": "1BDB4385 / 161FEF7E",
+      "full_readback": true,
+      "BOOTS": 24,
+      "CRASH": "NONE",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-pico-007/receipt.json",
+      "receipt_sha256": "885e39b51c684b6578e3e9256381cbbf5b66bbd117f3e8d360a01f28edcf30b5"
+    },
+    "short": {
+      "status": "HOLD",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-006/receipt.json",
+      "receipt_sha256": "aadd1ec919a6e20eba83aad36cda04f646985980fd84a2b1d6f0fd95756f1731",
+      "case": "AYABC",
+      "qualified_short_passes": 0,
+      "frames": 130,
+      "nrz_blocks": 563,
+      "audio_underruns": 0,
+      "engine_error": -45,
+      "late_blocks": 2,
+      "block_max_us": 4761,
+      "prime_us": 16594,
+      "max_frame_lag_us": 3618,
+      "I2C_errors": 0,
+      "battery_errors": 0,
+      "pio_fifo_debug": 0,
+      "dma_words_remaining": 0,
+      "cleanup_complete": true
+    }
+  },
+  "gp6_candidate": {
+    "Pico": "7ACE0AE4 / 7E555A73",
+    "package": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-017.json",
+    "package_sha256": "343ecbea4ba806770e19dafbe0ddbe89c008d6c5d13711a0ff88d5e363fae66f",
+    "status": "HOST_TESTED",
+    "physical_io": false,
+    "model_cases": 72,
+    "old_stop_errors_intact_data": 33,
+    "GP6_framing": true,
+    "CRC_and_sequence_validation": true,
+    "ACK_before_I2C_controller_restore": true,
+    "M3_body_crc": "B89B1FE5",
+    "static_sram_bytes": 120516,
+    "heap_bytes": 108860
+  },
+  "short_007": {
+    "build": "7ACE0AE4",
+    "crc": "7E555A73",
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-007/receipt.json",
+    "status": "HOLD",
+    "error": -46,
+    "late_blocks": 0,
+    "underruns": 0,
+    "metrics": {
+      "mode": 2,
+      "frames": 73,
+      "cycles": 5232947,
+      "elapsed_us": 1495128,
+      "timing_valid": true,
+      "mhz": 3.499999331160944,
+      "fps": 48.825251082181595,
+      "starved": 0,
+      "frame_min_us": 19928,
+      "frame_max_us": 20537,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 536,
+      "samples": 37760,
+      "blocks": 320,
+      "block_max_us": 4188,
+      "block_min_us": 2783,
+      "prime_us": 16604,
+      "min_queued": 168,
+      "inline_requests": 145,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 18744,
+      "transport_rx_bytes": 10472,
+      "native_render_us": 606383,
+      "exchange_block_us": 1150002,
+      "nrz4_blocks": 320,
+      "nrz4_bytes": 78080,
+      "nrz4_returns": 321,
+      "nrz4_restore_us": 235,
+      "nrz4_transport_us": 1302,
+      "nrz4_wait_us": 3148,
+      "nrz4_hold_us": 20028
+    },
+    "cleanup_complete": true
+  },
+  "gp6_capture_001": {
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-gp6-capture-001/receipt.json",
+    "status": "HOLD",
+    "state": 1,
+    "at": 303416003,
+    "context": "20035600",
+    "error": -46,
+    "wire_sequence": 509,
+    "wire_started": 303412499,
+    "copied_bytes": 776,
+    "phase": 8,
+    "frame_bytes": 268,
+    "ceiling": 244,
+    "reported_actual": 244,
+    "expected_sequence": 509,
+    "native_error": -46,
+    "header_magic": "345A524E",
+    "received_sequence": 509,
+    "module_bytes": 244,
+    "job": 1219,
+    "slice_us": 1304,
+    "module_status": 0,
+    "received_crc": "EECECCEE",
+    "calculated_crc": "6D6B0299",
+    "validation_failures": [
+      "crc"
+    ],
+    "accepted_blocks": 122,
+    "expected_crc": "50378A56",
+    "matching_shifted_payload_bytes": 186,
+    "frame_shift_bytes": 4,
+    "cleanup_complete": true
+  },
+  "centered_receiver": {
+    "status": "HOST_PASS",
+    "hardware_verified": false,
+    "build": "B1F4B802",
+    "crc": "ECA8A1F1",
+    "bin_sha256": "9ca2ce865c62e12c4932212a3cd4907750b8a4e35c04f8ab22d0f342c1b4e6a1",
+    "uf2_sha256": "ff1b83e719c83035d237daf7e7f757e9ef0c4109d07c6c5c95dbf5bafb53a246",
+    "source_sha256": "a58ef409586990e7e275e613a314ae625926e30ff61db8cf7ee69cddcd3816ee",
+    "elf_sha256": "49cade2c36f8f36f881e1fd3b4558156c2e2e93b2eef15059d2692b0b35f1c9e",
+    "static_sram_bytes": 120516,
+    "heap_bytes": 108860,
+    "package": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-018.json",
+    "package_sha256": "fd1354c939a5a79e1477295dfd65013c2e50d7a1004220b837714fa3a6a53ac3",
+    "model": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "PIO_instruction_model_cases": 4608,
+      "old_failing_cases": 772,
+      "old_bad_stop": 3,
+      "old_intact_stop_bad_payload_reproduced": true,
+      "candidate_bad_stops": 0,
+      "symbol_hz": 2000000,
+      "late_PC_edge_tested_ns": 312.5,
+      "clock_drift_tested_percent": [
+        -1,
+        1
+      ],
+      "fractional_divider_quantization": true,
+      "change": "PIO SM16->64MHz, WAIT delay23/SET delay31/JMP delay30: sample125ns later with finite receive and interframe margin; symbol/CPU clocks unchanged",
+      "scope": "Ideal DMA drain, modeled single PC-lane stop or data-edge lag. Reproduces stop3 with intact payload and intact stops with bad payload, not proof of a hardware worst-case bound or corrected hardware.",
+      "gp6_framing_cases": 72,
+      "old_stop_errors_with_intact_data": 33,
+      "model_corrupt_data_still_fails_crc": true,
+      "delayed_start_cases": 144,
+      "old_group_loss_reproduced": true,
+      "captured_bytes_reproduced": 268,
+      "captured_shift_bytes": 4,
+      "center_sample_ns": 250,
+      "tested_start_delay_ns": 150,
+      "tested_PC_data_delay_ns": 150
+    },
+    "inferred_start_delay_ns": 120,
+    "modeled_GPIOC_skew_ns": 16,
+    "M3_body_crc": "B89B1FE5",
+    "CPU_clock_change": false,
+    "wire_rate_change": false
+  },
+  "short_008": {
+    "status": "HOLD",
+    "build": "B1F4B802",
+    "crc": "ECA8A1F1",
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-008/receipt.json",
+    "metrics": {
+      "mode": 2,
+      "frames": 4,
+      "cycles": 287060,
+      "elapsed_us": 88881,
+      "timing_valid": true,
+      "mhz": 3.2297116369077754,
+      "fps": 45.003994104476774,
+      "starved": 0,
+      "frame_min_us": 20480,
+      "frame_max_us": 27371,
+      "late_frames_1ms": 1,
+      "max_frame_lag_us": 6961,
+      "samples": 2006,
+      "blocks": 17,
+      "block_max_us": 4157,
+      "block_min_us": 3352,
+      "prime_us": 17904,
+      "min_queued": 240,
+      "inline_requests": 9,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 7258,
+      "transport_rx_bytes": 1382,
+      "native_render_us": 33036,
+      "exchange_block_us": 60964,
+      "nrz4_blocks": 17,
+      "nrz4_bytes": 4148,
+      "nrz4_returns": 18,
+      "nrz4_restore_us": 220,
+      "nrz4_transport_us": 1121,
+      "nrz4_wait_us": 2630,
+      "nrz4_hold_us": 20035
+    },
+    "failures": [
+      "complete_run",
+      "no_probe_fault",
+      "z80_at_least_3_5MHz",
+      "no_frame_delays_over_1ms",
+      "frame_lag_bounded",
+      "zero_M3_ERROR",
+      "profile_sample_coverage",
+      "nrz4_no_errors",
+      "nrz4_all_pins_returned"
+    ],
+    "cleanup_complete": true,
+    "late_blocks": 0,
+    "underruns": 0
+  },
+  "center_capture_001": {
+    "state": 1,
+    "at": 307726403,
+    "context": "20035600",
+    "error": -46,
+    "wire_sequence": 90,
+    "wire_started": 307723196,
+    "copied_bytes": 776,
+    "phase": 8,
+    "frame_bytes": 268,
+    "ceiling": 244,
+    "reported_actual": 244,
+    "expected_sequence": 90,
+    "native_error": -46,
+    "single_bit_crc_repair": {
+      "offset": 222,
+      "bit": 7,
+      "received": 0,
+      "expected": 128,
+      "group": 55,
+      "symbol_in_group": 4,
+      "lane": 3
+    },
+    "header_magic": "345A524E",
+    "received_sequence": 90,
+    "module_bytes": 244,
+    "job": 1248,
+    "slice_us": 1264,
+    "module_status": 0,
+    "received_crc": "E2728DCE",
+    "calculated_crc": "7BC1C6BE",
+    "validation_failures": [
+      "crc"
+    ],
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-center-capture-001/receipt.json",
+    "status": "HOLD",
+    "independently_reproduced_audio_block": 7,
+    "matching_bytes": 267,
+    "mismatched_byte": 222,
+    "expected_byte": 128,
+    "expected_crc": "E2728DCE",
+    "cleanup_complete": true
+  },
+  "majority_receiver": {
+    "status": "HOST_PASS",
+    "physical_io": false,
+    "hardware_verified": false,
+    "manifest": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.16",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "automatic_audio_clock_mhz": null,
+      "ai_overclock_diagnostic": false,
+      "ai_fast_clock": true,
+      "ai_fast_math": true,
+      "ai_psram_late_read": false,
+      "block_audio_dma": false,
+      "m0_libc_candidate": 0,
+      "lcd_color_chain": true,
+      "lcd_spi_requested_hz": 12500000,
+      "psram_bus": "qpi-with-spi-fallback",
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + owned ARMv6-M IEEE runtime",
+      "arithmetic_runtime": "owned-m0",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 1793244,
+      "flash_limit": 2088960,
+      "static_ram_bytes": 120524,
+      "foreground_memory_budget": {
+        "minimum_heap_bytes": 108544,
+        "heap_capacity_bytes": 108852
+      },
+      "static_ram_data_bss_bytes": 83988,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 3586560,
+      "bin_sha256": "37bcabf04c1ee0dade6b4435ba5b7de7dbd383865ae3e9a5d6d40c202289168b",
+      "uf2_sha256": "ce015bf801bd49f5a6a04b21761383d6768d0af159613cd86fe8a887036e8644",
+      "hardware_verified": false,
+      "source_sha256": "462cbbbeeb0c6a23df7469e76027b02b3ef40cee1af94728f4c7976042d5b68c",
+      "build_id": "17058cb6",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 1793244,
+        "footer_offset": 951396,
+        "profile_id": "50434831",
+        "crc32": "f6343b1e"
+      }
+    },
+    "production_overlay": {
+      "base": "B1F4B802 / ECA8A1F1",
+      "production_changes": {
+        "ports/picocalc/m3_audio.cpp": {
+          "before": "754feaf578eb4eaf17039da4e27e221eb0c3925bdda12e48ef7058bad5bde662",
+          "after": "88c79b6a22538cb67c3e8f61e7d301d2950715ab3f7b478bb895665a10f3d3d5"
+        },
+        "ports/picocalc/m3_audio.hpp": {
+          "before": "18488825827411bd1f4599e50e92dd74466d474c30f5d5e11f1ea71de31f759b",
+          "after": "6cd29da12cd71d5a6d535a1db607dfa852b937a6a93c06f76bae80c348172bb4"
+        },
+        "ports/picocalc/m3_nrz4.cpp": {
+          "before": "0ba385acec1c21399f1ce7b2de7c87a0217ab90766bf7804ec6936df7c059c69",
+          "after": "d21baa2c64a61c8292f4721064e81f76236b00b3da975a0dd03c17f8257ac315"
+        },
+        "ports/picocalc/m3_nrz4.hpp": {
+          "before": "a4025b5b1a547193c54556af0513666a1ebbbf627d99b92cc144a5d729105d08",
+          "after": "bacc26e10cebacc1008306381993ea306fa3768519eb3951b1c04f99e54f7ac7"
+        },
+        "ports/picocalc/main.cpp": {
+          "before": "db0af7b1688d9f58f48c86cd8fe7701440ab6279db1ab97ac5b78ae51bbcd8d8",
+          "after": "92ef207b66e723a2627a5feb626e67ed70b6730f8537476b5090365ee2ab8a16"
+        },
+        "sdk/coproc/nrz4.h": {
+          "before": "89522ec0d0a911642af0f892ca52ac396a59f466375d5086d71b3481ce1bb569",
+          "after": "2bfd7200879519547aeabfc1b497dc5a85eef10a97029a0fe92a85a8969cc461"
+        }
+      },
+      "M3_wire_unchanged": true,
+      "physical_io": false
+    },
+    "model": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "PIO_instruction_model_cases": 4608,
+      "old_failing_cases": 772,
+      "old_bad_stop": 3,
+      "old_intact_stop_bad_payload_reproduced": true,
+      "candidate_bad_stops": 0,
+      "symbol_hz": 2000000,
+      "late_PC_edge_tested_ns": 312.5,
+      "clock_drift_tested_percent": [
+        -1,
+        1
+      ],
+      "fractional_divider_quantization": true,
+      "change": "PIO SM16->64MHz, WAIT delay23/SET delay31/JMP delay30: sample125ns later with finite receive and interframe margin; symbol/CPU clocks unchanged",
+      "scope": "Ideal DMA drain, modeled single PC-lane stop or data-edge lag. Reproduces stop3 with intact payload and intact stops with bad payload, not proof of a hardware worst-case bound or corrected hardware.",
+      "gp6_framing_cases": 72,
+      "old_stop_errors_with_intact_data": 33,
+      "model_corrupt_data_still_fails_crc": true,
+      "delayed_start_cases": 144,
+      "old_group_loss_reproduced": true,
+      "captured_bytes_reproduced": 268,
+      "captured_shift_bytes": 4,
+      "sample_points_ns": [
+        187.5,
+        250,
+        312.5
+      ],
+      "tested_start_delay_ns": 150,
+      "tested_PC_data_delay_ns": 150,
+      "single_sample_transient_cases": 672,
+      "two_sample_fault_rejected_by_crc": true
+    },
+    "bit_replay": {
+      "status": "PASS",
+      "physical_io": false,
+      "actual_ARM_cases": 3,
+      "raw_frame_sha256": "5a877b247562a3331f91cb60bffd67a8d2c9ee5abd7692031b7c7b25e58f7d30",
+      "source_crc": "E2728DCE",
+      "firmware_sha256": "ed385fe5b1ad85ee22dab846d1c09906cdfd899b925cff4c62447444ad389e02",
+      "scope": "One bad temporal sample is outvoted and exact original payload is published after full CRC. Two or three bad samples fail original CRC without ACK or publication. Physical pulse width remains unmeasured."
+    },
+    "ARM": {
+      "nrz": {
+        "status": "PASS",
+        "physical_io": false,
+        "hardware_timing_measured": false,
+        "normal_ARM_cases": 7,
+        "voted_sample_and_UART_reuse_cases": 3,
+        "faults": [
+          "no_stop",
+          "no_final_idle",
+          "dma_bus",
+          "pio_stall",
+          "crc",
+          "two_samples",
+          "no_data",
+          "no_ready",
+          "no_ack_release",
+          "disable_stuck",
+          "reset_stuck",
+          "restore_enable_stuck",
+          "cancel_tx",
+          "cancel_rx",
+          "cancel_ack"
+        ],
+        "admission_cases": 12,
+        "first_fault_diagnostic_cases": 2,
+        "completed_reply_copy_cases": 3,
+        "actual_service_cleanup_cases": 10,
+        "elf_sha256": "ed385fe5b1ad85ee22dab846d1c09906cdfd899b925cff4c62447444ad389e02",
+        "scope": "Actual Pico Nrz4 and SDK ARM instructions; modeled GPIO/UART/I2C/PIO/DMA; receiver setup, CRC/no publication on faults, bounded recovery, UART RX armed before ACK release, exact GPIO/I2C/UART restore and SDK release. Not electrical or physical timing validation."
+      },
+      "service": {
+        "status": "PASS",
+        "physical_io": false,
+        "hardware_timing_measured": false,
+        "actual_ARM_cases": 8,
+        "reference_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+        "candidate_sha256": "ed385fe5b1ad85ee22dab846d1c09906cdfd899b925cff4c62447444ad389e02",
+        "records": {
+          "reference": {
+            "completed_result": {
+              "stage": 0,
+              "command": 0,
+              "pending": 0,
+              "complete": 0,
+              "error": 0,
+              "blocks": 1,
+              "sequence": 1,
+              "physical_slot": 0,
+              "nrz_phase": 1,
+              "offset": 0
+            },
+            "completed_result_done": {
+              "stage": 0,
+              "command": 0,
+              "pending": 0,
+              "complete": 0,
+              "error": 0,
+              "blocks": 1,
+              "sequence": 1,
+              "physical_slot": 3,
+              "nrz_phase": 1,
+              "offset": 0
+            },
+            "result_error": {
+              "stage": 2,
+              "command": 0,
+              "pending": 0,
+              "complete": 0,
+              "error": 4294967250,
+              "blocks": 0,
+              "sequence": 0,
+              "physical_slot": 0,
+              "nrz_phase": 1,
+              "offset": 0
+            },
+            "final_write_busy": {
+              "stage": 1,
+              "command": 0,
+              "pending": 0,
+              "complete": 1,
+              "error": 0,
+              "blocks": 0,
+              "sequence": 0,
+              "physical_slot": 1,
+              "nrz_phase": 1,
+              "offset": 0
+            }
+          },
+          "candidate": {
+            "completed_result": {
+              "stage": 2,
+              "command": 14,
+              "pending": 1,
+              "complete": 0,
+              "error": 0,
+              "blocks": 1,
+              "sequence": 1,
+              "physical_slot": 5,
+              "nrz_phase": 3,
+              "offset": 0
+            },
+            "completed_result_done": {
+              "stage": 2,
+              "command": 14,
+              "pending": 1,
+              "complete": 0,
+              "error": 0,
+              "blocks": 1,
+              "sequence": 1,
+              "physical_slot": 6,
+              "nrz_phase": 3,
+              "offset": 0
+            },
+            "result_error": {
+              "stage": 2,
+              "command": 0,
+              "pending": 0,
+              "complete": 0,
+              "error": 4294967250,
+              "blocks": 0,
+              "sequence": 0,
+              "physical_slot": 0,
+              "nrz_phase": 1,
+              "offset": 0
+            },
+            "final_write_busy": {
+              "stage": 1,
+              "command": 0,
+              "pending": 0,
+              "complete": 1,
+              "error": 0,
+              "blocks": 0,
+              "sequence": 0,
+              "physical_slot": 1,
+              "nrz_phase": 1,
+              "offset": 0
+            }
+          }
+        },
+        "scope": "Actual service/engine/lease/TX instructions; completed result publishes exactly once and admits next prepared job in same call with idle pins or an unconsumed I2C reply; real errors retained; final WRITE ack unchanged under busy I2C. Modeled MMIO, not hardware priming measurement."
+      },
+      "keyboard": {
+        "status": "PASS",
+        "physical_io": false,
+        "hardware_timing_measured": false,
+        "reference_stale_read_and_unknown_errors_reproduced": true,
+        "actual_firmware_ARM_cases": 18,
+        "reference_sha256": "35ab658b42d5889e585ceb514d7bbdd6c61ac5bbbf77c485a7cbc38e2a6ba969",
+        "candidate_sha256": "ed385fe5b1ad85ee22dab846d1c09906cdfd899b925cff4c62447444ad389e02",
+        "scope": "Actual sealed Pico Keyboard/request_register/fault ARM, DWARF-pinned objects, modeled I2C peer1s expiry and documented UNKNOWN, normal/guard/late/32bit rollover, malformed reply capture; no runtime or counter fields edited"
+      },
+      "ai": {
+        "status": "NATIVE_ARM_ROM_PASS",
+        "physical_io": false,
+        "cases": [
+          {
+            "id": 0,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 1,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 2,
+            "columns": 384,
+            "rows": 8,
+            "kernel": "direct",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 3,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 4,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 5,
+            "columns": 128,
+            "rows": 16,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 6,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 7,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 8,
+            "columns": 384,
+            "rows": 8,
+            "kernel": "direct",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 9,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 10,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 11,
+            "columns": 128,
+            "rows": 16,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 12,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 13,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 14,
+            "columns": 384,
+            "rows": 8,
+            "kernel": "direct",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 15,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 16,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 17,
+            "columns": 128,
+            "rows": 16,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 18,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 19,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 20,
+            "columns": 384,
+            "rows": 8,
+            "kernel": "direct",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 21,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 22,
+            "columns": 128,
+            "rows": 28,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          },
+          {
+            "id": 23,
+            "columns": 128,
+            "rows": 16,
+            "kernel": "LUT8",
+            "whole_and_split_bit_exact": true
+          }
+        ],
+        "whole_and_split_checks": 48,
+        "integer_dot_cases": 803,
+        "integer_dot_checks": 6424,
+        "all_weight_byte_alignments": true,
+        "both_table_halfword_alignments": true,
+        "unaligned_fallback_entries": 4818,
+        "no_unaligned_weight_word_reads": true,
+        "numeric_error_checks": 8,
+        "format_error_checks": 8,
+        "failed_row_not_stored": true,
+        "maximum_kernel_stack_bytes": 224,
+        "firmware_sha256": "ed385fe5b1ad85ee22dab846d1c09906cdfd899b925cff4c62447444ad389e02",
+        "fixtures_sha256": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+        "new_kernel_and_prepare_in_SRAM": true
+      }
+    },
+    "original_wire_rate": 2000000,
+    "stock_hz": [
+      125000000,
+      72000000
+    ],
+    "M3_body_crc": "B89B1FE5"
+  },
+  "unified_majority": {
+    "status": "HOST_PASS",
+    "hardware_verified": false,
+    "physical_io": false,
+    "package": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-019.json",
+    "package_sha256": "fbbef0fcb3a9d777f4f79821a9b04053317197a7d0a0b5389d697b82f8f67f28",
+    "manifest": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.16",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "automatic_audio_clock_mhz": null,
+      "ai_overclock_diagnostic": false,
+      "ai_fast_clock": true,
+      "ai_fast_math": true,
+      "ai_psram_late_read": false,
+      "block_audio_dma": false,
+      "m0_libc_candidate": 0,
+      "lcd_color_chain": true,
+      "lcd_spi_requested_hz": 12500000,
+      "psram_bus": "qpi-with-spi-fallback",
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + owned ARMv6-M IEEE runtime",
+      "arithmetic_runtime": "owned-m0",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 1793244,
+      "flash_limit": 2088960,
+      "static_ram_bytes": 120540,
+      "foreground_memory_budget": {
+        "minimum_heap_bytes": 108544,
+        "heap_capacity_bytes": 108836
+      },
+      "static_ram_data_bss_bytes": 84004,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 3586560,
+      "bin_sha256": "9007f240a0691413a2d7aed7678532017850302721a2316fd56d5f23b0ea8884",
+      "uf2_sha256": "f2c62eda36a5bc5bd27523b54f74161713c882abf1d86cedd99113a605f8d6bb",
+      "hardware_verified": false,
+      "source_sha256": "6b95cb2075c5235da1657179e9077a7672d8a3e39a83f731e9accb9637ef1102",
+      "build_id": "c529144e",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 1793244,
+        "footer_offset": 951668,
+        "profile_id": "50434831",
+        "crc32": "630315f7"
+      }
+    },
+    "overlay": {
+      "base": "B1F4B802 / ECA8A1F1",
+      "production_changes": {
+        "ports/picocalc/CMakeLists.txt": {
+          "before": "b433f63b9e247cd25e22a62a29477c22f2ab9b15b3fe8418b05fff84733ec68a",
+          "after": "72012496f83c89c70d091e032a0dc97f335932fbc4f1aea2d30c7d62b13eca32"
+        },
+        "ports/picocalc/ai_harness.cpp": {
+          "before": "ac452305fad52bd4109ee355cd63c89ca4387bc2421113cdc80417e052b6c918",
+          "after": "5dbc31e11b7bb2471ae7e06fd7463d17f1d46d65638fb409ab3c5ab9b0ff5df9"
+        },
+        "ports/picocalc/ai_psram_read_clock.hpp": {
+          "before": "215d308ed3cf3b6098f21252045a02712278f20004fd0ea44a33bcf4f87a839f",
+          "after": "ac6cc69bae0762433b34c39faad45bf84eaa744f3421be33b1c52fc0aa1b947f"
+        },
+        "ports/picocalc/m3_audio.cpp": {
+          "before": "754feaf578eb4eaf17039da4e27e221eb0c3925bdda12e48ef7058bad5bde662",
+          "after": "88c79b6a22538cb67c3e8f61e7d301d2950715ab3f7b478bb895665a10f3d3d5"
+        },
+        "ports/picocalc/m3_audio.hpp": {
+          "before": "18488825827411bd1f4599e50e92dd74466d474c30f5d5e11f1ea71de31f759b",
+          "after": "6cd29da12cd71d5a6d535a1db607dfa852b937a6a93c06f76bae80c348172bb4"
+        },
+        "ports/picocalc/m3_nrz4.cpp": {
+          "before": "0ba385acec1c21399f1ce7b2de7c87a0217ab90766bf7804ec6936df7c059c69",
+          "after": "1372a6f54d47719bf4a4880c56651745ad1e595a10e3bd28303e65ff97f4a870"
+        },
+        "ports/picocalc/m3_nrz4.hpp": {
+          "before": "a4025b5b1a547193c54556af0513666a1ebbbf627d99b92cc144a5d729105d08",
+          "after": "bacc26e10cebacc1008306381993ea306fa3768519eb3951b1c04f99e54f7ac7"
+        },
+        "ports/picocalc/main.cpp": {
+          "before": "db0af7b1688d9f58f48c86cd8fe7701440ab6279db1ab97ac5b78ae51bbcd8d8",
+          "after": "92ef207b66e723a2627a5feb626e67ed70b6730f8537476b5090365ee2ab8a16"
+        },
+        "ports/picocalc/psram.cpp": {
+          "before": "17f3c91ab7fdf7e8b1cbbac39c6928120dbfd237525480380f17b523fade5191",
+          "after": "4b5a720da293d1387d619ffd73721ef4170b47aeda72141b1b53f3ac4f7ef7fb"
+        },
+        "ports/picocalc/psram.hpp": {
+          "before": "98715a3076aea7d93048af448e1586301e7ecdbabfd07640d6da33c677fdf02b",
+          "after": "616ce5d9c6ece34fe994f42ba6859596e48c4294ac255db125fe13806e694b1f"
+        },
+        "ports/picocalc/psram_qpi_burst.pio": {
+          "before": null,
+          "after": "2526ae96f6422d99335f82b1e53f320d38274b045c15c380406cb375ba163952"
+        },
+        "ports/picocalc/psram_stream.hpp": {
+          "before": "c950ccf02a6909850401e6a7d71d524a9dc8881c846f88143c8ef3a99b5b56e1",
+          "after": "f9dfc3813e14364da7830f224af4dd50d7b1bd1462ed187ed1a296c7842b9c52"
+        },
+        "sdk/coproc/nrz4.h": {
+          "before": "89522ec0d0a911642af0f892ca52ac396a59f466375d5086d71b3481ce1bb569",
+          "after": "a07003e3956c81d91efda4dedc1444c7c4c50a4bb09ad603e200e3c630e0ff18"
+        }
+      },
+      "ai_build": "C31F0D5E",
+      "ai_crc": "9643F2BC",
+      "ai_overlay": "/Users/bolk/Projects/MK61S_MINI/.build/mk61ai/psram-burst-20261113/production-overlay-final.json",
+      "ai_overlay_sha256": "873edcc8b778fc429e8a97410d3b21ab697a04d6d2159ce0e1c8cb84b82ecb54",
+      "M3_wire_unchanged": true,
+      "physical_io": false
+    },
+    "arm_instructions": {
+      "physical_io": false,
+      "scope": "Actual ARM instruction counts from DMA complete to validated NRZ frame. Counts do not measure clock cycles or wall time.",
+      "instructions": {
+        "center-sampling": 3595,
+        "majority-combined": 10817,
+        "majority-final": 10018
+      }
+    },
+    "host_checks": {
+      "controller": {
+        "status": "PASS",
+        "physical_io": false,
+        "controller_sha256": "6cddd9177c7f17f25b916fc11d4472e79e927b33cb939ebff5e3b0dec86e1ccb",
+        "test_sha256": "9902b976c7902d241bcada10bcd35ae46602e66638efa3a48cf728fcaf17b2f2",
+        "scope": "In-memory CDC/SD/ROM tools only; paired OS ownership query retains both aliases/all PIDs/error rejection/no retry; actual clean Pico-only install: old record present/absent, one clear only, clear-reply/clear-status faults before Flash, new-image readback/startup/new-crash rejection; no old payload show/save/compare/backup/rollback; Gate.finish serialization; no replay; installed proof gates;4strict short passes; audio-first-fault stop after2; SD battery-first-fault stop before game; cleanup; long blocked without4PASS; startup raw UNKNOWN->two valid CHARGING samples and all games while CHARGING and immediate real-error stop. Not hardware qualification."
+      },
+      "ARM": {
+        "nrz": {
+          "status": "PASS",
+          "physical_io": false,
+          "hardware_timing_measured": false,
+          "normal_ARM_cases": 7,
+          "voted_sample_and_UART_reuse_cases": 3,
+          "faults": [
+            "no_stop",
+            "no_final_idle",
+            "dma_bus",
+            "pio_stall",
+            "crc",
+            "two_samples",
+            "no_data",
+            "no_ready",
+            "no_ack_release",
+            "disable_stuck",
+            "reset_stuck",
+            "restore_enable_stuck",
+            "cancel_tx",
+            "cancel_rx",
+            "cancel_ack"
+          ],
+          "admission_cases": 12,
+          "first_fault_diagnostic_cases": 2,
+          "completed_reply_copy_cases": 3,
+          "actual_service_cleanup_cases": 10,
+          "elf_sha256": "79f3b5c9b6b50c9282ad7f231dca76369ea0a6dae449f93d8e222bdfbf7a7774",
+          "scope": "Actual Pico Nrz4 and SDK ARM instructions; modeled GPIO/UART/I2C/PIO/DMA; receiver setup, CRC/no publication on faults, bounded recovery, UART RX armed before ACK release, exact GPIO/I2C/UART restore and SDK release. Not electrical or physical timing validation."
+        },
+        "service": {
+          "status": "PASS",
+          "physical_io": false,
+          "hardware_timing_measured": false,
+          "actual_ARM_cases": 8,
+          "reference_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+          "candidate_sha256": "79f3b5c9b6b50c9282ad7f231dca76369ea0a6dae449f93d8e222bdfbf7a7774",
+          "records": {
+            "reference": {
+              "completed_result": {
+                "stage": 0,
+                "command": 0,
+                "pending": 0,
+                "complete": 0,
+                "error": 0,
+                "blocks": 1,
+                "sequence": 1,
+                "physical_slot": 0,
+                "nrz_phase": 1,
+                "offset": 0
+              },
+              "completed_result_done": {
+                "stage": 0,
+                "command": 0,
+                "pending": 0,
+                "complete": 0,
+                "error": 0,
+                "blocks": 1,
+                "sequence": 1,
+                "physical_slot": 3,
+                "nrz_phase": 1,
+                "offset": 0
+              },
+              "result_error": {
+                "stage": 2,
+                "command": 0,
+                "pending": 0,
+                "complete": 0,
+                "error": 4294967250,
+                "blocks": 0,
+                "sequence": 0,
+                "physical_slot": 0,
+                "nrz_phase": 1,
+                "offset": 0
+              },
+              "final_write_busy": {
+                "stage": 1,
+                "command": 0,
+                "pending": 0,
+                "complete": 1,
+                "error": 0,
+                "blocks": 0,
+                "sequence": 0,
+                "physical_slot": 1,
+                "nrz_phase": 1,
+                "offset": 0
+              }
+            },
+            "candidate": {
+              "completed_result": {
+                "stage": 2,
+                "command": 14,
+                "pending": 1,
+                "complete": 0,
+                "error": 0,
+                "blocks": 1,
+                "sequence": 1,
+                "physical_slot": 5,
+                "nrz_phase": 3,
+                "offset": 0
+              },
+              "completed_result_done": {
+                "stage": 2,
+                "command": 14,
+                "pending": 1,
+                "complete": 0,
+                "error": 0,
+                "blocks": 1,
+                "sequence": 1,
+                "physical_slot": 6,
+                "nrz_phase": 3,
+                "offset": 0
+              },
+              "result_error": {
+                "stage": 2,
+                "command": 0,
+                "pending": 0,
+                "complete": 0,
+                "error": 4294967250,
+                "blocks": 0,
+                "sequence": 0,
+                "physical_slot": 0,
+                "nrz_phase": 1,
+                "offset": 0
+              },
+              "final_write_busy": {
+                "stage": 1,
+                "command": 0,
+                "pending": 0,
+                "complete": 1,
+                "error": 0,
+                "blocks": 0,
+                "sequence": 0,
+                "physical_slot": 1,
+                "nrz_phase": 1,
+                "offset": 0
+              }
+            }
+          },
+          "scope": "Actual service/engine/lease/TX instructions; completed result publishes exactly once and admits next prepared job in same call with idle pins or an unconsumed I2C reply; real errors retained; final WRITE ack unchanged under busy I2C. Modeled MMIO, not hardware priming measurement."
+        },
+        "keyboard": {
+          "status": "PASS",
+          "physical_io": false,
+          "hardware_timing_measured": false,
+          "reference_stale_read_and_unknown_errors_reproduced": true,
+          "actual_firmware_ARM_cases": 18,
+          "reference_sha256": "35ab658b42d5889e585ceb514d7bbdd6c61ac5bbbf77c485a7cbc38e2a6ba969",
+          "candidate_sha256": "79f3b5c9b6b50c9282ad7f231dca76369ea0a6dae449f93d8e222bdfbf7a7774",
+          "scope": "Actual sealed Pico Keyboard/request_register/fault ARM, DWARF-pinned objects, modeled I2C peer1s expiry and documented UNKNOWN, normal/guard/late/32bit rollover, malformed reply capture; no runtime or counter fields edited"
+        },
+        "ai": {
+          "status": "NATIVE_ARM_ROM_PASS",
+          "physical_io": false,
+          "cases": [
+            {
+              "id": 0,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 1,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 2,
+              "columns": 384,
+              "rows": 8,
+              "kernel": "direct",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 3,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 4,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 5,
+              "columns": 128,
+              "rows": 16,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 6,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 7,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 8,
+              "columns": 384,
+              "rows": 8,
+              "kernel": "direct",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 9,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 10,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 11,
+              "columns": 128,
+              "rows": 16,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 12,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 13,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 14,
+              "columns": 384,
+              "rows": 8,
+              "kernel": "direct",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 15,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 16,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 17,
+              "columns": 128,
+              "rows": 16,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 18,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 19,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 20,
+              "columns": 384,
+              "rows": 8,
+              "kernel": "direct",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 21,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 22,
+              "columns": 128,
+              "rows": 28,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            },
+            {
+              "id": 23,
+              "columns": 128,
+              "rows": 16,
+              "kernel": "LUT8",
+              "whole_and_split_bit_exact": true
+            }
+          ],
+          "whole_and_split_checks": 48,
+          "integer_dot_cases": 803,
+          "integer_dot_checks": 6424,
+          "all_weight_byte_alignments": true,
+          "both_table_halfword_alignments": true,
+          "unaligned_fallback_entries": 4818,
+          "no_unaligned_weight_word_reads": true,
+          "numeric_error_checks": 8,
+          "format_error_checks": 8,
+          "failed_row_not_stored": true,
+          "maximum_kernel_stack_bytes": 224,
+          "firmware_sha256": "79f3b5c9b6b50c9282ad7f231dca76369ea0a6dae449f93d8e222bdfbf7a7774",
+          "fixtures_sha256": "683778a0262e73d4c601235fce2f57a9b952b2666a7f7bca2039f1f8dca6a4da",
+          "new_kernel_and_prepare_in_SRAM": true
+        }
+      },
+      "platform": {
+        "status": "PASS",
+        "physical_io": false,
+        "commands": [
+          {
+            "command": "bash tests/run_spectrum_nrz4_tests.sh",
+            "exit_code": 0,
+            "log": "host-nrz4.log",
+            "sha256": "940204b6a0bde990277eb7e71a77e9707972761e5c912ad11a746f0492dd36c8"
+          },
+          {
+            "command": "MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh",
+            "exit_code": 0,
+            "log": "host-platform.log",
+            "sha256": "1d0e8dd6f7422a6bcf92be66e50525e96e2ee5120d3c432b337460148ee0c588"
+          },
+          {
+            "command": "bash tests/run_spectrum_m3_audio_tests.sh",
+            "exit_code": 0,
+            "log": "host-audio.log",
+            "sha256": "3a592cca14f154a19cd2cd2c52d6db80f734a962be8d94f3bb463b58a8316a12"
+          },
+          {
+            "command": "picocalc_nrz4_sampling_self_test.py with exact reference/corrupted frames",
+            "exit_code": 0,
+            "log": "captured-group-model.log",
+            "sha256": "0e296ae4a1e53b408bf105633ce8ded79469422a750c0a30672f3a5ca3c3696e"
+          }
+        ]
+      },
+      "replay": {
+        "status": "PASS",
+        "physical_io": false,
+        "hardware_timing_measured": false,
+        "PIO_instruction_model_cases": 4608,
+        "old_failing_cases": 772,
+        "old_bad_stop": 3,
+        "old_intact_stop_bad_payload_reproduced": true,
+        "candidate_bad_stops": 0,
+        "symbol_hz": 2000000,
+        "late_PC_edge_tested_ns": 312.5,
+        "clock_drift_tested_percent": [
+          -1,
+          1
+        ],
+        "fractional_divider_quantization": true,
+        "change": "PIO SM16->64MHz, WAIT delay23/SET delay31/JMP delay30: sample125ns later with finite receive and interframe margin; symbol/CPU clocks unchanged",
+        "scope": "Ideal DMA drain, modeled single PC-lane stop or data-edge lag. Reproduces stop3 with intact payload and intact stops with bad payload, not proof of a hardware worst-case bound or corrected hardware.",
+        "gp6_framing_cases": 72,
+        "old_stop_errors_with_intact_data": 33,
+        "model_corrupt_data_still_fails_crc": true,
+        "delayed_start_cases": 144,
+        "old_group_loss_reproduced": true,
+        "captured_bytes_reproduced": 268,
+        "captured_shift_bytes": 4,
+        "center_sample_ns": 250,
+        "tested_start_delay_ns": 150,
+        "tested_PC_data_delay_ns": 150
+      },
+      "bit_replay": {
+        "status": "PASS",
+        "physical_io": false,
+        "actual_ARM_cases": 3,
+        "raw_frame_sha256": "5a877b247562a3331f91cb60bffd67a8d2c9ee5abd7692031b7c7b25e58f7d30",
+        "source_crc": "E2728DCE",
+        "firmware_sha256": "79f3b5c9b6b50c9282ad7f231dca76369ea0a6dae449f93d8e222bdfbf7a7774",
+        "scope": "One bad temporal sample is outvoted and exact original payload is published after full CRC. Two or three bad samples fail original CRC without ACK or publication. Physical pulse width remains unmeasured."
+      }
+    }
+  },
+  "short_009": {
+    "status": "HOLD",
+    "build": "C529144E",
+    "crc": "630315F7",
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-009/receipt.json",
+    "metrics": {
+      "mode": 2,
+      "frames": 0,
+      "cycles": 0,
+      "elapsed_us": 0,
+      "timing_valid": false,
+      "mhz": null,
+      "fps": null,
+      "starved": 0,
+      "frame_min_us": 0,
+      "frame_max_us": 0,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 0,
+      "samples": 0,
+      "blocks": 0,
+      "block_max_us": 0,
+      "block_min_us": 0,
+      "prime_us": 0,
+      "min_queued": 0,
+      "inline_requests": 1,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 6610,
+      "transport_rx_bytes": 872,
+      "native_render_us": 1834,
+      "exchange_block_us": 0,
+      "nrz4_blocks": 0,
+      "nrz4_bytes": 0,
+      "nrz4_returns": 1,
+      "nrz4_restore_us": 95,
+      "nrz4_transport_us": 0,
+      "nrz4_wait_us": 2901,
+      "nrz4_hold_us": 20118,
+      "nrz4_disputed_blocks": 0,
+      "nrz4_disputed_lanes": 0
+    },
+    "failures": [
+      "complete_run",
+      "no_probe_fault",
+      "z80_at_least_3_5MHz",
+      "z80_paced",
+      "no_frame_delays_over_1ms",
+      "frame_lag_bounded",
+      "zero_M3_ERROR",
+      "continuous_sample_coverage",
+      "profile_sample_coverage",
+      "nrz4_no_errors",
+      "nrz4_block_coverage",
+      "nrz4_pcm_coverage",
+      "nrz4_all_pins_returned"
+    ],
+    "cleanup_complete": true
+  },
+  "raw_majority_capture": {
+    "status": "HOLD",
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-majority-capture-001/receipt.json",
+    "metadata": {
+      "state": 1,
+      "at": 379987022,
+      "context": "20035A00",
+      "error": -46,
+      "wire_sequence": 81,
+      "wire_started": 379983283,
+      "copied_bytes": 516,
+      "phase": 8,
+      "frame_bytes": 268,
+      "ceiling": 244,
+      "reported_actual": 244,
+      "expected_sequence": 81,
+      "native_error": -46,
+      "single_bit_crc_repair": {
+        "offset": 31,
+        "bit": 7,
+        "received": 0,
+        "expected": 128,
+        "group": 7,
+        "symbol_in_group": 6,
+        "lane": 3
+      },
+      "header_magic": "345A524E",
+      "received_sequence": 81,
+      "module_bytes": 244,
+      "job": 1268,
+      "slice_us": 1265,
+      "module_status": 0,
+      "received_crc": "3B5C12E7",
+      "calculated_crc": "D96287A9",
+      "validation_failures": [
+        "crc"
+      ]
+    },
+    "analysis": {
+      "decoded_crc_matches_physical": true,
+      "module_sequence": 14,
+      "captured_crc": "e7125c3b",
+      "host_expected_crc": "e7125c3b",
+      "expected_pcm_bytes_matched": 243,
+      "disputed_samples": 2,
+      "bad_groups": {
+        "7": 1
+      },
+      "faults_by_lane_and_samples": {
+        "GP9-samples-011": 1,
+        "GP9-samples-001": 1
+      },
+      "different": [
+        {
+          "offset": 31,
+          "symbol": 0,
+          "value": 8,
+          "samples": [
+            0,
+            0,
+            8
+          ],
+          "vote": 0
+        },
+        {
+          "offset": 31,
+          "symbol": 1,
+          "value": 0,
+          "samples": [
+            8,
+            0,
+            0
+          ],
+          "vote": 0
+        }
+      ]
+    },
+    "raw_samples_sha256": "9604f5e65a7a8ff5ea9eee6e58de6b39cb937d4e0307fb2839f66b2636af2818",
+    "accepted_blocks": 14,
+    "valid_blocks_with_sample_disagreements": 3,
+    "cleanup_complete": true
+  },
+  "split_lane": {
+    "status": "HOST_PASS",
+    "hardware_verified": false,
+    "package": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-020.json",
+    "package_sha256": "293ce10d3cde5cbeb9cde2b2579491070fa6b1b59477e8a2e1635b421468ec88",
+    "Pico": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.16",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "automatic_audio_clock_mhz": null,
+      "ai_overclock_diagnostic": false,
+      "ai_fast_clock": true,
+      "ai_fast_math": true,
+      "ai_psram_late_read": false,
+      "block_audio_dma": false,
+      "m0_libc_candidate": 0,
+      "lcd_color_chain": true,
+      "lcd_spi_requested_hz": 12500000,
+      "psram_bus": "qpi-with-spi-fallback",
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + owned ARMv6-M IEEE runtime",
+      "arithmetic_runtime": "owned-m0",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 1793244,
+      "flash_limit": 2088960,
+      "static_ram_bytes": 120532,
+      "foreground_memory_budget": {
+        "minimum_heap_bytes": 108544,
+        "heap_capacity_bytes": 108844
+      },
+      "static_ram_data_bss_bytes": 83996,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 3586560,
+      "bin_sha256": "1aa25c0eae2b2afe6a875cfb0d27c67f96fdea7203220bbead100d0b9e3ec2ef",
+      "uf2_sha256": "f27c4a54569bd3f7a7e993ebac880b11864c550583c3f9d668fa1d8c758c0470",
+      "hardware_verified": false,
+      "source_sha256": "f5e65d4473596e910ab2dba9b4417d4347c04aec059bf67d89e95c130dc02d6d",
+      "build_id": "8b437154",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 1793244,
+        "footer_offset": 951636,
+        "profile_id": "50434831",
+        "crc32": "a33761f2"
+      }
+    },
+    "M3": {
+      "body_bytes": 31936,
+      "body_CRC": "029BA093",
+      "M3U_sha256": "7c472b48116b9f162d81e4f24dc6395f30e017dd05b3a1aa808b153f4055cc69",
+      "cpu_hz": 72000000,
+      "symbols_hz": 1500000,
+      "bootloader_unchanged": true
+    },
+    "model": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "PIO_instruction_model_cases": 4608,
+      "old_failing_cases": 772,
+      "old_bad_stop": 3,
+      "old_intact_stop_bad_payload_reproduced": true,
+      "candidate_bad_stops": 0,
+      "symbol_hz": 2000000,
+      "late_PC_edge_tested_ns": 312.5,
+      "clock_drift_tested_percent": [
+        -1,
+        1
+      ],
+      "fractional_divider_quantization": true,
+      "change": "PIO SM16->64MHz, WAIT delay23/SET delay31/JMP delay30: sample125ns later with finite receive and interframe margin; symbol/CPU clocks unchanged",
+      "scope": "Ideal DMA drain, modeled single PC-lane stop or data-edge lag. Reproduces stop3 with intact payload and intact stops with bad payload, not proof of a hardware worst-case bound or corrected hardware.",
+      "gp6_framing_cases": 72,
+      "old_stop_errors_with_intact_data": 33,
+      "model_corrupt_data_still_fails_crc": true,
+      "delayed_start_cases": 144,
+      "old_group_loss_reproduced": true,
+      "captured_bytes_reproduced": 268,
+      "captured_shift_bytes": 4,
+      "sample_points_ns": [
+        187.5,
+        250,
+        312.5
+      ],
+      "tested_start_delay_ns": 150,
+      "tested_PC_data_delay_ns": 150,
+      "single_sample_transient_cases": 672,
+      "two_sample_fault_rejected_by_crc": true,
+      "split_lane_cases": 480,
+      "wire_symbols_hz": 1500000,
+      "port_B_sample_ns": 333.5,
+      "port_C_sample_ns": 375.2,
+      "max_modeled_start_delay_ns": 200,
+      "max_modeled_PC_delay_ns": 350,
+      "late_pulse_cases": 24,
+      "raw_capture_bytes_reproduced": 804,
+      "modeled_rising_edge_ns": 280,
+      "modeled_falling_edge_delay_ns": 220
+    }
+  },
+  "short_010": {
+    "status": "HOLD",
+    "stock_hz": [
+      125000000,
+      72000000
+    ],
+    "Pico": "8B437154 / A33761F2",
+    "M3": "029BA093",
+    "pico_readback": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-pico-011/receipt.json",
+      "sha256": "1597307a43aaf7f3804602c76c71d86d0d78a2c00b31bf2d3a0a813092c327ad"
+    },
+    "m3_readback": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-m3-002/receipt.json",
+      "sha256": "3a9eecce963dc97b7b42b4d6ae26369bb159523d793ca0941026060662ef8699"
+    },
+    "m3_restart_i2c_aborts": 62,
+    "receipt": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-010/receipt.json",
+      "sha256": "8ddf4f77992eb93415bf323dea7356c743787ecf7fec683a8cbc2d7d8efc1610"
+    },
+    "first_failure": "AYABC",
+    "failures": [
+      "zero_M3_LATE_BLOCKS"
+    ],
+    "metrics": {
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 4730,
+      "block_min_us": 2841,
+      "prime_us": 17873,
+      "min_queued": 134,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 105873,
+      "transport_rx_bytes": 79331,
+      "native_render_us": 5008578,
+      "exchange_block_us": 9933451,
+      "nrz4_blocks": 2603,
+      "nrz4_bytes": 635132,
+      "nrz4_returns": 2603,
+      "nrz4_restore_us": 344,
+      "nrz4_transport_us": 1724,
+      "nrz4_wait_us": 3299,
+      "nrz4_hold_us": 4660
+    },
+    "late_block": {
+      "index": 1304,
+      "wall_us": 4730,
+      "limit_us": 4720,
+      "frames": 118,
+      "input_bytes": 11,
+      "queued_samples": 250,
+      "service_gap_max_us": 589,
+      "receive_pump_max_us": 333,
+      "step_max_us": 355,
+      "tx_max_us": 19,
+      "stage_maxima_additive": false,
+      "m3_per_block_timing_available": false
+    },
+    "nrz_crc_errors": 0,
+    "i2c_errors": 0,
+    "underruns": 0,
+    "cleanup_complete": true,
+    "remaining_short": 3,
+    "long_started": false
+  },
+  "packed_receive": {
+    "status": "HOST_PASS",
+    "hardware_verified": false,
+    "pico": {
+      "build": "7103F15A",
+      "crc": "1265EBA4",
+      "bytes": 1793244
+    },
+    "m3_crc": "029BA093",
+    "symbol_hz": 1500000,
+    "maximum_frame_dma_words_before": 134,
+    "maximum_frame_dma_words_after": 67,
+    "ack_ready_spin_us": 8,
+    "arm_instruction_comparison": {
+      "path": ".build/spectrum-nrz4-audio-20261111/packed-receive/arm-comparison.json",
+      "sha256": "0b9c3b7d7420db6c50ffb0366c1a76b41fae2e047a3e6d3763155bc5792b290d"
+    },
+    "package": {
+      "path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-021.json",
+      "sha256": "df0def89cc8491a68b117db1e1e7b209f972c27fa88e063f647b196e37d5b8bc"
+    },
+    "criteria": {
+      "max_prime_us": 20000,
+      "stock_hz": [
+        125000000,
+        72000000
+      ],
+      "short": 4,
+      "short_frames": 600,
+      "long_frames": 30000,
+      "long_only_all_four_pass": true,
+      "minimum_Z80_MHz": "3.5 within1us timestamp uncertainty",
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 1000,
+      "M3_late_blocks": 0,
+      "underruns": 0,
+      "UART_or_NRZ_errors": 0,
+      "ready_polls": 0,
+      "fallback": 0,
+      "I2C_counter_deltas": 0,
+      "all_pin_leases_returned": true
+    }
+  },
+  "short_011": {
+    "status": "HOLD",
+    "pico": "7103F15A / 1265EBA4",
+    "m3": "029BA093",
+    "readback": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-pico-012/receipt.json",
+      "sha256": "f6d85dc0212d8f611485cd02e77ac2f12a99e903f1354fcf285e0898b2403a33"
+    },
+    "receipt": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-011/receipt.json",
+      "sha256": "6b0a0b0cf64189288f282a5b95b6d4b6fc5bbe7003ee8da10d4abd92adae2760"
+    },
+    "cleanup": {
+      "path": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-011/cleanup-native.txt",
+      "sha256": "9da47b2f488c8dd75dda6a9bd526599f40e2fd0c61d4b063ad02053b1b92b41e"
+    },
+    "case": "AYABC",
+    "failures": [
+      "zero_M3_LATE_BLOCKS"
+    ],
+    "stock_hz": [
+      125000000,
+      72000000
+    ],
+    "metrics": {
+      "mode": 2,
+      "frames": 599,
+      "cycles": 42937957,
+      "elapsed_us": 12267988,
+      "timing_valid": true,
+      "mhz": 3.4999999184870414,
+      "fps": 48.826262301528175,
+      "starved": 0,
+      "frame_min_us": 19923,
+      "frame_max_us": 20547,
+      "late_frames_1ms": 0,
+      "max_frame_lag_us": 539,
+      "samples": 307154,
+      "blocks": 2603,
+      "block_max_us": 4732,
+      "block_min_us": 2825,
+      "prime_us": 17855,
+      "min_queued": 156,
+      "inline_requests": 1192,
+      "stream_write_requests": 0,
+      "transport_tx_bytes": 105873,
+      "transport_rx_bytes": 79331,
+      "native_render_us": 5008926,
+      "exchange_block_us": 9850595,
+      "nrz4_blocks": 2603,
+      "nrz4_bytes": 635132,
+      "nrz4_returns": 2603,
+      "nrz4_restore_us": 377,
+      "nrz4_transport_us": 1763,
+      "nrz4_wait_us": 3539,
+      "nrz4_hold_us": 4654
+    },
+    "late_block": {
+      "index": 1981,
+      "wall_us": 4732,
+      "limit_us": 4720,
+      "frames": 118,
+      "input_bytes": 11,
+      "queued_samples": 264,
+      "service_gap_max_us": 426,
+      "pump_max_us": 341,
+      "step_max_us": 431,
+      "tx_max_us": 16
+    },
+    "mean_before_us": 3816.1548213599694,
+    "mean_after_us": 3784.3238570879753,
+    "nrz_crc_errors": 0,
+    "underruns": 0,
+    "i2c_errors": 0,
+    "remaining_short": 3,
+    "long_started": false
+  },
+  "timing_observer": {
+    "status": "DIAGNOSTIC_CONTROL_PASS_TIMED_FAIL",
+    "package": {
+      "path": ".build/spectrum-nrz4-audio-20261111/timing-observer/package.json",
+      "sha256": "588b557d02ce5c149232209c006c99e167c686e9df07645834df4543cff3e4b3"
+    },
+    "Pico": "F6E637C2 / C03391DF",
+    "M3": "029BA093",
+    "strict_limit_us": 4720,
+    "APP_measurement": "64us histogram bins and eight slowest observed completed blocks with M3 compute and schedule rounded to 16us",
+    "qualification_scope": "Two AY/ABC diagnostic runs; no completed four-case qualification.",
+    "control": {
+      "published_result": ".build/spectrum-nrz4-audio-20261111/timing-observer/CONTROL-recovered.json",
+      "sha256": "8770aa986de5937eeb63b0b09632599da231018b10d8fba5abcf9aa36de9e45b",
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4662,
+        "block_min_us": 2887,
+        "prime_us": 17835,
+        "min_queued": 102,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 105873,
+        "transport_rx_bytes": 79331,
+        "native_render_us": 5008684,
+        "exchange_block_us": 9768491,
+        "nrz4_blocks": 2603,
+        "nrz4_bytes": 635132,
+        "nrz4_returns": 2603,
+        "nrz4_restore_us": 310,
+        "nrz4_transport_us": 1677,
+        "nrz4_wait_us": 3402,
+        "nrz4_hold_us": 4544
+      },
+      "distribution": {
+        "wall": {
+          "count": 2602,
+          "min_us": 2887,
+          "max_us": 4662,
+          "p50_us": [
+            3712,
+            3775
+          ],
+          "p95_us": [
+            4096,
+            4159
+          ],
+          "p99_us": [
+            4288,
+            4351
+          ]
+        }
+      },
+      "coverage": 2602,
+      "coverage_missing": 1,
+      "controller_recovered": true,
+      "status": "PASS",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/timing-observer/hardware-001/receipt.json",
+      "receipt_sha256": "79746c63d5a2cb374e67bde27e15933209e4b09e84dd3657a598a0e93407692c"
+    },
+    "timed_package": {
+      "path": ".build/spectrum-nrz4-audio-20261111/timing-observer/timed-only-package.json",
+      "sha256": "d0fac6fac75c5968c5d7c73ed9266b656b8cbb353624c7de9736e716c6865b73"
+    },
+    "timed": {
+      "published_result": ".build/spectrum-nrz4-audio-20261111/timing-observer/TIMED-recovered.json",
+      "sha256": "6622c25493a0a1566df186fa7fe068555339cd131e5e59afac02b989342e8b51",
+      "status": "FAIL",
+      "strict_failures": [
+        "zero_M3_LATE_BLOCKS",
+        "started_promptly"
+      ],
+      "startup_limit_us": 20000,
+      "metrics": {
+        "mode": 2,
+        "frames": 599,
+        "cycles": 42937957,
+        "elapsed_us": 12267988,
+        "timing_valid": true,
+        "mhz": 3.4999999184870414,
+        "fps": 48.826262301528175,
+        "starved": 0,
+        "frame_min_us": 19923,
+        "frame_max_us": 20547,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 539,
+        "samples": 307154,
+        "blocks": 2603,
+        "block_max_us": 4770,
+        "block_min_us": 2908,
+        "prime_us": 20408,
+        "min_queued": 162,
+        "inline_requests": 1192,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 105997,
+        "transport_rx_bytes": 79331,
+        "native_render_us": 5000067,
+        "exchange_block_us": 9756995,
+        "nrz4_blocks": 2603,
+        "nrz4_bytes": 635132,
+        "nrz4_returns": 2603,
+        "nrz4_restore_us": 319,
+        "nrz4_transport_us": 1616,
+        "nrz4_wait_us": 3345,
+        "nrz4_hold_us": 4628
+      },
+      "timing": {
+        "captured": 2602,
+        "paired": 2602,
+        "module_timing": true,
+        "missing": 1,
+        "unpaired": 0,
+        "saturated": 0,
+        "late_observed": 1,
+        "native_max_us": 4770,
+        "resolution_us": 64,
+        "quantized_m3_fields_us": 16,
+        "distribution": {
+          "wall": {
+            "count": 2602,
+            "min_us": 2908,
+            "max_us": 4770,
+            "p50_us": [
+              3712,
+              3775
+            ],
+            "p95_us": [
+              4096,
+              4159
+            ],
+            "p99_us": [
+              4288,
+              4351
+            ]
+          },
+          "m3_compute": {
+            "count": 2602,
+            "min_us": 1232,
+            "max_us": 2336,
+            "p50_us": [
+              1920,
+              1983
+            ],
+            "p95_us": [
+              2112,
+              2175
+            ],
+            "p99_us": [
+              2176,
+              2239
+            ]
+          },
+          "m3_schedule": {
+            "count": 2602,
+            "min_us": 0,
+            "max_us": 256,
+            "p50_us": [
+              0,
+              63
+            ],
+            "p95_us": [
+              192,
+              255
+            ],
+            "p99_us": [
+              192,
+              255
+            ]
+          },
+          "remaining_exchange": {
+            "count": 2602,
+            "min_us": 1508,
+            "max_us": 2577,
+            "p50_us": [
+              1664,
+              1727
+            ],
+            "p95_us": [
+              2048,
+              2111
+            ],
+            "p99_us": [
+              2240,
+              2303
+            ]
+          }
+        },
+        "slowest": [
+          {
+            "index": 1532,
+            "wall_us": 4770,
+            "queued_samples": 360,
+            "observed_guest_frame": 354,
+            "sampled_at_us": 803731945,
+            "m3_compute_us": 2128,
+            "m3_schedule_us": 224,
+            "remaining_us": 2418,
+            "m3_largest_slice_us": 1434
+          },
+          {
+            "index": 2404,
+            "wall_us": 4529,
+            "queued_samples": 344,
+            "observed_guest_frame": 555,
+            "sampled_at_us": 807848388,
+            "m3_compute_us": 1904,
+            "m3_schedule_us": 48,
+            "remaining_us": 2577,
+            "m3_largest_slice_us": 1294
+          },
+          {
+            "index": 972,
+            "wall_us": 4491,
+            "queued_samples": 360,
+            "observed_guest_frame": 225,
+            "sampled_at_us": 801088402,
+            "m3_compute_us": 2192,
+            "m3_schedule_us": 48,
+            "remaining_us": 2251,
+            "m3_largest_slice_us": 1495
+          },
+          {
+            "index": 387,
+            "wall_us": 4487,
+            "queued_samples": 386,
+            "observed_guest_frame": 90,
+            "sampled_at_us": 798326517,
+            "m3_compute_us": 2096,
+            "m3_schedule_us": 224,
+            "remaining_us": 2167,
+            "m3_largest_slice_us": 1426
+          },
+          {
+            "index": 2,
+            "wall_us": 4465,
+            "queued_samples": 236,
+            "observed_guest_frame": 1,
+            "sampled_at_us": 796511290,
+            "m3_compute_us": 1840,
+            "m3_schedule_us": 224,
+            "remaining_us": 2401,
+            "m3_largest_slice_us": 1493
+          },
+          {
+            "index": 1787,
+            "wall_us": 4457,
+            "queued_samples": 370,
+            "observed_guest_frame": 412,
+            "sampled_at_us": 804935426,
+            "m3_compute_us": 1984,
+            "m3_schedule_us": 224,
+            "remaining_us": 2249,
+            "m3_largest_slice_us": 1351
+          },
+          {
+            "index": 537,
+            "wall_us": 4416,
+            "queued_samples": 390,
+            "observed_guest_frame": 124,
+            "sampled_at_us": 799034553,
+            "m3_compute_us": 2016,
+            "m3_schedule_us": 48,
+            "remaining_us": 2352,
+            "m3_largest_slice_us": 1365
+          },
+          {
+            "index": 1116,
+            "wall_us": 4413,
+            "queued_samples": 360,
+            "observed_guest_frame": 258,
+            "sampled_at_us": 801767947,
+            "m3_compute_us": 2080,
+            "m3_schedule_us": 48,
+            "remaining_us": 2285,
+            "m3_largest_slice_us": 1408
+          }
+        ]
+      },
+      "first_late": {
+        "index": 1532,
+        "us": 4770,
+        "request_us": 4770,
+        "frames": 118,
+        "input": 20,
+        "queued": 242,
+        "command": 14,
+        "gap": 751,
+        "pump": 253,
+        "step": 332,
+        "tx": 44,
+        "compute": 2128,
+        "schedule": 224
+      },
+      "wire": ".build/spectrum-nrz4-audio-20261111/timing-observer/hardware-002/TIMED-wire.txt",
+      "wire_sha256": "7f3931ffa4632c36ee089d422cc9297bd700cc147e76b7c209e871783321d8e9",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/timing-observer/hardware-002/receipt.json",
+      "receipt_sha256": "81b4d35ccea99e9b5b7ab5c30c2ea291ece69fcf280f0a234f363c42552f1ba0",
+      "zero_crc_uart_i2c_and_underruns": true
+    },
+    "closed": {
+      "Pico": "F6E637C2 / C03391DF",
+      "M3": "029BA093",
+      "temporary_dirs_removed": [
+        "/SP4TIM21",
+        "/SP4UP20"
+      ],
+      "state": "CALCULATOR/CLOSED/NONE",
+      "long_started": false
+    }
+  },
+  "ay_counter_candidate": {
+    "status": "FOUR_SHORT_PASS_LONG_FAIL",
+    "qualification_package": ".build/spectrum-nrz4-audio-20261111/ay-counter/qualification-package.json",
+    "qualification_sha256": "1fc77120381bd3a2ce83517fb4cc1290934e9a484280edc212f6584201bcbaf2",
+    "module_sha256": "dd3851d51916b8ecafc6248b4b279735610919194b595802207c02971ecde177",
+    "module_bytes_in_sram": 5960,
+    "scope": {
+      "directory": "/SP4N13",
+      "temporary": true,
+      "write_flash": false,
+      "reset": false,
+      "stock_hz": [
+        125000000,
+        72000000
+      ],
+      "short": [
+        "AYABC",
+        "AYACB",
+        "YMABC",
+        "YMACB"
+      ],
+      "short_frames": 600,
+      "long": "AYABCLONG",
+      "long_frames": 30000,
+      "long_requires_four_passes": true,
+      "stops_on_first_strict_failure": true,
+      "block_limit_us": 4720,
+      "startup_limit_us": 20000
+    },
+    "host_cosmic_pcm_stereo_frames": 29736,
+    "host_cosmic_full_state_exports": 20,
+    "host_cosmic_ARM_instruction_counts": {
+      "01": {
+        "before": 4284275,
+        "after": 4043497,
+        "reduction_pct": 5.620040730345277,
+        "savings_for_previous_late_blocks": {
+          "1304": 3999,
+          "1532": 4761,
+          "1981": 5533
+        }
+      },
+      "02": {
+        "before": 4275533,
+        "after": 4034755,
+        "reduction_pct": 5.631531787966548,
+        "savings_for_previous_late_blocks": {
+          "1304": 3999,
+          "1532": 4761,
+          "1981": 5533
+        }
+      },
+      "11": {
+        "before": 4284247,
+        "after": 4043469,
+        "reduction_pct": 5.6200774605199015,
+        "savings_for_previous_late_blocks": {
+          "1304": 3999,
+          "1532": 4761,
+          "1981": 5533
+        }
+      },
+      "12": {
+        "before": 4275215,
+        "after": 4034437,
+        "reduction_pct": 5.6319506738257585,
+        "savings_for_previous_late_blocks": {
+          "1304": 3999,
+          "1532": 4761,
+          "1981": 5533
+        }
+      }
+    },
+    "physical_timing_inferred": false,
+    "short_receipt": ".build/spectrum-nrz4-audio-20261111/ay-counter/hardware-short/receipt.json",
+    "short_receipt_sha256": "f412b3d337ac00e49b7ba8532c03d43d2f0fb48c59e50cc468b7fc9f5fb4ff59",
+    "cleanup_sha256": "c81325eb32c747ab8ba6f49e52d5401ef6d4f8c246d78a3a41d742d8ef8519d3",
+    "zero_late_blocks_across_10412": true,
+    "total_nrz4_blocks": 10412,
+    "short_cases": [
+      {
+        "tag": "AYABC",
+        "status": "PASS",
+        "failures": [],
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4570,
+          "block_min_us": 2804,
+          "prime_us": 17852,
+          "min_queued": 150,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736877,
+          "exchange_block_us": 9469373,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 270,
+          "nrz4_transport_us": 1631,
+          "nrz4_wait_us": 3299,
+          "nrz4_hold_us": 4532
+        }
+      },
+      {
+        "tag": "AYACB",
+        "status": "PASS",
+        "failures": [],
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4603,
+          "block_min_us": 2803,
+          "prime_us": 17830,
+          "min_queued": 154,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736697,
+          "exchange_block_us": 9476046,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 387,
+          "nrz4_transport_us": 1692,
+          "nrz4_wait_us": 3452,
+          "nrz4_hold_us": 4521
+        }
+      },
+      {
+        "tag": "YMABC",
+        "status": "PASS",
+        "failures": [],
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4542,
+          "block_min_us": 2793,
+          "prime_us": 16605,
+          "min_queued": 126,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736769,
+          "exchange_block_us": 9520525,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 315,
+          "nrz4_transport_us": 1690,
+          "nrz4_wait_us": 3464,
+          "nrz4_hold_us": 4521
+        }
+      },
+      {
+        "tag": "YMACB",
+        "status": "FAIL",
+        "failures": [
+          "started_promptly"
+        ],
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4454,
+          "block_min_us": 2780,
+          "prime_us": 20473,
+          "min_queued": 162,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736929,
+          "exchange_block_us": 9461461,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 299,
+          "nrz4_transport_us": 1635,
+          "nrz4_wait_us": 3394,
+          "nrz4_hold_us": 4385
+        }
+      }
+    ],
+    "long_started": true,
+    "startup_diagnostics": [
+      {
+        "variant": "startup-trace",
+        "receipt": ".build/spectrum-nrz4-audio-20261111/startup-trace/hardware-001/receipt.json",
+        "receipt_sha256": "aa6c5db0280f5c0797c77635787e9fbdea862c1876324d7fe88304a7f34bab26",
+        "strict_result": "PASS",
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4539,
+          "block_min_us": 2800,
+          "prime_us": 16565,
+          "min_queued": 128,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736618,
+          "exchange_block_us": 9510026,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 334,
+          "nrz4_transport_us": 1793,
+          "nrz4_wait_us": 3377,
+          "nrz4_hold_us": 4448
+        },
+        "startup_observer": "Startup provenance missing or invalid",
+        "closed": true,
+        "sd_removed": true
+      },
+      {
+        "variant": "startup-trace-v2",
+        "receipt": ".build/spectrum-nrz4-audio-20261111/startup-trace-v2/hardware-001/receipt.json",
+        "receipt_sha256": "2a3cbd37b0a0204f3abc8f3f49e9af6f5ea12f36a01873011bfaf26224a563ff",
+        "strict_result": "PASS",
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4590,
+          "block_min_us": 2753,
+          "prime_us": 17851,
+          "min_queued": 160,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736618,
+          "exchange_block_us": 9478066,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 323,
+          "nrz4_transport_us": 1770,
+          "nrz4_wait_us": 3291,
+          "nrz4_hold_us": 4532
+        },
+        "startup_observer": "Startup observer output missing or incomplete",
+        "closed": true,
+        "sd_removed": true
+      },
+      {
+        "variant": "startup-trace-v3",
+        "receipt": ".build/spectrum-nrz4-audio-20261111/startup-trace-v3/hardware-001/receipt.json",
+        "receipt_sha256": "04d934fe43bc742750825f65b9b83fdb1cd128388c5dddaf5e072d6da717392e",
+        "wire_sha256": "2e91fc9264ee04a6ba7d3b504cc6ef72de30e3d1b73a67ed5a75a8e62da45358",
+        "strict_result": "PASS",
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4422,
+          "block_min_us": 2818,
+          "prime_us": 17853,
+          "min_queued": 152,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736759,
+          "exchange_block_us": 9457291,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 399,
+          "nrz4_transport_us": 1721,
+          "nrz4_wait_us": 3298,
+          "nrz4_hold_us": 4352
+        },
+        "startup_observer": {
+          "summary": {
+            "gate": 3687838094,
+            "gap": 1607,
+            "bad": 0,
+            "arm_lo": 3687837181,
+            "arm_hi": 3687837191,
+            "begin": 3687838609,
+            "duration": 17853,
+            "observed": 3687856638,
+            "lost": 0,
+            "arm_lo_us": -913,
+            "arm_hi_us": -903,
+            "begin_us": 515,
+            "observed_us": 18544,
+            "first_audio_fill_us": 18368,
+            "first_audio_output_estimate_us": null,
+            "third_result_to_first_fill_us": null
+          },
+          "pwm": {
+            "fire": 3687856417,
+            "head": 480,
+            "filled": 448,
+            "entry": 18,
+            "fire_us": 18323
+          },
+          "blocks": [
+            {
+              "index": 1,
+              "ev": 3687843350,
+              "rx": 0,
+              "pub": 3687848247,
+              "wait": 0,
+              "busy": 0,
+              "lease": 0,
+              "req": 0,
+              "ack": 0,
+              "wall": 3944,
+              "ev_us": 5256,
+              "lease_us": null,
+              "req_us": null,
+              "rx_us": null,
+              "ack_us": null,
+              "pub_us": 10153,
+              "wait_us": null,
+              "busy_us": null,
+              "complete_us": null,
+              "confirmed_event_to_lease_us": null
+            },
+            {
+              "index": 2,
+              "ev": 3687845453,
+              "rx": 0,
+              "pub": 3687851918,
+              "wait": 0,
+              "busy": 0,
+              "lease": 0,
+              "req": 0,
+              "ack": 0,
+              "wall": 4351,
+              "ev_us": 7359,
+              "lease_us": null,
+              "req_us": null,
+              "rx_us": null,
+              "ack_us": null,
+              "pub_us": 13824,
+              "wait_us": null,
+              "busy_us": null,
+              "complete_us": null,
+              "confirmed_event_to_lease_us": null
+            },
+            {
+              "index": 3,
+              "ev": 3687849153,
+              "rx": 0,
+              "pub": 3687855774,
+              "wait": 0,
+              "busy": 0,
+              "lease": 0,
+              "req": 0,
+              "ack": 0,
+              "wall": 3597,
+              "ev_us": 11059,
+              "lease_us": null,
+              "req_us": null,
+              "rx_us": null,
+              "ack_us": null,
+              "pub_us": 17680,
+              "wait_us": null,
+              "busy_us": null,
+              "complete_us": null,
+              "confirmed_event_to_lease_us": null
+            }
+          ],
+          "observation_interval_min_us": 24,
+          "missing_is_null": true,
+          "scope": "Read-only sampling during startup; measured PWM fill, estimated first PCM on wire."
+        },
+        "missing_detail": "Phase/lease/request/ACK were not associated by the SD observer; cannot identify the earlier 20.473 ms startup cause.",
+        "closed": true,
+        "sd_removed": true
+      }
+    ],
+    "short_repeat": {
+      "receipt": ".build/spectrum-nrz4-audio-20261111/ay-counter/repeat-qualify/hardware-repeat/receipt.json",
+      "receipt_sha256": "453165b1bbc3a6b1e0d7155a97359f7e9ee6bdd37c19f6b003940625229a9dde",
+      "cleanup_sha256": "d7783126bd5de611357f32f183806433f543166343ba44a2b267bff17643764a",
+      "case": {
+        "tag": "YMACB",
+        "status": "PASS",
+        "mode": "remote",
+        "checks": {
+          "selected_backend": true,
+          "strict_remote_policy": true,
+          "complete_run": true,
+          "no_probe_fault": true,
+          "producer_not_starved": true,
+          "z80_at_least_3_5MHz": true,
+          "z80_paced": true,
+          "no_frame_delays_over_1ms": true,
+          "frame_lag_bounded": true,
+          "native_SYS_HZ": true,
+          "native_PERI_HZ": true,
+          "native_KBD": true,
+          "native_SD": true,
+          "native_SERVICE": true,
+          "native_RUNTIME": true,
+          "native_UI": true,
+          "native_CRASH": true,
+          "native_FIRMWARE_CRC": true,
+          "native_APP_BUFFERS": true,
+          "native_APP_BUFFER_BYTES": true,
+          "native_APP_EXTERNAL_BYTES": true,
+          "native_APP_WINDOWS": true,
+          "unchanged_BUILD": true,
+          "unchanged_ACTUAL": true,
+          "unchanged_EXPECTED": true,
+          "unchanged_BOOTS": true,
+          "unchanged_PHYSICAL_KEYS": true,
+          "unchanged_SETTINGS_WRITES": true,
+          "unchanged_RTC_SET": true,
+          "unchanged_ERRORS": true,
+          "unchanged_QPI_FALLBACKS": true,
+          "unchanged_TAIL_TIMEOUTS": true,
+          "unchanged_CRC_ERRORS": true,
+          "unchanged_DMA_TIMEOUTS": true,
+          "unchanged_LCD_ERRORS": true,
+          "unchanged_SD_SPEED_FALLBACKS": true,
+          "unchanged_SD_PROBE_FAILURES": true,
+          "unchanged_I2C_TIMEOUTS": true,
+          "unchanged_I2C_ABORTS": true,
+          "unchanged_SCREEN_ERRORS": true,
+          "no_dma_underruns": true,
+          "no_fallback": true,
+          "zero_M3_ERROR": true,
+          "zero_M3_UNDERRUNS": true,
+          "zero_M3_UART_ERRORS": true,
+          "zero_M3_UNLOAD_FAILURES": true,
+          "zero_M3_READY_POLLS": true,
+          "zero_M3_LATE_BLOCKS": true,
+          "native_profile": true,
+          "fused_input_supported": true,
+          "fused_input_exercised": true,
+          "no_stream_write_roundtrips": true,
+          "real_dma_output": true,
+          "dma_released": true,
+          "continuous_sample_coverage": true,
+          "profile_sample_coverage": true,
+          "started_promptly": true,
+          "native_slices_bounded": true,
+          "nrz4_capability": true,
+          "nrz4_no_errors": true,
+          "nrz4_block_coverage": true,
+          "nrz4_pcm_coverage": true,
+          "nrz4_all_pins_returned": true
+        },
+        "failures": [],
+        "preserved_boot": null,
+        "metrics": {
+          "mode": 2,
+          "frames": 599,
+          "cycles": 42937957,
+          "elapsed_us": 12267988,
+          "timing_valid": true,
+          "mhz": 3.4999999184870414,
+          "fps": 48.826262301528175,
+          "starved": 0,
+          "frame_min_us": 19923,
+          "frame_max_us": 20547,
+          "late_frames_1ms": 0,
+          "max_frame_lag_us": 539,
+          "samples": 307154,
+          "blocks": 2603,
+          "block_max_us": 4532,
+          "block_min_us": 2794,
+          "prime_us": 17851,
+          "min_queued": 152,
+          "inline_requests": 1192,
+          "stream_write_requests": 0,
+          "transport_tx_bytes": 106001,
+          "transport_rx_bytes": 79331,
+          "native_render_us": 4736792,
+          "exchange_block_us": 9464298,
+          "nrz4_blocks": 2603,
+          "nrz4_bytes": 635132,
+          "nrz4_returns": 2603,
+          "nrz4_restore_us": 376,
+          "nrz4_transport_us": 1750,
+          "nrz4_wait_us": 3352,
+          "nrz4_hold_us": 4460
+        },
+        "physical_io": false,
+        "source": "captured hardware logs; no new device access"
+      },
+      "package": ".build/spectrum-nrz4-audio-20261111/ay-counter/repeat-qualify/package.json",
+      "package_sha256": "e80724eb53a2ff01e803fc87d5002f5054541d136876f1b73677b32897c6a9fe",
+      "closed": true
+    },
+    "long_admitted": true,
+    "long_run": {
+      "receipt": ".build/spectrum-nrz4-audio-20261111/ay-counter/repeat-qualify/hardware-long/receipt.json",
+      "receipt_sha256": "b90108e8e934e8102c336af694ed0ae315c7ae3254682224dffa1793b54a6ed8",
+      "after_sha256": "371fd4f7b8270310255d8ddd42e54c0cad62ea9a81b5859be102075fea09ad16",
+      "cleanup_sha256": "842f7d612b4a223687734163498cc136b4b84d4910698965a3ba62690932de83",
+      "status": "FAIL",
+      "metrics": {
+        "mode": 2,
+        "frames": 12000,
+        "cycles": 860160113,
+        "elapsed_us": 245760854,
+        "timing_valid": true,
+        "mhz": 3.499988297566707,
+        "fps": 48.82795532603414,
+        "starved": 0,
+        "frame_min_us": 19895,
+        "frame_max_us": 21345,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 854,
+        "samples": 6144260,
+        "blocks": 52070,
+        "block_max_us": 4917,
+        "block_min_us": 2732,
+        "prime_us": 16558,
+        "min_queued": 110,
+        "inline_requests": 24019,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 2010095,
+        "transport_rx_bytes": 1563002,
+        "native_render_us": 94626760,
+        "exchange_block_us": 190166931,
+        "nrz4_blocks": 52071,
+        "nrz4_bytes": 12705324,
+        "nrz4_returns": 52071,
+        "nrz4_restore_us": 408,
+        "nrz4_transport_us": 1790,
+        "nrz4_wait_us": 3595,
+        "nrz4_hold_us": 4824
+      },
+      "failures": [
+        "complete_run",
+        "no_probe_fault",
+        "z80_at_least_3_5MHz",
+        "no_dma_underruns",
+        "zero_M3_ERROR",
+        "zero_M3_LATE_BLOCKS",
+        "profile_sample_coverage"
+      ],
+      "stage2_pwm_fault": {
+        "PWM_REFILL_US": 344,
+        "PWM_REFILL_STAGE": 2,
+        "PWM_REFILL_BEFORE": 6144337,
+        "PWM_REFILL_AFTER": 0,
+        "PWM_REFILL_FILLED": 6144288,
+        "PWM_REFILL_CORE": 1,
+        "PWM_REFILL_PRIO": 0,
+        "PWM_IRQ_RESTORED": 1
+      },
+      "timer_arm": {
+        "at": 47499803,
+        "end": 47499803,
+        "target": 47501032,
+        "head": 6144304,
+        "filled": 6144288,
+        "fraction": 70536,
+        "armed": 4,
+        "entry": 192017,
+        "callbacks": 1,
+        "from": 47499752,
+        "interval": -1280
+      },
+      "timer_fire": {
+        "at": 47501062,
+        "end": 47501083,
+        "target": 47501032,
+        "head": 6144335,
+        "filled": 6144288,
+        "fraction": 70536,
+        "armed": 0,
+        "entry": 192018,
+        "callbacks": 1,
+        "callback_at": 47501122,
+        "callback_head": 6144337,
+        "callback_filled": 6144288
+      },
+      "first_late": {
+        "index": 16782,
+        "us": 4917,
+        "request_us": 4917,
+        "frames": 118,
+        "input": 26,
+        "queued": 254,
+        "command": 14,
+        "gap": 412,
+        "pump": 280,
+        "step": 538,
+        "tx": 128,
+        "compute": 0,
+        "schedule": 0
+      },
+      "late_blocks": 9,
+      "zero_i2c_uart_crc_errors": true,
+      "outputs_returned": 52071,
+      "CLOSED": true,
+      "owned_sd_removed": true
+    }
+  },
+  "pwm_cursor_irq_candidate": {
+    "status": "INSTALLED_VERIFIED_STRICT_SHORT_3_OF_4",
+    "baseline_pico": {
+      "build": "F6E637C2",
+      "crc": "C03391DF"
+    },
+    "candidate_pico": {
+      "build": "7E432710",
+      "crc": "98893209",
+      "bytes": 1793244
+    },
+    "M3_crc": "029BA093",
+    "stock_hz": {
+      "Pico": 125000000,
+      "M3": 72000000
+    },
+    "package_sha256": "07379c4db84058bf21d4601f2405eeb728fd6905b7fabd6881e387ba28e8d3dd",
+    "scope_review_sha256": "c2d500db4b16bfb393347f971925d68b98f948115b5f90c62c3f10078f82ffe0",
+    "ring": {
+      "next_delay_us_at_captured_head": 680,
+      "replayed_jitter_us": 90,
+      "unchanged_guard_samples": 16
+    },
+    "fill": {
+      "exact_host_states": 36417,
+      "fast_host_states": 31184,
+      "baseline_arm_instructions": 1129,
+      "candidate_arm_instructions": [
+        400,
+        417
+      ],
+      "device_time_saved_measured": false
+    },
+    "exact_candidate_audio_tests_sha256": "c9c9fa46b964e7a4256c878efa5eb06d188b47809fd51d5bfeb5df6a1af091c9",
+    "panel_both_baseline_and_candidate": {
+      "status": "FAIL",
+      "reason": "color resets scrolled coordinates",
+      "same_log_sha256": "b926d36d39cc27577fb87ac332d5b806e9a297cdb6d7836839787de05eca5e49"
+    },
+    "static_ram": 120532,
+    "heap": 108844,
+    "M3_changed": false,
+    "criteria_relaxed": false,
+    "new_short_runs_completed": 4,
+    "long_admitted": false,
+    "physical_io": true,
+    "hardware": {
+      "install": {
+        "path": ".build/spectrum-nrz4-audio-20261111/pwm-cursor-irq/hardware-install/receipt.json",
+        "sha256": "a3062b00ab2a4c4d482d177692c5766d960ec4f3135f254e099a750fa47d8cc7"
+      },
+      "readback_sha256": "885b7e180efd2877d00cb6ea886507b62ac9ff419cecc5595c2d6ffd8483ef02",
+      "boot": {
+        "BOOTS": "38",
+        "BOOT_WATCHDOG": "0",
+        "RESET_REASON": "00010001",
+        "CRASH": "NONE"
+      },
+      "first_short": {
+        "path": ".build/spectrum-nrz4-audio-20261111/pwm-cursor-irq/hardware-short/receipt.json",
+        "sha256": "6c9577b8d3956fd5d88623f2d3359564a40f857066f5081ef3515a9508d140ce"
+      },
+      "separate_fourth_short": {
+        "path": ".build/spectrum-nrz4-audio-20261111/pwm-cursor-irq/hardware-short-ymacb/receipt.json",
+        "sha256": "0c187c75c969840e662577a8bb84ef77c98e1a6b9558186c5dc39efa9bfaa3ed"
+      },
+      "passed": 3,
+      "tested": 4,
+      "per_case": [
+        {
+          "tag": "AYABC",
+          "status": "PASS",
+          "failures": [],
+          "frames": 599,
+          "mhz": 3.4999999184870414,
+          "max_frame_lag_us": 539,
+          "prime_us": 17959,
+          "block_max_us": 4599,
+          "blocks": 2603
+        },
+        {
+          "tag": "AYACB",
+          "status": "PASS",
+          "failures": [],
+          "frames": 599,
+          "mhz": 3.4999999184870414,
+          "max_frame_lag_us": 539,
+          "prime_us": 17931,
+          "block_max_us": 4567,
+          "blocks": 2603
+        },
+        {
+          "tag": "YMABC",
+          "status": "FAIL",
+          "failures": [
+            "started_promptly"
+          ],
+          "frames": 599,
+          "mhz": 3.4999999184870414,
+          "max_frame_lag_us": 539,
+          "prime_us": 20521,
+          "block_max_us": 4545,
+          "blocks": 2603
+        },
+        {
+          "tag": "YMACB",
+          "status": "PASS",
+          "failures": [],
+          "frames": 599,
+          "mhz": 3.4999999184870414,
+          "max_frame_lag_us": 539,
+          "prime_us": 17942,
+          "block_max_us": 4411,
+          "blocks": 2603
+        }
+      ],
+      "total_blocks": 10412,
+      "late_blocks": 0,
+      "pwm_or_m3_underruns": 0,
+      "transport_errors": 0,
+      "long_started": false,
+      "owned_sd_removed": true,
+      "CLOSED": true,
+      "CDC_closed": true,
+      "lease_closed": true
+    }
+  },
+  "app_startup_first_frame": {
+    "status": "STRICT_SHORT_4_OF_4_LONG_LATE_BLOCKS_ONLY",
+    "scope": "Defer the first native keyboard pump to the first frame pacing wait when audio opens on M3.",
+    "resident": {
+      "build": "EBAAE560",
+      "crc": "5D1DFCF0",
+      "boots": 39,
+      "M3_crc": "029BA093",
+      "stock_hz": [
+        125000000,
+        72000000
+      ]
+    },
+    "app_sha256": "b5219f900f29e5a548e2052f52542e6a5df158a9ba06df3386c2de6daab413df",
+    "app_sram_bytes": 49040,
+    "module_sha256": "dd3851d51916b8ecafc6248b4b279735610919194b595802207c02971ecde177",
+    "host": {
+      "before_reproduced": true,
+      "after_sanitizers_pass": true,
+      "log_sha256": "f7633bd81804a9e8b73a3e818cea2372754ef27d8500528da2776a21eab7811a"
+    },
+    "package": {
+      "path": ".build/spectrum-nrz4-audio-20261111/startup-keyboard/package.json",
+      "sha256": "d8a615061f428b597106c426b61fcc78b4c9f972b97b8e08922be93b22042308"
+    },
+    "short": {
+      "receipt": ".build/spectrum-nrz4-audio-20261111/startup-keyboard/hardware-short/receipt.json",
+      "receipt_sha256": "48de534ee2c9c14365b6b2ad8b91b8de7f4e21902aae076bc4108ebe8f61c00e",
+      "cleanup_sha256": "0a7e72a8ba9963ad3c5293122cd0a371ce2a6d74d7a171ad3f89995f9ccdbfd9",
+      "closed": true,
+      "blocks": 10408,
+      "cases": [
+        {
+          "tag": "AYABC",
+          "status": "PASS",
+          "frames": 598,
+          "cycles": 42866269,
+          "elapsed_us": 12247506,
+          "mhz": 3.4999998367014475,
+          "prime_us": 16674,
+          "max_frame_lag_us": 539,
+          "block_max_us": 4511,
+          "blocks": 2602,
+          "samples": 307036
+        },
+        {
+          "tag": "AYACB",
+          "status": "PASS",
+          "frames": 598,
+          "cycles": 42866269,
+          "elapsed_us": 12247506,
+          "mhz": 3.4999998367014475,
+          "prime_us": 16663,
+          "max_frame_lag_us": 539,
+          "block_max_us": 4443,
+          "blocks": 2602,
+          "samples": 307036
+        },
+        {
+          "tag": "YMABC",
+          "status": "PASS",
+          "frames": 598,
+          "cycles": 42866269,
+          "elapsed_us": 12247506,
+          "mhz": 3.4999998367014475,
+          "prime_us": 16675,
+          "max_frame_lag_us": 539,
+          "block_max_us": 4604,
+          "blocks": 2602,
+          "samples": 307036
+        },
+        {
+          "tag": "YMACB",
+          "status": "PASS",
+          "frames": 598,
+          "cycles": 42866269,
+          "elapsed_us": 12247506,
+          "mhz": 3.4999998367014475,
+          "prime_us": 16705,
+          "max_frame_lag_us": 539,
+          "block_max_us": 4514,
+          "blocks": 2602,
+          "samples": 307036
+        }
+      ]
+    },
+    "long_admitted": true,
+    "long": {
+      "status": "FAIL",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/startup-keyboard/hardware-long/receipt.json",
+      "receipt_sha256": "02f80a722057b35b15fb803e53ed1d1724357e9b4d8360f33ad0bd8bcd87c57a",
+      "after_sha256": "52325d463389f4883bc14fe5ddf9b0850cc7417859ab23a8256982e77a4cd1ba",
+      "cleanup_sha256": "a03649c458a54a25037e6554bda2e6e423a6abd810b3ba180f4db601fd15a38d",
+      "wire_sha256": "cc6e415ac51ec0131ab772fed628742c55f75c262d1e0d08afc9eba6f688c21b",
+      "metrics": {
+        "mode": 2,
+        "frames": 29998,
+        "cycles": 2150256504,
+        "elapsed_us": 614359001,
+        "timing_valid": true,
+        "mhz": 3.5000000008138565,
+        "fps": 48.82812809964837,
+        "starved": 0,
+        "frame_min_us": 19895,
+        "frame_max_us": 20549,
+        "late_frames_1ms": 0,
+        "max_frame_lag_us": 543,
+        "samples": 15359824,
+        "blocks": 130168,
+        "block_max_us": 5099,
+        "block_min_us": 2747,
+        "prime_us": 16675,
+        "min_queued": 118,
+        "inline_requests": 60043,
+        "stream_write_requests": 0,
+        "transport_tx_bytes": 5014852,
+        "transport_rx_bytes": 3906281,
+        "native_render_us": 236565236,
+        "exchange_block_us": 472241929,
+        "nrz4_blocks": 130168,
+        "nrz4_bytes": 31760992,
+        "nrz4_returns": 130168,
+        "nrz4_restore_us": 398,
+        "nrz4_transport_us": 1860,
+        "nrz4_wait_us": 3753,
+        "nrz4_hold_us": 4891
+      },
+      "failures": [
+        "zero_M3_LATE_BLOCKS"
+      ],
+      "late_blocks": 15,
+      "pwm_refills": 480015,
+      "error_counts": {
+        "SYNTH_UNDERRUNS": 0,
+        "M3_UNDERRUNS": 0,
+        "M3_UART_ERRORS": 0,
+        "M3_NRZ4_ERRORS": 0,
+        "I2C_TIMEOUTS": 0,
+        "I2C_ABORTS": 0
+      },
+      "first_late_block": {
+        "index": 7098,
+        "us": 5099,
+        "request_us": 5099,
+        "frames": 118,
+        "input": 26,
+        "queued": 262,
+        "command": 14,
+        "gap": 493,
+        "pump": 301,
+        "step": 214,
+        "tx": 14,
+        "compute": 0,
+        "schedule": 0
+      },
+      "compute_schedule_measured": false,
+      "CLOSED": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "owned_sd_removed": true
+    },
+    "tail_host": {
+      "status": "DIAGNOSTIC_MEASURED",
+      "exact_observation_sha256": "69dc8ed23fee989cb16cc8841c15cacd79a3168a444d8d6d4625906eac64ab0b",
+      "arm_replay_sha256": "b74ee675ddd4ce0013bfb3c2a3da5139486bb659bd9da8c4646ac076e5b85764",
+      "actual_relocated_m3": true,
+      "reconstructed_blocks_per_layout": 130168,
+      "checked_stereo_samples": 56640,
+      "checked_states": 20,
+      "AYABC_reconstructed_first_late": {
+        "checked_blocks": 120,
+        "states": 5,
+        "samples": 14160,
+        "min": 56376,
+        "median": 65877,
+        "max": 73315,
+        "late_vector": {
+          "block": 7098,
+          "bytes": 26,
+          "instructions": 70268
+        }
+      },
+      "best_flag_saving_instructions_first_late": 297,
+      "hardware_interarrival_distribution_available": false,
+      "tail_fix_qualified": false,
+      "observer": {
+        "path": ".build/spectrum-nrz4-audio-20261111/late-tail/observer-package.json",
+        "sha256": "35eb2c680c225f8244a0a31e3d24b47548065ef86487818f2ec1af118edfe47d",
+        "frames_per_case": 3000,
+        "arm_verified": true,
+        "hardware_measured": true,
+        "deadline_us": 4720,
+        "hardware": {
+          "receipt": ".build/spectrum-nrz4-audio-20261111/late-tail/hardware-observer/receipt.json",
+          "receipt_sha256": "eb0ad5d68b0e6bd8f8f4d31c7bc75b53cac26ecaaa37f3aad859b0bce66e3c51",
+          "cleanup_sha256": "00ad915379b6c79a8bfef1eedf8e34a4248d83c7e77b46d31bfea8ed18f1cc51",
+          "cases": {
+            "CONTROL": {
+              "path": ".build/spectrum-nrz4-audio-20261111/late-tail/hardware-observer/CONTROL-result.json",
+              "sha256": "8cbd37ec1ab18b0b9eaf10c1d15c4ee89d96a93a5a4b67322aa2ea396d5afa3f",
+              "timing": {
+                "captured": 13014,
+                "paired": 0,
+                "module_timing": false,
+                "missing": 1,
+                "unpaired": 0,
+                "saturated": 0,
+                "late_observed": 2,
+                "native_max_us": 4811,
+                "quantized_m3_fields_us": 16,
+                "distribution": {
+                  "wall": {
+                    "count": 13014,
+                    "min_us": 2750,
+                    "max_us": 4811,
+                    "resolution_us": 128,
+                    "p50_us": [
+                      3584,
+                      3711
+                    ],
+                    "p95_us": [
+                      3968,
+                      4095
+                    ],
+                    "p99_us": [
+                      4224,
+                      4351
+                    ]
+                  },
+                  "sampled_result_intervals": {
+                    "count": 13013,
+                    "min_us": 1451,
+                    "max_us": 9713,
+                    "resolution_us": 256,
+                    "p50_us": [
+                      3840,
+                      4095
+                    ],
+                    "p95_us": [
+                      7936,
+                      9713
+                    ],
+                    "p99_us": [
+                      7936,
+                      9713
+                    ]
+                  }
+                },
+                "slowest": [
+                  {
+                    "index": 5848,
+                    "wall_us": 4811,
+                    "queued_samples": 368,
+                    "observed_guest_frame": 1348,
+                    "sampled_at_us": 3668854471,
+                    "m3_compute_us": null,
+                    "m3_schedule_us": null,
+                    "remaining_us": null,
+                    "m3_largest_slice_us": null,
+                    "sampled_pico": {
+                      "nrz_phase": 4,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 286,
+                      "observed_pwm_after_service_us": null
+                    }
+                  },
+                  {
+                    "index": 7098,
+                    "wall_us": 4780,
+                    "queued_samples": 412,
+                    "observed_guest_frame": 1636,
+                    "sampled_at_us": 3674753419,
+                    "m3_compute_us": null,
+                    "m3_schedule_us": null,
+                    "remaining_us": null,
+                    "m3_largest_slice_us": null,
+                    "sampled_pico": {
+                      "nrz_phase": 6,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 270,
+                      "observed_pwm_after_service_us": null
+                    }
+                  },
+                  {
+                    "index": 11471,
+                    "wall_us": 4604,
+                    "queued_samples": 362,
+                    "observed_guest_frame": 2644,
+                    "sampled_at_us": 3695394843,
+                    "m3_compute_us": null,
+                    "m3_schedule_us": null,
+                    "remaining_us": null,
+                    "m3_largest_slice_us": null,
+                    "sampled_pico": {
+                      "nrz_phase": 4,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 339,
+                      "observed_pwm_after_service_us": 156
+                    }
+                  },
+                  {
+                    "index": 2072,
+                    "wall_us": 4596,
+                    "queued_samples": 368,
+                    "observed_guest_frame": 478,
+                    "sampled_at_us": 3651032408,
+                    "m3_compute_us": null,
+                    "m3_schedule_us": null,
+                    "remaining_us": null,
+                    "m3_largest_slice_us": null,
+                    "sampled_pico": {
+                      "nrz_phase": 6,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 761,
+                      "observed_pwm_after_service_us": 270
+                    }
+                  }
+                ],
+                "intervals": 13013,
+                "interval_resets": 0,
+                "max_observer_poll_gap_us": 2554,
+                "captured_first_late": {
+                  "index": 5848,
+                  "wall_us": 4811,
+                  "queued_samples": 368,
+                  "observed_guest_frame": 1348,
+                  "sampled_at_us": 3668854471,
+                  "m3_compute_us": null,
+                  "m3_schedule_us": null,
+                  "remaining_us": null,
+                  "m3_largest_slice_us": null,
+                  "sampled_pico": {
+                    "nrz_phase": 4,
+                    "worker_site": 6,
+                    "i2c_stage": 5,
+                    "age_since_service_us": 286,
+                    "observed_pwm_after_service_us": null
+                  }
+                }
+              },
+              "first_late": {
+                "index": 5848,
+                "us": 4811,
+                "request_us": 4811,
+                "frames": 118,
+                "input": 26,
+                "queued": 250,
+                "command": 14,
+                "gap": 281,
+                "pump": 362,
+                "step": 518,
+                "tx": 15,
+                "compute": 0,
+                "schedule": 0
+              },
+              "metrics": {
+                "mode": 2,
+                "frames": 2998,
+                "cycles": 214897838,
+                "elapsed_us": 61399383,
+                "timing_valid": true,
+                "mhz": 3.4999999592829782,
+                "fps": 48.827852227765874,
+                "starved": 0,
+                "frame_min_us": 19923,
+                "frame_max_us": 20547,
+                "late_frames_1ms": 0,
+                "max_frame_lag_us": 541,
+                "samples": 1535770,
+                "blocks": 13015,
+                "block_max_us": 4811,
+                "block_min_us": 2750,
+                "prime_us": 16695,
+                "min_queued": 148,
+                "inline_requests": 6009,
+                "stream_write_requests": 0,
+                "transport_tx_bytes": 507707,
+                "transport_rx_bytes": 391691,
+                "native_render_us": 23643291,
+                "exchange_block_us": 47169130,
+                "nrz4_blocks": 13015,
+                "nrz4_bytes": 3175660,
+                "nrz4_returns": 13015,
+                "nrz4_restore_us": 355,
+                "nrz4_transport_us": 1821,
+                "nrz4_wait_us": 3469,
+                "nrz4_hold_us": 4684
+              },
+              "strict_failures": [
+                "zero_M3_LATE_BLOCKS"
+              ]
+            },
+            "TIMED": {
+              "path": ".build/spectrum-nrz4-audio-20261111/late-tail/hardware-observer/TIMED-result.json",
+              "sha256": "cb4e87aaa5aa1643ce246a3b18fffcb35d293efc0f6c83be148e103ea3a5e685",
+              "timing": {
+                "captured": 13014,
+                "paired": 13014,
+                "module_timing": true,
+                "missing": 1,
+                "unpaired": 0,
+                "saturated": 0,
+                "late_observed": 1,
+                "native_max_us": 4862,
+                "quantized_m3_fields_us": 16,
+                "distribution": {
+                  "wall": {
+                    "count": 13014,
+                    "min_us": 2717,
+                    "max_us": 4862,
+                    "resolution_us": 128,
+                    "p50_us": [
+                      3584,
+                      3711
+                    ],
+                    "p95_us": [
+                      3968,
+                      4095
+                    ],
+                    "p99_us": [
+                      4096,
+                      4223
+                    ]
+                  },
+                  "m3_compute": {
+                    "count": 13014,
+                    "min_us": 1184,
+                    "max_us": 2272,
+                    "resolution_us": 128,
+                    "p50_us": [
+                      1792,
+                      1919
+                    ],
+                    "p95_us": [
+                      1920,
+                      2047
+                    ],
+                    "p99_us": [
+                      2048,
+                      2175
+                    ]
+                  },
+                  "m3_schedule": {
+                    "count": 13014,
+                    "min_us": 0,
+                    "max_us": 256,
+                    "resolution_us": 128,
+                    "p50_us": [
+                      0,
+                      127
+                    ],
+                    "p95_us": [
+                      128,
+                      255
+                    ],
+                    "p99_us": [
+                      128,
+                      255
+                    ]
+                  },
+                  "remaining_exchange": {
+                    "count": 13014,
+                    "min_us": 1472,
+                    "max_us": 2654,
+                    "resolution_us": 128,
+                    "p50_us": [
+                      1664,
+                      1791
+                    ],
+                    "p95_us": [
+                      1920,
+                      2047
+                    ],
+                    "p99_us": [
+                      2176,
+                      2303
+                    ]
+                  },
+                  "sampled_result_intervals": {
+                    "count": 13013,
+                    "min_us": 1214,
+                    "max_us": 10789,
+                    "resolution_us": 256,
+                    "p50_us": [
+                      4096,
+                      4351
+                    ],
+                    "p95_us": [
+                      7936,
+                      10789
+                    ],
+                    "p99_us": [
+                      7936,
+                      10789
+                    ]
+                  }
+                },
+                "slowest": [
+                  {
+                    "index": 1590,
+                    "wall_us": 4862,
+                    "queued_samples": 356,
+                    "observed_guest_frame": 367,
+                    "sampled_at_us": 3712544379,
+                    "m3_compute_us": 2064,
+                    "m3_schedule_us": 256,
+                    "remaining_us": 2542,
+                    "m3_largest_slice_us": 1392,
+                    "sampled_pico": {
+                      "nrz_phase": 6,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 908,
+                      "observed_pwm_after_service_us": 244
+                    }
+                  },
+                  {
+                    "index": 12342,
+                    "wall_us": 4678,
+                    "queued_samples": 388,
+                    "observed_guest_frame": 2845,
+                    "sampled_at_us": 3763293447,
+                    "m3_compute_us": 1952,
+                    "m3_schedule_us": 224,
+                    "remaining_us": 2502,
+                    "m3_largest_slice_us": 1331,
+                    "sampled_pico": {
+                      "nrz_phase": 6,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 809,
+                      "observed_pwm_after_service_us": 150
+                    }
+                  },
+                  {
+                    "index": 5268,
+                    "wall_us": 4592,
+                    "queued_samples": 408,
+                    "observed_guest_frame": 1215,
+                    "sampled_at_us": 3729903085,
+                    "m3_compute_us": 1952,
+                    "m3_schedule_us": 224,
+                    "remaining_us": 2416,
+                    "m3_largest_slice_us": 1350,
+                    "sampled_pico": {
+                      "nrz_phase": 7,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 525,
+                      "observed_pwm_after_service_us": 129
+                    }
+                  },
+                  {
+                    "index": 11784,
+                    "wall_us": 4580,
+                    "queued_samples": 368,
+                    "observed_guest_frame": 2716,
+                    "sampled_at_us": 3760660235,
+                    "m3_compute_us": 1920,
+                    "m3_schedule_us": 48,
+                    "remaining_us": 2612,
+                    "m3_largest_slice_us": 1279,
+                    "sampled_pico": {
+                      "nrz_phase": 6,
+                      "worker_site": 6,
+                      "i2c_stage": 5,
+                      "age_since_service_us": 175,
+                      "observed_pwm_after_service_us": null
+                    }
+                  }
+                ],
+                "intervals": 13013,
+                "interval_resets": 0,
+                "max_observer_poll_gap_us": 2636,
+                "captured_first_late": {
+                  "index": 1590,
+                  "wall_us": 4862,
+                  "queued_samples": 356,
+                  "observed_guest_frame": 367,
+                  "sampled_at_us": 3712544379,
+                  "m3_compute_us": 2064,
+                  "m3_schedule_us": 256,
+                  "remaining_us": 2542,
+                  "m3_largest_slice_us": 1392,
+                  "sampled_pico": {
+                    "nrz_phase": 6,
+                    "worker_site": 6,
+                    "i2c_stage": 5,
+                    "age_since_service_us": 908,
+                    "observed_pwm_after_service_us": 244
+                  }
+                }
+              },
+              "first_late": {
+                "index": 1590,
+                "us": 4862,
+                "request_us": 4862,
+                "frames": 118,
+                "input": 11,
+                "queued": 270,
+                "command": 14,
+                "gap": 781,
+                "pump": 307,
+                "step": 422,
+                "tx": 15,
+                "compute": 2064,
+                "schedule": 256
+              },
+              "metrics": {
+                "mode": 2,
+                "frames": 2998,
+                "cycles": 214897838,
+                "elapsed_us": 61399383,
+                "timing_valid": true,
+                "mhz": 3.4999999592829782,
+                "fps": 48.827852227765874,
+                "starved": 0,
+                "frame_min_us": 19923,
+                "frame_max_us": 20547,
+                "late_frames_1ms": 0,
+                "max_frame_lag_us": 541,
+                "samples": 1535770,
+                "blocks": 13015,
+                "block_max_us": 4862,
+                "block_min_us": 2717,
+                "prime_us": 19227,
+                "min_queued": 170,
+                "inline_requests": 6009,
+                "stream_write_requests": 0,
+                "transport_tx_bytes": 507711,
+                "transport_rx_bytes": 391691,
+                "native_render_us": 23645326,
+                "exchange_block_us": 47103099,
+                "nrz4_blocks": 13015,
+                "nrz4_bytes": 3175660,
+                "nrz4_returns": 13015,
+                "nrz4_restore_us": 430,
+                "nrz4_transport_us": 1756,
+                "nrz4_wait_us": 3443,
+                "nrz4_hold_us": 4791
+              },
+              "strict_failures": [
+                "zero_M3_LATE_BLOCKS"
+              ]
+            }
+          },
+          "CLOSED": true,
+          "CDC_closed": true,
+          "lease_closed": true,
+          "owned_sd_removed": true
+        }
+      },
+      "turn_observer": {
+        "status": "CONTROL_COMPLETED_STARTUP_FAIL",
+        "package": ".build/spectrum-nrz4-audio-20261111/late-tail/turn-capture/observer-package.json",
+        "package_sha256": "3e82e23f7fcdb042cd74f2568f58177e4228a03785001a8ef971b0d490d0ddc3",
+        "receipt": ".build/spectrum-nrz4-audio-20261111/late-tail/turn-capture/hardware-turn/receipt.json",
+        "receipt_sha256": "807613f015d6ff2e22f9057f413954a234c8b64f1ed53f7b73f08e87803b6986",
+        "strict_control": ".build/spectrum-nrz4-audio-20261111/late-tail/turn-capture/hardware-turn/CONTROL-result.json",
+        "strict_control_sha256": "a53b00214cb06334da53900f27ac8aa15c1e21ad9e9999b31eae36d7534cbbbe",
+        "wire": ".build/spectrum-nrz4-audio-20261111/late-tail/turn-capture/hardware-turn/CONTROL-wire.txt",
+        "wire_sha256": "9ccbb5d529835c57a1f6f1f9aa0f09d0592b94810930b7fea5adae28db2e0da7",
+        "timing_parsed_offline": {
+          "captured": 13013,
+          "paired": 0,
+          "module_timing": false,
+          "missing": 1,
+          "unpaired": 0,
+          "saturated": 0,
+          "late_observed": 0,
+          "native_max_us": 4580,
+          "quantized_m3_fields_us": 16,
+          "distribution": {
+            "wall": {
+              "count": 13013,
+              "min_us": 2787,
+              "max_us": 4580,
+              "resolution_us": 256,
+              "p50_us": [
+                3584,
+                3839
+              ],
+              "p95_us": [
+                3840,
+                4095
+              ],
+              "p99_us": [
+                4096,
+                4351
+              ]
+            }
+          },
+          "slowest": [
+            {
+              "index": 9284,
+              "wall_us": 4580,
+              "queued_samples": 408,
+              "observed_guest_frame": 2140,
+              "sampled_at_us": 782845833,
+              "m3_compute_us": null,
+              "m3_schedule_us": null,
+              "remaining_us": null,
+              "m3_largest_slice_us": null,
+              "sampled_pico": {
+                "nrz_phase": 4,
+                "worker_site": 6,
+                "i2c_stage": 5,
+                "age_since_service_us": 335,
+                "observed_pwm_after_service_us": 159,
+                "ack_pin_high": true,
+                "ready_pin_high": false,
+                "ack_gpio_function": 6,
+                "uart_rx": false,
+                "i2c_enabled": false,
+                "pwm_irq_observed_us": 118,
+                "pwm_pc": "101499FA"
+              }
+            },
+            {
+              "index": 1967,
+              "wall_us": 4573,
+              "queued_samples": 394,
+              "observed_guest_frame": 454,
+              "sampled_at_us": 748310648,
+              "m3_compute_us": null,
+              "m3_schedule_us": null,
+              "remaining_us": null,
+              "m3_largest_slice_us": null,
+              "sampled_pico": {
+                "nrz_phase": 6,
+                "worker_site": 6,
+                "i2c_stage": 5,
+                "age_since_service_us": 801,
+                "observed_pwm_after_service_us": 355,
+                "ack_pin_high": false,
+                "ready_pin_high": true,
+                "ack_gpio_function": 5,
+                "uart_rx": false,
+                "i2c_enabled": false,
+                "pwm_irq_observed_us": 84,
+                "pwm_pc": "10007E82"
+              }
+            },
+            {
+              "index": 10787,
+              "wall_us": 4573,
+              "queued_samples": 354,
+              "observed_guest_frame": 2487,
+              "sampled_at_us": 789941844,
+              "m3_compute_us": null,
+              "m3_schedule_us": null,
+              "remaining_us": null,
+              "m3_largest_slice_us": null,
+              "sampled_pico": {
+                "nrz_phase": 3,
+                "worker_site": 12,
+                "i2c_stage": 5,
+                "age_since_service_us": 189,
+                "observed_pwm_after_service_us": 29,
+                "ack_pin_high": true,
+                "ready_pin_high": true,
+                "ack_gpio_function": 2,
+                "uart_rx": true,
+                "i2c_enabled": true,
+                "pwm_irq_observed_us": 105,
+                "pwm_pc": "1000A2EE"
+              }
+            },
+            {
+              "index": 10969,
+              "wall_us": 4559,
+              "queued_samples": 390,
+              "observed_guest_frame": 2529,
+              "sampled_at_us": 790800003,
+              "m3_compute_us": null,
+              "m3_schedule_us": null,
+              "remaining_us": null,
+              "m3_largest_slice_us": null,
+              "sampled_pico": {
+                "nrz_phase": 4,
+                "worker_site": 12,
+                "i2c_stage": 5,
+                "age_since_service_us": 460,
+                "observed_pwm_after_service_us": null,
+                "ack_pin_high": true,
+                "ready_pin_high": true,
+                "ack_gpio_function": 6,
+                "uart_rx": false,
+                "i2c_enabled": false,
+                "pwm_irq_observed_us": null,
+                "pwm_pc": null
+              }
+            }
+          ],
+          "max_observer_poll_gap_us": 1810
+        },
+        "pwm_pc_10007E82": "LCD color window setup (ports/picocalc/hardware.cpp:610)",
+        "timed_case_executed": false,
+        "cleanup": {
+          "CLOSED": true,
+          "CDC_closed": true,
+          "lease_closed": true,
+          "owned_sd_removed": true
+        }
+      }
+    },
+    "startup_repeat_observer": {
+      "status": "MEASURED_REPRODUCED_STARTUP_FAILURE",
+      "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/startup-package.json",
+      "sha256": "8455d25f98ecb129f1282e233ffd2ede0b6a11c28ea9c043b41b6382df7dcb06",
+      "maximum_attempts": 8,
+      "frames_per_attempt": 600,
+      "setup": {
+        "temporary_directory": "/SP4PRIM",
+        "stock_hz": [
+          125000000,
+          72000000
+        ],
+        "layout": "AY/ABC",
+        "frames_per_start": 600,
+        "maximum_starts": 8,
+        "stop_on_first_startup_fault": true,
+        "startup_limit_us": 20000,
+        "block_limit_us": 4720,
+        "qualifies_long": false,
+        "flash_writes": false,
+        "mcu_reset": false
+      },
+      "receipt": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/receipt.json",
+      "receipt_sha256": "ede54399b9439061b50c7d1044eb219046a5e4ad98debf2f31abfae4f64472b0",
+      "cases": [
+        {
+          "attempt": "START01",
+          "result": "PASS",
+          "failures": [],
+          "prime_us": 16673,
+          "max_block_us": 4518,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START01-result.json",
+          "sha256": "bb55405a30584ce79306c693787689595381fa219c02acdb99e7e58befbab123"
+        },
+        {
+          "attempt": "START02",
+          "result": "PASS",
+          "failures": [],
+          "prime_us": 16693,
+          "max_block_us": 4634,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START02-result.json",
+          "sha256": "a6c17688f77e256802d12c0cd0f569f98d3f185c802451d7ecebc8964ea86582"
+        },
+        {
+          "attempt": "START03",
+          "result": "PASS",
+          "failures": [],
+          "prime_us": 16638,
+          "max_block_us": 4575,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START03-result.json",
+          "sha256": "202db6a5f371ee4516296a07c8aafb2841d86dd2511a286b51cef260782c87cc"
+        },
+        {
+          "attempt": "START04",
+          "result": "PASS",
+          "failures": [],
+          "prime_us": 16660,
+          "max_block_us": 4690,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START04-result.json",
+          "sha256": "aa97c728f8a61a2acfefa8777c19b774e7545374319bc2ffba2e58a47bfd5a2f"
+        },
+        {
+          "attempt": "START05",
+          "result": "FAIL",
+          "failures": [
+            "zero_M3_LATE_BLOCKS"
+          ],
+          "prime_us": 16669,
+          "max_block_us": 4743,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START05-result.json",
+          "sha256": "226c7571b66ec35b7ed6db439d645eca00d646a08b6e451c5eaf9c19386470d5"
+        },
+        {
+          "attempt": "START06",
+          "result": "FAIL",
+          "failures": [
+            "zero_M3_LATE_BLOCKS",
+            "started_promptly"
+          ],
+          "prime_us": 20349,
+          "max_block_us": 4932,
+          "path": ".build/spectrum-nrz4-audio-20261111/startup-measure/hardware-001/START06-result.json",
+          "sha256": "26c091cfaf77c457c0163ddfd3d7948547de4f6452980308fd7b99819a6f5200"
+        }
+      ],
+      "delayed_start": {
+        "summary": {
+          "gate": 1537464806,
+          "gap": 1761,
+          "bad": 0,
+          "arm_lo": 1537463640,
+          "arm_hi": 1537463649,
+          "begin": 1537465139,
+          "duration": 20349,
+          "observed": 1537485698,
+          "lost": 0,
+          "arm_lo_us": -1166,
+          "arm_hi_us": -1157,
+          "begin_us": 333,
+          "observed_us": 20892,
+          "first_audio_fill_us": 20682,
+          "first_audio_output_estimate_us": null,
+          "third_result_to_first_fill_us": 937,
+          "third_result_to_fill_bounds_us": [
+            834,
+            2595
+          ]
+        },
+        "pwm": {
+          "fire": 1537485465,
+          "head": 545,
+          "filled": 512,
+          "entry": 19,
+          "fire_us": 20659
+        },
+        "blocks": [
+          {
+            "index": 1,
+            "ev": 1537469310,
+            "rx": 1537470034,
+            "pub": 1537474273,
+            "wait": 0,
+            "busy": 0,
+            "lease": 1537469322,
+            "req": 1537469320,
+            "ack": 1537472657,
+            "wall": 4327,
+            "ev_us": 4504,
+            "lease_us": 4516,
+            "req_us": 4514,
+            "rx_us": 5228,
+            "ack_us": 7851,
+            "pub_us": 9467,
+            "wait_us": null,
+            "busy_us": null,
+            "complete_us": 8841,
+            "confirmed_event_to_lease_us": 12
+          },
+          {
+            "index": 2,
+            "ev": 1537471397,
+            "rx": 1537477909,
+            "pub": 1537481279,
+            "wait": 1537474094,
+            "busy": 1537474273,
+            "lease": 1537477192,
+            "req": 1537477189,
+            "ack": 1537480816,
+            "wall": 3749,
+            "ev_us": 6591,
+            "lease_us": 12386,
+            "req_us": 12383,
+            "rx_us": 13103,
+            "ack_us": 16010,
+            "pub_us": 16473,
+            "wait_us": 9288,
+            "busy_us": 9467,
+            "complete_us": 16132,
+            "confirmed_event_to_lease_us": 5795
+          },
+          {
+            "index": 3,
+            "ev": 1537475166,
+            "rx": 1537481910,
+            "pub": 1537484654,
+            "wait": 0,
+            "busy": 0,
+            "lease": 1537481113,
+            "req": 1537480938,
+            "ack": 1537484294,
+            "wall": 3613,
+            "ev_us": 10360,
+            "lease_us": 16307,
+            "req_us": 16132,
+            "rx_us": 17104,
+            "ack_us": 19488,
+            "pub_us": 19848,
+            "wait_us": null,
+            "busy_us": null,
+            "complete_us": 19745,
+            "confirmed_event_to_lease_us": 5947
+          }
+        ],
+        "observation_interval_min_us": 24,
+        "missing_is_null": true,
+        "scope": "Read-only sampling during startup; measured PWM fill, estimated first PCM on wire."
+      },
+      "cleanup": {
+        "CLOSED": true,
+        "CDC_closed": true,
+        "lease_closed": true,
+        "owned_sd_removed": true
+      }
+    }
+  },
+  "startup_i2c_candidate": {
+    "status": "HOST_PASS_SUPERSEDED_BEFORE_HARDWARE",
+    "pico": {
+      "build": "F5288532",
+      "crc": "127B8B8C",
+      "bytes": 1793244
+    },
+    "baseline": {
+      "build": "EBAAE560",
+      "crc": "5D1DFCF0",
+      "bytes": 1793244
+    },
+    "M3_crc": "029BA093",
+    "qualification_package": ".build/spectrum-nrz4-audio-20261111/prime-i2c/qualification-package.json",
+    "qualification_package_sha256": "ff08e5dd05fbd85487e350d3d0ebd116e9aa6ec57e5800060b0fc31a916c1365",
+    "changed": [
+      "ports/picocalc/io_worker.cpp",
+      "ports/picocalc/m3_audio.cpp",
+      "ports/picocalc/m3_audio.hpp",
+      "ports/picocalc/m3_audio_engine.hpp"
+    ],
+    "prime_threshold_frames": {
+      "mono": 360,
+      "stereo": 354
+    },
+    "max_poll_deferral_us": 25000,
+    "arm_test": ".build/spectrum-nrz4-audio-20261111/prime-i2c/arm-prime.json",
+    "arm_nrz": ".build/spectrum-nrz4-audio-20261111/prime-i2c/arm-nrz.json",
+    "host_sanitizers": ".build/spectrum-nrz4-audio-20261111/prime-i2c/spectrum-host.log",
+    "device_written": false,
+    "hardware_qualified": false
+  },
+  "startup_i2c_unified_candidate": {
+    "status": "HARDWARE_SHORT_FAIL",
+    "pico": {
+      "build": "B3821DD4",
+      "crc": "A4C12DE2",
+      "bytes": 1793244
+    },
+    "baseline": {
+      "build": "1B0010C3",
+      "crc": "CC10489A",
+      "bytes": 1793244
+    },
+    "M3_crc": "029BA093",
+    "qualification_package": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/qualification-package.json",
+    "qualification_package_sha256": "da0e85727ff5886ca3dd6cf78324c70f3a1c7bfd68f55a55a2cf82fbe79c5452",
+    "changed": [
+      "ports/picocalc/io_worker.cpp",
+      "ports/picocalc/m3_audio.cpp",
+      "ports/picocalc/m3_audio.hpp",
+      "ports/picocalc/m3_audio_engine.hpp"
+    ],
+    "max_poll_deferral_us": 25000,
+    "arm_test": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/arm-prime.json",
+    "arm_nrz": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/arm-nrz.json",
+    "hardware_qualified": false,
+    "device_written": true,
+    "install": {
+      "receipt": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-install/receipt.json",
+      "receipt_sha256": "f2b005c24593ac461ced3b22480efc0e4a0808a6c49d75ed7df951696a67e3c9",
+      "flash_writes": 1,
+      "programmed_readback_verified": true,
+      "readback_sha256": "0784f196d0c10e2a8eea3f627908741c15d963bf280c6326a9f1dd1777d2447a",
+      "boot": {
+        "BOOTS": "41",
+        "BOOT_WATCHDOG": "0",
+        "RESET_REASON": "00010001",
+        "CRASH": "NONE"
+      },
+      "M3_crc": "029BA093",
+      "previous_state_saved": false,
+      "CDC_closed": true,
+      "lease_closed": true
+    },
+    "short": {
+      "status": "FAIL",
+      "receipt": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/receipt.json",
+      "receipt_sha256": "d6b9270c967019c60b408c72c86d37e3b622618440e8df8f2efcf4a147829f39",
+      "passes": 2,
+      "required": 4,
+      "block_limit_us": 4720,
+      "prime_limit_us": 20000,
+      "cases": [
+        {
+          "tag": "AYABC",
+          "status": "PASS",
+          "failures": [],
+          "late_blocks": 0,
+          "first_late": null,
+          "metrics": {
+            "mode": 2,
+            "frames": 598,
+            "cycles": 42866269,
+            "elapsed_us": 12247506,
+            "timing_valid": true,
+            "mhz": 3.4999998367014475,
+            "fps": 48.82626716002425,
+            "starved": 0,
+            "frame_min_us": 19923,
+            "frame_max_us": 20547,
+            "late_frames_1ms": 0,
+            "max_frame_lag_us": 539,
+            "samples": 307036,
+            "blocks": 2602,
+            "block_max_us": 4633,
+            "block_min_us": 2755,
+            "prime_us": 16627,
+            "min_queued": 154,
+            "inline_requests": 1192,
+            "stream_write_requests": 0,
+            "transport_tx_bytes": 105970,
+            "transport_rx_bytes": 79301,
+            "native_render_us": 4735064,
+            "exchange_block_us": 9499595,
+            "nrz4_blocks": 2602,
+            "nrz4_bytes": 634888,
+            "nrz4_returns": 2602,
+            "nrz4_restore_us": 290,
+            "nrz4_transport_us": 1804,
+            "nrz4_wait_us": 3338,
+            "nrz4_hold_us": 4578
+          },
+          "wire": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/AYABC-wire.txt",
+          "status_file": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/AYABC-after.txt"
+        },
+        {
+          "tag": "AYACB",
+          "status": "FAIL",
+          "failures": [
+            "zero_M3_LATE_BLOCKS"
+          ],
+          "late_blocks": 2,
+          "first_late": {
+            "index": 653,
+            "us": 4758,
+            "request_us": 4758,
+            "frames": 118,
+            "input": 11,
+            "queued": 232,
+            "command": 13,
+            "gap": 707,
+            "pump": 292,
+            "step": 290,
+            "tx": 10,
+            "compute": 0,
+            "schedule": 0
+          },
+          "metrics": {
+            "mode": 2,
+            "frames": 598,
+            "cycles": 42866269,
+            "elapsed_us": 12247506,
+            "timing_valid": true,
+            "mhz": 3.4999998367014475,
+            "fps": 48.82626716002425,
+            "starved": 0,
+            "frame_min_us": 19923,
+            "frame_max_us": 20547,
+            "late_frames_1ms": 0,
+            "max_frame_lag_us": 539,
+            "samples": 307036,
+            "blocks": 2602,
+            "block_max_us": 5214,
+            "block_min_us": 2781,
+            "prime_us": 16690,
+            "min_queued": 136,
+            "inline_requests": 1192,
+            "stream_write_requests": 0,
+            "transport_tx_bytes": 105970,
+            "transport_rx_bytes": 79301,
+            "native_render_us": 4734794,
+            "exchange_block_us": 9497050,
+            "nrz4_blocks": 2602,
+            "nrz4_bytes": 634888,
+            "nrz4_returns": 2602,
+            "nrz4_restore_us": 269,
+            "nrz4_transport_us": 1781,
+            "nrz4_wait_us": 3411,
+            "nrz4_hold_us": 5057
+          },
+          "wire": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/AYACB-wire.txt",
+          "status_file": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/AYACB-after.txt"
+        },
+        {
+          "tag": "YMABC",
+          "status": "FAIL",
+          "failures": [
+            "zero_M3_LATE_BLOCKS"
+          ],
+          "late_blocks": 2,
+          "first_late": {
+            "index": 705,
+            "us": 4827,
+            "request_us": 4827,
+            "frames": 118,
+            "input": 11,
+            "queued": 224,
+            "command": 13,
+            "gap": 732,
+            "pump": 292,
+            "step": 406,
+            "tx": 39,
+            "compute": 0,
+            "schedule": 0
+          },
+          "metrics": {
+            "mode": 2,
+            "frames": 598,
+            "cycles": 42866269,
+            "elapsed_us": 12247506,
+            "timing_valid": true,
+            "mhz": 3.4999998367014475,
+            "fps": 48.82626716002425,
+            "starved": 0,
+            "frame_min_us": 19923,
+            "frame_max_us": 20547,
+            "late_frames_1ms": 0,
+            "max_frame_lag_us": 539,
+            "samples": 307036,
+            "blocks": 2602,
+            "block_max_us": 4827,
+            "block_min_us": 2768,
+            "prime_us": 16699,
+            "min_queued": 150,
+            "inline_requests": 1192,
+            "stream_write_requests": 0,
+            "transport_tx_bytes": 105970,
+            "transport_rx_bytes": 79301,
+            "native_render_us": 4734806,
+            "exchange_block_us": 9474944,
+            "nrz4_blocks": 2602,
+            "nrz4_bytes": 634888,
+            "nrz4_returns": 2602,
+            "nrz4_restore_us": 333,
+            "nrz4_transport_us": 1789,
+            "nrz4_wait_us": 3408,
+            "nrz4_hold_us": 4737
+          },
+          "wire": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/YMABC-wire.txt",
+          "status_file": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/YMABC-after.txt"
+        },
+        {
+          "tag": "YMACB",
+          "status": "PASS",
+          "failures": [],
+          "late_blocks": 0,
+          "first_late": null,
+          "metrics": {
+            "mode": 2,
+            "frames": 598,
+            "cycles": 42866269,
+            "elapsed_us": 12247506,
+            "timing_valid": true,
+            "mhz": 3.4999998367014475,
+            "fps": 48.82626716002425,
+            "starved": 0,
+            "frame_min_us": 19923,
+            "frame_max_us": 20547,
+            "late_frames_1ms": 0,
+            "max_frame_lag_us": 539,
+            "samples": 307036,
+            "blocks": 2602,
+            "block_max_us": 4700,
+            "block_min_us": 2759,
+            "prime_us": 16668,
+            "min_queued": 154,
+            "inline_requests": 1192,
+            "stream_write_requests": 0,
+            "transport_tx_bytes": 105970,
+            "transport_rx_bytes": 79301,
+            "native_render_us": 4734598,
+            "exchange_block_us": 9485018,
+            "nrz4_blocks": 2602,
+            "nrz4_bytes": 634888,
+            "nrz4_returns": 2602,
+            "nrz4_restore_us": 311,
+            "nrz4_transport_us": 1764,
+            "nrz4_wait_us": 3573,
+            "nrz4_hold_us": 4536
+          },
+          "wire": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/YMACB-wire.txt",
+          "status_file": ".build/spectrum-nrz4-audio-20261111/prime-i2c-unified/hardware-short/YMACB-after.txt"
+        }
+      ],
+      "cleanup": {
+        "CLOSED": true,
+        "CDC_closed": true,
+        "lease_closed": true,
+        "owned_sd_removed": true
+      }
+    },
+    "long_started": false
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "date": "2026-11-11",
+  "status": "INSTALLED_VERIFIED_FIRST_SHORT_HOLD_STOP_FAULT",
+  "new_pico": {
+    "build": "BC3E68F9",
+    "crc": "AE970EF0",
+    "bin_sha256": "11909cb91ec619277f9b04cac2f6730db6f74f0870d1a566acc21953087912e7",
+    "uf2_sha256": "d757b7b9f1b5f1634b091ab2907c1692b1233b333f876602ec2ff85be0b71a27",
+    "bytes": 1793244,
+    "static_ram": 120484,
+    "heap": 108892,
+    "installed": true
+  },
+  "M3": {
+    "body_crc": "B89B1FE5",
+    "modified": false,
+    "stock_hz": 72000000
+  },
+  "pico_stock_hz": 125000000,
+  "symbol_hz": 2000000,
+  "PIO_SM_hz_before": 16000000,
+  "PIO_SM_hz_after": 64000000,
+  "sample_ns_before": 250,
+  "sample_ns_after": 375,
+  "hardware_capture": {
+    "status": "PASS",
+    "physical_io": false,
+    "source_snapshot_sha256": "30f85fd9843c95d118d6d5518a294337debc1c8eba45653960d1865e774bf93a",
+    "frame_bytes": 268,
+    "received_crc": "EF7C4BF7",
+    "calculated_crc": "EF7C4BF7",
+    "first_bad_stop_index": 6,
+    "first_bad_stop_value": 3,
+    "payload_intact": true,
+    "actual_reference_ARM_decoder_reproduces_exact536byte_postdecode_buffer": true,
+    "scope": "Derived only from preserved hardware snapshot; original untouched. First24 already decoded bytes plus61 untouched MSB-first payload words, then actual E9 ARM decoder replay. Not evidence of corrected hardware."
+  },
+  "host": {
+    "pio_model": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "PIO_instruction_model_cases": 4608,
+      "old_failing_cases": 772,
+      "old_bad_stop": 3,
+      "old_intact_stop_bad_payload_reproduced": true,
+      "candidate_bad_stops": 0,
+      "symbol_hz": 2000000,
+      "late_PC_edge_tested_ns": 312.5,
+      "clock_drift_tested_percent": [
+        -1,
+        1
+      ],
+      "fractional_divider_quantization": true,
+      "change": "PIO SM16->64MHz, WAIT delay23/SET delay31/JMP delay30: sample125ns later with finite receive and interframe margin; symbol/CPU clocks unchanged",
+      "scope": "Ideal DMA drain, modeled single PC-lane stop or data-edge lag. Reproduces stop3 with intact payload and intact stops with bad payload, not proof of a hardware worst-case bound or corrected hardware."
+    },
+    "nrz_ARM": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "normal_ARM_cases": 7,
+      "faults": [
+        "stop",
+        "crc",
+        "no_data",
+        "no_ready",
+        "no_ack_release",
+        "disable_stuck",
+        "reset_stuck",
+        "restore_enable_stuck",
+        "cancel_tx",
+        "cancel_rx",
+        "cancel_ack"
+      ],
+      "admission_cases": 10,
+      "actual_service_cleanup_cases": 10,
+      "elf_sha256": "7c2811299fa172d4631e459f073b450f66ca896fa2c66e6d1772d9150c0bfec4",
+      "scope": "Actual Pico Nrz4 and SDK ARM instructions; modeled GPIO/UART/I2C/PIO/DMA; receiver setup, CRC/no publication on faults, bounded recovery, UART RX armed before ACK release, exact GPIO/I2C/UART restore and SDK release. Not electrical or physical timing validation."
+    },
+    "service_ARM": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "actual_ARM_cases": 6,
+      "reference_sha256": "b38c2e93fbcad77b81e18b32e48a0aacb4ad8189a6dbede097821b494f35248f",
+      "candidate_sha256": "7c2811299fa172d4631e459f073b450f66ca896fa2c66e6d1772d9150c0bfec4",
+      "records": {
+        "reference": {
+          "completed_result": {
+            "stage": 0,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "result_error": {
+            "stage": 2,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 4294967250,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "final_write_busy": {
+            "stage": 1,
+            "command": 0,
+            "pending": 0,
+            "complete": 1,
+            "error": 0,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 1,
+            "nrz_phase": 1,
+            "offset": 0
+          }
+        },
+        "candidate": {
+          "completed_result": {
+            "stage": 2,
+            "command": 14,
+            "pending": 1,
+            "complete": 0,
+            "error": 0,
+            "blocks": 1,
+            "sequence": 1,
+            "physical_slot": 5,
+            "nrz_phase": 3,
+            "offset": 0
+          },
+          "result_error": {
+            "stage": 2,
+            "command": 0,
+            "pending": 0,
+            "complete": 0,
+            "error": 4294967250,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 0,
+            "nrz_phase": 1,
+            "offset": 0
+          },
+          "final_write_busy": {
+            "stage": 1,
+            "command": 0,
+            "pending": 0,
+            "complete": 1,
+            "error": 0,
+            "blocks": 0,
+            "sequence": 0,
+            "physical_slot": 1,
+            "nrz_phase": 1,
+            "offset": 0
+          }
+        }
+      },
+      "scope": "Actual service/engine/lease/TX instructions; completed result publishes exactly once and admits next prepared job in same call; real errors retained; final WRITE ack unchanged under busy I2C. Modeled MMIO, not hardware priming measurement."
+    },
+    "keyboard_ARM": {
+      "status": "PASS",
+      "physical_io": false,
+      "hardware_timing_measured": false,
+      "reference_stale_read_and_unknown_errors_reproduced": true,
+      "actual_firmware_ARM_cases": 18,
+      "reference_sha256": "35ab658b42d5889e585ceb514d7bbdd6c61ac5bbbf77c485a7cbc38e2a6ba969",
+      "candidate_sha256": "7c2811299fa172d4631e459f073b450f66ca896fa2c66e6d1772d9150c0bfec4",
+      "scope": "Actual sealed Pico Keyboard/request_register/fault ARM, DWARF-pinned objects, modeled I2C peer1s expiry and documented UNKNOWN, normal/guard/late/32bit rollover, malformed reply capture; no runtime or counter fields edited"
+    },
+    "combined_platform": "MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh PASS",
+    "M3_audio_suite": "PASS",
+    "default_game_probes": "All5 rebuilt byte-exact"
+  },
+  "source_seal": {
+    "status": "PASS",
+    "physical_io": false,
+    "source_sha256": "71700a44482a857d4507284db9a0d5b7ddc4e1276f0577ccd438dc46e3b45eef",
+    "build_id": "bc3e68f9",
+    "crc": "ae970ef0",
+    "before_sha256": "3f400834cfd68ef5b2b69b02dd1241dd9baa9242eb8287c15bd64bba8f707d9f",
+    "after_sha256": "5245324bf00ed65a704ef80f121b2f822139f0c8ef21d02d96858a2d6fa4bd9b"
+  },
+  "package": {
+    "path": ".build/spectrum-nrz4-audio-20261111/NRZ4-PACKAGE-011.json",
+    "sha256": "07624e40fbb7232bd32fcc759674cba71cc1d6214b2f649a4d8277474eb28bd3"
+  },
+  "not_proven": [
+    "Physical worst-case inter-port edge delay",
+    "Corrected NRZ integrity on hardware",
+    "Priming below20ms on hardware",
+    "All4short or long qualification PASS"
+  ],
+  "hardware_install": {
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-pico-004/receipt.json",
+    "sha256": "4c7ceef65f0691cd5fb75ac55035a64bb89cc947efcdf099530d07fdde05bf73",
+    "status": "PASS",
+    "full_BIN_readback": true,
+    "boot": {
+      "BOOTS": "23",
+      "BOOT_WATCHDOG": "0",
+      "RESET_REASON": "00010001",
+      "CRASH": "AVAILABLE"
+    },
+    "crash_preserved": true,
+    "settings_sequence": "4",
+    "M3_Flash_writes": 0
+  },
+  "user_approval": {
+    "date": "2026-11-12 Europe/Moscow",
+    "answer": "согласен"
+  },
+  "physical_short_003": {
+    "date": "2026-11-12",
+    "status": "HOLD",
+    "receipt": ".build/spectrum-nrz4-audio-20261111/nrz-hardware-short-003/receipt.json",
+    "Pico_MHz": 125,
+    "M3_MHz": 72,
+    "case": "AYABC",
+    "measured_frames": 2,
+    "delivered_blocks": 8,
+    "M3_ERROR": -45,
+    "NRZ_errors": 1,
+    "first_prime_us": 20461,
+    "I2C_errors": 0,
+    "battery_errors": 0,
+    "remaining_short_cases": "NOT_RUN",
+    "long": "NOT_RUN",
+    "scope": "Later PIO sampling did not eliminate the hardware stop-symbol fault; no hardware qualification claimed."
+  }
+}

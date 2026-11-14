@@ -1,0 +1,416 @@
+{
+  "status": "QUALIFIED_EXPERIMENT_NOT_PRODUCTION_AUDIO",
+  "pico_hz": 125000000,
+  "m3_hz": 72000000,
+  "m3_body_crc": "3BE158B4",
+  "runs": [
+    {
+      "run": "013",
+      "status": "PASS",
+      "receipt_sha256": "b438d47d84a64e328bd3f87b98efad0320b2042e85f827a90e4474116009cb85",
+      "elapsed_seconds": 12.193,
+      "reported_case_rows": 91,
+      "planned_i2c_restoration": {
+        "count": 84,
+        "max_us": 8
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "payload_bytes": 3192,
+      "qualified_cases": 91,
+      "pico_build": "7C38C634",
+      "pico_crc": "8A17554E"
+    },
+    {
+      "run": "014",
+      "status": "PASS",
+      "receipt_sha256": "4b9af7c5c0e7b31c187c984f2c54e2485b23d9b3ef90ef32d619e952494d1314",
+      "elapsed_seconds": 271.617,
+      "reported_case_rows": 9100,
+      "planned_i2c_restoration": {
+        "count": 8400,
+        "max_us": 8
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "payload_bytes": 319200,
+      "qualified_cases": 9100,
+      "pico_build": "7C38C634",
+      "pico_crc": "8A17554E"
+    },
+    {
+      "run": "015",
+      "status": "HOLD",
+      "receipt_sha256": "60818f669993f84432e60c4c564274872497f33dde72f5a1d7a19a4cbc1cfa29",
+      "elapsed_seconds": 9.249,
+      "reported_case_rows": 9,
+      "planned_i2c_restoration": {
+        "count": 2,
+        "max_us": 7
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "failure": "Second NRZ job rejected dirty timer state; prior successful job left CC3IF. Native I2C counters unchanged. This result remains HOLD.",
+      "pico_build": "7C38C634",
+      "pico_crc": "8A17554E"
+    },
+    {
+      "run": "016",
+      "status": "PASS",
+      "receipt_sha256": "b045a903a1072f1df1906082dd24d678c02644460193a2f80f7a504c5ed56bdd",
+      "elapsed_seconds": 11.898,
+      "reported_case_rows": 91,
+      "planned_i2c_restoration": {
+        "count": 84,
+        "max_us": 7
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "nrz_rates": [
+        {
+          "symbol_hz": 1000000,
+          "payload_bytes": 96,
+          "useful_mbit_s_min": 3.181588,
+          "useful_mbit_s_max": 3.188192,
+          "prep_us_min": 242,
+          "prep_us_max": 265
+        },
+        {
+          "symbol_hz": 1500000,
+          "payload_bytes": 96,
+          "useful_mbit_s_min": 4.735057,
+          "useful_mbit_s_max": 4.749699,
+          "prep_us_min": 243,
+          "prep_us_max": 262
+        },
+        {
+          "symbol_hz": 2000000,
+          "payload_bytes": 96,
+          "useful_mbit_s_min": 6.234047,
+          "useful_mbit_s_max": 6.306569,
+          "prep_us_min": 242,
+          "prep_us_max": 263
+        }
+      ],
+      "payload_bytes": 5208,
+      "startup_owned_CC3IF_cleanup": 1,
+      "pico_build": "7C38C634",
+      "pico_crc": "8A17554E"
+    },
+    {
+      "run": "017a",
+      "status": "PASS",
+      "pico_build": "C99DE0AF",
+      "pico_crc": "528F4874",
+      "nrz4_packer": "reference",
+      "receipt_sha256": "4ab67746b6ba4eea016b06f96101157cb0bc6f67fde22d547c598d694a0bdea8",
+      "elapsed_seconds": 12.128,
+      "reported_case_rows": 91,
+      "qualified_cases": 91,
+      "payload_bytes": 5208,
+      "planned_i2c_restoration": {
+        "count": 84,
+        "max_us": 7
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0,
+        "IO_ERRORS": 0,
+        "SETTINGS_WRITES": 0,
+        "SETTINGS_ERASES": 0,
+        "RTC_SET": 0,
+        "PHYSICAL_KEYS": 0,
+        "BOOTS": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "nrz_rates": [
+        {
+          "symbol_hz": 1000000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 3.163025,
+          "useful_mbit_s_max": 3.188192,
+          "prep_us_min": 241,
+          "prep_us_max": 263,
+          "prep_us_median": 250,
+          "wire_us_min": 241,
+          "wire_us_max": 244,
+          "prep_wire_mbit_s_min": 1.520541,
+          "prep_wire_mbit_s_max": 1.592076,
+          "prep_wire_mbit_s_median": 1.566104
+        },
+        {
+          "symbol_hz": 1500000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 4.708447,
+          "useful_mbit_s_max": 4.749699,
+          "prep_us_min": 242,
+          "prep_us_max": 265,
+          "prep_us_median": 250,
+          "wire_us_min": 162,
+          "wire_us_max": 164,
+          "prep_wire_mbit_s_min": 1.801407,
+          "prep_wire_mbit_s_max": 1.902822,
+          "prep_wire_mbit_s_median": 1.86773
+        },
+        {
+          "symbol_hz": 2000000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 6.234047,
+          "useful_mbit_s_max": 6.306569,
+          "prep_us_min": 243,
+          "prep_us_max": 264,
+          "prep_us_median": 249,
+          "wire_us_min": 122,
+          "wire_us_max": 124,
+          "prep_wire_mbit_s_min": 1.994517,
+          "prep_wire_mbit_s_max": 2.106354,
+          "prep_wire_mbit_s_median": 2.066213
+        }
+      ],
+      "maximum_m3_slice_us": 438
+    },
+    {
+      "run": "017b",
+      "status": "PASS",
+      "pico_build": "C99DE0AF",
+      "pico_crc": "528F4874",
+      "nrz4_packer": "frames",
+      "receipt_sha256": "c7c74b2178b1be77e2ff0eb227f36d7883fdb4442b08df7f9c6ed774653b83cf",
+      "elapsed_seconds": 11.665,
+      "reported_case_rows": 91,
+      "qualified_cases": 91,
+      "payload_bytes": 5208,
+      "planned_i2c_restoration": {
+        "count": 84,
+        "max_us": 7
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0,
+        "IO_ERRORS": 0,
+        "SETTINGS_WRITES": 0,
+        "SETTINGS_ERASES": 0,
+        "RTC_SET": 0,
+        "PHYSICAL_KEYS": 0,
+        "BOOTS": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "nrz_rates": [
+        {
+          "symbol_hz": 1000000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 3.163025,
+          "useful_mbit_s_max": 3.188192,
+          "prep_us_min": 109,
+          "prep_us_max": 129,
+          "prep_us_median": 116,
+          "wire_us_min": 241,
+          "wire_us_max": 244,
+          "prep_wire_mbit_s_min": 2.074819,
+          "prep_wire_mbit_s_max": 2.195767,
+          "prep_wire_mbit_s_median": 2.154697
+        },
+        {
+          "symbol_hz": 1500000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 4.708447,
+          "useful_mbit_s_max": 4.749699,
+          "prep_us_min": 109,
+          "prep_us_max": 129,
+          "prep_us_median": 115,
+          "wire_us_min": 162,
+          "wire_us_max": 164,
+          "prep_wire_mbit_s_min": 2.643086,
+          "prep_wire_mbit_s_max": 2.838458,
+          "prep_wire_mbit_s_median": 2.770202
+        },
+        {
+          "symbol_hz": 2000000,
+          "payload_bytes": 96,
+          "samples": 7,
+          "useful_mbit_s_min": 6.283636,
+          "useful_mbit_s_max": 6.306569,
+          "prep_us_min": 109,
+          "prep_us_max": 128,
+          "prep_us_median": 115,
+          "wire_us_min": 122,
+          "wire_us_max": 123,
+          "prep_wire_mbit_s_min": 3.058576,
+          "prep_wire_mbit_s_max": 3.32968,
+          "prep_wire_mbit_s_median": 3.236144
+        }
+      ],
+      "maximum_m3_slice_us": 438
+    },
+    {
+      "run": "018",
+      "status": "PASS",
+      "pico_build": "C99DE0AF",
+      "pico_crc": "528F4874",
+      "nrz4_packer": "frames",
+      "receipt_sha256": "8e9f71b3b933b2714c60ba7e4c98804e7c63f9df737bc4ca9d2fce15c651d574",
+      "elapsed_seconds": 272.007,
+      "reported_case_rows": 9100,
+      "qualified_cases": 9100,
+      "payload_bytes": 520800,
+      "planned_i2c_restoration": {
+        "count": 8400,
+        "max_us": 7
+      },
+      "native_counter_deltas": {
+        "I2C_TIMEOUTS": 0,
+        "IO_I2C_RESETS": 0,
+        "I2C_ABORTS": 0,
+        "errors": 0,
+        "IO_ERRORS": 0,
+        "SETTINGS_WRITES": 0,
+        "SETTINGS_ERASES": 0,
+        "RTC_SET": 0,
+        "PHYSICAL_KEYS": 0,
+        "BOOTS": 0
+      },
+      "CLOSED": true,
+      "owned_sd_removed": true,
+      "CDC_closed": true,
+      "lease_closed": true,
+      "nrz_rates": [
+        {
+          "symbol_hz": 1000000,
+          "payload_bytes": 96,
+          "samples": 700,
+          "useful_mbit_s_min": 3.154364,
+          "useful_mbit_s_max": 3.19132,
+          "prep_us_min": 108,
+          "prep_us_max": 133,
+          "prep_us_median": 116.0,
+          "wire_us_min": 241,
+          "wire_us_max": 244,
+          "prep_wire_mbit_s_min": 2.058445,
+          "prep_wire_mbit_s_max": 2.195767,
+          "prep_wire_mbit_s_median": 2.152014
+        },
+        {
+          "symbol_hz": 1500000,
+          "payload_bytes": 96,
+          "samples": 700,
+          "useful_mbit_s_min": 4.697248,
+          "useful_mbit_s_max": 4.783805,
+          "prep_us_min": 108,
+          "prep_us_max": 131,
+          "prep_us_median": 116.0,
+          "wire_us_min": 161,
+          "wire_us_max": 165,
+          "prep_wire_mbit_s_min": 2.627013,
+          "prep_wire_mbit_s_max": 2.838458,
+          "prep_wire_mbit_s_median": 2.766045
+        },
+        {
+          "symbol_hz": 2000000,
+          "payload_bytes": 96,
+          "samples": 700,
+          "useful_mbit_s_min": 6.141271,
+          "useful_mbit_s_max": 6.316655,
+          "prep_us_min": 108,
+          "prep_us_max": 147,
+          "prep_us_median": 116.0,
+          "wire_us_min": 122,
+          "wire_us_max": 126,
+          "prep_wire_mbit_s_min": 2.825405,
+          "prep_wire_mbit_s_max": 3.32968,
+          "prep_wire_mbit_s_median": 3.236144
+        }
+      ],
+      "maximum_m3_slice_us": 455
+    }
+  ],
+  "limitations": [
+    "Measured wire rates include sender completion observation, but exclude waveform preparation and ownership turnaround.",
+    "A/B packing uses the same pattern generation; it is not a measurement of game audio synthesis or battery consumption.",
+    "Long NRZ4 run018 qualifies this finite diagnostic at125/72MHz; the production audio backend has not been changed.",
+    "No Flash writes or MCU resets by these experiments. Harness separately installed C99 between016 and017a, advancing BOOTS19->20 and restarting native counters9->0. Each test preserves its intake counters and pre-existing CRASH=AVAILABLE.",
+    "ROMCACHE was not reread by these experiments."
+  ],
+  "pico_residents": [
+    {
+      "build": "7C38C634",
+      "crc": "8A17554E",
+      "runs": [
+        "013",
+        "014",
+        "015",
+        "016"
+      ]
+    },
+    {
+      "build": "C99DE0AF",
+      "crc": "528F4874",
+      "runs": [
+        "017a",
+        "017b",
+        "018"
+      ]
+    }
+  ],
+  "packing_AB": {
+    "reference_run": "017a",
+    "optimized_run": "017b",
+    "table_bytes": 16,
+    "module_memory_bytes": 5896,
+    "module_memory_limit_bytes": 6144,
+    "payload_bytes": 96,
+    "symbol_hz": 2000000,
+    "prep_wire_speedup": {
+      "min": 1.5334918966757012,
+      "max": 1.5807791894984042,
+      "median": 1.5622583139984532
+    },
+    "meaning": "M3 preparation plus wire completion observation. Preparation includes unchanged fixture pattern generation; excludes GPIO ownership and readiness/reply guards."
+  }
+}
