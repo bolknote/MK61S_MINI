@@ -47,7 +47,6 @@ if [[ -n "$output_dir" ]]; then
   [[ "$firmware_tag" =~ ^[A-Za-z0-9._-]+$ ]] ||
     fail "invalid firmware tag: $firmware_tag"
   mkdir -p "$output_dir"
-  command -v zip >/dev/null 2>&1 || fail 'zip is required for release bundles'
   # Published F411 bundles need the same complete notices as F401 bundles.
   python3 "$root/tools/fonts/package_ui_font_licenses.py" \
     --archive "$output_dir/UI_FONT_LICENSES.zip"
@@ -76,7 +75,7 @@ package_urq_apps() {
   if [[ ! -s "$cached/Apps/URQ.APP" || ! -s "$cached/Apps/URQUI.APP" ]]; then
     python3 "$root/tools/apps/urq/build_urq_app.py" --target stm32 \
       --toolchain "$tool_bin" --build-dir "$matrix_root/urq-build" \
-      --output-dir "$cached/Apps" --library-output "$cached/Games/URQ" \
+      --output-dir "$cached/Apps" \
       --licenses-output "$cached/licenses/urq"
     mkdir -p "$cached/licenses/ryu"
     cp "$root/third_party/ryu/LICENSE-Apache2" "$root/third_party/ryu/LICENSE-Boost" \
@@ -204,9 +203,8 @@ PY
   python3 "$root/tools/programs/program_bundle.py" --bundle "$bundle" --write-capabilities \
     --profile "$profile" --mcu f411 --firmware "$bundle/$bundle_name.bin" \
     --compile-commands "$build_path/compile_commands.json"
-  rm -rf "$bundle/Programs"
-  python3 "$root/tools/programs/program_bundle.py" --bundle "$bundle" --export "$bundle/Programs"
-  (cd "$output_dir" && zip -qr "$bundle_name.zip" "$bundle_name")
+  python3 "$root/tools/programs/program_bundle.py" --bundle "$bundle" \
+    --release-disk --archive "$output_dir/$bundle_name.zip"
 }
 
 compile_variant() {
@@ -335,6 +333,7 @@ PYTOOLS
   fi
 }
 
+matrix="$(python3 "$contract" cases --group f411-release --format tsv)"
 while IFS=$'\t' read -r \
     case_id profile optimization board_flags artifact_name \
     flash_capacity minimum_flash_headroom _ram_capacity _ram_limit \
@@ -346,6 +345,6 @@ while IFS=$'\t' read -r \
     "$artifact_name" "$flash_capacity" "$minimum_flash_headroom" \
     "$stack_frame_limit" "$publish" "$expect_usb_suspend" \
     "$expect_ws0010_graphics"
-done < <(python3 "$contract" cases --group f411-release --format tsv)
+done <<< "$matrix"
 
 printf '\nF411 strict release matrix: OK (%d variants)\n' "$variant_count"

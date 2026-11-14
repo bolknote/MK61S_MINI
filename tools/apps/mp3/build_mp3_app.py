@@ -2,6 +2,7 @@
 """Build a relocatable PicoCalc MP3 player and its SD card files."""
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -17,6 +18,7 @@ from tools.firmware.picocalc.build_picocalc import compiler_bin
 APP = ROOT / "examples/portable-apps/MP3"
 MAD = ROOT / "third_party/libmad"
 MAD_SOURCES = ("bit", "fixed", "frame", "huffman", "layer3", "stream", "synth", "timer")
+SD_FILES = ("MP3.APP", "RECORD.LP", "README.md", "LIBMAD-LICENSE.txt")
 
 
 def build(toolchain: Path, work: Path, output: Path, packer: Path | None) -> None:
@@ -46,12 +48,14 @@ def build(toolchain: Path, work: Path, output: Path, packer: Path | None) -> Non
     subprocess.run(command, check=True, cwd=ROOT)
 
     output.mkdir(parents=True, exist_ok=True)
-    for name in ("MP3.APP", "MP3.json"):
-        shutil.copy2(work / name, output / name)
+    shutil.copy2(work / "MP3.APP", output / "MP3.APP")
     shutil.copy2(APP / "RECORD.LP", output / "RECORD.LP")
     shutil.copy2(APP / "README.md", output / "README.md")
     shutil.copy2(MAD / "COPYING", output / "LIBMAD-LICENSE.txt")
     report = json.loads((work / "MP3.json").read_bytes())
+    report["files"] = {name: hashlib.sha256((output / name).read_bytes()).hexdigest() for name in SD_FILES}
+    report["app_sha256"] = report["files"]["MP3.APP"]
+    (output / "manifest.json").write_text(json.dumps(report, indent=2) + "\n")
     print(f"{output}: {report['memory_bytes']} bytes in the loaded APP, {report['app_bytes']} on SD")
 
 
@@ -60,7 +64,7 @@ def main() -> None:
     parser.add_argument("--toolchain", type=Path)
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--build-dir", type=Path, default=ROOT / ".build/mp3-app")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/mp3-sd/MP3")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/firmware/picocalc-pico-h/apps/MP3")
     args = parser.parse_args()
     build(compiler_bin(args.toolchain), args.build_dir.resolve(), args.output_dir.resolve(), args.packer)
 

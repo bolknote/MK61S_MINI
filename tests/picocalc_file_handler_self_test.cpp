@@ -82,19 +82,26 @@ int main() {
     using namespace picocalc;Services service;
     for(const char* path:{"/games/A.Z80","/games/A.sna","/games/A.Szx","/games/A.TRD","/games/A.ScL","/A.tap","/X.TzX"})
         assert(file_associations::handler(path)==spectrum_magic);
-    assert(file_associations::handler("/Music/Title.Mp3")==mp3_magic);
-    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak","/Music/Title.mp3.bak"})
+    assert(file_associations::handler("/Documents/Music/Title.Mp3")==mp3_magic);
+    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak","/Documents/Music/Title.mp3.bak"})
         assert(!file_associations::handler(path));
     reset();file("/Games/Sub/Title.sna");app("/Games/Sub/Local.App");app("/Apps/ZX/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Sub/Title.sna",spectrum_magic) && launched=="/Games/Sub/Local.App");
     reset();file("/Collection/ZX/Sub/Title.Z80");app("/Collection/ZX/SPECTRUM.APP");
     assert(!service.run_handled("/Collection/ZX/Sub/Title.Z80",spectrum_magic) && launched=="/Collection/ZX/SPECTRUM.APP");
+    reset();file("/Games/Spectrum Collection/GAMES.img");app("/Programs/Spectrum/SPECTRUM.APP");
+    assert(!service.run_handled("/Games/Spectrum Collection/GAMES.img",spectrum_magic) &&
+           launched=="/Programs/Spectrum/SPECTRUM.APP");
+    const auto urq_magic=program_store::TYPE_MAGIC_URQ;
+    reset();file("/Games/Quest/game.urq");app("/System/URQ/URQ.APP",urq_magic);
+    assert(!service.run_handled("/Games/Quest/game.urq",urq_magic) && launched=="/System/URQ/URQ.APP");
     reset();file("/Elsewhere/My Game.trd");app("/Apps/ZX/00broken.APP",spectrum_magic,true);app("/Apps/ZX/01other.APP",0x3143);app("/Apps/ZX/Spectrum.aPp");
     assert(!service.run_handled("/Elsewhere/My Game.trd",spectrum_magic) && launched=="/Apps/ZX/Spectrum.aPp");
     reset();file("/Games/Title.scl");app("/MK61S-HIL/SPECTRUM/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Title.scl",spectrum_magic) && launched=="/MK61S-HIL/SPECTRUM/SPECTRUM.APP");
-    reset();file("/Music/Title.MP3");app("/Apps/ZX/SPECTRUM.APP");app("/MP3/MP3.APP",mp3_magic);
-    assert(!service.run_handled("/Music/Title.MP3",mp3_magic) && launched=="/MP3/MP3.APP");
+    reset();file("/Documents/Music/Title.MP3");app("/Programs/Spectrum/SPECTRUM.APP");
+    app("/Programs/MP3/MP3.APP",mp3_magic);app("/Apps/MP3/Old.APP",mp3_magic);
+    assert(!service.run_handled("/Documents/Music/Title.MP3",mp3_magic) && launched=="/Programs/MP3/MP3.APP");
     reset();file("/Games/Title.sna");assert(service.run_handled("/Games/Title.sna",spectrum_magic)==1 && !launches && !message.empty());
     reset();for(unsigned i=0;i<5000;++i)file("/Apps/F"+std::to_string(i)+".txt");
     file("/Games/Title.sna");assert(service.run_handled("/Games/Title.sna",spectrum_magic)==1 && scans<1100);

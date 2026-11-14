@@ -116,13 +116,36 @@ static unsigned block_copy(z80* z,unsigned budget) {
 #define Z80_HOT_INLINE
 #endif
 
-static inline Z80_HOT_INLINE uint8_t rb(z80* const z, uint16_t addr) {
+static void bus_cycle(z80* z,uint16_t address,unsigned duration) {
+  const unsigned delay=(address&0xc000)==0x4000?z->wait(z->userdata,z->bus):0;
+  z->bus+=duration+delay;z->cyc+=delay;
+}
+
+/* Internal cycles may keep a contended address on the bus for several
+ * individual T-states. Opcode refresh is part of its single 4T access. */
+static void idle_bus(z80* z,uint16_t address,unsigned count) {
+  if(!z->wait) return;
+  if((address&0xc000)!=0x4000) z->bus+=count;
+  else while(count--) bus_cycle(z,address,1);
+}
+static uint16_t ir(const z80* z) { return (uint16_t)((z->i<<8)|z->r); }
+
+static inline Z80_HOT_INLINE uint8_t read_mapped(z80* const z, uint16_t addr) {
   const uint8_t* base=z->read_pages[addr>>10];
   if(base) return base[addr&1023];
   return z->read_byte(z->userdata,addr);
 }
 
+static inline uint8_t rb(z80* const z, uint16_t addr) {
+  if(z->wait) bus_cycle(z,addr,3);
+  return read_mapped(z,addr);
+}
+
 static inline void wb(z80* const z, uint16_t addr, uint8_t val) {
+  if(z->wait) {
+    bus_cycle(z,addr,3);
+    if(z->before_store) z->before_store(z->userdata,addr,z->bus);
+  }
   uint8_t* base=z->write_pages[addr>>10];
   if(base) { base[addr&1023]=val;return; }
   z->write_byte(z->userdata, addr, val);
@@ -141,7 +164,8 @@ static inline Z80_HOT_INLINE void set_reg_byte(z80* z,unsigned reg,uint8_t value
 }
 
 static inline uint16_t rw(z80* const z, uint16_t addr) {
-  return (rb(z, (uint16_t)(addr + 1)) << 8) | rb(z, addr);
+  const uint8_t low=rb(z,addr);
+  return (rb(z,(uint16_t)(addr+1))<<8)|low;
 }
 
 static inline void ww(z80* const z, uint16_t addr, uint16_t val) {
@@ -150,8 +174,17 @@ static inline void ww(z80* const z, uint16_t addr, uint16_t val) {
 }
 
 static inline void pushw(z80* const z, uint16_t val) {
-  z->sp -= 2;
-  ww(z, z->sp, val);
+  wb(z,--z->sp,val>>8);
+  wb(z,--z->sp,val&255);
+}
+static void push(z80* z,uint16_t value) { idle_bus(z,ir(z),1);pushw(z,value); }
+static uint16_t exchange_stack(z80* z,uint16_t value) {
+  const uint16_t high=(uint16_t)(z->sp+1);
+  const uint16_t saved=rw(z,z->sp);
+  idle_bus(z,high,1);
+  wb(z,high,value>>8);wb(z,z->sp,value&255);
+  idle_bus(z,z->sp,2);
+  return saved;
 }
 
 static inline uint16_t popw(z80* const z) {
@@ -167,21 +200,34 @@ __attribute__((noinline))
 #endif
 static uint8_t opcode_notify(z80* const z, uint16_t address) {
   z->m1(z->userdata,address,true);
-  const uint8_t value=nextb(z);
+  const uint8_t value=read_mapped(z,z->pc++);
   if(z->m1) z->m1(z->userdata,address,false);
   return value;
 }
 static inline Z80_HOT_INLINE uint8_t opcode_byte(z80* const z) {
   const uint16_t address=z->pc;
+  if(z->wait) bus_cycle(z,address,4);
   if(z->m1 && (uint16_t)(address-z->m1_start)<=z->m1_limit)
     return opcode_notify(z,address);
-  return nextb(z);
+  return read_mapped(z,z->pc++);
 }
 
 static inline uint16_t nextw(z80* const z) {
   z->pc += 2;
   return rw(z, z->pc - 2);
 }
+
+static void io_cycle(z80* z,uint16_t port) {
+  if(!z->wait) {z->io_at=(uint32_t)z->cyc;return;}
+  bus_cycle(z,port,1);
+  if(!(port&1)) {
+    const unsigned delay=z->wait(z->userdata,z->bus);
+    z->bus+=3+delay;z->cyc+=delay;
+  } else idle_bus(z,port,3);
+  z->io_at=z->bus;
+}
+static uint8_t input(z80* z,uint16_t port) { io_cycle(z,port);return z->port_in(z,port); }
+static void output(z80* z,uint16_t port,uint8_t value) { io_cycle(z,port);z->port_out(z,port,value); }
 
 static inline uint16_t get_bc(z80* const z) {
   return z->bc;
@@ -272,6 +318,7 @@ static inline void call(z80* const z, uint16_t addr) {
 static inline void cond_call(z80* const z, bool condition) {
   const uint16_t addr = nextw(z);
   if (condition) {
+    idle_bus(z,(uint16_t)(z->pc-1),1);
     call(z, addr);
     z->cyc += 7;
   }
@@ -286,6 +333,7 @@ static inline void ret(z80* const z) {
 
 // returns from subroutine if condition is true
 static inline void cond_ret(z80* const z, bool condition) {
+  idle_bus(z,ir(z),1);
   if (condition) {
     ret(z);
     z->cyc += 6;
@@ -293,6 +341,7 @@ static inline void cond_ret(z80* const z, bool condition) {
 }
 
 static inline void jr(z80* const z, int8_t displacement) {
+  idle_bus(z,(uint16_t)(z->pc-1),5);
   z->pc += displacement;
   z->mem_ptr = z->pc;
 }
@@ -347,6 +396,7 @@ static inline uint16_t subw(z80* const z, uint16_t a, uint16_t b, bool cy) {
 
 // adds a word to HL
 static inline void addhl(z80* const z, uint16_t val) {
+  idle_bus(z,ir(z),7);
   const uint16_t before=z->hl;
   const uint32_t wide=(uint32_t)before+val;
   const uint16_t result=(uint16_t)wide;
@@ -356,6 +406,7 @@ static inline void addhl(z80* const z, uint16_t val) {
 
 // adds a word to IX or IY
 static inline void addiz(z80* const z, uint16_t* reg, uint16_t val) {
+  idle_bus(z,ir(z),7);
   const uint16_t before=*reg;
   const uint32_t wide=(uint32_t)before+val;
   const uint16_t result=(uint16_t)wide;
@@ -365,6 +416,7 @@ static inline void addiz(z80* const z, uint16_t* reg, uint16_t val) {
 
 // adds a word (+ carry) to HL
 static inline void adchl(z80* const z, uint16_t val) {
+  idle_bus(z,ir(z),7);
   uint16_t result = addw(z, get_hl(z), val, z->cf);
   z->sf = result >> 15;
   z->zf = result == 0;
@@ -373,6 +425,7 @@ static inline void adchl(z80* const z, uint16_t val) {
 
 // substracts a word (+ carry) to HL
 static inline void sbchl(z80* const z, uint16_t val) {
+  idle_bus(z,ir(z),7);
   const uint16_t result = subw(z, get_hl(z), val, z->cf);
   z->sf = result >> 15;
   z->zf = result == 0;
@@ -554,6 +607,7 @@ static inline void ldi(z80* const z) {
   const uint8_t val = rb(z, hl);
 
   wb(z, de, val);
+  idle_bus(z,de,2);
 
   set_hl(z, get_hl(z) + 1);
   set_de(z, get_de(z) + 1);
@@ -580,6 +634,7 @@ static inline void ldd(z80* const z) {
 static inline void cpi(z80* const z) {
   bool cf = z->cf;
   const uint8_t result = subb(z, z->a, rb(z, get_hl(z)), 0);
+  idle_bus(z,z->hl,5);
   set_hl(z, get_hl(z) + 1);
   set_bc(z, get_bc(z) - 1);
   z->xf = GET_BIT(3, result - z->hf);
@@ -597,7 +652,7 @@ static inline void cpd(z80* const z) {
 }
 
 static void in_r_c(z80* const z, uint8_t* r) {
-  *r = z->port_in(z, get_bc(z));
+  *r = input(z, get_bc(z));
   z->zf = *r == 0;
   z->sf = *r >> 7;
   z->pf = parity(*r);
@@ -606,7 +661,8 @@ static void in_r_c(z80* const z, uint8_t* r) {
 }
 
 static void ini(z80* const z) {
-  uint8_t val = z->port_in(z, get_bc(z));
+  idle_bus(z,ir(z),1);
+  uint8_t val = input(z, get_bc(z));
   wb(z, get_hl(z), val);
   set_hl(z, get_hl(z) + 1);
   z->b -= 1;
@@ -622,9 +678,11 @@ static void ind(z80* const z) {
 }
 
 static void outi(z80* const z) {
-  z->port_out(z, get_bc(z), rb(z, get_hl(z)));
+  idle_bus(z,ir(z),1);
+  const uint8_t value=rb(z,z->hl);
+  --z->b;
+  output(z,z->bc,value);
   set_hl(z, get_hl(z) + 1);
-  z->b -= 1;
   z->zf = z->b == 0;
   z->nf = 1;
   z->mem_ptr = get_bc(z) + 1;
@@ -672,8 +730,9 @@ static void daa(z80* const z) {
   z->yf = GET_BIT(5, z->a);
 }
 
-static inline uint16_t displace(
-    z80* const z, uint16_t base_addr, int8_t displacement) {
+static uint16_t index_address(z80* z,uint16_t base_addr,unsigned internal) {
+  const int8_t displacement=(int8_t)nextb(z);
+  idle_bus(z,(uint16_t)(z->pc-1),internal);
   const uint16_t addr = base_addr + displacement;
   z->mem_ptr = addr;
   return addr;
@@ -697,6 +756,7 @@ static inline void process_interrupts(z80* const z) {
     z->iff1 = 0;
     inc_r(z);
 
+    if(z->wait) z->bus=(uint32_t)z->cyc+5;
     z->cyc += 11;
     call(z, 0x66);
     return;
@@ -709,9 +769,12 @@ static inline void process_interrupts(z80* const z) {
     z->iff2 = 0;
     inc_r(z);
 
+    if(z->wait) z->bus=(uint32_t)z->cyc+7;
     switch (z->interrupt_mode) {
     case 0:
-      z->cyc += 11;
+      /* An IM0 acknowledge replaces the normal opcode fetch. */
+      if(z->wait) --z->bus;
+      z->cyc += 2;
       exec_opcode(z, z->int_data);
       break;
 
@@ -722,7 +785,8 @@ static inline void process_interrupts(z80* const z) {
 
     case 2:
       z->cyc += 19;
-      call(z, rw(z, (z->i << 8) | z->int_data));
+      pushw(z,z->pc);
+      jump(z,rw(z,(z->i<<8)|z->int_data));
       break;
 
     default:
@@ -748,6 +812,7 @@ void z80_init(z80* const z) {
   for(unsigned i=0;i<4;++i) { z->read_map[i]=NULL;z->write_map[i]=NULL; }
   for(unsigned i=0;i<64;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
   z->ldir_until=0;
+  z->wait=NULL;z->before_store=NULL;z->bus=z->io_at=0;
 
   z->cyc = 0;
 
@@ -839,16 +904,19 @@ void exec_opcode(z80* const z, uint8_t opcode) {
 }
 
 #if defined(__GNUC__) && !defined(__clang__)
-/* Optimize the batch, not the whole APP. Shared operand decoding keeps
- * this hot loop within the same 48 KiB image budget. */
-__attribute__((optimize("O2")))
+/* Keep the bus-timed and ordinary paths within the PicoCalc APP slot. */
+__attribute__((optimize("Os")))
 #endif
 static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) {
   const unsigned long before=z->cyc;
   for(;;) {
     if(cycles) {
       if((uint32_t)(z->cyc-before)>=cycles || (stop && *stop))break;
-      opcode=z->halted?0:opcode_byte(z);
+      if(z->wait) z->bus=(uint32_t)z->cyc;
+      if(z->halted) {
+        if(z->wait) bus_cycle(z,(uint16_t)(z->pc-1),4);
+        opcode=0;
+      } else opcode=opcode_byte(z);
     }
   z->cyc += cyc_00[opcode];
   inc_r(z);
@@ -920,7 +988,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
     z->mem_ptr = addr + 1;
   } break; // ld (**),hl
 
-  case 0xF9: z->sp = get_hl(z); break; // ld sp,hl
+  case 0xF9: idle_bus(z,ir(z),2);z->sp = get_hl(z); break; // ld sp,hl
 
   case 0xEB: {
     const uint16_t de = get_de(z);
@@ -929,8 +997,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   } break; // ex de,hl
 
   case 0xE3: {
-    const uint16_t val = rw(z, z->sp);
-    ww(z, z->sp, get_hl(z));
+    const uint16_t val = exchange_stack(z,get_hl(z));
     set_hl(z, val);
     z->mem_ptr = val;
   } break; // ex (sp),hl
@@ -973,6 +1040,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0x2C: z->l = inc(z, z->l); break; // inc l
   case 0x34: {
     uint8_t result = inc(z, rb(z, get_hl(z)));
+    idle_bus(z,z->hl,1);
     wb(z, get_hl(z), result);
   } break; // inc (hl)
 
@@ -985,18 +1053,19 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0x2D: z->l = dec(z, z->l); break; // dec l
   case 0x35: {
     uint8_t result = dec(z, rb(z, get_hl(z)));
+    idle_bus(z,z->hl,1);
     wb(z, get_hl(z), result);
   } break; // dec (hl)
 
-  case 0x03: set_bc(z, get_bc(z) + 1); break; // inc bc
-  case 0x13: set_de(z, get_de(z) + 1); break; // inc de
-  case 0x23: set_hl(z, get_hl(z) + 1); break; // inc hl
-  case 0x33: z->sp = z->sp + 1; break; // inc sp
+  case 0x03: idle_bus(z,ir(z),2);set_bc(z, get_bc(z) + 1); break; // inc bc
+  case 0x13: idle_bus(z,ir(z),2);set_de(z, get_de(z) + 1); break; // inc de
+  case 0x23: idle_bus(z,ir(z),2);set_hl(z, get_hl(z) + 1); break; // inc hl
+  case 0x33: idle_bus(z,ir(z),2);z->sp = z->sp + 1; break; // inc sp
 
-  case 0x0B: set_bc(z, get_bc(z) - 1); break; // dec bc
-  case 0x1B: set_de(z, get_de(z) - 1); break; // dec de
-  case 0x2B: set_hl(z, get_hl(z) - 1); break; // dec hl
-  case 0x3B: z->sp = z->sp - 1; break; // dec sp
+  case 0x0B: idle_bus(z,ir(z),2);set_bc(z, get_bc(z) - 1); break; // dec bc
+  case 0x1B: idle_bus(z,ir(z),2);set_de(z, get_de(z) - 1); break; // dec de
+  case 0x2B: idle_bus(z,ir(z),2);set_hl(z, get_hl(z) - 1); break; // dec hl
+  case 0x3B: idle_bus(z,ir(z),2);z->sp = z->sp - 1; break; // dec sp
 
   case 0x27: daa(z); break; // daa
 
@@ -1088,15 +1157,19 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xF2: cond_jump(z, z->sf == 0); break; // jp p, **
   case 0xFA: cond_jump(z, z->sf == 1); break; // jp m, **
 
-  case 0x10: cond_jr(z, --z->b != 0); break; // djnz *
-  case 0x18: z->pc += (int8_t) nextb(z); break; // jr *
+  case 0x10: idle_bus(z,ir(z),1);cond_jr(z,--z->b!=0); break; // djnz *
+  case 0x18: jr(z,nextb(z)); break; // jr *
   case 0x20: cond_jr(z, z->zf == 0); break; // jr nz, *
   case 0x28: cond_jr(z, z->zf == 1); break; // jr z, *
   case 0x30: cond_jr(z, z->cf == 0); break; // jr nc, *
   case 0x38: cond_jr(z, z->cf == 1); break; // jr c, *
 
   case 0xE9: z->pc = get_hl(z); break; // jp (hl)
-  case 0xCD: call(z, nextw(z)); break; // call
+  case 0xCD: {
+    const uint16_t addr=nextw(z);
+    idle_bus(z,(uint16_t)(z->pc-1),1);
+    call(z,addr);
+  } break;
 
   case 0xC4: cond_call(z, z->zf == 0); break; // cnz
   case 0xCC: cond_call(z, z->zf == 1); break; // cz
@@ -1117,19 +1190,14 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xF0: cond_ret(z, z->sf == 0); break; // ret p
   case 0xF8: cond_ret(z, z->sf == 1); break; // ret m
 
-  case 0xC7: call(z, 0x00); break; // rst 0
-  case 0xCF: call(z, 0x08); break; // rst 1
-  case 0xD7: call(z, 0x10); break; // rst 2
-  case 0xDF: call(z, 0x18); break; // rst 3
-  case 0xE7: call(z, 0x20); break; // rst 4
-  case 0xEF: call(z, 0x28); break; // rst 5
-  case 0xF7: call(z, 0x30); break; // rst 6
-  case 0xFF: call(z, 0x38); break; // rst 7
+  case 0xC7: case 0xCF: case 0xD7: case 0xDF:
+  case 0xE7: case 0xEF: case 0xF7: case 0xFF:
+    idle_bus(z,ir(z),1);call(z,opcode&0x38);break;
 
-  case 0xC5: pushw(z, get_bc(z)); break; // push bc
-  case 0xD5: pushw(z, get_de(z)); break; // push de
-  case 0xE5: pushw(z, get_hl(z)); break; // push hl
-  case 0xF5: pushw(z, (z->a << 8) | get_f(z)); break; // push af
+  case 0xC5: push(z,get_bc(z)); break;
+  case 0xD5: push(z,get_de(z)); break;
+  case 0xE5: push(z,get_hl(z)); break;
+  case 0xF5: push(z,(z->a<<8)|get_f(z)); break;
 
   case 0xC1: set_bc(z, popw(z)); break; // pop bc
   case 0xD1: set_de(z, popw(z)); break; // pop de
@@ -1143,13 +1211,13 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xDB: {
     const uint8_t port = nextb(z);
     const uint8_t a = z->a;
-    z->a = z->port_in(z, (a << 8) | port);
+    z->a = input(z, (a << 8) | port);
     z->mem_ptr = (a << 8) | (z->a + 1);
   } break; // in a,(n)
 
   case 0xD3: {
     const uint8_t port = nextb(z);
-    z->port_out(z, (z->a << 8) | port, z->a);
+    output(z, (z->a << 8) | port, z->a);
     z->mem_ptr = (port + 1) | (z->a << 8);
   } break; // out (n), a
 
@@ -1188,13 +1256,13 @@ void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
   z->cyc += cyc_ddfd[opcode];
   inc_r(z);
 
-#define IZD displace(z, *iz, nextb(z))
+#define IZD index_address(z,*iz,5)
 #define IZH (*iz >> 8)
 #define IZL (*iz & 0xFF)
 
   switch (opcode) {
   case 0xE1: *iz = popw(z); break; // pop iz
-  case 0xE5: pushw(z, *iz); break; // push iz
+  case 0xE5: push(z,*iz); break; // push iz
 
   case 0xE9: jump(z, *iz); break; // jp iz
 
@@ -1234,17 +1302,19 @@ void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
   case 0xBC: cp(z, IZH); break; // cp izh
   case 0xBD: cp(z, *iz & 0xFF); break; // cp izl
 
-  case 0x23: *iz += 1; break; // inc iz
-  case 0x2B: *iz -= 1; break; // dec iz
+  case 0x23: idle_bus(z,ir(z),2);*iz += 1; break; // inc iz
+  case 0x2B: idle_bus(z,ir(z),2);*iz -= 1; break; // dec iz
 
   case 0x34: {
     uint16_t addr = IZD;
-    wb(z, addr, inc(z, rb(z, addr)));
+    const uint8_t value=inc(z,rb(z,addr));
+    idle_bus(z,addr,1);wb(z,addr,value);
   } break; // inc (iz+*)
 
   case 0x35: {
     uint16_t addr = IZD;
-    wb(z, addr, dec(z, rb(z, addr)));
+    const uint8_t value=dec(z,rb(z,addr));
+    idle_bus(z,addr,1);wb(z,addr,value);
   } break; // dec (iz+*)
 
   case 0x24: *iz = IZL | ((inc(z, IZH)) << 8); break; // inc izh
@@ -1257,8 +1327,9 @@ void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
   case 0x21: *iz = nextw(z); break; // ld iz,**
 
   case 0x36: {
-    uint16_t addr = IZD;
-    wb(z, addr, nextb(z));
+    const uint16_t addr=index_address(z,*iz,0);
+    const uint8_t value=nextb(z);
+    idle_bus(z,(uint16_t)(z->pc-1),2);wb(z,addr,value);
   } break; // ld (iz+*),*
 
   case 0x70: wb(z, IZD, z->b); break; // ld (iz+*),b
@@ -1307,18 +1378,18 @@ void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
   case 0x6F: *iz = (IZH << 8) | z->a; break; // ld izl,a
   case 0x2E: *iz = (IZH << 8) | nextb(z); break; // ld izl,*
 
-  case 0xF9: z->sp = *iz; break; // ld sp,iz
+  case 0xF9: idle_bus(z,ir(z),2);z->sp = *iz; break; // ld sp,iz
 
   case 0xE3: {
-    const uint16_t val = rw(z, z->sp);
-    ww(z, z->sp, *iz);
+    const uint16_t val = exchange_stack(z,*iz);
     *iz = val;
     z->mem_ptr = val;
   } break; // ex (sp),iz
 
   case 0xCB: {
-    uint16_t addr = IZD;
+    uint16_t addr = index_address(z,*iz,0);
     uint8_t op = nextb(z);
+    idle_bus(z,(uint16_t)(z->pc-1),2);
     exec_opcode_dcb(z, op, addr);
   } break;
 
@@ -1356,6 +1427,7 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
   case 5: reg = &z->l; break;
   case 6:
     hl = rb(z, get_hl(z));
+    idle_bus(z,z->hl,1);
     reg = &hl;
     break;
   case 7: reg = &z->a; break;
@@ -1392,7 +1464,7 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
     z->cyc += 7;
   }
 
-  if (reg == &hl) {
+  if (reg == &hl && x_!=1) {
     wb(z, get_hl(z), hl);
   }
 }
@@ -1400,6 +1472,7 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
 // executes a displaced CB opcode (DDCB or FDCB)
 void exec_opcode_dcb(z80* const z, uint8_t opcode, uint16_t addr) {
   uint8_t val = rb(z, addr);
+  idle_bus(z,addr,1);
   uint8_t result = 0;
 
   // decoding instructions from http://z80.info/decoding.htm#ddcb
@@ -1462,10 +1535,11 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   z->cyc += cyc_ed[opcode];
   inc_r(z);
   switch (opcode) {
-  case 0x47: z->i = z->a; break; // ld i,a
-  case 0x4F: z->r = z->a; break; // ld r,a
+  case 0x47: idle_bus(z,ir(z),1);z->i = z->a; break; // ld i,a
+  case 0x4F: idle_bus(z,ir(z),1);z->r = z->a; break; // ld r,a
 
   case 0x57:
+    idle_bus(z,ir(z),1);
     z->a = z->i;
     z->sf = z->a >> 7;
     z->zf = z->a == 0;
@@ -1475,6 +1549,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     break; // ld a,i
 
   case 0x5F:
+    idle_bus(z,ir(z),1);
     z->a = z->r;
     z->sf = z->a >> 7;
     z->zf = z->a == 0;
@@ -1500,6 +1575,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     ldi(z);
 
     if (get_bc(z) != 0) {
+      idle_bus(z,(uint16_t)(z->de-1),5);
       z->pc -= 2;
       z->cyc += 5;
       z->mem_ptr = z->pc + 1;
@@ -1513,6 +1589,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     ldd(z);
 
     if (get_bc(z) != 0) {
+      idle_bus(z,(uint16_t)(z->de+1),5);
       z->pc -= 2;
       z->cyc += 5;
       z->mem_ptr = z->pc + 1;
@@ -1524,6 +1601,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xB1: {
     cpi(z);
     if (get_bc(z) != 0 && !z->zf) {
+      idle_bus(z,(uint16_t)(z->hl-1),5);
       z->pc -= 2;
       z->cyc += 5;
       z->mem_ptr = z->pc + 1;
@@ -1534,6 +1612,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xB9: {
     cpd(z);
     if (get_bc(z) != 0 && !z->zf) {
+      idle_bus(z,(uint16_t)(z->hl+1),5);
       z->pc -= 2;
       z->cyc += 5;
     } else {
@@ -1560,6 +1639,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xB2:
     ini(z);
     if (z->b > 0) {
+      idle_bus(z,(uint16_t)(z->hl-1),5);
       z->pc -= 2;
       z->cyc += 5;
     }
@@ -1568,20 +1648,17 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xBA:
     ind(z);
     if (z->b > 0) {
+      idle_bus(z,(uint16_t)(z->hl+1),5);
       z->pc -= 2;
       z->cyc += 5;
     }
     break; // indr
 
-  case 0x41: z->port_out(z, get_bc(z), z->b); break; // out (c), b
-  case 0x49: z->port_out(z, get_bc(z), z->c); break; // out (c), c
-  case 0x51: z->port_out(z, get_bc(z), z->d); break; // out (c), d
-  case 0x59: z->port_out(z, get_bc(z), z->e); break; // out (c), e
-  case 0x61: z->port_out(z, get_bc(z), z->h); break; // out (c), h
-  case 0x69: z->port_out(z, get_bc(z), z->l); break; // out (c), l
-  case 0x71: z->port_out(z, get_bc(z), 0); break; // out (c), 0
+  case 0x41: case 0x49: case 0x51: case 0x59: case 0x61: case 0x69:
+    output(z,z->bc,reg_byte(z,(opcode>>3)&7));break;
+  case 0x71: output(z,z->bc,0); break; // out (c), 0
   case 0x79:
-    z->port_out(z, get_bc(z), z->a);
+    output(z,z->bc,z->a);
     z->mem_ptr = get_bc(z) + 1;
     break; // out (c), a
 
@@ -1589,6 +1666,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xB3: {
     outi(z);
     if (z->b > 0) {
+      idle_bus(z,z->bc,5);
       z->pc -= 2;
       z->cyc += 5;
     }
@@ -1597,7 +1675,9 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0xBB: {
     outd(z);
     if (z->b > 0) {
+      idle_bus(z,z->bc,5);
       z->pc -= 2;
+      z->cyc += 5;
     }
   } break; // otdr
 
@@ -1678,6 +1758,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0x67: {
     uint8_t a = z->a;
     uint8_t val = rb(z, get_hl(z));
+    idle_bus(z,z->hl,4);
     z->a = (a & 0xF0) | (val & 0xF);
     wb(z, get_hl(z), (val >> 4) | (a << 4));
 
@@ -1694,6 +1775,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0x6F: {
     uint8_t a = z->a;
     uint8_t val = rb(z, get_hl(z));
+    idle_bus(z,z->hl,4);
     z->a = (a & 0xF0) | (val >> 4);
     wb(z, get_hl(z), (val << 4) | (a & 0xF));
 

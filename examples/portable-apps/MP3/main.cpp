@@ -304,6 +304,12 @@ struct Player {
         }
         redraw();
     }
+    bool use_directory(const char* candidate) {
+        mk61_service_file_info info{};
+        if (!call_file(MK61_FILE_BYTES_STAT, candidate, 0, &info, sizeof(info)) || !info.directory) return false;
+        std::memcpy(directory, candidate, std::strlen(candidate) + 1);
+        return true;
+    }
     void file_key(int key) {
         if (key == function1) { toggle_files(); return; }
         if (key == MK61_APP_KEY_ESC) {
@@ -567,14 +573,13 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         if (app.start(app.path)) app.build_playlist(active);
         else app.toggle_files();
     } else {
-        mk61_service_file_info music{};
-        if (app.call_file(MK61_FILE_BYTES_STAT, "/Music", 0, &music, sizeof(music)) && music.directory) {
-            std::memcpy(app.directory, "/Music", 7);
-        } else if (app_id != UINT32_MAX &&
-                   app.call_file(MK61_FILE_BYTES_PATH, nullptr, app_id, app.directory, sizeof(app.directory))) {
-            app.parent();
-        } else {
-            std::memcpy(app.directory, "/", 2);
+        if (!app.use_directory("/Documents/Music") && !app.use_directory("/Music") && !app.use_directory("/Documents")) {
+            if (app_id != UINT32_MAX &&
+                app.call_file(MK61_FILE_BYTES_PATH, nullptr, app_id, app.directory, sizeof(app.directory))) {
+                app.parent();
+            } else {
+                std::memcpy(app.directory, "/", 2);
+            }
         }
         app.scan();
         app.toggle_files();

@@ -53,7 +53,7 @@ def main():
             "static void draw_file_dialog_name(", "static void dialog_item_name(",
             "static void draw_dialog_row("]))
     (out / "app_explorer_ui.inc").write_text(
-        "using loadable_module::ExplorerAction;\nusing loadable_module::ExplorerSession;\n" +
+        "using loadable_module::ExplorerAction;\nusing loadable_module::ExplorerSession;\nusing explorer_home::Page;\n" +
         declarations(app, ["static constexpr u32 LONG_OK_MS",
             "static constexpr i32 KEY_UP", "static constexpr i32 KEY_DOWN",
             "static constexpr i32 KEY_OK_SHORT", "static constexpr i32 KEY_OK_LONG",
@@ -61,24 +61,27 @@ def main():
             "static constexpr i32 KEY_REDRAW", "static constexpr u16 SCROLL_START_MS",
             "static constexpr u16 SCROLL_STEP_MS", "static constexpr u16 SCROLL_EDGE_MS",
             "static constexpr u8 MAX_LINES", "static constexpr usize LINE_BYTES",
-            "static constexpr ExplorerAction OPEN_DIRECTORY", "static constexpr ExplorerAction TOGGLE_VIEW"]) +
-        body(app, "struct Search", True) + body(app, "struct Scroll", True) +
+            "static constexpr ExplorerAction OPEN_DIRECTORY", "static constexpr ExplorerAction TOGGLE_VIEW",
+            "static constexpr ExplorerAction GAME_FILES", "static constexpr u16 MISSING_DIRECTORY",
+            "static constexpr u8 LIST_VIEW"]) +
+        body(app, "struct Location", True) + body(app, "struct Search", True) + body(app, "struct Scroll", True) +
         body(app, "struct Line", True) +
         functions(app, ["static bool reached(", "static usize bounded_length(",
-            "static void copy_text(", "static bool entry_at(", "static void cursor_off(",
+            "static void copy_text(", "static bool entry_at(", "static u16 section_directory(",
+            "static void row_name(", "static const char* empty_text(", "static void cursor_off(",
             "static i32 wait_key(", "static bool wait_ok_release(", "static void wait_handoff(",
             "static void clear_lines(", "static void render(", "static bool search_active(",
-            "static char ascii_upper(", "static bool contains_ci(", "static bool matches(",
-            "static int match_count(", "static int match_at(", "static int match_position(",
-            "static int first_match(", "static int next_match(", "static int previous_match(",
+            "static bool contains_ci(", "static bool filtering(", "static bool matches(",
+            "static int match_at(", "static int match_position(",
+            "static int first_match(", "static int move_match(",
             "static void reset_scroll(", "static u16 name_width(", "static u8 max_offset(",
-            "static void update_scroll(", "static u16 scroll_timeout(",
+            "static u16 update_scroll(",
             "static void search_reset(", "static bool search_insert(",
             "static bool handle_search_key(", "static u16 search_window_start(",
             "static void draw_search_cursor(", "static u16 draw_browser(",
             "static int make_actions(", "static const char* action_text(",
             "static void draw_action_menu(", "static ExplorerAction choose_action(",
-            "static bool autoexec(", "static void set_result(", "bool select(",
+            "static void set_result(", "bool select(",
             "uint32_t flow_step("]))
 
     rendered=out / "app_explorer_ui.inc"

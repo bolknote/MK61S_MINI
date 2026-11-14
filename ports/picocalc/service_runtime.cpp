@@ -478,6 +478,7 @@ bool Services::export_program(const char* path) {
 bool Services::enter_directory(const char* path,bool launch) {
     files::Entry info{};
     if(!path || !files::stat(path, info) || !info.directory) return false;
+    if(browser_page_ == explorer_home::Page::HOME) browser_page_ = explorer_home::Page::DISK;
     std::snprintf(directory_, sizeof(directory_), "%s", path);
     filter_[0]=0;
     skip_ = selection_ = 0; page_ = ServicePage::BROWSER; refresh();
@@ -499,6 +500,34 @@ bool Services::enter_directory(const char* path,bool launch) {
         return result != 2;
     }
     return true;
+}
+void Services::open_game(bool instructions) {
+    program_store::Entry directory{}, file{};
+    if(!script::register_file(selected_file_, directory) ||
+       !(instructions ? explorer_autoexec::find_manual(directory.id, file)
+                      : explorer_autoexec::find_game(directory.id, file))) {
+        message(instructions ? tr("No instructions", M8("Нет инструкции"))
+                             : tr("Game cannot start", M8("Нет запуска игры")), ServicePage::BROWSER);
+        return;
+    }
+    char path[files::PATH_SIZE];
+    std::snprintf(path, sizeof(path), "%s", script::file_path(file.id));
+    if(file.type == program_store::ProgramType::MK61) {
+        if(!leave_for_script() || !script::start(path)) {
+            message(tr("Game cannot start", M8("Нет запуска игры")), ServicePage::BROWSER);
+            return;
+        }
+        calculator_requested_ = true;
+        return_to_games_ = browser_games();
+        return;
+    }
+    release_browser();
+    if(run_external(path) == 2) {
+        message(tr("Cannot open file", M8("Ошибка открытия")), ServicePage::BROWSER);
+    } else if(page_ == ServicePage::CLOSED || page_ == ServicePage::BROWSER) {
+        page_ = ServicePage::BROWSER;
+        refresh();
+    }
 }
 u8 Services::run_external(const char* path) {
     using Type = program_store::ProgramType;

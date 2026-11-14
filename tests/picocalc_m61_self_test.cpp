@@ -105,6 +105,8 @@ void picocalc_m61_test() {
          "lib/b.tbi\nopen lib/f2.foc\nif r1==18 run :ok\nR3= -1\nret\n:ok\nR3= "
          "42\nret\n");
   services.open(Action::EXPLORER, false, calc);
+  for(unsigned i=0;i<3;++i) assert(services.input(0xB6));
+  assert(services.input('\r')); // All files
   assert(services.input('/'));
   for (const char *p = "M61 Tests/main.m61"; *p; ++p)
     assert(services.input((u8)*p));

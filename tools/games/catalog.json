@@ -10,24 +10,24 @@
       "source_page": "http://old-dos.ru/index.php?page=search&string=another+world",
       "url": "http://old-dos.ru/dl.php?id=29231",
       "archive_name": "Another-World-English.zip",
-      "prepared_cache": "sd/apps/ANOTHER",
+      "prepared_cache": "sd/Games/Another World",
       "sha256": "87b24c42c537388c95b5fe393f958f3b9ef552e29f5b7e4d10b103358f96830b",
       "rights": "The download host describes this as abandonware. That is not a redistribution licence; keep the downloaded data local and use it only when you have the right to do so.",
       "members": [
-        { "source": "Another_World/MEMLIST.BIN", "target": "sd/apps/ANOTHER/MEMLIST.BIN", "bytes": 2940, "sha256": "374b71d842e447c3fa3cd32d5eb8665f51f6da91d9748c701a970d785a82a584" },
-        { "source": "Another_World/BANK01", "target": "sd/apps/ANOTHER/BANK01", "bytes": 209410, "sha256": "6c87c32d90dba302ec456a503601b1ea993a8cb5b1ba7933e3e53ae01323617d" },
-        { "source": "Another_World/BANK02", "target": "sd/apps/ANOTHER/BANK02", "bytes": 77608, "sha256": "be14b7fdceb96437f7606c31c89ce3ebadd2140778b70d2de38c1a935fad13ca" },
-        { "source": "Another_World/BANK03", "target": "sd/apps/ANOTHER/BANK03", "bytes": 95472, "sha256": "b273633a4771d6e91a710b9e3d303683a62e54d256aec92b59a2b76e2714f0f4" },
-        { "source": "Another_World/BANK04", "target": "sd/apps/ANOTHER/BANK04", "bytes": 58524, "sha256": "c61c189527b337f5c318fa2c952b2369343d8fbc1d60c46a0e169b2f3433631d" },
-        { "source": "Another_World/BANK05", "target": "sd/apps/ANOTHER/BANK05", "bytes": 15152, "sha256": "f712ab662427e4ec842cc381db168b8839b5aae413a833cbbdd14651f6c783fa" },
-        { "source": "Another_World/BANK06", "target": "sd/apps/ANOTHER/BANK06", "bytes": 44034, "sha256": "6e4a6c7a07b14ad2a069aa2bef7da9c3d7b1e02e4d47b63c604a56de0980c01d" },
-        { "source": "Another_World/BANK07", "target": "sd/apps/ANOTHER/BANK07", "bytes": 98528, "sha256": "db1567e7595ccb851bb45a076081edc51fe12489eeeb8447b5cab2cc1a0e8cf2" },
-        { "source": "Another_World/BANK08", "target": "sd/apps/ANOTHER/BANK08", "bytes": 123656, "sha256": "7024c5f4d19b64f0fe0613375615f78a19dcdb4dfd780bd1df73c8795eea64bf" },
-        { "source": "Another_World/BANK09", "target": "sd/apps/ANOTHER/BANK09", "bytes": 7396, "sha256": "d3bf36bf5e0bc285c751b2e72c030d6382df8ba7d6e0585878c92e208463a803" },
-        { "source": "Another_World/BANK0A", "target": "sd/apps/ANOTHER/BANK0A", "bytes": 200364, "sha256": "bd5115c677c7f34ebd495d46dcdef71858d29ab58710c2632d09124828930e60" },
-        { "source": "Another_World/BANK0B", "target": "sd/apps/ANOTHER/BANK0B", "bytes": 46296, "sha256": "572bf7674c94eea7dcc2631cd50ad2864f42a8f3a02c39fb31bf5db06a18809d" },
-        { "source": "Another_World/BANK0C", "target": "sd/apps/ANOTHER/BANK0C", "bytes": 18864, "sha256": "4234ac40cf09fa3527c6d3042ffc702f00125a87b60725cadeabed5e3da49448" },
-        { "source": "Another_World/BANK0D", "target": "sd/apps/ANOTHER/BANK0D", "bytes": 157460, "sha256": "c7a919bdc3a2e5410e28e123df7f9ef1e33fb0ee0a0b90874211f74edd6ec828" }
+        { "source": "Another_World/MEMLIST.BIN", "target": "sd/Games/Another World/MEMLIST.BIN", "bytes": 2940, "sha256": "374b71d842e447c3fa3cd32d5eb8665f51f6da91d9748c701a970d785a82a584" },
+        { "source": "Another_World/BANK01", "target": "sd/Games/Another World/BANK01", "bytes": 209410, "sha256": "6c87c32d90dba302ec456a503601b1ea993a8cb5b1ba7933e3e53ae01323617d" },
+        { "source": "Another_World/BANK02", "target": "sd/Games/Another World/BANK02", "bytes": 77608, "sha256": "be14b7fdceb96437f7606c31c89ce3ebadd2140778b70d2de38c1a935fad13ca" },
+        { "source": "Another_World/BANK03", "target": "sd/Games/Another World/BANK03", "bytes": 95472, "sha256": "b273633a4771d6e91a710b9e3d303683a62e54d256aec92b59a2b76e2714f0f4" },
+        { "source": "Another_World/BANK04", "target": "sd/Games/Another World/BANK04", "bytes": 58524, "sha256": "c61c189527b337f5c318fa2c952b2369343d8fbc1d60c46a0e169b2f3433631d" },
+        { "source": "Another_World/BANK05", "target": "sd/Games/Another World/BANK05", "bytes": 15152, "sha256": "f712ab662427e4ec842cc381db168b8839b5aae413a833cbbdd14651f6c783fa" },
+        { "source": "Another_World/BANK06", "target": "sd/Games/Another World/BANK06", "bytes": 44034, "sha256": "6e4a6c7a07b14ad2a069aa2bef7da9c3d7b1e02e4d47b63c604a56de0980c01d" },
+        { "source": "Another_World/BANK07", "target": "sd/Games/Another World/BANK07", "bytes": 98528, "sha256": "db1567e7595ccb851bb45a076081edc51fe12489eeeb8447b5cab2cc1a0e8cf2" },
+        { "source": "Another_World/BANK08", "target": "sd/Games/Another World/BANK08", "bytes": 123656, "sha256": "7024c5f4d19b64f0fe0613375615f78a19dcdb4dfd780bd1df73c8795eea64bf" },
+        { "source": "Another_World/BANK09", "target": "sd/Games/Another World/BANK09", "bytes": 7396, "sha256": "d3bf36bf5e0bc285c751b2e72c030d6382df8ba7d6e0585878c92e208463a803" },
+        { "source": "Another_World/BANK0A", "target": "sd/Games/Another World/BANK0A", "bytes": 200364, "sha256": "bd5115c677c7f34ebd495d46dcdef71858d29ab58710c2632d09124828930e60" },
+        { "source": "Another_World/BANK0B", "target": "sd/Games/Another World/BANK0B", "bytes": 46296, "sha256": "572bf7674c94eea7dcc2631cd50ad2864f42a8f3a02c39fb31bf5db06a18809d" },
+        { "source": "Another_World/BANK0C", "target": "sd/Games/Another World/BANK0C", "bytes": 18864, "sha256": "4234ac40cf09fa3527c6d3042ffc702f00125a87b60725cadeabed5e3da49448" },
+        { "source": "Another_World/BANK0D", "target": "sd/Games/Another World/BANK0D", "bytes": 157460, "sha256": "c7a919bdc3a2e5410e28e123df7f9ef1e33fb0ee0a0b90874211f74edd6ec828" }
       ]
     },
     {
@@ -40,7 +40,7 @@
       "arguments": [
         "tools/apps/another/build_another_app.py",
         "--output-dir",
-        "{output}/sd/apps/ANOTHER"
+        "{output}/sd/Games/Another World"
       ]
     },
     {
@@ -78,7 +78,9 @@
         "tools/apps/spectrum/build_spectrum_app.py",
         "--fetch-devices",
         "--output-dir",
-        "{output}/sd/apps/SPECTRUM"
+        "{output}/sd/Programs/Spectrum",
+        "--games-output",
+        "{output}/sd/Games/Spectrum Collection"
       ],
       "with_games_when_selected": [
         "spectrum-ianna",
@@ -98,11 +100,11 @@
         "--target",
         "picocalc-pico-h",
         "--output-dir",
-        "{output}/sd/apps/URQ",
-        "--library-output",
-        "{output}/sd/urq",
+        "{output}/sd/System/URQ",
+        "--games-output",
+        "{output}/sd/Games",
         "--licenses-output",
-        "{output}/sd/apps/URQ/licenses"
+        "{output}/licenses/urq"
       ]
     }
   ]

@@ -1,13 +1,13 @@
 #include "inflate.h"
 #include <string.h>
 
-/* RFC 1950/1951. A page is its own LZ77 history, so the decoder needs no
- * additional 32 KiB dictionary. Read the SD source in bounded chunks. */
+/* RFC 1950/1951. Output storage doubles as the LZ77 history. */
 typedef struct {
     const spectrum_source* source;
     uint32_t at,end;
     uint8_t input[512];
     unsigned cursor,available,bits,held;
+    unsigned adler_a,adler_b;
     enum spectrum_error error;
 } stream;
 
@@ -89,16 +89,23 @@ static bool trees(stream* in,unsigned type,huffman* lit,huffman* dist) {
 static uint8_t* output_at(const spectrum_inflate_output* out,unsigned i) {
     return i<out->split?out->first+i:out->second+(i-out->split);
 }
+static bool emit(stream* in,const spectrum_inflate_output* out,unsigned at,uint8_t value) {
+    if(out->write) {
+        if(!out->write(out->context,at,value)) {in->error=SPECTRUM_IO;return false;}
+    } else *output_at(out,at)=value;
+    in->adler_a+=value;if(in->adler_a>=65521) in->adler_a-=65521;
+    in->adler_b+=in->adler_a;if(in->adler_b>=65521) in->adler_b-=65521;
+    return true;
+}
 static bool compressed(stream* in,const huffman* literal,const huffman* distance,
-                       const spectrum_inflate_output* out,unsigned* used) {
+                       const spectrum_inflate_output* out,unsigned* used,unsigned window) {
     unsigned at=*used;
     for(;;) {
         const unsigned sym=symbol(in,literal);
         if(in->error) return false;
         if(sym==256) {*used=at;return true;}
         if(sym<256) {
-            if(at==out->limit) return false;
-            *output_at(out,at++)=(uint8_t)sym;
+            if(at==out->limit || !emit(in,out,at++,(uint8_t)sym)) return false;
             continue;
         }
         if(sym>285) return false;
@@ -109,8 +116,14 @@ static bool compressed(stream* in,const huffman* literal,const huffman* distance
         if(d>=30) return false;
         const unsigned de=d<4?0:(d>>1)-1;
         const unsigned offset=(d<4?d+1:1+((2+(d&1))<<de))+take(in,de);
-        if(in->error || offset>at || length>out->limit-at) return false;
-        for(unsigned n=0;n<length;++n,++at) *output_at(out,at)=*output_at(out,at-offset);
+        if(in->error || offset>at || offset>window || length>out->limit-at) return false;
+        for(unsigned n=0;n<length;++n,++at) {
+            uint8_t value;
+            if(out->read) {
+                if(!out->read(out->context,at-offset,&value)) {in->error=SPECTRUM_IO;return false;}
+            } else value=*output_at(out,at-offset);
+            if(!emit(in,out,at,value)) return false;
+        }
     }
 }
 
@@ -118,12 +131,14 @@ enum spectrum_error spectrum_inflate(const spectrum_source* source,uint32_t offs
                                       const spectrum_inflate_output* out,unsigned* used) {
     if(!source || !source->read || offset>source->size || bytes>source->size-offset || bytes<6)
         return SPECTRUM_FORMAT;
-    if(!out || !out->first || !used || out->split>out->limit ||
-       (out->split!=out->limit && !out->second)) return SPECTRUM_UNSUPPORTED;
-    stream in={.source=source,.at=offset,.end=offset+bytes};
+    if(!out || !used || (out->write && !out->read) ||
+       (!out->write && (out->read || !out->first || out->split>out->limit ||
+                        (out->split!=out->limit && !out->second)))) return SPECTRUM_UNSUPPORTED;
+    stream in={.source=source,.at=offset,.end=offset+bytes,.adler_a=1};
     *used=0;
     const unsigned cm=take(&in,8),flg=take(&in,8);
     if((cm&15)!=8 || cm>>4>7 || ((cm<<8)|flg)%31 || (flg&32)) goto bad;
+    const unsigned window=256u<<(cm>>4);
     unsigned final;
     do {
         final=take(&in,1);
@@ -133,10 +148,13 @@ enum spectrum_error spectrum_inflate(const spectrum_source* source,uint32_t offs
             in.bits=0;in.held=0;
             const unsigned len=take(&in,16),inverse=take(&in,16);
             if((len^inverse)!=65535 || len>out->limit-*used) goto bad;
-            for(unsigned i=0;i<len;++i) *output_at(out,(*used)++)=(uint8_t)take(&in,8);
+            for(unsigned i=0;i<len;++i) {
+                const uint8_t value=(uint8_t)take(&in,8);
+                if(in.error || !emit(&in,out,(*used)++,value)) goto bad;
+            }
         } else {
             huffman lit,dist;
-            if(!trees(&in,type,&lit,&dist) || !compressed(&in,&lit,&dist,out,used)) goto bad;
+            if(!trees(&in,type,&lit,&dist) || !compressed(&in,&lit,&dist,out,used,window)) goto bad;
         }
         if(in.error) goto bad;
     } while(!final);
@@ -144,12 +162,7 @@ enum spectrum_error spectrum_inflate(const spectrum_source* source,uint32_t offs
     uint32_t checksum=0;
     for(unsigned i=0;i<4;++i) checksum=(checksum<<8)|take(&in,8);
     if(in.error || in.at!=in.end || in.cursor!=in.available) goto bad;
-    unsigned a=1,b=0;
-    for(unsigned i=0;i<*used;++i) {
-        a+=*output_at(out,i);if(a>=65521) a-=65521;
-        b+=a;if(b>=65521) b-=65521;
-    }
-    if(((uint32_t)b<<16|a)==checksum) return SPECTRUM_OK;
+    if(((uint32_t)in.adler_b<<16|in.adler_a)==checksum) return SPECTRUM_OK;
 bad:
     return in.error?in.error:SPECTRUM_FORMAT;
 }

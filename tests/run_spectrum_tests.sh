@@ -79,6 +79,7 @@ struct.pack_into('<HH',header,6,0x8000,0xFFFE);header[27]=header[28]=header[29]=
 (target/'OPEN.Z80').write_bytes(header+snapshot[27:])
 empty_scl=b'SINCLAIR\x00';(target/'OPEN.SCL').write_bytes(empty_scl+struct.pack('<I',sum(empty_scl)))
 (target/'BROKEN.z80').write_bytes(b'\xFF\x00\x80')
+shutil.copy2(target/'ESXDOS.img', target/'GAMES.img')
 PY
     clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
         -I"$root/sdk/portable/include" -I"$root/code" \
@@ -89,9 +90,10 @@ PY
         "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/app"
     "$build/app" "$build/app-assets"
     SPECTRUM_LEGACY_LCD=1 "$build/app" "$build/app-assets"
-    for selected in DEMO.sna DEMO128.sna OPEN.Z80 ZX0001.SZX BLANK.trd OPEN.SCL; do
+    for selected in DEMO.sna DEMO128.sna OPEN.Z80 ZX0001.SZX BLANK.trd OPEN.SCL GAMES.img; do
         SPECTRUM_OPEN_FILE="$selected" "$build/app" "$build/app-assets"
     done
+    SPECTRUM_OPEN_FILE=DEMO128.sna SPECTRUM_SAVE_OPEN_FILE=1 "$build/app" "$build/app-assets"
     for selected in missing unsupported.tap BROKEN.z80; do
         SPECTRUM_OPEN_FILE="$selected" SPECTRUM_OPEN_ERROR=1 "$build/app" "$build/app-assets"
     done

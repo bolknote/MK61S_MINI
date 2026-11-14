@@ -33,7 +33,8 @@ output_dir="${MK61_FIRMWARE_OUTPUT_DIR:-$matrix_root/firmware}"
 mkdir -p "$output_dir"
 
 build_group() {
-  local group="$1"
+  local group="$1" matrix
+  matrix="$(python3 "$contract" cases --group "$group" --format tsv)"
   while IFS=$'\t' read -r \
       case_id profile _optimization _defines artifact flash_capacity \
       minimum_flash_headroom ram_capacity ram_limit stack_frame_limit \
@@ -187,7 +188,7 @@ PY
       ((markdown_size <= markdown_limit)) ||
         fail "MARKDOWN.APP exceeds $markdown_limit bytes: $markdown_size"
     fi
-  done < <(python3 "$contract" cases --group "$group" --format tsv)
+  done <<< "$matrix"
 }
 
 build_group f401-product
@@ -215,15 +216,14 @@ python3 "$contract" aggregate-reports --reports-below "$matrix_root" \
   --output-prefix "$output_dir/F401_RESOURCE_REPORT"
 
 if [[ "${MK61_PACKAGE_RELEASE:-0}" == 1 ]]; then
-  command -v zip >/dev/null 2>&1 || fail 'zip is required for packaging'
+  product_matrix="$(python3 "$contract" cases --group f401-product --format tsv)"
   while IFS=$'\t' read -r \
       _case_id _profile _optimization _defines artifact _rest; do
-    # Programs is generated alongside firmware, never on a user filesystem.
-    rm -rf "$output_dir/$artifact/Programs"
+    # Disk is generated alongside firmware, never on a user filesystem.
+    rm -rf "$output_dir/$artifact/Disk"
     python3 "$root/tools/programs/program_bundle.py" --bundle "$output_dir/$artifact" \
-      --export "$output_dir/$artifact/Programs"
-    (cd "$output_dir" && zip -qr "$artifact.zip" "$artifact")
-  done < <(python3 "$contract" cases --group f401-product --format tsv)
+      --release-disk --archive "$output_dir/$artifact.zip"
+  done <<< "$product_matrix"
 fi
 
 printf '\nF401 release matrix: OK\n'

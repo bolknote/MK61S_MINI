@@ -12,6 +12,7 @@
 #include "ledcontrol.h"
 #include "loadable_module_system_app.hpp"
 #include "mk8_codec.hpp"
+#include "mk8_literal.hpp"
 #include "program_store.hpp"
 #include "language_flash_store.hpp"
 #include "mk8_codec.hpp"
@@ -1398,6 +1399,17 @@ static void test_explorer_autoexec_is_a_direct_script_child(void) {
   assert(!explorer_autoexec::find(nested, found));
   assert(!explorer_autoexec::find(other, found));
   assert(!explorer_autoexec::find(0x7FFEU, found));
+
+  u16 quest;
+  const u8 index[] = {'C','2'};
+  const u8 play[] = "GaMe.URQ\r\n";
+  assert(program_store::write_file(nested, 25, ProgramType::URQ, "game", index, sizeof(index), &quest));
+  assert(program_store::write_file(nested, 26, ProgramType::TEXT, "Play", play, sizeof(play)-1));
+  assert(explorer_autoexec::find_game(nested,found) && found.id==quest);
+  assert(program_store::move_rename(nested, other, M8("Квест")));
+  program_store::init();
+  assert(explorer_autoexec::find_game(nested,found) && found.id==quest);
+  assert(!explorer_autoexec::find_game(other,found));
 }
 
 static void test_system_apps_are_resolved_only_from_system_directory(void) {

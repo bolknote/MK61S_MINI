@@ -106,7 +106,9 @@ enum class ExplorerAction : u8 {
   RENAME,
   MOVE,
   DELETE_ENTRY,
-  AUTOEXEC
+  AUTOEXEC,
+  PLAY,
+  OPEN_DOCUMENTS
 };
 
 enum ExplorerActionMask : u32 {

@@ -4,10 +4,8 @@
 каталог `catalog.json`. Игровые ZIP и `programs/spectrum/GAMES.img` скачиваются
 и собираются локально; они исключены из Git. Этот каталог не копируется на устройство.
 
-После загрузки готовый каталог для копирования — `programs/spectrum/`. В нём находится
-только `GAMES.img`: FAT16-образ DivMMC на 32 МиБ с распакованными игровыми
-файлами и SYS/BIN esxDOS 0.8.9. ZIP, README, JSON, отчётов и лицензий
-в каталоге для устройства и внутри образа нет.
+После загрузки `programs/spectrum/` содержит `GAMES.img`. Это FAT16-образ
+DivMMC на 32 МиБ с игровыми файлами и SYS/BIN esxDOS 0.8.9.
 
 ## Состав
 
@@ -24,10 +22,11 @@
 
 ## Запись на SD и запуск
 
-Скопировать содержимое `programs/spectrum/` в `apps/SPECTRUM/games/`
-на microSD. В Spectrum APP открыть DivMMC (`I`), выбрать
-`games/GAMES.img`, запустить машину (`R`), затем открыть NMI-браузер
-esxDOS (`Esc`, `N`).
+Установите эмулятор в `/Programs/Spectrum/`. В архиве дополнения папка
+`Games/Spectrum Collection/` содержит `GAMES.img` и `Play.txt`.
+Скопируйте `Games/` в корень microSD. В проводнике откройте
+**Игры → Spectrum Collection** и нажмите Enter. В эмуляторе откройте
+NMI-браузер esxDOS (`Esc`, `N`).
 
 - Ianna: `IANNA/LOADER`.
 - Cosmic Payback: `COSMIC/COSMIC.TAP`.
@@ -58,9 +57,9 @@ SHA-256 исходников, каждого игрового файла и ит
 сторонних пакетов. Изменение или недоступность внешнего источника приводит
 к явной ошибке, контрольные суммы автоматически не обновляются.
 
-Для включения локальной библиотеки при сборке APP передать `--with-games`
-в `tools/apps/spectrum/build_spectrum_app.py`. По умолчанию APP собирается
-без игровых данных. Локальные игры сохраняются после очистки истории Git.
+При сборке APP для нужного дерева microSD передайте `--with-games` и
+`--games-output "путь/к/Games/Spectrum Collection"`. По умолчанию APP
+собирается без игровых данных.
 
 После первой загрузки можно подготовить архив для SD без сети:
 
@@ -72,7 +71,7 @@ python3 tests/spectrum_library_self_test.py \
   --zip .build/spectrum-library/spectrum-games.zip
 ```
 
-В архиве файл для SD находится в `apps/SPECTRUM/games/`, уведомления —
+В архиве файлы для SD находятся в `Games/Spectrum Collection/`, уведомления —
 в `licenses/SPECTRUM-GAMES/`. Служебные manifest и index сохраняются только
 в `.build/spectrum-library/`. Проверка читает каждый файл обратно из FAT16
 и сверяет исходные байты. Игровые архивы, образ и ZIP для SD не коммитить.

@@ -71,7 +71,7 @@ static void tape_test(void) {
         machine.cpu.cyc+=40;
         assert(spectrum_tape_ear(&tape,&machine.cpu)==(i==1));
     }
-    tzx[10]=0x19;
+    tzx[10]=0xff;
     assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_UNSUPPORTED);
 
     uint8_t calls[]={'Z','X','T','a','p','e','!',26,1,20,
@@ -80,7 +80,7 @@ static void tape_test(void) {
         0x12,90,0,1,0,0x27,
         0x12,60,0,1,0,0x27,
         0x18,16,0,0,0,0,0,0x58,0x1b,0,1,2,0,0,0,1,0,2,0,0,0};
-    uint8_t offsets[7*4];
+    uint8_t offsets[7*sizeof(spectrum_tape_index)];
     bytes index={offsets,sizeof(offsets)};
     tape=(spectrum_tape){.index_context=&index,.index_read=read_bytes,.index_write=write_bytes};
     input=(bytes){calls,sizeof(calls)};source.size=input.size;
@@ -97,6 +97,179 @@ static void tape_test(void) {
     assert(!spectrum_tape_ear(&tape,&machine.cpu) && !tape.playing && !tape.fault);
 }
 
+static void generalized_and_select_test(void) {
+    /* Jump to selection 2, using a negative offset. Two pilot repeats,
+     * then 3 two-bit symbols (same, forced low, forced high). */
+    uint8_t tzx[]={'Z','X','T','a','p','e','!',26,1,20,
+        0x23,3,0,
+        0x19,38,0,0,0,0,0,1,0,0,0,2,1,3,0,0,0,2,3,
+        0,10,0,20,0, 0,2,0,
+        1,31,0,0,0, 2,32,0,1,0, 3,33,0,0,0, 0x18,
+        0x20,0,0,
+        0x28,13,0,2,1,0,3,'E','n','d', 0xfe,0xff,3,'R','u','n',
+        0x12,55,0,1,0};
+    uint8_t offsets[5*sizeof(spectrum_tape_index)];
+    bytes index={offsets,sizeof(offsets)},input={tzx,sizeof(tzx)};
+    spectrum_source source={&input,input.size,read_bytes};
+    spectrum_tape tape={.index_context=&index,.index_read=read_bytes,.index_write=write_bytes};
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_OK);
+    machine.cpu.pc=0x8000;machine.cpu.cyc=0xfffffff0u;tape.playing=true;
+    assert(!spectrum_tape_ear(&tape,&machine.cpu) && tape.choices==2 && !tape.playing);
+    char text[4];
+    assert(spectrum_tape_choice(&tape,1,text,sizeof(text)) && !strcmp(text,"Run"));
+    assert(!spectrum_tape_choose(&tape,2,(uint32_t)machine.cpu.cyc));
+    assert(spectrum_tape_choose(&tape,1,(uint32_t)machine.cpu.cyc));
+    const unsigned lengths[]={10,20,10,20,31,32,1,33};
+    const bool levels[]={true,false,true,false,false,false,true,true};
+    for(unsigned i=0;i<sizeof(lengths)/sizeof(*lengths);++i) {
+        assert(spectrum_tape_ear(&tape,&machine.cpu)==levels[i]);
+        assert(tape.deadline==(uint32_t)machine.cpu.cyc+lengths[i]);
+        machine.cpu.cyc+=lengths[i];
+    }
+    assert(!spectrum_tape_ear(&tape,&machine.cpu) && !tape.playing && !tape.fault);
+    tzx[14]--;
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_FORMAT);
+    tzx[14]++;
+    tzx[61]=200;
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_FORMAT);
+
+    // One-symbol data stream has zero bits per symbol and no packed bytes.
+    uint8_t single[]={'Z','X','T','a','p','e','!',26,1,20,
+        0x19,17,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,1,1, 3,11,0};
+    input=(bytes){single,sizeof(single)};source.size=input.size;
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_OK);
+    machine.cpu.cyc=0;tape.playing=true;
+    for(unsigned i=0;i<3;++i) {
+        assert(spectrum_tape_ear(&tape,&machine.cpu) && tape.deadline==11*(i+1));
+        machine.cpu.cyc+=11;
+    }
+    assert(!spectrum_tape_ear(&tape,&machine.cpu) && !tape.playing && !tape.fault);
+}
+
+static void csw_zrle_test(void) {
+    enum { PULSES=560, RUN_BYTES=5*PULSES };
+    uint8_t rle[RUN_BYTES],scratch[1024];
+    static uint8_t backing[SPECTRUM_TAPE_INDEX_BYTES+RUN_BYTES],tzx[RUN_BYTES+50];
+    for(unsigned i=0;i<PULSES;++i) {
+        unsigned n=1+(i%83)*1000;
+        const uint8_t pulse[]={0,(uint8_t)n,(uint8_t)(n>>8),(uint8_t)(n>>16),0};
+        memcpy(rle+5*i,pulse,sizeof(pulse));
+    }
+    const uint8_t header[]={'Z','X','T','a','p','e','!',26,1,20,
+        0x18,0,0,0,0,0,0,0xe0,0x67,0x35,2,(uint8_t)PULSES,PULSES>>8,0,0};
+    memcpy(tzx,header,sizeof(header));
+    unsigned long length=sizeof(tzx)-sizeof(header);
+    assert(compress2(tzx+sizeof(header),&length,rle,sizeof(rle),9)==Z_OK);
+    tzx[11]=(uint8_t)(length+10);tzx[12]=(uint8_t)((length+10)>>8);
+    bytes input={tzx,sizeof(header)+(uint32_t)length},storage={backing,sizeof(backing)};
+    spectrum_source source={&input,input.size,read_bytes};
+    spectrum_tape tape={.index_context=&storage,.index_read=read_bytes,.index_write=write_bytes,
+                        .decode_scratch=scratch};
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_OK);
+    assert(tape.decoded_bytes==sizeof(rle));
+    assert(!memcmp(backing+SPECTRUM_TAPE_INDEX_BYTES,rle,sizeof(rle)));
+    for(unsigned pass=0;pass<2;++pass) {
+        spectrum_tape_rewind(&tape);
+        machine.cpu.cyc=0;tape.playing=true;
+        for(unsigned i=0;i<PULSES;++i) {
+            assert(spectrum_tape_ear(&tape,&machine.cpu)==(!(i&1)));
+            assert(tape.deadline==machine.cpu.cyc+1+(i%83)*1000);
+            machine.cpu.cyc=tape.deadline;
+        }
+        assert(!spectrum_tape_ear(&tape,&machine.cpu) && !tape.playing && !tape.fault);
+    }
+    tape.decode_scratch=scratch;tzx[21]++;
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_FORMAT);
+    tzx[21]--;tzx[input.size-1]^=1;
+    assert(spectrum_tape_open(&tape,&source,true)==SPECTRUM_FORMAT);
+}
+
+static unsigned ula_delay(unsigned time) {
+    static const unsigned delay[]={6,5,4,3,2,1,0,0};
+    if(time<14335 || time>=14335+192*224) return 0;
+    const unsigned col=(time-14335)%224;
+    return col<128?delay[col%8]:0;
+}
+static void timed_cpu(const uint8_t* program,unsigned bytes,uint16_t pc,unsigned phase,bool pentagon) {
+    spectrum_init(&machine,ram,rom);
+    memcpy(ram+pc-0x4000,program,bytes);
+    machine.pentagon=pentagon;
+    machine.cpu.pc=pc;machine.cpu.cyc=UINT32_MAX-11;machine.frame_tstates=phase;
+    machine.cpu.hl=0x4200;machine.cpu.de=0x4300;
+    machine.cpu.ix=0x4200;machine.cpu.sp=0x4400;
+}
+static void contention_test(void) {
+    const uint8_t nop[]={0},inc[]={0x34},idx[]={0xdd,0x34,0},ldir[]={0xed,0xb0};
+    const uint8_t out[]={0xd3,0xfe},bit[]={0xcb,0x46},push[]={0xf5};
+    for(unsigned t=14330;t<14571;++t) {
+        timed_cpu(nop,sizeof(nop),0x4000,t,false);
+        assert(spectrum_run(&machine,1)==4+ula_delay(t));
+        timed_cpu(nop,sizeof(nop),0x4000,t,true);
+        assert(spectrum_run(&machine,1)==4);
+        timed_cpu(inc,sizeof(inc),0x8000,t,false);
+        unsigned at=t+4;at+=ula_delay(at)+3;at+=ula_delay(at)+1;at+=ula_delay(at)+3;
+        assert(spectrum_run(&machine,1)==at-t);
+        timed_cpu(idx,sizeof(idx),0x4000,t,false);
+        at=t;at+=ula_delay(at)+4;at+=ula_delay(at)+4;at+=ula_delay(at)+3;
+        for(unsigned i=0;i<5;++i) at+=ula_delay(at)+1;
+        at+=ula_delay(at)+3;at+=ula_delay(at)+1;at+=ula_delay(at)+3;
+        assert(spectrum_run(&machine,1)==at-t);
+        timed_cpu(ldir,sizeof(ldir),0x8000,t,false);machine.cpu.bc=2;
+        at=t+8;at+=ula_delay(at)+3;at+=ula_delay(at)+3;
+        for(unsigned i=0;i<7;++i) at+=ula_delay(at)+1;
+        assert(spectrum_run(&machine,1)==at-t);
+        timed_cpu(out,sizeof(out),0x8000,t,false);machine.cpu.a=0x43;
+        at=t+7;at+=ula_delay(at)+1;at+=ula_delay(at)+3;
+        assert(spectrum_run(&machine,1)==at-t && machine.border==3);
+        timed_cpu(bit,sizeof(bit),0x8000,t,false);
+        at=t+8;at+=ula_delay(at)+3;at+=ula_delay(at)+1;
+        assert(spectrum_run(&machine,1)==at-t);
+        timed_cpu(push,sizeof(push),0x8000,t,false);machine.cpu.i=0x40;
+        at=t+4;at+=ula_delay(at)+1;at+=ula_delay(at)+3;at+=ula_delay(at)+3;
+        assert(spectrum_run(&machine,1)==at-t);
+    }
+    timed_cpu(nop,sizeof(nop),0x4000,14335,false);
+    machine.cpu.pc++;machine.cpu.halted=true;
+    assert(spectrum_run(&machine,1)==10);
+    timed_cpu(nop,sizeof(nop),0x4000,69887,false);
+    assert(spectrum_run(&machine,5)==8 && machine.frames==1 && machine.frame_tstates==7);
+}
+
+static bool raster_copy(void* context,unsigned strip,const uint8_t* source) {
+    const unsigned size=SPECTRUM_RASTER_BYTES/SPECTRUM_RASTER_STRIPS;
+    memcpy((uint8_t*)context+strip*size,source,size);return true;
+}
+static unsigned raster_pixel(const uint8_t* frame,unsigned x,unsigned y) {
+    const unsigned cells=SPECTRUM_RASTER_STRIP_ROWS*40,cell=(y%SPECTRUM_RASTER_STRIP_ROWS)*40+x/8;
+    const uint8_t* part=frame+(y/SPECTRUM_RASTER_STRIP_ROWS)*cells*5;
+    const uint8_t* colors=part+cells+cell*4+(part[cell]&(128u>>(x&7))?2:0);
+    return colors[0]|colors[1]<<8;
+}
+static void raster_test(void) {
+    static uint8_t frame[SPECTRUM_RASTER_BYTES],buffer[SPECTRUM_RASTER_BYTES/SPECTRUM_RASTER_STRIPS];
+    const uint8_t out[]={0xd3,0xfe,0x76};
+    const unsigned screen=14336;
+    timed_cpu(out,sizeof(out),0x8000,screen-32*224-16,false);
+    machine.cpu.a=2;
+    spectrum_raster_begin(&machine,buffer,frame,raster_copy);
+    spectrum_run(&machine,69888-machine.frame_tstates);
+    assert(raster_pixel(frame,8,0)==0 && raster_pixel(frame,16,0)==spectrum_color(2));
+    assert(raster_pixel(frame,0,1)==spectrum_color(2));
+
+    const uint8_t store[]={0x32,0x02,0x58,0x76};
+    timed_cpu(store,sizeof(store),0x8000,screen-5,false);
+    machine.cpu.a=2;
+    ram[0]=ram[1]=ram[2]=ram[256+2]=255;
+    ram[6144]=ram[6145]=ram[6146]=4;
+    spectrum_raster_begin(&machine,buffer,frame,raster_copy);
+    spectrum_run(&machine,69888-machine.frame_tstates);
+    assert(raster_pixel(frame,32,32)==spectrum_color(4));
+    assert(raster_pixel(frame,40,32)==spectrum_color(4));
+    assert(raster_pixel(frame,48,32)==spectrum_color(4));
+    assert(raster_pixel(frame,48,33)==spectrum_color(2));
+    spectrum_raster_end(&machine);
+}
+
 static void compressed_page_test(void) {
     uint8_t in[16384],encoded[17000],result[16384];
     for(unsigned i=0;i<sizeof(in);++i) in[i]=(uint8_t)(i%137 ^ (i>>9));
@@ -108,7 +281,7 @@ static void compressed_page_test(void) {
         bytes data={encoded,(uint32_t)z.total_out};
         assert(deflateEnd(&z)==Z_OK);
         const spectrum_source source={&data,data.size,read_bytes};
-        const spectrum_inflate_output out={result,result+12288,12288,sizeof(result)};
+        const spectrum_inflate_output out={.first=result,.second=result+12288,.split=12288,.limit=sizeof(result)};
         unsigned used=0;
         assert(spectrum_inflate(&source,0,source.size,&out,&used)==SPECTRUM_OK && used==sizeof(in));
         assert(!memcmp(in,result,sizeof(in)));
@@ -201,8 +374,9 @@ int main(int argc,char** argv) {
     assert(argc==2);
     FILE* file=fopen(argv[1],"rb");assert(file);
     assert(fread(rom,1,sizeof(rom),file)==sizeof(rom));fclose(file);
-    tape_test();compressed_page_test();
+    tape_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
+    contention_test();raster_test();
     for(unsigned model=0;model<3;++model) snapshot_test(model);
-    puts("ROM TAP load, TZX pulse/control/CSW, zlib, all SZX banks and both EFF7 renderers PASS");
+    puts("ROM TAP load, TZX Generalized/Select/CSW, ULA bus timing and scanlines, zlib, SZX and EFF7 PASS");
     return 0;
 }

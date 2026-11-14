@@ -112,7 +112,34 @@ static void randomized_color_plans() {
     }
     std::printf("LCD randomized reconstruction: %u TILE1/TILE8/odd INDEX4 frames PASS\n",frames);
 }
+static void per_scanline_colors() {
+    const uint8_t rows[]={0x80,1,0x80,1};
+    uint8_t colors[16]={0x00,0x00,0x00,0xf8, 0xff,0xff,0xe0,0x07,
+                        0x00,0x00,0x1f,0x00, 0xff,0xff,0xff,0x07};
+    const mk61_service_color_frame frame{
+        .pixels=rows,.tiles=colors,.pixel_bytes=4,.tile_bytes=16,
+        .x=8,.y=32,.width=16,.height=2,.format=MK61_COLOR_CELL565|MK61_COLOR_PRESERVE_OUTSIDE
+    };
+    assert(valid_color(frame));
+    uint16_t scanline[14];
+    const Rect r{9,32,14,2};
+    color_scanline(frame,r,0,scanline);
+    assert(scanline[0]==0 && scanline[7]==0xffff);
+    color_scanline(frame,Rect{8,32,1,2},0,scanline);assert(scanline[0]==0xf800);
+    color_scanline(frame,Rect{8,32,1,2},1,scanline);assert(scanline[0]==0x001f);
+    assert(color_pixel(frame,15,0)==0x07e0 && color_pixel(frame,15,1)==0x07ff);
+    mk61_service_color_frame older{},invalid=frame;
+    uint8_t storage[20];
+    copy_color(older,frame,storage);
+    Update update;
+    plan_color(update,older,frame,false);assert(!update.count);
+    colors[10]^=1;
+    plan_color(update,older,frame,false);assert(update.count==1 && update.bytes==32);
+    invalid.width=15;assert(!valid_color(invalid));
+    invalid=frame;invalid.tile_bytes=8;assert(!valid_color(invalid));
+}
 int main() {
+    per_scanline_colors();
     bounded_expansion();
     aligned_and_unaligned_tiles();
     randomized_color_plans();

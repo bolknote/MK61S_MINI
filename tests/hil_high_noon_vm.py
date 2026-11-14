@@ -34,7 +34,7 @@ OK,ESC,RUN=37,39,25
 
 
 def folder_index(report,name):
-    entries=listing_entries(report)
+    entries=[entry for entry in listing_entries(report) if entry.startswith('d\t')]
     matches=[i for i,entry in enumerate(entries)
              if entry.casefold()==("d\t"+name+"/").casefold()]
     assert len(matches)==1,(name,entries)
@@ -155,23 +155,19 @@ class Game:
         self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("intro")
         self.port.key(self.run);self.wait("ВАША СТРАТЕГИЯ?")
     def start_from_explorer(self):
-        assert self.directory.startswith("/")
         components=self.directory.strip("/").split("/")
-        assert all(component and component not in (".","..") for component in components)
-        indices=[];parent="/"
-        for component in components:
-            indices.append(folder_index(self.port.command("ls "+parent),component))
-            parent=parent.rstrip("/")+"/"+component
+        assert len(components)==2 and components[0].casefold()=="games"
+        index=folder_index(self.port.command("ls /Games"),components[1])
         self.port.open_text_start=len(self.port.text)
         self.port.key(ESC) # Calculator -> the pinned build's main menu.
         for _ in range(3):self.port.key(36) # DFU, USB disk, Setup, Explorer.
         self.port.key(OK);self.port.pump(.2)
-        for index in indices:
-            for _ in range(index):self.port.key(36)
-            self.port.key(OK);self.port.pump(.3)
+        self.port.key(OK);self.port.pump(.2) # Games is the first Explorer item.
+        for _ in range(index):self.port.key(36)
+        self.port.key(OK);self.port.pump(.3)
         self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("explorer-autoexec-intro")
-        self.result["checks"].append("Explorer-folder-entry-autoexec-M61")
-        print("Explorer folder entry -> High Noon autoexec PASS",flush=True)
+        self.result["checks"].append("Explorer-Games-OK-autoexec-M61")
+        print("Explorer Games -> High Noon autoexec PASS",flush=True)
     def stop(self):
         self.port.key(ESC);self.port.pump(.5)
         # A second ESC is safe if a nested interpreter's final key is pending.
@@ -263,11 +259,11 @@ class Game:
 def main():
     ap=argparse.ArgumentParser(description=__doc__)
     for name in ("port","public-id","build-id"):ap.add_argument("--"+name,required=True)
-    ap.add_argument("--directory",default="/games/High Noon")
+    ap.add_argument("--directory",default="/Games/High Noon")
     ap.add_argument("--output-dir",type=Path,required=True)
     ap.add_argument("--attempts",type=int,default=12)
     ap.add_argument("--explorer-start",action="store_true",
-                    help="start the first game by entering its folder in Explorer, not CDC open")
+                    help="start the first game with OK in Explorer's Games list")
     args=ap.parse_args();assert 1<=args.attempts<=20
     args.output_dir.mkdir(parents=True,exist_ok=True)
     result={"status":"RUNNING","checks":[],"screens":[],"register_reports":[]}

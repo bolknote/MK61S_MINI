@@ -100,18 +100,19 @@ void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
             char value[Services::COLS+1];services.row(row,value);
             canvas.item((u8)row,value+2,explorer_view::Kind::FILE,nullptr,services.browser_action_selection()==row);
         }
-        return;
+    } else {
+        const unsigned selected=services.browser_selection();
+        const unsigned first=geometry.classic()?(selected/geometry.page_size())*geometry.page_size():0;
+        for(unsigned slot=0;slot<geometry.page_size() && first+slot<services.browser_count();++slot) {
+            const unsigned index=first+slot;char name[64];if(!services.browser_label(index,name)) continue;
+            explorer_view::Icon icon{};const bool custom=services.browser_icon(index,icon);
+            canvas.item((u8)slot,name,services.browser_directory(index)?explorer_view::Kind::DIRECTORY:explorer_view::Kind::FILE,
+                        custom?&icon:nullptr,index==selected);
+        }
+        if(!services.browser_count()) canvas.empty(services.browser_filtered()?
+            (ru?M8("Нет совпадений"):"No matches"):services.browser_games()?
+            (ru?M8("Нет игр"):"No games"):(ru?M8("Папка пуста"):"Folder empty"));
     }
-    const unsigned selected=services.browser_selection();
-    const unsigned first=geometry.classic()?(selected/geometry.page_size())*geometry.page_size():0;
-    for(unsigned slot=0;slot<geometry.page_size() && first+slot<services.browser_count();++slot) {
-        const unsigned index=first+slot;char name[64];if(!services.browser_label(index,name)) continue;
-        explorer_view::Icon icon{};const bool custom=services.browser_icon(index,icon);
-        canvas.item((u8)slot,name,services.browser_directory(index)?explorer_view::Kind::DIRECTORY:explorer_view::Kind::FILE,
-                    custom?&icon:nullptr,index==selected);
-    }
-    if(!services.browser_count()) canvas.empty(services.browser_filtered()?
-        (ru?M8("Нет совпадений"):"No matches"):(ru?M8("Папка пуста"):"Folder empty"));
     if(height==320) {
         canvas.rectangle(0,299,width,1);
         canvas.text(10,303,services.footer(),12,width-20);
@@ -189,6 +190,7 @@ void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) c
     unsigned first=selected>=7?selected-6:0;
     if(services.active() && services.fixed_text()) first=services.first_console_row(7);
     for(unsigned row=0;row<7;++row) {
+        if(row==6 && services.dialog()) {text(7,services.footer(),false);break;}
         if(services.active()) services.row(first+row,line);else ui.row(first+row,line);
         text(row+1,line,!(services.active() && services.fixed_text()) && first+row==selected,first+row);
     }

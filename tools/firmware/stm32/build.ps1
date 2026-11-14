@@ -710,7 +710,6 @@ try {
             '-Toolchain', $toolchainBin,
             '-BuildDirectory', (Join-Path $buildDirectory 'urq'),
             '-OutputDirectory', (Join-Path $outputBundle 'Apps'),
-            '-LibraryOutput', (Join-Path $outputBundle 'Games/URQ'),
             '-LicensesOutput', (Join-Path $outputBundle 'licenses/urq'))
     } else {
         if (-not $python) { $python = Get-CommandPath 'python3' 'Python 3' }
@@ -719,7 +718,6 @@ try {
             '--target', 'stm32', '--toolchain', $toolchainBin,
             '--build-dir', (Join-Path $buildDirectory 'urq'),
             '--output-dir', (Join-Path $outputBundle 'Apps'),
-            '--library-output', (Join-Path $outputBundle 'Games/URQ'),
             '--licenses-output', (Join-Path $outputBundle 'licenses/urq'))
     }
     $ryuLicenses = Join-Path $outputBundle 'licenses/ryu'

@@ -183,7 +183,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     snapshot state={0};
     result=inspect(source,&state,model);
     if(result) return result;
-    const spectrum_inflate_output output={low,high,12288,PAGE};
+    const spectrum_inflate_output output={.first=low,.second=high,.split=12288,.limit=PAGE};
     bool packed=false;
     for(unsigned bank=0;bank<64;++bank) packed|=state.compressed[bank]!=0;
     if(packed && (!low || !high)) return SPECTRUM_UNSUPPORTED;
@@ -202,7 +202,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(!spectrum_disk_snapshot(s)) return SPECTRUM_IO;
     spectrum_reset_cpu(s);
     if(s->memory && !spectrum_memory_reset(s->memory)) return SPECTRUM_IO;
-    uint8_t buffer[1024];
+    uint8_t buffer[512];
     for(unsigned bank=0;bank<64;++bank) if(state.ram[bank]) {
         if(state.compressed[bank]) {
             unsigned used;

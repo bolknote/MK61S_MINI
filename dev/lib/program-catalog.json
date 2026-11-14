@@ -1,24 +1,40 @@
 {
   "format": 1,
   "groups": {
-    "library": {"requires": []},
-    "games": {"requires": []},
-    "examples": {"requires": []},
-    "app": {"requires": ["apps"]},
-    "sheets": {"requires": ["sheet"]},
-    "urq": {"requires": ["urq"]},
-    "CHIP8": {"requires": ["chip8", "graphics"]},
-    "Fonts": {"requires": ["fonts", "graphics"]}
+    "library": {"requires": [], "destination": "Programs/Calculations"},
+    "games": {"requires": [], "destination": "Games"},
+    "examples": {"requires": [], "destination": "Programs/Examples"},
+    "app": {"requires": ["apps"], "destination": "Programs"},
+    "sheets": {"requires": ["sheet"], "destination": "Programs/Examples/Sheets"},
+    "Fonts": {"requires": ["fonts", "graphics"], "destination": "Fonts"}
   },
   "games": {
     "High Noon": ["basic", "graphics"],
     "Turochamp": ["basic", "graphics"]
   },
   "apps": {
-    "ELIZA": {"requires": ["apps"]},
-    "SHEET": {"requires": ["apps", "graphics", "math", "s1"]},
-    "URQ": {"requires": ["apps", "urq"], "built": true},
-    "URQUI": {"requires": ["apps", "urq"], "built": true, "platform": "stm32"}
+    "ELIZA": {"requires": ["apps"], "destination": "Programs/ELIZA.APP"},
+    "SHEET": {"requires": ["apps", "graphics", "math", "s1"], "destination": "Programs/SHEET.APP"},
+    "URQ": {"requires": ["apps", "urq"], "built": true, "destination": "System/URQ/URQ.APP"},
+    "URQUI": {"requires": ["apps", "urq"], "built": true, "platform": "stm32", "destination": "System/URQ/URQUI.APP"},
+    "WBMP": {"requires": ["apps"], "platform": "picocalc", "destination": "System/WBMP.APP"},
+    "HELLO": {"requires": ["apps"], "platform": "picocalc", "destination": "Programs/Examples/HELLO.APP"},
+    "HELLO_CPP": {"requires": ["apps"], "platform": "picocalc", "destination": "Programs/Examples/HELLO_CPP.APP"},
+    "HELLO_RS": {"requires": ["apps"], "platform": "picocalc", "destination": "Programs/Examples/HELLO_RS.APP"},
+    "SERVICES": {"requires": ["apps"], "platform": "picocalc", "destination": "Programs/Examples/SERVICES.APP"}
+  },
+  "chip8_games": {
+    "br8kout.ch8": "Br8kout",
+    "echo8.ch8": "ECHO-8",
+    "fuse.ch8": "Fuse",
+    "space-invaders.ch8": "Space Invaders"
+  },
+  "urq_games": {
+    "jim_from_outer_space_ru": "Джим из Космоса",
+    "trapped_in_time_ru": "В ловушке времени",
+    "semion_escape": "Семён - Побег",
+    "semion_road": "Семён - На дороге",
+    "semion_snow": "Семён - В снежном плену"
   },
   "extensions": {
     ".m61": [], ".bin": [], ".tbi": ["basic"], ".foc": ["focal"],

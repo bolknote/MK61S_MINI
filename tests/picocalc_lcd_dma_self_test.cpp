@@ -3,6 +3,7 @@
 #include "rust_types.h"
 #include "lcd_update.hpp"
 #include "lcd_scroll.hpp"
+#include "shell_color.hpp"
 #include <array>
 #include <cassert>
 #include <cstdio>

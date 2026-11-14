@@ -2,6 +2,11 @@
 #define MK61_PICOCALC_LCD_COLOR_HPP
 #include "loadable_app_services.h"
 #include "lcd_update.hpp"
+#if defined(PICO_ON_DEVICE) && defined(__GNUC__)
+#define MK61_LCD_COLOR_CODE(name) __attribute__((noinline,section(".lcd_color_code." #name)))
+#else
+#define MK61_LCD_COLOR_CODE(name)
+#endif
 
 namespace picocalc::lcd {
 // Color APPs borrow the panel's existing monochrome snapshot storage. No
@@ -16,6 +21,9 @@ inline bool valid_color(const mk61_service_color_frame& f) {
     } else if(format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8) {
         if((f.width|f.height)&7U || !f.tiles) return false;
         pixels=f.width*f.height/8;tiles=f.width*f.height/64*(format==MK61_COLOR_TILE8?2:1);
+    } else if(format==MK61_COLOR_CELL565) {
+        if((f.width&7U) || !f.tiles) return false;
+        pixels=f.width*f.height/8;tiles=pixels*4;
     } else return false;
     if(f.pixel_bytes!=pixels || f.tile_bytes!=tiles || pixels+tiles>MK61_COLOR_SNAPSHOT_BYTES) return false;
     if(format==MK61_COLOR_TILE8) for(unsigned i=0;i<tiles;++i) if(f.tiles[i]>=64) return false;
@@ -25,8 +33,36 @@ inline bool same_color_view(const mk61_service_color_frame& a,const mk61_service
     return a.x==b.x && a.y==b.y && a.width==b.width && a.height==b.height &&
            a.format==b.format;
 }
+inline uint16_t cell_color(const uint8_t* colors) {
+    return static_cast<uint16_t>(colors[0]|(colors[1]<<8));
+}
+MK61_LCD_COLOR_CODE(scanline) inline void cell565_scanline(const mk61_service_color_frame& f,const Rect& r,
+                                               unsigned row,uint16_t* out) {
+    unsigned x=r.x-f.x,left=r.width;
+    const unsigned first=(r.y-f.y+row)*(f.width/8);
+    while(left) {
+        const unsigned cell=first+x/8,bit=x&7,span=left<8-bit?left:8-bit;
+        const uint8_t bits=f.pixels[cell];const auto* colors=f.tiles+4*cell;
+        const uint16_t paper=cell_color(colors),ink=cell_color(colors+2);
+        for(unsigned i=bit;i<bit+span;++i)*out++=(bits&(128U>>i))?ink:paper;
+        x+=span;left-=span;
+    }
+}
+MK61_LCD_COLOR_CODE(dirty) inline bool cell565_dirty(const mk61_service_color_frame& old,const mk61_service_color_frame& next,
+                                           unsigned x,unsigned y,unsigned rows) {
+    const unsigned stride=next.width/8;
+    for(unsigned row=0;row<rows;++row) {
+        const unsigned cell=(y+row)*stride+x/8;
+        if(old.pixels[cell]!=next.pixels[cell] || std::memcmp(old.tiles+4*cell,next.tiles+4*cell,4)!=0) return true;
+    }
+    return false;
+}
 inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigned y,const uint16_t* palette64=nullptr) {
     unsigned index;const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
+    if(format==MK61_COLOR_CELL565) {
+        const unsigned cell=y*(f.width/8)+x/8;
+        return cell_color(f.tiles+cell*4+(f.pixels[cell]&(128U>>(x&7))?2:0));
+    }
     if(format==MK61_COLOR_INDEX4) {
         const auto pair=f.pixels[y*((f.width+1U)/2)+x/2];
         index=(x&1U)?pair&15U:pair>>4;
@@ -43,6 +79,15 @@ inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigne
 inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,
                            const uint16_t* palette64=nullptr,void (*progress)()=nullptr) {
     const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
+    if(format==MK61_COLOR_CELL565) {
+        if(!progress) cell565_scanline(f,r,row,out);
+        else for(unsigned x=0;x<r.width;x+=64) {
+            const unsigned width=r.width-x<64?r.width-x:64;
+            cell565_scanline(f,Rect{(uint16_t)(r.x+x),r.y,(uint16_t)width,r.height},row,out+x);
+            progress();
+        }
+        return;
+    }
     if(format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8) {
         const unsigned stride=f.width/8,y=r.y-f.y+row;
         const uint8_t* pixels=f.pixels+y*stride;
@@ -97,7 +142,7 @@ inline void append_color_rect(Update& u,const Rect& next) {
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((optimize("O2")))
 #endif
-inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_service_color_frame& next,bool force) {
+MK61_LCD_COLOR_CODE(plan) inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_service_color_frame& next,bool force) {
     u.count=u.bytes=0;
     // Use the same conservative window charge as the monochrome planner:
     // commands, DMA setup and row service cost about 2048 pixel-data bytes.
@@ -151,6 +196,8 @@ inline void plan_color(Update& u,const mk61_service_color_frame& old,const mk61_
                 bool dirty=false;
                 if(tiled) {
                     dirty=changed[x/8]!=0;
+                } else if(format==MK61_COLOR_CELL565) {
+                    dirty=cell565_dirty(old,next,x,y,rows);
                 } else {
                     const unsigned stride=(next.width+1U)/2;
                     const unsigned bytes=(next.width-x<8?(next.width-x+1U)/2:4);
@@ -184,4 +231,5 @@ inline void copy_color(mk61_service_color_frame& out,const mk61_service_color_fr
     out=in;out.pixels=storage;out.tiles=in.tile_bytes?storage+in.pixel_bytes:nullptr;
 }
 } // namespace picocalc::lcd
+#undef MK61_LCD_COLOR_CODE
 #endif

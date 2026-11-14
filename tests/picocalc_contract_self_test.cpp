@@ -488,9 +488,11 @@ void themed_bitmap_contract() {
 }
 void explorer_app_exit_contract() {
     using namespace loadable_module;
-    constexpr char media[] = "/AppExit/Music/Соль.MP3";
-    constexpr char handler[] = "/AppExit/Player.APP";
-    CHECK(files::mkdir("/AppExit") && files::mkdir("/AppExit/Music"));
+    constexpr char media[] = "/Documents/Music/Соль.MP3";
+    constexpr char handler[] = "/Programs/MP3/MP3.APP";
+    CHECK((files::exists("/Documents") || files::mkdir("/Documents")) &&
+          (files::exists("/Programs") || files::mkdir("/Programs")));
+    CHECK(files::mkdir("/Documents/Music") && files::mkdir("/Programs/MP3"));
     const u8 image[] = {0x70,0x47,0,0};
     u8 work[256];
     std::vector<u8> container(HEADER_SIZE);
@@ -514,7 +516,9 @@ void explorer_app_exit_contract() {
 
     Calculator calculator;calculator.init();Services service;
     service.open(Action::EXPLORER,false,calculator);
-    CHECK(service.enter_directory("/AppExit/Music",false));
+    CHECK(service.input(0xB7) && service.input(0xB7) && service.input('\r'));
+    service.filter_directory("Music");
+    CHECK(service.input('\r'));
     unsigned presentations=0;
     service.set_color_display([](void* context,u32 operation,const void* payload)->u32 {
         if(operation==MK61_COLOR_END) return 1;
@@ -527,7 +531,7 @@ void explorer_app_exit_contract() {
             char path[384];
             mk61_service_file_bytes request{nullptr,path,document,sizeof(path)};
             CHECK(s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(request),&request));
-            CHECK(!std::strcmp(path,M8("/AppExit/Music/Соль.MP3")));
+            CHECK(!std::strcmp(path,M8("/Documents/Music/Соль.MP3")));
         }
         switch(*static_cast<Display*>(context)) {
         case Display::COLOR: {
@@ -566,7 +570,7 @@ void explorer_app_exit_contract() {
     CHECK(!std::strcmp(service.status(),"APP returned an error"));
     service.set_test_native_entry(nullptr,nullptr);
     CHECK(files::remove(media) && files::remove(handler));
-    CHECK(files::remove("/AppExit/Music") && files::remove("/AppExit"));
+    CHECK(files::remove("/Documents/Music") && files::remove("/Programs/MP3"));
     std::puts("Explorer APP launch and exit: MP3 association, document ID, color/mono return, text and errors PASS");
 }
 }
@@ -578,6 +582,8 @@ void picocalc_contract_test() {
         Calculator calculator;calculator.init();Services service;
         const auto baseline=shared_memory::buffer_statistics();
         service.open(Action::EXPLORER,false,calculator);
+        for(unsigned i=0;i<3;++i) CHECK(service.input(0xB6));
+        CHECK(service.input('\r'));
         CHECK(service.browser_count() && shared_memory::buffer_statistics().internal_used>=
             baseline.internal_used+Services::BROWSER_PAGE_SIZE*sizeof(files::Entry));
         struct State { Services* service;usize used; } state{&service,baseline.internal_used};
@@ -726,6 +732,6 @@ void picocalc_contract_test() {
     CHECK(files::mkdir("/Contract/gone"));s.open(Action::EXPLORER,false,calculator);
     CHECK(s.enter_directory("/Contract/gone") && files::remove("/Contract/gone"));
     s.open(Action::EXPLORER,false,calculator);
-    CHECK(!std::strcmp(s.page_name(),"BROWSER") && view(s).rfind("/\n",0)==0);
+    CHECK(!std::strcmp(s.page_name(),"BROWSER") && s.browser_count()==4);
     std::puts("PicoCalc public contract: browser search/move, M8 APP I/O, shared editor hooks/scrolling, atomic display/cursor/UI raster, bitmap restoration, raw key press/release/immediate/handoff PASS");
 }

@@ -735,7 +735,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   export ARM_NONE_EABI_OBJDUMP="${compiler_bin%/}/arm-none-eabi-objdump"
   mkdir -p "$shell_sketchbook/sketches/code" "$work/build"
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
-  for directory in tools third_party doc; do
+  for directory in tools third_party doc dev; do
     ln -s "$root/$directory" "$shell_sketchbook/sketches/$directory"
   done
   for legacy_font_setting in disabled enabled; do

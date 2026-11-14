@@ -243,7 +243,9 @@ bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     if(ok) { ++generation;text_cache.valid=false; }
     return ok;
 }
-static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter,bool include_hidden) {
+static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capacity,
+                      unsigned& used, bool& more, const char* filter, bool include_hidden,
+                      bool directories_only = false) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0; more = false;
     if(!available()) return false;
@@ -254,7 +256,7 @@ static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capa
     while((result = f_readdir(&directory, &info)) == FR_OK && info.fname[0]) {
         if(!std::strcmp(info.fname,".") || !std::strcmp(info.fname,"..") ||
            (!include_hidden && info.fname[0] == '.') || storage_journal::reserved(info.fname)) continue;
-        if(!contains(info.fname,filter)) continue;
+        if((directories_only && !(info.fattrib & AM_DIR)) || !contains(info.fname,filter)) continue;
         if(skip) { --skip; continue; }
         if(used == capacity) { more = true; break; }
         auto& entry = out[used++];
@@ -265,8 +267,9 @@ static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capa
     const FRESULT closed = f_closedir(&directory);
     return fail(result == FR_OK ? closed : result);
 }
-bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,const char* filter) {
-    return list_impl(path,skip,out,capacity,used,more,filter,false);
+bool list(const char* path, unsigned skip, Entry* out, unsigned capacity,
+          unsigned& used, bool& more, const char* filter, bool directories_only) {
+    return list_impl(path,skip,out,capacity,used,more,filter,false,directories_only);
 }
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more) {
     return list_impl(path,skip,out,capacity,used,more,nullptr,true);

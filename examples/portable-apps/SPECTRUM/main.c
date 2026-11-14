@@ -23,6 +23,7 @@ static spectrum* active_machine;
 #define machine (*active_machine)
 static uint8_t keys[32],previous_keys[32];
 static char *directory,*snapshot_path;
+static uint32_t opened_file;
 static bool started;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static spectrum_tape* tape;
@@ -30,6 +31,13 @@ static char* tape_path;
 #endif
 static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
 enum { WORK_CACHE_BYTES=8192 };
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
+       2*SPECTRUM_TAPE_SLOT_BYTES };
+typedef struct { unsigned capture,shown,next;bool clear,ready; } raster_output;
+static bool exact_raster;
+static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
+#endif
 static bool banked_buffers;
 static spectrum_memory bank_memory;
 static mk61_service_buffer external;
@@ -65,6 +73,32 @@ static bool external_read(void* context,uint32_t at,uint8_t* out,uint32_t n) {
 static bool external_write(void* context,uint32_t at,const uint8_t* in,uint32_t n) {
     (void)context;return external_transfer(true,at,(uint8_t*)in,n);
 }
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+/* The raster buffer is live during a Z80 bus callback. Keep the transfer
+ * bounded and avoid re-entering the guest while the beam is being caught up. */
+static bool raster_store(void* context,unsigned strip,const uint8_t* data) {
+    raster_output* raster=context;
+    const uint32_t at=RASTER_BASE+raster->capture*SPECTRUM_RASTER_BYTES+strip*SPECTRUM_RASTER_STRIP_BYTES;
+    return external_write(NULL,at,data,SPECTRUM_RASTER_STRIP_BYTES);
+}
+static bool raster_present(uint8_t* buffer,raster_output* raster) {
+    if(!raster->ready) {
+        const uint32_t at=RASTER_BASE+raster->shown*SPECTRUM_RASTER_BYTES+raster->next*SPECTRUM_RASTER_STRIP_BYTES;
+        if(!external_read(NULL,at,buffer,SPECTRUM_RASTER_STRIP_BYTES)) return false;
+        raster->ready=true;
+    }
+    mk61_service_color_frame part={0};
+    part.width=320;part.height=SPECTRUM_RASTER_STRIP_ROWS;
+    part.y=32+raster->next*SPECTRUM_RASTER_STRIP_ROWS;
+    part.pixels=buffer;part.pixel_bytes=SPECTRUM_RASTER_STRIP_BYTES/5;
+    part.tiles=buffer+part.pixel_bytes;part.tile_bytes=part.pixel_bytes*4;
+    part.background=spectrum_border(&machine);
+    part.format=MK61_COLOR_CELL565|(raster->clear?0:MK61_COLOR_PRESERVE_OUTSIDE);
+    const unsigned result=color(MK61_COLOR_PRESENT,&part);
+    if(result==1) {raster->clear=raster->ready=false;++raster->next;}
+    return result!=0;
+}
+#endif
 static bool external_clear(void* context,uint32_t at,uint32_t length) {
     (void)context;
     while(length) {
@@ -123,7 +157,7 @@ static bool menu_draw(const char* title,const char* const* labels,unsigned count
         spectrum_ui_window(&osd,8,8,224,"Spectrum",root,ROOT_COUNT,root_selected);
     }
     spectrum_ui_window(&osd,nested?40:8,nested?40:8,nested?208:224,title,labels,count,selected);
-    spectrum_ui_footer(&osd,"Enter: select    Esc: back");
+    spectrum_ui_footer(&osd,selected<count?"Enter: select    Esc: back":"Press any key");
     return spectrum_ui_present(&osd);
 }
 static int menu_pick(const char* title,const char* const* labels,unsigned count,unsigned* selected,bool nested,const char* hotkeys) {
@@ -161,7 +195,7 @@ static void message(const char* value) {
     }
     wait_key();
 }
-static uint32_t file_call(unsigned op,const char* path,void* out,uint32_t offset,uint32_t bytes) {
+static __attribute__((noinline)) uint32_t file_call(unsigned op,const char* path,void* out,uint32_t offset,uint32_t bytes) {
     mk61_service_file_bytes r={path,out,offset,bytes};
     return services->call(MK61_SERVICE_FILE_BYTES,op,0,sizeof(r),&r);
 }
@@ -238,7 +272,7 @@ static bool choose_file(unsigned type) {
         else if(c==0xB6 || c==0xB7) { mk61_service_file_info next;if(entry(selected+1,&next,type)) ++selected; }
         else if(enter(c) && found) {
             if(!join_path(snapshot_path,directory,f.name)) { message("Path too long\n\nPress any key");continue; }
-            if(f.directory) { memcpy(directory,snapshot_path,strlen(snapshot_path)+1);selected=0; }
+            if(f.directory) { strcpy(directory,snapshot_path);selected=0; }
             else return true;
         }
     }
@@ -270,13 +304,13 @@ static bool select_model(unsigned model) {
         if(!load_rom((uint8_t*)machine.rom)) return false;
         spectrum_attach_memory(&machine,NULL);reset_machine();started=false;return true;
     }
-    const unsigned index_bytes=
+    const unsigned external_bytes=
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        2*SPECTRUM_TAPE_INDEX_BYTES;
+        RASTER_BASE+2*SPECTRUM_RASTER_BYTES;
 #else
-        0;
+        SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES;
 #endif
-    if(!external.handle && !mk61_app_buffer_acquire(services,SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+index_bytes,MK61_BUFFER_EXTERNAL,&external)) {
+    if(!external.handle && !mk61_app_buffer_acquire(services,external_bytes,MK61_BUFFER_EXTERNAL,&external)) {
         message("Pentagon 512K requires PSRAM\n\nPress any key");return false;
     }
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
@@ -308,7 +342,7 @@ static bool disk_rom(unsigned mode) {
     const unsigned size=mode==SPECTRUM_DISK_BETA?16384:8192;
     mk61_service_file_info info;uint8_t bytes[256];
     if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory || info.size!=size) {
-        message("Disk interface ROM missing\nSee SPECTRUM/README.md\n\nPress any key");return false;
+        message("Disk interface ROM missing\nSee SPECTRUM/README.md");return false;
     }
     for(unsigned at=0;at<size;at+=sizeof(bytes))
         if(!read_source((void*)path,at,bytes,sizeof(bytes)) || !external_write(NULL,target+at,bytes,sizeof(bytes))) return false;
@@ -317,59 +351,74 @@ static bool disk_rom(unsigned mode) {
     return true;
 }
 static bool mount_selected_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return false; }
+    if(!machine.memory) { message("Disk interfaces require PSRAM");return false; }
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     const bool scl=suffix(snapshot_path,".scl");
     if(mode==SPECTRUM_DISK_DIVMMC && (info.size<1024*1024 || info.size%512)) {
-        message("SD image must be sector aligned\nand at least 1 MiB\n\nPress any key");return false;
+        message("SD image must be sector aligned\nand at least 1 MiB");return false;
     }
     if(mode==SPECTRUM_DISK_BETA && !scl && (info.size<4096 || info.size>SPECTRUM_TRD_BYTES || info.size%256)) {
-        message("Invalid TRD size\n\nPress any key");return false;
+        message("Invalid TRD size");return false;
     }
     if(!disk_rom(mode)) return false;
     if(scl) {
         const spectrum_source source={snapshot_path,info.size,read_source};
         const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
         if(spectrum_scl_unpack(&source,&io,SPECTRUM_EXTERNAL_BYTES)!=SPECTRUM_OK) {
-            message("Invalid SCL / checksum / SD error\n\nPress any key");return false;
+            message("Invalid SCL / checksum / SD error");return false;
         }
     }
     mounted_media* m=mode==SPECTRUM_DISK_BETA?&floppy:&sd_card;
-    memcpy(m->path,snapshot_path,strlen(snapshot_path)+1);m->scl=scl;
+    strcpy(m->path,snapshot_path);m->scl=scl;
     spectrum_disk_io* io=mode==SPECTRUM_DISK_BETA?&machine.disk.fdc.io:&machine.disk.spi.io;
     *io=(spectrum_disk_io){m,scl?SPECTRUM_TRD_BYTES:info.size,media_read,media_write,true,80,2};
     if(!spectrum_disk_mode(&machine,mode)) return false;
     reset_machine();started=false;return true;
 }
 static void mount_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return; }
+    if(!machine.memory) { message("Disk interfaces require PSRAM");return; }
     if(choose_file(mode==SPECTRUM_DISK_BETA?1:2)) (void)mount_selected_media(mode);
 }
 
 static bool tape_index_read(void* context,uint32_t offset,uint8_t* out,uint32_t n) {
-    return external_read(NULL,SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+(uint32_t)(uintptr_t)context+offset,out,n);
+    const uint32_t base=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
+        (uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
+    return external_read(NULL,base+offset,out,n);
 }
 static bool tape_index_write(void* context,uint32_t offset,const uint8_t* in,uint32_t n) {
-    return external_write(NULL,SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+(uint32_t)(uintptr_t)context+offset,in,n);
+    const uint32_t base=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
+        (uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
+    return external_write(NULL,base+offset,in,n);
 }
 
+static enum spectrum_error read_tape(const spectrum_source* source,bool tzx) {
+    mk61_service_framebuffer canvas={0};
+    if(!mk61_api->graphics_begin() ||
+       !services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(canvas),0,&canvas) ||
+       !canvas.pixels || canvas.bytes<sizeof(spectrum_tape)+SPECTRUM_TAPE_DECODE_SCRATCH ||
+       (uintptr_t)canvas.pixels%_Alignof(spectrum_tape)) return SPECTRUM_IO;
+    spectrum_tape* candidate=(spectrum_tape*)canvas.pixels;
+    *candidate=(spectrum_tape){0};
+    if(external.handle && tzx) {
+        candidate->index_read=tape_index_read;candidate->index_write=tape_index_write;
+        candidate->index_context=(void*)((uintptr_t)tape->index_context^1u);
+        candidate->decode_scratch=canvas.pixels+sizeof(*candidate);
+    }
+    const enum spectrum_error error=spectrum_tape_open(candidate,source,tzx);
+    if(!error) *tape=*candidate;
+    return error;
+}
 static bool mount_tape(void) {
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     spectrum_source source={snapshot_path,info.size,read_source};
-    spectrum_tape candidate={0};
-    if(external.handle && suffix(snapshot_path,".tzx")) {
-        candidate.index_read=tape_index_read;candidate.index_write=tape_index_write;
-        candidate.index_context=(void*)((uintptr_t)tape->index_context^SPECTRUM_TAPE_INDEX_BYTES);
-    }
-    const enum spectrum_error result=spectrum_tape_open(&candidate,&source,suffix(snapshot_path,".tzx"));
+    const enum spectrum_error result=read_tape(&source,suffix(snapshot_path,".tzx"));
     if(result) {
         message(result==SPECTRUM_UNSUPPORTED?"Unsupported tape block\n\nPress any key":"Cannot read tape\n\nPress any key");
         return false;
     }
-    *tape=candidate;
-    memcpy(tape_path,snapshot_path,strlen(snapshot_path)+1);
+    strcpy(tape_path,snapshot_path);
     tape->source.context=tape_path;tape->playing=true;
     machine.ear=spectrum_tape_ear;machine.ear_context=tape;
     if(!started) spectrum_reset(&machine);
@@ -393,16 +442,56 @@ static void tape_menu(void) {
         if(tape->source.read) spectrum_tape_rewind(tape);
         break;
     case 3:
-        tape->source.read=NULL;tape->playing=false;machine.ear=NULL;
+        tape->source.read=NULL;tape->playing=false;tape->choices=0;machine.ear=NULL;
         break;
     }
 }
+static bool tape_select(void) {
+    const unsigned count=tape->choices<10?tape->choices:10;
+    char text[10][25];
+    const char* labels[10];
+    unsigned selected=0,top=0;
+    for(;;) {
+        for(unsigned i=0;i<count;++i) {
+            labels[i]=text[i];
+            if(!spectrum_tape_choice(tape,top+i,text[i],sizeof(text[i]))) goto invalid;
+            if(!text[i][0]) strcpy(text[i],"(unnamed)");
+        }
+        if(!menu_draw("Tape selection",labels,count,selected-top,true)) return false;
+        const int c=wait_key();
+        if(enter(c)) {
+            if(spectrum_tape_choose(tape,selected,(uint32_t)machine.cpu.cyc)) return true;
+            goto invalid;
+        }
+        if(escape(c) || c==0x90) {
+            tape->choices=0;
+            if(c==0x90) started=false;
+            return false;
+        }
+        if((c==0xB4 || c==0xB5) && selected) --selected;
+        else if((c==0xB6 || c==0xB7) && selected+1<tape->choices) ++selected;
+        if(selected<top) top=selected;
+        if(selected>=top+count) top=selected-count+1;
+    }
+invalid:
+    tape->choices=0;tape->fault=false;
+    message("Invalid tape selection");
+    return false;
+}
 static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspace) {
     if(!started) {message("Start a machine first\n\nPress any key");return true;}
-    char name[16];
+    char* name=snapshot_path;
+    unsigned prefix=0;
+    if(opened_file!=MK61_SERVICE_INVALID_ID) {
+        if(!file_call(MK61_FILE_BYTES_PATH,NULL,name,opened_file,256)) {
+            message("Cannot get game folder");return true;
+        }
+        for(unsigned i=0;name[i];++i) if(name[i]=='/') prefix=i+1;
+        if(prefix>245) {message("Save path too long");return true;}
+    }
     for(unsigned n=1;n<=9999;++n) {
         mk61_service_file_info info;
-        mk61_app_snprintf(services,name,sizeof(name),"ZX%04u.SZX",n);
+        mk61_app_snprintf(services,name+prefix,256-prefix,"ZX%04u.SZX",n);
         if(file_call(MK61_FILE_BYTES_STAT,name,&info,0,sizeof(info))) continue;
         // The CPU is paused. Spill the cache to PSRAM and let the SD journal
         // use this contiguous lease until the snapshot is published.
@@ -460,7 +549,7 @@ static void settings(void) {
     unsigned selected=0;
     for(;;) {
         const char* joysticks[]={"Kempston","Sinclair 1","Sinclair 2"};
-        char values[8][28];const char* labels[10];
+        char values[8][28];const char* labels[11];
         const char* devices[]={"TurboSound","Covox","SpecDrum","ULAplus"};
         for(unsigned i=0;i<4;++i) { mk61_app_snprintf(services,values[i],28,"%s: %s",devices[i],machine.extensions&(1U<<i)?"On":"Off");labels[i]=values[i]; }
         mk61_app_snprintf(services,values[4],28,"Joystick: %s",joysticks[machine.joystick_mode]);labels[4]=values[4];
@@ -469,14 +558,24 @@ static void settings(void) {
         const char* layouts[]={"Mono","ABC","ACB"};
         mk61_app_snprintf(services,values[6],28,"Sound chip: %s",machine.sound_chip==SPECTRUM_YM?"YM2149":"AY-3-8912");labels[6]=values[6];
         mk61_app_snprintf(services,values[7],28,"Stereo: %s",layouts[machine.sound_layout]);labels[7]=values[7];
-        labels[8]="Eject disk";labels[9]="Back";
-        const int choice=menu_pick("Options",labels,10,&selected,true,"1234jwcsu di");
-        if(choice<0 || choice==9) return;
-        const char actions[]="1234jwcsu di";const int c=actions[choice];
+        labels[8]="Eject disk";
+        unsigned back=9;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(!machine.pentagon && external.handle && (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565)))
+            labels[back++]=exact_raster?"Raster: On":"Raster: Off";
+#endif
+        labels[back]="Back";
+        const char actions[]="1234jwcsur di";
+        const int choice=menu_pick("Options",labels,back+1,&selected,true,actions);
+        if(choice<0 || (unsigned)choice==back) return;
+        const int c=actions[choice];
         if(c>='1' && c<='4') machine.extensions^=1U<<(c-'1');
         else if(c=='j' || c=='J') machine.joystick_mode=(machine.joystick_mode+1)%3;
         else if(c=='c') spectrum_sound_configure(&machine,machine.sound_chip^1,machine.sound_layout);
         else if(c=='s') spectrum_sound_configure(&machine,machine.sound_chip,(machine.sound_layout+1)%3);
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        else if(c=='r') exact_raster=!exact_raster;
+#endif
         else if(c=='d' || c=='D') mount_media(SPECTRUM_DISK_BETA);
         else if(c=='i' || c=='I') mount_media(SPECTRUM_DISK_DIVMMC);
         else if(c=='u' || c=='U') { (void)spectrum_disk_mode(&machine,0);reset_machine();started=false; }
@@ -555,7 +654,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 }
 /* Keep display/audio locals out of the menu and SD paths. The timing
  * probe uses this same frame even when LTO strips the unused menus. */
-static __attribute__((noinline)) void emulate(void) {
+static __attribute__((noinline)) void emulate_session(void) {
     uint8_t blocked[32];memcpy(blocked,keys,sizeof(blocked));
     uint32_t keyboard_deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);guest_keyboard(blocked);
     if(!mk61_api->graphics_begin()) return;
@@ -622,6 +721,12 @@ static __attribute__((noinline)) void emulate(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     unsigned mode=spectrum_video_mode(&machine),strip=0;
     bool clear_mode=mode!=0;
+    const unsigned present_budget=3;
+    unsigned present_attempts=0;
+    const bool raster=exact_raster && !machine.pentagon && external.handle &&
+        (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
+    raster_output output={.next=SPECTRUM_RASTER_STRIPS,.clear=true};
+    if(raster) spectrum_raster_begin(&machine,scratch.pixels,&output,raster_store);
 #endif
     for(;;) {
         // The pacing guard already polled input. Produce the next CPU/audio
@@ -637,14 +742,33 @@ static __attribute__((noinline)) void emulate(void) {
         if(machine.memory && machine.memory->fault) goto memory_error;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(tape && tape->fault) {tape->fault=false;error="Tape read failed\n\nPress any key";break;}
+        if(tape->choices) break;
+        if(raster && !machine.video_bytes) goto memory_error;
 #endif
-        if(machine.frames==last_frame) continue;
+        if(machine.frames==last_frame) {
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(raster && output.next<SPECTRUM_RASTER_STRIPS && !machine.video_cell &&
+               present_attempts<present_budget) {
+                ++present_attempts;
+                if(!raster_present(scratch.pixels,&output)) {error="Raster output failed";break;}
+            }
+#endif
+            continue;
+        }
         last_frame=machine.frames;
         first_remote_frame=false;
         // Submit the completed frame before its pacing wait, leaving the
         // next frame's first CPU/audio slice free of display conversion.
         {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(raster) {
+                present_attempts=0;
+                output.ready=false;
+                if(output.next==SPECTRUM_RASTER_STRIPS) {
+                    output.shown=output.capture;output.capture^=1;output.next=0;
+                }
+                goto paced;
+            }
             const unsigned next_mode=spectrum_video_mode(&machine);
             if(next_mode!=mode) {
                 mode=next_mode;strip=0;clear_mode=mode!=0;
@@ -686,6 +810,9 @@ paced:
 memory_error:
     started=false;error="PSRAM I/O error\n\nPress any key";
 done:
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    spectrum_raster_end(&machine);
+#endif
     spectrum_sound_clock(&machine,false);
     services->call(MK61_SERVICE_AUDIO_STREAM,MK61_AUDIO_CLOSE,0,0,NULL);
     spectrum_sound_end(&machine);
@@ -694,6 +821,15 @@ done:
      * redraw resident text over the RAM pages stored in its unused tail. */
     color(MK61_COLOR_END,NULL);
     if(error) message(error);
+}
+static void emulate(void) {
+    do {
+        emulate_session();
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    } while(tape->choices && tape_select());
+#else
+    } while(0);
+#endif
 }
 /* The Z80 state and cache are in run_app's frame. Keep OSD/SD locals here
  * so their callees can reuse stack slots after their own return. */
@@ -708,6 +844,10 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     tape_path=mounted_path;tape=&mounted_tape;
 #endif
     directory=paths[0];snapshot_path=paths[1];floppy.path=paths[2];sd_card.path=paths[3];
+    opened_file=file_id;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    exact_raster=false;
+#endif
     directory[0]='.';directory[1]=snapshot_path[0]=floppy.path[0]=sd_card.path[0]=0;
     services=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_MEMORY|MK61_SERVICE_CAP_COLOR_DISPLAY|
         MK61_SERVICE_CAP_FILE_BYTES|MK61_SERVICE_CAP_UI|MK61_SERVICE_CAP_AUDIO_STREAM);
@@ -746,7 +886,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     uint32_t rom_size;
     if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
        (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES))) {
-        message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP\n\nPress any key");return 0;
+        message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP");return 0;
     }
     page_runs[0]=ram.data;page_runs[1]=rom.data;
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
@@ -757,26 +897,24 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
         if(!select_model(false)) return 0;
     }
     if(file_id!=MK61_SERVICE_INVALID_ID) {
-        mk61_service_file_bytes request={NULL,snapshot_path,file_id,256};
-        if(!services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(request),&request)) {
-            message("Cannot get selected file path\nUpdate PicoCalc firmware\n\nPress any key");
+        if(!file_call(MK61_FILE_BYTES_PATH,NULL,snapshot_path,file_id,256)) {
+            message("Cannot get selected file path\nUpdate PicoCalc firmware");
         } else {
-            memcpy(directory,snapshot_path,strlen(snapshot_path)+1);parent_directory();
-            const bool snapshot=is_snapshot(snapshot_path);
-            const bool disk=suffix(snapshot_path,".trd") || suffix(snapshot_path,".scl");
+            strcpy(directory,snapshot_path);parent_directory();
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             if(is_tape(snapshot_path)) {
-                if(mount_tape()) tape_ready();
+                if(select_model(0) && mount_tape()) tape_ready();
             } else
 #endif
-            if((snapshot && load_snapshot()) || (disk && mount_selected_media(SPECTRUM_DISK_BETA))) {
+            if(is_snapshot(snapshot_path) ? load_snapshot() :
+               mount_selected_media(suffix(snapshot_path,".img") ? SPECTRUM_DISK_DIVMMC : SPECTRUM_DISK_BETA)) {
                 // The Explorer's opening Enter/F-key may still be held.
                 // Seed the normal guest-key blocker before starting the CPU.
                 const int key=scan_keys();
                 if(escape(key) || key==0x90) goto done;
                 started=true;emulate();
                 if(!started) goto done;
-            } else if(!snapshot && !disk) message("Unsupported Spectrum file\n\nPress any key");
+            }
         }
     }
 #ifdef SPECTRUM_HIL_AFTER_FILE
@@ -811,7 +949,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
             }
             continue;
         }
-        if(c=='o' || c=='O') { if(!choose_file(0) || !load_snapshot()) continue; }
+        if(c=='o' || c=='O') { if(!choose_file(FILE_SNAPSHOT) || !load_snapshot()) continue; }
         else if((c=='t' || c=='T') && machine.disk.mode==SPECTRUM_DISK_BETA && started) {
             if(machine.pentagon) (void)spectrum_memory_page(machine.memory,machine.memory->paging|16);
             spectrum_refresh_map(&machine);

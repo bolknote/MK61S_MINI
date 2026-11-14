@@ -229,10 +229,10 @@ def main():
             write_file(p,directory+'/autoexec.'+kind,data)
             calculator(p)
             raw(p,b'\t4\r')
-            p.expect('SERVICE=BROWSER');raw(p,b'/'+directory.encode()+b'\r')
+            p.expect('SERVICE=BROWSER');raw(p,b'\xb6\xb6\xb6\r/'+directory.encode()+b'\r')
             p.expect(f'X_RAW=[ {value/10:.7f}  01]')
             calculator(p)
-        passed('Explorer entering directories executes autoexec.m61 and autoexec.tbi')
+        passed('Explorer All files opens a folder launcher by its explicit path')
         p.send(0x13);p.attached=False;p.command('uscreen off')
         profile=p.command('prof stop');assert 'core' in profile and 'storage' in profile
         assert re.search(r'core\s+calls=[1-9]',profile) and re.search(r'app\s+calls=[1-9]',profile),profile

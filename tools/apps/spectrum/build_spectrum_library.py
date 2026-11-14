@@ -17,6 +17,8 @@ from tools.apps.spectrum.spectrum_media import fat_image
 ROOT = Path(__file__).resolve().parents[3]
 LIBRARY = ROOT / "third_party/spectrum-games"
 READY_LIBRARY = ROOT / "programs/spectrum"
+COLLECTION = "Games/Spectrum Collection"
+LAUNCHER = b"GAMES.img\n"
 
 
 def sha256(data):
@@ -176,7 +178,8 @@ def main():
     if args.zip:
         args.zip.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(args.zip, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-            payload = {"apps/SPECTRUM/games/" + name: (args.output_dir / name).read_bytes() for name in names}
+            payload = {COLLECTION + "/" + name: (args.output_dir / name).read_bytes() for name in names}
+            payload[COLLECTION + "/Play.txt"] = LAUNCHER
             catalog, members = load_library()
             payload.update(redistribution_notices(catalog, members))
             for name, data in sorted(payload.items()):

@@ -19,7 +19,7 @@ static unsigned lcd_clock_requests;
 static uint32_t lcd_clock=12000000;
 static bool legacy_lcd;
 static const char* opened_name;
-static bool open_error;
+static bool open_error, save_opened_game;
 static unsigned open_keys,open_path_calls,selected_reads;
 static unsigned snapshots_written;
 static uint8_t canvas[12800],*psram;
@@ -134,6 +134,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
                 assert(!machine.memory->page_data[i] && machine.memory->tag[i]==UINT16_MAX);
             assert(request->size>512*1024 && suffix(request->name,".szx"));
+            if(save_opened_game) assert(!strcmp(request->name,"/External games/ZX0003.SZX"));
             char filename[1024];path(filename,request->name);
             FILE* f=fopen(filename,"wbx");assert(f);
             for(unsigned at=0;at<request->size;) {
@@ -225,7 +226,12 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             unsigned key=0;
             if(open_error)key=open_keys++? 'q':' ';
             else if(open_keys++<2)key=13;
-            else if(session_frames>=12)key=0x90;
+            else if(session_frames>=12) {
+                if(!save_opened_game)key=0x90;
+                else if(!ui[0])key=27;
+                else if(!snapshots_written)key='s';
+                else key=open_keys%2?' ':'q';
+            }
             if(key)((uint8_t*)payload)[key/8]|=1U<<(key&7);
             return 1;
         }
@@ -251,13 +257,15 @@ int main(int argc,char** argv) {
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
     remote_audio=getenv("SPECTRUM_REMOTE_AUDIO")!=NULL;
     opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
+    save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
     assert(mk61_app_open_file(MK61_SERVICE_INVALID_ID)==MK61_APP_INVALID_FILE);
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
     assert(!psram && !workspace && !generator.sample);
     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
     if(opened_name) {
-        assert(open_path_calls==1 && !action && graphics_ends==1);
+        assert(open_path_calls==1+save_opened_game && !action && graphics_ends==1);
+        if(save_opened_game) assert(snapshots_written==1);
         if(open_error) assert(!audio_opens && !audio_closes);
         else {
             assert(audio_opens==1 && audio_closes==1 && frames_shown>=12);

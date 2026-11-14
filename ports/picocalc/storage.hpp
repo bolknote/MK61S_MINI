@@ -27,7 +27,7 @@ bool mount();
 bool ready();
 const char* error();
 bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,
-          const char* filter=nullptr);
+          const char* filter=nullptr, bool directories_only=false);
 // Recursive operations include dotfiles, but never . / .. or the journal.
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more);
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used);

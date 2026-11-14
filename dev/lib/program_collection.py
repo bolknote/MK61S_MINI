@@ -18,6 +18,13 @@ from m8_codec import encode as m8_encode, decode as m8_decode
 ROOT = Path(__file__).resolve().parents[2]
 RECEIPT = '/System/PROGRAMS.TXT'
 TEXT = {'.m61', '.foc', '.tbi', '.txt', '.md'}
+PROGRAM_SYSTEM_FILES = {'System/URQ/URQ.APP', 'System/URQ/URQUI.APP', 'System/WBMP.APP'}
+DISK_FOLDERS = ('Games', 'Programs', 'Documents', 'System', 'Fonts')
+
+
+def owned_path(name):
+    parts = safe_path(name).parts
+    return len(parts) > 1 and (parts[0] in ('Games', 'Programs', 'Fonts') or name in PROGRAM_SYSTEM_FILES)
 
 
 def sha(data):
@@ -35,8 +42,9 @@ def logical(data, name):
 
 def safe_path(name):
     path = PurePosixPath(name)
-    if (not name or path.is_absolute() or any(c in name for c in '\\\t\r\n\0"')
-            or '..' in path.parts or str(path) != name or name.startswith('.')):
+    if (not path.parts or path.is_absolute() or any(c in name for c in '\\<>:"|?*') or
+            any(ord(c) < 32 for c in name) or str(path) != name or
+            any(part.startswith('.') or part.endswith((' ', '.')) for part in path.parts)):
         raise ValueError('unsafe bundle path: ' + name)
     return path
 
@@ -176,14 +184,13 @@ def validate_app(path, cap):
 
 
 def frozen_plan(directory, cap):
-    manifest = json.loads((directory/'programs-manifest.json').read_text(encoding='utf-8'))
+    manifest = json.loads((directory.parent/'programs-manifest.json').read_text(encoding='utf-8'))
     if manifest.get('format') != 1 or manifest.get('capabilities') != cap or not isinstance(manifest.get('files'), list):
         raise ValueError('program manifest belongs to another firmware bundle')
     records, names = [], set()
     for record in manifest['files']:
         name = record['path']
-        path = safe_path(name)
-        if path.parts[0] not in ('app','apps','games','library','examples','sheets','urq','CHIP8','Fonts'):
+        if not owned_path(name):
             raise ValueError('unexpected distribution destination: ' + name)
         source = directory/name
         if source.is_symlink() or not source.resolve().is_relative_to(directory.resolve()) or not source.is_file():
@@ -201,25 +208,25 @@ def frozen_plan(directory, cap):
         records.append({**record, 'source':str(source.resolve())})
     for record in manifest.get('system_files', []):
         safe_path(record['path'])
-        if sha((directory.parent/'System'/record['path']).read_bytes()) != record['sha256']:
+        original = directory.parent/'System'/record['path']
+        packaged = directory/'System'/record['path']
+        if any(sha(path.read_bytes()) != record['sha256'] for path in (original, packaged)):
             raise ValueError('distribution System dependency mismatch')
     return {**manifest, 'files':records}
 
 
 def plan(bundle, root=ROOT, *, prefer_bundle=True):
     cap = load_capabilities(bundle)
-    if prefer_bundle:
-        if (bundle/'Programs/programs-manifest.json').exists():
-            return frozen_plan(bundle/'Programs', cap)
-        if cap['platform'] == 'picocalc' and (bundle/'programs-manifest.json').exists():
-            return frozen_plan(bundle, cap)
-    catalog = json.loads((Path(__file__).with_name('program-catalog.json')).read_text())
+    if prefer_bundle and (bundle/'programs-manifest.json').exists():
+        return frozen_plan(bundle/'Disk', cap)
+    catalog = json.loads((root/'dev/lib/program-catalog.json').read_text(encoding='utf-8'))
     features = dict(cap['features'])
     files, packages, skipped = [], [], []
     def missing(requirements):
         return [key for key in requirements if not features.get(key, False)]
     def add(source, destination, package):
-        safe_path(destination)
+        if not owned_path(destination):
+            raise ValueError('unexpected distribution destination: ' + destination)
         if source.is_symlink() or not source.is_file():
             raise ValueError('missing/unsafe package source: ' + str(source))
         raw = source.read_bytes()
@@ -231,7 +238,10 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
                     struct.unpack_from('<I', raw, 16)[0] != zlib.crc32(raw[:16]+raw[20:])):
                 raise ValueError(str(source) + ': invalid sheet header/checksum')
         data = logical(raw, destination)
-        files.append(dict(path=destination, source=str(source.resolve()), size=wire_size(data, destination), sha256=sha(data), package=package))
+        size = wire_size(data, destination)
+        if size > file_limit(cap, PurePosixPath(destination).suffix.lower()):
+            raise ValueError('distribution file exceeds device limit: ' + destination)
+        files.append(dict(path=destination, source=str(source.resolve()), size=size, sha256=sha(data), package=package))
     for name, spec in catalog['apps'].items():
         if spec.get('platform') and spec['platform'] != cap['platform']:
             continue
@@ -239,16 +249,16 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
         source = (bundle / 'apps' / (name + '.APP') if cap['platform'] == 'picocalc' else
                   bundle / 'Apps' / (name + '.APP') if spec.get('built') else root / 'programs/app' / (name + '.APP'))
         if need:
-            skipped.append(dict(package='app/' + name, reason='requires ' + ', '.join(need)))
+            skipped.append(dict(package=spec['destination'], reason='requires ' + ', '.join(need)))
         else:
-            add(source, ('apps/' if cap['platform'] == 'picocalc' else 'app/') + name + '.APP', 'app/' + name)
-            packages.append('app/' + name)
-    features['sheet'] = 'app/SHEET' in packages
+            add(source, spec['destination'], spec['destination'])
+            packages.append(spec['destination'])
+    features['sheet'] = 'Programs/SHEET.APP' in packages
     for folder, group in catalog['groups'].items():
         if folder == 'app':
             icon = root / 'programs/app/autoexec.wbmp'
             if packages and icon.exists() and features.get('bitmap'):
-                add(icon, ('apps/' if cap['platform'] == 'picocalc' else 'app/') + 'autoexec.wbmp', 'app')
+                add(icon, group['destination'] + '/autoexec.wbmp', group['destination'])
             continue
         directory = root / 'programs' / folder
         if not directory.is_dir():
@@ -261,9 +271,12 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
         if folder == 'games':
             root_icon = directory / 'autoexec.wbmp'
             if features.get('bitmap') and root_icon.exists():
-                add(root_icon, 'games/autoexec.wbmp', 'games')
+                add(root_icon, 'Games/autoexec.wbmp', 'Games')
         for unit in units:
-            package = unit.relative_to(root / 'programs').as_posix()
+            destination = group['destination']
+            if folder == 'games':
+                destination += '/' + unit.name
+            package = destination
             sources = sorted(p for p in unit.rglob('*') if p.is_file() and not any(part.startswith('.') for part in p.relative_to(unit).parts))
             required = list(catalog['games'].get(unit.name, [])) if folder == 'games' else []
             # Interpreter scripts in a game form one package: never install a
@@ -292,15 +305,41 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
                 if size > limit:
                     skipped.append(dict(package=source.relative_to(root/'programs').as_posix(), reason=f'{size} bytes exceeds {cap["mcu"]} file limit {limit}'))
                     continue
-                add(source, source.relative_to(root / 'programs').as_posix(), package)
+                add(source, destination + '/' + source.relative_to(unit).as_posix(), package)
                 count += 1
             if folder == 'Fonts' and not any(f['package'] == package and f['path'].lower().endswith('.fmk') for f in files):
                 files[:] = [f for f in files if f['package'] != package]
                 count = 0
             if count:
                 packages.append(package)
-    for directory in sorted((root / 'programs').iterdir()):
-        if directory.is_dir() and directory.name not in catalog['groups']:
+    if not missing(('chip8', 'graphics')):
+        for leaf, title in catalog['chip8_games'].items():
+            prefix = 'Games/' + title
+            directory = root / 'programs/CHIP8'
+            source = directory / leaf
+            if leaf == 'echo8.ch8' and cap['platform'] == 'picocalc':
+                source = bundle / 'apps/ECHO8.ch8'
+            add(source, prefix + '/' + leaf, prefix)
+            add(directory / (source.stem.lower() + '.txt'), prefix + '/Play.txt', prefix)
+            if features['bitmap']:
+                add(directory / 'autoexec.wbmp', prefix + '/autoexec.wbmp', prefix)
+            packages.append(prefix)
+    else:
+        skipped.append(dict(package='CHIP-8 games', reason='requires chip8 and graphics'))
+    if features.get('urq'):
+        from tools.apps.urq.library import disk_games
+        for title, leaf, source in disk_games(root):
+            if leaf == 'autoexec.wbmp' and not features['bitmap']:
+                continue
+            prefix = 'Games/' + title
+            add(source, prefix + '/' + leaf, prefix)
+            if leaf == 'game.urq':
+                packages.append(prefix)
+    if cap['platform'] == 'picocalc' and features['bitmap']:
+        add(bundle/'apps/PATTERN.wbmp', 'Programs/Examples/PATTERN.wbmp', 'Programs/Examples')
+    known_folders = set(catalog['groups']) | {'CHIP8', 'urq', 'spectrum'}
+    for directory in sorted((root/'programs').iterdir()):
+        if directory.is_dir() and directory.name not in known_folders:
             skipped.append(dict(package=directory.name, reason='not in the reviewed program catalog'))
     paths = [f['path'].casefold() for f in files]
     if len(paths) != len(set(paths)):
@@ -447,8 +486,7 @@ def synchronize(selection, session, *, verify=False):
             if previous.get('format') != 1 or not isinstance(previous.get('files'), dict):
                 raise ValueError('invalid previous program receipt')
             for name, digest in previous['files'].items():
-                safe_path(name)
-                if name.split('/')[0] not in ('games', 'app', 'apps', 'library', 'examples', 'sheets', 'CHIP8', 'Fonts') or not re.fullmatch('[0-9a-f]{64}', digest):
+                if not owned_path(name) or not re.fullmatch('[0-9a-f]{64}', digest):
                     raise ValueError('invalid owned path in previous receipt')
             receipt = previous['files']
         incoming = {f['path']: f for f in selection['files']}
@@ -489,6 +527,11 @@ def synchronize(selection, session, *, verify=False):
                     operations.append(('REMOVE', actual_name('/' + name), None, digest))
                 else:
                     retained.append(name)
+        for folder in DISK_FOLDERS:
+            if exists('/' + folder) and entries('/')[folder.casefold()][0] != 'd':
+                raise ValueError('destination is not a directory: /' + folder)
+        for folder in DISK_FOLDERS:
+            mkdir('/' + folder)
         for operation, remote, source, expected in operations:
             if operation == 'PUT':
                 mkdir(str(PurePosixPath(remote).parent))
@@ -499,7 +542,6 @@ def synchronize(selection, session, *, verify=False):
                 session.call('REMOVE', remote)
             cache.pop(str(PurePosixPath(remote).parent).casefold(), None)
             print(operation.lower() + ' ' + remote)
-        mkdir('/System')
         result = dict(format=1, build_id=cap['build_id'], files=owned)
         raw = (json.dumps(result, ensure_ascii=True, sort_keys=True) + '\n').encode('utf-8')
         packed = base64.b64encode(zlib.compress(raw))
@@ -529,24 +571,40 @@ def synchronize(selection, session, *, verify=False):
         return dict(installed=sum(op[0] == 'PUT' for op in operations), removed=sum(op[0] == 'REMOVE' for op in operations), preserved=retained)
 
 
-def export(selection, output):
+def export(selection, output, *, system=None, manifest=None):
     # Export to a new directory only; never synchronize user data on an SD card
     # through this packaging path.
     if output.exists():
         raise ValueError('export directory must not exist: ' + str(output))
-    snapshots = []
+    snapshots = {}
+    if system and system.is_dir():
+        for source in sorted(system.rglob('*')):
+            if source.is_file():
+                name = source.relative_to(system).as_posix()
+                safe_path(name)
+                if source.is_symlink() or not source.resolve().is_relative_to(system.resolve()):
+                    raise ValueError('unsafe System source: ' + name)
+                snapshots['System/' + name] = source.read_bytes()
+        for module in selection.get('system_files', []):
+            if sha(snapshots.get('System/' + module['path'], b'')) != module['sha256']:
+                raise ValueError('System source changed after planning')
     for record in selection['files']:
         source = Path(record['source'])
         raw = source.read_bytes()
         if sha(logical(raw, record['path'])) != record['sha256']:
             raise ValueError('source changed after planning')
-        snapshots.append(raw)
+        if record['path'] in snapshots:
+            raise ValueError('duplicate disk file: ' + record['path'])
+        snapshots[record['path']] = raw
     output.mkdir(parents=True)
-    for record, raw in zip(selection['files'], snapshots):
-        target = output / record['path']
+    for folder in DISK_FOLDERS:
+        (output / folder).mkdir()
+    for name, raw in sorted(snapshots.items(), key=lambda item: item[0].casefold()):
+        target = output / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(raw)
-    (output / 'programs-manifest.json').write_text(json.dumps(distribution_manifest(selection), ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    manifest = manifest or output/'programs-manifest.json'
+    manifest.write_text(json.dumps(distribution_manifest(selection), ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
 def distribution_manifest(selection):

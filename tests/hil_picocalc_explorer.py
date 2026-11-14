@@ -183,7 +183,8 @@ def main():
         return frame
     def browse():
         calculator(p);keys(b'\t'+bytes([ord('1')+explorer])+b'\r')
-        p.expect('SERVICE=BROWSER');keys(b'/');p.expect('SERVICE=PROMPT')
+        p.expect('SERVICE=BROWSER');keys(b'\xb6\xb6\xb6\r/')
+        p.expect('SERVICE=PROMPT')
         keys(directory.encode()+b'\r');p.expect('SERVICE=BROWSER')
     try:
         initial=p.status();report['initial']=initial
@@ -214,7 +215,7 @@ def main():
         assert changed and all(91<=y<109 and x<211 for x,y in changed)
         report['cases'].append('exact 32x32 WBMP, 320x320 raster, name-only highlight and completed LCD source CRC')
         keys(b'\x81');p.expect('SERVICE=FILE_ACTIONS');picture('file-menu')
-        keys(b'\xb6'*5+b'\r');p.expect('SERVICE=BROWSER','M61_ACTIVE=0');picture('folder-without-autoexec')
+        keys(b'\r');p.expect('SERVICE=BROWSER','M61_ACTIVE=0');picture('folder-without-autoexec')
         report['cases'].append('file menu enters launcher directory without running its script')
         keys(b'\x1b');keys(b'\xb7'*9);page=picture('next-page')
         assert not any(value(page,x,y) for y in range(52,84) for x in range(244,276))
