@@ -132,26 +132,28 @@ bool aw_assets_flush(aw_assets *a) {
 }
 void aw_assets_progress(aw_assets *a) { if (a && a->progress) a->progress(a->progress_ctx); }
 
+enum { AW_PACKED_INPUT_BYTES = 2048 };
 typedef struct {
     aw_assets *assets;
     const aw_asset_entry *entry;
+    uint8_t *input;
     uint32_t input_base, input_size, cursor, output, bits, crc;
     bool input_valid, failed;
 } unpacker;
 
 static uint8_t input_byte(unpacker *u, uint32_t at) {
     if (u->failed || at >= u->entry->packed_size) { u->failed = true; return 0; }
-    const uint32_t base = at - at % AW_ASSET_PAGE;
+    const uint32_t base = at - at % AW_PACKED_INPUT_BYTES;
     if (!u->input_valid || u->input_base != base) {
         uint32_t size = u->entry->packed_size - base;
-        if (size > AW_ASSET_PAGE) size = AW_ASSET_PAGE;
+        if (size > AW_PACKED_INPUT_BYTES) size = AW_PACKED_INPUT_BYTES;
         if (!u->assets->bank_read(u->assets->ctx, u->entry->bank,
-                                  u->entry->bank_offset + base, u->assets->input, size)) {
+                                  u->entry->bank_offset + base, u->input, size)) {
             u->failed = true; return 0;
         }
         u->input_base = base; u->input_size = size; u->input_valid = true;
     }
-    return u->assets->input[at - u->input_base];
+    return u->input[at - u->input_base];
 }
 
 static uint32_t input_word(unpacker *u, uint32_t at) {
@@ -174,7 +176,19 @@ static unsigned next_bit(unpacker *u) {
     return bit;
 }
 
+/* ByteKiller consumes low bits first but returns each field high bit first. */
+static uint8_t reverse_byte(uint8_t x) {
+    static const uint8_t reverse_nibble[16] = {0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15};
+    return (uint8_t)((reverse_nibble[x & 15u] << 4) | reverse_nibble[x >> 4]);
+}
 static uint32_t read_bits(unpacker *u, unsigned count) {
+    if (count >= 8 && count <= 12 && (u->bits >> count)) {
+        const uint32_t bits = u->bits;
+        uint32_t value = reverse_byte((uint8_t)bits);
+        if (count > 8) value = (value << (count - 8)) | (reverse_byte((uint8_t)(bits >> 8)) >> (16 - count));
+        u->bits = bits >> count;
+        return value;
+    }
     uint32_t value = 0;
     while (count--) value = (value << 1) | next_bit(u);
     return value;
@@ -184,15 +198,14 @@ static void literal(unpacker *u, uint32_t count) {
     if (count > u->output) { u->failed = true; return; }
     while (count-- && !u->failed) {
         const uint8_t byte = (uint8_t)read_bits(u, 8);
-        --u->output;
-        if (!aw_assets_write(u->assets, u->entry->store_offset + u->output, &byte, 1)) u->failed = true;
+        const uint32_t offset = u->entry->store_offset + --u->output;
+        aw_asset_cache *c = cached(u->assets, offset);
+        if (!c) { u->failed = true; return; }
+        c->data[offset % AW_ASSET_PAGE] = byte; c->dirty = true;
     }
 }
 
-static void backref(unpacker *u, uint32_t count, uint32_t distance) {
-    if (count > u->output || !distance || distance > u->entry->size - u->output) {
-        u->failed = true; return;
-    }
+static void backref_slow(unpacker *u, uint32_t count, uint32_t distance) {
     while (count-- && !u->failed) {
         uint8_t byte;
         --u->output;
@@ -200,10 +213,41 @@ static void backref(unpacker *u, uint32_t count, uint32_t distance) {
             !aw_assets_write(u->assets, u->entry->store_offset + u->output, &byte, 1)) u->failed = true;
     }
 }
+static void backref(unpacker *u, uint32_t count, uint32_t distance) {
+    if (count > u->output || !distance || distance > u->entry->size - u->output) {
+        u->failed = true; return;
+    }
+#if AW_ASSET_CACHE_SLOTS > 1
+    /* Copy backwards within the two cached pages, preserving overlapping
+     * references and stopping at either page boundary. */
+    while (count && !u->failed) {
+        const uint32_t dst = u->entry->store_offset + u->output - 1;
+        const uint32_t src = dst + distance;
+        const uint32_t dst_pos = dst % AW_ASSET_PAGE, src_pos = src % AW_ASSET_PAGE;
+        uint32_t n = count;
+        if (n > dst_pos + 1) n = dst_pos + 1;
+        if (n > src_pos + 1) n = src_pos + 1;
+        aw_asset_cache *from = cached(u->assets, src);
+        aw_asset_cache *to = from ? cached(u->assets, dst) : NULL;
+        if (!to) { u->failed = true; return; }
+        /* A wrapped LRU clock can make the second lookup evict the source. */
+        if (!from->valid || from->page != src / AW_ASSET_PAGE) {
+            backref_slow(u, count, distance); return;
+        }
+        for (uint32_t i = 0; i < n; ++i) to->data[dst_pos - i] = from->data[src_pos - i];
+        to->dirty = true;
+        u->output -= n; count -= n;
+    }
+#else
+    backref_slow(u, count, distance);
+#endif
+}
 
 static bool unpack(aw_assets *a, const aw_asset_entry *e) {
     if (e->packed_size < 12 || (e->packed_size & 3u)) return false;
-    unpacker u = {0}; u.assets = a; u.entry = e; u.cursor = e->packed_size - 12;
+    /* The larger input window reduces SD requests without consuming heap. */
+    uint8_t input[AW_PACKED_INPUT_BYTES];
+    unpacker u = {0}; u.assets = a; u.entry = e; u.input = input; u.cursor = e->packed_size - 12;
     if (input_word(&u, e->packed_size - 4) != e->size) return false;
     u.crc = input_word(&u, e->packed_size - 8);
     u.bits = input_word(&u, e->packed_size - 12);

@@ -9,6 +9,14 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
 "$build_dir/assets"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/examples/portable-apps/ANOTHER/assets.c" \
+  "$root/tests/another_world_unpack_self_test.c" -o "$build_dir/unpack"
+"$build_dir/unpack"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_ASSET_CACHE_SLOTS=1 \
+  "$root/examples/portable-apps/ANOTHER/assets.c" \
+  "$root/tests/another_world_unpack_self_test.c" -o "$build_dir/unpack-single-slot"
+"$build_dir/unpack-single-slot"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  "$root/examples/portable-apps/ANOTHER/assets.c" \
   "$root/examples/portable-apps/ANOTHER/video.c" \
   "$root/tests/another_world_video_self_test.c" -o "$build_dir/video"
 "$build_dir/video"
