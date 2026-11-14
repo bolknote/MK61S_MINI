@@ -1,0 +1,3 @@
+# Embedded patch context and exact CDC line endings are archival data.
+candidate.patch -whitespace
+evidence/*/measurement.txt whitespace=cr-at-eol

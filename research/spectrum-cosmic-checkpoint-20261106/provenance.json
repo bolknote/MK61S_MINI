@@ -1,0 +1,279 @@
+{
+  "host/filter_identity_self_test.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/filter_identity_self_test.c",
+    "sha256": "b633234818b87dc58603cbae22166381ced7efd5f55413e6122e99ad095c5f2f",
+    "kind": "unchanged copy"
+  },
+  "host/input_oracle.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/input_oracle.c",
+    "sha256": "5ee7558512d244a138218bc8c28129b261de25f8cec67819d241eda88ce07190",
+    "kind": "unchanged copy"
+  },
+  "host/run_host.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/run_host.py",
+    "sha256": "517abdf5122ce7a3b53e12776e4a092b204459fcc5ba3d0dc7aac829f99cd4ed",
+    "kind": "unchanged copy"
+  },
+  "host/run_app_checks.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/run_app_checks.py",
+    "sha256": "4d5895ecabf9c9de43e6e0e32ff1588a11050937d73df80ce1346e268da0eb6d",
+    "kind": "unchanged copy"
+  },
+  "host/run_builds.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/run_builds.py",
+    "sha256": "3ffb242689f907bd6ed8560d0a47994513b79a3a3b5a6958f211bb64fb237974",
+    "kind": "unchanged copy"
+  },
+  "host/run_input_oracle.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/run_input_oracle.py",
+    "sha256": "97530ca086ad43442f5be831b6723fe5e8fec0acdcc18b5d2d99acc667b68c99",
+    "kind": "unchanged copy"
+  },
+  "host/host_driver.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/host_driver.c",
+    "sha256": "37aad8f0339cb3d4a6487c1e760a664ed7fd4d3afa92b971bd9f1c04ac6f41cb",
+    "kind": "unchanged copy"
+  },
+  "host/reference-main.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-chunk/candidate/examples/portable-apps/SPECTRUM/main.c",
+    "sha256": "1a9f6b79f71402208c9f10959e6799d10c2d4de901d230b7042e613deee60124",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/filter-and-quality-tests.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/filter-and-quality-tests.log",
+    "sha256": "4726b8a61315b2323b4900faf13c4dffbaca5e96e012ecadb9fd4785ff8edc4b",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/input-oracle-equality.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/input-oracle-equality.json",
+    "sha256": "73f91596e41f22998954f05d0e254d5c6c41fcf4f643c1f39b2623f0c3d49a15",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/app-current-tests.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/app-current-tests.log",
+    "sha256": "25308a7e8bffc268e33ed367d219afecf1d1c9fc14c13897839477856e326a7d",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/presentation-tests.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/presentation-tests.log",
+    "sha256": "dae6b54da71239434f6ffd6722bc69c021bc1b1a77910047c4d7209c6a73d6ba",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/presentation-wire.txt": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/presentation-wire.txt",
+    "sha256": "de013c60190619a6e8df485945288df5f6c539a47dbb68a134d1c1817a78a833",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/stack-accepted-paced.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/stack-accepted-paced.json",
+    "sha256": "674db315e299b14b0ab54eba4b97a439132b314ef309098d81a51ac8959b31c6",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/WEIGHTED-REVIEW-V2.md": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/WEIGHTED-REVIEW-V2.md",
+    "sha256": "06e53ba57958d20c861188d4eb1979100200a83bcc3938b5acaff3636c02b7af",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/profile-accepted-paced-build.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/profile-accepted-paced/SPPIPE.json",
+    "sha256": "b22992c4fbdbabdc8bad818672940291baa89b19858aba6c8173a668c5eebe89",
+    "kind": "unchanged copy"
+  },
+  "evidence/weighted/production-current-build.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/production-current/SPECTRUM.json",
+    "sha256": "9ca84642e8c4c4dbd27770972662ae052f7c574e149cbb5ec6c55dfff9de1a4d",
+    "kind": "unchanged copy"
+  },
+  "evidence/platform-2483-equivalence.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/platform-2483-equivalence.json",
+    "sha256": "84e50f743bb65838a8dce6c2e65a154b5179790e4ed9864e94a2afe1afaa8d4d",
+    "kind": "unchanged copy"
+  },
+  "evidence/experiment-history.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-pipeline/experiment-history.json",
+    "sha256": "ef027faa475d5c9241d631326fcdba5ae92a4a609ffe66bae3329f6db39db9f8",
+    "kind": "unchanged copy"
+  },
+  "evidence/PIPE-v1-717/receipt.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-pipeline/PIPE-HIL-r1/receipt.json",
+    "sha256": "f9a794f208b1ae2afb8fd55d79e1a6a222ad9f612c64a2502ec37038547bef82",
+    "kind": "unchanged copy"
+  },
+  "evidence/PIPE-v1-717/measurement.txt": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-pipeline/PIPE-HIL-r1/game-PIPE.txt",
+    "source_sha256": "a833caf827fbb800fbe635a21d95b88b0112e2452c00c742f8c2c6fbcc84e908",
+    "sha256": "edbe735ac57e32b84dc59f0ca809d6ef306b331dff788833df346e2e229b2e16",
+    "kind": "exact metrology lines only; no framebuffer/game bytes",
+    "prefixes": [
+      "SPTIME ",
+      "SPSTEADY ",
+      "SPWIN ",
+      "SPPACING ",
+      "SPWORK ",
+      "SPEXEC ",
+      "SPSOUND ",
+      "SPDISPLAY ",
+      "SPPRES ",
+      "SPAUDIO ",
+      "SPSTAGE "
+    ]
+  },
+  "evidence/WAIT-v2-2483/receipt.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/WAIT-V2-2483-HIL-r1/receipt.json",
+    "sha256": "10e4ea6aff36f0434dd0102aa6e3fde929ef6309de0d7de19059a789a18378c4",
+    "kind": "unchanged copy"
+  },
+  "evidence/WAIT-v2-2483/supervisor.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/WAIT-V2-2483-HIL-r1/supervisor.json",
+    "sha256": "75934cbb128d5893dbfe4d07e38caddabe0d4c7e49186a507280c78f2f6f1e7c",
+    "kind": "unchanged copy"
+  },
+  "evidence/WAIT-v2-2483/measurement.txt": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/WAIT-V2-2483-HIL-r1/game-WAIT.txt",
+    "source_sha256": "3d7900c062eff81864470c59ee631a7441b717af0ec0e21f1755092e9bfb14e3",
+    "sha256": "740cd8c70bb9c68e0ea69a654cd40ab218a7a1fbf7fbcdcdcb5c97ca77e10328",
+    "kind": "exact metrology lines only; no framebuffer/game bytes",
+    "prefixes": [
+      "SPTIME ",
+      "SPSTEADY ",
+      "SPWIN ",
+      "SPPACING ",
+      "SPWORK ",
+      "SPEXEC ",
+      "SPSOUND ",
+      "SPDISPLAY ",
+      "SPPRES ",
+      "SPAUDIO ",
+      "SPSTAGE "
+    ]
+  },
+  "evidence/PIPE-v2-2483/receipt.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/PIPE-V2-2483-HIL-r1/receipt.json",
+    "sha256": "4ffe96d45d8df2697b445ac6b4e3844641184f63549a77974aa3dfd2dfd87589",
+    "kind": "unchanged copy"
+  },
+  "evidence/PIPE-v2-2483/supervisor.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/PIPE-V2-2483-HIL-r1/supervisor.json",
+    "sha256": "916d71e527db8bfc50b41cecb338ad905be669983c7183683d319e2e8f85593c",
+    "kind": "unchanged copy"
+  },
+  "evidence/PIPE-v2-2483/measurement.txt": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/PIPE-V2-2483-HIL-r1/game-PIPE.txt",
+    "source_sha256": "bb163f8e11e9a494624eb3299dc8c52bad832dea2d9f4a056ed68082aa16d1f5",
+    "sha256": "36ed7d59f9cd8a654166735fec27cac241b770f1876516f64d9316c0946c8605",
+    "kind": "exact metrology lines only; no framebuffer/game bytes",
+    "prefixes": [
+      "SPTIME ",
+      "SPSTEADY ",
+      "SPWIN ",
+      "SPPACING ",
+      "SPWORK ",
+      "SPEXEC ",
+      "SPSOUND ",
+      "SPDISPLAY ",
+      "SPPRES ",
+      "SPAUDIO ",
+      "SPSTAGE "
+    ]
+  },
+  "audio-check/main.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/main.c",
+    "sha256": "56ffa7343c1e8f98509446aa6491c25acbe02de867cd532096973f27c4912fed",
+    "kind": "unchanged copy"
+  },
+  "audio-check/self_test.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/self_test.c",
+    "sha256": "d39c301e42fabc789ed2171a9473b1b8cf88c7841c043286daaf477479be5251",
+    "kind": "unchanged copy"
+  },
+  "audio-check/self-test.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/self-test.log",
+    "sha256": "6f121dc307c715c56e034cdedb6b335f04e95a4a25b0158dbeb2887198c14886",
+    "kind": "unchanged copy"
+  },
+  "audio-check/pcm_levels.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/pcm_levels.c",
+    "sha256": "2c8d846f21b4b80efffff8947aebb8f63a242138bd6d2f97ed403b2f95dfdd1c",
+    "kind": "unchanged copy"
+  },
+  "audio-check/frame_dump_driver.c": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/frame_dump_driver.c",
+    "sha256": "a2b637b2d1c76850c9f2d5a4700027253d38ee4412f7e39ba9b7eed9702bc2e3",
+    "kind": "unchanged copy"
+  },
+  "audio-check/pcm-levels.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/pcm-levels.log",
+    "sha256": "0fda540ad9f1acb645eadd2cff3378afe8eb62a2ab25d9b835abf5e14979b12a",
+    "kind": "unchanged copy"
+  },
+  "audio-check/run_audio_check.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/run_audio_check.py",
+    "sha256": "907dd56953493e80209ee8ddd9f40d3e2ccc141faecc63a83daa610fab3962d6",
+    "kind": "unchanged copy"
+  },
+  "audio-check/controller_tests.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/controller_tests.py",
+    "sha256": "a2fb0f4b0dd7768945a18e3443c1aa428968913b01120d9a9f8b363b747c7fb5",
+    "kind": "unchanged copy"
+  },
+  "audio-check/controller-tests.log": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/controller-tests.log",
+    "sha256": "86c967a00f06ad033ecab8fdfd48f0dfe4f7c54ecd2a5af426df39e10af79aa8",
+    "kind": "unchanged copy"
+  },
+  "audio-check/prepare_phase.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/prepare_phase.py",
+    "sha256": "8d62aa08304facec2e43fcdc9c5a02d029e4a08a2d3e5940372afa876f486ba2",
+    "kind": "unchanged copy"
+  },
+  "audio-check/REVIEW.md": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/REVIEW.md",
+    "sha256": "1f39f27f876ad553bfb6bb86a5bde08dccfc25b91351467fb6a4786ce70ce9cf",
+    "kind": "unchanged copy"
+  },
+  "audio-check/build.json": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-audio-check/build/SPAUDCHK.json",
+    "sha256": "da4d24656241b49e5bebb81c1e878e22b49fe57fc18ccd39369a239f63c2ae4e",
+    "kind": "unchanged copy"
+  },
+  "historical/run_pipe.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/run_pipe.py",
+    "sha256": "d2d4d024a3aa3321e8ee11addb1900aad1cf6f2f55dbc5cb88bc310cf379db78",
+    "kind": "unchanged copy"
+  },
+  "historical/run_compare.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/run_compare.py",
+    "sha256": "0f364691a9a30e34fa7f30f5ac35e1ec8b562c7116b36b6fdf13fcbd0b1c61a6",
+    "kind": "unchanged copy"
+  },
+  "historical/controller_pipe_tests.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/controller_pipe_tests.py",
+    "sha256": "4f9ab1dca9ee89d391b2ca6732840f293146b6972b954c635685d20f9e1c57c8",
+    "kind": "unchanged copy"
+  },
+  "historical/controller_tests.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/controller_tests.py",
+    "sha256": "f1351c4415745c8c98320907e26d6c443940534bd2a78098d6e0f70054d1ce8d",
+    "kind": "unchanged copy"
+  },
+  "historical/local_holders.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/local_holders.py",
+    "sha256": "8dc15eb9cfd691b9c57f3299b997eee1459c011c9b06395593f2db236f6f678d",
+    "kind": "unchanged copy"
+  },
+  "historical/run_games.py": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/run_games.py",
+    "sha256": "8533943d8d90fb0eeff1ac846d6e84ea9b2c9567cfb7290ff1073f3c1481e32d",
+    "kind": "unchanged copy"
+  },
+  "historical/MATCHED-V2-REVIEW.md": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/MATCHED-V2-REVIEW.md",
+    "sha256": "758bad6cd7c9a0e9e45acbda6050e98cd3a5d65ca4b5308eec2a0a9247116cc7",
+    "kind": "unchanged copy"
+  },
+  "historical/control.diff": {
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-display/control.diff",
+    "sha256": "4113fa0f1303918a072988fb8f1656240f3d29e3886b5a62c0eaaf409b46da97",
+    "kind": "unchanged copy"
+  }
+}

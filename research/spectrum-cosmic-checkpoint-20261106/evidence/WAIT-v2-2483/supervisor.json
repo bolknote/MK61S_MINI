@@ -1,0 +1,8 @@
+{
+  "child_pid": 57741,
+  "reaped": true,
+  "exit_code": 0,
+  "timed_out": false,
+  "tool_session": 87227,
+  "source": "exec_command supervisor Popen.wait returned0, observed completion stdout SUPERVISOR_REAPED0; no post-release device IO"
+}

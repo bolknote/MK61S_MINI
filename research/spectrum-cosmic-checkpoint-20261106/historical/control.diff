@@ -1,0 +1,28 @@
+--- PIPE/main.c
++++ WAIT/main.c
+@@ -357,24 +357,8 @@
+ #ifdef SPECTRUM_HIL_FRAME_READY
+     SPECTRUM_HIL_FRAME_READY(&machine);
+ #endif
+-    const uint32_t pending_frame=machine.frames,pending_phase=machine.frame_tstates;
+     while((int32_t)(now-target)<0) {
+-        // The pending image is frozen in the borrowed canvas. The native
+-        // PRESENT copies it into its own retained buffer before DMA.
+-        // Prefetch only near this deadline. The next complete 512T slice
+-        // stays within 4 ms of wall time (including a normal last step).
+-        // Keep 96 event slots free for a complete 512T producer slice.
+-        if(target-now>1024 && target-now+(machine.frame_tstates-pending_phase)*2/7<=3840 &&
+-           (int32_t)(now-*keyboard_deadline)<0 &&
+-           machine.frames==pending_frame && machine.frame_tstates<=14000-512 &&
+-           atomic_load_explicit(&machine.sound.write,memory_order_relaxed)-
+-           atomic_load_explicit(&machine.sound.read,memory_order_acquire)<=SPECTRUM_SOUND_QUEUE_EVENTS-96) {
+-            // Keep exactly the same complete 512T calls as the outer loop:
+-            // changing their partition would change frame overshoot/images.
+-            spectrum_run(&machine,512);
+-            if(machine.memory && machine.memory->fault)return false;
+-            now=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);continue;
+-        }
++        // Matched control: no next-frame prefetch.
+         // A full keyboard bitmap is relatively costly. The outer CPU loop
+         // will scan it just after this boundary if fewer than 1024 us remain.
+         const int key=target-now>1024?poll_guest(blocked,keyboard_deadline,now):-1;

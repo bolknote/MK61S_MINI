@@ -1,0 +1,36 @@
+{
+  "INPUT": {
+    "frames": 80,
+    "identical": true,
+    "trajectory_sha256": "075ce3afc908a98dad950f23fc6478ebb93cd6d6192c643ec4fba3cfb8724991",
+    "pcm_samples_at_last_capture": 40960,
+    "sound_events_at_last_capture": 39440,
+    "simulated_max_prefetch_IN_wall_ahead_us": 3988
+  },
+  "MANIC": {
+    "frames": 3100,
+    "identical": true,
+    "trajectory_sha256": "68e5486a20d47c31406b5b47483097ec312ab2efe33fd96658025ca18d94fb08",
+    "pcm_samples_at_last_capture": 1587201,
+    "sound_events_at_last_capture": 46696,
+    "simulated_max_prefetch_IN_wall_ahead_us": 3985
+  },
+  "COSMIC": {
+    "frames": 3100,
+    "identical": true,
+    "trajectory_sha256": "b8da0b57de8d8369ec490cdb492c37c31917984cb58c6a2c4213e6e49678aa0c",
+    "pcm_samples_at_last_capture": 1587202,
+    "sound_events_at_last_capture": 13846,
+    "simulated_max_prefetch_IN_wall_ahead_us": 0
+  },
+  "IANNA": {
+    "frames": 3100,
+    "identical": true,
+    "trajectory_sha256": "7fac905aa9f19e2178f66153d975eb9d38a9c2ae719b191d0d47b6deb2ef8db8",
+    "pcm_samples_at_last_capture": 1587203,
+    "sound_events_at_last_capture": 40300,
+    "simulated_max_prefetch_IN_wall_ahead_us": 3987
+  },
+  "negative_shift_1000T_detected": true,
+  "scope": "Weighted AY+pipeline vs production per-tick AY+outer512 reference; actual APP schedulers/real Z80/AY, timestamped guest IN, all32CPUfields/fullRAM/video/bothPSGstates/ordered events/fullPCM at every capture. Simulated wall/native costs, no hardware speed claim."
+}

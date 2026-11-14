@@ -1,0 +1,609 @@
+{
+  "kind": "unfinished Spectrum latency checkpoint",
+  "base_commit": "bb05bd8998b7d9373e0cece6b56baf2dcabefa08",
+  "last_installed_spectrum_commit": "1204fe3ad",
+  "installed_app_sha256": "bdb24250b22974a130c766e7790409f7cf41b83d50b215eecbb1363c76735238",
+  "production_modified": false,
+  "device_io_for_checkpoint": false,
+  "candidate_files": {
+    "examples/portable-apps/SPECTRUM/main.c": {
+      "base_sha256": "cde529816f6953ab2df8b3f34209d68db5e14bc9941dd522faad91a37462f643",
+      "candidate_sha256": "ca264cd31531b59d6a0943f184fafd5fe83413004e92b8280a972fb1f271b280",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/examples/portable-apps/SPECTRUM/main.c"
+    },
+    "examples/portable-apps/SPECTRUM/peripherals.c": {
+      "base_sha256": "ee5f520374cbd110542b2c835b2687ea1ac80deb9b4a28a7ac59da2059032cfe",
+      "candidate_sha256": "b2989809d05d2ddfd876306d5b96cdde833fabc661ba9c757ad46b3ea2784afd",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/examples/portable-apps/SPECTRUM/peripherals.c"
+    },
+    "examples/portable-apps/SPECTRUM/peripherals.h": {
+      "base_sha256": "e5203193edf1bb580b1c8f14e8eb81948364f4d077abe75c9b4bf1587ee72ee7",
+      "candidate_sha256": "758636ecd8861cae2cbfe28f493791f6569379183b6e228809a05ad6240359fe",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/examples/portable-apps/SPECTRUM/peripherals.h"
+    },
+    "third_party/emu2149/emu2149.c": {
+      "base_sha256": "3bf89ab7d422699b39cd155c8a2e7cfc24d72f7c5e905eb8877da6be3909498d",
+      "candidate_sha256": "9f10bf273e3d3a58590c7b21e5e8fc578135bcba0e755484149f55f58a35c98e",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/third_party/emu2149/emu2149.c"
+    },
+    "tests/emu2149_quality_self_test.c": {
+      "base_sha256": null,
+      "candidate_sha256": "ec98435054afd12076616672c139eed0ba90e43a4562a5660e2dc75adbe75b53",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/emu2149_quality_self_test.c"
+    },
+    "tests/pipeline_scheduler_self_test.c": {
+      "base_sha256": null,
+      "candidate_sha256": "f3a11a20ca79cd5d181defb9c8dad778ebc966a2277c9cbaf50461c0345bd6ce",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/pipeline_scheduler_self_test.c"
+    },
+    "tests/presentation_stats_self_test.c": {
+      "base_sha256": null,
+      "candidate_sha256": "6f96a9e08158bf5e53b93a3995dd510475d56c1520dca6cb608d63a7ca7c16e4",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/presentation_stats_self_test.c"
+    },
+    "tests/profile_audio_main.c": {
+      "base_sha256": null,
+      "candidate_sha256": "a26b9a6690b60b37813b30f4a00c16a22ae42a30700d8e3daf5840ffd4656f91",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/profile_audio_main.c"
+    },
+    "tests/profile_audio_self_test.c": {
+      "base_sha256": null,
+      "candidate_sha256": "31ccb3e7005dfffa907d01ff433f40947716481a9cbec023c73cb9d897c2c4d6",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/profile_audio_self_test.c"
+    },
+    "tests/spectrum_app_self_test.c": {
+      "base_sha256": "dc3a367764ee1dfd9314c38eaed73b555c53ccfdef1626902661fa69bce67d77",
+      "candidate_sha256": "5a3b840a00c8194a88fcc024d2f9d9c4ba17d18f4580b6da5d1d877619a460f9",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/spectrum_app_self_test.c"
+    },
+    "tests/spectrum_audio_timeline_self_test.c": {
+      "base_sha256": "ea2acd17fa2bf62ba49099899b7fdea7e42059658d5f6d1009651d00c8f24fac",
+      "candidate_sha256": "56131a83db716692e9271f6fc85d5fa0f768cbebaa33fc01ee443f29805e1170",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/spectrum_audio_timeline_self_test.c"
+    },
+    "tests/spectrum_hil_games.c": {
+      "base_sha256": "b44709814dc69548f74f78d86a27e9d7919b0d79c27378ff5559ac3f0035e90f",
+      "candidate_sha256": "2ba9704939cc653b7f6c9a0d1b362deeeeb38231a3acbd2700343b8d12be1441",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/spectrum_hil_games.c"
+    },
+    "tests/spectrum_hil_paced.c": {
+      "base_sha256": "a17a038f1de355271eb4825b9ecac205d1a49a433f3269028d606f05f3bf03bd",
+      "candidate_sha256": "5032a0a599026bcad0ea93df47db3b54ad1fa2eed21baf8c33c6a7eb91758cd5",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/spectrum_hil_paced.c"
+    },
+    "tests/spectrum_pacing_self_test.c": {
+      "base_sha256": "24b8178428c03ed037b4e44ea7ec87bfecc5fd303e1e191b47e67db1070ab0c4",
+      "candidate_sha256": "8cf33eff4ee01537c01003990851f8e27777fb46c6b1ef30e1729a701c015a82",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-games-20261106/cosmic-ay-dense/candidate/tests/spectrum_pacing_self_test.c"
+    }
+  },
+  "core_sources": [
+    "examples/portable-apps/SPECTRUM/spectrum.c",
+    "examples/portable-apps/SPECTRUM/memory.c",
+    "examples/portable-apps/SPECTRUM/peripherals.c",
+    "examples/portable-apps/SPECTRUM/fdc.c",
+    "examples/portable-apps/SPECTRUM/spi.c",
+    "examples/portable-apps/SPECTRUM/mapper.c",
+    "examples/portable-apps/SPECTRUM/media.c",
+    "examples/portable-apps/SPECTRUM/ui.c",
+    "examples/portable-apps/SPECTRUM/rom_cache.c",
+    "third_party/z80/z80.c",
+    "third_party/emu2149/emu2149.c"
+  ],
+  "hardware_measurements": [
+    {
+      "label": "PIPE-v1-717",
+      "receipt": "evidence/PIPE-v1-717/receipt.json",
+      "record": "evidence/PIPE-v1-717/measurement.txt",
+      "observer": "v1 DONE ordering includes marker overhead; not matched to v2",
+      "steady": {
+        "frames": 3000,
+        "cycles": 215040407,
+        "wall_us": 61440116,
+        "mhz": 3.5000000162760108,
+        "xip": 1,
+        "starved": 373230,
+        "first_phase": 23,
+        "last_phase": 430,
+        "kind": "complete-frame interval inside active execution",
+        "timer_lower_mhz": 3.4999999593099735,
+        "timer_upper_mhz": 3.50000007324205
+      },
+      "pacing": {
+        "max_late_us": 4742,
+        "wait_us": 17522171,
+        "min_wait_us": 0,
+        "late_frames": 947,
+        "resyncs": 0
+      },
+      "sound": {
+        "late_events": 2530,
+        "whole_max_late_tstates": 12984,
+        "whole_max_deficit_tstates": 16296
+      },
+      "display": {
+        "measurement": "API accepted submissions after native call; physical LCD scanout unmeasured",
+        "records": 3001,
+        "accepted": 2859,
+        "busy": 142,
+        "repeated": 0,
+        "skipped": 0,
+        "early": 0,
+        "faults": 0,
+        "accepted_wall_us": null,
+        "windows": [
+          {
+            "index": 0,
+            "accepted": 193,
+            "busy": 107,
+            "first_frame": 100,
+            "last_frame": 399,
+            "first_us": 1487627402,
+            "last_us": 1493750950,
+            "min_interval_us": 15668,
+            "max_interval_us": 307370,
+            "max_late_us": 6167
+          },
+          {
+            "index": 1,
+            "accepted": 291,
+            "busy": 9,
+            "first_frame": 400,
+            "last_frame": 699,
+            "first_us": 1493771526,
+            "last_us": 1499894889,
+            "min_interval_us": 17673,
+            "max_interval_us": 40938,
+            "max_late_us": 4255
+          },
+          {
+            "index": 2,
+            "accepted": 295,
+            "busy": 5,
+            "first_frame": 700,
+            "last_frame": 999,
+            "first_us": 1499915467,
+            "last_us": 1506038911,
+            "min_interval_us": 17775,
+            "max_interval_us": 40932,
+            "max_late_us": 4133
+          },
+          {
+            "index": 3,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 1000,
+            "last_frame": 1299,
+            "first_us": 1506059469,
+            "last_us": 1512182952,
+            "min_interval_us": 17587,
+            "max_interval_us": 40951,
+            "max_late_us": 4199
+          },
+          {
+            "index": 4,
+            "accepted": 295,
+            "busy": 5,
+            "first_frame": 1300,
+            "last_frame": 1599,
+            "first_us": 1512203525,
+            "last_us": 1518326916,
+            "min_interval_us": 17693,
+            "max_interval_us": 41049,
+            "max_late_us": 4222
+          },
+          {
+            "index": 5,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 1600,
+            "last_frame": 1899,
+            "first_us": 1518347466,
+            "last_us": 1524470882,
+            "min_interval_us": 17663,
+            "max_interval_us": 40930,
+            "max_late_us": 4271
+          },
+          {
+            "index": 6,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 1900,
+            "last_frame": 2199,
+            "first_us": 1524491442,
+            "last_us": 1530614917,
+            "min_interval_us": 17771,
+            "max_interval_us": 40915,
+            "max_late_us": 4148
+          },
+          {
+            "index": 7,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 2200,
+            "last_frame": 2499,
+            "first_us": 1530635480,
+            "last_us": 1536758942,
+            "min_interval_us": 17588,
+            "max_interval_us": 41048,
+            "max_late_us": 4195
+          },
+          {
+            "index": 8,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 2500,
+            "last_frame": 2799,
+            "first_us": 1536779482,
+            "last_us": 1542902982,
+            "min_interval_us": 17760,
+            "max_interval_us": 40925,
+            "max_late_us": 4160
+          },
+          {
+            "index": 9,
+            "accepted": 297,
+            "busy": 4,
+            "first_frame": 2800,
+            "last_frame": 3100,
+            "first_us": 1542923525,
+            "last_us": 1549067868,
+            "min_interval_us": 17721,
+            "max_interval_us": 40945,
+            "max_late_us": 4204
+          }
+        ]
+      },
+      "strict_3_5_lower_bound_reached": false
+    },
+    {
+      "label": "WAIT-v2-2483",
+      "receipt": "evidence/WAIT-v2-2483/receipt.json",
+      "record": "evidence/WAIT-v2-2483/measurement.txt",
+      "observer": "v2 capture before DONE",
+      "steady": {
+        "frames": 3000,
+        "cycles": 215040407,
+        "wall_us": 61439895,
+        "mhz": 3.500012605815814,
+        "xip": 1,
+        "starved": 557193,
+        "first_phase": 23,
+        "last_phase": 430,
+        "kind": "complete-frame interval inside active execution",
+        "timer_lower_mhz": 3.5000125488493667,
+        "timer_upper_mhz": 3.500012662782263
+      },
+      "pacing": {
+        "max_late_us": 4696,
+        "wait_us": 14774681,
+        "min_wait_us": 0,
+        "late_frames": 1879,
+        "resyncs": 0
+      },
+      "sound": {
+        "late_events": 6512,
+        "whole_max_late_tstates": 13908,
+        "whole_max_deficit_tstates": 16156
+      },
+      "display": {
+        "measurement": "API accepted submissions after native call; physical LCD scanout unmeasured",
+        "records": 3001,
+        "accepted": 2857,
+        "busy": 144,
+        "repeated": 0,
+        "skipped": 0,
+        "early": 0,
+        "faults": 0,
+        "accepted_wall_us": null,
+        "windows": [
+          {
+            "index": 0,
+            "accepted": 193,
+            "busy": 107,
+            "first_frame": 100,
+            "last_frame": 399,
+            "first_us": 2171621793,
+            "last_us": 2177744046,
+            "min_interval_us": 15738,
+            "max_interval_us": 307358,
+            "max_late_us": 6125
+          },
+          {
+            "index": 1,
+            "accepted": 292,
+            "busy": 8,
+            "first_frame": 400,
+            "last_frame": 699,
+            "first_us": 2177765894,
+            "last_us": 2183887980,
+            "min_interval_us": 16280,
+            "max_interval_us": 39646,
+            "max_late_us": 5653
+          },
+          {
+            "index": 2,
+            "accepted": 296,
+            "busy": 4,
+            "first_frame": 700,
+            "last_frame": 999,
+            "first_us": 2183909712,
+            "last_us": 2190032002,
+            "min_interval_us": 16152,
+            "max_interval_us": 39642,
+            "max_late_us": 5631
+          },
+          {
+            "index": 3,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 1000,
+            "last_frame": 1299,
+            "first_us": 2190053612,
+            "last_us": 2196176053,
+            "min_interval_us": 16150,
+            "max_interval_us": 39646,
+            "max_late_us": 5689
+          },
+          {
+            "index": 4,
+            "accepted": 294,
+            "busy": 6,
+            "first_frame": 1300,
+            "last_frame": 1599,
+            "first_us": 2196197899,
+            "last_us": 2202320019,
+            "min_interval_us": 16240,
+            "max_interval_us": 39737,
+            "max_late_us": 5679
+          },
+          {
+            "index": 5,
+            "accepted": 295,
+            "busy": 5,
+            "first_frame": 1600,
+            "last_frame": 1899,
+            "first_us": 2202341901,
+            "last_us": 2208463973,
+            "min_interval_us": 16217,
+            "max_interval_us": 39654,
+            "max_late_us": 5695
+          },
+          {
+            "index": 6,
+            "accepted": 299,
+            "busy": 1,
+            "first_frame": 1900,
+            "last_frame": 2199,
+            "first_us": 2208485622,
+            "last_us": 2214608015,
+            "min_interval_us": 16261,
+            "max_interval_us": 39495,
+            "max_late_us": 5658
+          },
+          {
+            "index": 7,
+            "accepted": 296,
+            "busy": 4,
+            "first_frame": 2200,
+            "last_frame": 2499,
+            "first_us": 2214629393,
+            "last_us": 2220752035,
+            "min_interval_us": 16102,
+            "max_interval_us": 39767,
+            "max_late_us": 5727
+          },
+          {
+            "index": 8,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 2500,
+            "last_frame": 2799,
+            "first_us": 2220773978,
+            "last_us": 2226896077,
+            "min_interval_us": 16246,
+            "max_interval_us": 39553,
+            "max_late_us": 5682
+          },
+          {
+            "index": 9,
+            "accepted": 297,
+            "busy": 4,
+            "first_frame": 2800,
+            "last_frame": 3100,
+            "first_us": 2226917926,
+            "last_us": 2233061681,
+            "min_interval_us": 16215,
+            "max_interval_us": 39618,
+            "max_late_us": 5701
+          }
+        ]
+      },
+      "strict_3_5_lower_bound_reached": true
+    },
+    {
+      "label": "PIPE-v2-2483",
+      "receipt": "evidence/PIPE-v2-2483/receipt.json",
+      "record": "evidence/PIPE-v2-2483/measurement.txt",
+      "observer": "v2 capture before DONE",
+      "steady": {
+        "frames": 3000,
+        "cycles": 215040409,
+        "wall_us": 61440117,
+        "mhz": 3.4999999918619946,
+        "xip": 1,
+        "starved": 380793,
+        "first_phase": 23,
+        "last_phase": 432,
+        "kind": "complete-frame interval inside active execution",
+        "timer_lower_mhz": 3.4999999348959583,
+        "timer_upper_mhz": 3.5000000488280327
+      },
+      "pacing": {
+        "max_late_us": 5047,
+        "wait_us": 17478598,
+        "min_wait_us": 0,
+        "late_frames": 947,
+        "resyncs": 0
+      },
+      "sound": {
+        "late_events": 2623,
+        "whole_max_late_tstates": 14106,
+        "whole_max_deficit_tstates": 17418
+      },
+      "display": {
+        "measurement": "API accepted submissions after native call; physical LCD scanout unmeasured",
+        "records": 3001,
+        "accepted": 2869,
+        "busy": 132,
+        "repeated": 0,
+        "skipped": 0,
+        "early": 0,
+        "faults": 0,
+        "accepted_wall_us": null,
+        "windows": [
+          {
+            "index": 0,
+            "accepted": 193,
+            "busy": 107,
+            "first_frame": 100,
+            "last_frame": 399,
+            "first_us": 1362223352,
+            "last_us": 1368346851,
+            "min_interval_us": 15353,
+            "max_interval_us": 307382,
+            "max_late_us": 6476
+          },
+          {
+            "index": 1,
+            "accepted": 294,
+            "busy": 6,
+            "first_frame": 400,
+            "last_frame": 699,
+            "first_us": 1368367383,
+            "last_us": 1374490830,
+            "min_interval_us": 17698,
+            "max_interval_us": 40950,
+            "max_late_us": 4234
+          },
+          {
+            "index": 2,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 700,
+            "last_frame": 999,
+            "first_us": 1374511400,
+            "last_us": 1380634865,
+            "min_interval_us": 17687,
+            "max_interval_us": 40946,
+            "max_late_us": 4225
+          },
+          {
+            "index": 3,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 1000,
+            "last_frame": 1299,
+            "first_us": 1380655416,
+            "last_us": 1386778874,
+            "min_interval_us": 17560,
+            "max_interval_us": 40954,
+            "max_late_us": 4219
+          },
+          {
+            "index": 4,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 1300,
+            "last_frame": 1599,
+            "first_us": 1386799460,
+            "last_us": 1392922887,
+            "min_interval_us": 17709,
+            "max_interval_us": 40945,
+            "max_late_us": 4214
+          },
+          {
+            "index": 5,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 1600,
+            "last_frame": 1899,
+            "first_us": 1392943428,
+            "last_us": 1399066907,
+            "min_interval_us": 17667,
+            "max_interval_us": 40919,
+            "max_late_us": 4258
+          },
+          {
+            "index": 6,
+            "accepted": 299,
+            "busy": 1,
+            "first_frame": 1900,
+            "last_frame": 2199,
+            "first_us": 1399087458,
+            "last_us": 1405210880,
+            "min_interval_us": 17793,
+            "max_interval_us": 40792,
+            "max_late_us": 4127
+          },
+          {
+            "index": 7,
+            "accepted": 297,
+            "busy": 3,
+            "first_frame": 2200,
+            "last_frame": 2499,
+            "first_us": 1405231428,
+            "last_us": 1411354885,
+            "min_interval_us": 17590,
+            "max_interval_us": 41045,
+            "max_late_us": 4185
+          },
+          {
+            "index": 8,
+            "accepted": 298,
+            "busy": 2,
+            "first_frame": 2500,
+            "last_frame": 2799,
+            "first_us": 1411375425,
+            "last_us": 1417498890,
+            "min_interval_us": 17700,
+            "max_interval_us": 40946,
+            "max_late_us": 4219
+          },
+          {
+            "index": 9,
+            "accepted": 299,
+            "busy": 2,
+            "first_frame": 2800,
+            "last_frame": 3100,
+            "first_us": 1417519455,
+            "last_us": 1423663465,
+            "min_interval_us": 17691,
+            "max_interval_us": 40921,
+            "max_late_us": 4228
+          }
+        ]
+      },
+      "strict_3_5_lower_bound_reached": false
+    }
+  ],
+  "qualification": {
+    "weighted_ay": "HOST exact; hardware performance untested",
+    "audio_check": "five actual APP HOST scenarios and seven controller tests; not run on device",
+    "pipeline": "matched WAIT-v2 / PIPE-v2 on2483; full100warmup+10x300; goal incomplete"
+  },
+  "unresolved": [
+    "Cosmic frame submission gaps up to307382us",
+    "sound event delay up to14106T and produced-history deficit17418T in PIPE-v2",
+    "strict3.5MHz lower interval bound not reached in PIPE-v2",
+    "user reports silence; actual master setting and speaker output unverified",
+    "weighted AY hardware throughput and ordinary APP two-game validation pending"
+  ],
+  "omitted": [
+    "APP/ELF/UF2 binaries",
+    "ROMs, snapshots, disk images and game framebuffers",
+    "expired device grants",
+    "previous calculator/Flash state backups",
+    "unrelated AI/math WIP"
+  ]
+}

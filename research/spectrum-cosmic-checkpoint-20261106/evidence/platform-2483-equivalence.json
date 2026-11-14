@@ -1,0 +1,73 @@
+{
+  "old_source": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-short-20261106-001/sdk-source-next-845base",
+  "new_source": "/Users/bolk/Projects/MK61S_MINI/.build/m0-exp-decision-20261106-001/sdk-source-next-717base",
+  "all_identical": true,
+  "files": [
+    {
+      "file": "ports/picocalc/native_app.cpp",
+      "old_sha256": "f17df58f3652e3adcfde7c32e27bd13809fb19e451f54049eeffa6b99e164531",
+      "new_sha256": "f17df58f3652e3adcfde7c32e27bd13809fb19e451f54049eeffa6b99e164531",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/input.cpp",
+      "old_sha256": "65cf23c5ce9a32a28a4773951aa44cf4d057ea1d2478f471a7e10129ed784a19",
+      "new_sha256": "65cf23c5ce9a32a28a4773951aa44cf4d057ea1d2478f471a7e10129ed784a19",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/input.hpp",
+      "old_sha256": "8818e4e1d030740fc0fb7d1da4ad52ba0592199d77b6568e68c0e6f591430873",
+      "new_sha256": "8818e4e1d030740fc0fb7d1da4ad52ba0592199d77b6568e68c0e6f591430873",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/hardware.cpp",
+      "old_sha256": "108e8be8560a2f0fe01315aa32c2bd959efcc3e753d64f36e197e1a2db1559bb",
+      "new_sha256": "108e8be8560a2f0fe01315aa32c2bd959efcc3e753d64f36e197e1a2db1559bb",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/lcd_color.hpp",
+      "old_sha256": "e501f4e7eb9eb00f463a0b8b6b4fe088cd292814a685fbaea8c0134a14d5a423",
+      "new_sha256": "e501f4e7eb9eb00f463a0b8b6b4fe088cd292814a685fbaea8c0134a14d5a423",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/audio_stream.cpp",
+      "old_sha256": "84ac946fb7940536499fab30f58ca4bc3762e1e867651f1ad548edb773d01562",
+      "new_sha256": "84ac946fb7940536499fab30f58ca4bc3762e1e867651f1ad548edb773d01562",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/io_worker.cpp",
+      "old_sha256": "3dc3f0cde7c09005304ffb54159c049fb332745fffb30dacb43db0716e68cc61",
+      "new_sha256": "3dc3f0cde7c09005304ffb54159c049fb332745fffb30dacb43db0716e68cc61",
+      "identical": true
+    },
+    {
+      "file": "ports/picocalc/dma_support.cpp",
+      "old_sha256": "a30fc9762ebf26ab48e1db360d321e5955039f719ac70e0ab0144e46f410efe3",
+      "new_sha256": "a30fc9762ebf26ab48e1db360d321e5955039f719ac70e0ab0144e46f410efe3",
+      "identical": true
+    },
+    {
+      "file": "code/loadable_app_services.h",
+      "old_sha256": "e2146ab5053bc3f82b81707e48d2ecebdeb013f068c6bd902771db8259d48880",
+      "new_sha256": "e2146ab5053bc3f82b81707e48d2ecebdeb013f068c6bd902771db8259d48880",
+      "identical": true
+    },
+    {
+      "file": "code/loadable_app_api.h",
+      "old_sha256": "edbf30c3492b9b9858cc5ffdae106ba0e21f1702f3c7c1f3c14260d63aaf54d3",
+      "new_sha256": "edbf30c3492b9b9858cc5ffdae106ba0e21f1702f3c7c1f3c14260d63aaf54d3",
+      "identical": true
+    },
+    {
+      "file": "code/loadable_system_runtime.def",
+      "old_sha256": "ef7d71b4177748b10e041be94df8e3a4bbd327fd678b6c87dd8e6cf473b15418",
+      "new_sha256": "ef7d71b4177748b10e041be94df8e3a4bbd327fd678b6c87dd8e6cf473b15418",
+      "identical": true
+    }
+  ]
+}
