@@ -4,6 +4,7 @@
 // from production hardware.cpp by picocalc_panel_recovery_self_test.py.
 #include "rust_types.h"
 #include "lcd_scroll.hpp"
+#include "lcd_shell_update.hpp"
 #include "diagnostics.hpp"
 #include <array>
 #include <atomic>
@@ -23,7 +24,9 @@ public:
     static constexpr unsigned WIDTH=lcd::WIDTH, HEIGHT=lcd::HEIGHT, BYTES=lcd::BYTES;
     std::array<u8,BYTES> pixels{};
     lcd::Region region{};
+    lcd::ShellTheme theme{};
     const u8* data() const { return pixels.data(); }
+    const lcd::ShellTheme& color_theme() const { return theme; }
     lcd::Region scroll_region() const { return region; }
 };
 }
@@ -42,7 +45,6 @@ void injected_crc_work();
 bool inject_crc_work=false,mask_crc_irq=false;
 audio_stream::DutyRing::Result injected_pwm_result=audio_stream::DutyRing::EARLY;
 struct Controller {
-    std::array<u8,lcd::BYTES> gram{};
     std::array<u16,lcd::WIDTH*lcd::HEIGHT> colors{};
     std::vector<Command> commands;
     lcd::Region region{0,lcd::HEIGHT};
@@ -71,18 +73,26 @@ struct Controller {
         require(cursor+count<=width*(y1-y0+1),"bounded pixel payload");
         for(unsigned i=0;i<count;++i,++cursor) {
             const unsigned x=x0+cursor%width,y=y0+cursor/width;
-            const u8 bit=(u8)(0x80U>>(x%8));
             colors[y*lcd::WIDTH+x]=source[i];
-            auto& target=gram[y*lcd::STRIDE+x/8];
-            target=source[i]?(u8)(target|bit):(u8)(target&~bit);
         }
+    }
+    const u16* visible_row(unsigned y) const {
+        const unsigned physical=y<region.top || y>=region.top+region.height?y:
+            region.top+(y-region.top+origin-region.top)%region.height;
+        return colors.data()+physical*lcd::WIDTH;
     }
     bool visible(const Screen& expected) const {
         if(origin<region.top || origin>=region.top+region.height) return false;
+        const auto& theme=expected.color_theme();
+        std::array<u16,lcd::WIDTH> background;
         for(unsigned y=0;y<lcd::HEIGHT;++y) {
-            const unsigned physical=y<region.top || y>=region.top+region.height?y:
-                region.top+(y-region.top+origin-region.top)%region.height;
-            if(std::memcmp(expected.data()+y*lcd::STRIDE,gram.data()+physical*lcd::STRIDE,lcd::STRIDE)) return false;
+            theme.background_row(0,y,lcd::WIDTH,background.data());
+            const u16* actual=visible_row(y);
+            const u8* bitmap=expected.data()+y*lcd::STRIDE;
+            for(unsigned x=0;x<lcd::WIDTH;++x) {
+                const bool ink=bitmap[x/8]&(0x80U>>(x%8));
+                if(actual[x]!=(ink?lcd::color(theme.at(x,y)):background[x])) return false;
+            }
         }
         return true;
     }
@@ -145,7 +155,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32&,bool color) {
     for(unsigned i=0;i<stream_.count;++i) {
         const auto block=lcd::Stream::prepare(rect,i,scanlines,[&](unsigned row,u16* out) {
             if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
-            else lcd::scanline(previous_,rect,row,(u8*)out);
+            else lcd::shell_scanline(previous_,rect,row,previous_theme_,out);
         });
         controller.pixels(scanlines,block.count);
         if(!finish_scanline()) return false;
@@ -292,6 +302,23 @@ void changed_view_before_retry(lcd::Region initial,lcd::Region failed,bool ordin
     std::printf("Panel changed-view retry: initial=%u/%u failed=%u/%u target=%u/%u actual_definition origin fixed_pixels PASS\n",
                 initial.top,initial.height,failed.top,failed.height,expected.top,expected.height);
 }
+void shell_theme_session(bool chain) {
+    controller=Controller{};
+    Panel panel;
+    Screen frame;
+    if(chain) { panel.dma_tx_=0;panel.dma_rx_=1;panel.dma_control_=2; }
+    frame.pixels[0]=0x80;
+    require(panel.flush(frame) && controller.pending,"initial shell frame queued");
+    controller.run();
+    require(controller.visible(frame),"initial shell palette arrives at the LCD");
+    frame.theme.reset(lcd::Ink::OCHRE);
+    require(panel.flush(frame) && controller.pending,"theme-only change queues a redraw");
+    controller.run();
+    require(controller.visible(frame) && controller.visible_row(0)[0]==lcd::color(lcd::Ink::OCHRE),
+            "theme-only redraw updates the actual RGB565 pixel");
+    require(panel.flush(frame) && !controller.pending,"unchanged bitmap and theme skip DMA");
+    std::printf("Panel shell palette chain=%u: theme-only redraw and RGB565 output PASS\n",chain);
+}
 void color_session(bool chain) {
     controller=Controller{};Panel panel;Screen mono;
     mono.region={40,240};for(auto& value:mono.pixels) value=byte();
@@ -304,14 +331,19 @@ void color_session(bool chain) {
     require(panel.color(MK61_COLOR_PRESENT,&f)==1,"color accepted");
     bits.fill(255);require(panel.color(MK61_COLOR_PRESENT,&f)==2,"in-flight color rejects without copying");
     require(!panel.flush(mono),"ordinary UI cannot overwrite color session");controller.run();
-    require(controller.region==lcd::Region{0,320} && controller.origin==0,"color resets scrolled coordinates");
-    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
-        require(controller.colors[y*320+x]==(x>=32 && x<288 && y>=64 && y<256?0x001F:0x1234),"immutable copied palette pixels and border");
+    require(controller.region==mono.region && controller.origin==mono.region.top+16,
+            "color preserves the active scroll mapping");
+    for(unsigned y=0;y<lcd::HEIGHT;++y) {
+        const u16* row=controller.visible_row(y);
+        for(unsigned x=0;x<lcd::WIDTH;++x)
+            require(row[x]==(x>=32 && x<288 && y>=64 && y<256?0x001F:0x1234),
+                    "immutable copied palette pixels and border");
+    }
     require(panel.color(MK61_COLOR_PRESENT,&f)==1,"changed color accepted");controller.run();
-    require(controller.colors[64*320+32]==0xF800,"changed tile pixels");
+    require(controller.visible_row(64)[32]==0xF800,"changed tile pixels");
     const auto frames=panel.frames();require(panel.color(MK61_COLOR_PRESENT,&f)==1 && !controller.pending && panel.frames()==frames,"identical color skips LCD");
     f.background=0x5678;require(panel.color(MK61_COLOR_PRESENT,&f)==1,"border-only change");controller.run();
-    require(controller.colors[0]==0x5678 && controller.colors[64*320+32]==0xF800,"border preserves image");
+    require(controller.visible_row(0)[0]==0x5678 && controller.visible_row(64)[32]==0xF800,"border preserves image");
     bits[0]=0;controller.fail_completion=true;panel.color(MK61_COLOR_PRESENT,&f);controller.run();
     require(panel.errors()==1,"color completion failure recorded");
     require(panel.color(MK61_COLOR_PRESENT,&f)==1,"color full retry");
@@ -322,10 +354,14 @@ void color_session(bool chain) {
     f.format=MK61_COLOR_TILE8;f.tiles=pairs.data();f.tile_bytes=pairs.size();bits[0]=0x80;
     require(panel.color(MK61_COLOR_PRESENT,&f)==1,"64-color tile frame accepted");
     clut[61]=0x5555;require(panel.color_palette(clut.data())==2,"busy palette rejects without mutation");
-    controller.run();require(controller.colors[64*320+32]==0xBCBC && controller.colors[64*320+33]==0xAFAF,"copied 64-color palette used");
+    controller.run();
+    require(controller.visible_row(64)[32]==0xBCBC && controller.visible_row(64)[33]==0xAFAF,
+            "copied 64-color palette used");
     require(panel.color_palette(clut.data())==1,"palette update accepted");
     require(panel.color(MK61_COLOR_PRESENT,&f)==1,"palette-only redraw accepted");
-    controller.run();require(controller.colors[64*320+33]==0x5555 && controller.colors[0]==0x5678,"palette redraw preserves border");
+    controller.run();
+    require(controller.visible_row(64)[33]==0x5555 && controller.visible_row(0)[0]==0x5678,
+            "palette redraw preserves border");
     bits[0]^=1;require(panel.color(MK61_COLOR_PRESENT,&f)==1,"queue last color transfer");
     require(panel.color(MK61_COLOR_END)==1 && !controller.pending && !panel.color_active(),"end drains transfer before APP buffer release");
     mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
@@ -486,6 +522,8 @@ int main() {
         }
     }
     for(bool chain:{false,true}) {
+        try { shell_theme_session(chain); }
+        catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel shell palette FAIL: %s\n",error.what()); }
         try { color_session(chain); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
     }
     try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
