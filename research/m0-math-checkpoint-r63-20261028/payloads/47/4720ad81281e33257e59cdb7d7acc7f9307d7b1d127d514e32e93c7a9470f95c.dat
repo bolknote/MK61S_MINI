@@ -1,0 +1,9 @@
+{
+  "all_test_producers_terminal": true,
+  "preparation_compile_exit": 1,
+  "successful_incremental_compile_and_links_exit": 0,
+  "affected_public_producer_exit": 1,
+  "affected_producer_failure": "Speed-goal assertion after all10173 calls; retained original failure receipt",
+  "public_guard_producer_exit": 0,
+  "all_exec_results_consumed": true
+}

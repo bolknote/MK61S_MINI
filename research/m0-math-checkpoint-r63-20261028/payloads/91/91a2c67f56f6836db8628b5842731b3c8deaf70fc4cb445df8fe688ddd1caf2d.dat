@@ -1,0 +1,26 @@
+"""ROM route from kernel registry and owned-process barrier; no USB/device opens."""
+from pathlib import Path
+from datetime import datetime,timezone
+import argparse,hashlib,json,plistlib,re,subprocess
+P=Path(__file__).resolve().parent
+a=argparse.ArgumentParser();a.add_argument('--stage',choices=['rom-load','rom-return'],required=True);a.add_argument('--run',type=int,default=1);a.add_argument('--location-id',type=int,default=1245184);args=a.parse_args()
+D=P/f'metadata-{args.stage}-{args.run:03d}';D.mkdir(exist_ok=False)
+def pin(p):return dict(path=str(p),bytes=p.stat().st_size,sha256=hashlib.sha256(p.read_bytes()).hexdigest())
+r=subprocess.run(['/usr/sbin/ioreg','-a','-l','-r','-c','IOUSBHostDevice'],capture_output=True,check=True,timeout=20);f=D/'root-usb.plist';f.write_bytes(r.stdout)
+def walk(n):
+    if isinstance(n,list):
+        for x in n:yield from walk(x)
+    elif isinstance(n,dict):
+        yield n
+        for x in n.get('IORegistryEntryChildren',[]):yield from walk(x)
+nodes=[n for n in walk(plistlib.loads(r.stdout)) if n.get('USB Serial Number')=='E0C9125B0D9B' and type(n.get('sessionID')) is int]
+assert len(nodes)==1
+n=nodes[0];ports=[c['IOCalloutDevice'] for c in walk(n) if 'IOCalloutDevice' in c];assert not ports
+assert n['idVendor']==0x2e8a and n['idProduct']==3 and n['locationID']==args.location_id
+address=n['USB Address'];assert type(address) is int and 0<address<128
+ps=subprocess.run(['/bin/ps','-axo','pid=,ppid=,command='],capture_output=True,check=True,text=True)
+pattern=re.compile(r'/m0-math-(?:r61|r62-r63)-ram-hil-[^\s]+/(?:operator[^/\s]*|preflight[^/\s]*)/(?:supervise_stage|capture_stage|resident_stage|rom_stage|worker_stage|return_stage)\.py\s+--execute(?:\s|$)')
+actors=[row for row in ps.stdout.splitlines() if pattern.search(row) or re.search(r'(?:^|\s)/[^\s]*/picotool\s',row)];assert not actors,actors
+facts=dict(mode='rom',serial=n['USB Serial Number'],VID=n['idVendor'],PID=n['idProduct'],location_id=n['locationID'],entry=n['IORegistryEntryID'],session=n['sessionID'],USBAddress=address,callouts=ports,bus=n['locationID']>>24,address=address,bus_mapping='Reused qualified pinned picotool/libusb Darwin1.0.30 mapping: locationID high byte and IOKit USB Address',no_live_owned_hardware_actors=True,no_global_libusb_holder_claim=True,Root_device_IO=0)
+report=dict(created_utc=datetime.now(timezone.utc).isoformat(),raw_USB=pin(f),facts=facts,Root_device_IO=0)
+out=D/'root-physical-and-actor-barrier.json';out.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(metadata=pin(out),facts=facts),indent=2))

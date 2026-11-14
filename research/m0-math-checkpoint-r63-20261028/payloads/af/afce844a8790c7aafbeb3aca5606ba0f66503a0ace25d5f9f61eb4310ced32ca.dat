@@ -1,0 +1,90 @@
+{
+  "status": "PASS_JOINT01_PHYSICAL_ALL720_OUR_RESULTS_CORRECT",
+  "batch": "joint-01",
+  "physical_pairs": 24,
+  "physical_states": 72,
+  "queries": 78,
+  "actual_target_calls": 2940,
+  "our_math_calls": 720,
+  "our_wrong": 0,
+  "accepted_policy": "Exact bits for non-NaN; quiet NaN class for NaN, identical to qualified worker",
+  "NaN_gold_states": 0,
+  "wrong_Qfplib_samples_retained": 870,
+  "target_pairs_sampled": 12,
+  "target_states": 36,
+  "target_speedup_by_median_range": [
+    3.1481481481481484,
+    3.363036303630363
+  ],
+  "state_classes_by_median": {
+    "no_slower": 63,
+    "no_correct_reference": 9
+  },
+  "pair_classes_by_median": {
+    "no_slower": 21,
+    "no_correct_reference": 3
+  },
+  "measured_cycle_spread_histogram": {
+    "0": 288
+  },
+  "observed_stack_max": 2276,
+  "universal_stack_bound": false,
+  "raw_cycles_include_same_wrapper": true,
+  "no_overhead_subtracted": true,
+  "all8_samples_and2_warmups_retained": true,
+  "raw_records": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001/records.jsonl",
+    "bytes": 679785,
+    "sha256": "cfe9553060fd4e6a20acc59b24fd768345497d5c643cc6e3d2ca3b9fb0ff9e34"
+  },
+  "cumulative_unique_pairs": 48,
+  "cumulative_unique_states": 144,
+  "cumulative_target_pairs": 26,
+  "cumulative_actual_target_calls": 5880,
+  "cumulative_our_math_calls": 1440,
+  "remaining_unique_pairs": 36,
+  "full84_pair_round_complete": false,
+  "resident_return_not_yet_verified": true,
+  "goal_complete": false,
+  "components": {
+    "joint-01-math-cdc-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001/FROZEN.json",
+        "bytes": 1398,
+        "sha256": "de079233a679ece388109cc24eea861f377ab72b9e15e0c2935e9de9480d523b"
+      },
+      "pins": 9
+    },
+    "joint-01-math-cdc-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-supervisor-001/FROZEN.json",
+        "bytes": 842,
+        "sha256": "31a221d0f181d33219bd48877227f8fb80b102e180dc0ee9ee4ae3177c9a8fc8"
+      },
+      "pins": 5
+    }
+  },
+  "quick_analysis": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001/quick-analysis.json",
+    "bytes": 61169,
+    "sha256": "f4f53ff2aa3635b339227a69f0df5b1476e0e96874978a0b529abc40c0cf5d8c"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001/RESULT.json",
+    "bytes": 794,
+    "sha256": "27bfbf06ab6eefbab58480ced1586e1912b60f2ce2a6ebfd56d6762e99f80cd4"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1315,
+    "sha256": "434385578b3aa6473d1f62d8714359d46a493aeb5a8a76834c1db296b2f885f7"
+  },
+  "normal_X_sent_once": true,
+  "serial_closed": true,
+  "operator_reaped": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "recorded_utc": "2026-10-28T05:23:47.072027+00:00"
+}

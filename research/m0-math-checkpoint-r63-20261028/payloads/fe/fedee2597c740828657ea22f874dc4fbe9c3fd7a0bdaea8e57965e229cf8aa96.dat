@@ -1,0 +1,12 @@
+{
+  "status": "ROOT_FINITE_STAGE_RECEIPTS_AND_SCOPE_REVIEW_PASS",
+  "batch": "joint-01",
+  "stage": "rom-load",
+  "pins_verified": 30,
+  "actor_pid": 66056,
+  "actor_reaped": true,
+  "Root_device_IO": 0,
+  "full_Flash_copies_verified": 2,
+  "Flash_sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442",
+  "Flash_program_commands": 0
+}

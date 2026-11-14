@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_REAPED_READONLY_STAGE_SUPERVISOR",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1379,
+      "sha256": "03f257c9ba76efc3b2a6f7e3ada1bf105bb14c353ee11b536b0ab6a2a80e1358"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 696,
+      "sha256": "c871577cf35a067c8f00aa6b3cc34ec3de26ca4c2efc2cb921e368621112b0ef"
+    },
+    "ARGV.json": {
+      "bytes": 707,
+      "sha256": "a972866d7313d5be6b26b2e61faddc9a3df7fe3d2d86b2c6e58e915162534028"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 897,
+      "sha256": "e85ca2d057366911f16bac69308eb462e8d2647b4d1dccd9e51475d6b5ae0b4c"
+    }
+  },
+  "all_own_stage_processes_terminal": true,
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

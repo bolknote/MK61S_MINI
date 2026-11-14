@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_FRESH_CURRENT_STATE_BEFORE_ALLOWED_VOLATILE_CLEAR_READONLY_REAPED",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1415,
+      "sha256": "2f177d5354bc9739e1ed82a61a9ef59d902d15ac3feac7bbe60ca4522d40b9d2"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 724,
+      "sha256": "906e14383eb60d99037ea2d9c33b952772645abdef54a6948de3c74c1963b856"
+    },
+    "ARGV.json": {
+      "bytes": 735,
+      "sha256": "d7c3b7247b997910964430d3b55fa767411bb12a43129cccb732a79be348dc0f"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 899,
+      "sha256": "354eec49780d9984feb3873fed7dc8ea736b8501b9ae4c8969b5d16f4b218c6a"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "reset_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

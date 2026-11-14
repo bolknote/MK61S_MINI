@@ -1,0 +1,33 @@
+# Joint R62/R63 RAM payload component
+
+Accepted R63 objects are relinked into the qualified R61 SRAM layout. There are no
+math, worker or SDK source compiles. All79 SDK/worker objects are reused exactly;
+the bench object changes only5 pinned literal words in main. All186 other worker
+functions and all instruction opcodes remain exact. The blobs object changes only
+embedded math data. Main math208456B has424B free, hot3988B has108B free, data16B,
+Qfplib6364B in its8KiB region. Worker/core0 stack/core1/first4KiB boundaries remain
+fixed. BIN257940B, entry0x20001001, VTOR0x20001100, SP0x20041000. No Flash writer.
+
+The new finite matrix has84pairs/252states: all36 R63 targets, all6 R62 targets,
+all24 previous physical pairs including all8 slow controls, all16 selected legal
+helper controls and exact half/sticky/decline neighbors across word branches.
+1008 fresh public RAM calls plus one actual-ROM math loader pass against pinned
+gold. All42 target pairs are faster than correct Qfplib by instruction count.
+Four other pairs remain slower. All306 wrong-Qfplib outcomes and their costs are
+retained. This is not a physical-cycle or universal accuracy claim.
+
+Actual CRT runs2779 instructions to runtime_init; first4KiB/core1 bank unchanged.
+Full SDK startup and148 earlier worker primitive calls are inherited through
+byteexact function proofs, not replayed or counted fresh. Actual RAM guard66words
+and original120prefix semantics/callee targets match accepted R63.
+
+Four finite proposed batches cover each state exactly once. First smoke is
+24pairs/72states,78queries,2940calls including calibration. Total276queries,
+10320targetcalls for the proposed round. Each batch has a new distinct nonce,
+2warmups+8samples/library, all3SIO/all3Qfplib plus R63; the protocol is unchanged.
+No old30 R61 batches resume. Fresh exact Root grant/reload is required per batch.
+
+This seals only the payload component. Refreshed capture/operators/return plan
+and whole-packet Root review are still required before any hardware action.
+Device/canonical/Git/Flash/SD/RTC-setter authority remains false. Full original
+math goal, universal CR/termination/stack/FMA/integration remain open.

@@ -1,0 +1,83 @@
+{
+  "status": "HOST_READONLY_STAGE0_READY_NOT_DEVICE_AUTHORITY",
+  "all_producers_terminal": true,
+  "physical_IO": 0,
+  "files": {
+    "preflight.py": {
+      "bytes": 9429,
+      "sha256": "2056ff980e8395fcfcbfb0cd9986c3490af1e9d6a1f4e717c52941a5ab368651"
+    },
+    "live_io.py": {
+      "bytes": 7147,
+      "sha256": "5d359cb810affc1a7c04fb9dbd691c9424951e6b2975abc594af24b001891065"
+    },
+    "test-live-io.py": {
+      "bytes": 4381,
+      "sha256": "6d2d2fbe3d2bc11bfdf93190a75a1b3ad9a1bc947d86b44206b953b0f6242dc9"
+    },
+    "live-io-test.json": {
+      "bytes": 569,
+      "sha256": "abff95e041301fd9f7ea0c19aa86598dd538f0fb435a8283181ad57d69acacc9"
+    },
+    "test-preflight.py": {
+      "bytes": 2711,
+      "sha256": "55d989000df894ba64cdde3667850a29e8ed9ab48e98b2c451297387918e09fa"
+    },
+    "preflight-test.json": {
+      "bytes": 865,
+      "sha256": "0a3fa85f28a2c42acde7f807a5d802b43e7570c8f65df5c101eb1ef23b3da863"
+    },
+    "verify-preflight.py": {
+      "bytes": 1018,
+      "sha256": "f1d383eb03bb1a237897bc3b70174ac0821ed594fbe0fa419362b7da8ed40feb"
+    },
+    "PREFLIGHT.md": {
+      "bytes": 3611,
+      "sha256": "c351526cdb28fae72d7d42379203b13035b6433475add73b13d18c09d4867cb1"
+    },
+    "PREFLIGHT-MANIFEST.json": {
+      "bytes": 1614,
+      "sha256": "ed4dfba78500ff4a6e73dfdae1595ae8e873335ebc13b84140ac7fb63a519dc0"
+    },
+    "PREFLIGHT-GRANT-TEMPLATE.json": {
+      "bytes": 733,
+      "sha256": "3b87a5e26e21500b8262209bcfd422b91922678025deef3c7cee5ffa1551aaee"
+    },
+    "HELPER-PROVENANCE.json": {
+      "bytes": 713,
+      "sha256": "d78130ab5c4aa0e0aaeb6c45ac267d050578bd1b8307e87c0ecb6bbf8c7861e0"
+    },
+    "RETURN-SOURCE-FINDINGS.json": {
+      "bytes": 2694,
+      "sha256": "29b6b8f167ebfad7fbfb9a1dcb60ba929059c1cdadca26cbc426f94f1f53f5e0"
+    },
+    "vendor/status_frames.py": {
+      "bytes": 1132,
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa"
+    },
+    "vendor/transaction_core.py": {
+      "bytes": 112,
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5"
+    },
+    "vendor/clock_bridge.py": {
+      "bytes": 9385,
+      "sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963"
+    },
+    "selected249-source/ports/picocalc/clock.cpp": {
+      "bytes": 10798,
+      "sha256": "8a2213285dd0af18bf2806d12d3cdd1160b5b4678960d5b4e32d9b134112fc8f"
+    },
+    "selected249-source/ports/picocalc/main.cpp": {
+      "bytes": 37824,
+      "sha256": "b16b588b7667ffa3439521d730d941b3fbeaaa3317f32f3ec7992761bf2a86ac"
+    },
+    "selected249-source/ports/picocalc/terminal.cpp": {
+      "bytes": 20576,
+      "sha256": "0b6b66b47c07ea0eaa48da9698a20d7688f37356e1f321dff35adea528e6e7c4"
+    },
+    "selected249-source/ports/picocalc/terminal.hpp": {
+      "bytes": 2353,
+      "sha256": "acfb5e8fe4a4593c152a1a39762edf5a12305c5469db3a7657d29305c61f246c"
+    }
+  }
+}

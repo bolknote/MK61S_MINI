@@ -1,0 +1,25 @@
+{
+  "status": "JOINT_R62_R63_HOST_PACKET_PREPARATION_AUTHORIZED_NO_IO",
+  "root_scope": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/NEXT-JOINT-RAM-HIL-SCOPE.json",
+    "bytes": 4731,
+    "sha256": "a0d5afaf4b04ec79f438c0e6e6b38f7a03819f6e9cdfb0208c17272d1e1e6a7c"
+  },
+  "accepted_R63": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/ROOT-ACCEPTANCE.json",
+    "bytes": 5258,
+    "sha256": "356adf2d7424c1ecef90a355c52f589970918dbf18f9a23c8b16b2eb41d768e6"
+  },
+  "source_manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+    "bytes": 73981,
+    "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558"
+  },
+  "actual_device_IO": 0,
+  "canonical_lease_mutation": false,
+  "new_SDK_builds": 0,
+  "new_Git_writes": 0,
+  "new_agents": 0,
+  "new_math_revision": false,
+  "goal_complete": false
+}

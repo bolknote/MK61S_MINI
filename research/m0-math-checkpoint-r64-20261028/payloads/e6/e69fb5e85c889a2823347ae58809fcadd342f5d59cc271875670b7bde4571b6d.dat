@@ -1,0 +1,31 @@
+"""Run only fresh inert HOST suites; no device entry points or ARM campaigns."""
+from pathlib import Path
+import hashlib
+import json
+import subprocess
+import sys
+
+H=Path('/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001')
+sh=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+receipts=[]
+suites=[('preflight-d6',n) for n in ['test-fresh-capture.py','test-live-io.py','test-supervisor.py']]
+for directory in ['operator-R64','operator-R63']:
+    suites.extend((directory,n) for n in ['test-supervisor.py','test-rom-envelope.py','test-return-ui.py','test-worker-live.py','test-worker-path.py','test-r61-plan.py'])
+for directory,name in suites:
+    w=H/directory;script=w/name
+    argv=[sys.executable,'-I','-B','-c','import runpy,sys;sys.path.insert(0,sys.argv[1]);runpy.run_path(sys.argv[2],run_name="__main__")',str(w),str(script)]
+    out=w/(name+'.stdout');err=w/(name+'.stderr')
+    with out.open('xb') as stdout,err.open('xb') as stderr:
+        child=subprocess.Popen(argv,stdout=stdout,stderr=stderr)
+        rc=child.wait(timeout=30)
+    row=dict(directory=directory,suite=name,pid=child.pid,reaped=True,exit_code=rc,
+        script_sha256=sh(script),stdout_sha256=sh(out),stderr_sha256=sh(err))
+    receipts.append(row)
+    (H/'HOST-TESTS-IN-PROGRESS.json').write_text(json.dumps(dict(receipts=receipts),indent=2)+'\n')
+    print(directory,name,'EXIT',rc,flush=True)
+    if rc:
+        print(err.read_text()[-4000:],flush=True)
+        raise SystemExit(rc)
+with (H/'HOST-OPERATOR-TESTS.json').open('x') as f:
+    f.write(json.dumps(dict(status='PASS_ALL15_INERT_D6_CAPTURE_AND_BOTH_RUNTIME_ENVELOPE_SUITES',receipts=receipts,
+        actual_device_IO=0,actual_picotool_children=0,actual_ARM_MPFR_calls=0),indent=2)+'\n')

@@ -1,0 +1,13 @@
+{
+  "all_producers_terminal": true,
+  "all_exec_results_consumed": true,
+  "prepare_exit": 0,
+  "incremental_build_exit": 0,
+  "admission_producer_exit": 0,
+  "guard_caller_producer_exit": 0,
+  "risk_plan_initial_and_refined_exit": 0,
+  "risk_replay_exit": 0,
+  "final_status": "PARTIAL_NEW_SPEED_LOSSES_HONESTLY_RETAINED",
+  "selected": false,
+  "actual_device_IO": 0
+}

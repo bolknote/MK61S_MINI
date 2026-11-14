@@ -1,0 +1,17 @@
+{
+  "status": "ROOT_ONE_RAW_ROM_ENTRY_ACK_AND_REAP_VERIFIED",
+  "all40_pins_verified": true,
+  "fresh_data_and_settings_exact": true,
+  "raw_exclamation_once": true,
+  "raw_mode_entry_once": true,
+  "TX_bytes": 53,
+  "all23_writes_full": true,
+  "ack_exact": true,
+  "native_disconnect": {
+    "errno": 6
+  },
+  "actor_reaped": true,
+  "ROM_UID_not_yet_confirmed": true,
+  "RAM_loads_so_far": 0,
+  "Root_device_IO": 0
+}

@@ -1,0 +1,92 @@
+{
+  "status": "ROOT_OFFLINE_PRE_REVIEW_ACCEPTED_READONLY_CAPTURE_ENTRY_PENDING_FRESH_ROUTE_AND_GRANT",
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json",
+    "bytes": 7473,
+    "sha256": "18aaaa31353d0b3e0917732c45dfef2c4ac9f5895676c8da6cbc3210416b42f4"
+  },
+  "verified_files": 31,
+  "verified_dependencies": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json",
+      "bytes": 7057,
+      "sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2/FROZEN.json",
+      "bytes": 10996,
+      "sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json",
+      "bytes": 2904,
+      "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json",
+      "bytes": 3089,
+      "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/ENVELOPE-FROZEN.json",
+      "bytes": 6010,
+      "sha256": "b78b32046ddeab627471a282a16d890d762949ce18cbb30cc4be562cb66136ea"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/ENVELOPE-FROZEN.json",
+      "bytes": 4713,
+      "sha256": "187b76327a130744aab4724b0b0dc58d9712f84fdc94f5d4602f9cee851d5262"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/ENVELOPE-FROZEN.json",
+      "bytes": 4715,
+      "sha256": "083da5bb699eace08f2a628a3dc6c7b554f762182d9425062020b337716df0d9"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/FROZEN.json",
+      "bytes": 8850,
+      "sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/ENVELOPE-FROZEN.json",
+      "bytes": 10164,
+      "sha256": "e27112f8a30a0c34133173ddb091601b7e12ce9dc3799e173d7d62a16974faac"
+    }
+  ],
+  "all_snapshot_parsers_Resident_getters_zero_predicate_byte_or_AST_exact": true,
+  "capture_after_first_identity_assignment_AST_exact": true,
+  "first_real_status_epoch_and_counter_bound_before_any_getter": true,
+  "settings_and_IP_compared_to_first_status": true,
+  "all11_subsequent_statuses_reject_counter_epoch_change": true,
+  "all_three_vendor_helpers_byteexact": true,
+  "lease_IO_guards_only_scope_change": true,
+  "owned_child_supervision_preserved": true,
+  "single_stage": "resident-capture",
+  "scope": "PICO_R61_READONLY_CURRENT249_ONCE",
+  "allowed_getters": [
+    "identity",
+    "reg",
+    "stk",
+    "hout",
+    "pwd",
+    "alarm",
+    "date"
+  ],
+  "normal_TX_bytes": 50,
+  "max_TX": 128,
+  "max_RX": 262144,
+  "session_seconds": 120,
+  "read_only_even_when_RTC_set_or_data_nonzero": true,
+  "RAM_launch_allowed": false,
+  "raw_exclamation_allowed": false,
+  "Flash_or_Sd_writes_allowed": false,
+  "RTC_setter_allowed": false,
+  "operator_no_auto_retry_reset_or_recovery": true,
+  "host_test_command_exit_codes": [
+    0,
+    0,
+    0
+  ],
+  "actual_Root_device_IO": 0,
+  "actual_Root_Git_writes": 0
+}

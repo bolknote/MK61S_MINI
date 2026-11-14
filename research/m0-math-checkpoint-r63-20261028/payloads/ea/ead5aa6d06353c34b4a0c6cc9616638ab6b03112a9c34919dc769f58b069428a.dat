@@ -1,0 +1,20 @@
+{
+  "HOST_FIXTURE_ONLY": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "math-cdc",
+    "--grant",
+    "ROOT_FRESH_MATH_CDC_GRANT_ABSOLUTE_PATH",
+    "--lease-sha256",
+    "ROOT_EXACT_GRANT_SHA256",
+    "--output",
+    "ROOT_FRESH_EXACT_MATH_CDC_OUTPUT",
+    "--supervisor-output",
+    "ROOT_FRESH_EXACT_MATH_CDC_SUPERVISOR_OUTPUT"
+  ],
+  "stage": "math-cdc"
+}

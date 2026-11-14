@@ -1,0 +1,43 @@
+{
+  "status": "ROOT_FIVE_STAGE_OPERATOR_SOURCE_DELTA_REVIEW_PASS_CONCRETE_STAGE_GRANTS_REQUIRED",
+  "operator": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/ENVELOPE-FROZEN.json",
+    "bytes": 10164,
+    "sha256": "e27112f8a30a0c34133173ddb091601b7e12ce9dc3799e173d7d62a16974faac"
+  },
+  "actual_delta_matches_report": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/operator-delta.patch",
+    "bytes": 9216,
+    "sha256": "4a9f4f176d9d58cff733eaa7ca45a7484ed19c82a1f27d17306664ed8ea295f5"
+  },
+  "reviewed_changes": [
+    "R61_scope_and_exact_payload_binding",
+    "strict_pinned_smoke_batch_ID_order_and_bounds",
+    "resident_verify_routes_reviewed_R4_typed_UI_comparison",
+    "two_fresh_complete_Flash_reads_and_exact_hash_before_RAM_load",
+    "no_retained212_read_in_four_operation_ROMload_budget",
+    "all_parent_canonical_revocation_lease_FD_and_owned_child_guards_unchanged"
+  ],
+  "raw_entry_budget": 1,
+  "ROMload_operations": [
+    "exact_identity",
+    "Flash2MiBcopy1",
+    "Flash2MiBcopy2",
+    "load_v_x_exact_RAM_ELF"
+  ],
+  "ROMreturn_operations": [
+    "exact_identity",
+    "Flash2MiBcompare",
+    "reboot_unchanged_resident"
+  ],
+  "math_first_smoke_queries": 78,
+  "math_first_smoke_target_calls": 2940,
+  "math_seconds": 300,
+  "Flash_writer_available": false,
+  "configured_RTC_return_available": false,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "fresh_snapshot_required": true,
+  "current_snapshot_root_verified": true,
+  "Root_device_IO": 0,
+  "Root_Git_writes": 0
+}

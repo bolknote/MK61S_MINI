@@ -1,0 +1,34 @@
+{
+  "status": "ROOT_JOINT_HIL_ALL_PINNED_COMPONENTS_AND_QUALIFIED_SOURCE_DELTA_VERIFIED",
+  "manifest_count": 16,
+  "total_pin_entries": 580,
+  "manifest_pin_counts": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/FROZEN.json": 9,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/FROZEN.json": 57,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json": 33,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r1/FROZEN.json": 50,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2/FROZEN.json": 75,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r1/PREFLIGHT-FROZEN.json": 19,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/PREFLIGHT-FROZEN.json": 19,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/ENVELOPE-FROZEN.json": 24,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/ENVELOPE-FROZEN.json": 15,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r5/ENVELOPE-FROZEN.json": 15,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/FROZEN.json": 62,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/ENVELOPE-FROZEN.json": 50,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/ENVELOPE-FROZEN.json": 31,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/ENVELOPE-FROZEN.json": 78,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-root-review-20261028-001/FROZEN.json": 7,
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/FROZEN.json": 36
+  },
+  "external_refs_verified": 26,
+  "changed_python_from_R61": {
+    "preflight-current249": [
+      "live_io.py"
+    ],
+    "operator-joint": [
+      "test-r61-plan.py",
+      "worker_stage.py",
+      "live_io.py"
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+"""First real public measurements of the eleven full-word cutoff targets."""
+from pathlib import Path
+import importlib.util,json,struct,sys,time
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',False)
+W=Path(__file__).resolve().parent
+s=importlib.util.spec_from_file_location('r61_probe_harness',W/'harness.py');h=importlib.util.module_from_spec(s);s.loader.exec_module(h)
+machines={n:h.machine(n) for n in ['candidate','zero-control']}
+states={'READY':struct.pack('<7I',0,0,0,0,0,0,1),'DIRTY':struct.pack('<7I',17,3,17,3,5,2,3),
+        'PENDING':struct.pack('<7I',0x80000001,7,0x80000001,7,0x11223344,0x55667788,2)}
+targets=json.loads((W/'target-pairs.json').read_text());rows=[];started=time.monotonic()
+for r in targets:
+    for state,sio in states.items():
+        actual={}
+        for label,m in machines.items():
+            m.uc.mem_write(0xd0000060,sio)
+            value,_,cost=m.call('_ZN12compact_math3powEdd',int(r['x'],16),int(r['y'],16),count=True)
+            assert value==int(r['expected'],16)
+            after=bytes(m.uc.mem_read(0xd0000060,28))
+            assert (after==sio) if state!='READY' else not struct.unpack('<7I',after)[6]&2
+            actual[label]=dict(bits=f'{value:016X}',instructions=cost)
+        refs=r['R60_states'][state]['correct_reference_costs']
+        assert actual['candidate']['instructions']<min(refs.values()),(r,state,actual,refs)
+        rows.append(dict(x=r['x'],y=r['y'],SIO=state,expected=r['expected'],actual_R61=actual,
+            R60=r['R60_states'][state],predicate_kind=r['predicate_kind'],predicate_k=r['predicate_k']))
+result=dict(status='PASS_R61_ELEVEN_FULLWORD_ENDPOINT_TARGETS_THREE_SIO',pairs=len(targets),
+    state_rows=len(rows),actual_completed_public_ARM_calls=2*len(rows),candidate_control_wrong=0,
+    candidate_instruction_range=[min(r['actual_R61']['candidate']['instructions'] for r in rows),
+                                 max(r['actual_R61']['candidate']['instructions'] for r in rows)],
+    fastest_correct_Qfplib_range=[min(min(r['R60']['correct_reference_costs'].values()) for r in rows),
+                                   max(min(r['R60']['correct_reference_costs'].values()) for r in rows)],
+    records=rows,new_MPFR_queries=0,actual_device_IO=0,new_Git_writes=0,selected=False,
+    goal_complete=False,elapsed_seconds=time.monotonic()-started)
+(W/'probe-result.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps({k:v for k,v in result.items() if k!='records'},indent=2))

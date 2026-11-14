@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_EXACT_FINITE_STAGE_GRANTED",
+  "stage": "resident-verify",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-verify.json",
+    "bytes": 2152,
+    "sha256": "888f76458dbd49356352969ff4b2de3d49d4997df216d380f6998659891b1add"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/ARGV-resident-verify.json",
+    "bytes": 1020,
+    "sha256": "49bab0ea38647ee81caf656672acdff26c2e966ef8819f93f467843d3957ea60"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-verify-001/root-physical-and-noholder.json",
+    "bytes": 4380,
+    "sha256": "be4e22e730dd7376f317e0009308b59c54dd66de5bd5e1904ea5b7fc06ce5445"
+  },
+  "previous_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CANONICAL-BEFORE-resident-verify.json",
+    "bytes": 2231,
+    "sha256": "153b1fdc7b567a049002d0803df20a843146433781e498a9c5a96f1f73740dd9"
+  },
+  "expires_utc": "2026-10-28T05:12:22.223592+00:00",
+  "Flash_programming_allowed": false,
+  "RTC_setter_allowed": false,
+  "other_stages_not_granted": true,
+  "Root_device_IO": 0
+}

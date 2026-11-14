@@ -1,0 +1,95 @@
+{
+  "status": "PASS_INERT_FRESH_STATUS_LATCH_AND_CONTINUOUS_COUNTER_EPOCH_CAPTURE",
+  "positive": [
+    {
+      "counter": 0,
+      "status_frames": 12,
+      "TX_bytes": 50
+    },
+    {
+      "counter": 25,
+      "status_frames": 12,
+      "TX_bytes": 50
+    },
+    {
+      "counter": 26,
+      "status_frames": 12,
+      "TX_bytes": 50
+    },
+    {
+      "counter": 731,
+      "status_frames": 12,
+      "TX_bytes": 50
+    },
+    {
+      "counter": 4294967295,
+      "status_frames": 12,
+      "TX_bytes": 50
+    }
+  ],
+  "rejected": [
+    "counter-changed-at-status-2",
+    "counter-changed-at-status-3",
+    "counter-changed-at-status-4",
+    "counter-changed-at-status-5",
+    "counter-changed-at-status-6",
+    "counter-changed-at-status-7",
+    "counter-changed-at-status-8",
+    "counter-changed-at-status-9",
+    "counter-changed-at-status-10",
+    "counter-changed-at-status-11",
+    "counter-changed-at-status-12",
+    "epoch-changed-at-status-2",
+    "epoch-changed-at-status-3",
+    "epoch-changed-at-status-4",
+    "epoch-changed-at-status-5",
+    "epoch-changed-at-status-6",
+    "epoch-changed-at-status-7",
+    "epoch-changed-at-status-8",
+    "epoch-changed-at-status-9",
+    "epoch-changed-at-status-10",
+    "epoch-changed-at-status-11",
+    "epoch-changed-at-status-12",
+    "settings-after-discovery",
+    "IP-after-discovery",
+    "invalid-initial-CRC",
+    "wrong-UID",
+    "stale-grant-counter-25",
+    "stale-grant-counter-26",
+    "revoked-before-first-status"
+  ],
+  "all_post_discovery_status_positions_tested": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "first_boundary_change_rejected_before_command_mode_or_getters": [
+    "counter-changed-at-status-2",
+    "epoch-changed-at-status-2"
+  ],
+  "configured_or_nonzero_state_never_grants_RAM_or_reboot": true,
+  "fixture": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ci249-activation-20261027-001/hardware-install-001/cdc-selected249-warm-ready/raw-from-open.bin",
+    "sha256": "a686b9dc12c4f3ff84e1df616ab4309d9cfb4e4fb37f642fdb9d02cd86fbe541"
+  },
+  "typed_fixture": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current26-actual-001/current-state.json",
+    "sha256": "651e2e82bb3a2e4982314cd759c6cf50226b7cb18e3348894d23cdf8a19c0f2d"
+  },
+  "historical_wire_is_not_current_device_evidence": true,
+  "actual_device_opens": 0,
+  "actual_TX_bytes": 0,
+  "actual_host_clock_processes_started": 0,
+  "actual_children_started": 0,
+  "ROM_transitions": 0,
+  "RTC_setters": 0,
+  "new_ARM_MPFR_calls": 0
+}

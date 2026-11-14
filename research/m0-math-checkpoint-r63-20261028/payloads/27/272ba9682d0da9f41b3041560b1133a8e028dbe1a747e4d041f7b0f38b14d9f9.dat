@@ -1,0 +1,117 @@
+{
+  "status": "PASS_ACTUAL_R61_FIRST_SMOKE_WIRE_AUDIT_AND_RAW_CYCLE_COMPARISON_FINITE_SCOPE",
+  "input_records": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/records.jsonl",
+    "bytes": 696564,
+    "sha256": "5f3e1e32ede01baa2631ad5623e4495c1c4dbefa19c0b74463b65748e957abfe"
+  },
+  "input_RX": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/rx.raw",
+    "bytes": 412519,
+    "sha256": "92a840844512d989b4143035ee6808c768335a576101157e617ae4578394f8a9"
+  },
+  "input_TX": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/tx.raw",
+    "bytes": 6748,
+    "sha256": "52b3e9f218328c330395c18f16d6ba476464ef830e74edfb1e37de4fedbb170c"
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/RESULT.json",
+    "bytes": 794,
+    "sha256": "d97d18b3e5ad89b735355028ca620a3af7fb0b0d8187869bf07520c06da0d693"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1299,
+    "sha256": "3021cdfa8fe6f618643c53fcd06d6dcddee1d437d242f595a602cd9e8a4d9a8e"
+  },
+  "payload_FROZEN_sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc",
+  "all3020_RX_frames_and_all80_TX_requests_exactly_match_structured_records": true,
+  "target_calls": 2940,
+  "math_target_calls": 2880,
+  "calibration_calls": 60,
+  "unique_pairs": 24,
+  "state_cases": 72,
+  "source": "physical PicoCalc RP2040 B2/ROMv3,125MHz; R61 and Qfplib SRAM",
+  "libraries": {
+    "0": "R61",
+    "1": "qfp_composed_pow",
+    "2": "qfp_composed_pow_exact",
+    "3": "qfp_composed_pow_integer"
+  },
+  "pair_median_classes": {
+    "no_slower": 15,
+    "slower": 8,
+    "no_correct_reference": 1
+  },
+  "state_median_classes": {
+    "faster": 45,
+    "slower": 24,
+    "no_correct_reference": 3
+  },
+  "origin_pair_classes": {
+    "R59_fixed": {
+      "no_slower": 4
+    },
+    "R60_fixed": {
+      "no_slower": 3
+    },
+    "R60_directed_boundary": {
+      "no_slower": 2
+    },
+    "R61_directed_boundary": {
+      "no_slower": 5
+    },
+    "R61_fixed": {
+      "no_slower": 6
+    },
+    "R61_retained_boundary_state": {
+      "no_slower": 2,
+      "slower": 3,
+      "no_correct_reference": 1
+    },
+    "R61_decline_added_7": {
+      "slower": 1
+    },
+    "R61_decline_added_8": {
+      "slower": 1,
+      "no_correct_reference": 1
+    },
+    "R61_decline_added_9": {
+      "slower": 1
+    },
+    "previous_R55_physical_control": {
+      "slower": 1,
+      "no_slower": 2,
+      "no_correct_reference": 1
+    },
+    "unchanged_inverse_root_control": {
+      "slower": 3
+    },
+    "unchanged_normal_result_control": {
+      "slower": 2
+    }
+  },
+  "candidate_wrong": 0,
+  "wrong_reference_measured_outputs_with_cycles_retained": 576,
+  "mixed_reference_measured_correctness": [],
+  "comparisons_against_every_correct_reference_no_nominal_domain_filter": true,
+  "paired_measured_round_classes": {
+    "faster": 856,
+    "wrong_reference": 576,
+    "slower": 296
+  },
+  "raw_cycles_include_wrapper": true,
+  "overhead_subtracted": false,
+  "warmups_per_library": 2,
+  "measured_samples_per_library": 8,
+  "candidate_max_observed_stack": 2276,
+  "calibration_entry_CSR_all_three_states_verified": true,
+  "RTC_setup_registers_before_after_equal": true,
+  "all_adverse_controls_and_wrong_references_retained": true,
+  "not_whole_library_or_universal_speed_acceptance": true,
+  "global_known_pow_losing_pairs_remains": 1398,
+  "new_device_IO": 0,
+  "new_ARM_MPFR_calls": 0,
+  "goal_complete": false
+}

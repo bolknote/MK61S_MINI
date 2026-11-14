@@ -1,0 +1,45 @@
+{
+  "status": "ROOT_R63_ACTUAL_ELF_FULLWORD_GUARD_AND_INTEGER_RELATIONS_PASS",
+  "source_only": "code/native_eabi_m0_rp2040.S",
+  "allocated_section_only": ".m0_pow_tiny_cold",
+  "all23_other_runtime_objects_byteexact": true,
+  "default_M0_M4_disabled_controls_byteexact": true,
+  "old120_prefix_semantics_unchanged": true,
+  "guard_static_instructions": 66,
+  "acyclic_no_memory_writes_stack_calls_SIO": true,
+  "exact_predicate": "positive subnormal x=2^-k and positive y=M53/2^52 in[1,2): +0 iff k*M53>=1075*2^52",
+  "independent_integer_relation_cases": 4576,
+  "relation_outcomes": {
+    "declined": 2638,
+    "admitted": 1938
+  },
+  "all52_power_positions_checked": true,
+  "all_decline_arguments_R4_R6_R12_SP_LR_preserved": true,
+  "max_legal_guard_decline_instructions": 57,
+  "max_added_nonzero_low_decline_over_R62": 54,
+  "zero_low_instruction_deltas": [
+    -2,
+    0
+  ],
+  "max_high_MUL32": 2252340174,
+  "max_full_high_product": 2252341247,
+  "partial_product_threshold_bound": 134217728,
+  "half_tie_RNE_even_zero": true,
+  "scalar_literal_pool_exact_R62": true,
+  "actual_linked_ELFs": {
+    "candidate": {
+      "prefix_instructions": 120,
+      "guard_actual_instruction_semantics": 66,
+      "linked_BL_targets_exact": true,
+      "code_delta": 32
+    },
+    "zero-control": {
+      "prefix_instructions": 120,
+      "guard_actual_instruction_semantics": 66,
+      "linked_BL_targets_exact": true,
+      "code_delta": 32
+    }
+  },
+  "negative_caller_exclusion": "Unchanged prior120 prefix and byteexact public ASM, negative validator and private dispatcher; negative nonintegers use CR before magnitude conversion, and y=1 identity remains before guard.",
+  "new_ARM_MPFR_device_Git_calls": 0
+}

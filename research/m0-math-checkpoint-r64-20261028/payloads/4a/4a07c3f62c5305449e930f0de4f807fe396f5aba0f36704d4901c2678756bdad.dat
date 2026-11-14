@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_R64_SHORT_HOST_REVIEW_PASS_RAM_BINDING_AND_WORST_CASE_MATRIX_ADAPTATION_REQUIRED",
+  "utc": "2026-10-28T13:42:43.872135+00:00",
+  "frozen": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-final-host-20261028-001/FROZEN.json",
+    "bytes": 63350,
+    "sha256": "c8c2cab35f2582664e575c25242426363dfa79281ff4e9896e88ec0cc7de3eab"
+  },
+  "author": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-final-host-20261028-001/AUTHOR-RESULT.json",
+    "bytes": 4594,
+    "sha256": "446cea629de77593898f2a7090e762abf9d9da9723d46ddb156c8304162e7a36"
+  },
+  "Root_consumer_exit": 0,
+  "Root_consumer": "verify_frozen.py:407internalpins/all324446records/sourcebinding/1400→1398/7658increases/391799wrongrefs retained",
+  "source_review": "Only native_eabi_m0_pow_fast.inc delta: normal saturation skip within bounded binades/integer exponent and exact reciprocal near-power shortcut n<=64; signed p remains bounded, only normal result exponents admitted; fallback retained",
+  "HOST_candidate_accepted_for_further_qualification_only": true,
+  "main_selection": false,
+  "device_grant": false,
+  "unresolved_binding": "Fresh R64/R63 RAM images+ABI/region/transport qualification on D6; fourbatches bounded",
+  "matrix_review_finding": "Old matrix max8 does not include globalmax14 xA469CB755EAD238A/yC000000000000000 READY/DIRTY. Replace increase role in new RAMpacket; separately qualify missing PENDING without altering old frozen corpus.",
+  "other_primary_candidate_notice": {
+    "thread": "01a17a32-c316-7880-86b9-969da392543c",
+    "reported": "Separate user M4strlen integration preparing privately; no Rootwriter grant issued; handle latest main guards when relevant",
+    "Root_message_or_resume_sent": false
+  },
+  "Root_device_IO": 0,
+  "Root_primary_Git_writes": 0
+}

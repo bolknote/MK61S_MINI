@@ -1,0 +1,38 @@
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -793,6 +793,11 @@
+       } else magnitude=0;
+       return real(magnitude|sign);
+     }
++    // For 0.5<=|x|<2 and integer 1<=|y|<128, the exact result
++    // is in (2^-127,2^127], so saturation tests cannot return.
++    // Keep the preceding exact-power-of-two shortcut unchanged.
++    if(unsigned(e)<=6U && uint32_t(E-1022U)<=1U)
++      goto negative_normal_result;
+     // |log2(|x|)|>=distance. Zero distance leaves the two binades at1
+     // to the rational refinements or the existing checked fallback.
+     const uint32_t distance=E>=1023U?E-1023U:1022U-E;
+@@ -830,6 +835,23 @@
+       // Otherwise n<=4095 and all products are below2^26.
+       if(coefficient && (e>=12 || coefficient*n>=target))
+         return real((growing?D::Infinity:U(0))|sign);
++    }
++  }
++negative_normal_result:
++  // For |x| immediately below a power of two and y=-n,1<=n<=64,
++  // the exact normalized magnitude lies strictly between1+n/2^53 and
++  // 1+(n+1)/2^53. Normal-result RNE therefore adds ceil(n/2) ulps.
++  // Finite/integer validation above supplies e>=0 and the exact odd bit.
++  if((yb&D::Sign) && unsigned(e)<=6U && E &&
++     uint32_t(m)==0xFFFFFFFFU &&
++     (uint32_t(m>>32)&0xFFFFFU)==0xFFFFFU) {
++    const unsigned n=((yh&0xFFFFFU)|0x100000U)>>unsigned(20-e);
++    if(n<=64U) {
++      // |p|<=1024*64. The unsigned range admits only normal results.
++      const int p=(1022-int(E))*int(n);
++      if(unsigned(p+1022)<=2045U)
++        return real((U(uint32_t(p+1023))<<52)|U((n+1U)>>1)|
++                    (odd?D::Sign:U(0)));
+     }
+   }
+ #endif

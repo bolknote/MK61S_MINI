@@ -1,0 +1,32 @@
+{
+  "status": "ROOT_NEXT_NARROW_HOST_R62_STAGE_AUTHORIZED_FROM_ACCEPTED_R61_NO_DEVICE_OR_GIT",
+  "proposal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-analysis-001/NEXT-HOST-PROPOSAL.json",
+    "bytes": 1743,
+    "sha256": "d2419be03c8069c30e8eb4b16009aa1546e65bff55b1bc9eb6ef5060582c927d"
+  },
+  "base": "R61",
+  "known_matching_pairs_verified": 6,
+  "math": "x=2^-k; y=M/2^20; k*M>=1075*2^20 iff result<=half-minsubnormal; exact tie rounds +0 under RNE",
+  "uint32_max_product": 2252340174,
+  "exact_tie_witness": {
+    "x": "0004000000000000",
+    "y": "3FF0CC0000000000"
+  },
+  "scope": "Only cold positive-subnormal exact-power-of-two underflow guard, targeted public cost/ABI/SIO and finite new-risk qualification; keep prior frozen/production objects",
+  "no_new_hardware_grant": true,
+  "Git_writer": false,
+  "new_SDK_builds_allowed": false,
+  "other_agents_allowed": false,
+  "required_boundary_controls": [
+    "k1023/k1074",
+    "power-of-two and adjacent nonpower bases",
+    "y high below/equal/above threshold and low nonzero declines",
+    "exact half-minsubnormal tie and nearby inputs",
+    "all legal register/NZCV/SIO contracts",
+    "linked predicate faults and disabled default_M0/M4 controls"
+  ],
+  "old_full_ARM_MPFR_replay_allowed": false,
+  "parent_increases_and_wrong_references_must_be_retained": true,
+  "full_math_goal_complete": false
+}

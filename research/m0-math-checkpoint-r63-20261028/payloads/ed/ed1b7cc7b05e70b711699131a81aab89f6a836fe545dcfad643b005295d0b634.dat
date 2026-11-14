@@ -1,0 +1,30 @@
+{
+  "status": "PASS_FROZEN_PAYLOAD_CAPTURE_OPERATORS_AND_ALL24_INERT_ARGUMENT_SETS",
+  "payload_pins": 57,
+  "components": {
+    "preflight-current249": {
+      "pins": 33,
+      "sha256": "2ec9c3717fb6663f08072d99f7cbe620a92e375674216a39ccb6c45a39a66394"
+    },
+    "operator-joint": {
+      "pins": 78,
+      "sha256": "0ce9b7df679c87bfaa662346e7b702d21bdf36db35ee5593868c953268cd4810"
+    }
+  },
+  "stage_counts": {
+    "resident-capture": 4,
+    "resident-rom": 4,
+    "rom-load": 4,
+    "math-cdc": 4,
+    "rom-return": 4,
+    "resident-verify": 4
+  },
+  "all_payload_external_and_operator_dependency_pins_verified": true,
+  "first_live_counter_epoch_not_historical": true,
+  "all_grants_disabled_and_placeholder_only": true,
+  "all_operator_output_paths_fresh": true,
+  "actual_device_IO": 0,
+  "canonical_mutation": 0,
+  "new_ARM_MPFR_calls": 0,
+  "goal_complete": false
+}

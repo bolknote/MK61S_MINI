@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "resident-rom",
+  "supervisor_pid": 60483,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/resident_stage.py",
+    "--execute",
+    "--stage",
+    "resident-rom",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-rom.json",
+    "--lease-sha256",
+    "47d049fd96c3c9f47e785c60b14dc9527269410b0a2c6b47c2dcc0192a572b09",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001"
+  ],
+  "grant_sha256": "47d049fd96c3c9f47e785c60b14dc9527269410b0a2c6b47c2dcc0192a572b09",
+  "stage_output": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001",
+  "supervisor_device_IO": 0,
+  "pid": 60502,
+  "owned_process_group": 60502,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793164598.65177,
+  "stdout.bin_sha256": "cd2df62bdc396a777209d096ddc2e043e6a86944b63fc713bac3b107dbc8ac70",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

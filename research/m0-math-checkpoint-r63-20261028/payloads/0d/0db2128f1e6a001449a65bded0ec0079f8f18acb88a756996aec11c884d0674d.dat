@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_JOINT01_ROM_LOAD_REAPED",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1343,
+      "sha256": "5cdf3a571de3bc6bf839157a11e046e6e2ae18989507e60e8822266662e4d04d"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 674,
+      "sha256": "056af08dcd7fd4f5cf4e102309ccbafb1631edc307cc298be20d2eb0d74d0fdc"
+    },
+    "ARGV.json": {
+      "bytes": 685,
+      "sha256": "13805451fa41a13b76cd7f7259d6940fa0e6c077dfec81ee55c97cb4f8ad8f6d"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 1175,
+      "sha256": "b7b61960d47a3f299a8e6fec64f6dc94a447994fea60be2ab9b1af3a53f6162b"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

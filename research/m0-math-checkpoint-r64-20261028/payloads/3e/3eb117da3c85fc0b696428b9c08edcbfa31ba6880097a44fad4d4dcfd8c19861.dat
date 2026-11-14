@@ -1,0 +1,7 @@
+{
+  "pid": 37070,
+  "producer_sha256": "7324467c81a52f6e83b2abd6e38dbd17c2303021e83c0d284625c32f65914450",
+  "candidate_ELF_sha256": "c3a8e7f3cc0536ef74943e563090c4881d7429bd910d2af720e039092aae7fee",
+  "actual_device_IO": 0,
+  "selected": false
+}

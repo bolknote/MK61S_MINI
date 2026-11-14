@@ -1,0 +1,53 @@
+"""Select only the necessary new cold-reachability domain from saved R61 states."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-pow-fullword-endpoints-r61-20261028'
+Q=ROOT/'.build/m0-math-unified-pow-saturation-r55-qualification-20261027'
+R60=ROOT/'.build/m0-math-pow-subnormal-overflow-r60-20261027'
+cuts=json.loads((P/'cutoff-proof.json').read_text())['cutoffs']
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def read(p):
+    with gzip.open(p,'rt') as f:
+        for line in f:yield json.loads(line)
+def key(r):return r['x'],r['y'],r['SIO']
+def potential(r):
+    x,y=int(r['x'],16),int(r['y'],16)
+    if not 0<x<0x0010000000000000:return False
+    xh=x>>32;k=1022 if xh>>17 else 1025 if xh else 1042
+    return 0x3f30000000000000<=y<int(cuts['zero/'+str(k)]['bits'],16)
+parents={};pins={};full=Counter()
+for name in ['joined-pow-audit-records.jsonl.gz','new-boundary-union-records.jsonl.gz']:
+    p=P/name;pins[str(p)]=dict(bytes=p.stat().st_size,sha256=sha(p))
+    for r in read(p):
+        full['states']+=1
+        if not potential(r):continue
+        k=key(r);assert k not in parents
+        parents[k]=r;full['potential_states']+=1;full['prior_losing' if r['currently_losing'] else 'prior_not_losing']+=1
+assert full['states']==322071
+jobs={}
+def take(r,refs):
+    k=key(r)
+    if k not in parents:return
+    value=dict(x=r['x'],y=r['y'],SIO=r['SIO'],expected=r['expected'],references=refs,parent_joined_evidence=parents[k])
+    if k in jobs:assert jobs[k]['expected']==value['expected'] and jobs[k]['references']==refs,(k,'cache mismatch')
+    else:jobs[k]=value
+for name in ['full-records.jsonl.gz','original507-records.jsonl.gz','broad-records.jsonl.gz','admission-records.jsonl.gz']:
+    p=Q/name;pins[str(p)]=dict(bytes=p.stat().st_size,sha256=sha(p))
+    for r in read(p):
+        if r.get('operation')!='pow' or key(r) not in parents:continue
+        take(r,{n:dict(bits=r['outputs'][n],instructions=r['instructions'][n],correct=r['correct'][n]) for n in ['qfp_composed_pow','qfp_composed_pow_exact','qfp_composed_pow_integer']})
+for d in [R60,P]:
+    p=d/'new-boundary-union-records.jsonl.gz';pins[str(p)]=dict(bytes=p.stat().st_size,sha256=sha(p))
+    for r in read(p):
+        if key(r) in parents:take(r,r['references'])
+assert set(jobs)==set(parents),(len(jobs),len(parents),set(parents)-set(jobs))
+with (W/'affected-inputs.jsonl.gz').open('wb') as raw,gzip.GzipFile(filename='',fileobj=raw,mode='wb',mtime=0) as f:
+    for k in sorted(jobs):f.write((json.dumps(jobs[k],separators=(',',':'))+'\n').encode())
+report=dict(status='R62_NECESSARY_COLD_DOMAIN_SELECTED_FROM_ALL322071_PRIOR_STATES_WITHOUT_MATH_REPLAY',
+    counts=dict(full),potential_pairs=len({k[:2] for k in jobs}),
+    condition='positive nonzero subnormal x; positive y>=2^-12 strictly below its existing R61 upward bucket1075/k cutoff; all other public states have zero added instructions',
+    all_eligible_prior_states_including_nonlosers_and_wrong_references_retained=True,
+    source_pins=pins,inputs_sha256=sha(W/'affected-inputs.jsonl.gz'),new_ARM_MPFR_calls=0,new_device_IO=0,goal_complete=False)
+(W/'affected-inputs.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items() if k!='source_pins'},indent=2))

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/resident_stage.py",
+    "--execute",
+    "--stage",
+    "resident-rom",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-rom.json",
+    "--lease-sha256",
+    "47d049fd96c3c9f47e785c60b14dc9527269410b0a2c6b47c2dcc0192a572b09",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001"
+  ],
+  "grant_sha256": "47d049fd96c3c9f47e785c60b14dc9527269410b0a2c6b47c2dcc0192a572b09"
+}

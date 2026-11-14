@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_R61_PRIVATE_FINITE_ACCEPTANCE_FROZEN",
+  "files": {
+    "RECORD-REVIEW.json": {
+      "bytes": 1815,
+      "sha256": "01c5e1708dc0a6f903d86c4c8f490f09ab54ffda2f481e47036c442493b3ccc6"
+    },
+    "ROOT-ACCEPTANCE.json": {
+      "bytes": 3818,
+      "sha256": "3e0310c6843f5ca331fbdfc153b713ec08c40b217856f4bac0de0cb75df12701"
+    },
+    "STATIC-REVIEW.json": {
+      "bytes": 28640,
+      "sha256": "d7a2788f4611c1ef52481dae2d5204d27f2542b48e905ca6c7e3f377933d5f85"
+    },
+    "review_records.py": {
+      "bytes": 7968,
+      "sha256": "ace2f64ffbb840847e6ac1aaeb9b356c821685a3967676cafd479dd43d977931"
+    },
+    "review_static.py": {
+      "bytes": 8121,
+      "sha256": "67f39c215a8eb7fad794f1738c28e61d1dbbc1d7688e280d0fbc0300f1b587cf"
+    }
+  },
+  "selected_private_baseline": "R61",
+  "hardware_grant": false,
+  "Git_writer": false,
+  "M0_Math_R61_HIL_preparation_instruction_sent": true,
+  "full_math_goal_complete": false
+}

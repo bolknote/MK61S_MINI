@@ -1,0 +1,46 @@
+{
+  "status": "ROOT_FRESH_CURRENT249_CAPTURE_INDEPENDENTLY_VERIFIED",
+  "capture": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/RESULT.json",
+    "bytes": 897,
+    "sha256": "39c1922a05eb61e1049ade8221910f9f8f18dbf98dd1d0eb136933ce466e6dc8"
+  },
+  "state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/current-state.json",
+    "bytes": 2460,
+    "sha256": "6e5386b4f1662e91c7adef38fd145e16043b034042c84310769686107ed2dbc1"
+  },
+  "baseline": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-001/BASELINE.json",
+    "bytes": 921,
+    "sha256": "3a2500a8678a541f8cf51d99717de91e220d80f93b03f2a48b6744acb57ef3ab"
+  },
+  "actual_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/readonly-current249-capture-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1372,
+    "sha256": "b425933e6c5e78f291c356c354df07415fe35a79234826c4d2abf3748e27994c"
+  },
+  "all12_actual_statuses_same_epoch_physical_counter_settings_IP": true,
+  "actual_physical_keys": 0,
+  "epoch": [
+    "7",
+    "00010001"
+  ],
+  "all_typed_register_stack_program105_bytes_zero": true,
+  "pwd": "/",
+  "IP": 0,
+  "RTC_SET": 0,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "current_UI_VIEW": 0,
+  "UI_return_should_be_exact_if_default_remains0": true,
+  "TX": 50,
+  "RX": 40007,
+  "only_fixed_readonly_getters_and_ENQ_US": true,
+  "actors": {
+    "supervisor": 97869,
+    "actor": 97870,
+    "reaped": true
+  },
+  "Root_device_IO": 0,
+  "RAW_RAM_transition_not_yet_granted": true
+}

@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_PHYSICAL_JOINT_SMOKE_RAW_AND_REAPED_RECEIPTS",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1300,
+      "sha256": "0dd82efb077a3582d4aca462f24a2810009166ac6097d5843ecf964e69d096a0"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 634,
+      "sha256": "78651b06c3f40f9f7165df4855f630fea0b9a64b5fad16addc590757ddcc95c2"
+    },
+    "ARGV.json": {
+      "bytes": 645,
+      "sha256": "ea5a52d9722757930033abcf20250d8e18b6ccb1ebf63dd9746cb8f600413b49"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 794,
+      "sha256": "acac1f41577f46cd5807d91735396503aac55a345e8ec082444819417ea55aea"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

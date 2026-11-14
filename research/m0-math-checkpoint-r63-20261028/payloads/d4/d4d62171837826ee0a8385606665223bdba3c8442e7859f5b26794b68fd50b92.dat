@@ -1,0 +1,4 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-tight-endpoint-r56-20261027/source/code/native_eabi_m0_rp2040.S:1930:10: fatal error: public-div-polynomial-table.inc: No such file or directory
+ 1930 | #include "public-div-polynomial-table.inc"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.

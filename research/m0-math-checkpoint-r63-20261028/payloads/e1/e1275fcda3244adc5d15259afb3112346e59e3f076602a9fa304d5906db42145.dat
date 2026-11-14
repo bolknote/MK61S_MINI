@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_ONE_REMAINING_BATCH_SINGLE_STAGE_GRANTED",
+  "batch": "joint-01",
+  "stage": "resident-capture",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-capture.json",
+    "bytes": 1858,
+    "sha256": "a4a5390e9504eac9fc6811bee88b86747decc80346d32fb64277c2f4502c698e"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/ARGV-joint-01-resident-capture.json",
+    "bytes": 1079,
+    "sha256": "2b654b552a56c2771265a48ab97f2194be27d260a0377945f5ef008f6ebf73fb"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-capture-004/root-physical-and-noholder.json",
+    "bytes": 4383,
+    "sha256": "343f2e04a05eb8570264b8b7d9e6e11ec6492d315ada2371fd17630d436094b0"
+  },
+  "previous_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/CANONICAL-BEFORE-joint-01-resident-capture.json",
+    "bytes": 2796,
+    "sha256": "a41b170fe7ab19bd57a61def143631720493afd281ac500ce192166fd42da467"
+  },
+  "expires_utc": "2026-10-28T05:18:55.902999+00:00",
+  "other_stages_not_granted": true,
+  "Flash_programming_allowed": false,
+  "RTC_setter_allowed": false,
+  "Root_device_IO": 0
+}

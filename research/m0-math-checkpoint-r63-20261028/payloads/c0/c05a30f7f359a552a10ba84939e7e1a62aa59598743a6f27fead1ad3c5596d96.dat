@@ -1,0 +1,109 @@
+{
+  "status": "FROZEN_JOINT01_ROM_LOAD_REAPED",
+  "files": {
+    "01-exact-ROM-identity.actual-exit.json": {
+      "bytes": 425,
+      "sha256": "fd697869a452d65239d854e5da1a69b0392529d574ea49e47d421e617342e21a"
+    },
+    "01-exact-ROM-identity.intent.json": {
+      "bytes": 216,
+      "sha256": "006fd632f956ce3966f7da809fa3f8db783a11237f65dc4b8cf16340f76b0515"
+    },
+    "01-exact-ROM-identity.pid.json": {
+      "bytes": 40,
+      "sha256": "651ddaab598b67de1b166330fd340500ef217e984faa84a16fbc0ea4c3e00926"
+    },
+    "01-exact-ROM-identity.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "01-exact-ROM-identity.stdout.bin": {
+      "bytes": 93,
+      "sha256": "49bdb0185e0aa53a0e88d59980da6f95d6205bb349123afc58e6530181f747d4"
+    },
+    "02-flash-before-math.actual-exit.json": {
+      "bytes": 579,
+      "sha256": "1bbc5d9c1e3af665b6f6456580429da79701516751b579e88870111487af9362"
+    },
+    "02-flash-before-math.intent.json": {
+      "bytes": 370,
+      "sha256": "2bb69a58d87c527f3114a9adb03a812d2fc4785d602311ff591c5fe4bfaf18e7"
+    },
+    "02-flash-before-math.pid.json": {
+      "bytes": 40,
+      "sha256": "b1563e7da7ff83d8ede2c3ecc3be5ab3dd88093a1a8da21d23d719680892ed01"
+    },
+    "02-flash-before-math.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "02-flash-before-math.stdout.bin": {
+      "bytes": 10570,
+      "sha256": "4bdc8decb1ac0bd92cab3ed176513e28985584c832c4d6f27794216534b2b1cb"
+    },
+    "03-flash-before-math-confirm.actual-exit.json": {
+      "bytes": 587,
+      "sha256": "cc0e2f58c601a10b4bf6ea82143931f58f433c51836437a8466b8c40b958b335"
+    },
+    "03-flash-before-math-confirm.intent.json": {
+      "bytes": 378,
+      "sha256": "b18b3a218651a7e218ed7e2c606a55c5befea8df2327e6543414fa13b3fef5a4"
+    },
+    "03-flash-before-math-confirm.pid.json": {
+      "bytes": 40,
+      "sha256": "468be4ce2721ab0703a566acf2184964c1d02c573eed209977daa07eeadae181"
+    },
+    "03-flash-before-math-confirm.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "03-flash-before-math-confirm.stdout.bin": {
+      "bytes": 10578,
+      "sha256": "81e083599c51f35ade046e9825001a3d63b9c831231384251ae9875af9b7c7f2"
+    },
+    "04-load-verify-start-exact-R1-ELF.actual-exit.json": {
+      "bytes": 569,
+      "sha256": "170ee3f87b0cfdcd41c664b4849a83868f8a481a916f42c64fa1aef78480c3dc"
+    },
+    "04-load-verify-start-exact-R1-ELF.intent.json": {
+      "bytes": 360,
+      "sha256": "8158382332107232bbbc7d39faabcf9ae1146c536f247417c36e1ac72d7b0990"
+    },
+    "04-load-verify-start-exact-R1-ELF.pid.json": {
+      "bytes": 40,
+      "sha256": "4bd2c2dd96900f3bca6f9d1b49e1cf708d73ced0dbfaa47dcf7549fb5dcfeed4"
+    },
+    "04-load-verify-start-exact-R1-ELF.stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "04-load-verify-start-exact-R1-ELF.stdout.bin": {
+      "bytes": 7629,
+      "sha256": "687dddda27ed622a70fe7cb3cca263fdb75b6f6bb585b9090b23077afb24a58b"
+    },
+    "RESULT.json": {
+      "bytes": 1175,
+      "sha256": "b7b61960d47a3f299a8e6fec64f6dc94a447994fea60be2ab9b1af3a53f6162b"
+    },
+    "STARTED.json": {
+      "bytes": 162,
+      "sha256": "57964c18948b563101aac45d36362935aeec441efd92ec5fc6506685bfaf00fd"
+    },
+    "flash-before-math-confirm.bin": {
+      "bytes": 2097152,
+      "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+    },
+    "flash-before-math.bin": {
+      "bytes": 2097152,
+      "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+    },
+    "grant.byteexact.json": {
+      "bytes": 2262,
+      "sha256": "594e35b0e1b12653e92efa3c742b8980f535c0905aa6ff4911e8f581a6e6c186"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

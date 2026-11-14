@@ -1,0 +1,21 @@
+# R5: exact named worker CDC port
+
+The reviewed R2 image has actually started in SRAM. Root's kernel observation
+found worker USB2E8A:000A, serial M0R55POW01, with the native macOS callout
+`/dev/cu.usbmodemM0R55POW011`. The unchanged R3 numerical suffix check rejects
+that path before an open. No attempt was made to open it under R3 or create an
+alias. R5 adds only this exact literal path to the existing numeric admission,
+and only for stage `math-cdc` with `worker_USB_serial=M0R55POW01`.
+
+The rest of LiveLease/LeasePort is byteexact R3: canonical/grant equality,
+hash/owner/UID/scope/stage/expiry checks, exact rdev before and after open,
+instance lock/exclusive FD, every native operation's live guard, budgets and
+owned descriptor cleanup. The worker stage and payload are unchanged. The
+supervisor differs only by narrowing its CLI to math-cdc. Resident stages use
+the already reviewed operators. No firmware, math, dataset or RAM load repeats.
+
+Three inert controls reject the named path with the wrong worker serial, in a
+different stage, and with a foreign suffix, all before any native stat/open.
+The exact path and the original numeric route pass with only an instance-local
+fake IO. No hardware is opened by these controls. This frozen envelope is not
+an execution grant: Root must issue the fresh exact worker lease and argv.

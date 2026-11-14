@@ -1,0 +1,18 @@
+{
+  "status": "PREPARATION_COMPILE_MISSING_COPIED_R55_LOCAL_ASSEMBLY_INCLUDE",
+  "exit_code": 1,
+  "error": "public-div-polynomial-table.inc: No such file or directory",
+  "receipts": {
+    "command-1.stdout": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "command-1.stderr": {
+      "bytes": 322,
+      "sha256": "d4d62171837826ee0a8385606665223bdba3c8442e7859f5b26794b68fd50b92"
+    }
+  },
+  "repair": "Copy unchanged source/code includes from exact R55 frozen pins before compiling; preserve R55 include semantics",
+  "guest_ARM_calls": 0,
+  "hardware_IO": 0
+}

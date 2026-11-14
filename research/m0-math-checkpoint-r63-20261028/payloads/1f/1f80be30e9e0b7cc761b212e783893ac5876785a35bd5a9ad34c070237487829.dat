@@ -1,0 +1,25 @@
+{
+  "status": "R63_ALL322829_CURRENT_STATES_PARTITIONED_NO_NUMERICAL_REPLAY",
+  "counts": {
+    "all_current_states": 322829,
+    "potential_states": 3879,
+    "previously_not_losing": 3696,
+    "previously_losing": 183,
+    "y_low_zero": 2041,
+    "y_low_nonzero": 1838
+  },
+  "potential_pairs": 1783,
+  "all111_previous_R62_fixed_pairs_included": true,
+  "all36_target_pairs_included": true,
+  "all_parent_exact_costs_from_completed_R62_calls": true,
+  "input_sha256": "bddc80565d34f42323250706e64321dce5e93bf0b93701e753e47af129c689b0",
+  "source_pins": {
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/joined-pow-audit-records.jsonl.gz": "c3c4290438bbcc911cec37e5d2dd938107c626a1781d76d1f31ebb02193e09ca",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/affected-records.jsonl.gz": "ae137a674fa974bc1914138d0e7c94d20bd39e90931f264f3b3adbab6e35b113",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/boundary-result.json": "d15f480003a49bff19881f6970fba836dffcfea96ddc8b18cb84fb2586942e77",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/cutoff-proof.json": "50d72597f9d20d7b9b4e5b5383e9f5466984b29057eff456e30936385d5c97ba"
+  },
+  "necessary_domain": "Positive nonzero subnormal x; positive y>=2^-12 and below original bucket zero cutoff. Prefix/caller proof excludes every other changed path.",
+  "actual_new_ARM_MPFR_device_calls": 0,
+  "goal_complete": false
+}

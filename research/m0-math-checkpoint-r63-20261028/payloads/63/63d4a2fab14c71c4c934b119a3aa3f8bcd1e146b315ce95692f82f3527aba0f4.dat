@@ -1,0 +1,80 @@
+Historical preimplementation plan, completed by this packet.
+Current implementation, evidence and remaining work are in HANDOFF.md.
+
+# R60 continuation: sufficient subnormal overflow guard
+
+The rational predicate and the real R59 path profile are complete. Runtime source
+has not been edited or compiled for R60. R59 is frozen; never write into it.
+R55 is still the selected private author baseline pending independent acceptance.
+
+Parent: `.build/m0-math-pow-dispatch-contract-r59-20261027`.
+Frozen manifest SHA-256:
+`fdb260d5f7430c74306175d7d41d01fda8268493d5d7dbcc7bf57bf481f7154a`.
+
+## Proved condition
+
+Positive nonzero raw x <= `00040000000000B1` and negative raw y in
+[`BFF0000000000001`, `FFF0000000000000`] imply correctly rounded positive
+infinity. The final endpoint y=-infinity is handled by its separate mathematical
+limit; NaNs are excluded by the raw upper bound. The existing helper prefix
+already limits y to finite magnitude below2^63, so its insertion point needs no
+new nonfinite test.
+
+`predicate-proof.json` verifies by exact rational arithmetic:
+
+    alpha = 2^-52
+    t = 177 * 2^-50
+    ln(2) > 842/1215
+    1024*alpha*(842/1215) - (1+alpha)*t > 0
+
+Since ln(1+t)<t, the exact result exceeds2^1024. This is a sufficient condition;
+no claim is made that every omitted case is finite.
+
+## Placement established by real ARM execution
+
+`parent-profile.json` contains seven actual completed R59 public calls, with
+uncached instruction hooks and actual unchanged numerical bodies/ROM. Results
+and costs exactly match the saved R59 DIRTY records. The subnormal gate is
+reached after124–185 instructions, before the CR routine at135–196. Total parent
+cost is6207–38473 versus788 for the fastest correct cached Qfplib composition.
+Thus an implementation in the existing cold subnormal branch can be useful;
+it does not suffer the earlier huge-y3000-instruction public prelude problem.
+
+## Next implementation
+
+Copy R59 source, original objects and linker inputs into this unfrozen successor;
+compile only the modified `native_eabi_m0_rp2040.S`. Reuse exact R59 C++/other
+objects. Put the new check at `.Lpow_subnormal_reciprocal_cut`, after the existing
+positive nonzero subnormal x / finite negative y prefix. Normal x and all public
+exact exponent shortcuts must retain their previous paths and counts.
+
+The existing R4 is doubled magnitude-high(y), while R0:R1 and R2:R3 remain the
+raw original arguments. R5/R6 are saved scratch registers. A possible guard is:
+
+    compare R4 with 0x7fe00000
+    if smaller: old_negative_cut
+    if equal and R2==0: old_negative_cut
+    compare R1 with 0x00040000
+    if smaller: existing_positive_infinity_return
+    if greater: old_negative_cut
+    compare R0 with 177
+    if <=177: existing_positive_infinity_return
+    old_negative_cut: original instructions without modification
+
+The high coefficient constant can use MOVS/LSLS;177 fits an immediate compare.
+Use a single scalar literal for the exponent threshold if not already pooled.
+This adds no lookup table. Preserve original arguments on every decline, SP/LR,
+callee-saved registers and SIO. The original half-root/pow_rsqrt paths remain
+unchanged, including subnormal inverse roots. M4/default objects remain exact.
+
+First build and measure the seven cases against cached correct references.
+Then test raw boundaries x=cut-1/cut/cut+1, y=-1 and its two neighbours, zeros,
+smallest/largest subnormals, normal transition, signed/nonfinite inputs and all
+three SIO states. Use new directed MPFR queries only for genuinely new boundary
+arguments. A linked cutoff mutation from177 to178 should be checked against a
+fresh oracle; do not assume its result. Qualify the affected cold route and audit
+new speed risks from a fresh actual CFG bound, retaining all parent increases.
+
+Do not repeat old full numerical corpora. No hardware, Git, primary runtime,
+canonical lease, SDK rebuild or agent actions. All seven profiling calls are
+terminal; the private fixture writes receipts here, outside frozen R59.

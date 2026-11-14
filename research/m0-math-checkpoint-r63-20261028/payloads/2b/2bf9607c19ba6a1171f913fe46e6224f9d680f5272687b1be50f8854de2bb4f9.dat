@@ -1,0 +1,53 @@
+"""Observe real R59 prefix costs for the seven rational-predicate targets."""
+from pathlib import Path
+import hashlib,importlib.util,json,struct,sys,time
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',False)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-pow-dispatch-contract-r59-20261027'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+proof=json.loads((W/'predicate-proof.json').read_text())
+assert sha(P/'FROZEN.json')==proof['source_FROZEN_sha256']
+spec=importlib.util.spec_from_file_location('frozen_r59_profile_harness',P/'harness.py')
+h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
+from unicorn import UC_HOOK_CODE
+from unicorn.arm_const import UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3,UC_ARM_REG_SP
+targets=json.loads((W/'target-pairs.json').read_text());m=h.machine('candidate')
+names=['mk61_m0_pow_positive_checked_dispatch','pow_refine_checked',
+       'mk61_m0_pow_tiny_or_cr','mk61_m0_pow_subnormal_gate_begin',
+       'mk61_m0_cr_pow']
+addresses={m.elf.symbols[n]&~1:n for n in names}
+rows=[];started=time.monotonic();sio=struct.pack('<7I',17,3,17,3,5,2,3)
+for r in targets:
+    trace=[];counter=[0]
+    def observe(uc,address,size,user):
+        before=counter[0];counter[0]+=1
+        if address in addresses:
+            trace.append(dict(entry=addresses[address],instructions_before_entry=before,
+                args=[uc.reg_read(reg) for reg in [UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3]],
+                SP=uc.reg_read(UC_ARM_REG_SP),SIO=bytes(uc.mem_read(0xd0000060,28)).hex()))
+    hook=m.uc.hook_add(UC_HOOK_CODE,observe)
+    m.uc.mem_write(0xd0000060,sio)
+    try:value,_,cost=m.call('_ZN12compact_math3powEdd',int(r['x'],16),int(r['y'],16),count=True)
+    finally:m.uc.hook_del(hook)
+    assert counter[0]==cost
+    assert value==int(r['expected'],16)==0x7ff0000000000000
+    assert cost==r['R59_states']['DIRTY']['candidate']
+    assert bytes(m.uc.mem_read(0xd0000060,28))==sio
+    assert [t['entry'] for t in trace]==names,(r['x'],r['y'],trace)
+    rows.append(dict(x=r['x'],y=r['y'],SIO='DIRTY',expected=r['expected'],actual_bits=f'{value:016X}',
+        R59_instructions=cost,trace=trace,cached_correct_Qfplib_costs=r['R59_states']['DIRTY']['correct_reference_costs']))
+result=dict(status='PASS_REAL_R59_PREFIX_PROFILE_SEVEN_R60_PROOF_TARGETS',
+    actual_completed_public_ARM_calls=len(rows),actual_MPFR_queries=0,
+    records=rows,source_parent_FROZEN_sha256=sha(P/'FROZEN.json'),
+    mathematical_guest_code_or_returns_changed=False,actual_ROM_used=True,
+    all_AAPCS_SP_and_dirty_SIO_checks=True,source_M4_Git_or_device_changed=False,
+    new_predicate_implemented=False,new_performance_claim=False,goal_complete=False,
+    elapsed_seconds=time.monotonic()-started)
+(W/'parent-profile.json').write_text(json.dumps(result,indent=2)+'\n')
+print(json.dumps(dict(status=result['status'],actual_completed_public_ARM_calls=len(rows),
+    rows=[dict(x=r['x'],y=r['y'],R59=r['R59_instructions'],
+        helper_entry=next(t['instructions_before_entry'] for t in r['trace'] if t['entry']=='mk61_m0_pow_tiny_or_cr'),
+        subnormal_gate_entry=next(t['instructions_before_entry'] for t in r['trace'] if t['entry']=='mk61_m0_pow_subnormal_gate_begin'),
+        CR_entry=next(t['instructions_before_entry'] for t in r['trace'] if t['entry']=='mk61_m0_cr_pow'),
+        fastest_correct_Qfplib=min(r['cached_correct_Qfplib_costs'].values())) for r in rows]),indent=2))

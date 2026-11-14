@@ -1,0 +1,66 @@
+{
+  "status": "TERMINAL_REAPED_EXIT1_INVALID_EQUAL_COST_CONTROL_ASSERTION_NOT_NUMERICAL_FAILURE",
+  "session_id": 83270,
+  "exit_code": 1,
+  "chunk_id": "170192",
+  "script_sha256": "40ed61b486886251cedd8071807b37d36542376b5c9a3d666855ad0bf3c99de3",
+  "retained_completed_record_rows": 1728,
+  "retained_records_sha256": "bf0e4412b7458116e7f678795473d5b8afff19fe2789cffb77a6712bf765d049",
+  "completed_call_evidence_rows": {
+    "pinned_completed_R59_affected_call": 659,
+    "fresh_completed_R59_public_call": 1069
+  },
+  "actual_fresh_public_calls_first_attempt": {
+    "candidate": 1070,
+    "zero-control": 1070
+  },
+  "last_completed_row_not_written_before_assertion": {
+    "operation": "pow",
+    "x": "40449B1CFD487AC5",
+    "SIO": "DIRTY",
+    "expected": "3F5871148A891534",
+    "outputs": {
+      "candidate": "3F5871148A891534",
+      "parent_R52": "3F5871148A891534",
+      "qfp_composed_pow": "3F5871148A891534",
+      "qfp_composed_pow_exact": "3F5871148A891534",
+      "qfp_composed_pow_integer": "BF5871148A891534"
+    },
+    "instructions": {
+      "candidate": 1649,
+      "parent_R52": 1649,
+      "qfp_composed_pow": 1523,
+      "qfp_composed_pow_exact": 1544,
+      "qfp_composed_pow_integer": 1581
+    },
+    "correct": {
+      "candidate": true,
+      "parent_R52": true,
+      "qfp_composed_pow": true,
+      "qfp_composed_pow_exact": true,
+      "qfp_composed_pow_integer": false
+    },
+    "parent_instruction_delta": 0,
+    "y": "BFFC000000000000",
+    "index": 117314,
+    "group": "old-full140715",
+    "risk_partition": "prior_loser_changed_dispatch_requires_measured_R59",
+    "new_dispatch_added_instruction_bound": 124,
+    "actual_R59": {
+      "candidate": {
+        "bits": "3F5871148A891534",
+        "instructions": 1648
+      },
+      "zero-control": {
+        "bits": "3F5871148A891534",
+        "instructions": 1651
+      }
+    },
+    "actual_R59_evidence": "completed_public_calls_retained_from_terminal_assertion_output",
+    "parent_R55_instruction_delta": -1
+  },
+  "invalid_assumption": "Candidate and the intentionally different reciprocal zero-control must have equal instruction costs. They need only return the same correctly rounded result and preserve their call contracts.",
+  "all_completed_numerical_bits_gold_SIO_and_candidate_prefix_bound_checks_preceded_assertion": true,
+  "no_math_source_or_guest_code_changed": true,
+  "repeat_completed_rows": false
+}

@@ -1,0 +1,21 @@
+{
+  "status": "ROOT_BATCH_WIRE_AND_FULL_FLASH_TYPED_SETTINGS_UI_RETURN_PASS",
+  "batch": "r63-smoke",
+  "wire_review": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/ROOT-r63-smoke-WIRE-RECOUNT.json",
+  "source_capture": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-resident-capture-002/current-state.json",
+  "full_Flash_three_exact_sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126",
+  "state_after_sha256": "a0bcec3ad143fb895510fa8bf5e6625a2b79f73227c51536ddc545a023ef9138",
+  "typed_settings_UI_exact": true,
+  "epoch_before": [
+    "15",
+    "00010001"
+  ],
+  "epoch_after": [
+    "16",
+    "00010001"
+  ],
+  "physical_keys_before": 6,
+  "physical_keys_after": 0,
+  "RTC_SET0_placeholder_no_setter_or_trajectory_claim": true,
+  "Root_device_IO": 0
+}

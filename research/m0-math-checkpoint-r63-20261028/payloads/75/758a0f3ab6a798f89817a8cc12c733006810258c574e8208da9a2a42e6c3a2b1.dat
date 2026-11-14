@@ -1,0 +1,52 @@
+{
+  "status": "COMPLETE_SAVED_SMOKE_ROWS_RECOUNTED_NOT_FULL_ACCEPTANCE",
+  "math_state_cases": 72,
+  "query_requests": 78,
+  "sample_reference_comparisons": 216,
+  "comparison_classes": {
+    "no_correct_reference": 78,
+    "equal_or_faster": 72,
+    "slower_sample": 66
+  },
+  "wrong_measured_reference_outputs_preserved": 624,
+  "maximum_observed_stack_bytes": 2284,
+  "raw_cycles_include_wrapper": true,
+  "no_blind_overhead_subtraction": true,
+  "full_corpus_or_universal_performance_acceptance": false,
+  "goal_complete": false,
+  "input_pins": {
+    "RESULT.json": {
+      "bytes": 794,
+      "sha256": "69f51e5b173ce3a21c343ad5394bf1bb309c9acf11c335fc23d3e4cc3d8187ff"
+    },
+    "grant.byteexact.json": {
+      "bytes": 4068,
+      "sha256": "6c47580a8375cd95d9a4bb2f4c86651499f9cbf123e82132c485102a7759bdf0"
+    },
+    "records.jsonl": {
+      "bytes": 677559,
+      "sha256": "fddffc5d685f701f178c714a666b43ebf0473c4f6e15db99e0f300896503b545"
+    },
+    "tx.raw": {
+      "bytes": 6748,
+      "sha256": "dcabed37647f1b9af1c5430437a840888dfe3cf3a77068a2882a09580e8468f5"
+    },
+    "rx.raw": {
+      "bytes": 412519,
+      "sha256": "4d2cf2f1982bde17a7fefc3c2331b2eb06c0186f25a17f29a9f16dda50f6f78a"
+    },
+    "wire-from-open.bin": {
+      "bytes": 412519,
+      "sha256": "4d2cf2f1982bde17a7fefc3c2331b2eb06c0186f25a17f29a9f16dda50f6f78a"
+    },
+    "native-io.jsonl": {
+      "bytes": 20856,
+      "sha256": "f63580009cc178aa7878ea80ed92118a3549f9a5170c5faf6b5d26ad4f334fe1"
+    }
+  },
+  "source_result_status": "PASS_BOUNDED_PHYSICAL_SMOKE_NOT_FULL_ACCEPTANCE",
+  "fixture_only": false,
+  "raw_TX_RX_and_decoded_records_exact": true,
+  "actual_device_IO_by_consumer": 0,
+  "new_ARM_MPFR_calls": 0
+}

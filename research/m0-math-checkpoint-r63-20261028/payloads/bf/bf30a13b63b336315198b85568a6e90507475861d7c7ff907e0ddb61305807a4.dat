@@ -1,0 +1,13 @@
+{
+  "status": "STARTED_READONLY_FRESH_STATUS_AND_CURRENT249_CAPTURE",
+  "pid": 97870,
+  "stage": "resident-capture",
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "SD_operations": 0,
+  "physical_key_actions_sent": 0,
+  "no_RAW_exclamation_X_reset_or_reboot": true,
+  "goal_complete": false
+}

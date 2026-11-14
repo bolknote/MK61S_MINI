@@ -1,0 +1,69 @@
+{
+  "external_frozen_packets": {
+    "parent_R1_payload": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/bootable-r1",
+      "manifest": "FROZEN.json",
+      "sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+      "pins": 50
+    },
+    "payload": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/bootable-r2",
+      "manifest": "FROZEN.json",
+      "sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a",
+      "pins": 75
+    },
+    "preflight_R1": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/operator-r1",
+      "manifest": "PREFLIGHT-FROZEN.json",
+      "sha256": "b8ff5658cf9f965d2ba01d93d4f41e1ae3d066d3cf3a37e709edcfe17085888d",
+      "pins": 19
+    },
+    "preflight_R2": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/operator-r2",
+      "manifest": "PREFLIGHT-FROZEN.json",
+      "sha256": "81ae25bb4a4b9e281ae489eae081bab8e4162e414d598913662d67034a84aa22",
+      "pins": 19
+    },
+    "reviewed_operator_R3": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/operator-r3",
+      "manifest": "ENVELOPE-FROZEN.json",
+      "sha256": "b78b32046ddeab627471a282a16d890d762949ce18cbb30cc4be562cb66136ea",
+      "pins": 24
+    },
+    "reviewed_operator_R4": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/operator-r4",
+      "manifest": "ENVELOPE-FROZEN.json",
+      "sha256": "187b76327a130744aab4724b0b0dc58d9712f84fdc94f5d4602f9cee851d5262",
+      "pins": 15
+    },
+    "reviewed_operator_R5": {
+      "relative_directory": "../../m0-math-r55-hil-20261027/operator-r5",
+      "manifest": "ENVELOPE-FROZEN.json",
+      "sha256": "083da5bb699eace08f2a628a3dc6c7b554f762182d9425062020b337716df0d9",
+      "pins": 15
+    },
+    "accepted_R61_RAM_payload": {
+      "relative_directory": "../bootable",
+      "manifest": "FROZEN.json",
+      "sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc",
+      "pins": 62
+    }
+  },
+  "external_file_refs": {
+    "root_R61_source_acceptance": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-root-review-20261028-001/ROOT-ACCEPTANCE.json",
+      "bytes": 3818,
+      "sha256": "3e0310c6843f5ca331fbdfc153b713ec08c40b217856f4bac0de0cb75df12701"
+    },
+    "previous_round_final_close": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/R55-PHYSICAL-ROUND-FINAL-CLOSE.json",
+      "bytes": 4010,
+      "sha256": "936f47987401b85ad6d90a4ea78a3deeb28d4e2b8f314e749678fc3716a44d35"
+    },
+    "HOST_only_previous_round_UI_fixture": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current26-actual-001/current-state.json",
+      "bytes": 2239,
+      "sha256": "651e2e82bb3a2e4982314cd759c6cf50226b7cb18e3348894d23cdf8a19c0f2d"
+    }
+  }
+}

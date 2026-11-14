@@ -1,0 +1,55 @@
+{
+  "x": "A469CB755EAD238A",
+  "y": "C000000000000000",
+  "SIO": "PENDING",
+  "expected": "76F89FB863735B8B",
+  "actual": {
+    "R64": {
+      "bits": "76F89FB863735B8B",
+      "instructions": 1437,
+      "correct": true
+    },
+    "R63": {
+      "bits": "76F89FB863735B8B",
+      "instructions": 1423,
+      "correct": true
+    },
+    "qfp_composed_pow": {
+      "bits": "7FF0000000000000",
+      "instructions": 786,
+      "correct": false
+    },
+    "qfp_composed_pow_exact": {
+      "bits": "7FF0000000000000",
+      "instructions": 807,
+      "correct": false
+    },
+    "qfp_composed_pow_integer": {
+      "bits": "76F89FB863735BBF",
+      "instructions": 1658,
+      "correct": false
+    }
+  },
+  "gold_evidence": [
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/decline-trials/normal-saturation-skip-001/existing-negative-audit/records.jsonl",
+      "bytes": 75172719,
+      "sha256": "7c37c17254e0b245d413a64e182a0e0e6417464017c1cea40dc00f5cd8b82d5e",
+      "line": 1879
+    },
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/decline-trials/normal-saturation-skip-001/existing-negative-audit/records.jsonl",
+      "bytes": 75172719,
+      "sha256": "7c37c17254e0b245d413a64e182a0e0e6417464017c1cea40dc00f5cd8b82d5e",
+      "line": 1880
+    }
+  ],
+  "original_union324446_not_modified": true,
+  "actual_math_calls": {
+    "R64": 1,
+    "R63": 1,
+    "Qfplib": 3
+  },
+  "whole_bank_loaders_excluded": 2,
+  "ROM_table_initializer_calls_excluded": 2
+}

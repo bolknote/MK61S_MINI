@@ -1,0 +1,34 @@
+{
+  "external_frozen_packets": {
+    "qualified_parent": {
+      "relative_directory": "../../../../../../../Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint",
+      "manifest": "ENVELOPE-FROZEN.json",
+      "sha256": "0ce9b7df679c87bfaa662346e7b702d21bdf36db35ee5593868c953268cd4810",
+      "pins": 78
+    },
+    "fixed_RAM_packet": {
+      "relative_directory": "../../m0-math-r64-ram-hil-host-20261028-001",
+      "manifest": "FROZEN.json",
+      "sha256": "3868ef3cafab7fd8269f1f1b0c9e124ab2ba4931170ce25f1c1adb0160be8180",
+      "pins": 113
+    },
+    "D6_helper": {
+      "relative_directory": "../helper-d6",
+      "manifest": "PREFLIGHT-FROZEN.json",
+      "sha256": "e8b2c1342709a15b665dc2d42102b67e6f5a04c6e46e4eda327eb8de324a09ea",
+      "pins": 4
+    }
+  },
+  "external_file_refs": {
+    "D6_Root_final_close": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-scroll-recovery-root-20261028-001/ROOT-FINAL-CLOSE.json",
+      "bytes": 1910,
+      "sha256": "c0dbbbd91747f7b1fab453ef4867cf8c077071417ae436267d6beb50f9f997ac"
+    },
+    "D6_image": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-ui-final-20261028-001/candidate-v2/firmware/mk61s-picocalc-pico-h.bin",
+      "bytes": 1537008,
+      "sha256": "c2082cbf590ac151e2c081c84b20374efcc4b6ebd2ef3b49f6e4a6b1456cc81e"
+    }
+  }
+}

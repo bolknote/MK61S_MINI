@@ -1,0 +1,37 @@
+{
+  "status": "HOST_MATHEMATICAL_PROPOSAL_ONLY_NOT_R64_OR_EXECUTION_AUTHORITY",
+  "files": {
+    "derive.py": {
+      "bytes": 8896,
+      "sha256": "492308967fd8de24de291509d5701680a63396797bb28f88ae6ba288bc5ff2aa"
+    },
+    "proof.json": {
+      "bytes": 25753,
+      "sha256": "079d5c5c28fc3c033d82735aa0c4b411a198d0499d05d9fb9cc5eda7e49bfbca"
+    },
+    "proposal.json": {
+      "bytes": 4408,
+      "sha256": "5f0845b0bddb9566a5df4e71c9d650edc104f39bf6ae20d64674980cf7e25b9c"
+    }
+  },
+  "external_refs": {
+    "source": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+      "bytes": 73981,
+      "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558"
+    },
+    "physical": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001/FROZEN.json",
+      "bytes": 1407,
+      "sha256": "e7db9e4ca36ddc3d757144f2dcd373dfbbca2b8af9f82d956a59def0fe2be1ed"
+    },
+    "hardware_HOLD": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/joint-01-RETURN-HOLD-CLOSED.json",
+      "bytes": 1361,
+      "sha256": "de52d79a337ea3f47aac3215e326832343c73d8a111453fbe9871172a06f4a29"
+    }
+  },
+  "runtime_modified": false,
+  "device_IO": 0,
+  "full_goal_complete": false
+}

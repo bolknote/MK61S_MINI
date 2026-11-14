@@ -1,0 +1,25 @@
+{
+  "status": "OFFLINE_REVIEW_ONLY_R61_RAM_OPERATOR_NOT_AUTHORITY",
+  "scope": "PICO_R61_MATH_RAM_TARGETED_ONCE",
+  "stages": [
+    "resident-rom",
+    "rom-load",
+    "math-cdc",
+    "rom-return",
+    "resident-verify"
+  ],
+  "payload_FROZEN_sha256": "200c37008279297013d90938049f257279d650a321b371fe4f27ea31d3b46bbc",
+  "first_batch": "smoke",
+  "exact_preexisting_Flash_sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442",
+  "changed_resident_or_nonzero_state_requires_new_review": true,
+  "configured_RTC_return_not_implemented": true,
+  "UI_exception_only_if_fresh_Root_grant_accepts_it": true,
+  "no_direct_driver_or_picotool_execution_allowed": true,
+  "first_smoke_query_requests": 78,
+  "maximum_target_calls": 2940,
+  "maximum_session_seconds": 300,
+  "subsequent_batches_require_new_grants_and_reload": true,
+  "hardware_IO": 0,
+  "physical_cycles_measured": false,
+  "goal_complete": false
+}

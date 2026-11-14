@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_ROM_LOAD_FROZEN_PINS_TWO_FLASH_READS_AND_SUPERVISOR_PASS",
+  "all30_pins_verified": true,
+  "before_Flash": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-rom-load-001/flash-before-math-confirm.bin",
+      "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-rom-load-001/flash-before-math.bin",
+      "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+    }
+  ],
+  "actor_reaped": true,
+  "only4_picotool_commands_under_qualified_rom_operator": true,
+  "independent_RAM_dump_claimed": false,
+  "Root_device_IO": 0
+}

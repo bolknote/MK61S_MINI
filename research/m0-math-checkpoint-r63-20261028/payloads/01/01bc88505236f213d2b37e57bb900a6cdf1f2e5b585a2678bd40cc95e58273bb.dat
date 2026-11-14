@@ -1,0 +1,68 @@
+{
+  "status": "PASS_STARTUP_ONLY_SUCCESSOR_MATH_AND_REFERENCES_EXACT",
+  "parent_R1_FROZEN_sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+  "ELF_sha256": "f14fd6f37ce138772aee8ee843c279c1e8729349beab4f96bbbe2d20bc41f7da",
+  "BIN_sha256": "2cf280e53ea4926077d0e322968b3f4aa4f3910a7dbdd8045848c8959343b8a2",
+  "all_four_math_sections_addresses_and_bytes_exact": {
+    ".r55_main": {
+      "address": 536920080,
+      "bytes": 207912,
+      "sha256": "1de7a7a94406703b9220bf74386aea74e37c6f914f477f97d5abc9b601526787"
+    },
+    ".r55_hot": {
+      "address": 537128960,
+      "bytes": 3988,
+      "sha256": "51129e714442cded5cd7c3c1cbf68e74b300b28564d2dcfe5b7c7dac1169a0cc"
+    },
+    ".r55_data": {
+      "address": 536920064,
+      "bytes": 16,
+      "sha256": "c1292dbff446f8780d7c3da658022fece94cb978e203e04cfffd61070fb218d7"
+    },
+    ".qfplib": {
+      "address": 536911872,
+      "bytes": 6364,
+      "sha256": "03e34e32e5d5602dadc322f6ba2d112769540d34cae4e5c07027f5ad0540005b"
+    }
+  },
+  "unchanged_files": [
+    "bench.c",
+    "measure.S",
+    "descriptors.c",
+    "runtime-resets-keep-rtc.c",
+    "blob-meta.h",
+    "blobs.S",
+    "blobs.json",
+    "tusb_config.h",
+    "memmap.ld",
+    "math_main.bin",
+    "math_hot.bin",
+    "math_data.bin",
+    "qfplib.bin",
+    "math-pow-ram.elf",
+    "qfplib-ram.elf",
+    "dataset.json",
+    "dataset.jsonl.gz",
+    "smoke-plan.json",
+    "ram-validation.json",
+    "ram-records.jsonl.gz",
+    "protocol.py",
+    "driver.py",
+    "r55-source-FROZEN.json",
+    "r55-qualification-FROZEN.json"
+  ],
+  "borrowed_original_objects_checked": 81,
+  "unchanged_objects_reused": 80,
+  "recompiled_final_object_count": 1,
+  "SDK_segment_file_size_delta": 80,
+  "SDK_segment_memory_size_delta": 80,
+  "mathematical_layout_dataset_and_raw_RAM_records_unchanged": true,
+  "inherited_RAM_math_calls": 274008,
+  "new_public_math_ARM_calls": 0,
+  "new_MPFR_calls": 0,
+  "new_startup_and_parent_function_calls": 47,
+  "new_worker_primitive_calls": 148,
+  "physical_IO": 0,
+  "physical_cycles_measured": false,
+  "goal_complete": false
+}

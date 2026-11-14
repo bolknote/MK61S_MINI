@@ -1,0 +1,16 @@
+{
+  "status": "ROOT_JOINT01_FRESH_CAPTURE_ZERO_SET0_AND_DATA_UI_EXACT_PASS",
+  "all38_pins_verified": true,
+  "all12_status_keys_epoch_build_locked": true,
+  "state_sha256": "96389bfc8e51fe67fdcf557c4251677c8f727bde0861ea0f21d2fc7ce85b5973",
+  "physical_keys": 0,
+  "epoch": [
+    "9",
+    "00010001"
+  ],
+  "all_typed_data_settings_UI_exact": true,
+  "RTC_SET": 0,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "actor_reaped": true,
+  "Root_device_IO": 0
+}

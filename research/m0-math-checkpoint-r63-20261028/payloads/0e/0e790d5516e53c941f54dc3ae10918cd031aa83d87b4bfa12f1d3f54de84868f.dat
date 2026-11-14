@@ -1,0 +1,25 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "math-cdc",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-math-cdc.json",
+    "--lease-sha256",
+    "185b540d683102f68fedda55f1779b7d71c9257ace2507a5ecb71464c7a4a3bb",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-001",
+    "--supervisor-output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-math-cdc-supervisor-001"
+  ],
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-math-cdc.json",
+    "bytes": 2873,
+    "sha256": "185b540d683102f68fedda55f1779b7d71c9257ace2507a5ecb71464c7a4a3bb"
+  },
+  "stage": "math-cdc",
+  "batch": "joint-01"
+}

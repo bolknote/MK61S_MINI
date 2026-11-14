@@ -1,0 +1,13 @@
+
+/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/candidate.elf:     file format elf32-littlearm
+
+
+Disassembly of section .sqrt_group:
+
+Disassembly of section .pow_log_group:
+
+Disassembly of section .pow_dispatch_group:
+
+Disassembly of section .text:
+
+Disassembly of section .scratch_y:

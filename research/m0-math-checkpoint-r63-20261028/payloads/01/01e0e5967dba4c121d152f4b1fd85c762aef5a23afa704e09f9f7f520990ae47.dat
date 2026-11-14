@@ -1,0 +1,7 @@
+# Required preflight before the five R61 HIL stages
+
+This is an additive correction to PLAN.md. Run the separately reviewed `preflight-current249` supervisor stage `resident-capture` first, with its own new canonical Root grant. `preflight-current249/ARGV-resident-capture.json` contains the absolute argument array and its template is disabled. The read-only scope is `PICO_R61_READONLY_CURRENT249_ONCE`, distinct from the five-stage RAM scope. No device action was taken while preparing or testing it.
+
+It observes PHYSICAL_KEYS and BOOTS/RESET_REASON from the first valid current249 status, then locks both through every subsequent status/getter/clock capture. A historical expected counter is not permitted. Root must inspect the new BASELINE.json and current-state.json, independently pin the fresh typed state, actual counter/epoch and clock disposition, and only then decide whether the existing resident-rom prerequisites are met. Nonzero calculator state or configured RTC still has no automatic RAM/reboot grant. The output is a read-only snapshot, not permission to transition.
+
+The old payload, operator and plan hashes remain unchanged. This extra envelope is independently frozen in preflight-current249/ENVELOPE-FROZEN.json. It has one entry only, uses the reviewed canonical lease/owned-descriptor/owned-child guards, transmits only ENQ, command-mode US and seven fixed read-only getters, then closes. Normal TX is 50 bytes and all twelve status responses are checked. No RAW !, X, reset, ROM/Flash/SD/APP action or clock setter is available.

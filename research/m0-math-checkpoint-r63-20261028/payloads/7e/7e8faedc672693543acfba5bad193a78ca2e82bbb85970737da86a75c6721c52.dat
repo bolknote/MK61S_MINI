@@ -1,0 +1,28 @@
+{
+  "status": "R60_EXACT_SUFFICIENT_OVERFLOW_PROOF_AND_SEVEN_REAL_PARENT_PREFIX_PROFILES_PASS_NOT_IMPLEMENTED",
+  "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-overflow-r60-20261027",
+  "source_parent": "R59",
+  "parent_FROZEN_sha256": "fdb260d5f7430c74306175d7d41d01fda8268493d5d7dbcc7bf57bf481f7154a",
+  "predicate_proof_sha256": "ef77955461ed202323e87888eee61598fcac16708bd0d3d5a8292f69e6d2cb6a",
+  "parent_profile_sha256": "79d34d7d2e7225b1efa9b5d5b338580f81e48cf97e744cbe6b701923c9791835",
+  "actual_new_parent_ARM_calls": 7,
+  "new_MPFR_calls": 0,
+  "remaining_pairs_matched": 7,
+  "subnormal_gate_entry_instruction_range": [
+    124,
+    185
+  ],
+  "parent_public_instruction_range": [
+    6207,
+    38473
+  ],
+  "fastest_correct_cached_Qfplib_instructions": 788,
+  "next_action": "Implement only cold RP negative-subnormal helper guard; preserve normal and all exact shortcut paths. Follow NEXT-ACTIONS.md.",
+  "runtime_implemented": false,
+  "M4_changed": false,
+  "actual_device_IO": 0,
+  "new_Git_writes": 0,
+  "agents_spawned": 0,
+  "all_processes_terminal": true,
+  "goal_complete": false
+}

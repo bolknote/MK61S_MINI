@@ -1,0 +1,75 @@
+{
+  "created_utc": "2026-10-28T05:22:23.399808+00:00",
+  "raw_USB": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-math-cdc-002/root-usb.plist",
+    "bytes": 84537,
+    "sha256": "e8d6971d6b9f6b48268194c0bfa45bdb5addf689ebe554bfb32de2b818c43d0d"
+  },
+  "facts": {
+    "serial": "M0R55POW01",
+    "location_id": 1245184,
+    "VID": 11914,
+    "PID": 10,
+    "port": "/dev/cu.usbmodemM0R55POW011",
+    "callouts": [
+      "/dev/cu.usbmodemM0R55POW011"
+    ],
+    "entry": 4298050847,
+    "session": 13072299712090,
+    "mode": "worker",
+    "noholder": {
+      "policy_id": "host-named-cdc-noholder-001",
+      "policy_ref": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-panic-origin-20261026-001/hardware-caller-006/lib/POLICY.json",
+        "sha256": "a26687e320bcde1cd733ffb0f0a824b34623fe425b392f249db0df14b8c1fd77"
+      },
+      "ownport": "/dev/cu.usbmodemM0R55POW011",
+      "lsof_returncode": 1,
+      "scope": "exact named CDC probe only",
+      "lsof_stdout_hex": "",
+      "lsof_stderr_hex": "6c736f663a205741524e494e473a2063616e27742073746174282920736d6266732066696c652073797374656d202f566f6c756d65732f2e74696d656d616368696e652f416972506f72742054696d652043617073756c652e5f736d622e5f7463702e6c6f63616c2e2f35383932434237462d394646352d344431322d394532312d3138313236453741453237302fd094d0b8d181d0ba20416972506f72740a2020202020204f757470757420696e666f726d6174696f6e206d617920626520696e636f6d706c6574652e0a202020202020617373756d696e6720226465763d3336303030303465222066726f6d206d6f756e74207461626c650a",
+      "lsof_stderr": "lsof: WARNING: can't stat() smbfs file system /Volumes/.timemachine/AirPort Time Capsule._smb._tcp.local./5892CB7F-9FF5-4D12-9E21-18126E7AE270/Диск AirPort\n      Output information may be incomplete.\n      assuming \"dev=3600004e\" from mount table\n",
+      "warning": {
+        "path": "/Volumes/.timemachine/AirPort Time Capsule._smb._tcp.local./5892CB7F-9FF5-4D12-9E21-18126E7AE270/Диск AirPort",
+        "device_hex": "3600004e",
+        "device": 905969742
+      },
+      "local_observation": {
+        "monotonic_ns": 544745888776625,
+        "follow_symlinks": false,
+        "dev_stat": {
+          "st_mode": 16749,
+          "st_dev": 2106754796,
+          "st_rdev": 0,
+          "st_ino": 333
+        },
+        "own_stat": {
+          "st_mode": 8630,
+          "st_dev": 2106754796,
+          "st_rdev": 150994947,
+          "st_ino": 3883
+        }
+      },
+      "cached_mount_probe": {
+        "argv": [
+          "/sbin/mount",
+          "-t",
+          "smbfs"
+        ],
+        "timeout_seconds": 10,
+        "returncode": 0,
+        "stdout_sha256": "c8e94ad651608916a28c55548fea3ecb71cf4fca3e1deb3cad23abdb9b146ec2",
+        "stdout_bytes": 219,
+        "stderr_hex": ""
+      },
+      "matched_cached_mount_row": "//bolk@AirPort%20Time%20Capsule._smb._tcp.local./%D0%94%D0%B8%D1%81%D0%BA%20AirPort on /Volumes/.timemachine/AirPort Time Capsule._smb._tcp.local./5892CB7F-9FF5-4D12-9E21-18126E7AE270/Диск AirPort (smbfs, nobrowse)",
+      "qualified": true,
+      "reason": "exact named CDC result qualified; no global noholder claim"
+    },
+    "advisory_EX_acquired": true,
+    "port_stat_rdev": 150994947,
+    "serial_FD_opened": false
+  },
+  "own_prior_hardware_stage_actors_live": [],
+  "Root_device_IO": 0
+}

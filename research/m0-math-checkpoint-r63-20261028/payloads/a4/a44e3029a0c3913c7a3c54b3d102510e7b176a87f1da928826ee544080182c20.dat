@@ -1,0 +1,42 @@
+"""Read-only envelope/dependency/receipt verification; no device, build or ARM."""
+from pathlib import Path
+import ast,hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+from envelope_pins import verify_files
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+frozen=W/'ENVELOPE-FROZEN.json';manifest=json.loads(frozen.read_text())
+assert manifest['all_producers_terminal'] and manifest['actual_device_IO']==0
+verify_files(W,manifest)
+external_pins=0
+for d in manifest['external_frozen_packets'].values():
+    folder=(W/d['relative_directory']).resolve();p=folder/d['manifest']
+    assert p.is_file() and not p.is_symlink() and sha(p)==d['sha256']
+    m=json.loads(p.read_text());assert m['all_producers_terminal'] and len(m['files'])==d['pins']
+    verify_files(folder,m);external_pins+=len(m['files'])
+for ref in manifest['external_file_refs'].values():
+    p=Path(ref['path']);assert p.is_absolute() and p.is_file() and not p.is_symlink()
+    assert p.stat().st_size==ref['bytes'] and sha(p)==ref['sha256']
+for name in manifest['files']:
+    if name.endswith('.py'):ast.parse((W/name).read_text(),filename=name)
+tests={'worker-live-test.json':3,'rom-envelope-test.json':3,'resident-stage-test.json':5,'supervisor-test.json':3}
+for name,n in tests.items():
+    result=json.loads((W/name).read_text());assert result['status'].startswith('PASS_') and len(result['rejected'])==n
+terminal=json.loads((W/'producer-terminal.json').read_text())
+assert terminal['all_HOST_jobs_terminal'] and all(x['exit_code']==0 for x in terminal['jobs'].values())
+for ref in terminal['jobs'].values():
+    p=W/ref['result'];assert sha(p)==ref['result_sha256']
+definition=json.loads((W/'ENVELOPE-MANIFEST.json').read_text())
+assert definition['source_math_candidate']=='R55' and not definition['physical_cycles_measured']
+assert set(definition['stages'])=={'resident-rom','rom-load','math-cdc','rom-return','resident-verify'}
+for stage in definition['stages']:
+    t=json.loads((W/('TEMPLATE-'+stage+'.json')).read_text())
+    assert t['stage']==stage and t['HOST_FIXTURE_ONLY'] and not t['enabled'] and not t['hardware_execution_allowed']
+    assert t['operator_packet_sha256']=='ROOT_EXACT_ENVELOPE_FROZEN_SHA256'
+assert definition['current_adopted_RTC_SET']==0 and definition['clock_return_status']=='SET0_PLACEHOLDER_HOLD_NO_SETTER'
+print(json.dumps(dict(status='PASS_HOST_STAGED_OPERATOR_ENVELOPE_NOT_PHYSICAL_GRANT',
+    ENVELOPE_FROZEN_sha256=sha(frozen),operator_pins=len(manifest['files']),
+    external_frozen_pins=external_pins,external_file_refs=len(manifest['external_file_refs']),
+    additional_inert_rejections=sum(tests.values()),all_HOST_jobs_terminal=True,
+    actual_device_IO=0,new_ARM_MPFR_or_build_calls=0,physical_cycles_measured=False,
+    whole_library_goal_complete=False),indent=2))

@@ -1,0 +1,19 @@
+{
+  "pid": 17987,
+  "owned_process_group": 17987,
+  "supervisor_pid": 17986,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/preflight-d6/capture_stage.py",
+    "--execute",
+    "--stage",
+    "resident-capture",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/grants/r63-smoke-resident-capture.json",
+    "--lease-sha256",
+    "a772eb02971e865b9eada74ce2cf97c2d5d3b7fd0c7f76c67b938606521e8d6e",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-resident-capture-001"
+  ]
+}

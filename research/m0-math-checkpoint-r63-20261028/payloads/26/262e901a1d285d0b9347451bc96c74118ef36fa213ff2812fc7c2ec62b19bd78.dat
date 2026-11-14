@@ -1,0 +1,21 @@
+{
+  "status": "ROOT_FINITE_STAGE_RECEIPTS_AND_SCOPE_REVIEW_PASS",
+  "batch": "joint-01",
+  "stage": "resident-rom",
+  "pins_verified": 40,
+  "actor_pid": 60502,
+  "actor_reaped": true,
+  "Root_device_IO": 0,
+  "exact_RAW_ACK": true,
+  "state_sha256": "a0d8f9c5cbcfb3ab9fe07228e78c3791ba14bf281be18cf603b4566348aed134",
+  "epoch": [
+    "9",
+    "00010001"
+  ],
+  "physical_keys": 0,
+  "typed_data_settings_UI_exact": true,
+  "RTC_SET": 0,
+  "clock_disposition": "SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED",
+  "TX_bytes": 53,
+  "all_writes_full": true
+}

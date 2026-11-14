@@ -1,0 +1,12 @@
+{
+  "status": "HOST_INERT_D6_WAKE_SUCCESSOR_PENDING_TESTS",
+  "identity_wake_policy": "ROOT_ADMITS_QUALIFIED_CLOSED_IDENTITY_WAKE_THEN_STRICT_SLEEP0",
+  "exact_UIv6_methods_reused": [
+    "_guard",
+    "admit",
+    "to_command",
+    "_closed_cache"
+  ],
+  "readiness_strengthened_not_relaxed": true,
+  "actual_device_IO": 0
+}

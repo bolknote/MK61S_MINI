@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "resident-capture",
+  "supervisor_pid": 21295,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/preflight-d6/capture_stage.py",
+    "--execute",
+    "--stage",
+    "resident-capture",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/grants/r63-smoke-resident-capture-002.json",
+    "--lease-sha256",
+    "06205ff1b1bfbb60f4a89cc36163aa0238ba058aa5dada1d702249ad5bdda263",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-resident-capture-002"
+  ],
+  "grant_sha256": "06205ff1b1bfbb60f4a89cc36163aa0238ba058aa5dada1d702249ad5bdda263",
+  "stage_output": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-smoke-resident-capture-002",
+  "supervisor_device_IO": 0,
+  "pid": 21300,
+  "owned_process_group": 21300,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793202791.488065,
+  "stdout.bin_sha256": "4f7176feaf246f00b0694953651d8c1dfba7e3b35e722a32b72a7a2aeec6a950",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

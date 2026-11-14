@@ -1,0 +1,11 @@
+{
+  "status": "PASS_ALL_31_PREFLIGHT_PLUS_62_PAYLOAD_PLUS_50_OPERATOR_PINS_UNCHANGED",
+  "PREFLIGHT_READY": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/PREFLIGHT-READY.json",
+    "sha256": "6c2c7e33f4657ca57ebe9037fe244264a3d5f499c3ef3e8facf94a29cd4a0048",
+    "bytes": 1436
+  },
+  "physical_IO": 0,
+  "new_ARM_MPFR_calls": 0,
+  "all_producers_terminal": true
+}

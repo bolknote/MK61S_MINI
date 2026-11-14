@@ -1,0 +1,14 @@
+{
+  "status": "PASS_HOST_PREPARED_PACKET_NOT_PHYSICAL_ACCEPTANCE",
+  "pinned_files": 50,
+  "package_FROZEN_sha256": "8eae142891720c98286f6679bb144d5a72acf6816a0df89196f25c3c400f77e8",
+  "ELF_sha256": "68f752c5c5a581be8929c9318ebe5c18d1a754911faf80c72ff3b42a59728b6a",
+  "new_ARM_MPFR_calls": 0,
+  "device_IO": 0,
+  "physical_cycles_measured": false,
+  "goal_complete": false,
+  "recounted_states": 68502,
+  "recounted_public_ARM_calls": 274008,
+  "remaining_finite_RAM_pow_pairs": 1435,
+  "all_wrong_reference_outputs_costs_and_all_correct_comparisons_retained": true
+}

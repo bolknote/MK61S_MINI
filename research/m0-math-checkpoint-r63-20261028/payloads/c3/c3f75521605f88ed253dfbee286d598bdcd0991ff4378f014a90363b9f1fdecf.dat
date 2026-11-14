@@ -1,0 +1,2 @@
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-dispatch-contract-r59-20261027/private-pow-dispatch.cpp:22:8:double mk61_m0_pow_dispatch_fractional(double, double)	48	static
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-dispatch-contract-r59-20261027/private-pow-dispatch.cpp:41:8:double mk61_m0_pow_dispatch_high_word(double, uint32_t, uint32_t)	48	static

@@ -1,0 +1,20 @@
+{
+  "status": "SAVED_ACTUAL_TARGETED_POW_SMOKE_UNIQUE_STATE_AGGREGATION_NOT_FULL_ACCEPTANCE",
+  "unique_pairs": 24,
+  "unique_states": 72,
+  "state_classes": {
+    "equal_or_faster_than_all_correct_references": 36,
+    "no_correct_reference": 12,
+    "slower_than_at_least_one_correct_reference": 24
+  },
+  "pair_classes": {
+    "equal_or_faster_than_all_correct_references": 12,
+    "no_correct_reference": 4,
+    "slower_than_at_least_one_correct_reference": 8
+  },
+  "all_costs_and_wrong_refs_in_original_comparisons": true,
+  "all_libraries_execute_from_SRAM": true,
+  "frequency_Hz": 125000000,
+  "observed_stack_bytes": 2284,
+  "universality_or_full_corpus_acceptance": false
+}

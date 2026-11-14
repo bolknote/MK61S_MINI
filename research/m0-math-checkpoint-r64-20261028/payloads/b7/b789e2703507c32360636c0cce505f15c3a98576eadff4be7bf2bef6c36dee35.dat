@@ -1,0 +1,16 @@
+{
+  "status": "CAPTURE_TEMPLATES_BIND_CORRESPONDING_FUTURE_ROLE_METADATA_ONLY",
+  "changes": [
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/preflight-d6/TEMPLATE-r63-smoke-resident-capture.json",
+      "old": "5fd17a577994698dcc877ef2b520ee5c0ce17a4f8c71a451edd737cca1857854",
+      "new": "55ce3f8351b19a93474e46428387ed0418c2aeaafc3e7b3a21c31221423e8649"
+    },
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/preflight-d6/TEMPLATE-r63-tail-resident-capture.json",
+      "old": "5fd17a577994698dcc877ef2b520ee5c0ce17a4f8c71a451edd737cca1857854",
+      "new": "55ce3f8351b19a93474e46428387ed0418c2aeaafc3e7b3a21c31221423e8649"
+    }
+  ],
+  "actual_device_IO": 0
+}

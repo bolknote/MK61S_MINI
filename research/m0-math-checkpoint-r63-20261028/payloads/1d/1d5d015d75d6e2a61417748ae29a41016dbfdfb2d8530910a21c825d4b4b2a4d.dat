@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_JOINT01_SINGLE_ROM_TRANSITION_REAPED",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1367,
+      "sha256": "e37c378915ad52a78ec577ff059a1c425f6787e864b34c53fe86502046dfe028"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 691,
+      "sha256": "9792ea9f7d7acef58072741330045a3d0fdf877116a48be893567d20d517ae35"
+    },
+    "ARGV.json": {
+      "bytes": 702,
+      "sha256": "cfb27fcf42261f7d20d0e6c9d3e40461ba7b60ca8b423aafa1965f62c9eecdc2"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 588,
+      "sha256": "cd2df62bdc396a777209d096ddc2e043e6a86944b63fc713bac3b107dbc8ac70"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "raw_exclamation_attempts": 1,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

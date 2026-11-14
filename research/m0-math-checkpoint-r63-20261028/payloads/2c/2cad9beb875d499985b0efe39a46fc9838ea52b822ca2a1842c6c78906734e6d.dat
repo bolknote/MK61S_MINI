@@ -1,0 +1,22 @@
+{
+  "pid": 99459,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "save",
+    "-a",
+    "-v",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/flash-after-math.bin",
+    "-t",
+    "bin",
+    "--bus",
+    "0",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "ed6166e49a1d424793a2940113a62a25a47a34f3627eeb45b848ebeb0219a039",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

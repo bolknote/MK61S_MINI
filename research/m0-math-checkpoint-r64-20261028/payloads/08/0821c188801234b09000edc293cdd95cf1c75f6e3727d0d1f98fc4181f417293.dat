@@ -1,0 +1,14 @@
+{
+  "status": "D6_OPERATORS_PREPARED_HOST_ONLY_NOT_READY_UNTIL_TESTS_AND_SEAL",
+  "RAM_manifest": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/FROZEN.json",
+    "bytes": 17368,
+    "sha256": "3868ef3cafab7fd8269f1f1b0c9e124ab2ba4931170ce25f1c1adb0160be8180"
+  },
+  "fixed_new_global_max14_pair": true,
+  "historical_D6_fullFlash_hash_is_not_a_fresh_backup": true,
+  "no_actual_grants": true,
+  "live_IO": 0,
+  "Git_writes": 0,
+  "primary_writes": 0
+}

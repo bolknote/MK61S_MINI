@@ -1,0 +1,30 @@
+{
+  "status": "EXACT_RATIONAL_DIRECTED_BOUNDARIES_PREPARED_HOST_ONLY",
+  "pairs": 1618,
+  "planned_states": 4854,
+  "local_predicate_true": 153,
+  "tags": {
+    "exponent_order_boundaries": 684,
+    "second_predecessor_decline": 162,
+    "high_fraction_decline": 162,
+    "power_of_two_old_route": 162,
+    "positive_base_old_route": 162,
+    "result_p_1024": 6,
+    "result_p_-1075": 3,
+    "result_p_-1023": 5,
+    "result_p_-1022": 4,
+    "zero_subnormal_infinity_decline": 108,
+    "result_p_-1076": 2,
+    "result_p_-1074": 3,
+    "result_p_-1021": 1,
+    "result_p_1022": 3,
+    "result_p_1023": 4,
+    "noninteger_y_decline": 160
+  },
+  "inputs_sha256": "a1504d7c501d5b72b009fe627690ac0a987f073546e1a9bcfbd41086480f291f",
+  "oracle_sha256": "c0da4386ebe8de12451047b5eaf62dbe2860408c65f4cfc7f3ab2bea19a7febf",
+  "producer_sha256": "5b51edb0c73792c8139b89bf8e81e16442bbbffbace033b45cb97de3e5263fd6",
+  "actual_ARM_calls": 0,
+  "actual_device_IO": 0,
+  "selected": false
+}

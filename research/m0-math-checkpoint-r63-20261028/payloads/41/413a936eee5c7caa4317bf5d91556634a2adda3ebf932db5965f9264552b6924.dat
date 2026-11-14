@@ -1,0 +1,8 @@
+{
+  "status": "TERMINAL_HOST_PREPARATION_FAILURE_NO_MATH_EDIT_OR_ARM_CALLS",
+  "error": "Copied source/objects then expected nonexistent zero-control.ld; actual pinned link scripts will be copied by inventory",
+  "second_attempt_command_failed_before_import": "build.py was not created",
+  "source_modified": false,
+  "new_ARM_MPFR_calls": 0,
+  "new_device_IO": 0
+}

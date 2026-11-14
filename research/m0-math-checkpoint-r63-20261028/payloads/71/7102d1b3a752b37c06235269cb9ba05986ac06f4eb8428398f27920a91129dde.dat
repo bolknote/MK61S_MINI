@@ -1,0 +1,82 @@
+{
+  "status": "EXACT_REUSED_R61_BENCH_OBJECT_ONLY_PINNED_LITERAL_DATA_UPDATED",
+  "original": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/bootable/build/bench.c.o",
+    "bytes": 35220,
+    "sha256": "ffd029f7a7ba2d22e38b773714649961fe9d9da64300d2cb65711abb6ed82929"
+  },
+  "new": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/build/bench.c.o",
+    "bytes": 35220,
+    "sha256": "497f4c0a9bc1ac383f10789a4a94ba28c8ab93bb16c4337a6c3757b38cbd9088"
+  },
+  "header_changes": {
+    "MATH_MAIN_BYTES": {
+      "old": 208312,
+      "new": 208456
+    },
+    "MATH_MAIN_CRC": {
+      "old": 4252426209,
+      "new": 4184172300
+    },
+    "MATH_HOT_CRC": {
+      "old": 764869799,
+      "new": 203475046
+    }
+  },
+  "patches": [
+    {
+      "section": ".text.startup.main",
+      "section_offset": 736,
+      "file_offset": 1356,
+      "old": 208312,
+      "new": 208456,
+      "roles": [
+        "MATH_MAIN_BYTES"
+      ]
+    },
+    {
+      "section": ".text.startup.main",
+      "section_offset": 744,
+      "file_offset": 1364,
+      "old": 4252426209,
+      "new": 4184172300,
+      "roles": [
+        "MATH_MAIN_CRC"
+      ]
+    },
+    {
+      "section": ".text.startup.main",
+      "section_offset": 756,
+      "file_offset": 1376,
+      "old": 764869799,
+      "new": 203475046,
+      "roles": [
+        "MATH_HOT_CRC"
+      ]
+    },
+    {
+      "section": ".text.startup.main",
+      "section_offset": 1860,
+      "file_offset": 2480,
+      "old": 4252426209,
+      "new": 4184172300,
+      "roles": [
+        "MATH_MAIN_CRC"
+      ]
+    },
+    {
+      "section": ".text.startup.main",
+      "section_offset": 1864,
+      "file_offset": 2484,
+      "old": 764869799,
+      "new": 203475046,
+      "roles": [
+        "MATH_HOT_CRC"
+      ]
+    }
+  ],
+  "all_other_object_bytes_exact": true,
+  "no_instruction_opcode_modified": true,
+  "new_compiles": 0
+}

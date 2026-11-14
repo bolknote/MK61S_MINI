@@ -1,0 +1,61 @@
+"""Pure HOST audit of the new dataset, nonce/CRC frames and finite budgets."""
+from pathlib import Path
+from collections import Counter
+import gzip,hashlib,json,zlib
+from protocol import query,control
+W=Path(__file__).resolve().parent;ROOT=W.parents[2]
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+dataset=[]
+with gzip.open(W/'dataset.jsonl.gz','rt') as f:dataset=[json.loads(x) for x in f]
+index={r['case_id']:r for r in dataset};batches=json.loads((W/'batches.json').read_text())['batches']
+assert len(dataset)==252 and len(index)==252 and len(batches)==4
+ids=[];nonces=set();total_frames=0
+for b in batches:
+    nonce=b['wire_nonce_proposal'];assert type(nonce)is int and 0<nonce<2**32 and nonce not in nonces
+    nonces.add(nonce);ids.extend(b['case_ids']);frames=[control('I',nonce)];i=0
+    for op in [0,1]:
+        for state in range(3):
+            i+=1;frames.append(query(nonce,i,op,state,0x3ff8000000000000,0,0x3ff8000000000000 if not op else (1 if state==0 else 3 if state==1 else 2)))
+    for case in b['case_ids']:
+        r=index[case];i+=1
+        frames.append(query(nonce,i,2,['READY','DIRTY','PENDING'].index(r['SIO']),int(r['x'],16),int(r['y'],16),int(r['expected'],16)))
+    frames.append(control('X',nonce))
+    assert i==b['total_query_requests']<=78
+    assert sum(map(len,frames))==b['TX_bytes_exact']
+    for raw in frames:
+        length=10 if raw[:1] in [b'I',b'X'] else 76
+        assert int(raw[length+1:-1],16)==zlib.crc32(raw[:length]) and len(raw)==length+10
+    assert b['maximum_public_target_calls']==60+40*b['state_cases']
+    total_frames+=len(frames)
+assert sorted(ids)==sorted(index) and len(ids)==len(set(ids))
+old=ROOT/'.build/m0-math-r61-ram-hil-20261028/physical-smoke-math-cdc-001/records.jsonl'
+def old_nonces(value):
+    if isinstance(value,dict):
+        for k,v in value.items():
+            if k=='nonce' and isinstance(v,int):yield v
+            else:yield from old_nonces(v)
+    elif isinstance(value,list):
+        for v in value:yield from old_nonces(v)
+prior=set()
+for line in old.read_text().splitlines():prior.update(old_nonces(json.loads(line)))
+assert prior and not nonces&prior
+ram=[]
+with gzip.open(W/'ram-records.jsonl.gz','rt') as f:ram=[json.loads(x) for x in f]
+targets={n:{(r['x'],r['y']) for r in json.loads((ROOT/'.build'/name/'target-pairs.json').read_text())} for n,name in [(62,'m0-math-pow-subnormal-powerzero-r62-20261028'),(63,'m0-math-pow-fullword-powerzero-r63-20261028')]}
+ranges={}
+for stage,keys in targets.items():
+    values=[]
+    for r in ram:
+        if (r['x'],r['y']) not in keys:continue
+        valid=[r['instructions'][n] for n,v in r['correct'].items() if n!='candidate' and v]
+        assert r['correct']['candidate'] and valid and r['instructions']['candidate']<min(valid)
+        values.append(r['instructions']['candidate'])
+    assert len(values)==3*len(keys);ranges[stage]=[min(values),max(values)]
+result=dict(status='PASS_JOINT_PACKET_BUDGET_NONCE_CRC_AND_ALL42_TARGET_RAM_COMPARISONS',
+    unique_pairs=84,states=252,batches=4,all_case_ids_once=True,all_three_SIO_per_pair=True,
+    proposed_nonces_unique_and_not_prior_physical_nonce=True,total_proposed_frames=total_frames,
+    total_proposed_queries=sum(b['total_query_requests'] for b in batches),total_proposed_target_calls=sum(b['maximum_public_target_calls'] for b in batches),
+    all_query_CRCs_and_exact_TX_budgets_checked=True,all42_original_target_pairs_faster_in_RAM_instruction_checks=True,
+    RAM_instruction_ranges=ranges,prior_full_worker_primitive_check=sha(ROOT/'.build/m0-math-r61-ram-hil-20261028/bootable/worker-check.json'),
+    worker_primitives_inherited_not_rerun=True,new_ARM_MPFR_device_calls=0,physical_cycles_measured=False,goal_complete=False)
+(W/'packet-plan-check.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

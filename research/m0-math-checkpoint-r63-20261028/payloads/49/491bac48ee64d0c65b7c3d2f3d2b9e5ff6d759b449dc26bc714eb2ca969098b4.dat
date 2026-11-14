@@ -1,0 +1,60 @@
+--- R1/runtime-clocks-keep-rtc.c
++++ R2/runtime-clocks-keep-rtc.c
+@@ -11,6 +11,7 @@
+ #include "hardware/regs/pll.h"
+ extern void bench_fault_entry(void);
+ #include "hardware/pll.h"
++#include "hardware/resets.h"
+ #include "hardware/ticks.h"
+ #include "hardware/timer.h"
+ #include "hardware/vreg.h"
+@@ -56,16 +57,32 @@
+         uint32_t rd=cs & PLL_CS_REFDIV_BITS;
+         uint32_t p1=(prim & PLL_PRIM_POSTDIV1_BITS)>>PLL_PRIM_POSTDIV1_LSB;
+         uint32_t p2=(prim & PLL_PRIM_POSTDIV2_BITS)>>PLL_PRIM_POSTDIV2_LSB;
+-        if (!(cs & PLL_CS_LOCK_BITS) || (cs & PLL_CS_BYPASS_BITS) ||
++        bool usb_pll_needs_init = !(cs & PLL_CS_LOCK_BITS) || (cs & PLL_CS_BYPASS_BITS) ||
+             (pwr & (PLL_PWR_PD_BITS | PLL_PWR_VCOPD_BITS | PLL_PWR_POSTDIVPD_BITS)) ||
+-            !rd || !p1 || !p2 || (XOSC_HZ/rd)*pll_usb->fbdiv_int/p1/p2 != USB_CLK_HZ) {
+-            bench_fault_entry();
++            !rd || !p1 || !p2 || (XOSC_HZ/rd)*pll_usb->fbdiv_int/p1/p2 != USB_CLK_HZ;
++        if (usb_pll_needs_init) {
++            uint32_t rtc_ctrl = clocks_hw->clk[clk_rtc].ctrl;
++            uint32_t rtc_source = (rtc_ctrl & CLOCKS_CLK_RTC_CTRL_AUXSRC_BITS) >> CLOCKS_CLK_RTC_CTRL_AUXSRC_LSB;
++            // A live RTC driven by this PLL cannot tolerate reinitialization.
++            // BootROM watchdog entry has RTC reset/clock disabled; SET0 return
++            // is explicitly accepted by the operator, without any RTC setter.
++            if ((rtc_ctrl & CLOCKS_CLK_RTC_CTRL_ENABLE_BITS) &&
++                rtc_source == CLOCKS_CLK_RTC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB &&
++                !(resets_hw->reset & (1u << RESET_RTC))) {
++                bench_fault_entry();
++            }
+         }
+         // Disable resus that may be enabled from previous software
+         clocks_hw->resus.ctrl = 0;
+ 
+         // Enable the xosc
+         xosc_init();
++        if (usb_pll_needs_init) {
++            // SDK pll_init may return early for a locked but bypassed PLL.
++            reset_unreset_block_num_wait_blocking(RESET_PLL_USB);
++            pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
++                     PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
++        }
+ 
+         // Before we touch PLLs, switch sys and ref cleanly away from their aux sources.
+         hw_clear_bits(&clocks_hw->clk[clk_sys].ctrl, CLOCKS_CLK_SYS_CTRL_SRC_BITS);
+@@ -77,7 +94,7 @@
+ 
+         /// \tag::pll_init[]
+         pll_init(pll_sys, PLL_SYS_REFDIV, PLL_SYS_VCO_FREQ_HZ, PLL_SYS_POSTDIV1, PLL_SYS_POSTDIV2);
+-        /* Existing USB PLL is validated below; never restart its RTC source. */
++        /* USB PLL was checked/initialized above; a live RTC source is preserved. */
+         /// \end::pll_init[]
+ 
+         // Configure clocks
+@@ -149,4 +166,4 @@
+     start_all_ticks();
+ }
+ 
+-#endif+#endif

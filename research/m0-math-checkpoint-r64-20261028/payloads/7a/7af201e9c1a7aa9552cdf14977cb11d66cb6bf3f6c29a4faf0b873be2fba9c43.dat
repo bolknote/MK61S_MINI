@@ -1,0 +1,16 @@
+{
+  "status": "D6_WAKE_SUCCESSOR_HOST_ONLY_PENDING_TESTS",
+  "parent": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/FROZEN.json",
+    "bytes": 26894,
+    "sha256": "d375518a8f8bf4751891953959ed83442407c09d2d10f0c0a14bdb717046b28f"
+  },
+  "current_human_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/development-next-root-20261028-001/USER-DEVICE-STATE-001.json",
+    "bytes": 531,
+    "sha256": "a5077b7752bea060890d9c71ba176b69efd4930b3c93429b4dc8fdeb52991e15"
+  },
+  "no_live_grants": true,
+  "device_IO": 0,
+  "old_frozen_unchanged": true
+}

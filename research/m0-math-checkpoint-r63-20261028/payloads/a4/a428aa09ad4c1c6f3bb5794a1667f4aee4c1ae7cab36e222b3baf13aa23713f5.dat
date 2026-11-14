@@ -1,0 +1,4 @@
+class GuardError(RuntimeError):
+    pass
+def require(value,message):
+    if not value:raise GuardError(message)

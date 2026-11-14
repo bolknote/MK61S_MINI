@@ -1,0 +1,37 @@
+{
+  "status": "ROOT_R63_PARENT_AND_SOURCE_PINS_VERIFIED",
+  "packets": [
+    {
+      "packet": "R63",
+      "manifest_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+      "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558",
+      "pins": 458,
+      "external_refs": 16,
+      "extra": []
+    },
+    {
+      "packet": "R62",
+      "manifest_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-powerzero-r62-20261028/FROZEN.json",
+      "sha256": "342d99787bd364c760151d44223329ed1ffc2077ceac766d99f9008588bf32d5",
+      "pins": 460,
+      "external_refs": 14,
+      "extra": []
+    },
+    {
+      "packet": "Root_R62",
+      "manifest_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-root-review-20261028-001/FROZEN.json",
+      "sha256": "e9c099916d199f7dfea9bc21575ece159fab2b3e165107ffeacad977782de5f4",
+      "pins": 7,
+      "external_refs": 0,
+      "extra": []
+    },
+    {
+      "packet": "Root_R59_R60",
+      "manifest_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r59-r60-root-review-20261028-001/FROZEN.json",
+      "sha256": "f6c012549fc8ae5a182e65068e3edf3513f5eeadc71fa9a6f70f1a7614821deb",
+      "pins": 8,
+      "external_refs": 0,
+      "extra": []
+    }
+  ]
+}

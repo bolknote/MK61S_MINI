@@ -1,0 +1,42 @@
+{
+  "status": "ACTUAL_LINKED_DISPATCH_CALLERS_ONLY",
+  "candidate_ELF_sha256": "5ac911ffca3ade6baf81fb8f8dd8f168fc8f0cacca89eb0a4dc5b3e1c34dc39d",
+  "caller_objects": {
+    "RP-merged-asm.o": [
+      [
+        ".m0_pow_dispatch_extension",
+        192,
+        2,
+        "mk61_m0_pow_dispatch_high_word"
+      ],
+      [
+        ".m0_pow_dispatch_extension",
+        58,
+        102,
+        "mk61_m0_pow_dispatch"
+      ],
+      [
+        ".m0_pow_dispatch_extension",
+        72,
+        102,
+        "mk61_m0_pow_dispatch_fractional"
+      ]
+    ],
+    "RP-unified-native_eabi_m0_rp2040.S.o": [
+      [
+        ".m0_pow_early_endpoint",
+        120,
+        2,
+        "mk61_m0_pow_dispatch_fractional"
+      ],
+      [
+        ".m0_pow_early_endpoint",
+        124,
+        2,
+        "mk61_m0_pow_dispatch_high_word"
+      ]
+    ]
+  },
+  "unlinked_generic_M0_not_a_caller": true,
+  "no_guest_or_object_mutations": true
+}

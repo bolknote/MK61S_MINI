@@ -1,0 +1,15 @@
+{
+  "status": "HOLD_RESIDENT_STAGE_NO_RESET_RETRY_OR_SETTER",
+  "stage": "resident-rom",
+  "pid": 19314,
+  "Flash_writes_requested": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "physical_key_actions_sent": 0,
+  "goal_complete": false,
+  "error": "RuntimeError('Physical counter changed from the Root-bound current baseline')",
+  "serial_closed": true,
+  "TX_bytes": 1,
+  "RX_bytes": 3253,
+  "no_global_noholder_claim": true
+}

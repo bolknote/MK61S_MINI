@@ -1,0 +1,32 @@
+{
+  "status": "HOST_ANALYSIS_ADDENDUM_ONLY_NO_RUNTIME_OR_HARDWARE_AUTHORITY",
+  "files": {
+    "derive.py": {
+      "bytes": 6108,
+      "sha256": "8a7b0c7639b00770390f021ea9c676bdea4d624e6d4dce9b88d31cb802d76861"
+    },
+    "notes.json": {
+      "bytes": 1670,
+      "sha256": "141da81488a4fcb3990f6ff74ea27790428e875a0583862ac0bca0d76e6da869"
+    },
+    "proof.json": {
+      "bytes": 282009,
+      "sha256": "71e86300e15ffbe7c8beaeaa3b37b84b8bb8814ce8d94fefd65a32b4a609a6a6"
+    }
+  },
+  "external_refs": {
+    "parent": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-study-20261028-001/FROZEN.json",
+      "bytes": 1354,
+      "sha256": "09312f6187b2912186da4a4b45076b5b8f89ed5673d19f01edc078562d4b95dd"
+    },
+    "hardware_HOLD": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/joint-01-RETURN-HOLD-CLOSED.json",
+      "bytes": 1361,
+      "sha256": "de52d79a337ea3f47aac3215e326832343c73d8a111453fbe9871172a06f4a29"
+    }
+  },
+  "runtime_modified": false,
+  "device_IO": 0,
+  "full_goal_complete": false
+}

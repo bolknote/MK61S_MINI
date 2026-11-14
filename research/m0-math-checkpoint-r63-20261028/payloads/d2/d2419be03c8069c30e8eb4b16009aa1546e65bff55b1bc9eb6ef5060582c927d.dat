@@ -1,0 +1,63 @@
+{
+  "status": "HOST_ONLY_NEXT_STAGE_PROPOSAL_FROM_REAL_PHYSICAL_LOSSES_NOT_IMPLEMENTED",
+  "restricted_domain": "positive exact power-of-two subnormal x; positive y in[1,2) with low32bits zero",
+  "mathematics": "x=2^-k, y=M/2^20; compare k*M>=1075*2^20, exactly in uint32. Includes equality: ties-to-even gives +0.",
+  "known_remaining_pairs_matching_exact_predicate": 6,
+  "all_three_actual_8k_cycle_decline_pairs_included": true,
+  "uint32_product_max": 2252340174,
+  "uint32_limit": 4294967295,
+  "matching_pairs": [
+    {
+      "x": "0000000000000001",
+      "y": "3FF081B800000000",
+      "k": 1074,
+      "product": 1161836016,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    },
+    {
+      "x": "0000000100000000",
+      "y": "3FF0C7CE00000000",
+      "k": 1042,
+      "product": 1145914492,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    },
+    {
+      "x": "0002000000000000",
+      "y": "3FF0D46A00000000",
+      "k": 1025,
+      "product": 1130527850,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    },
+    {
+      "x": "0000000000000002",
+      "y": "3FF081B800000000",
+      "k": 1073,
+      "product": 1160754232,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    },
+    {
+      "x": "0000000100000000",
+      "y": "3FF081B900000000",
+      "k": 1042,
+      "product": 1127219970,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    },
+    {
+      "x": "0002000000000000",
+      "y": "3FF0C7CF00000000",
+      "k": 1025,
+      "product": 1127220175,
+      "threshold": 1127219200,
+      "kind": "zero_or_infinity"
+    }
+  ],
+  "new_math_source_edits": 0,
+  "new_ARM_MPFR_calls": 0,
+  "new_device_IO": 0,
+  "no_stage_started": true
+}

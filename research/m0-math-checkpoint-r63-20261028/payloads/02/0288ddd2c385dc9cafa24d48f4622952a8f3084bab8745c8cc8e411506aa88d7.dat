@@ -1,0 +1,53 @@
+{
+  "status": "PASS_ALL_NINE_INERT_OPERATOR_TEST_SUITES",
+  "receipts": [
+    {
+      "directory": "preflight-current249",
+      "test": "test-fresh-capture.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "preflight-current249",
+      "test": "test-live-io.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "preflight-current249",
+      "test": "test-supervisor.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-supervisor.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-rom-envelope.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-return-ui.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-worker-live.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-worker-path.py",
+      "exit_code": 0
+    },
+    {
+      "directory": "operator-joint",
+      "test": "test-r61-plan.py",
+      "exit_code": 0
+    }
+  ],
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_calls": 0,
+  "global_canonical_mutations": 0
+}

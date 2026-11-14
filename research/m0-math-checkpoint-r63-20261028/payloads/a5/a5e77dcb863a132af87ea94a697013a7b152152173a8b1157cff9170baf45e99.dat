@@ -1,0 +1,23 @@
+{
+  "status": "FAILED_R56_AFFECTED_PUBLIC_QUALIFICATION",
+  "error": "AssertionError((0, set()))",
+  "current": {
+    "pair": [
+      "FFF0000000000000",
+      "0000000000000000"
+    ],
+    "SIO": "PENDING",
+    "index": 1656,
+    "groups": [
+      "actual_physical_smoke24_pairs"
+    ]
+  },
+  "completed_public_calls": {
+    "candidate": 4971,
+    "zero-control": 4971,
+    "parent_R55": 231
+  },
+  "candidate_selected": false,
+  "hardware_IO": 0,
+  "goal_complete": false
+}

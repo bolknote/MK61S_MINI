@@ -1,0 +1,11 @@
+--- /Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/preflight-current249/live_io.py
++++ live_io.py
+@@ -4,7 +4,7 @@
+ OWNER='01a14fdd-8514-7d33-b324-93b038e5f137'
+ ROOT='01a164b7-9caa-7011-90d1-807e9630921c'
+ UID='E6657CD423721C35'
+-SCOPE='PICO_R61_READONLY_CURRENT249_ONCE'
++SCOPE='PICO_R63_READONLY_CURRENT249_ONCE'
+ CANONICAL=Path('/Users/bolk/Projects/MK61S_MINI/.build/picocalc-device-handoff.json')
+ STAGES={'resident-capture','resident-rom','rom-load','math-cdc','rom-return','resident-verify'}
+ def sha(raw):return hashlib.sha256(raw).hexdigest()

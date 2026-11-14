@@ -1,0 +1,19 @@
+{
+  "pid": 53430,
+  "owned_process_group": 53430,
+  "supervisor_pid": 53429,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/resident_stage.py",
+    "--execute",
+    "--stage",
+    "resident-verify",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/RESIDENT-VERIFY-R4-GRANT.json",
+    "--lease-sha256",
+    "70f115df51b760f6cae372abd09a7aa90693ee6a9c69c8947f5bb4b47536c60a",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/resident-verify-r4-actual-001"
+  ]
+}

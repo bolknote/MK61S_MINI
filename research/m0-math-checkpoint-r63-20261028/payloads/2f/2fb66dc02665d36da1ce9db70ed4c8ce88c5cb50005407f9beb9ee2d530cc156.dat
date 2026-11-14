@@ -1,0 +1,92 @@
+{
+  "status": "ROOT_ACTUAL_ELF_AND_CFG_REVIEW_PASS_PRIVATE_ONLY",
+  "isolated_changes": [
+    {
+      "old": "m0-math-unified-pow-saturation-r55-20261027",
+      "new": "m0-math-pow-dispatch-contract-r59-20261027",
+      "object": "RP-merged-asm.o",
+      "only_changed_allocated_section": ".m0_pow_dispatch_extension"
+    },
+    {
+      "old": "m0-math-unified-pow-saturation-r55-20261027",
+      "new": "m0-math-pow-dispatch-contract-r59-20261027",
+      "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+      "only_changed_allocated_section": ".m0_pow_early_endpoint"
+    },
+    {
+      "old": "m0-math-pow-dispatch-contract-r59-20261027",
+      "new": "m0-math-pow-subnormal-overflow-r60-20261027",
+      "object": "RP-unified-native_eabi_m0_rp2040.S.o",
+      "only_changed_allocated_section": ".m0_pow_tiny_cold"
+    }
+  ],
+  "R59_actual_prefix_longest_instruction_paths": {
+    "public": {
+      "mk61_m0_pow_fast": 20
+    },
+    "early": {
+      "mk61_m0_pow_tight_dispatch": 37,
+      "mk61_m0_pow_tight_ordinary": 37
+    },
+    "fractional": {
+      "mk61_m0_pow_dispatch_fractional": 52
+    },
+    "high_word": {
+      "mk61_m0_pow_dispatch_high_word": 67
+    }
+  },
+  "R59_actual_linked_veneer_max": 5,
+  "R59_full_new_dispatch_conservative_bound": 124,
+  "R60_old_helper_semantic_instruction_matches": 83,
+  "R60_only_added_guard_instructions": 13,
+  "R60_guard_bytes": 26,
+  "R60_actual_guard_opcodes_match_exact_predicate": true,
+  "R60_guard_acyclic_max_instructions": 13,
+  "images": {
+    "m0-math-unified-pow-saturation-r55-20261027": {
+      "code_bytes": 258432,
+      "section_sizes": {
+        ".sqrt_group": 8976,
+        ".pow_log_group": 4192,
+        ".pow_dispatch_group": 5376,
+        ".text": 235816,
+        ".rodata": 237424,
+        ".scratch_y": 4072,
+        ".data": 16,
+        ".bss": 0
+      }
+    },
+    "m0-math-pow-dispatch-contract-r59-20261027": {
+      "code_bytes": 259016,
+      "section_sizes": {
+        ".sqrt_group": 8976,
+        ".pow_log_group": 4192,
+        ".pow_dispatch_group": 5592,
+        ".text": 236184,
+        ".rodata": 237424,
+        ".scratch_y": 4072,
+        ".data": 16,
+        ".bss": 0
+      }
+    },
+    "m0-math-pow-subnormal-overflow-r60-20261027": {
+      "code_bytes": 259048,
+      "section_sizes": {
+        ".sqrt_group": 8976,
+        ".pow_log_group": 4192,
+        ".pow_dispatch_group": 5592,
+        ".text": 236216,
+        ".rodata": 237424,
+        ".scratch_y": 4072,
+        ".data": 16,
+        ".bss": 0
+      }
+    }
+  },
+  "actual_alias_targets_exact": true,
+  "default_M0_and_M4_disabled_units_byteexact": true,
+  "fresh_ARM_execution": 0,
+  "fresh_compilations": 0,
+  "hardware_IO": 0,
+  "Git_writes": 0
+}

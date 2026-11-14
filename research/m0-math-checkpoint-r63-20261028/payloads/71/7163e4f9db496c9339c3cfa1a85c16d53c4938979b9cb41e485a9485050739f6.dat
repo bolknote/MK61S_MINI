@@ -1,0 +1,59 @@
+{
+  "status": "UNAPPLIED_NARROW_RP_GUARD_PATCH_READY_FOR_SCOPE_REVIEW",
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/source/code/native_eabi_m0_pow_fast.inc",
+    "bytes": 48220,
+    "sha256": "7d9eb9108f5ade2489af492bad0d991e426748ae91413c58e06ffae8e2247967"
+  },
+  "source_manifest": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-powerzero-r63-20261028/FROZEN.json",
+    "bytes": 73981,
+    "sha256": "c0758769eeda95445fd7640af92cabb9485285278befd1472864e6e26f633558"
+  },
+  "mathematical_proof": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-study-20261028-001/FROZEN.json",
+    "bytes": 1354,
+    "sha256": "09312f6187b2912186da4a4b45076b5b8f89ed5673d19f01edc078562d4b95dd"
+  },
+  "patch": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r63-nearpower-negative-patch-20261028-001/guard.patch",
+    "bytes": 1182,
+    "sha256": "c839e4c011049affacce599db907a29b81c3ce292ab60f2990c29d95a228a0d3"
+  },
+  "baseline_sha256": "7d9eb9108f5ade2489af492bad0d991e426748ae91413c58e06ffae8e2247967",
+  "hypothetical_patched_sha256": "9fd915323bd117baec1ca2140bd3a96f52fd6ec3532e013489ccc93867c26835",
+  "insertion_enclosing_preprocessor_condition": "#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI",
+  "actual_source_modified": false,
+  "private_runtime_revision_created": false,
+  "compiled_or_ARM_executed": false,
+  "broader_t_family_not_included": true,
+  "exact_guard_contract": [
+    "Upstream validation already established a finite negative base magnitude and a finite nonzero integer y, with exact parity.",
+    "Require y negative, e in0..6, a normal nonzero magnitude, all52 fraction bits set, decoded n<=64.",
+    "The decode shift20-e is in14..20; n is in1..64; |p|<=65536, so int32 arithmetic is bounded.",
+    "unsigned(p+1022)<=2045 admits exactly p in[-1022,1023]; all other results retain the existing fallback.",
+    "Result magnitude words encode exponent p+1023 and fraction ceil(n/2); existing odd selects the sign.",
+    "The new code is inside the existing RP2040 conditional; no M4/default branch is edited."
+  ],
+  "required_before_any_acceptance": [
+    "Fresh explicitly scoped private copy, compilation and linked caller/Thumb audit.",
+    "Directed exact output/guard boundary checks, all3 SIO states, legal ABI/register variants and appropriate fault controls.",
+    "Affected existing-corpus decline risk audit against R63; preserve every correct/wrong reference cost and prohibit new correct-reference losing states.",
+    "M4/default and unrelated kernel/object fingerprints, footprint/RAM/table/libgcc checks.",
+    "Independent review before selecting any runtime; later physical cycles need a separate fresh device grant."
+  ],
+  "current_hardware_HOLD": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/joint-01-RETURN-HOLD-CLOSED.json",
+    "bytes": 1361,
+    "sha256": "de52d79a337ea3f47aac3215e326832343c73d8a111453fbe9871172a06f4a29"
+  },
+  "compiler_calls": 0,
+  "SDK_builds": 0,
+  "Git_writes": 0,
+  "new_agents": 0,
+  "new_ARM_MPFR_calls": 0,
+  "device_IO": 0,
+  "measured_instruction_or_cycle_speedup_not_claimed": true,
+  "full_goal_complete": false,
+  "recorded_utc": "2026-10-28T06:36:00.218930+00:00"
+}

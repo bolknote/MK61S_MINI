@@ -1,0 +1,25 @@
+{
+  "status": "HOST_INERT_JOINT_R63_OPERATOR_PENDING_TESTS_AND_FREEZE",
+  "scope": "PICO_R62_R63_MATH_RAM_JOINT_ONCE",
+  "stages": [
+    "resident-rom",
+    "rom-load",
+    "math-cdc",
+    "rom-return",
+    "resident-verify"
+  ],
+  "payload_FROZEN_sha256": "ac1858610e19121935d24e5cb9f8c5aad8ad38e90ba350eb7ded7f47df2e17aa",
+  "fresh_counter_epoch_learned_first": true,
+  "all_stages_bound_to_fresh_state": true,
+  "zero_data_losslessly_rebootable_and_SET0_required_before_ROM": true,
+  "nonzero_data_or_configured_clock_requires_separate_review_before_any_transition": true,
+  "UI_exact_return_required_no_inferred_exception": true,
+  "Flash_programming_allowed": false,
+  "SD_writes_allowed": false,
+  "RTC_setters_allowed": false,
+  "global_restore_allowed": false,
+  "old_R61_batches_not_resumed": true,
+  "actual_device_IO": 0,
+  "canonical_mutation": false,
+  "goal_complete": false
+}

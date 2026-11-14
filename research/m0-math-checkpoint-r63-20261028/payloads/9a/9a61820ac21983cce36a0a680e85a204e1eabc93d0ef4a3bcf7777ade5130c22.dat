@@ -1,0 +1,11 @@
+{
+  "status": "R62_PRIVATE_COLD_SOURCE_PREPARED_NOT_YET_BUILT_OR_QUALIFIED",
+  "parent_R61_FROZEN_sha256": "e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f",
+  "parent_pins_verified": 444,
+  "scope_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/NEXT-HOST-R62-SCOPE.json",
+  "only_modified_source": "source/code/native_eabi_m0_rp2040.S",
+  "new_device_IO": 0,
+  "new_Git_writes": 0,
+  "selected_private_baseline": "R61",
+  "goal_complete": false
+}

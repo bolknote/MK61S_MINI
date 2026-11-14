@@ -1,0 +1,23 @@
+{
+  "status": "FROZEN_D6_METADATA_ONLY_CURRENT_STATE_HELPER_NO_IO",
+  "files": {
+    "preflight.py": {
+      "bytes": 9935,
+      "sha256": "b3b91c25f9d90d9dd5aada997a6d554257c301b10740e241324aef0c2a326572"
+    },
+    "vendor/clock_bridge.py": {
+      "bytes": 9385,
+      "sha256": "41f49a7134038cdc96ce523cc47a518a0a2b5c20178551e62297846c0c2ff963"
+    },
+    "vendor/status_frames.py": {
+      "bytes": 1132,
+      "sha256": "9db5fecce7034764e30bbdfe44c2244575fb261f6e7896092ef722d441c82eaa"
+    },
+    "vendor/transaction_core.py": {
+      "bytes": 112,
+      "sha256": "a428aa09ad4c1c6f3bb5794a1667f4aee4c1ae7cab36e222b3baf13aa23713f5"
+    }
+  },
+  "all_producers_terminal": true,
+  "actual_device_IO": 0
+}

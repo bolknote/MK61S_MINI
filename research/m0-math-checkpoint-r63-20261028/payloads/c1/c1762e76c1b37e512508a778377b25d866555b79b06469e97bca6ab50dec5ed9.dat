@@ -1,0 +1,19 @@
+{
+  "pid": 57599,
+  "owned_process_group": 57599,
+  "supervisor_pid": 57598,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/preflight-current249/capture_stage.py",
+    "--execute",
+    "--stage",
+    "resident-capture",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/joint-01-resident-capture.json",
+    "--lease-sha256",
+    "a4a5390e9504eac9fc6811bee88b86747decc80346d32fb64277c2f4502c698e",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-capture-001"
+  ]
+}

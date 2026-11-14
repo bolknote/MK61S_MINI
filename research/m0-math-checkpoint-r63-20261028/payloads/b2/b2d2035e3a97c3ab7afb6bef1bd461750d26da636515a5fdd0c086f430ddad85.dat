@@ -1,0 +1,13 @@
+{
+  "all_HOST_jobs_terminal": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r4/test-return-ui.py"
+  ],
+  "exit_code": 0,
+  "result": "return-ui-test.json",
+  "result_sha256": "965dd21bb7da740ef257c5dbe9f45ed19a78bab7c0eb121c9b1ba7b32a4a56cc",
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_or_firmware_calls": 0
+}

@@ -1,0 +1,41 @@
+{
+  "status": "EXACT_RATIONAL_SUFFICIENT_SUBNORMAL_OVERFLOW_PREDICATE_NOT_IMPLEMENTED",
+  "source_parent": "R59",
+  "source_FROZEN_sha256": "fdb260d5f7430c74306175d7d41d01fda8268493d5d7dbcc7bf57bf481f7154a",
+  "x_max_bits": "00040000000000B1",
+  "minimum_negative_y_bits": "BFF0000000000001",
+  "maximum_negative_y_bits": "FFF0000000000000",
+  "finite_y_guard_required_for_NaNs": true,
+  "zero_x_excluded": true,
+  "alpha": {
+    "numerator": 1,
+    "denominator": 4503599627370496
+  },
+  "ln2_strict_lower": {
+    "numerator": 842,
+    "denominator": 1215
+  },
+  "relative_x_increment": {
+    "numerator": 177,
+    "denominator": 1125899906842624
+  },
+  "strict_log_overflow_margin_lower": {
+    "numerator": 2238289014802921457,
+    "denominator": 6160781917109194891273977578127360
+  },
+  "derivation": [
+    "ln(2)=2*atanh(1/3)>2*(1/3+1/(3*3^3)+1/(5*3^5))=842/1215.",
+    "x<=2^-1024*(1+t), -y>=1+alpha, ln(1+t)<t.",
+    "y*ln(x)>=(1+alpha)*(1024*ln2-ln(1+t))>1024*ln2+gap.",
+    "gap=1024*alpha*(842/1215)-(1+alpha)*t>0, verified by exact rational arithmetic.",
+    "Therefore finite negative y in the specified interval gives x^y>2^1024, sufficient for RNE positive infinity. For y=-infinity, positive x<1 separately gives positive infinity."
+  ],
+  "matched_R59_remaining_pairs": 7,
+  "original_numerical_tails_not_changed": true,
+  "new_ARM_MPFR_calls": 0,
+  "new_tables_RAM_libgcc": 0,
+  "M4_changed": false,
+  "device_IO": 0,
+  "new_Git_writes": 0,
+  "goal_complete": false
+}

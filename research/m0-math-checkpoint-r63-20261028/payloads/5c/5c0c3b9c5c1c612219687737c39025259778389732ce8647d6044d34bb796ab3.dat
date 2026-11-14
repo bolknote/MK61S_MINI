@@ -1,0 +1,28 @@
+{
+  "status": "ROOT_ONE_CURRENT249_RAW_ROM_TRANSITION_GRANTED_NOT_RAM_LOAD",
+  "stage": "resident-rom",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-rom.json",
+    "bytes": 2171,
+    "sha256": "a2da1a2c76cd1f3c3306a2a925b764e7c12b0503a05038ea5c0a75761da0f0a1"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/ARGV-resident-rom.json",
+    "bytes": 1002,
+    "sha256": "53fb75dad5dc84ee0bd8e0660b92d388b1c9266e846647721bb6fd616d079dec"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/metadata-resident-rom-001/root-physical-and-noholder.json",
+    "bytes": 4371,
+    "sha256": "9d05799d034c96d8364a4ef658a4559c31815ba751197b78ec1c687774e09f13"
+  },
+  "fresh_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-capture-001/current-state.json",
+    "bytes": 2460,
+    "sha256": "4fa5c66a5b655de115ab8da75faa4d49a25024f7f161f64eeea581546e6a8a30"
+  },
+  "expires_utc": "2026-10-28T04:53:14.895225+00:00",
+  "RAM_load_or_execution_allowed": false,
+  "Flash_programming_allowed": false,
+  "Root_device_IO": 0
+}

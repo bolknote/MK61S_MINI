@@ -1,0 +1,36 @@
+{
+  "status": "ROOT_JOINT_R62_R63_RAM_PACKET_REVIEW_PASS_READONLY_STAGE_ADMISSIBLE",
+  "packet": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/FROZEN.json",
+    "bytes": 3779,
+    "sha256": "1e54a834537666c7763587f27d18068311f960deed9cd16044bae68dcbb63c19"
+  },
+  "ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/build/m0_r55_pow_hil.elf",
+    "bytes": 639888,
+    "sha256": "cbbe6dd1407f57db603a266fa289741e677ffe68f063e1d628e7b5fb80e18a26"
+  },
+  "BIN": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/bootable/build/m0_r55_pow_hil.bin",
+    "bytes": 257940,
+    "sha256": "fd7dd76849cf7ae87b21ee8db6af126eb691d33b5d72d15c1843a31af500d6ce"
+  },
+  "independent_reviews": {
+    "PIN-AND-OPERATOR-SOURCE-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/PIN-AND-OPERATOR-SOURCE-REVIEW.json",
+      "bytes": 2115,
+      "sha256": "58670368ef73b8e0f2d966e4fc760188a7bd81a3852cb1811205612cd5d9c247"
+    },
+    "PAYLOAD-MATRIX-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-hil-root-review-20261028-001/PAYLOAD-MATRIX-REVIEW.json",
+      "bytes": 2379,
+      "sha256": "d6fbd611816e819742c6dc33f8202d1f914f8bd3778e36c0567e39e461409402"
+    }
+  },
+  "supervisor_capture_snapshot_and_vendor_R61_code_exact": true,
+  "source_delta": "Scope/payload pins, pinned nonce enforcement, primitive inheritance reference only",
+  "new_Root_ARM_MPFR_device_Git_calls": 0,
+  "selected_private_math": "R63",
+  "physical_R63_math_not_yet_executed": true,
+  "automatic_other_stages_allowed": false
+}

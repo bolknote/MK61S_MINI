@@ -1,0 +1,30 @@
+{
+  "status": "EXACT_RAM_IMAGE_LOAD_READBACK_ENTRY_COMMAND_COMPLETE_CDC_PENDING",
+  "stage": "rom-load",
+  "pid": 33105,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false,
+  "Flash_before": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-tail-rom-load-001/flash-before-math.bin",
+    "bytes": 2097152,
+    "sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126"
+  },
+  "Flash_before_confirm": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-tail-rom-load-001/flash-before-math-confirm.bin",
+    "bytes": 2097152,
+    "sha256": "a05379163123d8f634ad1c81e82daf1d48afd5ea500139201f3503b96ee8f126"
+  },
+  "RAM_image": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/runtime-R63/build/m0_r55_pow_hil.elf",
+  "RAM_image_sha256": "cbbe6dd1407f57db603a266fa289741e677ffe68f063e1d628e7b5fb80e18a26",
+  "RAM_load_attempts": 1,
+  "RAM_entry_attempts": 1,
+  "independent_saved_RAM_dump": false,
+  "readback_method": "pinned picotool -v exact comparison before -x",
+  "child_pids": [
+    33106,
+    33107,
+    33115,
+    33123
+  ]
+}

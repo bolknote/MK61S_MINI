@@ -1,0 +1,13 @@
+{
+  "status": "PASS_INERT_OWNED_STAGE_SUPERVISION",
+  "rejected": [
+    "revoke-running",
+    "kill-required",
+    "revoke-at-completion"
+  ],
+  "success_receipt_checked": true,
+  "actual_children_started": 0,
+  "actual_OS_signals_sent": 0,
+  "actual_device_IO": 0,
+  "global_OS_substitutions": 0
+}

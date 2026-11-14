@@ -1,0 +1,298 @@
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -342,6 +342,24 @@
+     if(significand&((U(1)<<shift)-1)) return mk61_m0_cr_pow(x,y);
+     odd=bool((significand>>shift)&1);
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  // R64 normal-result certificate: |x| immediately below a power of two,
++  // y=-n, 1<=n<=64. The exact normalized magnitude is strictly between
++  // 1+n/2^53 and 1+(n+1)/2^53; nearest-even adds ceil(n/2) ulps.
++  // The existing finite/integer checks above supply e>=0 and exact odd.
++  const unsigned E=unsigned(m>>52);
++  if((yb&D::Sign) && unsigned(e)<=6U && E &&
++     uint32_t(m)==0xFFFFFFFFU &&
++     (uint32_t(m>>32)&0xFFFFFU)==0xFFFFFU) {
++    const unsigned n=((uint32_t(ym>>32)&0xFFFFFU)|0x100000U)>>unsigned(20-e);
++    if(n<=64U) {
++      const int p=(1022-int(E))*int(n);
++      if(unsigned(p+1022)<=2045U)
++        return real((U(uint32_t(p+1023))<<52)|U((n+1U)>>1)|
++                    (odd?D::Sign:U(0)));
++    }
++  }
++#endif
+   const U result=m==UINT64_C(0x3FF0000000000000)?m:bits(pow_positive_checked(real(m),y));
+   return real(result|(odd?D::Sign:0));
+ }
+--- a/tests/native_eabi_m0_arm_self_test.py
++++ b/tests/native_eabi_m0_arm_self_test.py
+@@ -373,6 +373,16 @@
+         b=(rng.randrange(990,1055)<<52)|rng.getrandbits(52)
+         check(a,b)
+ 
++def pow_nearpower_r64_vectors(m):
++    # Gold comes from the frozen independent corpus, not this implementation.
++    fixture=json.loads((ROOT/'tests/fixtures/m0_pow_nearpower_r64.json').read_text())
++    assert fixture['schema']==1 and len(fixture['cases'])==28
++    before=m.calls
++    for row in fixture['cases']:
++        m.floating('_ZN12compact_math3powEdd',int(row['x'],16),int(row['y'],16),
++                   int(row['expected'],16))
++    return m.calls-before
++
+ def build(toolchain,out,rp2040=False):
+     out.mkdir(parents=True,exist_ok=True)
+     flags=['-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-ffunction-sections','-fdata-sections',
+@@ -412,6 +422,7 @@
+         before=m.calls;mixed_sign_nearby(m);nearby_calls=m.calls-before
+         before=m.calls;multiplication_division(m,a.samples);muldiv_calls=m.calls-before
+     worst=math_vectors(m)
++    nearpower_calls=pow_nearpower_r64_vectors(m) if a.rp2040 else 0
+     if a.rp2040:
+         # A caller with pending divider state must get the full software path,
+         # preserving every SIO operand/result/CSR bit.
+@@ -425,7 +436,7 @@
+     report={'status':'PASS','elf_sha256':hashlib.sha256(elf.read_bytes()).hexdigest(),'actual_arm_calls':m.calls,
+         'nearby_addition_calls':nearby_calls,
+         'multiplication_division_calls':muldiv_calls,
+-        'math_vectors':1897,'math_worst_ulp':worst,'sample_instructions':counts,
++        'math_vectors':1897,'pow_nearpower_r64_calls':nearpower_calls,'math_worst_ulp':worst,'sample_instructions':counts,
+         'abi':'Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes '+('stack and SIO divider only' if a.rp2040 else 'stack only'),
+         'timing_note':'Instruction counts are emulator diagnostics, not measured RP2040 cycles.'}
+     if m.rom_models:report['sdk_rom_intrinsic_models']=m.rom_models
+--- /dev/null
++++ b/tests/fixtures/m0_pow_nearpower_r64.json
+@@ -0,0 +1,232 @@
++{
++  "schema": 1,
++  "source_matrix_sha256": "88cdcea994bc1ad72c9adf46c06a6385304030b9c672edee423e2b021bf3e30a",
++  "source": "R64 frozen 28-pair matrix; the source contains all three qualified SIO states",
++  "scope": "Existing regression inputs only; this proposal has not executed ARM or measured its speed.",
++  "cases": [
++    {
++      "x": "001FFFFFFFFFFFFF",
++      "y": "C050000000000000",
++      "expected": "7FF0000000000000",
++      "reasons": [
++        "sign-clear route control"
++      ]
++    },
++    {
++      "x": "001FFFFFFFFFFFFF",
++      "y": "C050400000000000",
++      "expected": "7FF0000000000000",
++      "reasons": [
++        "n65 declined endpoint"
++      ]
++    },
++    {
++      "x": "3FCFFFFFFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "4050000000000002",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "3FFFFFFFFFFFFFFF",
++      "y": "C031000000000000",
++      "expected": "3EE0000000000009",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "400FFFFFFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "3F90000000000002",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "402FFFFFFFFFFFFF",
++      "y": "C02E000000000000",
++      "expected": "3C30000000000008",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "801FFFFFFFFFFFFE",
++      "y": "C050000000000000",
++      "expected": "7FF0000000000000",
++      "reasons": [
++        "second predecessor declines result shortcut"
++      ]
++    },
++    {
++      "x": "801FFFFFFFFFFFFF",
++      "y": "3FEFFFFFFFFFFFFF",
++      "expected": "7FF8000000000000",
++      "reasons": [
++        "noninteger exponent decline"
++      ]
++    },
++    {
++      "x": "9FEFFFFFFFFFFFFF",
++      "y": "C000000000000000",
++      "expected": "7FF0000000000000",
++      "reasons": [
++        "overflow result boundary"
++      ]
++    },
++    {
++      "x": "A469CB755EAD238A",
++      "y": "C000000000000000",
++      "expected": "76F89FB863735B8B",
++      "reasons": [
++        "global maximum +14 Flash instruction increase over R63; no correct Qfplib on this input"
++      ]
++    },
++    {
++      "x": "BFC2000000000000",
++      "y": "4031000000000000",
++      "expected": "BCED9FE779881944",
++      "reasons": [
++        "retained old-union slow control"
++      ]
++    },
++    {
++      "x": "BFCFFFFEFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "C050000180001802",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "BFCFFFFFFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "C050000000000002",
++      "reasons": [
++        "measured corrected speed deficit"
++      ]
++    },
++    {
++      "x": "BFCFFFFFFFFFFFFF",
++      "y": "C050000000000000",
++      "expected": "47F0000000000020",
++      "reasons": [
++        "n64 admitted normal endpoint"
++      ]
++    },
++    {
++      "x": "BFE0000000000000",
++      "y": "C04F800000000000",
++      "expected": "C3E0000000000000",
++      "reasons": [
++        "exact power shortcut retained; all incorrect Qfplib outputs also retained"
++      ]
++    },
++    {
++      "x": "BFE1FFFFFFFFFFFF",
++      "y": "402E000000000000",
++      "expected": "BF276838794F170C",
++      "reasons": [
++        "retained old-union slow control"
++      ]
++    },
++    {
++      "x": "BFEFFFFEFFFFFFFF",
++      "y": "C030000000000000",
++      "expected": "3FF0000800022008",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "BFEFFFFEFFFFFFFF",
++      "y": "C031000000000000",
++      "expected": "BFF0000880026409",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "BFEFFFFEFFFFFFFF",
++      "y": "C04F800000000000",
++      "expected": "BFF0001F801F8035",
++      "reasons": [
++        "original R64 regression counterexample; repaired decline guard"
++      ]
++    },
++    {
++      "x": "BFEFFFFEFFFFFFFF",
++      "y": "C050000000000000",
++      "expected": "3FF0002000208036",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "BFEFFFFEFFFFFFFF",
++      "y": "C050400000000000",
++      "expected": "BFF0002080218438",
++      "reasons": [
++        "measured corrected speed deficit"
++      ]
++    },
++    {
++      "x": "BFF1FFFFFFFFFFFF",
++      "y": "402E000000000000",
++      "expected": "C0176838794F170C",
++      "reasons": [
++        "retained old-union slow control"
++      ]
++    },
++    {
++      "x": "BFF2000000000000",
++      "y": "4031000000000000",
++      "expected": "C01D9FE779881944",
++      "reasons": [
++        "retained old-union slow control"
++      ]
++    },
++    {
++      "x": "BFFFFFFFFFFFFFFF",
++      "y": "C031000000000000",
++      "expected": "BEE0000000000009",
++      "reasons": [
++        "measured corrected speed deficit"
++      ]
++    },
++    {
++      "x": "C00FFFFEFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "BF90000180001802",
++      "reasons": [
++        "retained directed slow control"
++      ]
++    },
++    {
++      "x": "C00FFFFFFFFFFFFF",
++      "y": "C008000000000000",
++      "expected": "BF90000000000002",
++      "reasons": [
++        "measured corrected speed deficit"
++      ]
++    },
++    {
++      "x": "C02FFFFFFFFFFFFF",
++      "y": "C02E000000000000",
++      "expected": "BC30000000000008",
++      "reasons": [
++        "measured corrected speed deficit"
++      ]
++    },
++    {
++      "x": "C1DFFFFFFFFFFFFF",
++      "y": "C040800000000000",
++      "expected": "8008000000000008",
++      "reasons": [
++        "first subnormal result boundary"
++      ]
++    }
++  ]
++}

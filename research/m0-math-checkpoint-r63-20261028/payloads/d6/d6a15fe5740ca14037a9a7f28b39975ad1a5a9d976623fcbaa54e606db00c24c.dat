@@ -1,0 +1,38 @@
+{
+  "status": "ROOT_R63_PRIVATE_FINITE_ACCEPTANCE_AND_NEXT_RAM_PACKET_SCOPE_FROZEN",
+  "files": {
+    "NEXT-JOINT-RAM-HIL-SCOPE.json": {
+      "bytes": 4731,
+      "sha256": "a0d5afaf4b04ec79f438c0e6e6b38f7a03819f6e9cdfb0208c17272d1e1e6a7c"
+    },
+    "PIN-REVIEW.json": {
+      "bytes": 1297,
+      "sha256": "540031f17dffbca1ef37b2053a7e692d0b80b0b438df1111517c618ac89d6c0d"
+    },
+    "RECORD-REVIEW.json": {
+      "bytes": 3023,
+      "sha256": "a81e2c43ea86eadf7ca0cb8180b1142e8d0078f4bad1a28c6731bc3e9f8af37f"
+    },
+    "ROOT-ACCEPTANCE.json": {
+      "bytes": 5258,
+      "sha256": "356adf2d7424c1ecef90a355c52f589970918dbf18f9a23c8b16b2eb41d768e6"
+    },
+    "STATIC-REVIEW.json": {
+      "bytes": 1716,
+      "sha256": "4d203afc6132e76d4bb1090ae65ff48c8d86f0b42c3009c722f3d692f46706ee"
+    },
+    "review_records.py": {
+      "bytes": 15050,
+      "sha256": "05a8adc849de9be821109e202ac21343275e4e0cb0af18d19c9d5933832500f5"
+    },
+    "review_static.py": {
+      "bytes": 10508,
+      "sha256": "391ef95a7e8d95f8fd803bd2bb20b6acc519087cc722f3e12ad3680f13545e11"
+    }
+  },
+  "selected_private_baseline": "R63",
+  "hardware_window_closed": true,
+  "physical_R63_cycles_measured": false,
+  "Git_writer": false,
+  "full_math_goal_complete": false
+}

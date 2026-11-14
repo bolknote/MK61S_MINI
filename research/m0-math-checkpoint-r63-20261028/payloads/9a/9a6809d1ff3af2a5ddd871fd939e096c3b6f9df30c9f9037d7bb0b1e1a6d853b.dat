@@ -1,0 +1,46 @@
+"""Inert supervisor cancellation/receipt controls; starts no child or device."""
+from pathlib import Path
+import json,signal,subprocess,tempfile
+from supervise_stage import supervise
+W=Path(__file__).resolve().parent
+class Lease:
+    expected_sha='a'*64
+    def __init__(self):self.revoked=False
+    def guard(self):
+        if self.revoked:raise RuntimeError('Root revoked')
+        return {}
+class Child:
+    pid=99999999
+    def __init__(self,lease,mode):self.lease=lease;self.mode=mode;self.returncode=None;self.reaped=False
+    def poll(self):return self.returncode
+    def wait(self,timeout=None):
+        if self.returncode is not None:self.reaped=True;return self.returncode
+        if self.mode=='pass':self.returncode=0;self.reaped=True;return 0
+        if timeout==.03:
+            self.lease.revoked=True
+            if self.mode=='revoke-at-completion':self.returncode=0;self.reaped=True;return 0
+            raise subprocess.TimeoutExpired('inert stage',timeout)
+        if self.mode=='kill-required':raise subprocess.TimeoutExpired('inert cleanup',timeout)
+        self.returncode=-signal.SIGTERM;self.reaped=True;return self.returncode
+rejected=[]
+with tempfile.TemporaryDirectory(prefix='m0-supervisor-test-',dir=W.parent) as name:
+    root=Path(name)
+    for mode in ['pass','revoke-running','kill-required','revoke-at-completion']:
+        folder=root/mode;folder.mkdir();lease=Lease();child=Child(lease,mode);signals=[];calls=[]
+        def factory(argv,stdout,stderr,**kwargs):
+            calls.append(argv);assert kwargs==dict(start_new_session=True);return child
+        def send_signal(group,signum):
+            assert group==child.pid;signals.append(signum)
+            if signum==signal.SIGKILL:child.returncode=-signal.SIGKILL
+        try:receipt=supervise(lease,folder,['inert-only'], 'rom-load',folder/'never-created',factory=factory,send_signal=send_signal)
+        except RuntimeError:
+            assert mode!='pass';rejected.append(mode)
+        else:assert mode=='pass' and receipt['exit_code']==0
+        receipt=json.loads((folder/'ACTUAL-EXIT.json').read_text())
+        assert len(calls)==1 and receipt['reaped'] and child.reaped
+        assert receipt['owned_process_group']==child.pid
+        if mode=='revoke-running':assert signals==[signal.SIGTERM]
+        elif mode=='kill-required':assert signals==[signal.SIGTERM,signal.SIGKILL]
+        else:assert not signals
+result=dict(status='PASS_INERT_OWNED_STAGE_SUPERVISION',rejected=rejected,success_receipt_checked=True,actual_children_started=0,actual_OS_signals_sent=0,actual_device_IO=0,global_OS_substitutions=0)
+(W/'supervisor-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

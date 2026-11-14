@@ -1,0 +1,24 @@
+{
+  "pid": 33858,
+  "candidate_ELF_sha256": "c3a8e7f3cc0536ef74943e563090c4881d7429bd910d2af720e039092aae7fee",
+  "producer_sha256": "6217265e68454a3eb85b14d9315d72569231dde723beb6c4b6e1328fce923c87",
+  "inherited_inputs": [
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/audit-full/records.jsonl",
+      "bytes": 29404320,
+      "sha256": "5f20d8f71ffc96354702f4f8d0c3149bd6c1e929861641fa7626fda9d8abab09",
+      "states": 32636,
+      "result_path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/audit-full/RESULT.json",
+      "result_sha256": "0c5d668655464b22063675afa5be00fb4c3d276bfd8c7db8dd8ff1643b6bd0ed"
+    },
+    {
+      "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/audit-declines/records.jsonl",
+      "bytes": 44652436,
+      "sha256": "21619140013ffc3c989279f36dbd2a2ab5e309314e6dec028c2f2cf84807881c",
+      "states": 49410,
+      "result_path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-pow-nearpower-negative-r64-20261028/audit-declines/RESULT.json",
+      "result_sha256": "d73cf6343f7633b8c113c8475eda57ae8b42796685068e9642ac02b99c0c0921"
+    }
+  ],
+  "actual_device_IO": 0
+}

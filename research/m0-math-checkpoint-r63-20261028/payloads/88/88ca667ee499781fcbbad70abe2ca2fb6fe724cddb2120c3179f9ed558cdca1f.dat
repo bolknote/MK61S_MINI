@@ -1,0 +1,22 @@
+"""Three inert controls for the one Root-accepted post-return UI transition."""
+from pathlib import Path
+import copy,json
+from return_ui import compare_return_data,DISPOSITION
+W=Path(__file__).resolve().parent
+before=json.loads((W.parent/'stage0-r2-current26-actual-001/current-state.json').read_text())
+after=copy.deepcopy(before);after['settings']['UI=']=after['settings']['UI='].replace('VIEW=1 ','VIEW=0 ')
+assert compare_return_data(before,before)['UI_exact']
+accepted=compare_return_data(before,after,DISPOSITION)
+assert accepted['UI_VIEW_RESET'] and not accepted['UI_exact'] and accepted['typed_data_exact']
+rejected=[]
+for label,disp,change in [
+    ('no-Root-disposition',None,lambda x:None),
+    ('other-UI-field-changed',DISPOSITION,lambda x:x['settings'].__setitem__('UI=',x['settings']['UI='].replace('LANG=RU','LANG=EN'))),
+    ('calculator-IP-changed',DISPOSITION,lambda x:x.__setitem__('IP',1)),
+]:
+    current=copy.deepcopy(after);change(current)
+    try:compare_return_data(before,current,disp)
+    except RuntimeError:rejected.append(label)
+    else:raise AssertionError('Return verifier silently accepted '+label)
+result=dict(status='PASS_THREE_INERT_ROOT_UI_RETURN_CONTROLS',accepted_exact_original=True,accepted_only_VIEW1_to_VIEW0_with_explicit_Root_disposition=True,rejected=rejected,actual_device_IO=0,new_ARM_MPFR_or_firmware_calls=0,physical_UI_actions=0,UI_setters=0)
+(W/'return-ui-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

@@ -1,0 +1,97 @@
+{
+  "status": "ROOT_ACCEPTED_R61_PRIVATE_FINITE_MATH_SUCCESSOR_READY_FOR_OFFLINE_HIL_PREPARATION",
+  "created_utc": "2026-10-27T22:21:35.593428+00:00",
+  "client_date": "2026-10-28",
+  "owner": "M0+ Math",
+  "selected_private_baseline": "R61",
+  "reviewed_candidate_ELF": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/candidate.elf",
+    "bytes": 2353220,
+    "sha256": "6521c3dbe77f093f3ea991b1db8649603a999c6f575f1b86b277e73f494dbc46"
+  },
+  "verified_packets": [
+    {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/FROZEN.json",
+        "bytes": 68597,
+        "sha256": "e09a1db789376f5987f8c0650d93339bcfdd8ee78875e0fa371e78286057b90f"
+      },
+      "verified_files": 444,
+      "unlisted_files": []
+    },
+    {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-subnormal-overflow-r60-20261027/FROZEN.json",
+        "bytes": 71021,
+        "sha256": "5effdab53736d79be6d0f4be5d0fa766220a59f20d97c037c602ddf47f88c89f"
+      },
+      "verified_files": 460,
+      "unlisted_files": []
+    },
+    {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r59-r60-root-review-20261028-001/FROZEN.json",
+        "bytes": 1449,
+        "sha256": "f6c012549fc8ae5a182e65068e3edf3513f5eeadc71fa9a6f70f1a7614821deb"
+      },
+      "verified_files": 8,
+      "unlisted_files": []
+    }
+  ],
+  "reviews": {
+    "STATIC-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-root-review-20261028-001/STATIC-REVIEW.json",
+      "bytes": 28640,
+      "sha256": "d7a2788f4611c1ef52481dae2d5204d27f2542b48e905ca6c7e3f377933d5f85"
+    },
+    "RECORD-REVIEW.json": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-root-review-20261028-001/RECORD-REVIEW.json",
+      "bytes": 1815,
+      "sha256": "01c5e1708dc0a6f903d86c4c8f490f09ab54ffda2f481e47036c442493b3ccc6"
+    }
+  },
+  "manual_source_findings": [
+    "subnormal_bucket_x_bounds_are_strict_2_to_minus1022_minus1025_minus1042",
+    "all_six_fullword_thresholds_upward_rounded_exact_rationals",
+    "positive_y_zero_below_half_min_subnormal_and_negative_y_Inf_above2_to1024",
+    "R4_is_even_doubled_y_high_and_R6_original_x_high_shifted17",
+    "common_unequal_high_word_paths_have_zero_extra_instructions",
+    "new_equal_high_comparison_changes_only_dead_R5_and_unspecified_flags",
+    "all_reachable_public_negative_base_equality_exponents_noninteger_so_unchanged_CR_route",
+    "all23_other_runtime_objects_and_disabled_M0_M4_controls_exact"
+  ],
+  "accepted_old_corpus": {
+    "pairs": 151878,
+    "states": 321225,
+    "R60_losses": 1351,
+    "R61_losses": 1340,
+    "fixed_pairs": 11,
+    "new_losing_states": 0
+  },
+  "expanded_corpus": {
+    "pairs": 152160,
+    "states": 322071,
+    "R60_losses": 1464,
+    "R61_losses": 1398,
+    "fixed_pairs": 66,
+    "new_preexisting_losses": 113,
+    "new_preexisting_still_open": 58,
+    "new_losing_states": 0
+  },
+  "all_adverse_deltas_retained": true,
+  "unknown_inherited_exact_costs_not_invented": true,
+  "fresh_Root_numerical_ARM_or_MPFR_calls": 0,
+  "root_hardware_IO": 0,
+  "root_Git_writes": 0,
+  "historical_selected_false_records_immutable": true,
+  "new_hardware_grant": false,
+  "Git_writer_granted": false,
+  "canonical_runtime_integration_approved": false,
+  "physical_R61_cycles_measured": false,
+  "independent_whole_library_acceptance": false,
+  "universal_CR_totality_stack_and_FMA_acceptance": false,
+  "main": "c093d8a08af8d22c8f41793736d80368d8dfc0c7",
+  "Bytecode_task_remains_closed": true,
+  "next_scope": "Only concrete R61 RAM HIL payload and operator/restoration plan; no I/O until reviewed; no R62 research direction",
+  "full_math_goal_complete": false
+}

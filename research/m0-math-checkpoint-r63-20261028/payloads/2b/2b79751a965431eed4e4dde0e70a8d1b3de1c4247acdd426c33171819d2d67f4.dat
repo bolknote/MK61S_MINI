@@ -1,0 +1,183 @@
+{
+  "batch_id": "smoke",
+  "unique_pairs": 24,
+  "state_cases": 72,
+  "case_ids": [
+    37,
+    38,
+    39,
+    67,
+    68,
+    69,
+    112,
+    113,
+    114,
+    124,
+    125,
+    126,
+    157,
+    158,
+    159,
+    169,
+    170,
+    171,
+    25,
+    26,
+    27,
+    43,
+    44,
+    45,
+    70,
+    71,
+    72,
+    103,
+    104,
+    105,
+    121,
+    122,
+    123,
+    154,
+    155,
+    156,
+    175,
+    176,
+    177,
+    217,
+    218,
+    219,
+    226,
+    227,
+    228,
+    229,
+    230,
+    231,
+    238,
+    239,
+    240,
+    241,
+    242,
+    243,
+    247,
+    248,
+    249,
+    190,
+    191,
+    192,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84
+  ],
+  "wire_nonce_proposal": 2974737016,
+  "calibration_queries": 6,
+  "total_query_requests": 78,
+  "maximum_public_target_calls": 2940,
+  "warmups_per_library": 2,
+  "measured_samples_per_library": 8,
+  "libraries": 4,
+  "SIO_states": 3,
+  "TX_bytes_exact": 6748,
+  "RX_bytes_max": 773120,
+  "maximum_session_seconds": 300,
+  "exit_to_bootsel": true,
+  "each_batch_requires_fresh_Root_stage_and_reload_no_automatic_continuation": true,
+  "pair_reasons": {
+    "0000000000000001/3FF081B800000000": [
+      "R62_all_original_targets",
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "0000000000000002/3FF081B800000000": [
+      "R62_all_original_targets"
+    ],
+    "0000000100000000/3FF081B900000000": [
+      "R62_all_original_targets"
+    ],
+    "0000000100000000/3FF0C7CE00000000": [
+      "R62_all_original_targets",
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "0002000000000000/3FF0C7CF00000000": [
+      "R62_all_original_targets"
+    ],
+    "0002000000000000/3FF0D46A00000000": [
+      "R62_all_original_targets",
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "0000000000000001/3FF003D0FFFFFFFF": [
+      "R63_all_original_targets"
+    ],
+    "0000000000000001/3FF081B842D34936": [
+      "R63_all_original_targets"
+    ],
+    "0000000000000002/3FF081B842D33937": [
+      "R63_all_original_targets"
+    ],
+    "0000000100000000/3FF081B842D34937": [
+      "R63_all_original_targets",
+      "R63_legal_helper_control",
+      "fullword_sticky_half_tie_or_decline_k1042"
+    ],
+    "0000000100000000/3FF0C7CDFFFFFFFF": [
+      "R63_all_original_targets"
+    ],
+    "0002000000000000/3FF0C7CEFFFFFFFF": [
+      "R63_all_original_targets"
+    ],
+    "0002000000000000/3FF0D46A351A8D46": [
+      "R63_all_original_targets"
+    ],
+    "0008000000000000/3FF0D035FFFFFFFF": [
+      "R63_all_original_targets"
+    ],
+    "001045E50671563E/BDF0000000000000": [
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "0013900000000000/BFE0000000000000": [
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "3FFAAF14E8A4B59B/BFE0000000000000": [
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "7FE8A00000000000/BFE0000000000000": [
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "C02FFFFFFFFFFFFF/C02E000000000000": [
+      "all8_previous_measured_slow_controls",
+      "previous_R61_physical_pair"
+    ],
+    "0004000000000000/3FF0CC0000000000": [
+      "R63_legal_helper_control",
+      "fullword_sticky_half_tie_or_decline_k1024"
+    ],
+    "0000000000000001/3FF003D053E735DE": [
+      "R63_legal_helper_control",
+      "fullword_sticky_half_tie_or_decline_k1074"
+    ],
+    "0000000000000001/3FF003D053E735DF": [
+      "R63_legal_helper_control",
+      "fullword_sticky_half_tie_or_decline_k1074"
+    ],
+    "0000000080000000/3FF07DAB1363E57D": [
+      "fullword_sticky_half_tie_or_decline_k1043"
+    ],
+    "0000000080000000/3FF07DAB1363E57E": [
+      "R63_legal_helper_control",
+      "fullword_sticky_half_tie_or_decline_k1043"
+    ]
+  }
+}

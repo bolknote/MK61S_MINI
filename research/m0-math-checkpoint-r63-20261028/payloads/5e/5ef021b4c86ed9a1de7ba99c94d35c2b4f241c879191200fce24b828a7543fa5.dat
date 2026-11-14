@@ -1,0 +1,19 @@
+{
+  "pid": 42991,
+  "owned_process_group": 42991,
+  "supervisor_pid": 42990,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/resident_stage.py",
+    "--execute",
+    "--stage",
+    "resident-rom",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/resident-rom.json",
+    "--lease-sha256",
+    "a2da1a2c76cd1f3c3306a2a925b764e7c12b0503a05038ea5c0a75761da0f0a1",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-resident-rom-001"
+  ]
+}

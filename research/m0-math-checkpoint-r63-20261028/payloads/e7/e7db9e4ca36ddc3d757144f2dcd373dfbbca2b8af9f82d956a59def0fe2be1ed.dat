@@ -1,0 +1,45 @@
+{
+  "status": "FROZEN_PHYSICAL_JOINT_SMOKE_RAW_AND_REAPED_RECEIPTS",
+  "files": {
+    "RESULT.json": {
+      "bytes": 794,
+      "sha256": "acac1f41577f46cd5807d91735396503aac55a345e8ec082444819417ea55aea"
+    },
+    "STARTED.json": {
+      "bytes": 234,
+      "sha256": "5efb3d54e04b059143d19badee15d9a982e9cc9f9953bd5b587561eeaae2706e"
+    },
+    "grant.byteexact.json": {
+      "bytes": 2917,
+      "sha256": "4c0bfaf98001097deca9806adb9d589f838725622dbd25392db34e519e5ce104"
+    },
+    "native-io.jsonl": {
+      "bytes": 20856,
+      "sha256": "f6428716451736bbae4aa7475c0b250f5e89cf2de7f6061d973eecb158c2f633"
+    },
+    "quick-analysis.json": {
+      "bytes": 63184,
+      "sha256": "2949928eb170eb9c8ee11db921458e9f2d85c0d6c75e5a0b72c766934d0e071c"
+    },
+    "records.jsonl": {
+      "bytes": 691774,
+      "sha256": "2a050d0b8edf03a77f4722aac7ceb762d9b490ecc32cf9899efc6a5e5ff5bf3d"
+    },
+    "rx.raw": {
+      "bytes": 412519,
+      "sha256": "349e0925110092fbdd07970bb9b88e2b594ab82341adfbbf73cb8a77ebf3867f"
+    },
+    "tx.raw": {
+      "bytes": 6748,
+      "sha256": "6781aa423ab99aecd60383115db833ed4d19d27cab678e9803481621820602c8"
+    },
+    "wire-from-open.bin": {
+      "bytes": 412519,
+      "sha256": "349e0925110092fbdd07970bb9b88e2b594ab82341adfbbf73cb8a77ebf3867f"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

@@ -1,0 +1,29 @@
+{
+  "status": "PASS_FRESH_READONLY_CURRENT249_CAPTURE_NOT_RAM_GO",
+  "pid": 8063,
+  "stage": "resident-capture",
+  "device_transition_attempts": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "APP_opens": 0,
+  "SD_operations": 0,
+  "physical_key_actions_sent": 0,
+  "no_RAW_exclamation_X_reset_or_reboot": true,
+  "goal_complete": false,
+  "state_sha256": "48860a391c2ad97ab8c97badbb1cf126b358cd73b7d859de7b051571f1986833",
+  "baseline_sha256": "ec4f4f6129c2848a4a8d9689f992b249039344af778ff9269face0aac686ebe6",
+  "observed_physical_keys_baseline": 0,
+  "observed_epoch": [
+    "14",
+    "00010001"
+  ],
+  "RTC_SET": 0,
+  "calendar": "2026-01-01 02:15:20",
+  "current_zero_data_losslessly_rebootable": true,
+  "RAM_launch_or_clock_return_GO": false,
+  "serial_closed": true,
+  "TX_bytes": 50,
+  "RX_bytes": 40074,
+  "no_implicit_transition_or_recovery": true,
+  "no_global_noholder_claim": true
+}

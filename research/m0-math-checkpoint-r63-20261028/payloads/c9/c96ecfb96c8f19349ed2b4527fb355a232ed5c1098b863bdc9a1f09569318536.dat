@@ -1,0 +1,36 @@
+{
+  "all_producers_terminal": true,
+  "final_jobs": {
+    "image-proof.json": {
+      "result": "image-proof.json",
+      "result_sha256": "e9b53fe318db86e78b0996be12370f62ae7c5f0374349a8365c97c540d34b71c",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "startup-check.json": {
+      "result": "startup-check.json",
+      "result_sha256": "0f07c9ed185838e6855751dec76befea25d1e05c4708cbb500e573e48e65ae8a",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "worker-check.json": {
+      "result": "worker-check.json",
+      "result_sha256": "4a400752e96e595b20d0a1c9016726f89903d8186e4f45f31623545fad184291",
+      "exit_code": 0,
+      "terminal": true
+    },
+    "successor-comparison.json": {
+      "result": "successor-comparison.json",
+      "result_sha256": "01bc88505236f213d2b37e57bb900a6cdf1f2e5b585a2678bd40cc95e58273bb",
+      "exit_code": 0,
+      "terminal": true
+    }
+  },
+  "targeted_startup_completed_function_calls": 47,
+  "worker_completed_primitive_calls": 148,
+  "failed_development_runs_not_added_to_completed_final_counts": true,
+  "rejected_startup_trial": "rejected-before-forced-PLL-reset/failure.json",
+  "new_public_math_ARM_calls": 0,
+  "new_MPFR_calls": 0,
+  "hardware_IO": 0
+}

@@ -1,0 +1,9 @@
+{
+  "status": "ALL_HOST_OPERATOR_TESTS_TERMINAL_NO_DEVICE_IO",
+  "all_producers_terminal": true,
+  "inherited_fixture_path_failure_preserved": true,
+  "host_test_final_successes": 6,
+  "no_external_picotool_or_device_process_started": true,
+  "new_ARM_MPFR_calls": 0,
+  "actual_device_IO": 0
+}

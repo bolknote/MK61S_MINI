@@ -1,0 +1,11 @@
+{
+  "status": "EXACT_RATIONAL_GOLD_ALL9701_NARROW_NORMAL_PAIRS",
+  "pairs": 9701,
+  "planned_all3_SIO_states": 29103,
+  "rounding": "exact integer ratio to binary64 RNE; crosschecked with CPython Fraction conversion",
+  "independent_exact_rational_evaluations": 9701,
+  "inputs_sha256": "3c8116d2410a0e0b2f3e1656338c99deb36b485b103fb20b942c63c0a3752321",
+  "oracle_sha256": "c0da4386ebe8de12451047b5eaf62dbe2860408c65f4cfc7f3ab2bea19a7febf",
+  "ARM_MPFR_device_Git_SDK_calls": 0,
+  "selected": false
+}

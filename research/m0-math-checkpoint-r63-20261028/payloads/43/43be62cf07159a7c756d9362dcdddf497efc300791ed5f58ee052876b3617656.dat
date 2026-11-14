@@ -1,0 +1,37 @@
+{
+  "status": "PASS_ACTUAL_LINKED_R63_PREFIX_AND_UNCHANGED_NEGATIVE_PUBLIC_CALLER_EXCLUSION",
+  "images": {
+    "candidate": {
+      "actual_linked_guard66_opcode_words_exact_to_interpreted_object": true,
+      "parent_ELF_sha256": "760615cdda1f30e1119d662cd16f897deafa7fe4307d7decb792837b83b03582",
+      "new_ELF_sha256": "d334d9fe16b24e7a5673eb92de887fc124198df957542f128ea221cbf1e2cbb2",
+      "original_linked_prefix_instructions_verified": 120,
+      "helper_parent_address": 268743908,
+      "helper_new_address": 268743908,
+      "scalar_values_and_actual_BL_target_names_exact": true,
+      "all_original_decline_edges_exact": true
+    },
+    "zero-control": {
+      "actual_linked_guard66_opcode_words_exact_to_interpreted_object": true,
+      "parent_ELF_sha256": "adaff1855721ae95826b6fea88b567df28cdb832d4b68198d6048cc77274b70a",
+      "new_ELF_sha256": "5ff19de8fa35439f39eddffe243c74148f3d4f5a15f717253883e71034e21e69",
+      "original_linked_prefix_instructions_verified": 120,
+      "helper_parent_address": 268743908,
+      "helper_new_address": 268743908,
+      "scalar_values_and_actual_BL_target_names_exact": true,
+      "all_original_decline_edges_exact": true
+    }
+  },
+  "private_dispatch_source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-fullword-endpoints-r61-20261028/private-pow-dispatch.cpp",
+    "sha256": "6ef5320c0fdd500f8256d3d9c8a792fdf44e5366768027ffacf6d706931c9b95"
+  },
+  "negative_validator_source_sha256": "7d9eb9108f5ade2489af492bad0d991e426748ae91413c58e06ffae8e2247967",
+  "public_asm_sha256": "bc36ae7d3eaa7b3f55d11cebe22510cc8e4c4da42bf4f028e34f216383bba2e3",
+  "negative_public_inputs_cannot_reach_new_decline": true,
+  "condition": "Any new path requires positive-subnormal magnitude and positive y in[2^-12,existing1075/k cut<2). Negative nonintegers use unchanged CR before abs; y=1 uses public identity.",
+  "old_full_library_ARM_replay": false,
+  "new_ARM_MPFR_calls": 0,
+  "new_device_IO": 0,
+  "goal_complete": false
+}

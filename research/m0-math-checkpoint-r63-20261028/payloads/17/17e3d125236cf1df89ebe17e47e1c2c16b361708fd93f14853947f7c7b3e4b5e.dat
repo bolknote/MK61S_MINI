@@ -1,0 +1,6 @@
+{
+  "source": "selected249 ports/picocalc/main.cpp raw ! branch, no save_settings",
+  "payload_hex": "21",
+  "DTR_retained_until_disconnect": true,
+  "ROM_UID_not_yet_confirmed": true
+}

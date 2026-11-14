@@ -1,0 +1,17 @@
+{
+  "pid": 48138,
+  "owned_process_group": 48138,
+  "supervisor_pid": 48137,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/worker_stage.py",
+    "--execute",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/grants/math-cdc.json",
+    "--lease-sha256",
+    "4c0bfaf98001097deca9806adb9d589f838725622dbd25392db34e519e5ce104",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-math-cdc-001"
+  ]
+}

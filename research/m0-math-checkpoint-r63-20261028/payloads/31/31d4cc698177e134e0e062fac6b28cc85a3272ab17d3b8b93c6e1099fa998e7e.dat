@@ -1,0 +1,40 @@
+"""Pure synthetic row controls. No hardware or ARM results are synthesized as real."""
+from pathlib import Path
+import copy,json
+from analyze_smoke import codec,analyze_rows
+W=Path(__file__).resolve().parent;protocol=codec();nonce=123
+cases=[dict(case_id=i+1,x='3FF0000000000000',y='4000000000000000',expected='3FF0000000000000',SIO=state) for i,state in enumerate(['READY','DIRTY','PENDING'])]
+def sample(id,op,state,lib,round_id,gold):
+    bits=gold if lib!=3 else 0
+    return dict(type='R',nonce=nonce,id=id,op=op,state=state,library=lib,round=round_id,bits=bits,cycles=(100,101,99,1)[lib],elapsed_us=10,csr=1 if state==0 else 3,dividend=17,divisor=3,quotient=5,remainder=2,flags=int(not protocol.equal64(bits,gold)),stack_used=256)
+records=[dict(kind='identity',value=dict(type='I',nonce=nonce))]
+for id in range(1,10):
+    op=(id-1)%2 if id<=6 else 2;state=(id-1)//2 if id<=6 else id-7
+    gold=(0x3ff8000000000000 if op==0 else (1,3,2)[state]) if id<=6 else 0x3ff0000000000000
+    libraries=1 if op!=2 else 4;rows=[]
+    for turn in range(10):
+        for pos in range(libraries):
+            lib=libraries-1-pos if turn&1 else pos
+            rows.append(sample(id,op,state,lib,0x80+turn if turn<2 else turn-2,gold))
+    record=dict(request_id=id,samples=rows,done=dict(type='D',nonce=nonce,id=id,samples=len(rows),calibrated=7))
+    if id<=6:record.update(kind='calibration',op=op,state=state)
+    else:record.update(kind='math_case',source_case=cases[id-7])
+    records.append(record)
+records.append(dict(kind='explicit_exit_to_ROM_USB',value=dict(type='X',nonce=nonce)))
+summary,comparisons,decoded,tx=analyze_rows(records,cases,nonce,protocol)
+assert summary['comparison_classes']==dict(equal_or_faster=3,slower_sample=3,no_correct_reference=3)
+assert summary['wrong_measured_reference_outputs_preserved']==24
+assert all(r['classification']=='no_correct_reference' for r in comparisons if r['reference']==protocol.LIBRARIES[3])
+rejected=[]
+for label,edit in [
+    ('missing-final-exit',lambda r:r.pop()),
+    ('changed-candidate-gold',lambda r:r[7]['samples'][0].update(bits=0,flags=1)),
+    ('PENDING-never-observed',lambda r:r[6]['samples'][0].update(bits=3,flags=0)),
+    ('duplicate-round',lambda r:r[7]['samples'][4].update(round=0x80)),
+]:
+    changed=copy.deepcopy(records);edit(changed)
+    try:analyze_rows(changed,cases,nonce,protocol)
+    except AssertionError:rejected.append(label)
+    else:raise AssertionError('Invalid fixture accepted: '+label)
+result=dict(status='PASS_PURE_SYNTHETIC_SMOKE_ANALYSIS_CONTROLS',rejected=rejected,wrong_reference_cycles_retained=True,positive_and_slower_classes_distinguished=True,hardware_evidence_generated=False,actual_device_IO=0,new_ARM_MPFR_calls=0)
+(W/'test-result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

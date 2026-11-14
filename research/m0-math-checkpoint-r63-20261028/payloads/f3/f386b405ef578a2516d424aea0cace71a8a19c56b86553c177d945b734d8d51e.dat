@@ -1,0 +1,17 @@
+{
+  "pid": 48820,
+  "owned_process_group": 48820,
+  "supervisor_pid": 48819,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py",
+    "--execute",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-math-root-20261027-001/CURRENT26-CAPTURE-GRANT.json",
+    "--lease-sha256",
+    "5bc1c83390dabcdb27bd03d43f3cbc59729e0b2b0fdd7d6651b01fac901dd7d0",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/stage0-r2-current26-actual-001"
+  ]
+}

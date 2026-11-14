@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/resident_stage.py",
+    "--execute",
+    "--stage",
+    "resident-rom",
+    "--grant",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/resident-rom.json",
+    "--lease-sha256",
+    "f06c0d98e75c7893eea4dcc025a3979643ed20a65597ed723f4eca83521d9697",
+    "--output",
+    "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-rom-001"
+  ],
+  "grant_sha256": "f06c0d98e75c7893eea4dcc025a3979643ed20a65597ed723f4eca83521d9697"
+}

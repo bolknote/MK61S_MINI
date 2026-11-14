@@ -1,0 +1,14 @@
+{
+  "status": "PASS_PURE_SYNTHETIC_SMOKE_ANALYSIS_CONTROLS",
+  "rejected": [
+    "missing-final-exit",
+    "changed-candidate-gold",
+    "PENDING-never-observed",
+    "duplicate-round"
+  ],
+  "wrong_reference_cycles_retained": true,
+  "positive_and_slower_classes_distinguished": true,
+  "hardware_evidence_generated": false,
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_calls": 0
+}

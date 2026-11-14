@@ -1,0 +1,37 @@
+"""R58 keeps the R57 gate and uses existing CMP flags for small negative y."""
+from pathlib import Path
+import hashlib,json
+W=Path(__file__).resolve().parent;P=W.parent/'m0-math-pow-early-endpoint-r57-20261027'
+assert hashlib.sha256((P/'FROZEN.json').read_bytes()).hexdigest()=='66fedf4f9b6bade70f122b0d90d9faee7ad9e93e293bf1730f72aad6b2a7a759'
+assert not (W/'build.py').exists()
+m=json.loads((P/'FROZEN.json').read_text())
+for name in ['build.py','sitecustomize.py']:
+    assert hashlib.sha256((P/name).read_bytes()).hexdigest()==m['files'][name]['sha256']
+source=(P/'build.py').read_text()
+needle='path.write_text(source[:start]+body+source[end:])'
+replacement='''
+# CMP against -0.5 already establishes that negative |y|<0.5 cannot enter
+# the huge-exponent region. Replace the old unconditional branch at equal
+# instruction cost for that entire class, preserving exact -1/-0.5 shortcuts.
+needle=' beq .Lpow_inverse_root\\n b .Lpow_exact_ordinary'
+replacement=' beq .Lpow_inverse_root\\n blo .Lpow_exact_ordinary_small\\n b .Lpow_exact_ordinary'
+assert body.count(needle)==1;body=body.replace(needle,replacement)
+needle=' // Original R3 is intact; the C++ ordinary ABI receives low word zero.'
+assert body.count(needle)==1;body=body.replace(needle,'.Lpow_exact_ordinary_small:\\n'+needle)
+path.write_text(source[:start]+body+source[end:])'''
+assert source.count(needle)==1;source=source.replace(needle,replacement)
+needle="    if receipt is not None and receipt['argv']==cmd and receipt['object_pin']==pin(W/name) and receipt['source_pin']==pin(Path(cmd[cmd.index('-c')+1])):"
+replacement='''    R57=ROOT/'.build/m0-math-pow-early-endpoint-r57-20261027'
+    if name=='RP-unified-native_eabi_m0_rp2040.S.o':
+        assert sha(R57/'FROZEN.json')=='66fedf4f9b6bade70f122b0d90d9faee7ad9e93e293bf1730f72aad6b2a7a759'
+        prior=json.loads((R57/'FROZEN.json').read_text());assert pin(R57/name)==prior['files'][name]
+        assert (W/'source/code/native_eabi_m0_rp2040.S').read_bytes()==(R57/'source/code/native_eabi_m0_rp2040.S').read_bytes()
+        (W/name).write_bytes((R57/name).read_bytes())
+        previous=json.loads((R57/'link-result.json').read_text())['commands'][1]['argv']
+        commands.append(dict(argv=previous,exit_code=0,byteexact_reused_R57_object=str(R57/name),copy_destination=str(W/name)))
+    elif receipt is not None and receipt['argv']==cmd and receipt['object_pin']==pin(W/name) and receipt['source_pin']==pin(Path(cmd[cmd.index('-c')+1])):'''
+assert source.count(needle)==1;source=source.replace(needle,replacement)
+source=source.replace('BUILT_R57_EARLY_PUBLIC_GATE_AWAIT_QUALIFICATION','BUILT_R58_SMALL_NEGATIVE_BYPASS_AWAIT_QUALIFICATION')
+source=source.replace('final_object_compile_commands=2,total_native_compiler_invocations_including_preparation=3,successful_final_links=2,failed_preparation_links=1','final_changed_object_inputs=2,fresh_native_compiler_invocations=1,byteexact_R57_gate_object_reused=True,successful_final_links=2,failed_preparation_links=0')
+(W/'build.py').write_text(source);(W/'sitecustomize.py').write_bytes((P/'sitecustomize.py').read_bytes())
+print('Prepared R58: same gate, generic reuse of existing negative-y CMP flags')

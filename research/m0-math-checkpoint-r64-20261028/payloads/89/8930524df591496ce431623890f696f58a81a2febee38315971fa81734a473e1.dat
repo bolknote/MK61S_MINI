@@ -1,0 +1,20 @@
+{
+  "HOST_TEMPLATE_ONLY": true,
+  "not_executable_until_fresh_Root_grant": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/operator-R64/supervise_stage.py",
+    "--execute",
+    "--stage",
+    "resident-rom",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/grants/r64-tail-resident-rom.json",
+    "--lease-sha256",
+    "ROOT_FRESH_EXACT_GRANT_SHA256",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/stage-outputs/r64-tail-resident-rom-001",
+    "--supervisor-output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-operators-20261028-001/supervisor-outputs/r64-tail-resident-rom-001"
+  ]
+}

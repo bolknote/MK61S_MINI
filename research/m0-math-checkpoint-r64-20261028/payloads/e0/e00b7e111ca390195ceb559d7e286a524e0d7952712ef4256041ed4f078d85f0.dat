@@ -1,0 +1,22 @@
+{
+  "pid": 12664,
+  "exit_code": 0,
+  "reaped": true,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-picotool/picotool",
+    "load",
+    "-v",
+    "-x",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/runtime-R64/build/m0_r55_pow_hil.elf",
+    "-t",
+    "elf",
+    "--bus",
+    "2",
+    "--address",
+    "5",
+    "--ser",
+    "E6657CD423721C35"
+  ],
+  "stdout_sha256": "2fef021519204da9b33c22eb20eb52e85af1cc94e34702bd4e51cd5327057dfa",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

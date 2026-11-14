@@ -1,0 +1,22 @@
+{
+  ".build/m0-math-pow-nearpower-negative-r64-20261028/decline-trials/normal-saturation-skip-001/FROZEN.json": {
+    "sha256": "640c4d09341f18e965b27b88044d3e0da65f8a6c17e55db4aa6eacf57c6a3d77",
+    "pins": 1652
+  },
+  ".build/m0-math-r64-final-host-20261028-001/FROZEN.json": {
+    "sha256": "c8c2cab35f2582664e575c25242426363dfa79281ff4e9896e88ec0cc7de3eab",
+    "pins": 407
+  },
+  ".build/m0-math-r64-ram-hil-host-20261028-001/FROZEN.json": {
+    "sha256": "3868ef3cafab7fd8269f1f1b0c9e124ab2ba4931170ce25f1c1adb0160be8180",
+    "pins": 113
+  },
+  ".build/m0-math-r64-d6-wake-operators-20261028-001/FROZEN.json": {
+    "sha256": "be6016a58976adaa997937b9ba9300e3482775dbe6fca1bb974c519fb8b3639a",
+    "pins": 184
+  },
+  ".build/m0-math-r64-all84-physical-report-20261028-001/FROZEN.json": {
+    "sha256": "5a54e0941c058b48634610cf37b22e1169bfa60841703fe3577dc2a7527393b6",
+    "pins": 5
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "status": "JOINT01_SINGLE_RAW_ROM_EXACT_ACK_DISCONNECT_PASS_UID_PENDING",
+  "components": {
+    "joint-01-resident-rom-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/FROZEN.json",
+        "bytes": 5008,
+        "sha256": "b41c6a20998c6350730ee47229a6f6b1416cd8a31cfcfffeca328e7a0cbb589d"
+      },
+      "pins": 35
+    },
+    "joint-01-resident-rom-supervisor-001": {
+      "manifest": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-supervisor-001/FROZEN.json",
+        "bytes": 876,
+        "sha256": "1d5d015d75d6e2a61417748ae29a41016dbfdfb2d8530910a21c825d4b4b2a4d"
+      },
+      "pins": 5
+    }
+  },
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/RESULT.json",
+    "bytes": 588,
+    "sha256": "cd2df62bdc396a777209d096ddc2e043e6a86944b63fc713bac3b107dbc8ac70"
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/current-state.json",
+    "bytes": 2236,
+    "sha256": "a0d8f9c5cbcfb3ab9fe07228e78c3791ba14bf281be18cf603b4566348aed134"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1367,
+    "sha256": "e37c378915ad52a78ec577ff059a1c425f6787e864b34c53fe86502046dfe028"
+  },
+  "ROM_intent": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/ROM-INTENT.json",
+    "bytes": 186,
+    "sha256": "17e3d125236cf1df89ebe17e47e1c2c16b361708fd93f14853947f7c7b3e4b5e"
+  },
+  "ROM_handoff": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/ROM-HANDOFF.json",
+    "bytes": 367,
+    "sha256": "6a46e52c567c59386ffc6baab86eb49596e55e5830ba27ea3c11d5ba908328a7"
+  },
+  "raw_journal": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/raw-from-open.bin",
+    "bytes": 43283,
+    "sha256": "3d336d0ec747a36c5c231228d74ebdb33edb8c42ed1884272b1a04dccd035048"
+  },
+  "io_ledger": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/joint-01-resident-rom-001/io.jsonl",
+    "bytes": 2176,
+    "sha256": "b04deba8d68bfe8420c56465965163696f5586402d3e690a3d5ebd31e987a2fa"
+  },
+  "all_typed_fields_exact_to_joint01_capture": true,
+  "epoch": [
+    "9",
+    "00010001"
+  ],
+  "ack_hex": "456e746572696e67205250323034302055534220424f4f5453454c0d0a",
+  "native_disconnect_errno": 6,
+  "actual_write_operations": 23,
+  "actual_getters": 7,
+  "status_requests": 13,
+  "command_mode_entries": 1,
+  "raw_mode_entries": 1,
+  "raw_exclamation_attempts": 1,
+  "TX_bytes": 53,
+  "RX_bytes": 43283,
+  "serial_closed": true,
+  "own_child_reaped": true,
+  "exact_ROM_UID_pending": true,
+  "actual_RAM_loads": 0,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "canonical_lease_mutations": 0,
+  "next_stage_authorized": false,
+  "goal_complete": false,
+  "recorded_utc": "2026-10-28T05:16:52.400970+00:00"
+}

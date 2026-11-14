@@ -1,0 +1,38 @@
+"""Focused inert source-domain/framing/readonly checks; no new hardware campaign."""
+from pathlib import Path
+import hashlib,json,sys
+sys.dont_write_bytecode=True
+W=Path(__file__).resolve().parent
+from preflight import Resident,whole_frame,validate_frame,first_complete_frame,rebootable_zero
+ROOT=W.parents[2]
+historical=ROOT/'.build/picocalc-ci249-activation-20261027-001/hardware-install-001/cdc-selected249-warm-ready/raw-from-open.bin'
+raw=historical.read_bytes();frame=first_complete_frame(raw)
+assert frame is not None
+epoch,mode=validate_frame(frame)
+assert mode=='COMMAND' and whole_frame(frame.encode())==len(frame.encode())
+assert whole_frame(frame.encode()[:40]) is None
+rejected=[]
+def reject(fn,name):
+    try:fn()
+    except RuntimeError:rejected.append(name)
+    else:raise AssertionError('Unexpected acceptance: '+name)
+reject(lambda:whole_frame(b'UI_FONT_FAMILY=1\r\n'+frame.encode()),'leading-incomplete-status-tail')
+reject(lambda:validate_frame(frame.replace('BUILD=249A92DE','BUILD=1940130E')),'wrong-resident-build')
+reject(lambda:validate_frame(frame.replace('ACTUAL=E6CFC3B8','ACTUAL=00000000')),'wrong-current-image-CRC')
+reject(lambda:validate_frame(frame.replace('SERVICE=CLOSED','SERVICE=TEXT')),'unknown-foreground')
+reject(lambda:validate_frame(frame.replace('RUN=0','RUN=1')),'active-calculator')
+reject(lambda:validate_frame(frame.replace('PHYSICAL_KEYS=0','PHYSICAL_KEYS=1')),'new-physical-input')
+reject(lambda:validate_frame(frame,('99999999','00000000')),'changed-reset-epoch')
+class NoIO:
+    def __init__(self):self.calls=0
+    def write(self,*a):self.calls+=1;raise AssertionError('Unexpected I/O')
+port=NoIO();resident=Resident(port,W)
+for command in ['dfu','!','date 2026-10-27 00:00:00','alarm a off','reg 0','reinit','open APP','crash clear']:
+    reject(lambda c=command:resident.command(c),'forbidden-'+command)
+assert port.calls==0
+state_path=ROOT/'.build/picocalc-ci249-activation-20261027-001/hardware-install-001/actual-preflight-reconfirmed.json'
+state=json.loads(state_path.read_text());assert rebootable_zero(state,frame)
+bad=dict(state);bad['IP']=1;assert not rebootable_zero(bad,frame)
+bad=dict(state);bad['reg']=bad['reg'].replace(' 0.0000000',' 1.0000000',1);assert not rebootable_zero(bad,frame)
+result=dict(status='PASS_INERT_READONLY_CURRENT249_PREFLIGHT_PARSER_AND_WHITELIST',historical_fixture_sha256=hashlib.sha256(raw).hexdigest(),historical_fixture_is_not_current_admission=True,source_domain_grammar_fixture_epoch=list(epoch),rejected=rejected,actual_device_opens=0,actual_TX_bytes=0,RTC_setters=0,ROM_transitions=0,wide_campaigns_rerun=0)
+(W/'preflight-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

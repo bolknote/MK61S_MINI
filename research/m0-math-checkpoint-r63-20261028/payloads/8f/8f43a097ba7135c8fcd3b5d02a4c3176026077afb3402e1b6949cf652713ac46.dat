@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_EXACT_FINITE_STAGE_GRANTED",
+  "stage": "math-cdc",
+  "grant": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/grants/math-cdc.json",
+    "bytes": 2931,
+    "sha256": "8478c4982c042bf28b57a6355df4045bbe43b863e5459943fa4e82479812f956"
+  },
+  "argv": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/ARGV-math-cdc.json",
+    "bytes": 974,
+    "sha256": "a77179aae8f210fe03ed579f74aca0a475844d0673e7ede59c78a745387b1471"
+  },
+  "metadata": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/root-r61-worker-before-smoke-20261028-001/root-pico-math-stage-metadata.json",
+    "bytes": 3473,
+    "sha256": "c442c5771196e4e5882297c239b69648204d530cb9fced308e0f41aca7d3ba93"
+  },
+  "previous_canonical": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-hil-root-review-20261028-001/CANONICAL-BEFORE-math-cdc.json",
+    "bytes": 2200,
+    "sha256": "1701a1db1c82c4658827ed74c1c06014d8bd3b437290d68cf90fe91c452a5004"
+  },
+  "expires_utc": "2026-10-27T23:21:28.847766+00:00",
+  "Flash_programming_allowed": false,
+  "RTC_setter_allowed": false,
+  "other_stages_not_granted": true,
+  "Root_device_IO": 0
+}

@@ -1,0 +1,8 @@
+{
+  "pid": 32955,
+  "inputs_sha256": "a1504d7c501d5b72b009fe627690ac0a987f073546e1a9bcfbd41086480f291f",
+  "producer_sha256": "9ec4c10c41c16d3d3cdafad25d5c4c783e02718515cca7b1faf1b34603a65ccc",
+  "harness_sha256": "df3203806f16de4af70c3dfe4a5dfea9353726339f1865e2d418498f55791e54",
+  "candidate_ELF_sha256": "c3a8e7f3cc0536ef74943e563090c4881d7429bd910d2af720e039092aae7fee",
+  "actual_device_IO": 0
+}

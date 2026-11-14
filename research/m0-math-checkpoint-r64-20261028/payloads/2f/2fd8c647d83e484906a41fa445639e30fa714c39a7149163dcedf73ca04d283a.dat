@@ -1,0 +1,15 @@
+{
+  "status": "QUALIFIED_WORKER_PRIMITIVES_INHERITED_NEW_MATH_BOUND_ELSEWHERE",
+  "actual_ROM_CRC32": 172131586,
+  "source": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r62-r63-ram-hil-20261028/operator-joint/worker-check-inheritance.json",
+    "bytes": 608,
+    "sha256": "126675f9869d321a31179b044caf0b4950a65306e0e940f3a4cfcf953f33ef67"
+  },
+  "current_worker_correspondence": {
+    "path": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-ram-hil-host-20261028-001/worker-correspondence.json",
+    "bytes": 7588,
+    "sha256": "47ccf855a7f97ceae2c83e372568c3f02a1431d28337530af50dd64c8f2db6b5"
+  },
+  "fresh_ARM_calls": 0
+}

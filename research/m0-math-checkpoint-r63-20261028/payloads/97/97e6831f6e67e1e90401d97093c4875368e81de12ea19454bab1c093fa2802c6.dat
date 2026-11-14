@@ -1,0 +1,57 @@
+{
+  "status": "PASS_R58_LINKED_PUBLIC_GUARDS_AND_LEGAL_CALLER_STATES",
+  "linked_mutation_controls": [
+    {
+      "label": "lower-cutoff-one-ULP/above1/underflow_zero",
+      "rejected": true,
+      "wrong_gold": true,
+      "original_route_lost": true,
+      "positive_public_calls": 1,
+      "mutated_public_calls": 1,
+      "positive_instructions": 40346,
+      "mutated_instructions": 50
+    },
+    {
+      "label": "lower-cutoff-one-ULP/above1/overflow_infinity",
+      "rejected": true,
+      "wrong_gold": true,
+      "original_route_lost": true,
+      "positive_public_calls": 1,
+      "mutated_public_calls": 1,
+      "positive_instructions": 38974,
+      "mutated_instructions": 50
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/underflow_zero",
+      "rejected": true,
+      "wrong_gold": true,
+      "original_route_lost": true,
+      "positive_public_calls": 1,
+      "mutated_public_calls": 1,
+      "positive_instructions": 38058,
+      "mutated_instructions": 47
+    },
+    {
+      "label": "lower-cutoff-one-ULP/below1/overflow_infinity",
+      "rejected": true,
+      "wrong_gold": true,
+      "original_route_lost": true,
+      "positive_public_calls": 1,
+      "mutated_public_calls": 1,
+      "positive_instructions": 36844,
+      "mutated_instructions": 46
+    }
+  ],
+  "positive_public_guard_calls": 4,
+  "mutated_public_guard_calls": 4,
+  "completed_public_NZCV_R12_variation_calls": 256,
+  "original_callee_entry_probes": 512,
+  "all_declined_arguments_SP_LR_callee_saved_and_PENDING_SIO_exact": true,
+  "callee_entries_observed_not_stubbed": true,
+  "no_return_value_or_guest_instruction_stubs": true,
+  "caller_condition_flags_all16_tested": true,
+  "MPFR_queries": 0,
+  "actual_device_IO": 0,
+  "selected": false,
+  "goal_complete": false
+}

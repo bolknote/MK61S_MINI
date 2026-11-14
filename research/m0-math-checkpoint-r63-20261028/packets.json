@@ -1,0 +1,107 @@
+{
+  "r56": {
+    "directory": ".build/m0-math-pow-tight-endpoint-r56-20261027",
+    "archived_files": 103,
+    "omitted_binaries": 25
+  },
+  "r57": {
+    "directory": ".build/m0-math-pow-early-endpoint-r57-20261027",
+    "archived_files": 401,
+    "omitted_binaries": 26
+  },
+  "r58": {
+    "directory": ".build/m0-math-pow-early-endpoint-r58-20261027",
+    "archived_files": 405,
+    "omitted_binaries": 25
+  },
+  "r59": {
+    "directory": ".build/m0-math-pow-dispatch-contract-r59-20261027",
+    "archived_files": 432,
+    "omitted_binaries": 26
+  },
+  "r60": {
+    "directory": ".build/m0-math-pow-subnormal-overflow-r60-20261027",
+    "archived_files": 431,
+    "omitted_binaries": 30
+  },
+  "r61": {
+    "directory": ".build/m0-math-pow-fullword-endpoints-r61-20261028",
+    "archived_files": 415,
+    "omitted_binaries": 30
+  },
+  "r62": {
+    "directory": ".build/m0-math-pow-subnormal-powerzero-r62-20261028",
+    "archived_files": 424,
+    "omitted_binaries": 37
+  },
+  "r63": {
+    "directory": ".build/m0-math-pow-fullword-powerzero-r63-20261028",
+    "archived_files": 423,
+    "omitted_binaries": 36
+  },
+  "r55-hil-history": {
+    "directory": ".build/m0-math-r55-hil-20261027",
+    "archived_files": 516,
+    "omitted_binaries": 24
+  },
+  "r61-hil-history": {
+    "directory": ".build/m0-math-r61-ram-hil-20261028",
+    "archived_files": 344,
+    "omitted_binaries": 13
+  },
+  "joint-r62-r63-hil": {
+    "directory": ".build/m0-math-r62-r63-ram-hil-20261028",
+    "archived_files": 595,
+    "omitted_binaries": 16
+  },
+  "root-r59-r60": {
+    "directory": ".build/m0-math-r59-r60-root-review-20261028-001",
+    "archived_files": 9,
+    "omitted_binaries": 0
+  },
+  "root-r61": {
+    "directory": ".build/m0-math-r61-root-review-20261028-001",
+    "archived_files": 6,
+    "omitted_binaries": 0
+  },
+  "root-r62": {
+    "directory": ".build/m0-math-r62-root-review-20261028-001",
+    "archived_files": 8,
+    "omitted_binaries": 0
+  },
+  "root-r63": {
+    "directory": ".build/m0-math-r63-root-review-20261028-001",
+    "archived_files": 8,
+    "omitted_binaries": 0
+  },
+  "root-r61-hil": {
+    "directory": ".build/m0-math-r61-hil-root-review-20261028-001",
+    "archived_files": 37,
+    "omitted_binaries": 0
+  },
+  "root-joint-hil": {
+    "directory": ".build/m0-math-r62-r63-hil-root-review-20261028-001",
+    "archived_files": 117,
+    "omitted_binaries": 0
+  },
+  "r62-predicate-note": {
+    "directory": ".build/m0-math-r62-fullword-zero-predicate-note-20261028",
+    "archived_files": 4,
+    "omitted_binaries": 0
+  },
+  "nearpower-proof-narrow": {
+    "directory": ".build/m0-math-r63-nearpower-negative-study-20261028-001",
+    "archived_files": 4,
+    "omitted_binaries": 0
+  },
+  "nearpower-proof-generalized": {
+    "directory": ".build/m0-math-r63-nearpower-negative-study-20261028-002",
+    "archived_files": 4,
+    "omitted_binaries": 0
+  },
+  "nearpower-unapplied-patch": {
+    "directory": ".build/m0-math-r63-nearpower-negative-patch-20261028-001",
+    "archived_files": 4,
+    "omitted_binaries": 0
+  }
+}

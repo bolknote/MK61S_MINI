@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/resident_stage.py", line 79, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/resident_stage.py", line 78, in main
+    if failure:raise failure
+               ^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/resident_stage.py", line 63, in main
+    port=LeasePort(lease,raw,journal);current=preflight.capture(port,out,lease)
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py", line 79, in capture
+    shell=Resident(port,folder,lease.fields['expected_physical_keys']);shell.admit();identity=shell.command('identity')
+                                                                       ~~~~~~~~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py", line 52, in admit
+    self.status()
+    ~~~~~~~~~~~^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py", line 48, in status
+    frame=first_complete_frame(wire);self.epoch,terminal=validate_frame(frame,self.epoch,mode,self.physical_keys)
+                                                         ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r2/preflight.py", line 34, in validate_frame
+    need(physical_keys is None or observed_keys==physical_keys,'Physical counter changed from the Root-bound current baseline')
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/operator-r3/live_io.py", line 12, in need
+    if not ok:raise RuntimeError(why)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Physical counter changed from the Root-bound current baseline

@@ -1,0 +1,14 @@
+{
+  "status": "HOST_WORKER_ONLY_R5_NOT_PHYSICAL_AUTHORITY",
+  "source_math_candidate": "R55",
+  "stages": [
+    "math-cdc"
+  ],
+  "math_or_firmware_changes": false,
+  "physical_cycles_measured": false,
+  "accepted_additional_native_port": "/dev/cu.usbmodemM0R55POW011",
+  "required_worker_USB_serial": "M0R55POW01",
+  "all_other_live_guards_byteexact_R3": true,
+  "actual_device_IO": 0,
+  "goal_complete": false
+}

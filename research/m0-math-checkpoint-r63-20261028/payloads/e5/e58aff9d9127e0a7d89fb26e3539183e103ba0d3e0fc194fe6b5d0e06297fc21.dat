@@ -1,0 +1,75 @@
+[
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-worker-path.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-supervisor.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-rom-envelope.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-return-ui.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 1
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-return-ui.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-worker-live.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-r61-plan.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0
+  },
+  {
+    "argv": [
+      "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+      "-B",
+      "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/operator-r61/test-r61-plan.py"
+    ],
+    "cwd": "/Users/bolk/Projects/MK61S_MINI",
+    "exit_code": 0,
+    "reason": "Removed unreachable optional fifth-command branch; same focused controls rerun"
+  }
+]

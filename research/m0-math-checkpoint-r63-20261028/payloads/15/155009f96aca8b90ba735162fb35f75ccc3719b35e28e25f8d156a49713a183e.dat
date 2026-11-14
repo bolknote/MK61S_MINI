@@ -1,0 +1,41 @@
+"""Only three inert controls for the exact physical worker's named CDC port."""
+from pathlib import Path
+import io,json,stat,tempfile,time,types
+from live_io import LiveLease,LeasePort,OWNER,ROOT,UID,SCOPE,sha
+W=Path(__file__).resolve().parent
+PORT='/dev/cu.usbmodemM0R55POW011'
+class FakeIO:
+    def __init__(self):self.stat_calls=0;self.opens=0;self.closed=[]
+    def stat(self,p):self.stat_calls+=1;return types.SimpleNamespace(st_mode=stat.S_IFCHR,st_rdev=123)
+    def lock(self,p):return 41
+    def open(self,p):self.opens+=1;return 42
+    def fstat(self,fd):return types.SimpleNamespace(st_rdev=123)
+    def exclusive(self,fd):pass
+    def attributes(self,fd):return [0,0,0,0,0,0,[0]*32]
+    def configure(self,fd,a):pass
+    def dtr(self,fd):pass
+    def close(self,fd):self.closed.append(fd)
+rejected=[]
+with tempfile.TemporaryDirectory(prefix='m0-worker-path-',dir=W.parent) as name:
+    d=Path(name).resolve();grant=d/'grant.json';canonical=d/'canonical.json'
+    base=dict(owner='m0-math-ram',owner_thread=OWNER,coordinator_thread=ROOT,uid=UID,scope=SCOPE,status='ROOT_MATH_STAGE_GO',stage='math-cdc',enabled=True,hardware_window_granted=True,hardware_execution_allowed=True,lease_nonce='d'*32,expires_unix=time.time()+100,session_seconds=300,port=PORT,port_stat_rdev=123,worker_USB_serial='M0R55POW01',max_TX_bytes=1000,max_RX_bytes=1000)
+    def fresh(g):
+        raw=(json.dumps(g)+'\n').encode();grant.write_bytes(raw);canonical.write_bytes(raw)
+        return LiveLease(grant,sha(raw),g['stage'],canonical=canonical)
+    for path in [PORT,'/dev/cu.usbmodem999999']:
+        g=dict(base,port=path);fake=FakeIO();port=LeasePort(fresh(g),io.BytesIO(),io.StringIO(),io=fake)
+        assert port.is_open and fake.opens==1;port.close();assert fake.closed==[42,41]
+    for label,patch in [
+        ('worker-path-with-wrong-serial',dict(worker_USB_serial='OTHERWORKER')),
+        ('worker-path-in-wrong-stage',dict(stage='resident-verify')),
+        ('foreign-worker-port-suffix',dict(port='/dev/cu.usbmodemM0R55POW012')),
+    ]:
+        fake=FakeIO()
+        try:LeasePort(fresh(dict(base,**patch)),io.BytesIO(),io.StringIO(),io=fake)
+        except RuntimeError as e:
+            assert str(e)=='Exact native CDC path required'
+            rejected.append(label)
+        else:raise AssertionError('Broadened worker route accepted: '+label)
+        assert fake.stat_calls==fake.opens==0 and fake.closed==[]
+result=dict(status='PASS_THREE_INERT_EXACT_WORKER_CDC_PATH_CONTROLS',accepted_exact_worker_path=PORT,accepted_only_with_math_stage_and_worker_serial=True,original_numeric_path_still_accepted=True,rejected=rejected,rejected_before_native_stat_or_open=True,actual_device_opens=0,new_ARM_MPFR_or_firmware_calls=0,old_protocol_or_RAM_corpora_repeated=False)
+(W/'worker-path-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

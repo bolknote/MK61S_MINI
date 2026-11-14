@@ -1,0 +1,88 @@
+
+/Users/bolk/Projects/MK61S_MINI/.build/m0-math-pow-dispatch-contract-r59-20261027/RP-unified-native_eabi_m0_rp2040.S.o:     file format elf32-littlearm
+
+
+Disassembly of section .m0_pow_early_endpoint:
+
+00000000 <mk61_m0_pow_tight_dispatch>:
+   0:	b4f0      	push	{r4, r5, r6, r7}
+   2:	4f1d      	ldr	r7, [pc, #116]	@ (78 <mk61_m0_pow_early_gate_end+0x2>)
+   4:	e002      	b.n	c <mk61_m0_pow_early_gate_begin>
+
+00000006 <mk61_m0_pow_tight_ordinary>:
+   6:	b4f0      	push	{r4, r5, r6, r7}
+   8:	2200      	movs	r2, #0
+   a:	4f1c      	ldr	r7, [pc, #112]	@ (7c <mk61_m0_pow_early_gate_end+0x6>)
+
+0000000c <mk61_m0_pow_early_gate_begin>:
+   c:	005c      	lsls	r4, r3, #1
+   e:	4d1c      	ldr	r5, [pc, #112]	@ (80 <mk61_m0_pow_early_gate_end+0xa>)
+  10:	42ac      	cmp	r4, r5
+  12:	d32d      	bcc.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  14:	4d1b      	ldr	r5, [pc, #108]	@ (84 <mk61_m0_pow_early_gate_end+0xe>)
+  16:	42ac      	cmp	r4, r5
+  18:	d22a      	bcs.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  1a:	0d0d      	lsrs	r5, r1, #20
+  1c:	3d01      	subs	r5, #1
+  1e:	4e1a      	ldr	r6, [pc, #104]	@ (88 <mk61_m0_pow_early_gate_end+0x12>)
+  20:	42b5      	cmp	r5, r6
+  22:	d225      	bcs.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  24:	4d19      	ldr	r5, [pc, #100]	@ (8c <mk61_m0_pow_early_gate_end+0x16>)
+  26:	42a9      	cmp	r1, r5
+  28:	d30e      	bcc.n	48 <mk61_m0_pow_early_gate_begin+0x3c>
+  2a:	d801      	bhi.n	30 <mk61_m0_pow_early_gate_begin+0x24>
+  2c:	2800      	cmp	r0, #0
+  2e:	d01f      	beq.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  30:	2b00      	cmp	r3, #0
+  32:	d404      	bmi.n	3e <mk61_m0_pow_early_gate_begin+0x32>
+  34:	4d16      	ldr	r5, [pc, #88]	@ (90 <mk61_m0_pow_early_gate_end+0x1a>)
+  36:	46ac      	mov	ip, r5
+  38:	4d11      	ldr	r5, [pc, #68]	@ (80 <mk61_m0_pow_early_gate_end+0xa>)
+  3a:	4e16      	ldr	r6, [pc, #88]	@ (94 <mk61_m0_pow_early_gate_end+0x1e>)
+  3c:	e00f      	b.n	5e <mk61_m0_pow_early_gate_begin+0x52>
+  3e:	2500      	movs	r5, #0
+  40:	46ac      	mov	ip, r5
+  42:	4d15      	ldr	r5, [pc, #84]	@ (98 <mk61_m0_pow_early_gate_end+0x22>)
+  44:	4e15      	ldr	r6, [pc, #84]	@ (9c <mk61_m0_pow_early_gate_end+0x26>)
+  46:	e00a      	b.n	5e <mk61_m0_pow_early_gate_begin+0x52>
+  48:	2b00      	cmp	r3, #0
+  4a:	d404      	bmi.n	56 <mk61_m0_pow_early_gate_begin+0x4a>
+  4c:	2500      	movs	r5, #0
+  4e:	46ac      	mov	ip, r5
+  50:	4d13      	ldr	r5, [pc, #76]	@ (a0 <mk61_m0_pow_early_gate_end+0x2a>)
+  52:	4e14      	ldr	r6, [pc, #80]	@ (a4 <mk61_m0_pow_early_gate_end+0x2e>)
+  54:	e003      	b.n	5e <mk61_m0_pow_early_gate_begin+0x52>
+  56:	4d0e      	ldr	r5, [pc, #56]	@ (90 <mk61_m0_pow_early_gate_end+0x1a>)
+  58:	46ac      	mov	ip, r5
+  5a:	4d13      	ldr	r5, [pc, #76]	@ (a8 <mk61_m0_pow_early_gate_end+0x32>)
+  5c:	4e13      	ldr	r6, [pc, #76]	@ (ac <mk61_m0_pow_early_gate_end+0x36>)
+  5e:	42ac      	cmp	r4, r5
+  60:	d306      	bcc.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  62:	d801      	bhi.n	68 <mk61_m0_pow_early_gate_begin+0x5c>
+  64:	42b2      	cmp	r2, r6
+  66:	d303      	bcc.n	70 <mk61_m0_pow_early_gate_begin+0x64>
+  68:	2000      	movs	r0, #0
+  6a:	4661      	mov	r1, ip
+  6c:	bcf0      	pop	{r4, r5, r6, r7}
+  6e:	4770      	bx	lr
+  70:	46bc      	mov	ip, r7
+  72:	bcf0      	pop	{r4, r5, r6, r7}
+  74:	4760      	bx	ip
+
+00000076 <mk61_m0_pow_early_gate_end>:
+	...
+			78: R_ARM_ABS32	mk61_m0_pow_dispatch_fractional
+			7c: R_ARM_ABS32	mk61_m0_pow_dispatch_high_word
+  7e:	0000      	.short	0x0000
+  80:	878c5c84 	.word	0x878c5c84
+  84:	ffe00000 	.word	0xffe00000
+  88:	000007fe 	.word	0x000007fe
+  8c:	3ff00000 	.word	0x3ff00000
+  90:	7ff00000 	.word	0x7ff00000
+  94:	fefa39f0 	.word	0xfefa39f0
+  98:	878e9220 	.word	0x878e9220
+  9c:	d52d3053 	.word	0xd52d3053
+  a0:	87ae9220 	.word	0x87ae9220
+  a4:	d52d3052 	.word	0xd52d3052
+  a8:	87ac5c84 	.word	0x87ac5c84
+  ac:	fefa39ef 	.word	0xfefa39ef

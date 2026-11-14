@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/operator-R64/return_stage.py",
+    "--execute",
+    "--stage",
+    "resident-verify",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/grants/r64-tail-resident-verify.json",
+    "--lease-sha256",
+    "5a35515be51f7fc8b497f04cfa3dfc24fe6391711545a64a12d999ef544dd7a4",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r64-tail-resident-verify-001"
+  ],
+  "grant_sha256": "5a35515be51f7fc8b497f04cfa3dfc24fe6391711545a64a12d999ef544dd7a4"
+}

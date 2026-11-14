@@ -1,0 +1,13 @@
+{
+  "status": "TERMINAL_EXIT1_OUTDATED_EXPECTED_IMPROVEMENT_COUNT_NO_ARM_EXECUTION",
+  "session_id": 61107,
+  "exit_code": 1,
+  "chunk_id": "28d0de",
+  "observed_fixed_pairs": 94,
+  "observed_remaining_pairs": 1358,
+  "old_assertion_expected_only81_endpoint_fixes": true,
+  "numerical_failure": false,
+  "actual_new_ARM_MPFR_calls": 0,
+  "producer_sha256": "0f4f2dd521582381aa9a52598df08659da1dc14803eb434b8b06f3f8717501f1",
+  "correction": "The joined measurements also fix additional ordinary pow pairs. Derive totals from pinned records; do not force the older81 endpoint-only count."
+}

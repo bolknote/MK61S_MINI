@@ -1,0 +1,37 @@
+{
+  "policy_id": "host-named-cdc-noholder-001",
+  "scope": "One caller-provided exact named CDC lsof result; not global noholder or warning-free evidence.",
+  "caller_lsof_argv": ["/usr/sbin/lsof", "-nP", "-S2", "--", "OWN_PORT"],
+  "required_returncode": 1,
+  "required_stdout": "",
+  "target": {
+    "path_pattern": "/dev/cu.usbmodem[A-Za-z0-9]+",
+    "fresh_stat_follow_symlinks": false,
+    "required_type": "character device",
+    "required_filesystem": "st_dev equals fresh non-symlink /dev directory st_dev",
+    "must_differ_from_warning_device": true
+  },
+  "stderr": {
+    "empty": "accepted after local target validation",
+    "nonempty": "exact entire single three-line lsof smbfs stat warning with final LF",
+    "warning_path_prefix": "/Volumes/.timemachine/",
+    "warning_device": "exactly eight hexadecimal digits",
+    "unknown_extra_multiple_truncated_or_malformed": "reject"
+  },
+  "mount_observation": {
+    "argv": ["/sbin/mount", "-t", "smbfs"],
+    "timeout_seconds": 10,
+    "source": "fresh invocation reading the cached OS mount table, never stat a mount/NAS path",
+    "required_returncode": 0,
+    "required_stderr": "",
+    "matching_rows": 1,
+    "matching_path": "exact warning path",
+    "required_options": ["smbfs", "nobrowse"],
+    "cross_probe_cache": false
+  },
+  "public_api_observation_injection": false,
+  "import_probes": false,
+  "retries": 0,
+  "forbidden": ["NAS/network stat", "serial/device open", "lsof -b/-O/-w", "filesystem exclusions", "warning suppression", "lease or UID replacement"],
+  "caller_guards_unchanged": ["exact own USB identity and port", "EX lock", "TIOCEXCL", "Root lease and hardware authority"]
+}

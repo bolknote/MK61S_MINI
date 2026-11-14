@@ -1,0 +1,30 @@
+{
+  "status": "FROZEN_REAPED_RESIDENT_ROM_SUPERVISOR",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1353,
+      "sha256": "8dc838ed77ee6833ccebfc84ba8dd7adbb2f8f3cf7977766720f67b60c3f4c66"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 679,
+      "sha256": "5ef021b4c86ed9a1de7ba99c94d35c2b4f241c879191200fce24b828a7543fa5"
+    },
+    "ARGV.json": {
+      "bytes": 690,
+      "sha256": "5808c390797379cbc6cba31350aafc3c6a063fc65474e60311ed8b87f9041310"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 588,
+      "sha256": "1bada8210e6b43ad4956ca2725273ce4d987c0adb3689ba428475b3cae60e5e6"
+    }
+  },
+  "all_own_stage_processes_terminal": true,
+  "raw_exclamation_attempts": 1,
+  "Flash_writes": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

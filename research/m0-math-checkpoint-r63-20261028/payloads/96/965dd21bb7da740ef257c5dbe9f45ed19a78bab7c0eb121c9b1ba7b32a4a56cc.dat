@@ -1,0 +1,14 @@
+{
+  "status": "PASS_THREE_INERT_ROOT_UI_RETURN_CONTROLS",
+  "accepted_exact_original": true,
+  "accepted_only_VIEW1_to_VIEW0_with_explicit_Root_disposition": true,
+  "rejected": [
+    "no-Root-disposition",
+    "other-UI-field-changed",
+    "calculator-IP-changed"
+  ],
+  "actual_device_IO": 0,
+  "new_ARM_MPFR_or_firmware_calls": 0,
+  "physical_UI_actions": 0,
+  "UI_setters": 0
+}

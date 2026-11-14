@@ -1,0 +1,50 @@
+{
+  "r64-candidate-and-rejected-trials": {
+    "archived_files": 1979,
+    "omitted_binaries": 145
+  },
+  "r64-paired-smoke-analysis": {
+    "archived_files": 4,
+    "omitted_binaries": 0
+  },
+  "r64-final-physical-report": {
+    "archived_files": 6,
+    "omitted_binaries": 0
+  },
+  "r64-superseded-no-wake-operators": {
+    "archived_files": 171,
+    "omitted_binaries": 0
+  },
+  "r64-qualified-operators-and-physical": {
+    "archived_files": 971,
+    "omitted_binaries": 12
+  },
+  "r64-final-host": {
+    "archived_files": 405,
+    "omitted_binaries": 3
+  },
+  "r64-ram-images": {
+    "archived_files": 88,
+    "omitted_binaries": 26
+  },
+  "r64-first-cycle-analysis": {
+    "archived_files": 3,
+    "omitted_binaries": 0
+  },
+  "core-math-source-dependency": {
+    "archived_files": 17,
+    "omitted_binaries": 0
+  },
+  "root-review-and-closures": {
+    "archived_files": 45,
+    "omitted_binaries": 0
+  },
+  "accepted-r63-binding": {
+    "archived_files": 2,
+    "omitted_binaries": 0
+  },
+  "root-pinned-external-evidence": {
+    "archived_files": 6,
+    "omitted_binaries": 0
+  }
+}

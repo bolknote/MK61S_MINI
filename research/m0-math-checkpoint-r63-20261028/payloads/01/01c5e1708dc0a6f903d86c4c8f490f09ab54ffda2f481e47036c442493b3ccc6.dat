@@ -1,0 +1,75 @@
+{
+  "status": "ROOT_R61_SAVED_CORPUS_RECOUNT_PASS_NO_NUMERICAL_REEXECUTION",
+  "old_pairs": 151878,
+  "old_states": 321225,
+  "old_partitions": {
+    "unchanged_R60_public_path": 321153,
+    "completed_R61_affected_call": 72
+  },
+  "affected_states": 72,
+  "affected_routes": {
+    "fallback": 33,
+    "zero": 18,
+    "infinity": 15,
+    "not_reached": 6
+  },
+  "actual_parent_delta_histogram": {
+    "9": 12,
+    "-5084": 3,
+    "-6085": 3,
+    "-8880": 3,
+    "-9884": 3,
+    "8": 12,
+    "-5041": 3,
+    "-6046": 3,
+    "-8890": 3,
+    "-36227": 3,
+    "7": 9,
+    "-5038": 3,
+    "0": 6,
+    "-8945": 3,
+    "-9903": 3
+  },
+  "actual_parent_increase_rows": 33,
+  "old_losing_pairs_R60": 1351,
+  "old_losing_pairs_R61": 1340,
+  "old_fixed": 11,
+  "new_argument_pairs": 282,
+  "new_state_rows": 846,
+  "expanded_pairs": 152160,
+  "expanded_states": 322071,
+  "expanded_parent_R60_loss_pairs": 1464,
+  "expanded_R61_loss_pairs": 1398,
+  "expanded_fixed": 66,
+  "new_preexisting_parent_losses": 113,
+  "new_preexisting_still_open": 58,
+  "old_remaining_kinds": {
+    "zero_or_infinity": 136,
+    "normal_result": 483,
+    "inverse_root": 721
+  },
+  "expanded_remaining_kinds": {
+    "zero_or_infinity": 194,
+    "normal_result": 483,
+    "inverse_root": 721
+  },
+  "new_losing_states": 0,
+  "boundary_calls": 9837,
+  "boundary_library_counts": {
+    "candidate": 903,
+    "zero-control": 903,
+    "parent_R60": 873,
+    "Qfplib": 2538,
+    "legal_helper/candidate": 2304,
+    "legal_helper/zero-control": 2304,
+    "positive_control": 6,
+    "intentional_fault": 6
+  },
+  "completed_legal_private_flags_calls": 4608,
+  "linked_faults_compared_with_positive_controls": 6,
+  "unknown_old_exact_costs_preserved": true,
+  "fresh_Root_ARM_calls": 0,
+  "fresh_Root_MPFR_calls": 0,
+  "hardware_IO": 0,
+  "Git_writes": 0
+}

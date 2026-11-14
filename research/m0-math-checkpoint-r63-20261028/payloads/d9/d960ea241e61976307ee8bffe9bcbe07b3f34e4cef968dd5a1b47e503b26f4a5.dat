@@ -1,0 +1,40 @@
+{
+  "status": "ROOT_R62_ACTUAL_ELF_INTEGER_GUARD_AND_PREDICATE_REVIEW_PASS",
+  "original120_instruction_prefix_preserved_except_two_decline_edges": [
+    148,
+    172
+  ],
+  "guard_static_instructions": 52,
+  "all23_other_runtime_objects_byteexact": true,
+  "only_changed_allocated_section": ".m0_pow_tiny_cold",
+  "default_M0_M4_disabled_controls_byteexact": true,
+  "independent_complete_integer_relation_cases": 1445,
+  "relation_outcomes": {
+    "declined": 1286,
+    "admitted": 159
+  },
+  "all52_power_positions_checked": true,
+  "max_legal_decline_instructions": 44,
+  "all_decline_arguments_R4_R6_R12_SP_LR_unchanged": true,
+  "no_guard_memory_writes_or_SIO_BL_stack_ops": true,
+  "uint32_max_product": 2252340174,
+  "exact_RNE_half_min_subnormal_tie_zero": true,
+  "negative_public_caller_exclusion": "Only two positive-subnormal decline edges enter guard; negative nonintegers use unchanged CR before abs and y=1 public shortcut unchanged.",
+  "code_delta_bytes": 112,
+  "new_ARM_or_MPFR_calls": 0,
+  "device_IO": 0,
+  "Git_writes": 0,
+  "actual_linked_ELF_checks": {
+    "candidate": {
+      "original_prefix": 120,
+      "actual_guard_instruction_semantics": 52,
+      "actual_BL_targets_exact": true
+    },
+    "zero-control": {
+      "original_prefix": 120,
+      "actual_guard_instruction_semantics": 52,
+      "actual_BL_targets_exact": true
+    }
+  },
+  "all_other_source_files_byteexact": true
+}

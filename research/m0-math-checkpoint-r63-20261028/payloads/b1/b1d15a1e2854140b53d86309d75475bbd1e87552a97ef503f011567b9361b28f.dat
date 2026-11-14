@@ -1,0 +1,89 @@
+{
+  "status": "ONE_REAL_PUBLIC_R56_CALL_COST_ATTRIBUTION",
+  "actual_public_calls": 1,
+  "instructions": 2931,
+  "largest_symbol_regions": [
+    [
+      "pow_refined_log",
+      816
+    ],
+    [
+      "pow_positive_checked",
+      789
+    ],
+    [
+      "pow_refine_checked",
+      471
+    ],
+    [
+      "pow_fast_log",
+      231
+    ],
+    [
+      "pow_near_one_argument",
+      151
+    ],
+    [
+      "_ZN7m0_eabi5clz32Em",
+      91
+    ],
+    [
+      "__aeabi_llsl",
+      64
+    ],
+    [
+      "mk61_m0_pow_dispatch",
+      51
+    ],
+    [
+      "pow_near_one_refined_argument",
+      51
+    ],
+    [
+      "__aeabi_llsr",
+      49
+    ],
+    [
+      "mk61_m0_pow_tight_gate_begin",
+      24
+    ],
+    [
+      "_ZN7m0_eabi5clz64Ey",
+      21
+    ],
+    [
+      "____aeabi_llsl_veneer",
+      20
+    ],
+    [
+      "mk61_m0_pow_tiny_or_cr",
+      18
+    ],
+    [
+      "pow_near_one_binomial",
+      17
+    ],
+    [
+      "____aeabi_llsr_veneer",
+      15
+    ],
+    [
+      "pow_tiny_integer",
+      13
+    ],
+    [
+      "mk61_m0_pow_exp_table_product",
+      10
+    ],
+    [
+      "mk61_m0_pow_log_select",
+      9
+    ],
+    [
+      "__pow_positive_checked_veneer",
+      5
+    ]
+  ],
+  "device_IO": 0,
+  "new_MPFR_calls": 0
+}

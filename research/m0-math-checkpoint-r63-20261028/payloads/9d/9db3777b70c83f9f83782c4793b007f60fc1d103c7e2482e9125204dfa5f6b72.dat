@@ -1,0 +1,26 @@
+"""One actual R56 public call to locate the remaining preparation cost."""
+from pathlib import Path
+from collections import Counter
+import bisect,importlib.util,json,subprocess,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+P=ROOT/'.build/m0-math-pow-tight-endpoint-r56-20261027'
+sys.path.insert(0,str(ROOT/'.build/m0-float-fma-qualification-20261023/support'))
+from unicorn import UC_HOOK_CODE
+spec=importlib.util.spec_from_file_location('r56_real_harness_diagnostic',P/'harness.py');h=importlib.util.module_from_spec(spec);spec.loader.exec_module(h)
+m=h.machine();tool='/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-nm'
+text=subprocess.check_output([tool,'-n','--defined-only',str(P/'candidate.elf')],text=True)
+symbols=[]
+for line in text.splitlines():
+    fields=line.split()
+    if len(fields)==3 and fields[1] in ['T','t']:symbols.append((int(fields[0],16)&~1,fields[2]))
+symbols.sort();addresses=[s[0] for s in symbols];counts=Counter()
+def tick(uc,address,size,user):
+    index=bisect.bisect_right(addresses,address)-1
+    counts[symbols[index][1] if index>=0 else 'before-first-symbol']+=1
+hook=m.uc.hook_add(UC_HOOK_CODE,tick)
+value,_,cost=m.call('_ZN12compact_math3powEdd',0x3ff0000000000001,0xc3c74910d52d3053,count=True)
+m.uc.hook_del(hook);assert value==0 and cost==2931
+result=dict(status='ONE_REAL_PUBLIC_R56_CALL_COST_ATTRIBUTION',actual_public_calls=1,instructions=cost,largest_symbol_regions=counts.most_common(20),device_IO=0,new_MPFR_calls=0)
+(W/'preparation-diagnostic.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

@@ -1,0 +1,67 @@
+"""Actual qualified source-frame parser with inert RAW handoff IO; no device."""
+from pathlib import Path
+import io,json,tempfile
+from resident_stage import raw_rom_transition,source_state
+from live_io import sha
+W=Path(__file__).resolve().parent
+ACTUAL=W.parent/'stage0-r2-current249-actual-001'
+frame=(ACTUAL/'status-011.raw').read_bytes()
+assert frame.count(b'TERMINAL=COMMAND')==1
+current=json.loads((ACTUAL/'current-state.json').read_text())
+ack=b'Entering RP2040 USB BOOTSEL\r\n'
+class Lease:
+    def __init__(self):self.revoked=False;self.fields=dict(expected_physical_keys=25,max_RX_bytes=262144)
+    def guard(self):
+        if self.revoked:raise RuntimeError('Root revoked')
+        return self.fields
+class IO:
+    def __init__(self,lease,chunks,revoke=False):self.lease=lease;self.chunks=list(chunks);self.reads=0;self.revoke=revoke
+    def wait(self,fd,write,timeout):
+        assert fd==42 and not write and 0<timeout<=.03
+        if self.revoke:self.lease.revoked=True
+        return True
+    def read(self,fd,n):self.reads+=1;return self.chunks.pop(0)
+class Port:
+    def __init__(self,lease,chunks,source=frame,revoke=False):
+        self.lease=lease;self.io=IO(lease,chunks,revoke);self.source=source
+        self.fd=42;self.raw=io.BytesIO();self.buffer=bytearray();self.rx_bytes=0;self.writes=[];self.mode='COMMAND'
+    def write(self,data):
+        self.lease.guard();self.writes.append(data)
+        if data==b'\x1e':self.mode='RAW'
+        return len(data)
+    def receive(self,predicate,timeout):
+        raw=self.source if self.mode=='COMMAND' else self.source.replace(b'TERMINAL=COMMAND',b'TERMINAL=RAW')
+        assert predicate(raw)==len(raw)
+        return raw
+rejected=[]
+with tempfile.TemporaryDirectory(prefix='m0-resident-stage-test-',dir=W.parent) as name:
+    root=Path(name)
+    for label,chunks,source,revoke in [
+        ('pass',[ack[:9],ack[9:],b''],frame,False),
+        ('missing-ack',[b''],frame,False),
+        ('bad-ack',[b'UNRELATED'],frame,False),
+        ('revoke-after-wait',[ack],frame,True),
+        ('new-physical-input',[ack],frame.replace(b'PHYSICAL_KEYS=25',b'PHYSICAL_KEYS=26'),False),
+        ('new-boot',[ack],frame.replace(b'BOOTS=6 ',b'BOOTS=7 '),False),
+    ]:
+        folder=root/label;folder.mkdir();lease=Lease();port=Port(lease,chunks,source,revoke)
+        try:result=raw_rom_transition(port,lease,folder,current)
+        except RuntimeError:
+            assert label not in ['pass','missing-ack'];rejected.append(label)
+        else:
+            assert label in ['pass','missing-ack']
+            assert result['ack_complete']==(label=='pass') and result['ROM_UID_not_yet_confirmed']
+            assert result['status']=='ONE_RAW_ROM_REQUEST_NATIVE_DISCONNECT_SEEN_EXACT_ROM_PENDING'
+            assert port.writes==[b'\x05',b'\x1e',b'\x05',b'!']
+        if label in ['new-physical-input','new-boot']:assert port.writes==[b'\x05']
+        if label=='revoke-after-wait':assert port.io.reads==0
+        assert port.writes.count(b'!')<=1
+    state=root/'state.json';state.write_bytes((ACTUAL/'current-state.json').read_bytes())
+    g=dict(current_state=dict(path=str(state),bytes=state.stat().st_size,sha256=sha(state.read_bytes())),clock_disposition='SET0_PLACEHOLDER_RETURN_CLOCK_HOLD_ACCEPTED')
+    assert source_state(g)==current
+    state.write_text('{}')
+    try:source_state(g)
+    except RuntimeError:rejected.append('changed-typed-state-before-device-open')
+    else:raise AssertionError('Changed typed state accepted')
+result=dict(status='PASS_INERT_SELECTED249_RAW_HANDOFF_AND_EVIDENCE',rejected=rejected,success_and_missing_ack_distinguished=True,actual_qualified_frame_parser_used=True,actual_device_IO=0,global_OS_substitutions=0,new_ARM_MPFR_calls=0)
+(W/'resident-stage-test.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

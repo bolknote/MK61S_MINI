@@ -1,0 +1,29 @@
+{
+  "status": "PASS_JOINT_PACKET_BUDGET_NONCE_CRC_AND_ALL42_TARGET_RAM_COMPARISONS",
+  "unique_pairs": 84,
+  "states": 252,
+  "batches": 4,
+  "all_case_ids_once": true,
+  "all_three_SIO_per_pair": true,
+  "proposed_nonces_unique_and_not_prior_physical_nonce": true,
+  "total_proposed_frames": 284,
+  "total_proposed_queries": 276,
+  "total_proposed_target_calls": 10320,
+  "all_query_CRCs_and_exact_TX_budgets_checked": true,
+  "all42_original_target_pairs_faster_in_RAM_instruction_checks": true,
+  "RAM_instruction_ranges": {
+    "62": [
+      233,
+      242
+    ],
+    "63": [
+      172,
+      195
+    ]
+  },
+  "prior_full_worker_primitive_check": "9c64667439174aee4d818f5fd036f53e41327542a54daf6cffccfff523890d5e",
+  "worker_primitives_inherited_not_rerun": true,
+  "new_ARM_MPFR_device_calls": 0,
+  "physical_cycles_measured": false,
+  "goal_complete": false
+}

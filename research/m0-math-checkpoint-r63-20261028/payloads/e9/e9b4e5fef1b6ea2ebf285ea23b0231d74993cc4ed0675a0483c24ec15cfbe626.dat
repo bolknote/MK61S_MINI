@@ -1,0 +1,30 @@
+{
+  "status": "ROOT_AFTER_MATH_FULL_FLASH_BYTEEXACT_AND_UNCHANGED249_REBOOT_EXIT0",
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/RESULT.json",
+    "bytes": 626,
+    "sha256": "8576a23efa66497089582399f9636fda4e6fbdcc74ca2248028d96d2fcf63014"
+  },
+  "actual_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1337,
+    "sha256": "fcb7a783fec24096acd2a365be19d1445dcf84f09ee09316554b88ee0f5a2736"
+  },
+  "Flash_after": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-rom-return-001/flash-after-math.bin",
+    "bytes": 2097152,
+    "sha256": "3decbb907143254b9837bd6ac8b0d688339fc163a2eede141cffe8266a83b442"
+  },
+  "all_three_complete_Flash_copies_byteexact": true,
+  "all3_children_reaped_exit0": true,
+  "actor_pid": 99457,
+  "supervisor_pid": 99456,
+  "child_pids": [
+    99458,
+    99459,
+    99468
+  ],
+  "Flash_program_commands": 0,
+  "typed_return_pending": true,
+  "Root_device_IO": 0
+}

@@ -1,0 +1,64 @@
+#ifndef MK61_VIRTUAL_FAT_HPP
+#define MK61_VIRTUAL_FAT_HPP
+
+#include "rust_types.h"
+#include "virtual_fat_diagnostic.hpp"
+
+namespace virtual_fat {
+
+static constexpr u16 SECTOR_SIZE = 512;
+
+enum class CommitResult : u8 {
+  OK = 0,
+  REJECTED,
+  IO_FAILED
+};
+
+u32 sector_count(void);
+u32 volume_serial(void);
+bool read_sector(u32 lba, u8* out);
+bool read_sectors(u32 lba, u8* out, u16 count);
+// Подключает дополнительную ОЗУ только на время сеанса до reset_session().
+// Базовый кеш всегда размещён в language_workspace; сборки UC1609 одалживают
+// сюда свободный буфер шрифта, пока устройство принадлежит USB-накопителю.
+bool set_external_cache(u8* data, usize size);
+u8 write_cache_capacity(void);
+u8 dirty_cache_sectors(void);
+// Атомарно принимает целый USB-пакет в уже занятую ОЗУ без обмена по SPI.
+// Если чистых или свободных слотов не хватает, возвращает false без изменения
+// кеша, позволяя вызывающему коду отложить пакет до основного цикла.
+bool try_write_cached_sectors(u32 lba, const u8* data, u16 count);
+bool write_cached_sectors(u32 lba, const u8* data, u16 count);
+bool flush_write_cache(void);
+bool write_sector(u32 lba, const u8* data);
+bool write_sectors(u32 lba, const u8* data, u16 count);
+// Durably import payload while retaining the host's exact FAT/dirent view.
+// Closing the MSC session canonicalizes directories and releases metadata.
+bool flush_pending(void);
+CommitResult flush_pending_result(void);
+// Финальная граница USB-сеанса: после детерминированного отказа read-only
+// preflight отменяет host-транзакцию. Retryable I/O/resource failure сохраняет
+// staging для восстановления и повтора.
+bool finalize_pending(void);
+CommitResult finalize_pending_result(void);
+bool reset_session(void);
+void end_session(void);
+
+// Retained across MSC -> CDC and no-op sync; cleared by a successful import
+// or explicitly by "vlog clear". No diagnostic is persisted to Flash.
+const Diagnostic& diagnostic(void);
+void clear_diagnostic(void);
+// Records a resident-side failure which happened before the FAT session could
+// expose its own detailed diagnostic (font/cache/APP/USB initialization).
+void report_startup_failure(u32 stage, const char* subject);
+// Internal session bridge: F401 USBDISK.APP has ordinary volatile BSS, whereas
+// the public diagnostic must survive APP eviction until a successful import
+// or an explicit clear. The resident proxy restores its retained value on
+// reload; the F411 resident implementation uses the same API directly.
+void restore_diagnostic(const Diagnostic& value);
+
+} // пространство имён virtual_fat
+
+extern "C" u8 MK61_VirtualFatSync(void);
+
+#endif

@@ -1,0 +1,24 @@
+{
+  "status": "HOST_READY_R2_STARTUP_SUCCESSOR_AWAIT_FRESH_ROOT_REVIEW_AND_STAGE_GRANTS",
+  "packet_path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r55-hil-20261027/bootable-r2",
+  "FROZEN_sha256": "9d7b6553249dfa43bbeed46460fe6384152804d96c1a3e8da249df878e34310a",
+  "pinned_files": 75,
+  "ELF": {
+    "path": "build/m0_r55_pow_hil.elf",
+    "bytes": 639888,
+    "sha256": "f14fd6f37ce138772aee8ee843c279c1e8729349beab4f96bbbe2d20bc41f7da"
+  },
+  "BIN": {
+    "path": "build/m0_r55_pow_hil.bin",
+    "bytes": 257940,
+    "sha256": "2cf280e53ea4926077d0e322968b3f4aa4f3910a7dbdd8045848c8959343b8a2",
+    "load_base": 536875008
+  },
+  "startup_only_delta": true,
+  "all_math_and_references_addresses_and_bytes_exact": true,
+  "all_HOST_jobs_terminal": true,
+  "physical_IO": 0,
+  "physical_cycles_measured": false,
+  "operator_successor_binding_pending": true,
+  "goal_complete": false
+}

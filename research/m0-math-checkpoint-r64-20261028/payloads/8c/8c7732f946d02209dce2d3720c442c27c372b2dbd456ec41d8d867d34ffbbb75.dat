@@ -1,0 +1,32 @@
+{
+  "status": "ACTUAL_STAGE_EXIT_REAPED",
+  "stage": "rom-return",
+  "supervisor_pid": 38204,
+  "argv": [
+    "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-arm-venv/bin/python",
+    "-B",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/operator-R63/rom_stage.py",
+    "--execute",
+    "--stage",
+    "rom-return",
+    "--grant",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/grants/r63-tail-rom-return.json",
+    "--lease-sha256",
+    "00d40293e3a3dfe667f1702d3da9e0003f453cb06a6f00edbeef0cef38570891",
+    "--output",
+    "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-tail-rom-return-001"
+  ],
+  "grant_sha256": "00d40293e3a3dfe667f1702d3da9e0003f453cb06a6f00edbeef0cef38570891",
+  "stage_output": "/Users/bolk/.codex/worktrees/m0-math-r63-checkpoint/MK61S_MINI/.build/m0-math-r64-d6-wake-operators-20261028-001/stage-outputs/r63-tail-rom-return-001",
+  "supervisor_device_IO": 0,
+  "pid": 38205,
+  "owned_process_group": 38205,
+  "exit_code": 0,
+  "reaped": true,
+  "terminated_by_owned_supervisor": false,
+  "supervisor_withdrawal_or_error": false,
+  "owned_group_signals_sent": [],
+  "finished_unix": 1793205380.9567208,
+  "stdout.bin_sha256": "ca1e73e37e88ee8db2796d68fc47e08f1e498c92da483e60c39cd319f927bbe1",
+  "stderr.bin_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

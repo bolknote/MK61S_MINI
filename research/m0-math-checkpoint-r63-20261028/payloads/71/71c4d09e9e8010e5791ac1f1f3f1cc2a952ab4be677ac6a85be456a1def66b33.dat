@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_ROM_RETURN_AND_REAPED_RECEIPTS",
+  "files": {
+    "ACTUAL-EXIT.json": {
+      "bytes": 1339,
+      "sha256": "c6a9ef0ffdb9f0351ece7d0b2a2348156e2c906471b4582c692148d5f2371d83"
+    },
+    "ACTUAL-PID.json": {
+      "bytes": 668,
+      "sha256": "cce0f41b58b3894e4ce7dfc6ab2c7a40a329987ce06abc4e078095e24d19be52"
+    },
+    "ARGV.json": {
+      "bytes": 679,
+      "sha256": "5d5990d9511fdbb33dd8f9c23b495488c84c925f2128b48c40f9ff9870806849"
+    },
+    "stderr.bin": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "stdout.bin": {
+      "bytes": 621,
+      "sha256": "7c6a9d00739807d39e049ed48c75a97023c1b522a2e271f52317775c7587e2f6"
+    }
+  },
+  "all_own_processes_terminal": true,
+  "Flash_program_commands": 0,
+  "RTC_setters": 0,
+  "goal_complete": false
+}

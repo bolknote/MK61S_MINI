@@ -1,0 +1,111 @@
+--- R61/native_eabi_m0_rp2040.S
++++ R62/native_eabi_m0_rp2040.S
+@@ -1830,7 +1830,7 @@
+ mk61_m0_pow_subnormal_zero_fullword_compare:
+  cmp r4,r5
+  bhi .Lpow_magnitude_zero
+- blo .Lpow_magnitude_fallback
++ blo .Lpow_subnormal_power_zero_decline
+  cmp r6,#0
+  bne .Lpow_subnormal_zero_low1022
+  cmp r1,#0
+@@ -1854,7 +1854,7 @@
+ .Lpow_subnormal_zero_low_compare:
+  cmp r2,r5
+  bhs .Lpow_magnitude_zero
+- b .Lpow_magnitude_fallback
++ b .Lpow_subnormal_power_zero_decline
+ .Lpow_subnormal_reciprocal_cut:
+  // The unchanged prefix proves positive nonzero subnormal x and finite
+  // negative y. If -y>=1+2^-52 and x<=2^-1024*(1+177*2^-50), then
+@@ -1925,6 +1925,90 @@
+ .global mk61_m0_pow_subnormal_gate_end
+ .hidden mk61_m0_pow_subnormal_gate_end
+ mk61_m0_pow_subnormal_gate_end:
++
++// Only an already declined positive-subnormal endpoint path enters here.
++// x=2^-k,1023<=k<=1074; y=M/2^20,2^20<=M<2^21.
++// k*M>=1075*2^20 proves +0 under RNE, including the even half tie.
++// Maximum product1074*(2^21-1)=2252340174 fits uint32: unsigned CMP.
++.global mk61_m0_pow_power_zero_begin
++.hidden mk61_m0_pow_power_zero_begin
++mk61_m0_pow_power_zero_begin:
++.Lpow_subnormal_power_zero_decline:
++ cmp r2,#0
++ bne .Lpow_power_zero_reject_fast
++ cmp r4,#0                  @ doubled positive y.high: negative iff y>=2
++ bmi .Lpow_power_zero_reject_fast
++ ldr r5,=0x7fe00000
++ cmp r4,r5
++ blo .Lpow_power_zero_reject_fast
++ cmp r1,#0
++ bne .Lpow_power_zero_high
++ subs r5,r0,#1
++ tst r0,r5
++ bne .Lpow_power_zero_reject_fast
++ movs r5,r0
++ ldr r6,=1074
++ b .Lpow_power_zero_log2
++.Lpow_power_zero_high:
++ cmp r0,#0
++ bne .Lpow_power_zero_reject_fast
++ subs r5,r1,#1
++ tst r1,r5
++ bne .Lpow_power_zero_reject_fast
++ movs r5,r1
++ ldr r6,=1042              @ high-word bit0 is whole-mantissa bit32
++.Lpow_power_zero_log2:
++.global mk61_m0_pow_power_zero_log2
++.hidden mk61_m0_pow_power_zero_log2
++mk61_m0_pow_power_zero_log2:
++ lsrs r4,r5,#16
++ beq .Lpow_power_zero_log8
++ movs r5,r4
++ subs r6,#16
++.Lpow_power_zero_log8:
++ lsrs r4,r5,#8
++ beq .Lpow_power_zero_log4
++ movs r5,r4
++ subs r6,#8
++.Lpow_power_zero_log4:
++ lsrs r4,r5,#4
++ beq .Lpow_power_zero_log2bit
++ movs r5,r4
++ subs r6,#4
++.Lpow_power_zero_log2bit:
++ lsrs r4,r5,#2
++ beq .Lpow_power_zero_log1
++ movs r5,r4
++ subs r6,#2
++.Lpow_power_zero_log1:
++ lsrs r5,r5,#1            @ the single bit is now1 or2
++ subs r6,r6,r5
++ lsls r5,r3,#12
++ lsrs r5,r5,#12
++ ldr r4,=0x00100000
++ orrs r5,r4               @ exact21-bit M; original y.low proved zero
++ muls r5,r6
++.global mk61_m0_pow_power_zero_compare
++.hidden mk61_m0_pow_power_zero_compare
++mk61_m0_pow_power_zero_compare:
++ ldr r4,=0x43300000        @ 1075*2^20
++ cmp r5,r4
++ blo .Lpow_power_zero_restore_decline
++ b .Lpow_magnitude_zero
++.Lpow_power_zero_restore_decline:
++.global mk61_m0_pow_power_zero_restore_decline
++.hidden mk61_m0_pow_power_zero_restore_decline
++mk61_m0_pow_power_zero_restore_decline:
++ lsls r4,r3,#1
++ lsrs r6,r1,#17            @ exact original derived cold state
++.Lpow_power_zero_reject_fast:
++.global mk61_m0_pow_power_zero_reject
++.hidden mk61_m0_pow_power_zero_reject
++mk61_m0_pow_power_zero_reject:
++ b .Lpow_magnitude_fallback
++.global mk61_m0_pow_power_zero_end
++.hidden mk61_m0_pow_power_zero_end
++mk61_m0_pow_power_zero_end:
+  .ltorg
+ .size mk61_m0_pow_tiny_or_cr,.-mk61_m0_pow_tiny_or_cr
+ 

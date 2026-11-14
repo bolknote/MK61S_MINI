@@ -1,0 +1,11 @@
+{
+  "status": "PURE_SOURCE_ADAPTER_BINDINGS_COMPLETE_BEFORE_FIRST_EXECUTION",
+  "projection_functions_exact": [
+    "row",
+    "value"
+  ],
+  "qualified_RS_transition_updates_owned_terminal_state": true,
+  "old_helper_sha256": "0124e98e6978659cc4959f8690fa4330a10b9b48108b42bbf4ec6b6e5cb6871a",
+  "new_helper_sha256": "93bc6d61c5ac41805461cfd8f677c8e81780e817d009bf59b82f83f440556cdd",
+  "device_IO": 0
+}

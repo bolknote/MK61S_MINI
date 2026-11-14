@@ -1,0 +1,40 @@
+"""Four new linked public cutoff controls; do not repeat completed qualification."""
+from pathlib import Path
+from collections import Counter
+import gzip,importlib.util,json,struct,sys
+sys.dont_write_bytecode=True
+assert getattr(sys,'mk61_private_fixture',None)
+W=Path(__file__).resolve().parent;ROOT=W.parents[1]
+T=ROOT/'.build/m0-pow-saturation-tight-host-r1-20261027'
+P=ROOT/'.build/m0-math-unified-pow-saturation-r55-20261027'
+sys.path[:0]=[str(ROOT/'.build/m0-float-fma-qualification-20261023'),str(ROOT/'.build/m0-float-fma-qualification-20261023/support')]
+from oracles import equal
+from unicorn import UC_HOOK_CODE
+def module(name,path):
+    spec=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
+harness=module('r56_unchanged_real_ROM_harness',W/'harness.py')
+fp=module('r55_pure_semantic_fingerprint',P/'support/fingerprint.py')
+obj=fp.image_fingerprint((W/'RP-unified-native_eabi_m0_rp2040.S.o').read_bytes())
+size=next(r[4] for r in obj['allocated'] if r[0]=='.m0_pow_tiny_cold')
+rows={(r['x'],r['y']):r for r in map(json.loads,gzip.open(W/'affected-records.jsonl.gz','rt')) if 'exact_cutoff_boundary_MPFR' in r['groups'] and r['SIO']=='PENDING'}
+cuts={k:int(v,16) for k,v in json.loads((T/'proof.json').read_text())['cutoff_bits'].items()}
+ONE=0x3ff0000000000000;SIGN=1<<63
+sio=struct.pack('<7I',0x80000001,7,0x80000001,7,0x11223344,0x55667788,2)
+controls=[]
+for key,cut in cuts.items():
+    below=key.startswith('below1/');negative=key.endswith('/underflow_zero');x=ONE-1 if below else ONE+1;y=(cut-1)|(SIGN if below^negative else 0)
+    prior=rows[(f'{x:016X}',f'{y:016X}')]
+    assert all(prior['actual'][label]['visits'].get('mk61_m0_cr_pow')==1 for label in ['candidate','zero-control'])
+    mutant=harness.machine();start=mutant.elf.symbols['mk61_m0_pow_tiny_or_cr']&~1
+    data=bytes(mutant.uc.mem_read(start,size));word=struct.pack('<I',cut&0xffffffff)
+    offsets=[i for i in range(0,len(data)-3,4) if data[i:i+4]==word];assert len(offsets)==1
+    mutant.uc.mem_write(start+offsets[0],struct.pack('<I',(cut-1)&0xffffffff))
+    seen=Counter();a=mutant.elf.symbols['mk61_m0_cr_pow']&~1
+    hook=mutant.uc.hook_add(UC_HOOK_CODE,lambda *unused:seen.update(['fallback']),begin=a,end=a)
+    mutant.uc.mem_write(0xd0000060,sio)
+    value,_,cost=mutant.call('_ZN12compact_math3powEdd',x,y,count=True);mutant.uc.hook_del(hook)
+    assert bytes(mutant.uc.mem_read(0xd0000060,28))==sio
+    assert not seen['fallback'],'Linked mutant must remove required fallback'
+    controls.append(dict(label='lower-cutoff-one-ULP/'+key,rejected_by_missing_required_fallback=True,actual_bits=f'{value:016X}',expected=prior['expected'],wrong_gold=not equal(value,int(prior['expected'],16),64),actual_public_ARM_calls=1,instructions=cost))
+result=dict(status='PASS_FOUR_LINKED_PUBLIC_CUTOFF_NEGATIVE_CONTROLS',controls=controls,actual_public_ARM_calls=4,actual_whole_bank_ROM_loader_calls=4,positive_public_rows_reused_without_execution=True,new_MPFR_queries=0,device_IO=0,selected=False,goal_complete=False)
+(W/'public-guard-result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))

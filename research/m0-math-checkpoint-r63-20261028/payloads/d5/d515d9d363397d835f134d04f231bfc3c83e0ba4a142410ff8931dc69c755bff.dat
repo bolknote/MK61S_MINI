@@ -1,0 +1,40 @@
+{
+  "status": "PASS_RESIDENT_TYPED_DATA_SETTINGS_UI_EXACT_AND_THREE_FLASH_COPIES_EXACT_CLOCK_SET0_HOLD",
+  "recorded_utc": "2026-10-27T23:23:48.779859+00:00",
+  "supervisor_pid": 99765,
+  "actor_pid": 99766,
+  "exit_code": 0,
+  "reaped": true,
+  "own_serial_closed": true,
+  "typed_data_exact": true,
+  "UI_exact": true,
+  "UI_view_exception_used": false,
+  "Flash_all_three_copies_bitexact": true,
+  "RTC_SET": 0,
+  "calendar": "2026-01-01 00:03:36",
+  "clock_trajectory_PASS": false,
+  "clock_disposition": "ROOT_ACCEPTED_SET0_PLACEHOLDER_FRESH_BASE_NO_SETTER",
+  "RTC_setters": 0,
+  "result": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-verify-001/RESULT.json",
+    "bytes": 711,
+    "sha256": "0c1dd1592788c9b7f93c65cc96b2578519014db8de92abea03fd8599464d0844"
+  },
+  "current_state": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-verify-001/current-state.json",
+    "bytes": 2236,
+    "sha256": "fe48cf1cb9e8a19cb26339b60388a0a7ec149fb78f5ac176e9d9974060a6dd63"
+  },
+  "supervisor_exit": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/m0-math-r61-ram-hil-20261028/physical-smoke-resident-verify-supervisor-001/ACTUAL-EXIT.json",
+    "bytes": 1366,
+    "sha256": "4164464004a4aec8599da45b904aef403c9af3a6ea47e90efec59f11aab432e9"
+  },
+  "physical_keys": 0,
+  "epoch": [
+    "8",
+    "00010001"
+  ],
+  "no_further_device_IO_allowed": true,
+  "goal_complete": false
+}

@@ -1,0 +1,27 @@
+#include "tusb.h"
+#include <string.h>
+/* Fixed image serial: physical device identity must be bound externally.
+ * No pico_unique_id, QSPI command or Flash access is used for enumeration. */
+static const tusb_desc_device_t device={
+ .bLength=sizeof(tusb_desc_device_t),.bDescriptorType=TUSB_DESC_DEVICE,
+ .bcdUSB=0x0200,.bDeviceClass=TUSB_CLASS_MISC,
+ .bDeviceSubClass=MISC_SUBCLASS_COMMON,.bDeviceProtocol=MISC_PROTOCOL_IAD,
+ .bMaxPacketSize0=64,.idVendor=0x2e8a,.idProduct=0x000a,
+ .bcdDevice=0x5501,.iManufacturer=1,.iProduct=2,.iSerialNumber=3,.bNumConfigurations=1
+};
+static const uint8_t configuration[]={
+ TUD_CONFIG_DESCRIPTOR(1,2,0,TUD_CONFIG_DESC_LEN+TUD_CDC_DESC_LEN,0,100),
+ TUD_CDC_DESCRIPTOR(0,4,0x81,8,0x02,0x82,64)
+};
+const uint8_t *tud_descriptor_device_cb(void){return (const uint8_t *)&device;}
+const uint8_t *tud_descriptor_configuration_cb(uint8_t index){(void)index;return configuration;}
+const uint16_t *tud_descriptor_string_cb(uint8_t index,uint16_t langid){
+ (void)langid;
+ static uint16_t out[32];
+ static const char *const strings[]={"","Math research","R55 pow SRAM HIL","M0R55POW01","Math CDC"};
+ if(!index){out[0]=0x0304;out[1]=0x0409;return out;}
+ if(index>=sizeof(strings)/sizeof(strings[0]))return NULL;
+ unsigned n=0;
+ while(strings[index][n] && n<31){out[n+1]=(uint8_t)strings[index][n];++n;}
+ out[0]=(uint16_t)(0x0300u+2u*n+2u);return out;
+}
