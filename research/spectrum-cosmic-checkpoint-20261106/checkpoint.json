@@ -1,6 +1,7 @@
 {
   "kind": "unfinished Spectrum latency checkpoint",
-  "base_commit": "bb05bd8998b7d9373e0cece6b56baf2dcabefa08",
+  "base_commit": "9b61498e95a207bd30bf339f7e0c00b1029523a5",
+  "original_base_commit": "bb05bd8998b7d9373e0cece6b56baf2dcabefa08",
   "last_installed_spectrum_commit": "1204fe3ad",
   "installed_app_sha256": "bdb24250b22974a130c766e7790409f7cf41b83d50b215eecbb1363c76735238",
   "production_modified": false,

@@ -2,10 +2,14 @@
 
 This preserves unfinished Spectrum work at the user's request to commit it.
 The ordinary APP and production sources are unchanged. The candidate is an
-applyable patch against `bb05bd8998b7d9373e0cece6b56baf2dcabefa08`, with its
+patch against `9b61498e95a207bd30bf339f7e0c00b1029523a5`, with its
 HOST checks, hardware measurement records and the separate silence diagnostic.
 The target of original Spectrum speed, timely frames and audible sound remains
 open. No hardware access took place while creating this checkpoint.
+
+The original commit ID is recorded in `checkpoint.json`. The verifier uses
+the base in the rewritten history and checks the source hashes captured
+with the original patch.
 
 ## Candidate and qualification
 

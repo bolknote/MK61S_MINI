@@ -1,6 +1,6 @@
 {
   ".gitattributes": "11e2fda782c64dd40422dc79b3d7aff2fe53e324bb11edf0b5ef0ac6a4388a7c",
-  "README.md": "4af49b521df662a5945f9c3fd1b6b05cb027f7cd6ffec8d697f794e3110bf3f1",
+  "README.md": "1c2b9b1adb694b2b9f6e34458ab7a9d6e34f5934352c4959d9254409b3018260",
   "audio-check/REVIEW.md": "1f39f27f876ad553bfb6bb86a5bde08dccfc25b91351467fb6a4786ce70ce9cf",
   "audio-check/build.json": "da4d24656241b49e5bebb81c1e878e22b49fe57fc18ccd39369a239f63c2ae4e",
   "audio-check/controller-tests.log": "86c967a00f06ad033ecab8fdfd48f0dfe4f7c54ecd2a5af426df39e10af79aa8",
@@ -14,7 +14,7 @@
   "audio-check/self-test.log": "6f121dc307c715c56e034cdedb6b335f04e95a4a25b0158dbeb2887198c14886",
   "audio-check/self_test.c": "d39c301e42fabc789ed2171a9473b1b8cf88c7841c043286daaf477479be5251",
   "candidate.patch": "a2ee43a65e016bb90cc29be04d7cdc95620f68ae5db56010e2d6785ff4c6fbae",
-  "checkpoint.json": "520bf83c5f9c69aca3c98ed3427cc4e13ed4531ec51f7d7b8a15aed7a2baf9bf",
+  "checkpoint.json": "5f2f240fb6900fc32aa05273049b57756a926bf0706b9eb18a0d71ab9df50fc8",
   "evidence/PIPE-v1-717/measurement.txt": "edbe735ac57e32b84dc59f0ca809d6ef306b331dff788833df346e2e229b2e16",
   "evidence/PIPE-v1-717/receipt.json": "f9a794f208b1ae2afb8fd55d79e1a6a222ad9f612c64a2502ec37038547bef82",
   "evidence/PIPE-v2-2483/measurement.txt": "36ed7d59f9cd8a654166735fec27cac241b770f1876516f64d9316c0946c8605",
@@ -51,5 +51,5 @@
   "host/run_host.py": "517abdf5122ce7a3b53e12776e4a092b204459fcc5ba3d0dc7aac829f99cd4ed",
   "host/run_input_oracle.py": "97530ca086ad43442f5be831b6723fe5e8fec0acdcc18b5d2d99acc667b68c99",
   "provenance.json": "1674354b12f6dad2b561d7fefc26c798db79dc5649a0cf93c4a32c62290133f9",
-  "verify.py": "313fa3ac01692a58f22c04a68f7c6a9c1f0f496872c299f3991986ad5f47bc3b"
+  "verify.py": "c4908ef13f336b548e14deca5c592ee62494eef71e8f61316a605ea77a259520"
 }

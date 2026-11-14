@@ -18,7 +18,7 @@ def sha(data):
 
 
 def git(*args):
-    return subprocess.check_output(['git', *args], cwd=ROOT)
+    return subprocess.check_output(['git', '-C', str(ROOT), *args], cwd=ROOT)
 
 
 def main():
@@ -67,7 +67,7 @@ def main():
     print(f'{len(manifest)} archived files and three complete ten-window measurements verified', flush=True)
     if not args.replay_host:
         return
-    names = git('ls-tree', '-r', '--name-only', base).decode().splitlines()
+    names = git('ls-tree', '-r', '--full-tree', '--name-only', base).decode().splitlines()
     selected = set(checkpoint['candidate_files'])
     prefixes = ('examples/portable-apps/SPECTRUM/', 'third_party/z80/', 'third_party/emu2149/', 'sdk/portable/include/')
     names = [name for name in names if name in selected or name.startswith(prefixes) or
