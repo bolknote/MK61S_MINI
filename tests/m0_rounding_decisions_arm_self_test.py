@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check narrowed exp decisions and signed atan division with integer oracles."""
+"""Check signed atan division and the historical exp guard when linked."""
 import argparse
 import hashlib
 import json
@@ -29,11 +29,7 @@ def decision(base,fraction,n,magnitude,cell):
     return 2 if distance>guard else 1 if distance<-guard else 0
 
 
-def main():
-    p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--elf',type=Path,required=True);p.add_argument('--samples',type=int,default=10000)
-    p.add_argument('--json',type=Path,required=True);a=p.parse_args();assert 0<=a.samples<=50000
-    m=Machine(a.elf,True,stack_bytes=16384,instruction_budget=20000000)
+def check_legacy_exp(m,samples,digest):
     def address(name):
         return next(v for k,v in m.elf.symbols.items() if k==name or name+'E' in k and (name.startswith('refine_') or 'refine' not in k))
     bases=struct.unpack('<512Q',m.uc.mem_read(address('exp_table'),4096))
@@ -54,17 +50,33 @@ def main():
                 for target in [0,0x7FFFFFFE,0x7FFFFFFF,0x80000000,0x80000001,0xFFFFFFFE,MASK]:
                     bh=((target-ah*bl-(al>>16)*(bl>>16))*inverse)&MASK
                     vectors.append((i,rng.choice(bounds+nearby),bl|(bh<<32),rng.choice(tails)|(rng.randrange(4)<<10)))
-    vectors += [(rng.randrange(512),rng.randrange((1<<20)+1),rng.getrandbits(64),rng.choice(tails)|(rng.randrange(4)<<10)) for _ in range(a.samples)]
+    vectors += [(rng.randrange(512),rng.randrange((1<<20)+1),rng.getrandbits(64),rng.choice(tails)|(rng.randrange(4)<<10)) for _ in range(samples)]
     # The optimized caller passes error4/9 shifted by10, whose unused
     # bits12/13 must not affect the tail, sign or normalization fields.
     vectors=[(i,n,mag,cell|((1+(j&1))<<12)) for j,(i,n,mag,cell) in enumerate(vectors)]
-    digest=hashlib.sha256();start=time.monotonic();contexts=0
-    for count,(i,n,mag,cell) in enumerate(vectors,1):
+    start=time.monotonic()
+    for i,n,mag,cell in vectors:
         assert time.monotonic()-start<300
         expected=decision(bases[i],fractions[i],n,mag,cell)
         got=m.call('exp_round_decide',i|(n<<32),mag,c=cell)[0]&MASK
         assert got==expected,('exp decision',i,n,hex(mag),cell,got,expected)
         digest.update(struct.pack('<IIQII',i,n,mag,cell,got))
+    return len(vectors)
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--elf',type=Path,required=True);p.add_argument('--samples',type=int,default=10000)
+    p.add_argument('--json',type=Path,required=True);a=p.parse_args();assert 0<=a.samples<=50000
+    m=Machine(a.elf,True,stack_bytes=16384,instruction_budget=20000000)
+    digest=hashlib.sha256();contexts=0
+    if any('exp_round_decide' in name for name in m.elf.symbols):
+        exp_decisions=check_legacy_exp(m,a.samples,digest)
+        exp_scope='Historical exp carry chain and midpoint guard checked against unbounded integers.'
+    else:
+        assert '_ZL10exp_center' in m.elf.symbols,'Unrecognized RP2040 exp implementation'
+        exp_decisions=0
+        exp_scope='Current exp uses dyadic centers; see certify_m0_exp_center.py and qualify_m0_rounding.py.'
     signed_calls=0
     states=[(0,0,0,0,0,0,1),(17,3,17,3,5,2,3),(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2)]
     heads=[0,1,-1,32,-32,(1<<18)-1,1<<18,-(1<<18),(1<<24)-1,-((1<<24)-1),33*(1<<24),-33*(1<<24)]
@@ -80,10 +92,11 @@ def main():
                 if words[-1]&2:
                     assert bytes(m.uc.mem_read(0xD0000060,28))==before;contexts+=1
                 digest.update(struct.pack('<4I',head&MASK,denominator,words[-1],got));signed_calls+=1
-    result=dict(status='PASS_INTEGER_EXP_DECISIONS_SIGNED_ATAN_DIVISION',exp_decisions=len(vectors),signed_divisions=signed_calls,
+    result=dict(status='PASS_INTEGER_EXP_DECISIONS_SIGNED_ATAN_DIVISION' if exp_decisions else 'PASS_SIGNED_ATAN_DIVISION',
+        exp_decisions=exp_decisions,exp_scope=exp_scope,signed_divisions=signed_calls,
         DIRTY_PENDING_checks=contexts,wrong=0,records_sha256=digest.hexdigest(),elf_sha256=hashlib.sha256(a.elf.read_bytes()).hexdigest(),
-        n_precondition_maximum=1<<20,source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),hardware_IO=0,pow_calls=0,
-        scope='Actual Thumb-1 carry chain vs unbounded integers and previous guard formula. All512table rows, carry/half-bit boundaries, sufficient-bound thresholds and random vectors. Signed SIO quotient vs exact truncation, including clean/dirty/pending contexts; Machine checks divider latency and preserved ABI/stack.')
+        source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),hardware_IO=0,pow_calls=0,
+        scope='Signed SIO quotient vs exact truncation in clean, dirty and pending contexts; Machine checks divider latency and preserved ABI/stack.')
     a.json.parent.mkdir(parents=True,exist_ok=True);a.json.write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
 
 

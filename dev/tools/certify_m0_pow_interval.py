@@ -13,6 +13,13 @@ v=sum(x<<(16*i) for i,x in enumerate(words));assert F(v,1<<1024)<lo<hi<F(v+1,1<<
 assert 65535**2+65535+65535==(1<<32)-1
 assert F(1,1<<52)/(1+F(1,1<<52))>F(1,1<<53)
 assert 1024>800>1075*hi and 800>1024*hi
+assert 1074*hi < 745
+# The nearest binary64 below one is 1-2^-53, so its midpoint
+# is 1-2^-54. Above one the corresponding midpoint is 1+2^-53.
+# |y|<2^-64 gives -t <= exp(y*ln(x))-1 <= t/(1-t), with t<2^-54.
+tiny_y_t=F(745,1<<64)
+assert tiny_y_t < F(1,1<<54)
+assert tiny_y_t/(1-tiny_y_t)<F(1,1<<53)
 assert 3**64>1<<53
 inv=F(1512775,1<<20);inv_error=max(abs(inv-1/lo),abs(inv-1/hi));assert inv_error<F(1,1<<21)
 rows=[]
@@ -37,6 +44,8 @@ for p in [512,1024]:
  while exp_width<F(1,1<<bits):bits+=1
  rows.append(dict(bits=p,log_width_units=log_units,q_width=str(q_width),residual_bound=str(residual),residual_bound_float=float(residual),relative_final_width_bound=str(exp_width*2),conservative_relative_bits=bits-2))
 r=dict(status='PASS',header_sha256=hashlib.sha256(text.encode()).hexdigest(),rows=rows,
+ tiny_exponent_rounds_to_one={'maximum_abs_exponent_exclusive':'2^-64', 'log_abs_bound':745,
+    'negative_displacement_bound':str(tiny_y_t), 'positive_displacement_bound':str(tiny_y_t/(1-tiny_y_t))},
  conditional_rounding='Directed integer endpoints enclose the positive magnitude. A result is returned only when both endpoints round to the same binary64; a false return is preserved when undecided.',
  boundary_argument='For x=a*2^e with a odd and y=b/2^k with b odd, a dyadic result requires a perfect 2^k-th root and e divisible by 2^k. Nontrivial a has k<=5; an exact/midpoint odd significand has <=54 bits. Negative y requires a=1. The prototype tests these conditions with exact integer roots and capped products.',
  scope='Elementary rational bounds for the experimental fixed-point algorithm, not a machine-checked proof of the C++ implementation and not an all-input totality proof. A fixed maximum precision still does not establish all-input totality.')

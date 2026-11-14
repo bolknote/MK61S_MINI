@@ -423,12 +423,7 @@ __attribute__((always_inline)) inline U trig_pack192(Trig192 a,U sign,unsigned &
   const U rounded=(q>>11)+(tail>1024 || (tail==1024 && (((q>>11)&1)||sticky)));
   return sign+(U(1022-leading)<<52)+rounded;
 }
-__attribute__((always_inline)) inline Trig192 trig_remainder(U b,uint32_t &n,bool &negative) {
-  const U s=(b&D::Fraction)|D::Hidden;
-  const int e=int((b>>52)&0x7FFU)-1023;
-  const U estimate=wide32(uint32_t(s>>21),0xA2F9836EU);
-  n=e==-1?uint32_t(estimate>=(U(1)<<63)):
-    uint32_t((estimate+(U(1)<<(62-e)))>>unsigned(63-e));
+__attribute__((always_inline)) inline Trig192 trig_remainder_at(U s,int e,uint32_t n,bool &negative) {
   U words[3],carry=0;
   for(unsigned i=0;i<3;++i) {
     const U lo=wide32(trig_pi2[2*i],n)+carry;
@@ -440,6 +435,14 @@ __attribute__((always_inline)) inline Trig192 trig_remainder(U b,uint32_t &n,boo
   negative=(r.high>>63)!=0;
   if(negative) r=trig_negate(r);
   return r;
+}
+__attribute__((always_inline)) inline Trig192 trig_remainder(U b,uint32_t &n,bool &negative) {
+  const U s=(b&D::Fraction)|D::Hidden;
+  const int e=int((b>>52)&0x7FFU)-1023;
+  const U estimate=wide32(uint32_t(s>>21),0xA2F9836EU);
+  n=e==-1?uint32_t(estimate>=(U(1)<<63)):
+    uint32_t((estimate+(U(1)<<(62-e)))>>unsigned(63-e));
+  return trig_remainder_at(s,e,n,negative);
 }
 __attribute__((always_inline)) inline bool trig_remainder_pair(Trig192 r,U sign,double* output) {
   unsigned leading;
@@ -613,19 +616,11 @@ __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
   return q+(tail>half || (tail==half && (q&1)));
 }
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-#include "native_eabi_m0_exp_round.inc"
-#include "native_eabi_m0_exp_fine.inc"
-#endif
+#include "native_eabi_m0_exp_center.inc"
+#else
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
-// For RP2040, explicit scalar temporaries and source block order avoid
-// additional stack traffic and branch/move overhead with GCC14.2.
-MK61_M0_EXP_CORE
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-__attribute__((optimize("Os","no-tree-ter","no-reorder-blocks","no-if-conversion")))
-#else
 __attribute__((optimize("Os")))
-#endif
 MK61_SOFT_PCS double mk61_m0_exp(double x) {
   const U a=bits(x),m=a&D::Magnitude;
   if(m>=UINT64_C(0x4090000000000000)) {
@@ -639,36 +634,13 @@ MK61_SOFT_PCS double mk61_m0_exp(double x) {
   const U significand=(m&D::Fraction)|D::Hidden;
   uint32_t n=0;
   if(e>=-11) {
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-    // Like Qfplib's split constants, keep only the high word needed here.
-    // 0x3B29+0xB8AA<2^16, so even the complete carry sum fits uint32.
-    // This is exactly high32(significand_head*0xB8AA3B29), with no
-    // discarded term or change to the existing segment selection.
-    const uint32_t head=uint32_t(significand>>21),lo=head&65535U,hi=head>>16;
-    const uint32_t low=lo*0x3B29U;
-    const uint32_t cross=hi*0x3B29U+lo*0xB8AAU+(low>>16);
-    const uint32_t high=hi*0xB8AAU+(cross>>16);
-    n=((high>>unsigned(20-e))+1U)>>1;
-#else
     const U p=wide32(uint32_t(significand>>21),0xB8AA3B29U);
     // -11 <= e <= 9: the rounding bit is in p's upper word. Round that
     // word directly, avoiding two variable 64-bit shifts on ARMv6-M.
     n=((uint32_t(p>>32)>>unsigned(20-e))+1U)>>1;
-#endif
   }
   const int shift=e+12;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  U scaled;
-  if(shift>0) {
-    // |x|<1024 gives 1<=shift<=21. Form the same low64 bits without
-    // a general 64-bit shift helper or its >=32-bit shift dispatch.
-    const uint32_t lo=uint32_t(significand),hi=uint32_t(significand>>32);
-    scaled=(U((hi<<unsigned(shift))|(lo>>unsigned(32-shift)))<<32)|
-      (lo<<unsigned(shift));
-  } else scaled=significand>>unsigned(-shift);
-#else
   const U scaled=shift<0?significand>>unsigned(-shift):significand<<unsigned(shift);
-#endif
   const U reduction=wide32(uint32_t(exp_step_high),n)+
     (U(uint32_t(exp_step_high>>32)*n)<<32);
   U r=scaled-reduction-uint32_t(wide32(n,exp_step_low)>>32);
@@ -697,59 +669,24 @@ MK61_SOFT_PCS double mk61_m0_exp(double x) {
   const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
   const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
   const unsigned index=unsigned(k)&511U;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  // k-index is an exact multiple of512; ARM GCC arithmetic shift is exact.
-  k=(k-int(index))>>9;
-#else
   k=(k-int(index))/512;
-#endif
   U q=exp_table[index];
   const bool below=(delta>>63)!=0;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  const U final_magnitude=below?U(0)-delta:delta;
-  const U correction=exp_high_product(q,final_magnitude)+1;
-#else
   const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
-#endif
   q=below?q-correction:q+correction;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  // Strict error<5 (or<10 after normalization) permits integer
-  // midpoint rejection radii4 and9 without weakening the enclosure.
-  unsigned error=4;
-  if(q<(U(1)<<62)) {q<<=1;--k;error=9;}
-#else
   unsigned error=5;
   if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
-#endif
   if(k>=-1022 && k<=1023) {
     // The certified interval must lie in one rounding cell. Ambiguous
     // results retain the independent correctly rounded refinement.
     const uint32_t tail=uint32_t(q)&1023U;
-    if(uint32_t(tail-(512U-error))<=2*error) {
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-      // Only bit10 of error<<10 is consumed: error is4 or9. The other
-      // high bits are outside the cell's tail/sign/normalization fields.
-      const unsigned cell=tail|(error<<10)|(below?2048U:0U);
-      unsigned decision=exp_round_decide(index,n,final_magnitude,cell);
-      if(!decision) decision=exp_round_fine(x,n,final_magnitude,cell);
-      if(!decision) return exp_refine(x,n);
-      const U rounded=(q>>10)+(decision-1U);
-      return real((U(k+1022)<<52)+rounded);
-#else
-      return exp_refine(x,n);
-#endif
-    }
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-    // Midpoints have already been rejected, so parity cannot affect RNE.
-    const U rounded=(q+512)>>10;
-    return real((U(k+1022)<<52)+rounded);
-#else
+    if(uint32_t(tail-(512U-error))<=2*error) return exp_refine(x,n);
     const U rounded=(q+511+((q>>10)&1))>>10;
     return real((U(k+1022)<<52)+rounded);
-#endif
   }
   return mk61_m0_cr_exp(x);
 }
+#endif
 #include "native_eabi_m0_pow_fast.inc"
 MK61_SOFT_PCS double mk61_m0_sqrt_slow(double x) {
   const U a=bits(x),m=a&D::Magnitude;

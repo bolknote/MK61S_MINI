@@ -32,6 +32,10 @@ def main():
              (0x0010000000000000, bits(2.)),
              (0x7FEFFFFFFFFFFFFF, bits(32.)),
              (bits(2.), bits(-32.)), (bits(1.), bits(-1. / 32))]
+    pairs += [(bits(x), bits(y)) for x, y in [
+        (1.0009765625, 129.), (1.125, -129.), (1.25, 65. / 64),
+        (0.75, -65. / 64), (0.5, 1. / 64), (1.125, -1. / 64),
+        (0.25, 45. / 64), (2. ** -16, 125. / 4)]]
     rng = random.Random(0xE7AC70)
     for _ in range(args.samples):
         pairs.append((rng.randrange(1, 0x7FF0000000000000),
@@ -54,10 +58,14 @@ def main():
         machine.uc.hook_add(UC_HOOK_CODE, compared, begin=address, end=address)
     digest = hashlib.sha256()
     for index, (x, y) in enumerate(pairs):
-        machine.uc.mem_write(pointer, struct.pack('<Q', 0xBAD0BAD0BAD0BAD0))
+        wanted = oracle.reference('pow', x, y)
+        # One expanded case deliberately forces the complete search. Most
+        # of the ARM cases use a midpoint hint; the host suite checks
+        # distant hints across the entire expanded exponent domain.
+        hint = 0xBAD0BAD0BAD0BAD0 if index in (0, 12) else max(0,wanted-1)
+        machine.uc.mem_write(pointer, struct.pack('<Q', hint))
         accepted = machine.call('mk61_m0_pow_exact_small', x, y, c=pointer)[0] & 255
         got = struct.unpack('<Q', machine.uc.mem_read(pointer, 8))[0]
-        wanted = oracle.reference('pow', x, y)
         assert accepted and got == wanted, (index, hex(x), hex(y), accepted, hex(got), hex(wanted))
         digest.update(struct.pack('<4Q', x, y, got, wanted))
         print('PASS', index + 1, '/', len(pairs), flush=True)
@@ -82,13 +90,13 @@ def main():
         machine.uc.mem_write(0xD0000060, pending)
         assert machine.call('mk61_m0_pow_exact_small', x, y, c=pointer)[0] & 255
         assert bytes(machine.uc.mem_read(0xD0000060, len(pending))) == pending
-    for y in [0., 33., 1. / 64, float('inf')]:
+    for y in [0., 130., 67. / 64, 1. / 128, float('inf')]:
         machine.uc.mem_write(pointer, struct.pack('<Q', 0xBAD0BAD0BAD0BAD0))
         assert not machine.call('mk61_m0_pow_exact_small', bits(1.25), bits(y), c=pointer)[0] & 255
         assert struct.unpack('<Q', machine.uc.mem_read(pointer, 8))[0] == 0xBAD0BAD0BAD0BAD0
     assert sha == hashlib.sha256(args.elf.read_bytes()).hexdigest()
     report = dict(status='PASS', elf_sha256=sha, cases=len(pairs), actual_arm_calls=machine.calls,
-                  wrong_rounding=0, dirty_sio_checks=4, unsupported_checks=4,
+                  wrong_rounding=0, dirty_sio_checks=4, unsupported_checks=5,
                   maximum_stack_bytes=SP-lowest[0],
                   maximum_bounded_write_depth=SP-machine.stack_lowest, result_sha256=digest.hexdigest(),
                   checked_hint_calls=hinted_calls,maximum_hint_comparisons=maximum_hint_comparisons,

@@ -1,5 +1,6 @@
 /* Private HIL APP. Calls typed soft-float entries in one identified diagnostic
- * firmware; both the owned implementation and Qfplib execute from flash.
+ * firmware. Reference entries are either in flash or, in the v3 ROM
+ * benchmark, restricted to the verified factory math table.
  * Input addresses are generated from that ELF and checked by the host runner.
  */
 #include "mk61_app.h"
@@ -122,6 +123,22 @@ static int same(uint64_t a,uint64_t b,unsigned kind) {
                                      (b&UINT64_C(0x7FFFFFFFFFFFFFFF))>UINT64_C(0x7FF0000000000000);
     return 0;
 }
+
+static int flash_entry(uint32_t address) {
+    return address >= UINT32_C(0x10000001) && address < UINT32_C(0x10200000) && (address&1);
+}
+#ifdef MK61_M0_TIMING_RP2040_ROM_V3
+static __attribute__((noipa)) uint32_t rom_word(uint32_t address) {
+    return *(const volatile uint32_t*)(uintptr_t)address;
+}
+static int raw_rom_entry(uint32_t address) {
+    if (!(address&1) || address >= 0x4000U || rom_word(0x10U) != 0x0301754dU) return 0;
+    return address==rom_word(0x24cU+0x3cU) ||  /* cos */
+           address==rom_word(0x24cU+0x40U) ||  /* sin */
+           address==rom_word(0x24cU+0x4cU);    /* exp */
+}
+#endif
+
 NO_TABLES int main(void) {
     const mk61_app_services* s=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_FILES);
     if(!s || !mk61_api->file_read) return MK61_APP_RUNTIME_ERROR;
@@ -133,8 +150,12 @@ NO_TABLES int main(void) {
        h[0]!=UINT32_C(0x4D304246) || h[1]!=1 || h[3]>COMPARE || !h[4] || h[4]>CASES ||
        !h[5] || h[5]>4096 || h[4]*h[5]>65536 ||
        mk61_api->file_size(file.id)!=sizeof(h)+h[4]*sizeof(Vector)) return MK61_APP_INVALID_FILE;
-    for(unsigned i=6;i<8;++i)
-        if(h[i]<UINT32_C(0x10000001) || h[i]>=UINT32_C(0x10200000) || !(h[i]&1)) return MK61_APP_INVALID_FILE;
+    if(!flash_entry(h[6])) return MK61_APP_INVALID_FILE;
+#ifdef MK61_M0_TIMING_RP2040_ROM_V3
+    if(h[3]!=UNARY || !raw_rom_entry(h[7])) return MK61_APP_INVALID_FILE;
+#else
+    if(!flash_entry(h[7])) return MK61_APP_INVALID_FILE;
+#endif
     Vector inputs[CASES];
     if(mk61_api->file_read(file.id,sizeof(h),(uint8_t*)inputs,h[4]*sizeof(Vector))!=h[4]*sizeof(Vector)) return MK61_APP_IO_ERROR;
     output.magic=UINT32_C(0x4D305250);output.version=REPORT_VERSION;output.group=h[2];output.kind=h[3];

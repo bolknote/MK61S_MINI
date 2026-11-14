@@ -29,13 +29,20 @@ subprocess.run(['c++','-std=c++17','-O2','-Wall','-Wextra','-Werror','-fPIC','-d
 lib=ctypes.CDLL(str(library.resolve()));f=lib.mk61_m0_pow_exact_small
 f.argtypes=[ctypes.c_uint64,ctypes.c_uint64,ctypes.POINTER(ctypes.c_uint64)];f.restype=ctypes.c_int
 oracle=Oracle();rng=random.Random(0xE7AC70);pairs=set()
-exponents=set(Fraction(sign*p,1<<k) for sign in [-1,1] for p in range(1,33) for k in range(6))
+exponents={Fraction(sign*p,1<<k) for sign in (-1,1) for p in range(1,130) for k in range(7)}
+exponents={y for y in exponents if 53*abs(y.numerator)+54*y.denominator <= 6912}
+assert len(exponents)==912
 for y in exponents:
-    for x in [1,0x0010000000000000,0x3FEFFFFFFFFFFFFF,0x3FF0000000000001,0x7FEFFFFFFFFFFFFF]:
+    bases=[1,0x0010000000000000,0x3FEFFFFFFFFFFFFF,0x3FF0000000000001,0x7FEFFFFFFFFFFFFF]
+    if abs(y.numerator)>32 or y.denominator>32:
+        bases=[bases[rng.randrange(len(bases))]]
+    for x in bases:
         pairs.add((x,bits(float(y))))
     pairs.add((rng.randrange(1,0x7FF0000000000000),bits(float(y))))
 for x in [2.,3.,9.,81.,.0625,1.,1.+2.**-26]:
-    for y in exponents:pairs.add((bits(x),bits(float(y))))
+    for y in exponents:
+        if abs(y.numerator)<=32 and y.denominator<=32:
+            pairs.add((bits(x),bits(float(y))))
 for k in range(6):
     for p in [1,3,17,31,32]:
         y=Fraction(p,1<<k)
@@ -51,15 +58,17 @@ digest=hashlib.sha256();calls=0
 for index,(x,y) in enumerate(sorted(pairs)):
     want=oracle.reference('pow',x,y)
     infinity=0x7FF0000000000000
-    hints=[0xBAD0BAD0BAD0BAD0,min(want,infinity-1),max(0,want-1),
-           min(infinity-1,want+1),0,rng.getrandbits(64)]
+    yq=Fraction(real(y))
+    hints=[min(want,infinity-1),max(0,want-1)]
+    if (abs(yq.numerator)<=32 and yq.denominator<=32) or index%127==0:
+        hints += [0xBAD0BAD0BAD0BAD0,min(infinity-1,want+1),0,rng.getrandbits(64)]
     for hint in dict.fromkeys(hints):
         out=ctypes.c_uint64(hint);ok=f(x,y,ctypes.byref(out));calls+=1
         assert ok and out.value==want,(index,hex(x),hex(y),hex(hint),ok,hex(out.value),hex(want))
         digest.update(struct.pack('<5Q',x,y,hint,out.value,want))
     if index%500==0:print('PASS',index+1,'/',len(pairs),flush=True)
 rejected=[]
-for y in [0.,33.,65.,1./64,math.nextafter(.5,1.),float('inf'),float('nan')]:
+for y in [0.,130.,67./64,1./128,math.nextafter(.5,1.),float('inf'),float('nan')]:
     out=ctypes.c_uint64(0xBAD0BAD0BAD0BAD0)
     assert not f(bits(1.25),bits(y),ctypes.byref(out)) and out.value==0xBAD0BAD0BAD0BAD0
     rejected.append(bits(y))

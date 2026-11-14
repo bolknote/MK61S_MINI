@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Time the identified diagnostic M0 image, preserving calculator data.
+"""Time an identified PicoCalc image, preserving calculator data.
 
 Never flashes or resets. It checks the exact UID and diagnostic build before
-creating one temporary directory, then removes it in finally. Both libraries
-execute from the same flash image. The input vectors contain MPFR references.
+creating one temporary directory, then removes it in finally. The reference is
+either in the diagnostic image or the qualified factory BootROM. The input
+vectors contain MPFR references.
 """
 import argparse
 from datetime import datetime,timezone
@@ -30,15 +31,31 @@ class MathPort(AppsPort):
             os.write(self.fd,b'\x1f');self.pump(.3)
         raise AssertionError('PicoCalc terminal did not enter command mode')
 
-    def command(self,command,timeout=5):
+    def command(self,command,timeout=5,*,wait_for_app=False):
         if command.startswith('fsget '):timeout=max(timeout,120)
         self.pump(.002);start=len(self.text);self.write_line(command)
         deadline=time.monotonic()+timeout
         while time.monotonic()<deadline:
             self.pump(.002)
+            if wait_for_app and re.search(rb'(?m)^APP_FLOW_RESULT=\d+\r?\n',self.text[start:]):
+                return self.text[start:].decode('cp1251','replace')
             if re.search(rb'(?:^|[\r\n])mk61> ',self.text[start:]):
                 return self.text[start:].decode('cp1251','replace')
         raise TimeoutError((command,bytes(self.text[start:])))
+
+    def leave_timing_app(self,directory):
+        status=self.status()
+        if 'SERVICE=CLOSED' in status:
+            self.commands()
+            return
+        assert all(token in status for token in ('RUNTIME=NONE','SERVICE=VIEWER','DIRTY=0',
+                   'PATH=['+directory+'/TIMING.APP]','RESULT=[APP finished;')),status
+        os.write(self.fd,b'\x1e');self.pump(.03)
+        os.write(self.fd,b'\x1b');self.pump(.12)
+        assert 'SERVICE=BROWSER' in self.status()
+        os.write(self.fd,b'\x1b');self.pump(.15)
+        assert 'SERVICE=CLOSED' in self.status()
+        self.commands()
 
 
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -66,8 +83,18 @@ def cleanup_session(port,output,before,directory,created,identity,initial,failur
         port.command('fsput cancel')
         os.write(port.fd,b'\x1e\x1b\x1b\x1f');port.pump(.3)
         if created:
-            answer=port.command('rm -r '+directory,timeout=30)
-            assert 'ERROR' not in answer,answer
+            listing=port.command('ls '+directory,timeout=30)
+            entries=re.findall(r'^f\t[^\t\r\n]+\t([^\r\n]+)',listing,re.M)
+            names={name.casefold() for name in entries}
+            expected={'timing.app','input.bin','result.bin'}
+            count=re.search(r'(?m)^(\d+) (?:entry|entries)\.\r?$',listing)
+            assert count and int(count[1])==len(entries)==len(names) and names<=expected,listing
+            for name in entries:
+                answer=port.command('rm "'+directory+'/'+name+'"')
+                assert 'ERROR' not in answer,answer
+            assert '0 entries.' in port.command('ls '+directory)
+            answer=port.command('rmdir '+directory,timeout=30)
+            assert 'ERROR' not in answer and directory[1:].casefold()+'/' not in port.command('ls /').casefold(),answer
             removed=True
         after={command:port.command(command) for command in before}
         final=port.status()
@@ -191,8 +218,13 @@ def main():
         initial=port.status();build=config['firmware_manifest']['build_id'].upper()
         for token in ('BUILD='+build,'RP2040 125 MHz','MATH_TEST=OK','FIRMWARE_CRC=valid','CRASH=NONE','RUN=0 BUSY=0','USB_DISK=0','RUNTIME=NONE','SERVICE=CLOSED','DIRTY=0'):
             assert token in initial,(token,initial)
+        if config.get('reference_kind')=='RP2040_factory_BootROM_v3':
+            integrity=config['firmware_manifest']['firmware_integrity']
+            crc=integrity['crc32'].upper()
+            for key,value in (('EXPECTED',crc),('ACTUAL',crc),('IMAGE',str(integrity['image_size']))):
+                assert re.findall(r'(?<!\S)'+key+r'=([^\s]+)',initial)==[value],(key,initial)
         before={c:port.command(c) for c in ('reg','stk','hout','pwd')}
-        assert directory[1:]+'/' not in port.command('ls /')
+        assert directory[1:].casefold()+'/' not in port.command('ls /').casefold()
         try:
             answer=port.command('mkdir '+directory);assert 'ERROR' not in answer,answer;created=True
             write_file(port,directory+'/TIMING.APP',app.read_bytes())
@@ -202,17 +234,28 @@ def main():
                 path=Path(chunk['input']);assert sha(path)==chunk['input_sha256']
                 data=path.read_bytes();write_file(port,directory+'/INPUT.bin',data)
                 port.pump(a.settle_ms/1000.)
-                answer=port.command('open "'+directory+'/TIMING.APP"',timeout=120)
-                assert 'APP_FLOW_RESULT=0' in answer,answer
+                direct_rom=config.get('reference_kind')=='RP2040_factory_BootROM_v3'
+                answer=port.command('open "'+directory+'/TIMING.APP"',timeout=120,wait_for_app=direct_rom)
+                assert re.search(r'(?m)^APP_FLOW_RESULT=0\r?$',answer),answer
+                if direct_rom:
+                    port.leave_timing_app(directory)
                 raw=read_file(port,directory+'/RESULT.bin')
                 (a.output/f"{chunk['index']:03d}.bin").write_bytes(raw)
-                row=decode(raw,chunk,data);rows.append(row)
+                if config.get('report_version')==5:
+                    from m0_sincos_timing import decode_v5
+                    row=decode_v5(raw,chunk,data,minimum_warmup_us=config['app_warmup_us'],
+                                  pairs_cap=config['warmup_pairs_cap'])
+                else:
+                    row=decode(raw,chunk,data)
+                if direct_rom:
+                    assert row['qfplib_wrong_results']==0,('BootROM reference disagrees with MPFR',chunk['index'])
+                rows.append(row)
                 if 'rounds' in config:assert row['rounds']==config['rounds'],'APP round count differs from frozen contract'
                 assert row['app_warmup_us']>=config.get('app_warmup_us',0),'APP warm-up shorter than the frozen benchmark contract'
                 (a.output/f"{chunk['index']:03d}.json").write_text(json.dumps(row,indent=2)+'\n')
                 displayed=row['order_balanced']['us_per_call'] if config.get('primary_estimator')=='order_balanced_median' else {k:v['median_us'] for k,v in row['timings'].items()}
                 print(chunk['index'],chunk['operation'],chunk['stream'],
-                    {k:round(v,6) for k,v in displayed.items()},'QFP errors',row['qfplib_wrong_results'],flush=True)
+                    {k:round(v,6) for k,v in displayed.items()},'reference errors',row['qfplib_wrong_results'],flush=True)
         except BaseException as error:
             failure=repr(error);raise
         finally:
@@ -235,8 +278,9 @@ def main():
         all_prepared_chunks_completed=len(rows)==len(config['chunks']),calculator_data_preserved=True,
         selected_chunks_completed=len(rows)==len(chunks),stop_requested=stopped,
         temporary_directory_removed=True,primary_estimator=config.get('primary_estimator','legacy_per_library_median'),
-        scope='Physical RP2040 timings; finite controlled workloads. Group times weight per-chunk estimates by case count. New reports use medians of opposite-order pair averages from twelve calibrated rounds; legacy reports retain per-library medians from nine rounds. Raw batches and both summaries remain available. Qfplib output error is reported separately.')
-    report.update({k:config[k] for k in ('comparison_set','composition_scope','composition_source_sha256') if k in config})
+        scope='Physical RP2040 timings; finite controlled workloads. Group times weight per-chunk estimates by case count. New reports use medians of opposite-order pair averages from twelve calibrated rounds; legacy reports retain per-library medians from nine rounds. The wire name qfplib denotes the selected reference, including factory ROM when configured.')
+    report.update({k:config[k] for k in ('comparison_set','composition_scope','composition_source_sha256',
+                                        'reference_kind','bootrom_sha256') if k in config})
     (a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
 
 if __name__=='__main__':main()

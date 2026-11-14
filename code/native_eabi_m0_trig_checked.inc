@@ -65,8 +65,18 @@ __attribute__((optimize("Os"),noinline)) static void checked_trig_argument(U m,C
     else {a->q=s<<10;a->e=e+1;}
     return;
   }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // Here -1 <= e <= 19. The half-up bit is in the high word of
+  // s_head * (2/pi); shifting first makes the rounding add at most 21 bits.
+  const uint32_t head=uint32_t(s>>21),lo16=head&65535U,hi16=head>>16;
+  const uint32_t p=hi16*0x836EU+((lo16*0x836EU)>>16);
+  const uint32_t cross=lo16*0xA2F9U+(p&65535U);
+  const uint32_t estimate=hi16*0xA2F9U+(p>>16)+(cross>>16);
+  const uint32_t n=((estimate>>unsigned(30-e))+1U)>>1;
+#else
   const U estimate=wide32(uint32_t(s>>21),0xA2F9836EU);
   uint32_t n=e==-1?uint32_t(estimate>=(U(1)<<63)):uint32_t((estimate+(U(1)<<(62-e)))>>unsigned(63-e));
+#endif
   if(!n) {a->q=checked_trig_left(s,unsigned(e+10));a->e=1;return;}
   const U lo=wide32(trig_pi2[3],n),middle=wide32(trig_pi2[4],n)+(lo>>32);
   const uint32_t top=trig_pi2[5]*n+uint32_t(middle>>32);
@@ -124,7 +134,13 @@ __attribute__((optimize("Os"),noinline)) static void checked_trig_argument(U m,C
       // n<2^20 and e>=-43: pi/2 truncation contributes <2^-1
       // relative Q63 unit; nearest-even contributes at most another half.
     } else {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      // The already computed quadrant is bit-identical to the reference
+      // reducer's; the extremely small remainder only needs more pi bits.
+      const Trig192 r=trig_remainder_at(s,e,n,negative);
+#else
       const Trig192 r=trig_remainder(m,n,negative);
+#endif
       q=trig_relative(r,exponent);
       if(exponent<-99) q=0;
     }
@@ -297,9 +313,17 @@ __attribute__((optimize("Os"),noinline)) static U checked_trig_table(CheckedTrig
   if(high>=4) {high>>=2;shift+=2;}
   if(high>=2) ++shift;
   const uint32_t half=1U<<(shift-1),lo=uint32_t(value.low),hi=uint32_t(value.low>>32),tail=lo&((half<<1)-1);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // half >= 1024 and error <= 13. One unsigned range check rejects the
+  // entire uncertain interval, including the midpoint (so no parity test).
+  if(tail-(half-error)<=2U*error) return 0;
+  const U retained=(U((hi>>shift)|(value.high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
+  return sign+(U(shift+1004)<<52)+retained+U(tail>half);
+#else
   if(tail>=half?tail-half<=error:half-tail<=error) return 0;
   const U retained=(U((hi>>shift)|(value.high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
   return sign+(U(shift+1004)<<52)+retained+U(tail>half || (tail==half && (retained&1)));
+#endif
 }
 MK61_M0_TRIG_SECTION("dispatch")
 __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_trig(double x,unsigned op) {

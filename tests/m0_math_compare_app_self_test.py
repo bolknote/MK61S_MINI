@@ -80,6 +80,10 @@ def main():
     if a.cache_counters:flags+=['-DMK61_M0_TIMING_CACHE=1']
     if a.bounded_warmup:flags+=['-DMK61_M0_TIMING_BOUNDED_WARMUP=1',
         '-DMK61_M0_TIMING_WARMUP_PAIRS_CAP='+str(a.warmup_pairs_cap)]
+    direct_rom=config.get('reference_kind')=='RP2040_factory_BootROM_v3'
+    if direct_rom:
+        assert a.bootrom and hashlib.sha256(a.bootrom.read_bytes()).hexdigest()==config['bootrom_sha256']
+        flags+=['-DMK61_M0_TIMING_RP2040_ROM_V3=1']
     objects=[]
     for source in (source_fixture,ROOT/'sdk/portable/memory.c',shim):
         obj=a.output/(source.name+'.o');objects.append(obj)
@@ -151,12 +155,14 @@ def main():
     for address in (0x080E0010,0x080E0020,0x080E0030,0x080E0040,0x080E0050):
         m.uc.mem_write(address,b'\x70\x47');m.uc.hook_add(UC_HOOK_CODE,callback,begin=address,end=address)
     selected={}
-    for chunk in config['chunks']:selected.setdefault(chunk['kind'],chunk)
+    for chunk in config['chunks']:
+        selected.setdefault((chunk['kind'],chunk['operation'] if direct_rom else ''),chunk)
     expected_kinds=set(range(13)) if a.kinds is None else set(a.kinds)
     assert expected_kinds and expected_kinds<=set(range(13)),sorted(expected_kinds)
-    assert set(selected)==expected_kinds,(sorted(selected),sorted(expected_kinds))
+    assert {key[0] for key in selected}==expected_kinds,(sorted(selected),sorted(expected_kinds))
+    if direct_rom:assert set(selected)=={(1,op) for op in ('cos','exp','sin')}
     rows=[]
-    for kind,chunk in sorted(selected.items()):
+    for (kind,_),chunk in sorted(selected.items()):
         data=Path(chunk['input']).read_bytes();header=list(struct.unpack_from('<8I',data));count=min(2,header[4]);header[4]=count;header[5]=1
         original=struct.pack('<8I',*header)+data[32:32+24*count]
         for negative in (False,True):
@@ -199,13 +205,24 @@ def main():
                     assert all(v['cache']['median_misses_per_call']==0 and v['cache']['median_accesses_per_call']==0 for v in parsed['timings'].values())
             rows.append(dict(kind=kind,operation=chunk['operation'],negative=negative,calls=reached))
             print('PASS',kind,chunk['operation'],'failure detected' if negative else 'exact results',flush=True)
+        if direct_rom:
+            for word,value in ((7,0x1d),(7,header[7]&~1),(7,header[6]),(3,0)):
+                source=bytearray(original)
+                struct.pack_into('<I',source,word*4,value)
+                result=None
+                status=m.call('timing_test_entry',0)[0]&0xFFFFFFFF
+                assert status and result is None,(word,value,status)
+            print('PASS rejects non-math ROM, even and flash references, and binary ABI',flush=True)
     report=dict(status='PASS',cases=rows,cache_counters=a.cache_counters,warmup_tested=has_warmup,
         rounds=rounds,wire_version=version,
-        tested_kinds=sorted(selected),all_abi_kinds_tested=expected_kinds==set(range(13)),
+        tested_kinds=sorted(expected_kinds),all_abi_kinds_tested=expected_kinds==set(range(13)),
         bounded_warmup=a.bounded_warmup,warmup_pairs_cap=a.warmup_pairs_cap if a.bounded_warmup else None,
         scope='Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark.')
     if a.rom:
         report['rom_sha256']=hashlib.sha256(a.rom.read_bytes()).hexdigest()
+    if direct_rom:
+        report['rom_sha256']=config['bootrom_sha256']
+        report['reference_kind']=config['reference_kind']
     (a.output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
 
 if __name__=='__main__':main()

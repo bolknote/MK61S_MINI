@@ -1,5 +1,6 @@
-// Exact last-stage midpoint comparison for y=p/q, |p|<=32, q<=32.
-// Called only after the 1024-bit enclosure could not decide rounding.
+// Exact last-stage midpoint comparison for y=p/q with at most 432
+// 16-bit words in the combined coefficient powers. Called only after
+// the 1024-bit enclosure could not decide rounding.
 // No floating-point operations, tables, allocation or global RAM are used.
 #pragma once
 #include <stdint.h>
@@ -12,12 +13,11 @@
 
 namespace m0_pow_exact {
 using U=uint64_t;
-enum {N=216};
+enum {N=432};
 struct B {uint16_t w[N]{};unsigned used=1;};
 
-// Multiplying the two coefficient powers needs at most (53+54)*32=3424
-// bits. There are 3456 bits available; every multiply includes an overflow
-// check so even a call outside the supported domain cannot corrupt memory.
+// Every multiply also checks for overflow. Copy back only the limbs in
+// use; the cost is proportional to the actual exponent.
 static M0_POW_EXACT bool multiply(B& a,U factor) {
   uint16_t t[N+4]{};
   for(unsigned j=0;j<4;++j) {
@@ -29,8 +29,11 @@ static M0_POW_EXACT bool multiply(B& a,U factor) {
     t[a.used+j]=uint16_t(carry);
   }
   for(unsigned i=N;i<N+4;++i) if(t[i]) return false;
-  for(unsigned i=0;i<N;++i) a.w[i]=t[i];
-  a.used=N;while(a.used>1 && !a.w[a.used-1]) --a.used;
+  unsigned used=a.used+4;
+  if(used>N) used=N;
+  while(used>1 && !t[used-1]) --used;
+  for(unsigned i=0;i<used;++i) a.w[i]=t[i];
+  a.used=used;
   return true;
 }
 
@@ -67,13 +70,15 @@ static M0_POW_EXACT bool parameters(U y,unsigned& p,unsigned& q) {
   U coefficient;int exponent;decode(magnitude,coefficient,exponent);
   while(!(coefficient&1)) {coefficient>>=1;++exponent;}
   if(exponent>=0) {
-    if(exponent>=6 || coefficient>(U(32)>>unsigned(exponent))) return false;
+    if(exponent>=8 || coefficient>((16U*N/53)>>unsigned(exponent))) return false;
     p=unsigned(coefficient)<<unsigned(exponent);q=1;
   } else {
-    if(exponent < -5 || coefficient>32) return false;
+    if(exponent < -7 || coefficient>16U*N/53) return false;
     p=unsigned(coefficient);q=1U<<unsigned(-exponent);
   }
-  return true;
+  // For negative y the comparison uses the product of both powers.
+  // The same admission bound gives both signs identical coverage.
+  return 53U*p+54U*q<=16U*N;
 }
 
 static M0_POW_EXACT bool midpoint(U lower,U upper,U& coefficient,int& exponent) {

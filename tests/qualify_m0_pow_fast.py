@@ -174,6 +174,15 @@ def main():
     qualify('signed_boundaries','_ZN12compact_math3powEdd',
             [(a,b) for a in bases for b in dict.fromkeys(exponents)])
 
+    tiny_magnitudes=(0,1,0x000FFFFFFFFFFFFF,bits(2.**-64)-1,bits(2.**-64),
+                     bits(2.**-64)+1,bits(2.**-62))
+    tiny_bases=(0,1,0x000FFFFFFFFFFFFF,0x0010000000000000,bits(.5),bits(1.)-1,
+                bits(1.),bits(1.)+1,bits(2.),0x7FEFFFFFFFFFFFFF,0x7FF0000000000000,
+                0x7FF0000000000001,0x7FF8000000000013)
+    qualify('tiny_exponent_boundaries','_ZN12compact_math3powEdd',
+            [(a|sx,b|sy) for a in tiny_bases for b in tiny_magnitudes
+             for sx in (0,1<<63) for sy in (0,1<<63)])
+
     exact=[((rng.randrange(1,2047)<<52)|rng.getrandbits(52)|(rng.randrange(2)<<63),
             bits(rng.choice((1.,-1.,2.)))) for _ in range(args.samples)]
     # Squaring crosses both the subnormal rounding boundary and overflow.

@@ -143,12 +143,22 @@ SECTIONS {
     } > FLASH
     ASSERT(SIZEOF(.ai_diagnostic_extension) <= 0x10000,
            "AI diagnostic code exceeds its64KiB flash slot")
+    /* Place the exp coefficients away from the shared hot code and Q94
+     * reconstructor's combined XIP cache indices. */
+    .m0_exp_center_extension 0x10191280 : {
+        *(.m0_exp_center_table)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.m0_exp_center_extension) <= 0x3000,
+           "Exp center table exceeds its 12 KiB flash slot")
     /* Same 8KiB cache indices as the0.729s/token E0CDF5AB model code.
      * UI/diagnostic growth must not move these instruction streams. */
     .ai_inference_extension 0x101ac248 : {
         *mk61_ai_model.cpp.o(.text*)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
+    ASSERT(ADDR(.m0_exp_center_extension) + SIZEOF(.m0_exp_center_extension) <= ADDR(.ai_inference_extension),
+           "Exp center table overlaps AI inference")
     ASSERT(SIZEOF(.ai_inference_extension) <= 0x6000,
            "AI inference exceeds its24KiB flash slot")
     .ai_attention_extension 0x101b4000 : {

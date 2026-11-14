@@ -215,6 +215,11 @@ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))
 __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))) static double pow_refine_checked(double x,double y) {
   const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
   const int ey=int(ym>>52)-1023;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  // For positive finite binary64 x, |ln(x)| < 745. For |y| < 2^-64,
+  // exp(y*ln(x)) lies strictly inside the round-to-nearest cell of 1.
+  if(uint32_t(ym>>32)<0x3BF00000U && xb && xb<D::Infinity) return 1.0;
+#endif
   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64 || xb==UINT64_C(0x3FF0000000000000))
     return mk61_m0_cr_pow(x,y);
   const PowRefinedLog logarithm=pow_refined_log(xb);

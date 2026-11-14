@@ -13,15 +13,27 @@ class Port:
     fd=9876
     text=b'last acknowledgement\r\n*** PANIC ***\r\n'
 
-    def __init__(self,disconnect=False,changed=False):
+    def __init__(self,disconnect=False,changed=False,entries=('TIMING.APP','INPUT.bin','RESULT.bin')):
         self.disconnect=disconnect
         self.changed=changed
         self.commands=[]
+        self.entries=list(entries)
+        self.present=True
 
     def command(self,command,timeout=5):
         self.commands.append(command)
         if self.disconnect:
             raise OSError('USB disappeared during cleanup')
+        if command=='ls /MK61S-M0-TIMING-TEST':
+            count=len(self.entries)
+            return ''.join(f'f\t17\t{name}\r\n' for name in self.entries)+(
+                f'{count} {"entry" if count==1 else "entries"}.\r\n')
+        if command.startswith('rm "'):
+            self.entries.remove(command.rsplit('/',1)[-1][:-1])
+        if command=='rmdir /MK61S-M0-TIMING-TEST':
+            assert not self.entries
+            self.present=False
+        if command=='ls /':return 'MK61S-M0-TIMING-TEST/' if self.present else '0 entries.'
         return 'changed' if self.changed and command=='reg' else 'ok'
 
     def pump(self,seconds):pass
@@ -37,6 +49,14 @@ def main():
         assert result['status']=='PASS' and result['calculator_data_preserved']
         assert result['temporary_directory_removed'] and result['cleanup_failure'] is None
         assert (output/'transcript.bin').read_bytes()==Port.text
+        with patch('hil_m0_math_compare.os.write',return_value=4):
+            partial=Port(entries=('TIMING.APP',))
+            result=cleanup_session(partial,output,before,'/MK61S-M0-TIMING-TEST',True,'UID','initial','upload failed')
+            assert result['status']=='FAIL' and result['temporary_directory_removed']
+            foreign=Port(entries=('TIMING.APP','OTHER.bin'))
+            result=cleanup_session(foreign,output,before,'/MK61S-M0-TIMING-TEST',True,'UID','initial','upload failed')
+            assert not result['temporary_directory_removed'] and result['cleanup_failure']
+            assert not any(cmd.startswith(('rm ','rmdir ')) for cmd in foreign.commands)
         primary=OSError('USB disappeared during input upload')
         try:
             try:
