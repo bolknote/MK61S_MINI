@@ -1,6 +1,5 @@
 #include "ui.h"
 #include <string.h>
-#include "rom_cache.h"
 /* The OSD shares the resident borrowed canvas and panel-owned snapshot.
  * 256x256 TILE1: 8192 bitmap + 1024 attributes, no RGB framebuffer. */
 static void pixel(spectrum_ui* u,unsigned x,unsigned y,bool on) {
@@ -26,13 +25,9 @@ bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectru
     if(!mk61_api->graphics_begin()) return false;
     mk61_service_framebuffer buffer={0};
     if(!api->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(buffer),0,&buffer) || !buffer.pixels || buffer.bytes<9984) return false;
-    const uint8_t* rom=spectrum_rom_cache_find(SPECTRUM_ROM_48,NULL);
-    if(rom) u->font=rom+0x3D00;
-    else {
-        mk61_service_file_bytes request={"48.rom",buffer.pixels+9216,0x3D00,768};
-        if(!api->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(request),&request)) return false;
-        u->font=buffer.pixels+9216;
-    }
+    mk61_service_file_bytes request={"48.rom",buffer.pixels+9216,0x3D00,768};
+    if(!api->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(request),&request)) return false;
+    u->font=buffer.pixels+9216;
     memset(&u->frame,0,sizeof(u->frame));u->frame.pixels=buffer.pixels;u->frame.tiles=buffer.pixels+8192;
     u->frame.pixel_bytes=8192;u->frame.tile_bytes=1024;u->frame.width=u->frame.height=256;
     u->frame.x=u->frame.y=32;u->frame.format=MK61_COLOR_TILE1;

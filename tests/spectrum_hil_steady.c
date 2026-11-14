@@ -28,8 +28,8 @@ static void report(const char* text) { services->call(MK61_SERVICE_DEBUG_WRITE,s
 static void observed_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,
                             const char* const* labels,unsigned count,unsigned selected) {
     char line[112];
-    mk61_app_snprintf(services,line,sizeof(line),"SPMENU %s %u/%u xip=%u [%s]\n",
-        title,selected,count,mapped_roms,count?labels[selected<count?selected:0]:"");report(line);
+    mk61_app_snprintf(services,line,sizeof(line),"SPMENU %s %u/%u rom_psram=%u [%s]\n",
+        title,selected,count,bank_memory.paged_rom,count?labels[selected<count?selected:0]:"");report(line);
     spectrum_ui_window(u,x,y,width,title,labels,count,selected);
 }
 /* Observe the first CPU call after each frame's pacing wait. Both endpoints
@@ -55,9 +55,9 @@ static void observed_begin(spectrum* s,void(*yield)(void*),void* context) {
 }
 static void observed_end(spectrum* s) {
     const uint32_t elapsed=timer()-started_us;char line[128];
-    mk61_app_snprintf(services,line,sizeof(line),"SPTIME frames=%lu cycles=%lu wall=%lu xip=%u starved=%lu\n",
+    mk61_app_snprintf(services,line,sizeof(line),"SPTIME frames=%lu cycles=%lu wall=%lu rom_psram=%u starved=%lu\n",
         (unsigned long)(s->frames-started_frames),(unsigned long)((uint32_t)s->cpu.cyc-started_cycles),
-        (unsigned long)elapsed,mapped_roms,(unsigned long)atomic_load(&s->sound.starved));report(line);
+        (unsigned long)elapsed,bank_memory.paged_rom,(unsigned long)atomic_load(&s->sound.starved));report(line);
     mk61_app_snprintf(services,line,sizeof(line),"SPSTEADY frames=%lu cycles=%lu wall=%lu phase=%lu/%lu starved=%lu\n",
         (unsigned long)steady.frames,(unsigned long)steady.cycles,
         (unsigned long)(steady.last_us?steady.last_us-steady.first_us:0),

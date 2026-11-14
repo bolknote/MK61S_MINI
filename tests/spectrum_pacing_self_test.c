@@ -35,7 +35,7 @@ static const mk61_app_services fake={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_V
 static void begin(paced_trace* state,uint32_t clock_start,unsigned long cycle_start) {
     active_machine=&test_machine;
     spectrum_init(&machine,ram,rom);machine.pentagon=true;machine.cpu.cyc=cycle_start;
-    services=&fake;trace=state;test_clock=clock_start;used=escape_key=0;mapped_roms=true;
+    services=&fake;trace=state;test_clock=clock_start;used=escape_key=0;bank_memory.paged_rom=true;
     memset(keys,0,32);memset(previous_keys,0,32);observed_begin(&machine,NULL,NULL);
 }
 static void scheduled_frames(uint32_t clock_start,uint32_t cycle_start,unsigned resume_phase,bool pentagon) {

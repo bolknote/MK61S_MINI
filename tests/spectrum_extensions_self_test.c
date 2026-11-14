@@ -125,7 +125,7 @@ static void full_window(void) {
     out(0xEFF7,8);
     const uint8_t dos[]={0x3A,0,2,0x32,0,0x82,0xC3,0,0x81};
     memcpy(backing+SPECTRUM_TRDOS_ROM+0x3D00,dos,sizeof(dos));backing[SPECTRUM_TRDOS_ROM+0x200]=0x5A;
-    ram[0x4100]=0xF3;ram[0x4101]=0x76;s.disk.xip_rom[SPECTRUM_DISK_BETA]=backing+SPECTRUM_TRDOS_ROM;
+    ram[0x4100]=0xF3;ram[0x4101]=0x76;s.disk.direct_rom[SPECTRUM_DISK_BETA]=backing+SPECTRUM_TRDOS_ROM;
     assert(spectrum_disk_mode(&s,SPECTRUM_DISK_BETA));
     const uint32_t before=read_bytes;s.cpu.pc=0x3D00;s.cpu.halted=false;spectrum_run(&s,200);
     assert(ram[0x4200]==0x5A && !s.disk.mapped && !s.cpu.read_map[0] && read_bytes==before);

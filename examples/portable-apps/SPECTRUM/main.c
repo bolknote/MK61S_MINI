@@ -2,7 +2,6 @@
 #include "spectrum.h"
 #include "media.h"
 #include "ui.h"
-#include "rom_cache.h"
 #include <string.h>
 
 static const mk61_app_services* services;
@@ -21,11 +20,9 @@ static spectrum* active_machine;
 static uint8_t keys[32],previous_keys[32];
 static char *directory,*snapshot_path;
 static bool started;
-static uint8_t* page_cache;
 static uint8_t* bank_window;
 static uint8_t *guest_blocks[2],*bank_tails[3];
-static bool banked_buffers,mapped_roms;
-static const uint8_t* mapped_rom[3];
+static bool banked_buffers;
 static spectrum_memory bank_memory;
 static mk61_service_buffer external;
 typedef struct { char* path;bool scl; } mounted_media;
@@ -202,17 +199,6 @@ static bool load_rom(uint8_t* rom) {
         if(!read_source("48.rom",at,rom+at,4096)) return false;
     return true;
 }
-static const uint8_t* cached_rom(unsigned id,const char* path) {
-    uint32_t expected;const uint8_t* data=spectrum_rom_cache_find(id,&expected);if(!data) return NULL;
-    const unsigned size=id==SPECTRUM_ROM_DIV?8192:16384;mk61_service_file_info info;
-    if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory || info.size!=size) return NULL;
-    uint8_t bytes[256];uint32_t crc=UINT32_MAX;
-    for(unsigned at=0;at<size;at+=sizeof(bytes)) {
-        if(!read_source((void*)path,at,bytes,sizeof(bytes))) return NULL;
-        crc=spectrum_crc32(crc,bytes,sizeof(bytes));
-    }
-    return (crc^UINT32_MAX)==expected?data:NULL;
-}
 static bool select_model(unsigned model) {
     const bool pentagon=model!=0;
     if(!pentagon && !banked_buffers) {
@@ -223,20 +209,18 @@ static bool select_model(unsigned model) {
         message("Pentagon 512K requires PSRAM\n\nPress any key");return false;
     }
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
-    if(mapped_roms) {
-        if(!spectrum_memory_init_split(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,bank_window,
-            mapped_rom[pentagon?1:0],mapped_rom[pentagon?2:0],io)) return false;
-    } else {
+    {
       const char* names[]={pentagon?"128-0.rom":"48.rom",pentagon?"128-1.rom":"48.rom"};
+      uint8_t bytes[1024];
       for(unsigned bank=0;bank<2;++bank) {
         mk61_service_file_info info;
         if(!file_call(MK61_FILE_BYTES_STAT,names[bank],&info,0,sizeof(info)) || info.size!=16384 || info.directory) return false;
-        for(unsigned at=0;at<16384;at+=4096) {
-            if(!read_source((void*)names[bank],at,(uint8_t*)machine.rom,4096) ||
-               !external_write(NULL,SPECTRUM_ROM_BASE+bank*16384+at,machine.rom,4096)) return false;
+        for(unsigned at=0;at<16384;at+=sizeof(bytes)) {
+            if(!read_source((void*)names[bank],at,bytes,sizeof(bytes)) ||
+               !external_write(NULL,SPECTRUM_ROM_BASE+bank*16384+at,bytes,sizeof(bytes))) return false;
         }
       }
-      if(!spectrum_memory_init_split(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,page_cache,machine.rom,NULL,io)) return false;
+      if(!spectrum_memory_init_external_rom(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,bank_window,io)) return false;
     }
     bank_memory.extended=model==2;bank_memory.banks=model==2?64:32;
     if(model==2 && !spectrum_memory_reset(&bank_memory)) return false;
@@ -260,8 +244,6 @@ static bool media_write(void* raw,uint32_t at,const uint8_t* in,uint32_t n) {
 }
 static bool disk_rom(unsigned mode) {
     const char* path=mode==SPECTRUM_DISK_BETA?"trdos.rom":"esxmmc.rom";
-    machine.disk.xip_rom[mode]=cached_rom(mode==SPECTRUM_DISK_BETA?SPECTRUM_ROM_BETA:SPECTRUM_ROM_DIV,path);
-    if(machine.disk.xip_rom[mode]) return true;
     const uint32_t target=mode==SPECTRUM_DISK_BETA?SPECTRUM_TRDOS_ROM:SPECTRUM_DIV_ROM;
     const unsigned size=mode==SPECTRUM_DISK_BETA?16384:8192;
     mk61_service_file_info info;uint8_t bytes[256];
@@ -270,6 +252,8 @@ static bool disk_rom(unsigned mode) {
     }
     for(unsigned at=0;at<size;at+=sizeof(bytes))
         if(!read_source((void*)path,at,bytes,sizeof(bytes)) || !external_write(NULL,target+at,bytes,sizeof(bytes))) return false;
+    spectrum_memory_invalidate(&bank_memory,target,size);
+    spectrum_refresh_map(&machine);
     return true;
 }
 static bool mount_selected_media(unsigned mode) {
@@ -455,11 +439,16 @@ static void emulate(void) {
     // clocks start here, after that wait, rather than during its callbacks.
     spectrum_sound_clock(&machine,true);
     const char* error=NULL;
+    // The keys from the menu or FILE_OPEN are already latched. Produce the
+    // first frame's sound events before pumping keyboard/LCD/USB from a key
+    // scan. The first pacing wait can poll input while M3 renders the queue.
+    bool first_remote_frame=audio_mode==2;
     bool after_pace=false;
     for(;;) {
         // The pacing guard already polled input. Produce the next CPU/audio
         // slice before starting another potentially millisecond-long scan.
-        const int c=after_pace?-1:poll_guest(blocked,&keyboard_deadline,services->call(MK61_SERVICE_MICROS,0,0,0,NULL));
+        const int c=first_remote_frame || after_pace?-1:
+            poll_guest(blocked,&keyboard_deadline,services->call(MK61_SERVICE_MICROS,0,0,0,NULL));
         after_pace=false;
         if(escape(c) || c==0x90) {
             if(c==0x90) started=false;
@@ -469,6 +458,7 @@ static void emulate(void) {
         if(machine.memory && machine.memory->fault) goto memory_error;
         if(machine.frames==last_frame) continue;
         last_frame=machine.frames;
+        first_remote_frame=false;
         // Submit the completed frame before its pacing wait, leaving the
         // next frame's first CPU/audio slice free of display conversion.
         {
@@ -516,18 +506,15 @@ static int app_run(uint32_t file_id) {
     mk61_service_lease ram={0},rom={0};
     mk61_service_buffer sram[2]={{0}};
     banked_buffers=(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_EXTERNAL_BUFFERS)!=0;
-    mapped_roms=banked_buffers && (mapped_rom[0]=cached_rom(SPECTRUM_ROM_48,"48.rom")) &&
-        (mapped_rom[1]=cached_rom(SPECTRUM_ROM_128_0,"128-0.rom")) && (mapped_rom[2]=cached_rom(SPECTRUM_ROM_128_1,"128-1.rom"));
     if(banked_buffers) {
         mk61_service_framebuffer canvas={0};
         if(!mk61_api->graphics_begin() ||
            !services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(canvas),0,&canvas) ||
-           !canvas.pixels || canvas.bytes<10240+2*SPECTRUM_CACHE_PAGE_BYTES) {
+           !canvas.pixels || canvas.bytes<9984) {
             message("Native framebuffer unavailable\n\nPress any key");return 0;
         }
-        /* UI: 0..9215; running video: 0..7679; disk cache: 7680..9727.
-         * RAM pages at 10240 remain valid across both display modes. */
-        page_cache=canvas.pixels+10240;
+        /* UI: 0..9215 plus its SD-loaded font; running video: 0..7679.
+         * The shared ROM/RAM pages live in separate SRAM leases. */
         /* Fixed banks use 15K heap chunks and 1K stack tails. The complete
          * sixteen-page cache uses two further 8K leases. */
         for(unsigned i=0;i<2;++i) {
@@ -539,17 +526,19 @@ static int app_run(uint32_t file_id) {
         }
     }
     if((!banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,SPECTRUM_RAM_BYTES,&ram)) ||
-       (mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,8192,&ram)) ||
-       (mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,8192,&rom)) ||
-       (!mapped_roms && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,SPECTRUM_ROM_BYTES,&rom))) {
+       (banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,8192,&ram)) ||
+       (banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,8192,&rom)) ||
+       (!banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,SPECTRUM_ROM_BYTES,&rom))) {
         message("Not enough SRAM for Spectrum\n\nPress any key");return 0;
     }
-    if(!mapped_roms && !load_rom(rom.data)) {
+    mk61_service_file_info rom_info;
+    if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
+       (!file_call(MK61_FILE_BYTES_STAT,"48.rom",&rom_info,0,sizeof(rom_info)) || rom_info.directory || rom_info.size!=SPECTRUM_ROM_BYTES))) {
         message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP\n\nPress any key");return 0;
     }
-    bank_window=mapped_roms?ram.data:NULL;bank_tails[2]=mapped_roms?rom.data:NULL;
+    bank_window=banked_buffers?ram.data:NULL;bank_tails[2]=banked_buffers?rom.data:NULL;
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
-    else { memset(&machine,0,sizeof(machine));machine.ram=guest_blocks[0];machine.rom=mapped_roms?mapped_rom[0]:rom.data;
+    else { memset(&machine,0,sizeof(machine));machine.ram=guest_blocks[0];machine.rom=NULL;
         machine.extensions=SPECTRUM_TURBOSOUND|SPECTRUM_COVOX|SPECTRUM_SPECDRUM|SPECTRUM_ULAPLUS; }
     spectrum_sound_configure(&machine,SPECTRUM_AY,SPECTRUM_ABC);
     if(!select_model(true)) {

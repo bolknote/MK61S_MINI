@@ -21,7 +21,6 @@ from tools.apps.system.build_picocalc_apps import APPS, ASSETS, ROOT
 from seal_picocalc import verify as verify_firmware
 from explorer_icons import install_bundle_icons
 from tools.apps.urq.library import copy_device_library, copy_licenses
-from tools.apps.spectrum.spectrum_rom_cache import validate_uf2 as verify_spectrum_rom_cache
 
 README='''MK61S / PicoCalc / Pico H
 
@@ -114,15 +113,14 @@ def main():
     spectrum=apps/'SPECTRUM'
     if spectrum.exists():
         record=json.loads((spectrum/'manifest.json').read_text())
+        if any(Path(name).name in ('ROMCACHE.uf2','rom-cache.json')for name in record['files']):
+            raise ValueError('Rebuild Spectrum SD assets: Flash ROM packs are no longer supported')
         verify_app(spectrum/'SPECTRUM.APP',record)
         for name,digest in record['files'].items():
             path=spectrum/name
             if not path.resolve().is_relative_to(spectrum.resolve()) or sha256(path)!=digest:
                 raise ValueError('Spectrum asset/manifest mismatch: '+name)
-        cache=spectrum/'ROMCACHE.uf2'
-        if cache.exists():
-            verify_spectrum_rom_cache(cache.read_bytes(),build['flash_bytes'])
-        files += sorted(path for path in spectrum.rglob('*') if path.is_file())
+        files += sorted(path for path in spectrum.rglob('*') if path.is_file() and path.name not in ('ROMCACHE.uf2','rom-cache.json'))
     files += copy_device_library(apps/'URQ')
     files += copy_licenses(directory/'licenses/urq')
     files += sorted(path for path in (directory/'licenses/ryu').rglob('*') if path.is_file())

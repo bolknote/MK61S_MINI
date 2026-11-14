@@ -47,7 +47,7 @@ static void clock_test(uint32_t clock_start,unsigned long cycle_start) {
     }
     test_clock=first+300*20480U+400000;observed_end(&machine);
     assert(strstr(output,"SPSTEADY frames=300 cycles=21504000 wall=6144000 phase=100/100 starved=20\n"));
-    assert(strstr(output,"wall=6844000 xip="));
+    assert(strstr(output,"wall=6844000 rom_psram="));
 }
 static void palette_test(void) {
     static uint8_t snapshot[49182];snapshot[6]=0x00;snapshot[7]=0x80;

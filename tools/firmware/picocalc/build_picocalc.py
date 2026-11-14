@@ -20,13 +20,13 @@ ROOT = Path(__file__).resolve().parents[3]
 SDK_VERSION = "2.2.0"
 SDK_COMMIT = "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
 TARGET = "mk61s-picocalc-pico-h"
-FIRMWARE_FLASH_LIMIT = 0x1C0000
+FIRMWARE_FLASH_LIMIT = 2 * 1024 * 1024 - 8192
 
 
 def firmware_flash_budget(image_bytes):
-    # Spectrum ROM assets persist above this address across firmware updates.
+    # The last two4KiB sectors hold device settings; APP resources live on SD.
     if not 0 < image_bytes <= FIRMWARE_FLASH_LIMIT:
-        raise ValueError("Firmware overlaps the persistent Spectrum ROM cache at 0x101C0000")
+        raise ValueError("Firmware overlaps the device settings at 0x101FE000")
 
 
 def audio_memory_budget(static_ram_bytes, enabled):

@@ -2,31 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../examples/portable-apps/SPECTRUM/rom_cache.h"
-static const uint8_t* app_rom_cache_find(unsigned,uint32_t*);
-#define spectrum_rom_cache_find app_rom_cache_find
 #define main spectrum_app_main
 #ifndef SPECTRUM_APP_MAIN_SOURCE
 #define SPECTRUM_APP_MAIN_SOURCE "../examples/portable-apps/SPECTRUM/main.c"
 #endif
 #include SPECTRUM_APP_MAIN_SOURCE
 #undef main
-#undef spectrum_rom_cache_find
 
 /* Execute the actual APP UI and core against a bounded resident ABI fixture.
  * Electrical timing, SRAM residency and multicore IRQs require the device. */
 static const char* asset_dir;
-static uint8_t* cache_image;
-static unsigned cache_bytes;
-static bool cache_mismatch,expect_mapped;
-static uint32_t cache_word(unsigned at) {
-    return cache_image[at]|((uint32_t)cache_image[at+1]<<8)|((uint32_t)cache_image[at+2]<<16)|((uint32_t)cache_image[at+3]<<24);
-}
-static const uint8_t* app_rom_cache_find(unsigned id,uint32_t* crc) {
-    if(!cache_image || id>=SPECTRUM_ROM_COUNT) return NULL;
-    if(crc) *crc=cache_word(32+id*32+12)^(cache_mismatch && id==SPECTRUM_ROM_128_0);
-    return cache_image+cache_word(32+id*32+4);
-}
 static char ui[600];
 static uint32_t micros_now,frames_shown,session_frames,calls,audio_opens,audio_closes;
 static unsigned palette_calls;
@@ -43,6 +28,9 @@ static bool released=true;
 static unsigned held_key,held_scans;
 static unsigned graphics_ends;
 static bool saw_ym,saw_acb;
+static bool remote_audio,first_remote_scan;
+static unsigned remote_scans;
+static uint32_t remote_open_frame;
 static mk61_service_audio_synth generator;
 typedef struct { const char* screen;unsigned key,frames; } action_item;
 static const action_item script[]={
@@ -102,7 +90,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(op==MK61_SERVICE_MICROS) { micros_now+=100;return micros_now; }
     if(op==MK61_SERVICE_MEMORY_ACQUIRE) {
         mk61_service_lease* r=payload;r->data=calloc(1,c);assert(r->data);r->size=c;r->fresh=1;
-        assert((expect_mapped && a<=1 && c==8192) || (!expect_mapped && a==1 && c==16384));return 1;
+        assert(a<=1 && c==8192);return 1;
     }
     if(op==MK61_SERVICE_MEMORY_RELEASE) { mk61_service_lease* r=payload;free(r->data);r->data=NULL;return 1; }
     if(op==MK61_SERVICE_BUFFER) {
@@ -174,16 +162,19 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
         assert(lcd_clock==(legacy_lcd?12000000:24000000));
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
-        assert(mapped_roms==expect_mapped);
-        assert(!machine.memory->window && machine.memory->page_count==(expect_mapped?16:2));
-        if(expect_mapped) {
-            assert(machine.memory->pages==bank_window && machine.memory->pages_tail==bank_tails[2]);
-            assert(machine.rom>=cache_image && machine.rom<cache_image+cache_bytes);
-        }
+        assert(machine.memory->paged_rom && !machine.rom && !machine.memory->window && machine.memory->page_count==16);
+        assert(machine.memory->pages==bank_window && machine.memory->pages_tail==bank_tails[2]);
         assert((machine.keys[6]&1) && (machine.keys[2]&8)); // Menu Enter/R never leak into the guest.
         return frames_shown%3?1:2;
     }
     if(op==MK61_SERVICE_AUDIO_STREAM) {
+        if(a==MK61_AUDIO_PSG_CONFIG_OPEN && remote_audio) {
+            const mk61_service_audio_psg_config* config=payload;
+            assert(c==sizeof(*config) && !*config->psg.running && !generator.sample);
+            generator=config->psg.local;++audio_opens;
+            remote_open_frame=machine.frames;first_remote_scan=true;
+            return 2;
+        }
         if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_CONFIG_OPEN)return 0; // Older resident: use SYNTH_OPEN.
         if(a==MK61_AUDIO_SYNTH_OPEN) {
             if(saw_ym && saw_acb)assert(machine.sound_chip==SPECTRUM_YM && machine.sound_layout==SPECTRUM_ACB);
@@ -192,9 +183,14 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             for(unsigned i=0;i<500;++i) { assert(!generator.sample(generator.context));micros_now+=40; }
             assert(machine.sound.time==(uint32_t)machine.cpu.cyc && !atomic_load(&machine.sound.starved));return 1;
         }
-        assert(a==MK61_AUDIO_CLOSE);generator.sample=NULL;++audio_closes;return 1;
+        assert(a==MK61_AUDIO_CLOSE && !first_remote_scan);
+        generator.sample=NULL;++audio_closes;return 1;
     }
     if(op==MK61_SERVICE_KEYBOARD) {
+        if(first_remote_scan) {
+            assert(machine.frames!=remote_open_frame);
+            first_remote_scan=false;++remote_scans;
+        }
         assert(a==MK61_SERVICE_KEY_BITMAP && b==32);memset(payload,0,32);pump();
         if(opened_name) {
             unsigned key=0;
@@ -222,17 +218,10 @@ static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_V
     .service=pump,.delay_ms=delay,.display_clear=clear_screen,.graphics_begin=graphics_begin,.graphics_end=graphics_end,.query_service=query};
 const mk61_app_api* mk61_api=&api;
 int main(int argc,char** argv) {
-    assert(argc==2 || argc==3);asset_dir=argv[1];
+    assert(argc==2);asset_dir=argv[1];
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
+    remote_audio=getenv("SPECTRUM_REMOTE_AUDIO")!=NULL;
     opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
-    if(argc==3) {
-        cache_mismatch=!strcmp(argv[2],"mismatch");expect_mapped=!cache_mismatch;
-        char filename[1024];path(filename,"ROMCACHE.bin");FILE* f=fopen(filename,"rb");assert(f);
-        assert(!fseek(f,0,SEEK_END));cache_bytes=(unsigned)ftell(f);rewind(f);
-        cache_image=malloc(cache_bytes);assert(cache_image);
-        assert(fread(cache_image,1,cache_bytes,f)==cache_bytes);fclose(f);
-        assert(spectrum_rom_cache_valid(cache_image,cache_bytes));
-    }
     assert(mk61_app_open_file(MK61_SERVICE_INVALID_ID)==MK61_APP_INVALID_FILE);
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
@@ -247,9 +236,11 @@ int main(int argc,char** argv) {
         }
     } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1 && saw_ym && saw_acb);
     assert(lcd_clock_requests>=audio_opens && lcd_clock==12000000);
-    if(cache_image) { assert(spectrum_rom_cache_valid(cache_image,cache_bytes));free(cache_image); }
+    if(remote_audio) {
+        assert(remote_scans==audio_opens);
+        puts("Actual M3 APP startup: first frame produced before first keyboard pump, release and exit PASS");
+    }
     if(opened_name) printf("Actual FILE_OPEN %s: external path, %s, held Enter blocked, readonly media, complete cleanup PASS\n",opened_name,open_error?"error handled":"started and F10 exited");
-    else printf("Actual APP menus, PSRAM bounds, Beta/DivMMC, snapshots, key handoff and exit (%s): PASS\n",
-        expect_mapped?"Flash ROM / retained RAM pages":cache_mismatch?"custom ROM fallback":"SD ROM / small pages");
+    else puts("Actual APP menus, SD ROM->PSRAM/shared16KiB cache, Beta/DivMMC, snapshots, key handoff and exit: PASS");
     return 0;
 }

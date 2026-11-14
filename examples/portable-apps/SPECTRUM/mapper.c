@@ -21,7 +21,7 @@ static bool flush(spectrum* s) {
 static bool mapping(spectrum* s,bool on) {
     spectrum_disk* d=&s->disk;
     if(on==d->mapped && (!on || d->loaded_control==d->control)) return true;
-    if(d->cache || d->xip_rom[d->mode] || s->memory->rom_banks[0]) {
+    if(d->cache || d->direct_rom[d->mode] || s->memory->rom_banks[0] || s->memory->paged_rom) {
         d->loaded_control=d->control;d->mapped=on;s->memory->overlay=on;
         spectrum_disk_filter(s);spectrum_refresh_map(s);return true;
     }
@@ -64,7 +64,8 @@ static uint8_t* cache_byte(spectrum* s,uint32_t address,bool writing) {
 bool spectrum_disk_cache_begin(spectrum* s,uint8_t cache[SPECTRUM_DISK_CACHE_BYTES]) {
     spectrum_disk* d=&s->disk;
     if(!d->mode) return true;
-    if(d->mode==SPECTRUM_DISK_BETA && d->xip_rom[d->mode]) return true;
+    if(s->memory && s->memory->paged_rom)return true;
+    if(d->mode==SPECTRUM_DISK_BETA && d->direct_rom[d->mode]) return true;
     if(!s->memory || !cache || d->cache || !flush(s)) return false;
     if(d->mapped && !s->memory->rom_banks[0] && !transfer(s,false,SPECTRUM_ROM_BASE+((s->memory->paging&16)?16384:0),(uint8_t*)s->rom,16384)) return false;
     d->cache=cache;d->tag[0]=d->tag[1]=65535;d->recent=1;
@@ -72,6 +73,9 @@ bool spectrum_disk_cache_begin(spectrum* s,uint8_t cache[SPECTRUM_DISK_CACHE_BYT
 }
 bool spectrum_disk_cache_end(spectrum* s) {
     spectrum_disk* d=&s->disk;
+    if(s->memory && s->memory->paged_rom) {
+        const bool ok=spectrum_memory_sync(s->memory);spectrum_refresh_map(s);return ok;
+    }
     if(!d->cache) return true;
     const bool ok=cache_flush(s,0) && cache_flush(s,1);
     d->cache=NULL;s->memory->overlay_cached=false;
@@ -80,13 +84,32 @@ bool spectrum_disk_cache_end(spectrum* s) {
     if(d->mapped) { d->mapped=false;return mapping(s,true); }
     return true;
 }
-uint8_t spectrum_disk_read_memory(spectrum* s,uint16_t address) {
-    const spectrum_disk* d=&s->disk;
-    if(d->xip_rom[d->mode] && (d->mode==SPECTRUM_DISK_BETA ||
-       (address<8192 && (!(d->control&64) || (d->control&128))))) return d->xip_rom[d->mode][address];
-    const uint32_t base=d->mode==SPECTRUM_DISK_BETA?SPECTRUM_TRDOS_ROM:
+static uint32_t external_base(const spectrum_disk* d,uint16_t address) {
+    return d->mode==SPECTRUM_DISK_BETA?SPECTRUM_TRDOS_ROM:
         address>=8192?SPECTRUM_DIV_RAM+(d->control&15)*8192U-8192:
         (d->control&64) && !(d->control&128)?SPECTRUM_DIV_RAM+3*8192:SPECTRUM_DIV_ROM;
+}
+void spectrum_disk_map_pages(spectrum* s,const uint8_t* read[64],uint8_t* write[64]) {
+    spectrum_memory* m=s->memory;const spectrum_disk* d=&s->disk;
+    if(!m || !m->paged_rom || !d->mapped)return;
+    for(unsigned i=0;i<16;++i) {
+        const uint16_t address=(uint16_t)(i*1024);const uint32_t offset=external_base(d,address)+address;
+        read[i]=spectrum_memory_cached_byte(m,offset,false);
+        const bool writable=d->mode==SPECTRUM_DISK_DIVMMC && address>=8192 &&
+            !((d->control&64) && !(d->control&128) && (d->control&15)==3);
+        write[i]=writable?spectrum_memory_cached_byte(m,offset,true):NULL;
+    }
+}
+uint8_t spectrum_disk_read_memory(spectrum* s,uint16_t address) {
+    const spectrum_disk* d=&s->disk;
+    if(d->direct_rom[d->mode] && (d->mode==SPECTRUM_DISK_BETA ||
+       (address<8192 && (!(d->control&64) || (d->control&128))))) return d->direct_rom[d->mode][address];
+    const uint32_t base=external_base(d,address);
+    if(s->memory->paged_rom) {
+        const uint8_t* p=spectrum_memory_external_byte(s->memory,base+address,false);
+        if(s->memory->fault)s->cpu.ldir_until=0;
+        spectrum_refresh_map(s);return p?*p:255;
+    }
     if(!d->cache) { uint8_t value=255;(void)transfer(s,false,base+address,&value,1);return value; }
     uint8_t* value=cache_byte(s,base+address,false);return value?*value:255;
 }
@@ -100,14 +123,17 @@ void spectrum_disk_reset(spectrum* s) {
     /* Reset is a power cycle for the interface, including sticky MAPRAM. */
     d->cache=NULL;d->mapped=d->automap=d->dirty=false;d->control=d->loaded_control=0;d->spi_data=255;
     spectrum_fdc_reset(&d->fdc);spectrum_spi_reset(&d->spi);
-    if(d->mode==SPECTRUM_DISK_DIVMMC && s->memory &&
-       !s->memory->io.clear(s->memory->io.context,SPECTRUM_DIV_RAM,128U*1024U)) s->memory->fault=true;
+    if(d->mode==SPECTRUM_DISK_DIVMMC && s->memory) {
+        if(!s->memory->io.clear(s->memory->io.context,SPECTRUM_DIV_RAM,128U*1024U))s->memory->fault=true;
+        else spectrum_memory_invalidate(s->memory,SPECTRUM_DIV_RAM,128U*1024U);
+    }
     spectrum_disk_filter(s);spectrum_refresh_map(s);
 }
 bool spectrum_disk_snapshot(spectrum* s) {
     /* Snapshot formats contain no DivMMC state. Keep the running esxDOS
      * kernel in DivRAM, so its IM1 and NMI hooks remain usable after load. */
     if(!flush(s)) return false;
+    if(s->memory && s->memory->paged_rom && !spectrum_memory_sync(s->memory)) return false;
     spectrum_disk* d=&s->disk;d->mapped=d->automap=false;d->control&=64;
     spectrum_fdc_reset(&d->fdc);spectrum_spi_select(&d->spi,255);
     spectrum_disk_filter(s);spectrum_refresh_map(s);
@@ -133,7 +159,12 @@ void spectrum_disk_write_memory(spectrum* s,uint16_t address,uint8_t value) {
     spectrum_disk* d=&s->disk;
     if(d->mode==SPECTRUM_DISK_DIVMMC && d->mapped && address>=8192 &&
        !((d->control&64) && !(d->control&128) && (d->control&15)==3)) {
-        if(d->cache) {
+        if(s->memory->paged_rom) {
+            uint8_t* byte=spectrum_memory_external_byte(s->memory,SPECTRUM_DIV_RAM+(d->control&15)*8192U+address-8192,true);
+            if(byte)*byte=value;
+            if(s->memory->fault)s->cpu.ldir_until=0;
+            spectrum_refresh_map(s);
+        } else if(d->cache) {
             uint8_t* byte=cache_byte(s,SPECTRUM_DIV_RAM+(d->control&15)*8192U+address-8192,true);
             if(byte) *byte=value;
         } else if(s->memory->rom_banks[0]) {

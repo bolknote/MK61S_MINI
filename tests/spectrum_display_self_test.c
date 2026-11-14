@@ -2,23 +2,25 @@
  * receive a fixed font/palette here; the clock contract is the boundary. */
 #include <assert.h>
 #include <stdio.h>
-#define spectrum_rom_cache_find display_test_rom
 #define spectrum_color display_test_color
 #define spectrum_video display_test_video
 #include "../examples/portable-apps/SPECTRUM/ui.c"
-#undef spectrum_rom_cache_find
 #undef spectrum_color
 #undef spectrum_video
 static uint8_t canvas[12800],rom[16384];
 static bool supported;
 static unsigned clocks,presents,delays;
 static uint32_t hz;
-const uint8_t* display_test_rom(unsigned id,uint32_t* crc) { assert(id==SPECTRUM_ROM_48 && !crc);return rom; }
 uint16_t display_test_color(unsigned color) { return (uint16_t)(color*17); }
 void display_test_video(const spectrum* s,uint8_t* bits,uint8_t* tiles) { (void)s;(void)bits;(void)tiles; }
 static uint32_t begin(void) { return 1; }
 static void delay(uint32_t ms) { assert(ms==1);++delays; }
 static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* p) {
+    if(op==MK61_SERVICE_FILE_BYTES) {
+        const mk61_service_file_bytes* r=p;
+        assert(a==MK61_FILE_BYTES_READ && !b && c==sizeof(*r) && !strcmp(r->path,"48.rom") && r->offset==0x3D00 && r->size==768);
+        memcpy(r->data,rom+0x3D00,768);return 1;
+    }
     if(op==MK61_SERVICE_DISPLAY) {
         assert(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER && b==sizeof(mk61_service_framebuffer) && !c);
         *(mk61_service_framebuffer*)p=(mk61_service_framebuffer){canvas,sizeof(canvas),320,320};return 1;

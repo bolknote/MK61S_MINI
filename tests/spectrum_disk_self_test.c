@@ -7,7 +7,7 @@ static uint8_t backing[SPECTRUM_EXTERNAL_BYTES],cache[49152],rom[16384],font[768
 static spectrum machine;
 static spectrum_memory memory;
 static uint8_t disk[655360],disk_cache[SPECTRUM_DISK_CACHE_BYTES],small_pages[2*SPECTRUM_CACHE_PAGE_BYTES];
-static bool mapped_backend;
+static unsigned mapped_backend;
 static bool rd(void* p,uint32_t at,uint8_t* out,uint32_t n) { memcpy(out,(uint8_t*)p+at,n);return true; }
 static bool wr(void* p,uint32_t at,const uint8_t* in,uint32_t n) { memcpy((uint8_t*)p+at,in,n);return true; }
 static bool clear(void* p,uint32_t at,uint32_t n) { memset((uint8_t*)p+at,0,n);return true; }
@@ -108,10 +108,13 @@ static void load(const char* dir,const char* name,uint8_t* out,unsigned n) {
 static void setup(void) {
     memset(&machine,0,sizeof(machine));machine.ram=cache;machine.rom=rom;
     const spectrum_memory_io io={backing,rd,wr,clear};
-    if(mapped_backend) assert(spectrum_memory_init_mapped(&memory,cache,small_pages,cache+32768,backing+SPECTRUM_ROM_BASE,backing+SPECTRUM_ROM_BASE+16384,io));
+    if(mapped_backend==2) {
+        uint8_t* tails[]={cache+15360,cache+31744,cache+40960};
+        assert(spectrum_memory_init_external_rom(&memory,cache,cache+16384,tails,cache+32768,io));
+    } else if(mapped_backend) assert(spectrum_memory_init_mapped(&memory,cache,small_pages,cache+32768,backing+SPECTRUM_ROM_BASE,backing+SPECTRUM_ROM_BASE+16384,io));
     else assert(spectrum_memory_init(&memory,cache,rom,io));
     spectrum_attach_memory(&machine,&memory);machine.pentagon=false;
-    if(mapped_backend) { machine.disk.xip_rom[SPECTRUM_DISK_BETA]=backing+SPECTRUM_TRDOS_ROM;machine.disk.xip_rom[SPECTRUM_DISK_DIVMMC]=backing+SPECTRUM_DIV_ROM; }
+    if(mapped_backend==1) { machine.disk.direct_rom[SPECTRUM_DISK_BETA]=backing+SPECTRUM_TRDOS_ROM;machine.disk.direct_rom[SPECTRUM_DISK_DIVMMC]=backing+SPECTRUM_DIV_ROM; }
 }
 static char display[24*33+1];
 static void screen(void) {
@@ -183,5 +186,5 @@ static void real_boot(const char* romdir,const char* extras) {
     assert(spectrum_disk_cache_end(&machine));free(sd);puts("Real TR-DOS boot/sector read/write, esxDOS FAT boot, .ls, .mkdir/writeback, NMI: PASS");
 }
 int main(int argc,char** argv) {
-    fdc_test();spi_test();if(argc==3) { real_boot(argv[1],argv[2]);mapped_backend=true;real_boot(argv[1],argv[2]); }return 0;
+    fdc_test();spi_test();if(argc==3)for(mapped_backend=0;mapped_backend<3;++mapped_backend)real_boot(argv[1],argv[2]);return 0;
 }

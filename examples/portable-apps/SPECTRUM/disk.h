@@ -48,7 +48,7 @@ typedef struct {
     uint16_t tag[2];
     uint8_t recent;
     bool cache_dirty[2];
-    const uint8_t* xip_rom[3];
+    const uint8_t* direct_rom[3];
 } spectrum_disk;
 struct spectrum;
 bool spectrum_disk_mode(struct spectrum*,unsigned mode);
@@ -57,6 +57,7 @@ bool spectrum_disk_snapshot(struct spectrum*);
 bool spectrum_disk_cache_begin(struct spectrum*,uint8_t cache[SPECTRUM_DISK_CACHE_BYTES]);
 bool spectrum_disk_cache_end(struct spectrum*);
 uint8_t spectrum_disk_read_memory(struct spectrum*,uint16_t);
+void spectrum_disk_map_pages(struct spectrum*,const uint8_t* read[64],uint8_t* write[64]);
 void spectrum_disk_m1(void*,uint16_t,bool);
 void spectrum_disk_filter(struct spectrum*);
 void spectrum_disk_write_memory(struct spectrum*,uint16_t,uint8_t);

@@ -62,8 +62,8 @@ static bool speed_present(spectrum_ui* ui) {
 static void speed_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,const char* title,
                          const char* const* labels,unsigned count,unsigned selected) {
     char line[112];
-    mk61_app_snprintf(services,line,sizeof(line),"SPMENU %s %u/%u xip=%u [%s]\n",
-        title,selected,count,mapped_roms,count?labels[selected<count?selected:0]:"");report(line);
+    mk61_app_snprintf(services,line,sizeof(line),"SPMENU %s %u/%u rom_psram=%u [%s]\n",
+        title,selected,count,bank_memory.paged_rom,count?labels[selected<count?selected:0]:"");report(line);
     spectrum_ui_window(u,x,y,width,title,labels,count,selected);
 }
 static uint32_t speed_run(spectrum* s,uint32_t cycles) {
@@ -72,9 +72,9 @@ static uint32_t speed_run(spectrum* s,uint32_t cycles) {
 }
 static void speed_end(spectrum* s) {
     const uint32_t wall=timer()-stats.start;stats.active=false;char line[128];
-    mk61_app_snprintf(services,line,sizeof(line),"SPTIME frames=%lu cycles=%lu wall=%lu xip=%u starved=%lu\n",
+    mk61_app_snprintf(services,line,sizeof(line),"SPTIME frames=%lu cycles=%lu wall=%lu rom_psram=%u starved=%lu\n",
         (unsigned long)(s->frames-stats.frames),(unsigned long)((uint32_t)s->cpu.cyc-stats.cycles),
-        (unsigned long)wall,mapped_roms,(unsigned long)atomic_load(&s->sound.starved));report(line);
+        (unsigned long)wall,bank_memory.paged_rom,(unsigned long)atomic_load(&s->sound.starved));report(line);
     mk61_app_snprintf(services,line,sizeof(line),"SPIO run=%lu mem=%lu\n",
         (unsigned long)stats.run,(unsigned long)stats.mem);report(line);
     mk61_app_snprintf(services,line,sizeof(line),"SPAUDIO count=%lu busy=%lu max=%lu loads=%lu wb=%lu\n",

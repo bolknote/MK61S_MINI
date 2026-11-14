@@ -36,7 +36,7 @@ static void exercise(uint32_t clock_start,unsigned long cycle_start) {
     test_clock=first+300*20480U+400000; // Audio/LCD drain is outside too.
     observed_end(&machine);
     assert(strstr(output,"SPSTEADY frames=300 cycles=21504000 wall=6144000 phase=100/100 starved=20\n"));
-    assert(strstr(output,"wall=6844000 xip="));
+    assert(strstr(output,"wall=6844000 rom_psram="));
 }
 int main(void) {
     exercise(1000000,0);exercise(UINT32_MAX-200000,UINT32_MAX-40000UL);

@@ -10,7 +10,7 @@ SECTIONS {
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
     /* Diagnostic-only arm/fire records use an otherwise empty Flash gap.
-     * No math slot or ROMCACHE boundary is moved. */
+     * No math slot address is moved. */
     .audio_alarm_diagnostics 0x10148000 : {
         *(.audio_alarm_diagnostics)
         *(.audio_alarm_diagnostics.*)
@@ -159,8 +159,8 @@ SECTIONS {
     } > FLASH
     ASSERT(SIZEOF(.ai_fp32_extension) <= 0x1000,
            "Exact FP32 helper exceeds its4KiB slot")
-    ASSERT(__flash_binary_end <= 0x101c0000,
-           "Firmware overlaps the persistent Spectrum ROM cache")
+    ASSERT(__flash_binary_end <= 0x101fe000,
+           "Firmware overlaps device settings")
     ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ADDR(.m0_math_extension),
            "Main firmware overlaps the M0 math extension")
     ASSERT(SIZEOF(.m0_math_extension) <= 0x10000,
@@ -182,7 +182,7 @@ SECTIONS {
     } > FLASH
     ASSERT(ADDR(.ai_fp32_extension) + SIZEOF(.ai_fp32_extension) <= ADDR(.ai_math_extension),
            "AI FP32 helpers overlap AI math")
-    ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= 0x101c0000,
-           "AI math overlaps persistent ROMCACHE")
+    ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= 0x101fe000,
+           "AI math overlaps device settings")
 }
 INSERT AFTER .flash_end;
