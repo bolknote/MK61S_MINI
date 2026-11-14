@@ -150,6 +150,19 @@ void report_battery_diagnostics() {
     std::printf(format,(unsigned long)keyboard.battery_unknown_reads(),(unsigned long)keyboard.selection_restarts(),
         fault.phase,fault.reg,fault.value,fault.selected,fault.count,(unsigned long)fault.selection_us,(unsigned long)fault.at_us);
 }
+void report_color_history() {
+    picocalc::Panel::ColorHistory history;
+    if(!panel.color_history(history)) return;
+    const unsigned size=history.frames<picocalc::Panel::ColorHistory::CAPACITY?
+        history.frames:picocalc::Panel::ColorHistory::CAPACITY;
+    std::printf("LCD_COLOR_FRAMES=%lu LCD_COLOR_CRCS=",(unsigned long)history.frames);
+    const char* sep="";
+    for(unsigned i=history.frames-size;i<history.frames;++i) {
+        std::printf("%s%08lX",sep,(unsigned long)history.crc[i%picocalc::Panel::ColorHistory::CAPACITY]);
+        sep=",";
+    }
+    std::printf("%s\n",size?"":"-");
+}
 void report(unsigned math_failures) {
     char diagnostic_status[512];
     const unsigned diagnostic_size=picocalc::diagnostics::status_report(diagnostic_status,sizeof(diagnostic_status));
@@ -315,6 +328,7 @@ void report(unsigned math_failures) {
     std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
         io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
         picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
+    report_color_history();
     std::printf("I2C_IRQ=1 I2C_IRQS=%lu I2C_TIMEOUTS=%lu I2C_ABORTS=%lu I2C_BUSY_US=%lu I2C_SLEEP_HOLDS=%lu\n",
         (unsigned long)io.i2c_irqs,(unsigned long)io.i2c_timeouts,(unsigned long)io.i2c_aborts,(unsigned long)io.i2c_busy_us,
         (unsigned long)io.i2c_sleep_holds);

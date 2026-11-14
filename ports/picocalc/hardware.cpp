@@ -283,6 +283,13 @@ void Panel::completed_input(u64 now) {
     }
     frame_input_at_=0;
 }
+bool Panel::color_history(ColorHistory& out) const {
+    // The worker publishes its completed transfer before clearing the
+    // pending flag. The reporting core owns submission of the next one.
+    if(io_worker::frame_pending()) return false;
+    out=color_history_;
+    return true;
+}
 u32 Panel::color_palette(const u16* colors) {
     if(!colors) return 0;
     if(io_worker::frame_pending()) return 2;
@@ -670,7 +677,14 @@ void Panel::transfer_color() {
     last_rectangles_.store(windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
-    frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();}),std::memory_order_relaxed);
+    const u32 crc=dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();});
+    frame_crc_.store(crc,std::memory_order_relaxed);
+    // Monochrome OSD updates must leave completed guest strips available
+    // for a report after a pause or an application exit.
+    if((color_frame_.format&~MK61_COLOR_PRESERVE_OUTSIDE)!=MK61_COLOR_TILE1) {
+        color_history_.crc[color_history_.frames%ColorHistory::CAPACITY]=crc;
+        ++color_history_.frames;
+    }
     }
     frames_.fetch_add(1,std::memory_order_relaxed);
 }

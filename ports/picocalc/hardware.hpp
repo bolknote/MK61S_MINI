@@ -51,6 +51,10 @@ private:
 
 class Panel {
 public:
+    struct ColorHistory {
+        static constexpr unsigned CAPACITY=16;
+        u32 frames=0,crc[CAPACITY]={};
+    };
     void init();
     bool flush(const Screen& screen);
     u32 color(u32 operation,const void* payload=nullptr);
@@ -75,6 +79,7 @@ public:
     u32 spi_hz() const { return spi_hz_; }
     u32 frames() const { return frames_.load(std::memory_order_relaxed); }
     u32 frame_crc() const { return frame_crc_.load(std::memory_order_relaxed); }
+    bool color_history(ColorHistory& out) const;
     u32 last_bytes() const { return last_bytes_.load(std::memory_order_relaxed); }
     u32 last_rectangles() const { return last_rectangles_.load(std::memory_order_relaxed); }
     u32 last_us() const { return last_us_.load(std::memory_order_relaxed); }
@@ -98,6 +103,7 @@ private:
     u64 input_at_=0,frame_input_at_=0;
     std::atomic<u32> responses_{0},response_us_{0},response_max_us_{0};
     std::atomic<u32> frames_{0},frame_crc_{0};
+    ColorHistory color_history_;
     std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
     std::atomic<u32> errors_{0};
     std::atomic<bool> failed_{false};

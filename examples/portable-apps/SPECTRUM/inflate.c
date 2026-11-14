@@ -29,7 +29,7 @@ static unsigned take(stream* in,unsigned bits) {
     return result;
 }
 
-typedef struct { uint16_t count[16],symbols[288]; } huffman;
+typedef struct { uint16_t count[16];uint16_t* symbols; } huffman;
 
 static bool make_tree(huffman* tree,const uint8_t* widths,unsigned n,bool complete) {
     memset(tree->count,0,sizeof(tree->count));
@@ -153,7 +153,8 @@ enum spectrum_error spectrum_inflate(const spectrum_source* source,uint32_t offs
                 if(in.error || !emit(&in,out,(*used)++,value)) goto bad;
             }
         } else {
-            huffman lit,dist;
+            uint16_t literal_symbols[288],distance_symbols[32];
+            huffman lit={.symbols=literal_symbols},dist={.symbols=distance_symbols};
             if(!trees(&in,type,&lit,&dist) || !compressed(&in,&lit,&dist,out,used,window)) goto bad;
         }
         if(in.error) goto bad;
