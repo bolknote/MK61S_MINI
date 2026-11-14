@@ -27,8 +27,11 @@ struct BatteryStatus {
         return battery_present()?"BATTERY":"NO_BATTERY";
     }
     bool decode(uint8_t reg,uint8_t value) {
-        if(reg!=0x0B || (value&0x7F)>100) { clear_reading();return false; }
-        percent=value&0x7F;bios_flag7=(value&0x80)!=0;available=true;return true;
+        const unsigned level=value&0x7F;
+        // The async Southbridge publishes127 when its PMU snapshot has no
+        // percentage. This is a valid UNKNOWN reply, including charging FF.
+        if(reg!=0x0B || (level>100 && level!=127)) { clear_reading();return false; }
+        percent=level==127?-1:(int16_t)level;bios_flag7=(value&0x80)!=0;available=true;return true;
     }
 };
 // Native pixels, no scaled font. The LCD title and clock reserve this space.

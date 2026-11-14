@@ -19,8 +19,15 @@ SECTIONS {
     } > FLASH
     ASSERT(ADDR(.m0_math_extension) + SIZEOF(.m0_math_extension) <= ADDR(.audio_alarm_diagnostics),
            "M0 math overlaps audio alarm diagnostics")
-    ASSERT(ADDR(.audio_alarm_diagnostics) + SIZEOF(.audio_alarm_diagnostics) <= 0x1014d800,
+    ASSERT(ADDR(.audio_alarm_diagnostics) + SIZEOF(.audio_alarm_diagnostics) <= 0x1014d000,
            "Audio diagnostics exceed existing Flash gap")
+    .input_diagnostics 0x1014d000 : {
+        *(.input_diagnostics)
+        *(.input_diagnostics_data)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.input_diagnostics) <= 0x800,
+           "Input diagnostics exceed the existing2KiB gap")
     /* Keep these leaf product helpers disjoint from the fixed log10
      * hot path in cache index space. Grouping the unchanged bodies also
      * decouples their placement from future platform text growth. */

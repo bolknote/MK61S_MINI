@@ -161,8 +161,8 @@ void battery_test() {
     assert(!status.available);
     for(unsigned raw=0;raw<256;++raw) {
         const bool valid=status.decode(0x0B,(uint8_t)raw);
-        assert(valid==((raw&127)<=100));
-        if(valid) assert(status.percent==(int)(raw&127) && status.bios_flag7==((raw&128)!=0) && status.available);
+        assert(valid==((raw&127)<=100 || (raw&127)==127));
+        if(valid) assert(status.percent==((raw&127)==127?-1:(int)(raw&127)) && status.bios_flag7==((raw&128)!=0) && status.available);
         else assert(status.percent<0 && !status.bios_flag7);
     }
     assert(!status.decode(0,45));

@@ -73,14 +73,29 @@ void Keyboard::init() {
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
     online_ = pending_ = false;io_phase_=0;
     due_ = battery_due_ = power_due_ = 0;battery_={};battery_errors_=0;
+    selected_at_=0;selected_reg_=0;selection_restarts_=battery_unknown_reads_=0;battery_fault_={};
     io_worker::start();
 }
 
+bool Keyboard::request_register(u8 reg,u8 phase,u64 now) {
+    if(!io_worker::request_i2c(false,&reg,1)) return false;
+    selected_reg_=reg;selected_at_=now;io_phase_=phase;return true;
+}
+void Keyboard::record_battery_fault(u8 phase,int count,const u8* reply,u64 now) {
+    if(battery_fault_.phase) return;
+    const u64 elapsed=now-selected_at_;
+    battery_fault_={(u32)now,(u32)(elapsed>UINT32_MAX?UINT32_MAX:elapsed),count,phase,reply[0],reply[1],selected_reg_};
+}
 bool Keyboard::poll(KeyEvent& event) {
     const u64 now = time_us_64();
     if(io_phase_) {
         if((io_phase_==4 || io_phase_==6 || io_phase_==8) && pending_ && now>=due_) {
-            if(io_worker::request_i2c(true,nullptr,2)) pending_=false;
+            // Southbridge discards an unconsumed register selection after1s.
+            // An SD operation may keep feeding the watchdog while core0's
+            // keyboard poll is delayed. Renew before reading a stale0,0.
+            if(now-selected_at_>=900000) {
+                if(request_register(selected_reg_,io_phase_-1,now)) {pending_=false;++selection_restarts_;}
+            } else if(io_worker::request_i2c(true,nullptr,2)) pending_=false;
             return false;
         }
         if((io_phase_==4 || io_phase_==6 || io_phase_==8) && pending_) return false;
@@ -94,17 +109,18 @@ bool Keyboard::poll(KeyEvent& event) {
         }
         if(phase==3 || phase==5 || phase==7) {
             if(count==1) { pending_=true;io_phase_=phase+1;due_=now+16000; }
-            else { ++battery_errors_;if(phase==3) battery_.clear_reading();else battery_.clear_power(); }
+            else { record_battery_fault(phase,count,response,now);++battery_errors_;if(phase==3) battery_.clear_reading();else battery_.clear_power(); }
             return false;
         }
         if(phase==4) {
             pending_=false;
-            if(count!=2 || !battery_.decode(response[0],response[1])) { ++battery_errors_;battery_.clear_reading(); }
+            if(count!=2 || !battery_.decode(response[0],response[1])) {record_battery_fault(phase,count,response,now);++battery_errors_;battery_.clear_reading();}
+            else if((response[1]&127)==127) ++battery_unknown_reads_;
             battery_due_=now+20000000;return false;
         }
         if(phase==6) {
             pending_=false;
-            if(count!=2) { ++battery_errors_;battery_.clear_power(); }
+            if(count!=2) {record_battery_fault(phase,count,response,now);++battery_errors_;battery_.clear_power();}
             else battery_.decode_power(response[0],response[1]); // Old BIOS: unsupported, not an I2C error.
             power_due_=now+(battery_.power_supported()?1000000:20000000);return false;
         }
@@ -115,9 +131,8 @@ bool Keyboard::poll(KeyEvent& event) {
             // power tag range before discovering the optional register.
             if(count==2 && response[0]<=1 && (response[1]&BIOS_POWER_TAG_MASK)!=BIOS_POWER_TAG) {
                 const u8 reg=BIOS_POWER_REG;
-                if(io_worker::request_i2c(false,&reg,1)) io_phase_=5;
-                else power_due_=now;
-            } else { if(count!=2) ++battery_errors_;battery_.clear_power(); }
+                if(!request_register(reg,5,now)) power_due_=now;
+            } else {if(count!=2) {record_battery_fault(phase,count,response,now);++battery_errors_;}battery_.clear_power();}
             return false;
         }
         pending_=false;online_=count==2;
@@ -128,22 +143,24 @@ bool Keyboard::poll(KeyEvent& event) {
     }
     if(!idle_ && online_ && !pending_ && now>=battery_due_) {
         const u8 reg=0x0B;
-        if(io_worker::request_i2c(false,&reg,1)) { io_phase_=3;battery_due_=now+20000000; }
+        if(request_register(reg,3,now)) battery_due_=now+20000000;
         return false;
     }
     if(!idle_ && online_ && !pending_ && now>=power_due_) {
         const bool known=battery_.power_supported();const u8 reg=known?BIOS_POWER_REG:0x01;
-        if(io_worker::request_i2c(false,&reg,1)) { io_phase_=known?5:7;power_due_=now+20000000; }
+        if(request_register(reg,known?5:7,now)) power_due_=now+20000000;
         return false;
     }
     if(now < due_) return false;
     diagnostics::Scope measure(diagnostics::Point::KEYBOARD);
     if(!pending_) {
         const u8 reg = 0x09;
-        if(io_worker::request_i2c(false,&reg,1)) io_phase_=1;
+        (void)request_register(reg,1,now);
         return false;
     }
-    if(io_worker::request_i2c(true,nullptr,2)) io_phase_=2;
+    if(now-selected_at_>=900000) {
+        if(request_register(selected_reg_,1,now)) {pending_=false;++selection_restarts_;}
+    } else if(io_worker::request_i2c(true,nullptr,2)) io_phase_=2;
     return false;
 }
 

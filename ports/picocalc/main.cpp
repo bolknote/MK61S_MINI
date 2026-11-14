@@ -142,6 +142,14 @@ void save_settings() {
     else save_at = time_us_64() + 5000000;
 }
 
+__attribute__((noinline,section(".input_diagnostics")))
+void report_battery_diagnostics() {
+    static const char format[] __attribute__((section(".input_diagnostics_data")))=
+        "BATTERY_UNKNOWN_READS=%lu I2C_SELECTION_RESTARTS=%lu BATTERY_FIRST_ERROR_PHASE=%u BATTERY_FIRST_ERROR_REG=%02X BATTERY_FIRST_ERROR_VALUE=%02X BATTERY_FIRST_ERROR_SELECTED=%02X BATTERY_FIRST_ERROR_COUNT=%d BATTERY_FIRST_ERROR_DELAY_US=%lu BATTERY_FIRST_ERROR_AT_US=%lu\n";
+    const auto fault=keyboard.battery_fault();
+    std::printf(format,(unsigned long)keyboard.battery_unknown_reads(),(unsigned long)keyboard.selection_restarts(),
+        fault.phase,fault.reg,fault.value,fault.selected,fault.count,(unsigned long)fault.selection_us,(unsigned long)fault.at_us);
+}
 void report(unsigned math_failures) {
     char diagnostic_status[512];
     const unsigned diagnostic_size=picocalc::diagnostics::status_report(diagnostic_status,sizeof(diagnostic_status));
@@ -260,6 +268,7 @@ void report(unsigned math_failures) {
     const auto battery=keyboard.battery();
     std::printf("BATTERY_PERCENT=%d BATTERY_BIOS_FLAG7=%u BATTERY_AVAILABLE=%u BATTERY_ERRORS=%lu\n",
         battery.percent,battery.bios_flag7,battery.available,(unsigned long)keyboard.battery_errors());
+    report_battery_diagnostics();
     std::printf("POWER_STATUS=%s POWER_VALID=%u POWER_PROTOCOL=%u POWER_BATTERY=%d POWER_EXTERNAL=%d POWER_CHARGING=%d POWER_COMPLETE=%d\n",
         battery.power_name(),battery.power_valid(),battery.power_supported(),
         battery.power_valid()?(int)battery.battery_present():-1,battery.power_valid()?(int)battery.external_power():-1,

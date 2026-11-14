@@ -12,6 +12,11 @@ namespace picocalc {
 
 class Keyboard {
 public:
+    struct BatteryFault {
+        u32 at_us=0,selection_us=0;
+        int count=0;
+        u8 phase=0,reg=0,value=0,selected=0;
+    };
     void init();
     bool poll(KeyEvent& event);
     void backlight(u8 lcd = 240, u8 keys = 40);
@@ -23,6 +28,9 @@ public:
     u32 errors() const { return errors_; }
     BatteryStatus battery() const { return battery_; }
     u32 battery_errors() const { return battery_errors_; }
+    u32 battery_unknown_reads() const { return battery_unknown_reads_; }
+    u32 selection_restarts() const { return selection_restarts_; }
+    BatteryFault battery_fault() const { return battery_fault_; }
     int lcd_backlight() const { return lcd_backlight_; }
     int key_backlight() const { return key_backlight_; }
 private:
@@ -33,6 +41,12 @@ private:
     u32 battery_errors_=0;
     u32 errors_ = 0;
     int lcd_backlight_ = -1, key_backlight_ = -1;
+    u64 selected_at_=0;
+    u8 selected_reg_=0;
+    u32 selection_restarts_=0,battery_unknown_reads_=0;
+    BatteryFault battery_fault_;
+    bool request_register(u8 reg,u8 phase,u64 now);
+    void record_battery_fault(u8 phase,int count,const u8* reply,u64 now);
 };
 
 class Panel {

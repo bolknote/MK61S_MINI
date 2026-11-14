@@ -9,7 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 header = (ROOT / "ports/picocalc/hardware.hpp").read_text()
 keyboard = "class Keyboard {" + header.split("class Keyboard {", 1)[1].split("\n};", 1)[0] + "\n};\n"
 source = (ROOT / "ports/picocalc/hardware.cpp").read_text()
-poll = source[source.index("bool Keyboard::poll("):source.index("void Keyboard::clock_changed(")]
+poll_start = "bool Keyboard::request_register(" if "bool Keyboard::request_register(" in source else "bool Keyboard::poll("
+poll = source[source.index(poll_start):source.index("void Keyboard::clock_changed(")]
 fixture = r'''
 #include "battery.hpp"
 #include <algorithm>
