@@ -50,3 +50,9 @@ phases outside their period continue through the original correction.
 The module retains filter state in local variables for each sample slice
 and uses signed saturation on Cortex-M3. PCM and exported state remain
 bit exact, including truncation toward zero at unity PWM gain.
+
+The M3 mixer groups ticks with the same envelope amplitude and multiplies
+each channel's masked IIR weights by that amplitude. For noise periods
+above one, an in-range counter uses one division and its remainder to
+advance through the exact number of edges. Out-of-range phases still
+advance one tick at a time until they are in range.

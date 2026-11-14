@@ -532,11 +532,12 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   }
   if(period>1 && count<period) {
     /* Only an LFSR shift can change the noise output. Build whole spans
-     * between those edges instead of revisiting every internal tick. */
+     * between those edges. The valid starting phase lets UDIV compute
+     * both the edge count and the remainder directly. */
     bits=(seed&1)?all:0;
     const unsigned first=period-count-1+(scaler?period:0);
-    uint32_t phase=count;
-    const unsigned edges=advance_counter(&phase,period,ticks);
+    const unsigned total=count+ticks;
+    const unsigned edges=total/period,phase=total-edges*period;
     for(unsigned at=first;at<ticks;at+=2*period) {
       const unsigned previous=seed&1;
       seed=advance_noise(seed,1);
@@ -568,13 +569,15 @@ __attribute__((noinline,optimize("Os")))
 #endif
 static void mix_envelopes(PSG* psg,unsigned ticks,const uint32_t* envelopes,int32_t* channels)
 {
-  /* All envelope channels share one amplitude at a tick. Preserve the
-   * exact IIR weights while advancing the envelope once, rather than
-   * repeating all oscillator/mixer work for each internal tick. */
+  /* The envelope is constant between edges. Multiply its amplitude by
+   * the channel mask for that span, with each set bit retaining the IIR
+   * weight of its original tick. */
   unsigned count=psg->env_count,ptr=psg->env_ptr,face=psg->env_face,pause=psg->env_pause;
   const unsigned period=psg->env_freq;
   const PSG_volume_t* volumes=psg->voltbl;
-  for(unsigned tick=0;tick<ticks;++tick) {
+  unsigned tick=0;
+  while(tick<ticks) {
+    unsigned end=tick+1;
     if(++count>=period) {
       count=period?count-period:0;
       if(!pause) {
@@ -588,12 +591,19 @@ static void mix_envelopes(PSG* psg,unsigned ticks,const uint32_t* envelopes,int3
         }
       }
     }
-    /* Accumulate each channel once; pan only after all internal ticks.
-     * Mono and both stereo outputs then share these exact IIR weights. */
-    const int32_t amplitude=(int32_t)((volumes[ptr]<<4)<<tick);
-    if(envelopes[0]&(1u<<tick))channels[0]+=amplitude;
-    if(envelopes[1]&(1u<<tick))channels[1]+=amplitude;
-    if(envelopes[2]&(1u<<tick))channels[2]+=amplitude;
+    // A phase left beyond the new period by a register write advances
+    // one tick at a time until it is back in range.
+    if(period && count<period) {
+      const unsigned skip=period-count-1;
+      end+=skip<ticks-end?skip:ticks-end;
+      count+=end-tick-1;
+    }
+    const unsigned span=(1u<<end)-(1u<<tick);
+    const unsigned amplitude=volumes[ptr]<<4;
+    channels[0]+=(int32_t)(amplitude*(envelopes[0]&span));
+    channels[1]+=(int32_t)(amplitude*(envelopes[1]&span));
+    channels[2]+=(int32_t)(amplitude*(envelopes[2]&span));
+    tick=end;
   }
   psg->env_count=count;psg->env_ptr=(uint8_t)ptr;psg->env_face=(uint8_t)face;psg->env_pause=(uint8_t)pause;
   for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
