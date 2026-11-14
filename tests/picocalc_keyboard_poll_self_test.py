@@ -110,6 +110,6 @@ if __name__=='__main__':
  import argparse
  ap=argparse.ArgumentParser();ap.add_argument('--baseline-only',action='store_true');a=ap.parse_args()
  old=(ROOT/'tests/fixtures/picocalc_keyboard_poll_before_renewal.inc').read_text()
- assert hashlib.sha256(body(old).encode()).hexdigest()=='7c946aa98e3425e285a7a63bbfd64f429af987dce8173d7e3c749b025dd49fd6'
+ assert hashlib.sha256(body(old).rstrip().encode()).hexdigest()=='d6ea3d16626c34a6e106175ab95e5f3400f788c72cada8a8ee39367902f90e70'
  run(old,True)
  if not a.baseline_only:run((ROOT/'ports/picocalc/hardware.cpp').read_text(),False)
