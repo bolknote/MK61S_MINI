@@ -11,6 +11,21 @@
 
 namespace mk61ai {
 namespace {
+struct FeedForwardActivation {
+  float *gate;
+  const float *up;
+  unsigned count;
+
+  static void run(void *raw) {
+    auto &job = *static_cast<FeedForwardActivation *>(raw);
+    for (unsigned j = 0; j < job.count; ++j) {
+      const float gate = job.gate[j];
+      job.gate[j] = math::mul(math::div(gate, math::add(1.0f, math::exp(-gate))),
+                              job.up[j]);
+    }
+  }
+};
+
 unsigned row_limit(unsigned requested) {
   return requested==64?64U:requested==28?28U:requested==24?24U:8U;
 }
@@ -957,8 +972,16 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     if (!normalize(base + 7, x, n, 1, c.hidden) ||
         !linear(base + 8, n, gate, false) || !linear(base + 9, n, up, false,true))
       return status;
-    for (unsigned j = 0; j < c.intermediate; ++j)
-      gate[j] = math::mul(math::div(gate[j],math::add(1.0f,math::exp(-gate[j]))),up[j]);
+    // Both projections are complete. Each half writes only its gate slice,
+    // and the down projection can quantize it once both halves have finished.
+    const unsigned split = c.intermediate / 2;
+    FeedForwardActivation first{gate, up, c.intermediate};
+    FeedForwardActivation second{gate + split, up + split, c.intermediate - split};
+    const bool submitted = execution_.submit && execution_.join &&
+        execution_.submit(execution_.context, FeedForwardActivation::run, &second);
+    if (submitted) first.count = split;
+    FeedForwardActivation::run(&first);
+    if (submitted) execution_.join(execution_.context);
     if (!linear(base + 10, gate, o, false))
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)
