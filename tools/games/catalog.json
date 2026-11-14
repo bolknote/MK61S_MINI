@@ -4,7 +4,7 @@
     {
       "id": "another-world-en",
       "title": "Another World (DOS, English)",
-      "description": "Download the original data needed by a future native APP",
+      "description": "Download the original DOS data used by ANOTHER.APP",
       "default": true,
       "runner": "download_zip",
       "source_page": "http://old-dos.ru/index.php?page=search&string=another+world",
@@ -27,6 +27,19 @@
         { "source": "Another_World/BANK0B", "target": "sd/apps/ANOTHER/BANK0B", "bytes": 46296, "sha256": "572bf7674c94eea7dcc2631cd50ad2864f42a8f3a02c39fb31bf5db06a18809d" },
         { "source": "Another_World/BANK0C", "target": "sd/apps/ANOTHER/BANK0C", "bytes": 18864, "sha256": "4234ac40cf09fa3527c6d3042ffc702f00125a87b60725cadeabed5e3da49448" },
         { "source": "Another_World/BANK0D", "target": "sd/apps/ANOTHER/BANK0D", "bytes": 157460, "sha256": "c7a919bdc3a2e5410e28e123df7f9ef1e33fb0ee0a0b90874211f74edd6ec828" }
+      ]
+    },
+    {
+      "id": "build-another-app",
+      "title": "Build ANOTHER.APP",
+      "description": "Build the PicoCalc Another World interpreter",
+      "default": true,
+      "runner": "python",
+      "windows_supported": false,
+      "arguments": [
+        "tools/apps/another/build_another_app.py",
+        "--output-dir",
+        "{output}/sd/apps/ANOTHER"
       ]
     },
     {

@@ -23,13 +23,14 @@ hashes and, where applicable, every extracted member. Add a catalog entry only
 after checking its redistribution or user-download terms; a download source is
 not automatically a licence.
 
-Another World is intentionally data-only until the native APP exists. The
-catalog extracts only `MEMLIST.BIN` and `BANK01` through `BANK0D`, which are the
-resource files needed by the known engine reimplementations. The source site's
+For Another World select both the DOS data and `Build ANOTHER.APP`. The catalog
+extracts only `MEMLIST.BIN` and `BANK01` through `BANK0D`. The source site's
 "abandonware" label is not treated as permission to redistribute those files.
+The APP has been tested on PicoCalc. It currently mixes mono audio on the Pico;
+the experimental M3 audio backend is not connected to the APP.
 
-The current `SPECTRUM.APP` and PicoCalc `URQ.APP` orchestration uses their
-existing Python builders, so those two build checkboxes are shown on
+The current `ANOTHER.APP`, `SPECTRUM.APP` and PicoCalc `URQ.APP` orchestration uses their
+existing Python builders, so those build checkboxes are shown on
 macOS/Linux only. Windows still downloads and verifies the selected game
 sources natively.
 
