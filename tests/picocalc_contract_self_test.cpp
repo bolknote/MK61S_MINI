@@ -25,7 +25,7 @@ namespace {
 }
 #define CHECK(test) ((test)?(void)0:failed(#test,__LINE__))
 using namespace picocalc;
-struct ColorCalls { unsigned frames=0,ends=0,clocks=0;u32 hz=12000000; };
+struct ColorCalls { unsigned frames=0,ends=0,clocks=0,scrolls=0,commits=0;u32 hz=12000000; };
 void color_file_contract(void* context,const mk61_app_api&,const mk61_app_services& s) {
     auto& calls=*(ColorCalls*)context;
     const auto caps=s.call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr);
@@ -43,6 +43,14 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),nullptr));
     CHECK(!calls.clocks);
     CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),&hz)==24000000 && calls.clocks==1);
+    mk61_service_color_scroll scroll{22,250,0,18};
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,1,sizeof(scroll),&scroll));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,0,sizeof(scroll)-1,&scroll));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,0,sizeof(scroll),nullptr));
+    CHECK(!calls.scrolls);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,0,sizeof(scroll),&scroll)==3 && calls.scrolls==1);
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_END,0,sizeof(scroll),&scroll));
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_END,0,0,nullptr)==1 && calls.commits==1);
     std::vector<u8> raw(70000);for(unsigned i=0;i<raw.size();++i) raw[i]=(u8)(i*37);
     CHECK(files::write("/Contract/raw.rom",raw.data(),raw.size()));
     mk61_service_file_info info{};mk61_service_file_bytes r{"raw.rom",&info,0,sizeof(info)};
@@ -611,6 +619,8 @@ void picocalc_contract_test() {
     s.set_color_display([](void* raw,u32 operation,const void* payload) -> u32 {
         auto& c=*(ColorCalls*)raw;
         if(operation==MK61_COLOR_SPI_HZ) { std::memcpy(&c.hz,payload,sizeof(c.hz));++c.clocks;return c.hz; }
+        if(operation==MK61_COLOR_SCROLL_BEGIN) {++c.scrolls;return 3;}
+        if(operation==MK61_COLOR_SCROLL_END) {++c.commits;return 1;}
         if(operation==MK61_COLOR_PRESENT) { ++c.frames;return 2; }
         if(operation==MK61_COLOR_END) { ++c.ends;c.hz=12000000; }
         return 1;

@@ -11,6 +11,12 @@
 #include <cstring>
 #include <iterator>
 
+#if defined(PICO_ON_DEVICE)
+#define AI_CHAT_COLD __attribute__((section(".ai_diagnostic_extension"), noinline))
+#else
+#define AI_CHAT_COLD
+#endif
+
 namespace picocalc::ai::chat {
 using namespace mk61ai;
 namespace {
@@ -343,6 +349,77 @@ constexpr std::uint16_t palette[] = {
     rgb(21, 27, 36), rgb(231, 237, 245), rgb(156, 171, 188), rgb(53, 64, 80),
     rgb(36, 47, 61), rgb(35, 52, 80),    rgb(155, 186, 255), rgb(171, 197, 255),
     rgb(23, 36, 51), rgb(255, 170, 170), rgb(145, 216, 183)};
+// Two independent 32-bit streams avoid a 64-bit multiply on Cortex-M0+.
+// Hash the body separately from the editor: typing must not invalidate GRAM
+// reuse. The LCD owns no full color snapshot beyond its current strip.
+struct Stamp {
+  std::uint32_t a = 2166136261U, b = 0x9e3779b9U;
+  void bytes(const void *raw, unsigned size) {
+    const auto *p = static_cast<const std::uint8_t *>(raw);
+    while (size--) {
+      const auto value = *p++;
+      a = (a ^ value) * 16777619U;
+      b = ((b << 5) | (b >> 27)) ^ (value + 0x9e3779b9U);
+    }
+  }
+  template <typename T> void add(const T &value) { bytes(&value, sizeof(value)); }
+  void text(const char *value) { bytes(value, unsigned(std::strlen(value)) + 1); }
+  std::uint64_t value() const { return (std::uint64_t(a) << 32) | b; }
+};
+std::uint64_t body_stamp(const View &v, void (*mnemonic)(std::uint8_t, char *)) {
+  Stamp hash;
+  hash.add(mnemonic);
+  if (v.history) {
+    hash.add(v.history->count());
+    hash.add(v.history->at_latest());
+    hash.add(v.history->has_older());
+    for (unsigned i = 0; i < v.history->count(); ++i) {
+      const auto &t = (*v.history)[i];
+      hash.text(t.user); hash.text(t.reply);
+      // Hash values, not structure padding refreshed by History::observe.
+      hash.add(t.program.version); hash.add(t.program.size);
+      hash.bytes(t.program.bytes, t.program.size);
+      const auto &m = t.telemetry;
+      hash.add(m.measured); hash.add(m.input); hash.add(m.output);
+      hash.add(m.reused); hash.add(m.decode_steps); hash.add(m.elapsed_ms);
+      hash.add(m.prefill_us); hash.add(m.decode_us); hash.add(m.tool_us);
+      hash.add(t.angle); hash.add(t.state); hash.add(t.has_result);
+      if (t.has_result) { hash.add(t.result.status); hash.add(t.result.x); }
+    }
+  }
+  hash.add(v.active); hash.add(v.loading); hash.add(v.paused);
+  hash.add(v.expanded_code); hash.add(v.expanded_metrics);
+  hash.add(v.load_kb); hash.text(v.phase); hash.text(v.live_reply);
+  return hash.value();
+}
+std::uint64_t fixed_stamp(const View &v) {
+  Stamp hash;
+  hash.text(v.draft); hash.text(v.notice); hash.add(v.cursor);
+  hash.add(v.typing); hash.add(v.russian); hash.add(v.active);
+  hash.add(v.history && !v.history->at_latest());
+  return hash.value();
+}
+void move_mono(std::uint8_t *mono, int delta) {
+  if (!delta) return;
+  const unsigned first = 22 + (delta < 0 ? unsigned(-delta) : 0),
+                 last = 272 - (delta > 0 ? unsigned(delta) : 0);
+  // canvas::frame is page-major: one byte holds eight vertical pixels.
+  // Gather adjacent source pages, preserving fixed/exposed boundary bits.
+  for (unsigned step = 0; step < 40; ++step) {
+    const unsigned page = delta > 0 ? step : 39 - step, y = page * 8;
+    if (y >= last || y + 8 <= first) continue;
+    const unsigned lo = std::max(y, first) - y, hi = std::min(y + 8, last) - y;
+    const auto mask = std::uint8_t((255U << lo) & (255U >> (8 - hi)));
+    const unsigned source = unsigned(int(y) + delta), shift = source & 7;
+    const auto *a = mono + (source / 8) * 320;
+    const auto *b = source / 8 + 1 < 40 ? a + 320 : nullptr;
+    auto *out = mono + page * 320;
+    for (unsigned x = 0; x < 320; ++x) {
+      const auto value = std::uint8_t((a[x] >> shift) | (shift && b ? b[x] << (8 - shift) : 0));
+      out[x] = std::uint8_t((out[x] & ~mask) | (value & mask));
+    }
+  }
+}
 } // namespace
 unsigned Renderer::measure(const char *value, unsigned size,
                            unsigned scale) const {
@@ -356,8 +433,9 @@ unsigned Renderer::measure(const char *value, unsigned size,
 void Renderer::box(int x, int y, unsigned width, unsigned height, Color color) {
   const int bottom = std::min(clip_bottom_, y + int(height));
   y = std::max(clip_top_, y);
-  if (y >= bottom || !width || count_ >= (clip_top_ == 22 ? 52U : 64U))
+  if (y >= bottom || !width)
     return;
+  if (count_ >= (clip_top_ == 22 ? 52U : 64U)) { budget_full_ = true; return; }
   auto &c = commands_[count_++];
   c = {};
   c.x = x;
@@ -369,8 +447,9 @@ void Renderer::box(int x, int y, unsigned width, unsigned height, Color color) {
 void Renderer::text(int x, int y, const char *value, unsigned size, Color color,
                     unsigned scale) {
   if (y + int(ui_font::metrics(face(size)).height * scale) <= clip_top_ ||
-      y >= clip_bottom_ || count_ >= (clip_top_ == 22 ? 52U : 64U))
+      y >= clip_bottom_)
     return;
+  if (count_ >= (clip_top_ == 22 ? 52U : 64U)) { budget_full_ = true; return; }
   auto &c = commands_[count_++];
   c = {};
   c.x = x;
@@ -413,7 +492,7 @@ int Renderer::flow(int x, int y, const char *value, unsigned size, Color color,
   }
   return y;
 }
-int Renderer::layout(const View &v, void (*mnemonic)(std::uint8_t, char *)) {
+AI_CHAT_COLD int Renderer::layout(const View &v, void (*mnemonic)(std::uint8_t, char *)) {
   int y = 28 - int(v.scroll);
   char label[128], time[32];
   const auto *h = v.history;
@@ -610,10 +689,19 @@ int Renderer::layout(const View &v, void (*mnemonic)(std::uint8_t, char *)) {
   }
   return y + int(v.scroll) - 22;
 }
-void Renderer::raster(unsigned top, std::uint8_t *mono) {
+AI_CHAT_COLD void Renderer::raster(unsigned top, std::uint8_t *mono, unsigned first,
+                      unsigned last) {
   std::memset(stripe_, 0, sizeof(stripe_));
+  if (mono) {
+    if (first == 0 && last == 320)
+      std::memset(mono + top * 40, 0, 8 * 40);
+    else
+      for (unsigned y = top; y < top + 8; ++y)
+        for (unsigned x = first; x < last; ++x)
+          canvas::pixel(mono, x, y, false);
+  }
   auto pixel = [&](int x, int y, unsigned color) {
-    if (x < 0 || x >= 320 || y < int(top) || y >= int(top + 8))
+    if (x < int(first) || x >= int(last) || y < int(top) || y >= int(top + 8))
       return;
     auto &b = stripe_[(unsigned(y) - top) * 160 + unsigned(x) / 2];
     if (x & 1)
@@ -630,7 +718,7 @@ void Renderer::raster(unsigned top, std::uint8_t *mono) {
     if (!c.text) {
       for (int y = std::max(c.y, int(top));
            y < std::min(c.y + int(c.height), int(top + 8)); ++y)
-        for (int x = std::max(0, c.x); x < std::min(320, c.x + int(c.width));
+        for (int x = std::max(int(first), c.x); x < std::min(int(last), c.x + int(c.width));
              ++x)
           pixel(x, y, c.color);
       continue;
@@ -642,7 +730,8 @@ void Renderer::raster(unsigned top, std::uint8_t *mono) {
       const auto g = ui_font::glyph(f, mk8::codepoint(std::uint8_t(*p)));
       const int left = x + g.bearing_x * c.scale,
                 y0 = c.y + (metrics.ascent - g.bearing_y) * c.scale;
-      if (y0 < int(top + 8) && y0 + g.height * c.scale > int(top))
+      if (left < int(last) && left + int(g.width * c.scale) > int(first) &&
+          y0 < int(top + 8) && y0 + g.height * c.scale > int(top))
         for (unsigned gy = 0; gy < g.height; ++gy)
           for (unsigned gx = 0; gx < g.width; ++gx)
             if (font_glyph::pixel(g, gx, gy))
@@ -656,10 +745,11 @@ void Renderer::raster(unsigned top, std::uint8_t *mono) {
     }
   }
 }
-unsigned Renderer::paint(const mk61_app_api &api,
+AI_CHAT_COLD unsigned Renderer::paint(const mk61_app_api &api,
                          const mk61_app_services &services, View &v,
                          void (*mnemonic)(std::uint8_t, char *)) {
   count_ = 0;
+  budget_full_ = false;
   clip_top_ = 22;
   clip_bottom_ = 272;
   height_ = unsigned(std::max(0, layout(v, mnemonic)));
@@ -668,6 +758,7 @@ unsigned Renderer::paint(const mk61_app_api &api,
   if (desired != v.scroll) {
     v.scroll = desired;
     count_ = 0;
+    budget_full_ = false;
     layout(v, mnemonic);
   }
   if (maximum) {
@@ -733,32 +824,88 @@ unsigned Renderer::paint(const mk61_app_api &api,
   const bool color = services.call(MK61_SERVICE_COLOR_DISPLAY,
                                    MK61_COLOR_AVAILABLE, 0, 0, nullptr) != 0;
   auto *mono = canvas::frame();
-  std::memset(mono, 0, canvas::BYTES);
-  for (unsigned top = 0; top < 320; top += 8) {
-    raster(top, mono);
-    if (color) {
+  const auto body = body_stamp(v, mnemonic), fixed = fixed_stamp(v);
+  const auto movement = std::int64_t(v.scroll) - previous_scroll_;
+  const bool same_body = image_valid_ && !budget_full_ && body == body_stamp_ &&
+                         movement > -250 && movement < 250;
+  const int delta = same_body ? int(movement) : 0;
+  const unsigned offset = same_body ? unsigned((int(gram_offset_) + delta + 250) % 250) : 0;
+  const auto call = [&](unsigned operation, unsigned size = 0, void *payload = nullptr) {
+    unsigned result;
+    do {
+      result = services.call(MK61_SERVICE_COLOR_DISPLAY, operation, 0, size, payload);
+      if (result == 2) api.service();
+    } while (result == 2);
+    return result;
+  };
+  mk61_service_color_scroll scroll{22, 250, std::uint16_t(gram_offset_), std::uint16_t(offset)};
+  const unsigned begin = color ? call(MK61_COLOR_SCROLL_BEGIN, sizeof(scroll), &scroll) : 0;
+  const bool transaction = begin == 1 || begin == 3;
+  bool reuse = transaction && begin == 1 && same_body;
+  const auto present = [&](unsigned x, unsigned y, unsigned width, unsigned rows,
+                           const std::uint8_t *pixels) {
       mk61_service_color_frame f{};
-      f.pixels = stripe_;
-      f.pixel_bytes = sizeof(stripe_);
-      f.width = 320;
-      f.height = 8;
-      f.y = std::uint16_t(top);
+      f.pixels = pixels;
+      f.pixel_bytes = ((width + 1) / 2) * rows;
+      f.x = std::uint16_t(x); f.y = std::uint16_t(y);
+      f.width = std::uint16_t(width); f.height = std::uint16_t(rows);
       f.format = MK61_COLOR_INDEX4 | MK61_COLOR_PRESERVE_OUTSIDE;
       f.background = palette[PAPER];
       std::copy(std::begin(palette), std::end(palette), f.palette);
-      unsigned result;
-      do {
-        result = services.call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT,
-                               0, sizeof(f), &f);
-        if (result == 2)
-          api.service();
-      } while (result == 2);
-      if (result != 1)
-        return 0;
+      return call(MK61_COLOR_PRESENT, sizeof(f), &f) == 1;
+  };
+  // One failed strip invalidates reuse. Repaint at the same pending mapping
+  // before publishing it; the old scan origin stays in place until END.
+  for (unsigned attempt = 0; attempt < 2; ++attempt) {
+    const bool fixed_changed = !reuse || fixed != fixed_stamp_;
+    if (!reuse) std::memset(mono, 0, canvas::BYTES);
+    else move_mono(mono, delta);
+    struct Band { unsigned first, last; };
+    Band bands[3]; unsigned band_count = 0;
+    if (!reuse) bands[band_count++] = {0, 320};
+    else {
+      if (fixed_changed) bands[band_count++] = {0, 22};
+      if (delta) bands[band_count++] = delta > 0 ? Band{272 - unsigned(delta), 272}
+                                                               : Band{22, 22 + unsigned(-delta)};
+      if (fixed_changed) bands[band_count++] = {272, 320};
     }
+    std::uint8_t scrollbar[250];
+    const bool redraw_bar = reuse && delta != 0;
+    bool ok = true;
+    for (unsigned top = 0; top < 320 && ok; top += 8) {
+      bool full = false;
+      for (unsigned i = 0; i < band_count; ++i)
+        full |= top < bands[i].last && top + 8 > bands[i].first;
+      if (full) raster(top, mono);
+      else if (redraw_bar && top < 272 && top + 8 > 22) raster(top, mono, 317, 319);
+      else continue;
+      if (redraw_bar)
+        for (unsigned y = std::max(top, 22U); y < std::min(top + 8, 272U); ++y) {
+          const auto *row = stripe_ + (y - top) * 160;
+          scrollbar[y - 22] = std::uint8_t(((row[158] & 15) << 4) | (row[159] >> 4));
+        }
+      if (color && full)
+        for (unsigned i = 0; i < band_count && ok; ++i) {
+          const unsigned first = std::max(top, bands[i].first), last = std::min(top + 8, bands[i].last);
+          if (first < last) ok = present(0, first, 320, last - first, stripe_ + (first - top) * 160);
+        }
+    }
+    if (ok && color && redraw_bar) ok = present(317, 22, 2, 250, scrollbar);
+    if (ok && !color) ok = api.graphics_present(mono, canvas::BYTES) != 0;
+    if (ok && transaction) {
+      const unsigned end = call(MK61_COLOR_SCROLL_END);
+      if (end != 1 && attempt == 0) { reuse = false; continue; }
+      ok = end == 1;
+    }
+    image_valid_ = ok && transaction && !budget_full_;
+    if (ok && transaction) {
+      body_stamp_ = body; fixed_stamp_ = fixed;
+      previous_scroll_ = v.scroll; gram_offset_ = offset;
+    }
+    if (!ok && transaction) (void)call(MK61_COLOR_END);
+    return ok ? height_ : 0;
   }
-  if (!color && !api.graphics_present(mono, canvas::BYTES))
-    return 0;
-  return height_;
+  image_valid_ = false;
+  return 0;
 }
 } // namespace picocalc::ai::chat

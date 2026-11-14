@@ -2,6 +2,7 @@
 #define MK61_TERMINAL_MNEMONICS_HPP
 
 #include "rust_types.h"
+#include "mk8_literal.hpp"
 #include <string.h>
 
 namespace terminal_mnemonics {
@@ -29,6 +30,54 @@ inline char* csv(const char* table, usize opcode, char* text) {
       text[length++] = *table++;
   }
   text[length] = 0;
+  return text;
+}
+
+// Calculator screen labels use real M8 glyphs. The CSV vocabulary remains
+// unchanged: its ASCII spellings also belong to the terminal assembler.
+// As with csv(), the caller supplies at least MAX_LENGTH + 1 bytes.
+inline char* display(const char* table, u8 opcode, char* text) {
+  const char* label = nullptr;
+  switch(opcode) {
+    case 0x0C: label = M8("ВП"); break;
+    case 0x0D: label = M8("Сx"); break;
+    case 0x0E: label = M8("В↑"); break;
+    case 0x0F: label = M8("F Вx"); break;
+    case 0x12: label = M8("×"); break;
+    case 0x13: label = M8("÷"); break;
+    case 0x15: label = M8("F 10ˣ"); break;
+    case 0x16: label = M8("F eˣ"); break;
+    case 0x17: label = "F lg"; break;
+    case 0x18: label = "F ln"; break;
+    case 0x19: label = "F asin"; break;
+    case 0x1A: label = "F acos"; break;
+    case 0x1B: label = "F atg"; break;
+    case 0x1C: label = "F sin"; break;
+    case 0x1D: label = "F cos"; break;
+    case 0x1E: label = "F tg"; break;
+    case 0x20: label = M8("F π"); break;
+    case 0x21: label = M8("F √"); break;
+    case 0x22: label = M8("F x²"); break;
+    case 0x23: label = "F 1/x"; break;
+    case 0x24: label = M8("F xʸ"); break;
+    case 0x25: label = M8("F ↻"); break;
+    case 0x50: label = M8("С/П"); break;
+    case 0x51: label = M8("БП"); break;
+    case 0x52: label = M8("В/О"); break;
+    case 0x53: label = M8("ПП"); break;
+    case 0x54: label = M8("НОП"); break;
+  }
+  if(label != nullptr) {
+    strcpy(text, label);
+  } else if((opcode & 0xF0) == 0x40 || (opcode & 0xF0) == 0x60) {
+    strcpy(text, opcode < 0x50 ? M8("П ") : M8("ИП "));
+    const usize length = strlen(text);
+    text[length] = (opcode & 15) == 13 ? M8("Д")[0] : hex_digit(opcode & 15);
+    text[length + 1] = 0;
+  } else {
+    csv(table, opcode, text);
+    if(text[0] == 0 || (text[0] == '?' && text[1] == 0)) hex(opcode, text);
+  }
   return text;
 }
 

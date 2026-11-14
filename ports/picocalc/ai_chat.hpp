@@ -66,6 +66,7 @@ public:
   unsigned paint(const mk61_app_api &api, const mk61_app_services &services,
                  View &view, void (*mnemonic)(std::uint8_t, char *));
   unsigned content_height() const { return height_; }
+  void invalidate() { image_valid_ = false; }
 
 private:
   enum Color : std::uint8_t {
@@ -91,6 +92,9 @@ private:
   unsigned count_ = 0, height_ = 0;
   std::uint8_t stripe_[320 * 8 / 2]{};
   int clip_top_ = 22, clip_bottom_ = 272;
+  std::uint64_t body_stamp_ = 0, fixed_stamp_ = 0;
+  unsigned previous_scroll_ = 0, gram_offset_ = 0;
+  bool image_valid_ = false, budget_full_ = false;
   unsigned measure(const char *m8, unsigned size, unsigned scale = 1) const;
   void box(int x, int y, unsigned width, unsigned height, Color color);
   void text(int x, int y, const char *m8, unsigned size, Color color,
@@ -98,7 +102,8 @@ private:
   int flow(int x, int y, const char *m8, unsigned size, Color color,
            unsigned width = 294);
   int layout(const View &view, void (*mnemonic)(std::uint8_t, char *));
-  void raster(unsigned top, std::uint8_t *mono);
+  void raster(unsigned top, std::uint8_t *mono, unsigned first = 0,
+              unsigned last = 320);
 };
 void duration(std::uint64_t milliseconds, char *out, unsigned capacity);
 void from_utf8(const char *text, char *out, unsigned capacity);

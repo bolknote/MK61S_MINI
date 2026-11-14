@@ -1,6 +1,7 @@
 #ifndef MK61_PICOCALC_LCD_SCROLL_HPP
 #define MK61_PICOCALC_LCD_SCROLL_HPP
 #include "lcd_update.hpp"
+#include "loadable_app_services.h"
 namespace picocalc::lcd {
 struct Region {
     uint16_t top=0,height=0;
@@ -52,6 +53,33 @@ struct Scroll {
         }
         offset=(offset+shift)%region.height;
     }
+};
+// A color strip is copied before DMA; the complete RGB565 image stays in
+// GRAM. Keep a mapping transaction, not a second color framebuffer. The new
+// origin is published only after every exposed/changed strip has completed.
+struct ColorScroll {
+    bool open=false,valid=false,failed=false;
+    unsigned rows=0;
+    static bool accepts(const mk61_service_color_scroll& r) {
+        return Region{r.top,r.height}.valid() && r.previous<r.height && r.offset<r.height;
+    }
+    unsigned begin(Scroll& mapping,const mk61_service_color_scroll& r) {
+        if(open || !accepts(r)) return 0;
+        const Region region{r.top,r.height};
+        const bool reuse=valid && mapping.region==region && mapping.offset==r.previous;
+        const unsigned distance=(r.offset+r.height-r.previous)%r.height;
+        rows=reuse?(distance<r.height-distance?distance:r.height-distance):0;
+        mapping={region,r.offset};open=true;valid=false;failed=false;
+        return reuse?1:3;
+    }
+    void fault() { valid=false;if(open) failed=true; }
+    bool ready() {
+        if(!open) return false;
+        if(failed) {failed=false;return false;}
+        return true;
+    }
+    void committed() { open=false;valid=true; }
+    void reset() { *this={}; }
 };
 }
 #endif

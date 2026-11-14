@@ -762,6 +762,10 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   case MK61_SERVICE_DISPLAY:
     return host.display.call(a,b,c,payload);
   case MK61_SERVICE_COLOR_DISPLAY:
+    if(a==MK61_COLOR_SCROLL_BEGIN) {
+      if(!s.color_display_ || b || c!=sizeof(mk61_service_color_scroll) || !payload) return 0;
+      return host.present_color(a,payload);
+    }
     if(a==MK61_COLOR_SPI_HZ) {
       if(!s.color_display_ || b || c!=sizeof(u32) || !payload) return 0;
       return host.present_color(a,payload);

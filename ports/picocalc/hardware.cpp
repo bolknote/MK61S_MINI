@@ -211,13 +211,14 @@ void Panel::init() {
     sleep_ms(120);
     command(0x29);
     sleep_ms(120);
-    valid_ = false;scroll_={};scroll_configured_=false;pending_scroll_rows_=0;
+    valid_ = false;scroll_={};color_scroll_.reset();scroll_configured_=false;pending_scroll_rows_=0;
     frames_ = 0;
     full_frames_=0;
 }
 
 void Panel::sleep(bool enabled) {
     io_worker::drain();
+    color_scroll_.fault();
     if(enabled) { command(0x28);command(0x10); }
     else { command(0x11);sleep_ms(120);command(0x29);valid_=false; }
 }
@@ -225,6 +226,7 @@ bool Panel::flush(const Screen& screen) {
     if(io_worker::frames_suspended()) return false;
     if(color_active_) return false;
     if(io_worker::frame_pending()) return false;
+    color_scroll_.reset();
     if(take_failure()) valid_=false;
     apply_clock();
     // The retained BASIC/APP image is usually identical. Avoid walking all
@@ -300,6 +302,22 @@ u32 Panel::color_clock(u32 hz) {
     return spi_hz_;
 }
 u32 Panel::color(u32 operation,const void* payload) {
+    if(operation==MK61_COLOR_SCROLL_BEGIN) {
+        if(!payload || !lcd::ColorScroll::accepts(*(const mk61_service_color_scroll*)payload)) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        if(take_failure()) color_scroll_.fault();
+        const unsigned result=color_scroll_.begin(scroll_,*(const mk61_service_color_scroll*)payload);
+        if(result) {color_active_=true;valid_=false;}
+        return result;
+    }
+    if(operation==MK61_COLOR_SCROLL_END) {
+        if(payload) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        if(take_failure()) color_scroll_.fault();
+        if(!color_scroll_.ready()) return 0;
+        if(!io_worker::submit_frame(this,[](void* context) {((Panel*)context)->transfer_color_scroll();})) return 2;
+        color_scroll_.committed();return 1;
+    }
     if(operation==MK61_COLOR_SPI_HZ) {
         if(!payload) return 0;
         u32 hz;std::memcpy(&hz,payload,sizeof(hz));
@@ -309,7 +327,11 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(operation==MK61_COLOR_AVAILABLE) return 1;
     if(operation==MK61_COLOR_END) {
         if(color_active_) {
-            io_worker::drain();color_active_=false;valid_=false;color_frame_={};
+            io_worker::drain();
+            // An aborted transaction has not published its target origin.
+            if(color_scroll_.open) scroll_=scroll_configured_?
+                lcd::Scroll{configured_region_,configured_start_-configured_region_.top}:lcd::Scroll{};
+            color_scroll_.reset();color_active_=false;valid_=false;color_frame_={};
         }
         if(color_spi_request_) (void)color_clock(0);
         else apply_clock();
@@ -321,6 +343,8 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(io_worker::frames_suspended()) return 2;
     if(io_worker::frame_pending()) return 2;
     const bool failed=take_failure();
+    if(failed) color_scroll_.fault();
+    if(!color_scroll_.open) color_scroll_.valid=false;
     apply_clock();
     const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);
     const bool force=geometry || ((frame->format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_TILE8 && palette_dirty_);
@@ -574,11 +598,21 @@ void Panel::transfer() {
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 
-bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses) {
+bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses,u32& windows) {
+    for(unsigned first=0;first<rect.height;) {
+        const unsigned count=scroll_.run(rect.y+first,rect.height-first);
+        const lcd::Rect piece{rect.x,(u16)(rect.y+first),rect.width,(u16)count};
+        ++windows;
+        if(!transfer_color_window(piece,scroll_.map(piece.y),background,strips,pauses)) return false;
+        first+=count;
+    }
+    return true;
+}
+bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool background,u32& strips,u32& pauses) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
-    const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
+    const unsigned right=rect.x+rect.width-1,bottom=physical_y+rect.height-1;
     const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
-    const u8 rows[]={(u8)(rect.y>>8),(u8)rect.y,(u8)(bottom>>8),(u8)bottom};
+    const u8 rows[]={(u8)(physical_y>>8),(u8)physical_y,(u8)(bottom>>8),(u8)bottom};
     command(0x2A,columns,sizeof(columns));command(0x2B,rows,sizeof(rows));
     gpio_put(DC,0);gpio_put(CS,0);busy_wait_us(1);
     const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
@@ -612,15 +646,10 @@ bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strip
 }
 void Panel::transfer_color() {
     const u64 start=time_us_64();
-    // A color image uses ordinary, unscrolled LCD coordinates. The next
-    // monochrome frame likewise starts from a fresh snapshot after END.
-    if(scroll_configured_) {
-        const u8 definition[]={0,0,1,64,0,0},origin[]={0,0};
-        command(0x33,definition,sizeof(definition));command(0x37,origin,sizeof(origin));
-        scroll_configured_=false;
-    }
-    scroll_={};pending_scroll_rows_=0;
-    bool ok=true;unsigned border_bytes=0,border_windows=0;u32 strips=0,pauses=0;
+    // Source coordinates stay logical even when GRAM wraps. Legacy color APPs
+    // can also preserve pixels left by a scrolled surface; END's next full
+    // monochrome flush restores its own origin without losing fixed pixels.
+    bool ok=true;unsigned border_bytes=0;u32 strips=0,pauses=0,windows=0;
     if(color_clear_) {
         const auto& f=color_frame_;
         const lcd::Rect borders[]={
@@ -629,20 +658,39 @@ void Panel::transfer_color() {
             {0,f.y,f.x,f.height},
             {(u16)(f.x+f.width),f.y,(u16)(Screen::WIDTH-f.x-f.width),f.height}};
         for(const auto& r:borders) if(r.width && r.height && ok) {
-            ok=transfer_color_rect(r,true,strips,pauses);border_bytes+=r.width*r.height*2;++border_windows;
+            ok=transfer_color_rect(r,true,strips,pauses,windows);border_bytes+=r.width*r.height*2;
         }
     }
-    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false,strips,pauses);
+    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false,strips,pauses,windows);
     if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
     io_worker::FrameDeadlineScope publish_trace(WorkerDeadlineTrace::LCD_PUBLISH);
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);
-    last_rectangles_.store(update_.count+border_windows,std::memory_order_relaxed);
+    last_rectangles_.store(windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
     frame_crc_.store(dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();}),std::memory_order_relaxed);
     }
     frames_.fetch_add(1,std::memory_order_relaxed);
+}
+
+void Panel::transfer_color_scroll() {
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
+    const auto region=scroll_.region;
+    const unsigned start=region.top+scroll_.offset;
+    if(!scroll_configured_ || configured_region_!=region) {
+        const unsigned bottom=lcd::HEIGHT-region.top-region.height;
+        const u8 definition[]={(u8)(region.top>>8),(u8)region.top,(u8)(region.height>>8),(u8)region.height,(u8)(bottom>>8),(u8)bottom};
+        command(0x33,definition,sizeof(definition));
+        scroll_configured_=true;configured_region_=region;configured_start_=lcd::HEIGHT;
+    }
+    if(configured_start_!=start) {
+        const u8 origin[]={(u8)(start>>8),(u8)start};command(0x37,origin,sizeof(origin));
+        configured_start_=start;
+    }
+    if(color_scroll_.rows) {
+        scrolls_.fetch_add(1);scrolled_rows_.fetch_add(color_scroll_.rows);
+    }
 }
 
 } // namespace picocalc

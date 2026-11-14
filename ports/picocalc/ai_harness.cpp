@@ -333,6 +333,7 @@ struct UI {
   }
   void end_chat_graphics() {
     if (!chat_graphics) return;
+    chat_renderer.invalidate();
     call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END);
     host.api->graphics_end();
     chat_graphics = false;
@@ -1225,9 +1226,7 @@ void UI::body() {
       line(M8("Программы пока нет."));
     for (unsigned i = 0; i < s.program.size; ++i) {
       char command[16];
-      terminal_mnemonics::csv(isa, s.program.bytes[i], command);
-      if (!command[0])
-        terminal_mnemonics::hex(s.program.bytes[i], command);
+      terminal_mnemonics::display(isa, s.program.bytes[i], command);
       line("%03u  %-8s  %02X", i, command, s.program.bytes[i]);
     }
   } else if (s.view == 2) {
@@ -1302,8 +1301,7 @@ void UI::draw() {
       chat_view.live_reply = agent.active() ? s.reply : "";
       chat_view.notice = notice;
       chat_renderer.paint(*host.api, *host.services, chat_view, [](std::uint8_t byte, char *out) {
-        terminal_mnemonics::csv(isa, byte, out);
-        if (!out[0]) terminal_mnemonics::hex(byte, out);
+        terminal_mnemonics::display(isa, byte, out);
       });
       dirty = false;
       last_draw = host.api->millis_ms();

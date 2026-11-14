@@ -2,6 +2,8 @@
 #include "mk61emu_core.h"
 #include "services.hpp"
 #include "lcd_color.hpp"
+#include "terminal_mnemonics.hpp"
+#include "ui_font.hpp"
 #include <array>
 #include <cstdio>
 #include <cassert>
@@ -10,15 +12,60 @@
 #include <string>
 #include <vector>
 
+void picocalc_ai_color_scroll_test();
+
 namespace {
 using namespace mk61ai;
 using namespace picocalc::ai::chat;
 std::array<std::uint16_t,320*320> opaque_pixels;
 std::array<unsigned,320*320> opaque_writes;
 unsigned opaque_frames=0;
+constexpr char classic_isa[] =
+#include "terminal_classic_isa.inc"
+;
+void display_mnemonics_test() {
+  // These are the operations in the verified Russian acos/sqrt example.
+  // Their wire/assembler spellings must not leak into calculator screen text.
+  struct Label { std::uint8_t opcode; const char *text; };
+  const Label expected[] = {
+      {0x66, M8("ИП 6")}, {0x1A, "F acos"}, {0x21, M8("F √")},
+      {0x0E, M8("В↑")}, {0x0D, M8("Сx")}, {0x12, M8("×")},
+      {0x13, M8("÷")}, {0x50, M8("С/П")}};
+  for (const auto &label : expected) {
+    char out[terminal_mnemonics::MAX_LENGTH + 1];
+    terminal_mnemonics::display(classic_isa, label.opcode, out);
+    assert(!std::strcmp(out, label.text));
+  }
+  // The terminal syntax still accepts the historical ASCII mnemonic.
+  char wire[terminal_mnemonics::MAX_LENGTH + 1];
+  terminal_mnemonics::csv(classic_isa, 0x21, wire);
+  assert(!std::strcmp(wire, "V\"\"\""));
+  for (unsigned opcode = 0; opcode < 256; ++opcode) {
+    std::array<char, terminal_mnemonics::MAX_LENGTH + 3> guarded;
+    guarded.fill('!');
+    char *out = guarded.data() + 1;
+    terminal_mnemonics::display(classic_isa, std::uint8_t(opcode), out);
+    assert(guarded.front() == '!' && guarded.back() == '!');
+    const auto length = std::strlen(out);
+    assert(length && length <= terminal_mnemonics::MAX_LENGTH);
+    assert(mk8::text_valid(reinterpret_cast<const u8 *>(out), length));
+  }
+  // All new mathematical glyphs must exist in every face used by the chat.
+  for (const auto size : {ui_font::Size::PX12, ui_font::Size::PX14,
+                          ui_font::Size::PX16}) {
+    const ui_font::Face face{ui_font::Family::PIXEL, size};
+    const auto missing = ui_font::glyph(face, '?');
+    for (const auto symbol : {mk8::BYTE_SQRT, mk8::BYTE_UP_ARROW,
+                              mk8::BYTE_MULTIPLY, mk8::BYTE_DIVIDE}) {
+      const auto glyph = ui_font::glyph(face, mk8::codepoint(symbol));
+      assert(glyph.bitmap != missing.bitmap && glyph.width && glyph.height);
+    }
+  }
+}
 std::uint32_t opaque_call(std::uint32_t service,std::uint32_t operation,std::uint32_t,std::uint32_t,void* payload) {
  assert(service==MK61_SERVICE_COLOR_DISPLAY);
  if(operation==MK61_COLOR_AVAILABLE)return 1;
+ if(operation==MK61_COLOR_SCROLL_BEGIN)return 0; // Older host compatibility.
  assert(operation==MK61_COLOR_PRESENT && payload);
  const auto &f=*static_cast<const mk61_service_color_frame*>(payload);
  assert(picocalc::lcd::valid_color(f));
@@ -66,6 +113,8 @@ struct Journal {
 void picocalc_ai_chat_test() {
   using namespace mk61ai;
   using namespace picocalc::ai::chat;
+  display_mnemonics_test();
+  picocalc_ai_color_scroll_test();
   core_61::enable();
   core_61::set_expanded_program_mode(false);
   Journal disk;

@@ -108,6 +108,7 @@ private:
     bool palette_dirty_=false;
     lcd::Update update_;
     lcd::Scroll scroll_;
+    lcd::ColorScroll color_scroll_;
     lcd::Region configured_region_;
     bool scroll_configured_=false;
     unsigned configured_start_=0,pending_scroll_rows_=0;
@@ -130,7 +131,9 @@ private:
     bool finish_scanline();
     void transfer();
     void transfer_color();
-    bool transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses);
+    void transfer_color_scroll();
+    bool transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses,u32& windows);
+    bool transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool background,u32& strips,u32& pauses);
 };
 
 } // namespace picocalc

@@ -264,8 +264,22 @@ enum mk61_color_operation { MK61_COLOR_AVAILABLE, MK61_COLOR_PRESENT, MK61_COLOR
    * Hz after draining the LCD, or 0 if unsupported/invalid. END and APP
    * return restore the firmware default, including before the first frame.
    * Older hosts return 0; the APP may keep their original clock. */
-  MK61_COLOR_SPI_HZ
+  MK61_COLOR_SPI_HZ,
+  /* Optional strip-renderer transaction. BEGIN: b=0,c=sizeof(scroll),payload
+   * points to absolute GRAM mapping. Returns 1 if the previous image can be
+   * reused, 3 if the caller must repaint the whole surface, 2 busy, 0 unsupported
+   * or invalid. Offset and previous are relative to top; both are <height.
+   * PRESENT keeps logical screen coordinates and copies its source as usual.
+   * END: b=c=0,payload=NULL. Publishes the new scan origin after all strips;
+   * returns 1 accepted, 2 busy, or 0 after a failed strip. After that 0 the
+   * transaction stays open: repaint every pixel, then retry END. COLOR_END
+   * cancels an unfinished transaction. Old hosts return 0 for BEGIN, so callers
+   * retain ordinary full redraws. No frame descriptor or snapshot size changes. */
+  MK61_COLOR_SCROLL_BEGIN, MK61_COLOR_SCROLL_END
 };
+typedef struct mk61_service_color_scroll {
+  uint16_t top, height, previous, offset;
+} mk61_service_color_scroll;
 enum mk61_color_format {
   /* Horizontal, high nibble first; each row occupies ceil(width/2) bytes. */
   MK61_COLOR_INDEX4,
