@@ -18,13 +18,13 @@ build_dir=$(mktemp -d "${TMPDIR:-/tmp}/mk61-another-reference.XXXXXXXX")
 trap 'rm -r "$build_dir"' EXIT HUP INT TERM
 app="$root/examples/portable-apps/ANOTHER"
 raw="$reference/src"
-for name in assets video vm text; do
+for name in assets prepared video vm text; do
   ${CC:-cc} -std=c11 -O2 -c "$app/$name.c" -o "$build_dir/$name.o"
 done
 common="-std=c++17 -O2 -DAUTO_DETECT_PLATFORM -Wno-deprecated-declarations"
 # shellcheck disable=SC2086
 ${CXX:-c++} $common -I"$raw" "$root/tests/another_world_assets_reference_test.cpp" \
-  "$build_dir/assets.o" "$raw/bank.cpp" "$raw/file.cpp" "$raw/util.cpp" -lz -o "$build_dir/assets"
+  "$build_dir/assets.o" "$build_dir/prepared.o" "$raw/bank.cpp" "$raw/file.cpp" "$raw/util.cpp" -lz -o "$build_dir/assets"
 "$build_dir/assets" "$data"
 case $(uname -s) in Darwin) strip=-Wl,-dead_strip ;; *) strip=-Wl,--gc-sections ;; esac
 # shellcheck disable=SC2086

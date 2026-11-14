@@ -26,6 +26,12 @@ not automatically a licence.
 For Another World select both the DOS data and `Build ANOTHER.APP`. The catalog
 extracts only `MEMLIST.BIN` and `BANK01` through `BANK0D`. The source site's
 "abandonware" label is not treated as permission to redistribute those files.
+It also builds `AWCACHE.BIN` locally from the sound resources on both Unix
+and Windows. Keep it beside the original files when copying the folder to the
+card. It is optional: the APP checks the cache against the original resources
+and falls back to them when the cache is absent or does not match. To rebuild
+it for an existing local copy on either platform, run
+`tools/games.cmd prepare-another path/to/ANOTHER`.
 The APP has been tested on PicoCalc. It currently mixes mono audio on the Pico;
 the experimental M3 audio backend is not connected to the APP.
 

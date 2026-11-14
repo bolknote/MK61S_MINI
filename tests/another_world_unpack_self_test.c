@@ -61,18 +61,45 @@ int main(void) {
     static memory m; static aw_assets assets; static uint8_t expected[OUTPUT], actual[OUTPUT]; uint8_t list[41];
     for (uint32_t test = 0; test < 64; ++test) {
         memset(&m, 0, sizeof(m)); memset(list, 0, sizeof(list));
-        m.bank_size = make_stream(m.bank, expected, 0x6c47a53bu + test, (test & 1) != 0);
-        if (test & 1) assert(m.bank_size > 2048);
+        const unsigned packed_size = make_stream(m.bank, expected, 0x6c47a53bu + test, (test & 1) != 0);
+        m.bank_size = packed_size < PREFIX ? PREFIX : packed_size;
+        if (test & 1) assert(packed_size > 2048);
         list[7] = 1; put16(list + 14, PREFIX); put16(list + 18, PREFIX);
-        list[27] = 1; put16(list + 34, (uint16_t)m.bank_size); put16(list + 38, OUTPUT); list[40] = 0xFF;
+        list[27] = 1; put16(list + 34, (uint16_t)packed_size); put16(list + 38, OUTPUT); list[40] = 0xFF;
         assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         if (test & 1) assets.clock = UINT32_MAX - 3;
         assert(aw_assets_load(&assets, 1));
         assert(aw_assets_read(&assets, PREFIX, actual, OUTPUT));
         assert(!memcmp(actual, expected, OUTPUT));
-        m.bank[m.bank_size - 5] ^= 1;
+        /* Let background decoding span many calls, interleave a foreground
+         * raw load, and sometimes demand the partially decoded resource
+         * before speculation has completed. */
+        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        if (test & 1) assets.clock = UINT32_MAX - 3;
+        assets.entries[0].decoded = 1;
+        bool interleaved = false;
+        for (unsigned step = 0; step < OUTPUT * 2u && !assets.entries[1].decoded; ++step) {
+            if (!interleaved && assets.prefetch.active && assets.prefetch.entry == &assets.entries[1] &&
+                assets.prefetch.output < OUTPUT - 32) {
+                assets.entries[0].decoded = 0;
+                assert(aw_assets_load(&assets, 0));
+                interleaved = true;
+                if (!(test & 3)) assert(aw_assets_load(&assets, 1));
+            }
+            assert(aw_assets_prefetch_step(&assets));
+        }
+        assert(interleaved && assets.entries[1].decoded);
+        assert(aw_assets_read(&assets, PREFIX, actual, OUTPUT));
+        assert(!memcmp(actual, expected, OUTPUT));
+        m.bank[packed_size - 5] ^= 1;
         assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         assert(!aw_assets_load(&assets, 1) && !assets.entries[1].decoded);
+        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        assets.entries[0].decoded = 1;
+        for (unsigned step = 0; step < OUTPUT * 2u &&
+             (assets.prefetch.active || assets.prefetch_next < assets.count); ++step)
+            assert(aw_assets_prefetch_step(&assets));
+        assert(!assets.prefetch.active && !assets.entries[1].decoded && !assets.fault);
     }
-    puts("ByteKiller public decoding: 64 mixed streams, overlap, pages and CRC passed"); return 0;
+    puts("ByteKiller decoding and interleaved prefetch: 64 mixed streams, overlap, pages and CRC passed"); return 0;
 }

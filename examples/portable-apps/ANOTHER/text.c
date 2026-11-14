@@ -70,146 +70,173 @@ const uint8_t aw_font[] = {
 };
 
 
-const aw_string aw_strings[] = {
-	{ 0x001, "P E A N U T  3000" },
-	{ 0x002, "Copyright  } 1990 Peanut Computer, Inc.\nAll rights reserved.\n\nCDOS Version 5.01" },
-	{ 0x003, "2" },
-	{ 0x004, "3" },
-	{ 0x005, "." },
-	{ 0x006, "A" },
-	{ 0x007, "@" },
-	{ 0x008, "PEANUT 3000" },
-	{ 0x00A, "R" },
-	{ 0x00B, "U" },
-	{ 0x00C, "N" },
-	{ 0x00D, "P" },
-	{ 0x00E, "R" },
-	{ 0x00F, "O" },
-	{ 0x010, "J" },
-	{ 0x011, "E" },
-	{ 0x012, "C" },
-	{ 0x013, "T" },
-	{ 0x014, "Shield 9A.5f Ok" },
-	{ 0x015, "Flux % 5.0177 Ok" },
-	{ 0x016, "CDI Vector ok" },
-	{ 0x017, " %%%ddd ok" },
-	{ 0x018, "Race-Track ok" },
-	{ 0x019, "SYNCHROTRON" },
-	{ 0x01A, "E: 23%\ng: .005\n\nRK: 77.2L\n\nopt: g+\n\n Shield:\n1: OFF\n2: ON\n3: ON\n\nP~: 1\n" },
-	{ 0x01B, "ON" },
-	{ 0x01C, "-" },
-	{ 0x021, "|" },
-	{ 0x022, "--- Theoretical study ---" },
-	{ 0x023, " THE EXPERIMENT WILL BEGIN IN    SECONDS" },
-	{ 0x024, "  20" },
-	{ 0x025, "  19" },
-	{ 0x026, "  18" },
-	{ 0x027, "  4" },
-	{ 0x028, "  3" },
-	{ 0x029, "  2" },
-	{ 0x02A, "  1" },
-	{ 0x02B, "  0" },
-	{ 0x02C, "L E T ' S   G O" },
-	{ 0x031, "- Phase 0:\nINJECTION of particles\ninto synchrotron" },
-	{ 0x032, "- Phase 1:\nParticle ACCELERATION." },
-	{ 0x033, "- Phase 2:\nEJECTION of particles\non the shield." },
-	{ 0x034, "A  N  A  L  Y  S  I  S" },
-	{ 0x035, "- RESULT:\nProbability of creating:\n ANTIMATTER: 91.V %\n NEUTRINO 27:  0.04 %\n NEUTRINO 424: 18 %\n" },
-	{ 0x036, "   Practical verification Y/N ?" },
-	{ 0x037, "SURE ?" },
-	{ 0x038, "MODIFICATION OF PARAMETERS\nRELATING TO PARTICLE\nACCELERATOR (SYNCHROTRON)." },
-	{ 0x039, "       RUN EXPERIMENT ?" },
-	{ 0x03C, "t---t" },
-	{ 0x03D, "000 ~" },
-	{ 0x03E, ".20x14dd" },
-	{ 0x03F, "gj5r5r" },
-	{ 0x040, "tilgor 25%" },
-	{ 0x041, "12% 33% checked" },
-	{ 0x042, "D=4.2158005584" },
-	{ 0x043, "d=10.00001" },
-	{ 0x044, "+" },
-	{ 0x045, "*" },
-	{ 0x046, "% 304" },
-	{ 0x047, "gurgle 21" },
-	{ 0x048, "{{{{" },
-	{ 0x049, "Delphine Software" },
-	{ 0x04A, "By Eric Chahi" },
-	{ 0x04B, "  5" },
-	{ 0x04C, "  17" },
-	{ 0x12C, "0" },
-	{ 0x12D, "1" },
-	{ 0x12E, "2" },
-	{ 0x12F, "3" },
-	{ 0x130, "4" },
-	{ 0x131, "5" },
-	{ 0x132, "6" },
-	{ 0x133, "7" },
-	{ 0x134, "8" },
-	{ 0x135, "9" },
-	{ 0x136, "A" },
-	{ 0x137, "B" },
-	{ 0x138, "C" },
-	{ 0x139, "D" },
-	{ 0x13A, "E" },
-	{ 0x13B, "F" },
-	{ 0x13C, "        ACCESS CODE:" },
-	{ 0x13D, "PRESS BUTTON OR RETURN TO CONTINUE" },
-	{ 0x13E, "   ENTER ACCESS CODE" },
-	{ 0x13F, "   INVALID PASSWORD !" },
-	{ 0x140, "ANNULER" },
-	{ 0x141, "      INSERT DISK ?\n\n\n\n\n\n\n\n\nPRESS ANY KEY TO CONTINUE" },
-	{ 0x142, " SELECT SYMBOLS CORRESPONDING TO\n THE POSITION\n ON THE CODE WHEEL" },
-	{ 0x143, "    LOADING..." },
-	{ 0x144, "              ERROR" },
-	{ 0x15E, "LDKD" },
-	{ 0x15F, "HTDC" },
-	{ 0x160, "CLLD" },
-	{ 0x161, "FXLC" },
-	{ 0x162, "KRFK" },
-	{ 0x163, "XDDJ" },
-	{ 0x164, "LBKG" },
-	{ 0x165, "KLFB" },
-	{ 0x166, "TTCT" },
-	{ 0x167, "DDRX" },
-	{ 0x168, "TBHK" },
-	{ 0x169, "BRTD" },
-	{ 0x16A, "CKJL" },
-	{ 0x16B, "LFCK" },
-	{ 0x16C, "BFLX" },
-	{ 0x16D, "XJRT" },
-	{ 0x16E, "HRTB" },
-	{ 0x16F, "HBHK" },
-	{ 0x170, "JCGB" },
-	{ 0x171, "HHFL" },
-	{ 0x172, "TFBB" },
-	{ 0x173, "TXHF" },
-	{ 0x174, "JHJL" },
-	{ 0x181, " BY" },
-	{ 0x182, "ERIC CHAHI" },
-	{ 0x183, "         MUSIC AND SOUND EFFECTS" },
-	{ 0x184, " " },
-	{ 0x185, "JEAN-FRANCOIS FREITAS" },
-	{ 0x186, "IBM PC VERSION" },
-	{ 0x187, "      BY" },
-	{ 0x188, " DANIEL MORAIS" },
-	{ 0x18B, "       THEN PRESS FIRE" },
-	{ 0x18C, " PUT THE PADDLE ON THE UPPER LEFT CORNER" },
-	{ 0x18D, "PUT THE PADDLE IN CENTRAL POSITION" },
-	{ 0x18E, "PUT THE PADDLE ON THE LOWER RIGHT CORNER" },
-	{ 0x258, "      Designed by ..... Eric Chahi" },
-	{ 0x259, "    Programmed by...... Eric Chahi" },
-	{ 0x25A, "      Artwork ......... Eric Chahi" },
-	{ 0x25B, "Music by ........ Jean-francois Freitas" },
-	{ 0x25C, "            Sound effects" },
-	{ 0x25D, "        Jean-Francois Freitas\n             Eric Chahi" },
-	{ 0x263, "              Thanks To" },
-	{ 0x264, "           Jesus Martinez\n\n          Daniel Morais\n\n        Frederic Savoir\n\n      Cecile Chahi\n\n    Philippe Delamarre\n\n  Philippe Ulrich\n\nSebastien Berthet\n\nPierre Gousseau" },
-	{ 0x265, "Now Go Out Of This World" },
-	{ 0x190, "Good evening professor." },
-	{ 0x191, "I see you have driven here in your\nFerrari." },
-	{ 0x192, "IDENTIFICATION" },
-	{ 0x193, "Monsieur est en parfaite sante." },
-	{ 0x194, "Y\n" },
-	{ 0x193, "AU BOULOT !!!\n" },
-	{ 0xFFFF, "" }
+#define AW_STRING_LIST(X) \
+    X(s000, 0x0001, "P E A N U T  3000") \
+    X(s001, 0x0002, "Copyright  } 1990 Peanut Computer, Inc.\nAll rights reserved.\n\nCDOS Version 5.01") \
+    X(s002, 0x0003, "2") \
+    X(s003, 0x0004, "3") \
+    X(s004, 0x0005, ".") \
+    X(s005, 0x0006, "A") \
+    X(s006, 0x0007, "@") \
+    X(s007, 0x0008, "PEANUT 3000") \
+    X(s008, 0x000A, "R") \
+    X(s009, 0x000B, "U") \
+    X(s010, 0x000C, "N") \
+    X(s011, 0x000D, "P") \
+    X(s012, 0x000E, "R") \
+    X(s013, 0x000F, "O") \
+    X(s014, 0x0010, "J") \
+    X(s015, 0x0011, "E") \
+    X(s016, 0x0012, "C") \
+    X(s017, 0x0013, "T") \
+    X(s018, 0x0014, "Shield 9A.5f Ok") \
+    X(s019, 0x0015, "Flux % 5.0177 Ok") \
+    X(s020, 0x0016, "CDI Vector ok") \
+    X(s021, 0x0017, " %%%ddd ok") \
+    X(s022, 0x0018, "Race-Track ok") \
+    X(s023, 0x0019, "SYNCHROTRON") \
+    X(s024, 0x001A, "E: 23%\ng: .005\n\nRK: 77.2L\n\nopt: g+\n\n Shield:\n1: OFF\n2: ON\n3: ON\n\nP~: 1\n") \
+    X(s025, 0x001B, "ON") \
+    X(s026, 0x001C, "-") \
+    X(s027, 0x0021, "|") \
+    X(s028, 0x0022, "--- Theoretical study ---") \
+    X(s029, 0x0023, " THE EXPERIMENT WILL BEGIN IN    SECONDS") \
+    X(s030, 0x0024, "  20") \
+    X(s031, 0x0025, "  19") \
+    X(s032, 0x0026, "  18") \
+    X(s033, 0x0027, "  4") \
+    X(s034, 0x0028, "  3") \
+    X(s035, 0x0029, "  2") \
+    X(s036, 0x002A, "  1") \
+    X(s037, 0x002B, "  0") \
+    X(s038, 0x002C, "L E T ' S   G O") \
+    X(s039, 0x0031, "- Phase 0:\nINJECTION of particles\ninto synchrotron") \
+    X(s040, 0x0032, "- Phase 1:\nParticle ACCELERATION.") \
+    X(s041, 0x0033, "- Phase 2:\nEJECTION of particles\non the shield.") \
+    X(s042, 0x0034, "A  N  A  L  Y  S  I  S") \
+    X(s043, 0x0035, "- RESULT:\nProbability of creating:\n ANTIMATTER: 91.V %\n NEUTRINO 27:  0.04 %\n NEUTRINO 424: 18 %\n") \
+    X(s044, 0x0036, "   Practical verification Y/N ?") \
+    X(s045, 0x0037, "SURE ?") \
+    X(s046, 0x0038, "MODIFICATION OF PARAMETERS\nRELATING TO PARTICLE\nACCELERATOR (SYNCHROTRON).") \
+    X(s047, 0x0039, "       RUN EXPERIMENT ?") \
+    X(s048, 0x003C, "t---t") \
+    X(s049, 0x003D, "000 ~") \
+    X(s050, 0x003E, ".20x14dd") \
+    X(s051, 0x003F, "gj5r5r") \
+    X(s052, 0x0040, "tilgor 25%") \
+    X(s053, 0x0041, "12% 33% checked") \
+    X(s054, 0x0042, "D=4.2158005584") \
+    X(s055, 0x0043, "d=10.00001") \
+    X(s056, 0x0044, "+") \
+    X(s057, 0x0045, "*") \
+    X(s058, 0x0046, "% 304") \
+    X(s059, 0x0047, "gurgle 21") \
+    X(s060, 0x0048, "{{{{") \
+    X(s061, 0x0049, "Delphine Software") \
+    X(s062, 0x004A, "By Eric Chahi") \
+    X(s063, 0x004B, "  5") \
+    X(s064, 0x004C, "  17") \
+    X(s065, 0x012C, "0") \
+    X(s066, 0x012D, "1") \
+    X(s067, 0x012E, "2") \
+    X(s068, 0x012F, "3") \
+    X(s069, 0x0130, "4") \
+    X(s070, 0x0131, "5") \
+    X(s071, 0x0132, "6") \
+    X(s072, 0x0133, "7") \
+    X(s073, 0x0134, "8") \
+    X(s074, 0x0135, "9") \
+    X(s075, 0x0136, "A") \
+    X(s076, 0x0137, "B") \
+    X(s077, 0x0138, "C") \
+    X(s078, 0x0139, "D") \
+    X(s079, 0x013A, "E") \
+    X(s080, 0x013B, "F") \
+    X(s081, 0x013C, "        ACCESS CODE:") \
+    X(s082, 0x013D, "PRESS BUTTON OR RETURN TO CONTINUE") \
+    X(s083, 0x013E, "   ENTER ACCESS CODE") \
+    X(s084, 0x013F, "   INVALID PASSWORD !") \
+    X(s085, 0x0140, "ANNULER") \
+    X(s086, 0x0141, "      INSERT DISK ?\n\n\n\n\n\n\n\n\nPRESS ANY KEY TO CONTINUE") \
+    X(s087, 0x0142, " SELECT SYMBOLS CORRESPONDING TO\n THE POSITION\n ON THE CODE WHEEL") \
+    X(s088, 0x0143, "    LOADING...") \
+    X(s089, 0x0144, "              ERROR") \
+    X(s090, 0x015E, "LDKD") \
+    X(s091, 0x015F, "HTDC") \
+    X(s092, 0x0160, "CLLD") \
+    X(s093, 0x0161, "FXLC") \
+    X(s094, 0x0162, "KRFK") \
+    X(s095, 0x0163, "XDDJ") \
+    X(s096, 0x0164, "LBKG") \
+    X(s097, 0x0165, "KLFB") \
+    X(s098, 0x0166, "TTCT") \
+    X(s099, 0x0167, "DDRX") \
+    X(s100, 0x0168, "TBHK") \
+    X(s101, 0x0169, "BRTD") \
+    X(s102, 0x016A, "CKJL") \
+    X(s103, 0x016B, "LFCK") \
+    X(s104, 0x016C, "BFLX") \
+    X(s105, 0x016D, "XJRT") \
+    X(s106, 0x016E, "HRTB") \
+    X(s107, 0x016F, "HBHK") \
+    X(s108, 0x0170, "JCGB") \
+    X(s109, 0x0171, "HHFL") \
+    X(s110, 0x0172, "TFBB") \
+    X(s111, 0x0173, "TXHF") \
+    X(s112, 0x0174, "JHJL") \
+    X(s113, 0x0181, " BY") \
+    X(s114, 0x0182, "ERIC CHAHI") \
+    X(s115, 0x0183, "         MUSIC AND SOUND EFFECTS") \
+    X(s116, 0x0184, " ") \
+    X(s117, 0x0185, "JEAN-FRANCOIS FREITAS") \
+    X(s118, 0x0186, "IBM PC VERSION") \
+    X(s119, 0x0187, "      BY") \
+    X(s120, 0x0188, " DANIEL MORAIS") \
+    X(s121, 0x018B, "       THEN PRESS FIRE") \
+    X(s122, 0x018C, " PUT THE PADDLE ON THE UPPER LEFT CORNER") \
+    X(s123, 0x018D, "PUT THE PADDLE IN CENTRAL POSITION") \
+    X(s124, 0x018E, "PUT THE PADDLE ON THE LOWER RIGHT CORNER") \
+    X(s125, 0x0258, "      Designed by ..... Eric Chahi") \
+    X(s126, 0x0259, "    Programmed by...... Eric Chahi") \
+    X(s127, 0x025A, "      Artwork ......... Eric Chahi") \
+    X(s128, 0x025B, "Music by ........ Jean-francois Freitas") \
+    X(s129, 0x025C, "            Sound effects") \
+    X(s130, 0x025D, "        Jean-Francois Freitas\n             Eric Chahi") \
+    X(s131, 0x0263, "              Thanks To") \
+    X(s132, 0x0264, "           Jesus Martinez\n\n          Daniel Morais\n\n        Frederic Savoir\n\n      Cecile Chahi\n\n    Philippe Delamarre\n\n  Philippe Ulrich\n\nSebastien Berthet\n\nPierre Gousseau") \
+    X(s133, 0x0265, "Now Go Out Of This World") \
+    X(s134, 0x0190, "Good evening professor.") \
+    X(s135, 0x0191, "I see you have driven here in your\nFerrari.") \
+    X(s136, 0x0192, "IDENTIFICATION") \
+    X(s137, 0x0193, "Monsieur est en parfaite sante.") \
+    X(s138, 0x0194, "Y\n") \
+    X(s139, 0x0193, "AU BOULOT !!!\n") \
+    X(s140, 0xFFFF, "")
+
+/* Byte-aligned records keep the complete string table compact on RP2040. */
+#define AW_STRING_DECL(name, id, value) struct { uint8_t lo, hi, size; char chars[sizeof(value)]; } name;
+#define AW_STRING_CHECK(name, id, value) _Static_assert(sizeof(value) <= UINT8_MAX, "game string too long");
+AW_STRING_LIST(AW_STRING_CHECK)
+static const struct {
+    AW_STRING_LIST(AW_STRING_DECL)
+} packed_strings = {
+#define AW_STRING_INIT(name, id, value) { (uint8_t)(id), (uint8_t)((id) >> 8), sizeof(value), value },
+    AW_STRING_LIST(AW_STRING_INIT)
 };
+#define AW_STRING_SIZE(name, id, value) + 3u + sizeof(value)
+_Static_assert(sizeof(packed_strings) == 0 AW_STRING_LIST(AW_STRING_SIZE), "game strings must have no padding");
+#undef AW_STRING_SIZE
+#undef AW_STRING_INIT
+#undef AW_STRING_CHECK
+#undef AW_STRING_DECL
+#undef AW_STRING_LIST
+
+const char *aw_text(uint16_t id) {
+    const uint8_t *p = (const uint8_t *)&packed_strings;
+    for (;;) {
+        const uint16_t code = (uint16_t)(p[0] | (uint16_t)p[1] << 8);
+        if (code == 0xFFFF) return 0;
+        if (code == id) return (const char *)(p + 3);
+        p += 3u + p[2];
+    }
+}

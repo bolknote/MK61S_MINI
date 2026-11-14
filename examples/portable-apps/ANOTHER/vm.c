@@ -29,11 +29,10 @@ static uint16_t word(aw_vm *v) {
     const uint16_t high = byte(v); return (uint16_t)((high << 8) | byte(v));
 }
 static bool text(aw_vm *v, uint16_t id, uint16_t x, uint16_t y, uint8_t color) {
-    const aw_string *s = aw_strings;
-    while (s->id != 0xFFFF && s->id != id) ++s;
-    if (s->id == 0xFFFF) return true;
+    const uint8_t *p = (const uint8_t *)aw_text(id);
+    if (!p) return true;
     const uint16_t origin = x;
-    for (const uint8_t *p = (const uint8_t *)s->text; *p; ++p) {
+    for (; *p; ++p) {
         if (*p == '\n') { y = (uint16_t)(y + 8); x = origin; }
         else {
             if (*p >= 32 && *p < 128 && !aw_video_char(v->video, x, y, color, aw_font + (*p - 32) * 8)) return false;

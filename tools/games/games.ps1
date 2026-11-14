@@ -86,7 +86,7 @@ function Invoke-ZipDownload {
     param([object]$Item)
     $archive = Join-Path (Join-Path $script:CacheRoot 'archives') $Item.archive_name
     $bytes = Save-CheckedDownload $Item.url $Item.sha256 $Item.title $archive
-    if ($script:DryRun -and $null -eq $bytes) {
+    if ($script:DryRun) {
         foreach ($member in $Item.members) { Write-Host "Would extract: $($member.target)" }
         return
     }
@@ -186,6 +186,14 @@ function Get-ItemById {
     return $matches[0]
 }
 
+function Invoke-AnotherCache {
+    param([string]$Directory)
+    if (-not (Get-Command New-AnotherSoundCache -ErrorAction SilentlyContinue)) {
+        . (Join-Path $PSScriptRoot 'another_cache.ps1')
+    }
+    Write-Host (New-AnotherSoundCache ([IO.Path]::GetFullPath($Directory)))
+}
+
 function Test-WindowsSupported {
     param([object]$Item)
     return -not ($Item.PSObject.Properties.Name -contains 'windows_supported') -or [bool]$Item.windows_supported
@@ -201,7 +209,14 @@ function Invoke-Selected {
         Write-Host "== $($item.title) ==" -ForegroundColor Cyan
         if ($item.PSObject.Properties.Name -contains 'rights') { Write-Host "Note: $($item.rights)" }
         switch ([string]$item.runner) {
-            'download_zip' { Invoke-ZipDownload $item }
+            'download_zip' {
+                Invoke-ZipDownload $item
+                if ($item.PSObject.Properties.Name -contains 'prepared_cache') {
+                    $directory = Get-SafeTarget ([string]$item.prepared_cache)
+                    if ($script:DryRun) { Write-Host "Would prepare: $(Join-Path $directory 'AWCACHE.BIN')" }
+                    else { Invoke-AnotherCache $directory }
+                }
+            }
             'spectrum_package' { Invoke-SpectrumDownload $item }
             default { throw "Unsupported native PowerShell runner: $($item.runner)" }
         }
@@ -215,6 +230,7 @@ function Show-Usage {
     Write-Host '  games.cmd                         interactive checklist'
     Write-Host '  games.cmd list'
     Write-Host '  games.cmd run --select ID [--select ID ...] [--dry-run]'
+    Write-Host '  games.cmd prepare-another PATH'
 }
 
 function Invoke-Arguments {
@@ -228,6 +244,10 @@ function Invoke-Arguments {
             Write-Host "$($item.id): $($item.title)$suffix"
         }
         return $true
+    }
+    if ($command -eq 'prepare-another') {
+        if ($Arguments.Count -ne 2) { throw 'prepare-another needs one directory path' }
+        Invoke-AnotherCache ([string]$Arguments[1]); return $true
     }
     if ($command -ne 'run') { throw "Unknown command: $command" }
     $ids = New-Object 'Collections.Generic.List[string]'

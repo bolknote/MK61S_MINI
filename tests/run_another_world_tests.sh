@@ -8,6 +8,15 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/tests/another_world_assets_self_test.c" -o "$build_dir/assets"
 "$build_dir/assets"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" \
+  "$root/tests/another_world_prepared_self_test.c" -o "$build_dir/prepared"
+"$build_dir/prepared"
+python3 "$root/tests/another_world_cache_tools_self_test.py"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  "$root/examples/portable-apps/ANOTHER/text.c" \
+  "$root/tests/another_world_text_self_test.c" -o "$build_dir/text"
+"$build_dir/text"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/examples/portable-apps/ANOTHER/assets.c" \
   "$root/tests/another_world_unpack_self_test.c" -o "$build_dir/unpack"
 "$build_dir/unpack"
@@ -68,11 +77,21 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/tests/another_world_vm_self_test.c" -o "$build_dir/vm"
 "$build_dir/vm"
 if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
+  if [ -f "$ANOTHER_WORLD_DATA/AWCACHE.BIN" ]; then
+    ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=another_cache_builder_main \
+      -I"$root/sdk/portable/include" -I"$root/code" \
+      -c "$root/tests/another_world_cache_device_builder.c" -o "$build_dir/cache-builder.o"
+    ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
+      "$root/examples/portable-apps/ANOTHER/assets.c" "$root/tests/another_world_cache_device_host_test.c" \
+      "$build_dir/cache-builder.o" -o "$build_dir/cache-builder"
+    "$build_dir/cache-builder" "$ANOTHER_WORLD_DATA"
+    "$build_dir/cache-builder" "$ANOTHER_WORLD_DATA" deny
+  fi
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=another_app_main \
     -I"$root/sdk/portable/include" -I"$root/code" \
     -c "$root/examples/portable-apps/ANOTHER/main.c" -o "$build_dir/main.o"
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
-    "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
+    "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" \
@@ -86,13 +105,24 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split-tail-failure
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
-    "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
+    "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" \
     "$root/tests/another_world_fragmentation_self_test.c" "$build_dir/main.o" -o "$build_dir/fragmentation"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
+  # Exercise an earlier fragmented layout even with 856 fewer bytes.
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-growth.state" 856
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-growth.state" 856
+  # Cold Pico observation: compacting the text table returned 624 bytes to
+  # the large free block, enough to reserve the complete background cache.
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-cold.state" 624 cold
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-cold.state" 624 cold
+  # Long-lived VM/display/audio state uses reserved stack, so the video cache
+  # fits even if another 1600 bytes of the large hole are unavailable.
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-warm.state" 2160 warm
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-warm.state" 2160 warm
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \

@@ -16,7 +16,7 @@ typedef struct { unsigned at, size; bool used; } arena_block;
 typedef struct { unsigned count; bool resident_allocated; arena_block blocks[32]; } arena_state;
 static arena_state arena;
 static _Alignas(8) uint8_t arena_bytes[75000];
-static bool pair_granted, background_head_granted, background_tail_granted;
+static bool pair_granted, background_single_granted, background_head_granted, background_tail_granted, cold_audio;
 static void *audio_allocation;
 
 static void *arena_allocate(unsigned size) {
@@ -56,6 +56,7 @@ static uint32_t now(void) { return now_ms++; }
 static void service(void) { ++now_ms; if (audio_queued) --audio_queued; }
 static uint32_t clear(void) { return 1; }
 static uint32_t write_text(uint32_t x, uint32_t y, const char *s, uint32_t n) {
+    if (!x && !y && n == 17 && !memcmp(s, "Loading sounds...", n)) return 1;
     (void)x; (void)y; fprintf(stderr, "unexpected APP error: %.*s\n", (int)n, s); return 1;
 }
 static int32_t key_wait(void) { return 0; }
@@ -74,6 +75,7 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
             if (!buffers[id]) return 0;
             sizes[id] = r->size; r->handle = id;
             if (id != 1 && r->size == 2 * AW_VIDEO_PAGE_BYTES) pair_granted = true;
+            if (id != 1 && r->size == 6144) background_single_granted = true;
             if (id != 1 && r->size == 4096) background_head_granted = true;
             if (id != 1 && r->size == 2048) background_tail_granted = true;
             r->storage = id == 1 ? MK61_BUFFER_PSRAM : MK61_BUFFER_SRAM;
@@ -117,7 +119,7 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
         if (a == MK61_AUDIO_CLOSE) { if (audio_allocation) arena_release(audio_allocation); ended = true; return 1; }
         if (a == MK61_AUDIO_OPEN) {
             if (!r || r->rate != 25000 || r->volume != 100) return 0;
-            audio_allocation = arena_allocate(1064); return audio_allocation != NULL;
+            audio_allocation = arena_allocate(cold_audio ? 2144 : 1064); return audio_allocation != NULL;
         }
         if (a == MK61_AUDIO_WRITE) {
             const unsigned room = 1024 - audio_queued;
@@ -147,7 +149,15 @@ static const void *query(uint32_t id, uint32_t version) {
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION ? &services : NULL;
 }
 int main(int argc, char **argv) {
-    if (argc != 3) { fprintf(stderr, "usage: %s DATA_DIR STATE_FILE\n", argv[0]); return 2; }
+    if (argc < 3 || argc > 5 || (argc == 5 && strcmp(argv[4], "cold") && strcmp(argv[4], "warm"))) {
+        fprintf(stderr, "usage: %s DATA_DIR STATE_FILE [IMAGE_GROWTH [cold|warm]]\n", argv[0]); return 2;
+    }
+    const unsigned growth = argc >= 4 ? (unsigned)strtoul(argv[3], NULL, 10) : 0;
+    const bool warm = argc == 5 && !strcmp(argv[4], "warm");
+    cold_audio = argc == 5;
+    if (growth > 2600 || (warm && growth < 1600)) return 2;
+    if ((!cold_audio && growth > 1000) ||
+        (cold_audio && 73344 + growth - (warm ? 1600 : 0) > sizeof(arena_bytes))) return 2;
     directory = argv[1];
     FILE *state = fopen(argv[2], "rb");
     if (state) {
@@ -157,25 +167,42 @@ int main(int argc, char **argv) {
         /* Model observed free blocks after the APP image is loaded: there is
          * enough total RAM, but a resident allocation separates two holes. */
         arena.count = 3; arena.resident_allocated = true;
-        arena.blocks[0] = (arena_block){0, 3472, false};
-        arena.blocks[1] = (arena_block){3472, 16, true};
-        arena.blocks[2] = (arena_block){3488, 69000, false};
+        if (cold_audio) {
+            /* Cold Pico: before audio, the 64 KB frame leaves free holes of
+             * 3544 and 5768 bytes. growth is bytes reclaimed from the image. */
+            arena.blocks[0] = (arena_block){0, 3544, false};
+            arena.blocks[1] = (arena_block){3544, 16, true};
+            /* The warm variant reserves another 1600 bytes to exercise a
+             * tighter layout after another application has used the heap. */
+            arena.blocks[2] = (arena_block){3560, 69784 + growth - (warm ? 1600 : 0), false};
+        } else {
+            arena.blocks[0] = (arena_block){0, 3472, false};
+            arena.blocks[1] = (arena_block){3472, 16, true};
+            arena.blocks[2] = (arena_block){3488, 69000 - growth, false};
+        }
     }
     arena_state saved = arena;
     assert(arena_allocate(2 * AW_VIDEO_PAGE_BYTES));
-    assert(arena_allocate(1064)); /* Audio starts before the cache reservation. */
-    assert(!arena_allocate(6144)); /* A single cache block does not fit. */
-    assert(arena_allocate(4096) && arena_allocate(2048)); /* Two smaller blocks do. */
+    assert(arena_allocate(cold_audio ? 2144 : 1064)); /* Audio starts before the cache reservation. */
+    if (cold_audio) {
+        assert(arena_allocate(6144));
+    } else {
+        assert(!arena_allocate(6144)); /* A single cache block does not fit. */
+        assert(arena_allocate(4096) && arena_allocate(2048)); /* Two smaller blocks do. */
+    }
     arena = saved;
     mk61_app_api api = {0}; api.magic = MK61_APP_API_MAGIC; api.version = MK61_APP_API_VERSION; api.struct_size = sizeof(api);
     api.millis_ms = now; api.service = service; api.display_clear = clear; api.display_write_m8 = write_text;
     api.key_wait = key_wait; api.graphics_begin = graphics_begin; api.graphics_end = graphics_end; api.query_service = query;
     mk61_api = &api;
     assert(another_app_main() == 0);
-    assert(presents >= 30 && audio_samples > 0 && releases == 4 && pair_granted && background_head_granted && background_tail_granted &&
+    assert(presents >= 30 && audio_samples > 0 && pair_granted &&
            !unexpected_extra_acquisitions && ended && !graphics &&
            !buffers[1] && !buffers[2] && !buffers[3] && !buffers[4]);
+    if (cold_audio) assert(releases == 3 && background_single_granted);
+    else assert(releases == 4 && background_head_granted && background_tail_granted);
     state = fopen(argv[2], "wb"); assert(state && fwrite(&arena, sizeof(arena), 1, state) == 1); fclose(state);
-    printf("Fragmented-heap launch passed: %u display strips, split background cache active\n", presents);
+    printf("Fragmented-heap launch passed: %u display strips, %u image bytes, %s background cache active\n",
+           presents, growth, cold_audio ? "contiguous" : "split");
     return 0;
 }

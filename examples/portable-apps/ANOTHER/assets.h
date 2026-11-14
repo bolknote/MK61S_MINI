@@ -14,6 +14,7 @@
 #define AW_ASSET_CACHE_SLOTS 5u
 #endif
 #define AW_ASSET_MAX_TRANSFER 4096u
+#define AW_PREFETCH_INPUT_BYTES 256u
 
 typedef bool (*aw_asset_bank_read)(void *ctx, uint8_t bank, uint32_t offset,
                                    void *data, uint32_t size);
@@ -34,7 +35,16 @@ typedef struct {
     uint8_t data[AW_ASSET_PAGE];
 } aw_asset_cache;
 
+typedef struct aw_assets aw_assets;
 typedef struct {
+    aw_assets *assets;
+    aw_asset_entry *entry;
+    uint8_t *input;
+    uint32_t input_base, input_size, input_capacity, cursor, output, bits, crc;
+    bool input_valid, failed, active, compressed;
+} aw_asset_prefetch;
+
+struct aw_assets {
     void *ctx;
     aw_asset_bank_read bank_read;
     aw_asset_store_read store_read;
@@ -47,8 +57,10 @@ typedef struct {
     aw_asset_cache *recent;
     aw_asset_entry entries[AW_ASSET_LIMIT];
     aw_asset_cache cache[AW_ASSET_CACHE_SLOTS];
-    uint8_t input[AW_ASSET_PAGE];
-} aw_assets;
+    uint8_t input[AW_PREFETCH_INPUT_BYTES];
+    aw_asset_prefetch prefetch;
+    uint16_t prefetch_next;
+};
 
 /* Parse the complete MEMLIST file. The terminator must be present. */
 bool aw_assets_init(aw_assets *assets, const uint8_t *memlist, size_t bytes,
@@ -56,6 +68,9 @@ bool aw_assets_init(aw_assets *assets, const uint8_t *memlist, size_t bytes,
                     aw_asset_store_read store_read, aw_asset_store_write store_write);
 /* Decode a resource at most once. Failure never marks it as decoded. */
 bool aw_assets_load(aw_assets *assets, unsigned id);
+/* Advance at most one decode operation or one raw transfer. Speculative
+ * failures leave the entry undecoded for the ordinary on-demand path. */
+bool aw_assets_prefetch_step(aw_assets *assets);
 bool aw_assets_read(aw_assets *assets, uint32_t offset, void *out, uint32_t size);
 bool aw_assets_write(aw_assets *assets, uint32_t offset, const void *in, uint32_t size);
 bool aw_assets_flush(aw_assets *assets);

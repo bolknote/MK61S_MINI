@@ -3,6 +3,7 @@
  * The test does not distribute any game data. */
 extern "C" {
 #include "../examples/portable-apps/ANOTHER/assets.h"
+#include "../examples/portable-apps/ANOTHER/prepared.h"
 }
 #include "bank.h"
 #include "resource.h"
@@ -18,6 +19,7 @@ struct Context {
     uint32_t stable_offset, progress_calls;
     uint8_t stable[16];
     bool armed;
+    FILE *prepared;
 };
 
 static bool bank_read(void *opaque, uint8_t bank, uint32_t offset, void *out, uint32_t size) {
@@ -29,6 +31,11 @@ static bool bank_read(void *opaque, uint8_t bank, uint32_t offset, void *out, ui
     const bool ok = fseek(f, offset, SEEK_SET) == 0 && fread(out, 1, size, f) == size;
     fclose(f);
     return ok;
+}
+static bool prepared_read(void *opaque, uint32_t offset, void *out, uint32_t size) {
+    Context *ctx = (Context *)opaque;
+    return ctx->prepared && fseek(ctx->prepared, offset, SEEK_SET) == 0 &&
+           fread(out, 1, size, ctx->prepared) == size;
 }
 static bool store_read(void *opaque, uint32_t offset, void *out, uint32_t size) {
     Context *ctx = (Context *)opaque;
@@ -94,6 +101,59 @@ int main(int argc, char **argv) {
         ++checked;
     }
     printf("matched %u resources; %u bytes in PSRAM; %u cooperative cache checks\n", checked, assets->used, ctx.progress_calls);
+    snprintf(path, sizeof(path), "%s/AWCACHE.BIN", argv[1]);
+    ctx.prepared = fopen(path, "rb");
+    if (ctx.prepared) {
+        if (fseek(ctx.prepared, 0, SEEK_END)) return 1;
+        const long cache_size = ftell(ctx.prepared);
+        uint8_t table[AW_ASSET_LIMIT * 12]; aw_prepared_cache prepared = {};
+        ctx.armed = false;
+        if (cache_size < 0 || !aw_assets_init(assets, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write) ||
+            !aw_prepared_open(&prepared, list, bytes, assets->count, (uint32_t)cache_size,
+                              table, sizeof(table), &ctx, prepared_read)) return 1;
+        assets->progress = progress; assets->progress_ctx = &ctx;
+        unsigned sounds = 0;
+        for (unsigned id = 0; id < assets->count; ++id) {
+            aw_asset_entry *e = &assets->entries[id];
+            if (e->type || !e->bank || !e->size || !e->packed_size) continue;
+            MemEntry reference = {}; reference.bankId = e->bank; reference.bankOffset = e->bank_offset;
+            reference.packedSize = e->packed_size; reference.size = e->size; Bank original(argv[1]);
+            if (!original.read(&reference, expected) || !aw_prepared_load(&prepared, assets, id) ||
+                !aw_assets_read(assets, e->store_offset, actual, e->size) || memcmp(expected, actual, e->size)) {
+                fprintf(stderr, "prepared sound %u does not match Raw\n", id); return 1;
+            }
+            if (!ctx.armed && e->size >= sizeof(ctx.stable)) {
+                ctx.stable_offset = e->store_offset; memcpy(ctx.stable, expected, sizeof(ctx.stable)); ctx.armed = true;
+            }
+            ++sounds;
+        }
+        printf("matched %u prepared sounds against Raw\n", sounds);
+        fclose(ctx.prepared);
+    }
+    ctx.armed = false;
+    if (!aw_assets_init(assets, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write)) return 1;
+    unsigned steps = 0;
+    while (assets->prefetch.active || assets->prefetch_next < assets->count) {
+        if (++steps > 2000000 || !aw_assets_prefetch_step(assets)) return 1;
+        if (!(steps % 37)) {
+            const uint8_t marker = (uint8_t)steps; uint8_t observed = 0;
+            if (!aw_assets_write(assets, assets->used, &marker, 1) ||
+                !aw_assets_read(assets, assets->used, &observed, 1) || marker != observed) return 1;
+        }
+    }
+    unsigned prefetched = 0;
+    for (unsigned id = 0; id < assets->count; ++id) {
+        aw_asset_entry *e = &assets->entries[id];
+        if (!e->bank || !e->size || !e->packed_size) continue;
+        MemEntry reference = {}; reference.bankId = e->bank; reference.bankOffset = e->bank_offset;
+        reference.packedSize = e->packed_size; reference.size = e->size; Bank original(argv[1]);
+        if (!e->decoded || !original.read(&reference, expected) ||
+            !aw_assets_read(assets, e->store_offset, actual, e->size) || memcmp(expected, actual, e->size)) {
+            fprintf(stderr, "prefetched resource %u does not match Raw\n", id); return 1;
+        }
+        ++prefetched;
+    }
+    printf("matched %u incrementally prefetched resources against Raw\n", prefetched);
     free(actual); free(expected); free(assets); free(ctx.store);
     return checked && ctx.progress_calls ? 0 : 1;
 }

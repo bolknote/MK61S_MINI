@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 
-SOURCES = ["main.c", "assets.c", "video.c", "display.c", "display_compact.c", "vm.c", "audio.c", "text.c",
+SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "vm.c", "audio.c", "text.c",
            "rp2040_divide.S"]
 
 

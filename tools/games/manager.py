@@ -144,6 +144,14 @@ def execute(catalog: dict, selected_ids: list[str], output_root: Path, cache_roo
         runner = item["runner"]
         if runner == "download_zip":
             extract_zip(item, output_root, cache_root, dry_run=dry_run)
+            if item.get("prepared_cache"):
+                directory = output_root / safe_relative(item["prepared_cache"])
+                if dry_run:
+                    print("Would prepare: " + str(directory / "AWCACHE.BIN"))
+                else:
+                    from another_cache import prepare
+                    count, size = prepare(directory)
+                    print(f"Prepared sound cache: {count} sounds, {size} decoded bytes")
         elif runner == "spectrum_package":
             run_command([
                 "tools/apps/spectrum/fetch_spectrum_games.py",
@@ -168,6 +176,8 @@ def main() -> int:
     list_parser = subparsers.add_parser("list", help="show catalog items")
     list_parser.add_argument("--json", action="store_true", help="machine-readable item list")
     list_parser.add_argument("--tsv", action="store_true", help="tab-separated item list")
+    prepare_parser = subparsers.add_parser("prepare-another", help="prepare a sound cache from local DOS files")
+    prepare_parser.add_argument("directory", type=Path)
     run_parser = subparsers.add_parser("run", help="download/build selected catalog items")
     run_parser.add_argument("--select", action="append", default=[], metavar="ID")
     run_parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
@@ -188,6 +198,11 @@ def main() -> int:
                 for item in catalog["items"]:
                     marker = "*" if item.get("default") else " "
                     print(f"{marker} {item['id']}: {item['title']}")
+            return 0
+        if args.command == "prepare-another":
+            from another_cache import prepare
+            count, size = prepare(args.directory.resolve())
+            print(f"Prepared sound cache: {count} sounds, {size} decoded bytes")
             return 0
         output_root = args.output_root.resolve()
         cache_root = (args.cache_root or output_root / "cache").resolve()

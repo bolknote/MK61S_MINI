@@ -133,20 +133,18 @@ bool aw_assets_flush(aw_assets *a) {
 void aw_assets_progress(aw_assets *a) { if (a && a->progress) a->progress(a->progress_ctx); }
 
 enum { AW_PACKED_INPUT_BYTES = 2048 };
-typedef struct {
-    aw_assets *assets;
-    const aw_asset_entry *entry;
-    uint8_t *input;
-    uint32_t input_base, input_size, cursor, output, bits, crc;
-    bool input_valid, failed;
-} unpacker;
+_Static_assert((AW_PACKED_INPUT_BYTES & (AW_PACKED_INPUT_BYTES - 1)) == 0 &&
+               AW_PREFETCH_INPUT_BYTES > 0 && (AW_PREFETCH_INPUT_BYTES & (AW_PREFETCH_INPUT_BYTES - 1)) == 0,
+               "asset input windows must be powers of two");
+typedef aw_asset_prefetch unpacker;
 
 static uint8_t input_byte(unpacker *u, uint32_t at) {
     if (u->failed || at >= u->entry->packed_size) { u->failed = true; return 0; }
-    const uint32_t base = at - at % AW_PACKED_INPUT_BYTES;
+    /* Both foreground and background windows are powers of two. */
+    const uint32_t base = at & ~(u->input_capacity - 1u);
     if (!u->input_valid || u->input_base != base) {
         uint32_t size = u->entry->packed_size - base;
-        if (size > AW_PACKED_INPUT_BYTES) size = AW_PACKED_INPUT_BYTES;
+        if (size > u->input_capacity) size = u->input_capacity;
         if (!u->assets->bank_read(u->assets->ctx, u->entry->bank,
                                   u->entry->bank_offset + base, u->input, size)) {
             u->failed = true; return 0;
@@ -243,32 +241,90 @@ static void backref(unpacker *u, uint32_t count, uint32_t distance) {
 #endif
 }
 
-static bool unpack(aw_assets *a, const aw_asset_entry *e) {
+static bool unpack_start(unpacker *u) {
+    const aw_asset_entry *e = u->entry;
     if (e->packed_size < 12 || (e->packed_size & 3u)) return false;
+    u->cursor = e->packed_size - 12;
+    if (input_word(u, e->packed_size - 4) != e->size) return false;
+    u->crc = input_word(u, e->packed_size - 8);
+    u->bits = input_word(u, e->packed_size - 12);
+    u->crc ^= u->bits; u->output = e->size;
+    return !u->failed;
+}
+
+static void unpack_step(unpacker *u) {
+    if (!next_bit(u)) {
+        if (!next_bit(u)) literal(u, read_bits(u, 3) + 1);
+        else backref(u, 2, read_bits(u, 8));
+    } else {
+        const unsigned code = read_bits(u, 2);
+        if (code == 3) literal(u, read_bits(u, 8) + 9);
+        else if (code < 2) backref(u, code + 3, read_bits(u, code + 9));
+        else {
+            const unsigned count = read_bits(u, 8) + 1;
+            backref(u, count, read_bits(u, 12));
+        }
+    }
+}
+
+static bool unpack(aw_assets *a, aw_asset_entry *e) {
     /* The larger input window reduces SD requests without consuming heap. */
     uint8_t input[AW_PACKED_INPUT_BYTES];
-    unpacker u = {0}; u.assets = a; u.entry = e; u.input = input; u.cursor = e->packed_size - 12;
-    if (input_word(&u, e->packed_size - 4) != e->size) return false;
-    u.crc = input_word(&u, e->packed_size - 8);
-    u.bits = input_word(&u, e->packed_size - 12);
-    u.crc ^= u.bits; u.output = e->size;
+    unpacker u = {0}; u.assets = a; u.entry = e; u.input = input; u.input_capacity = sizeof(input);
+    if (!unpack_start(&u)) return false;
     uint32_t progress_at = u.output;
     while (u.output && !u.failed) {
-        if (!next_bit(&u)) {
-            if (!next_bit(&u)) literal(&u, read_bits(&u, 3) + 1);
-            else backref(&u, 2, read_bits(&u, 8));
-        } else {
-            const unsigned code = read_bits(&u, 2);
-            if (code == 3) literal(&u, read_bits(&u, 8) + 9);
-            else if (code < 2) backref(&u, code + 3, read_bits(&u, code + 9));
-            else {
-                const unsigned count = read_bits(&u, 8) + 1;
-                backref(&u, count, read_bits(&u, 12));
-            }
-        }
+        unpack_step(&u);
         if (progress_at - u.output >= 256) { aw_assets_progress(a); progress_at = u.output; }
     }
     return !u.failed && !u.output && !u.crc;
+}
+
+static bool load_raw(aw_assets *a, const aw_asset_entry *e) {
+    uint8_t input[AW_ASSET_PAGE];
+    for (uint32_t at = 0; at < e->size;) {
+        uint32_t n = e->size - at;
+        if (n > sizeof(input)) n = sizeof(input);
+        if (!a->bank_read(a->ctx, e->bank, e->bank_offset + at, input, n) ||
+            !aw_assets_write(a, e->store_offset + at, input, n)) return false;
+        at += n; aw_assets_progress(a);
+    }
+    return true;
+}
+
+bool aw_assets_prefetch_step(aw_assets *a) {
+    if (!a || a->fault) return false;
+    unpacker *u = &a->prefetch;
+    if (!u->active) {
+        while (a->prefetch_next < a->count) {
+            aw_asset_entry *e = &a->entries[a->prefetch_next++];
+            if (e->decoded || !e->bank || !e->size || !e->packed_size) continue;
+            memset(u, 0, sizeof(*u));
+            u->assets = a; u->entry = e; u->input = a->input;
+            u->input_capacity = sizeof(a->input); u->active = true;
+            u->compressed = e->size != e->packed_size;
+            if (u->compressed) {
+                if (!unpack_start(u)) u->failed = true;
+            } else u->output = e->size;
+            break;
+        }
+        if (!u->active) return true;
+    } else if (!u->failed && u->output) {
+        if (u->compressed) unpack_step(u);
+        else {
+            const aw_asset_entry *e = u->entry;
+            uint32_t n = u->output < sizeof(a->input) ? u->output : sizeof(a->input);
+            if (!a->bank_read(a->ctx, e->bank, e->bank_offset + u->cursor, a->input, n) ||
+                !aw_assets_write(a, e->store_offset + u->cursor, a->input, n)) u->failed = true;
+            else { u->cursor += n; u->output -= n; }
+        }
+    }
+    if (u->failed || !u->output) {
+        if (!u->failed && (!u->compressed || !u->crc) && aw_assets_flush(a))
+            u->entry->decoded = 1;
+        u->active = false;
+    }
+    return !a->fault;
 }
 
 bool aw_assets_load(aw_assets *a, unsigned id) {
@@ -276,16 +332,19 @@ bool aw_assets_load(aw_assets *a, unsigned id) {
     aw_asset_entry *e = &a->entries[id];
     if (e->decoded) return true;
     if (!e->bank || !e->size || !e->packed_size) return false;
-    bool ok = true;
-    if (e->size != e->packed_size) ok = unpack(a, e);
-    else for (uint32_t at = 0; at < e->size && ok;) {
-        uint32_t n = e->size - at;
-        if (n > AW_ASSET_PAGE) n = AW_ASSET_PAGE;
-        ok = a->bank_read(a->ctx, e->bank, e->bank_offset + at, a->input, n) &&
-             aw_assets_write(a, e->store_offset + at, a->input, n);
-        at += n;
-        aw_assets_progress(a);
+    if (a->prefetch.active && a->prefetch.entry == e) {
+        uint32_t progress_at = a->prefetch.output;
+        while (a->prefetch.active && !a->fault) {
+            if (!aw_assets_prefetch_step(a)) return false;
+            if (!a->prefetch.active || progress_at - a->prefetch.output >= 256) {
+                aw_assets_progress(a); progress_at = a->prefetch.output;
+            }
+        }
+        if (e->decoded) return true;
     }
+    /* A foreground load may interleave with the speculative input window. */
+    a->prefetch.input_valid = false;
+    const bool ok = e->size != e->packed_size ? unpack(a, e) : load_raw(a, e);
     if (!ok || a->fault || !aw_assets_flush(a)) return false;
     e->decoded = 1;
     return true;

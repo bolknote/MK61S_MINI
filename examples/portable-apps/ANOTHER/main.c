@@ -3,6 +3,7 @@
 #include "display.h"
 #include "display_compact.h"
 #include "pacing.h"
+#include "prepared.h"
 #include <string.h>
 
 #define EXTERNAL_BYTES (2u * 1024u * 1024u)
@@ -11,12 +12,12 @@ static mk61_service_buffer external, screen, previous_frame, background_cache, b
 static aw_assets assets;
 static aw_video video;
 static aw_display display;
-static aw_display_compact compact_display;
-static aw_vm vm;
+static aw_display_compact *compact_display;
+static aw_vm *vm;
 static aw_audio audio;
 static aw_input input;
 static uint8_t keys[32], previous[32];
-static int16_t pending[AW_AUDIO_BLOCK];
+static int16_t *pending;
 static unsigned pending_at, pending_count;
 static uint32_t next_keys, next_audio, last_frame;
 static bool audio_open, first_strip, pump_failed, compact_ready;
@@ -46,6 +47,10 @@ static bool bank_read(void *ctx, uint8_t bank, uint32_t offset, void *out, uint3
     const bool ok = file_read(path, offset, out, size);
     if (audio_open) pump(NULL); else mk61_api->service();
     return ok && !pump_failed;
+}
+static bool prepared_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
+    (void)ctx;
+    return file_read("AWCACHE.BIN", offset, out, size);
 }
 static bool store_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     (void)ctx;
@@ -77,7 +82,7 @@ static void poll_keys(void) {
     if ((pressed(keys, 0x1B) || pressed(keys, 0xB1) || pressed(keys, 0x90)) &&
         !(pressed(previous, 0x1B) || pressed(previous, 0xB1) || pressed(previous, 0x90))) input.quit = true;
     for (unsigned c = 'a'; c <= 'z'; ++c) if (letter(keys, c) && !letter(previous, c)) {
-        if (c == 'c' && vm.part != AW_VM_LAST_PART) input.code = true;
+        if (c == 'c' && vm->part != AW_VM_LAST_PART) input.code = true;
         else input.last_char = (uint8_t)c;
         break;
     }
@@ -108,7 +113,12 @@ static void pump(void *ctx) {
 static bool frame_wait(void *ctx, unsigned slices) {
     (void)ctx;
     const uint32_t deadline = aw_frame_deadline(last_frame, mk61_api->millis_ms(), slices);
-    while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) pump(NULL);
+    while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
+        pump(NULL);
+        /* Leave room for a storage operation and the audio/input pump. */
+        if (!input.quit && !pump_failed && (int32_t)(deadline - mk61_api->millis_ms()) >= 12 &&
+            !aw_assets_prefetch_step(&assets)) pump_failed = true;
+    }
     last_frame = deadline;
     return !input.quit && !pump_failed;
 }
@@ -133,7 +143,7 @@ static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
 static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     (void)ctx;
     if (compact_ready)
-        return aw_display_compact_present(&compact_display, pixels, palette, present_rect, NULL);
+        return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL);
     if (previous_frame.data)
         return aw_display_present(&display, pixels, palette, present_rect, NULL);
     for (unsigned y = 0; y < 200;) {
@@ -158,6 +168,11 @@ static void message(const char *line1, const char *line2) {
 }
 
 int main(void) {
+    /* The firmware reserves a separate stack. Keeping long-lived state there
+     * leaves a larger contiguous heap block for the video-page cache. */
+    aw_vm vm_state = {0}; vm = &vm_state;
+    aw_display_compact compact_state; compact_display = &compact_state;
+    int16_t pending_samples[AW_AUDIO_BLOCK]; pending = pending_samples;
     const char *error = NULL; bool graphics = false, paired_frames = false; uint32_t compute = 0;
     services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM);
@@ -185,6 +200,29 @@ int main(void) {
     if (!aw_assets_init(&assets, screen.data, info.size, EXTERNAL_BYTES, NULL, bank_read, store_read, store_write)) {
         error = "Invalid game data"; goto done;
     }
+    mk61_api->display_clear();
+    mk61_api->display_write_m8(0, 0, "Loading sounds...", 17);
+    mk61_api->service();
+    assets.progress = pump;
+    next_keys = next_audio = mk61_api->millis_ms();
+    aw_prepared_cache prepared = {0};
+    mk61_service_file_info prepared_info;
+    mk61_service_file_bytes prepared_stat = {"AWCACHE.BIN", &prepared_info, 0, sizeof(prepared_info)};
+    const bool has_prepared = services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0,
+                                              sizeof(prepared_stat), &prepared_stat) &&
+        !prepared_info.directory &&
+        aw_prepared_open(&prepared, screen.data, info.size, assets.count, prepared_info.size,
+                         screen.data + 4096, AW_VIDEO_PAGE_BYTES - 4096, NULL, prepared_read);
+    for (unsigned id = 0; id < assets.count && !input.quit && !pump_failed; ++id) {
+        const aw_asset_entry *e = &assets.entries[id];
+        if (e->type || !e->bank || !e->size || !e->packed_size) continue;
+        if ((!has_prepared || !aw_prepared_load(&prepared, &assets, id)) &&
+            !aw_assets_load(&assets, id) && assets.fault) {
+            error = "Cannot load game"; goto done;
+        }
+    }
+    if (input.quit) goto done;
+    if (pump_failed) { error = "Input unavailable"; goto done; }
     if (!mk61_api->graphics_begin()) { error = "Display unavailable"; goto done; }
     graphics = true;
     uint32_t spi_hz = 24000000;
@@ -200,20 +238,20 @@ int main(void) {
         5 * AW_VIDEO_PAGE_BYTES <= assets.capacity - assets.used &&
         services->call(MK61_SERVICE_DISPLAY, MK61_SERVICE_DISPLAY_FRAMEBUFFER, sizeof(borrowed), 0, &borrowed) &&
         borrowed.pixels && borrowed.bytes >= 12800 && borrowed.width == 320 && borrowed.height == 320 &&
-        aw_display_compact_init(&compact_display, &assets, assets.used + 4 * AW_VIDEO_PAGE_BYTES,
+        aw_display_compact_init(compact_display, &assets, assets.used + 4 * AW_VIDEO_PAGE_BYTES,
                                 borrowed.pixels, 12800, borrowed.pixels, 12800) &&
         aw_video_use_spare(&video, previous_frame.data)) compact_ready = true;
     if (compact_ready && 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets.capacity - assets.used)
         (void)aw_video_use_packed_page3(&video, assets.used + 5 * AW_VIDEO_PAGE_BYTES, AW_VIDEO_PAGE3_PACKED_BYTES);
     aw_vm_host host = {NULL, frame_wait, pump, sound, music, stop_audio};
-    if (!aw_vm_init(&vm, &assets, &video, host, (uint16_t)mk61_api->millis_ms())) { error = "VM init failed"; goto done; }
-    aw_audio_init(&audio, &assets, &vm);
-    if (!aw_vm_set_part(&vm, AW_VM_FIRST_PART)) { error = "Cannot load game"; goto done; }
+    if (!aw_vm_init(vm, &assets, &video, host, (uint16_t)mk61_api->millis_ms())) { error = "VM init failed"; goto done; }
+    aw_audio_init(&audio, &assets, vm);
+    if (!aw_vm_set_part(vm, AW_VM_FIRST_PART)) { error = "Cannot load game"; goto done; }
     mk61_service_audio request = {0}; request.rate = AW_AUDIO_RATE; request.volume = 100;
     if (!services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_OPEN, 0, sizeof(request), &request)) {
         error = "Audio unavailable"; goto done;
     }
-    audio_open = true; assets.progress = pump;
+    audio_open = true;
     if (compact_ready) {
         if (acquire_direct(&background_cache, 6144)) {
             if (!aw_video_use_background(&video, background_cache.data, 6144)) drop_background();
@@ -228,7 +266,7 @@ int main(void) {
     (void)services->call(MK61_SERVICE_KEYBOARD, MK61_SERVICE_KEY_BITMAP, sizeof(previous), 0, previous);
     while (!input.quit && !pump_failed) {
         pump(NULL);
-        if (!aw_vm_frame(&vm, &input)) {
+        if (!aw_vm_frame(vm, &input)) {
             if (!input.quit) error = "Game runtime error";
             break;
         }

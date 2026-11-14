@@ -21,6 +21,7 @@ static uint32_t now(void) { return now_ms++; }
 static void service(void) { ++now_ms; if (audio_queued) --audio_queued; }
 static uint32_t clear(void) { return 1; }
 static uint32_t write_text(uint32_t x, uint32_t y, const char *s, uint32_t n) {
+    if (!x && !y && n == 17 && !memcmp(s, "Loading sounds...", n)) return 1;
     (void)x; (void)y; fprintf(stderr, "unexpected APP error: %.*s\n", (int)n, s); return 1;
 }
 static int32_t key_wait(void) { return 0; }

@@ -10,6 +10,7 @@
       "source_page": "http://old-dos.ru/index.php?page=search&string=another+world",
       "url": "http://old-dos.ru/dl.php?id=29231",
       "archive_name": "Another-World-English.zip",
+      "prepared_cache": "sd/apps/ANOTHER",
       "sha256": "87b24c42c537388c95b5fe393f958f3b9ef552e29f5b7e4d10b103358f96830b",
       "rights": "The download host describes this as abandonware. That is not a redistribution licence; keep the downloaded data local and use it only when you have the right to do so.",
       "members": [
