@@ -15,7 +15,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "dev/tools"), str(ROOT / "dev/lib")]
 from tools.firmware.picocalc.build_picocalc import compiler_bin
-from tools.apps.urq.library import copy_device_library, copy_licenses
+from tools.apps.urq.library import copy_device_library, copy_licenses, disk_games
 
 
 def build(target, toolchain, work, output, library=None, licenses=None):
@@ -63,10 +63,16 @@ def main():
     parser.add_argument("--build-dir", type=Path, default=ROOT / ".build/urq-apps")
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--library-output", type=Path)
+    parser.add_argument("--games-output", type=Path, help="Add launchable titles to the Games folder")
     parser.add_argument("--licenses-output", type=Path)
     args = parser.parse_args()
     build(args.target, compiler_bin(args.toolchain), args.build_dir / args.target,
           args.output_dir, args.library_output, args.licenses_output)
+    if args.games_output:
+        for title, name, source in disk_games():
+            directory = args.games_output / title
+            directory.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, directory / name)
 
 
 if __name__ == "__main__": main()

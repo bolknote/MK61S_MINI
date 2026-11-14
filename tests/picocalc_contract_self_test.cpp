@@ -490,6 +490,8 @@ void picocalc_contract_test() {
         Calculator calculator;calculator.init();Services service;
         const auto baseline=shared_memory::buffer_statistics();
         service.open(Action::EXPLORER,false,calculator);
+        for(unsigned i=0;i<3;++i) CHECK(service.input(0xB6));
+        CHECK(service.input('\r'));
         CHECK(service.browser_count() && shared_memory::buffer_statistics().internal_used>=
             baseline.internal_used+Services::BROWSER_PAGE_SIZE*sizeof(files::Entry));
         struct State { Services* service;usize used; } state{&service,baseline.internal_used};
@@ -638,6 +640,6 @@ void picocalc_contract_test() {
     CHECK(files::mkdir("/Contract/gone"));s.open(Action::EXPLORER,false,calculator);
     CHECK(s.enter_directory("/Contract/gone") && files::remove("/Contract/gone"));
     s.open(Action::EXPLORER,false,calculator);
-    CHECK(!std::strcmp(s.page_name(),"BROWSER") && view(s).rfind("/\n",0)==0);
+    CHECK(!std::strcmp(s.page_name(),"BROWSER") && s.browser_count()==4);
     std::puts("PicoCalc public contract: browser search/move, M8 APP I/O, shared editor hooks/scrolling, atomic display/cursor/UI raster, bitmap restoration, raw key press/release/immediate/handoff PASS");
 }

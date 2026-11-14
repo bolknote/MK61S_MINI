@@ -1267,6 +1267,9 @@ void  loop() {
   }
   if(!usb_screen_wire_busy) m61_text::service();
   service_m61_controls();
+  if(input_focus == &mk61_baseloop_hook && !usb_screen_wire_busy &&
+     !usb_mass_storage::active() && !lcd_hooked && program_store_explorer_resume())
+    lcd_std_display_redraw();
 
   const i32 used_key = kbd::last_key();
 

@@ -9,7 +9,7 @@ _tool_sys.path[:0] = [str(_tool_root), str(_tool_root / "dev/lib"), str(_tool_ro
 import hashlib
 import json
 import os
-from pathlib import Path,PurePosixPath
+from pathlib import Path
 import shutil
 import struct
 import subprocess
@@ -21,8 +21,8 @@ import zlib
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
-from tools.apps.system.build_picocalc_apps import APPS,ASSETS
-from explorer_icons import ARTWORK,BUNDLE_FOLDERS
+from tools.apps.system.build_picocalc_apps import APPS
+from tools.apps.urq.library import disk_games
 
 
 class PackageTests(unittest.TestCase):
@@ -51,40 +51,47 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(any(name.startswith(prefix+'System/') for name in reader.namelist()))
                 self.assertFalse((target/'System/autoexec.wbmp').exists())
                 self.assertEqual(len(reader.namelist()),len(set(reader.namelist())))
-                for game_root in ('urq/', 'apps/URQ/'):
-                    payload = [name for name in reader.namelist() if name.startswith(prefix + game_root)]
-                    self.assertTrue(payload)
-                    self.assertTrue(all(PurePosixPath(name).suffix in ('.urq','.uqd','.wbmp') for name in payload))
-                    self.assertFalse(any('/demo/' in name for name in payload))
+                disk=prefix+'Disk/'
+                self.assertIn(disk+'Documents/',reader.namelist())
+                self.assertFalse(any(name.startswith(prefix+path) for name in reader.namelist()
+                                     for path in ('urq/','games/','examples/','apps/URQ/')))
+                for title, name, source in disk_games():
+                    self.assertEqual(reader.read(disk+'Games/'+title+'/'+name),source.read_bytes())
+                for title, rom in (('Br8kout','br8kout.ch8'),('ECHO-8','echo8.ch8'),
+                                   ('Fuse','fuse.ch8'),('Space Invaders','space-invaders.ch8')):
+                    self.assertEqual(reader.read(disk+'Games/'+title+'/Play.txt'),(rom+'\n').encode())
+                    self.assertIn(disk+'Games/'+title+'/'+rom,reader.namelist())
                 self.assertFalse(any('/house_that_jack_built/' in name for name in reader.namelist()))
                 for game in ('trapped_in_time_ru','jim_from_outer_space_ru',
                              'semion_escape','semion_road','semion_snow'):
                     for name in ('AUTHORS.txt','LICENSE.txt'):
                         self.assertIn(prefix+'licenses/urq/'+game+'/'+name,reader.namelist())
-                folders={str(parent) for name in reader.namelist()
-                         for parent in PurePosixPath(name[len(prefix):]).parents if str(parent)!='.'}
-                roles={path.casefold():role for path,role in BUNDLE_FOLDERS.items()}
-                for folder in folders:
-                    self.assertIn(folder.casefold(),roles,'Unreviewed distribution folder')
-                    icon=prefix+folder+'/autoexec.wbmp'
-                    self.assertIn(icon,reader.namelist())
-                    self.assertEqual(reader.read(icon),(ARTWORK/(roles[folder.casefold()]+'.wbmp')).read_bytes())
-                expected=[*(f'apps/{name}.APP' for name in APPS),*(f'apps/{name}' for name in ASSETS),
-                    'README.txt','README.md','Fonts/DejaVu-12.FMK','Fonts/DejaVu-14.FMK',
+                devices={'ELIZA':'Programs','SHEET':'Programs','URQ':'System/URQ','WBMP':'System'}
+                for name in APPS:
+                    relative=f'{devices.get(name,"Programs/Examples")}/{name}.APP'
+                    self.assertEqual(reader.read(disk+relative),(target/'apps'/(name+'.APP')).read_bytes())
+                expected=['Disk/Programs/Spectrum/SPECTRUM.APP','Disk/Programs/Spectrum/48.rom',
+                    'Disk/Programs/Examples/PATTERN.wbmp','Disk/Programs/Examples/Sheets/BUDGET.mks',
+                    'README.txt','README.md','Disk/Fonts/DejaVu-12.FMK','Disk/Fonts/DejaVu-14.FMK',
                     'licenses/ui-fonts/LICENSE-Ark-Pixel.txt','licenses/ui-fonts/LICENSE-DejaVu.txt']
                 for name in expected:self.assertIn(prefix+name,reader.namelist())
                 hashes=json.loads(reader.read(prefix+f'bundle-sha256-{version}.json'))
                 for name,digest in hashes.items():
                     self.assertEqual(hashlib.sha256(reader.read(prefix+name)).hexdigest(),digest,name)
                 for font in ('DejaVu-12.FMK','DejaVu-14.FMK'):
-                    self.assertEqual(reader.read(prefix+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
+                    self.assertEqual(reader.read(disk+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
                 for game_dir in sorted((ROOT/'programs/games').iterdir()):
                     if not game_dir.is_dir() or not (game_dir/'autoexec.m61').exists():continue
                     for source in game_dir.iterdir():
                         if source.is_file():
-                            self.assertEqual(reader.read(prefix+'games/'+game_dir.name+'/'+source.name),source.read_bytes())
+                            self.assertEqual(reader.read(disk+'Games/'+game_dir.name+'/'+source.name),source.read_bytes())
                 for name in ('Graphics.tbi','Graphics.foc','Graph.tbi'):
-                    self.assertEqual(reader.read(prefix+'examples/'+name),(ROOT/'programs/examples'/name).read_bytes())
+                    self.assertEqual(reader.read(disk+'Programs/Examples/'+name),(ROOT/'programs/examples'/name).read_bytes())
+                # A release can be installed without consulting the local source tree.
+                reader.extractall(target/'extracted')
+            from program_collection import plan
+            frozen=plan(target/'extracted/mk61s-picocalc-pico-h')
+            self.assertIn('Games/Runner/autoexec.m61',{entry['path'] for entry in frozen['files']})
             report=target/'hardware-software-summary.json'
             build=json.loads((target/'manifest.json').read_text())
             # An updated SHA-256 manifest cannot legitimize a broken resident CRC.

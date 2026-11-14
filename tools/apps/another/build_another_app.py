@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--toolchain", type=Path)
     parser.add_argument("--build-dir", type=Path, default=ROOT / ".build/another-app")
-    parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/game-library/sd/apps/ANOTHER")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/game-library/sd/Games/Another World")
     args = parser.parse_args()
     src = ROOT / "examples/portable-apps/ANOTHER"
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
@@ -32,7 +32,8 @@ def main():
     subprocess.run(command, check=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(args.build_dir / "ANOTHER.APP", args.output_dir / "ANOTHER.APP")
-    shutil.copy2(src / "README.md", args.output_dir / "README.md")
+    shutil.copy2(src / "README.md", args.output_dir / "manual.md")
+    (args.output_dir / "Play.txt").write_text("ANOTHER.APP\n", encoding="ascii")
     shutil.copy2(ROOT / "LICENSE", args.output_dir / "COPYING.txt")
     shutil.copy2(ROOT / "third_party/rp2040-softfloat/LICENSE.TXT", args.output_dir / "RP2040-LICENSE.txt")
     report = json.loads((args.build_dir / "ANOTHER.json").read_text())

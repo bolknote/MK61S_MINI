@@ -141,7 +141,7 @@ void picocalc_software_test(const char* preview_path) {
     assert(script::file_type("/book.sheet")==program_store::ProgramType::SHEET);
     assert(script::file_type("/image.wbm")==program_store::ProgramType::IMAGE1);
     assert(script::file_type("/snapshot.state.txt")==program_store::ProgramType::MK61_STATE);
-    for(const char* path:{"/game.z80","/game.SNA","/game.szX","/game.TrD","/game.sCl","/game.tap","/game.TZX"})
+    for(const char* path:{"/game.z80","/game.SNA","/game.szX","/game.TrD","/game.sCl","/game.tap","/game.TZX","/Games/Library/GAMES.img"})
         assert(script::file_type(path)==program_store::ProgramType::EXTERNAL_BINARY);
     for(const char* path:{"/game.z80.txt","/game.sna/notes","/game.img","/game.tap.bak"})
         assert(script::file_type(path)==program_store::ProgramType::TEXT);
@@ -150,6 +150,8 @@ void picocalc_software_test(const char* preview_path) {
     text("/Software/auto/autoexec.m61","poke X 61\n");
     text("/Software/auto/autoexec.tbi","10 .X=17\n20 END\n");
     services.open(Action::EXPLORER,false,calculator);
+    for(unsigned i=0;i<3;++i) assert(services.input(0xB6));
+    assert(services.input('\r')); // All files
     services.input('/');
     for(char ch:std::string("/Software/auto")) services.input((u8)ch);
     services.input('\r');

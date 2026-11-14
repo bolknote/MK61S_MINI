@@ -11,10 +11,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import zipfile
 import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT/'dev/lib'))
+sys.path[:0] = [str(ROOT/'dev/lib'), str(ROOT)]
 from program_collection import (MkcSession, capabilities, distribution_manifest, export,
                                 firmware_identity, load_capabilities, logical, plan, sha, synchronize)
 
@@ -92,35 +93,51 @@ class ProgramBundleTests(unittest.TestCase):
     def test_real_catalog_selects_sheet_and_filters_interpreter_packages(self):
         selected = plan(self.bundle)
         names = {f['path'] for f in selected['files']}
-        self.assertIn('app/SHEET.APP', names)
-        self.assertIn('sheets/BUDGET.mks', names)
-        self.assertIn('games/Turochamp/autoexec.m61', names)
-        self.assertFalse(any(p.startswith('CHIP8/') for p in names))
-        self.assertTrue(any(s['package'] == 'CHIP8' for s in selected['skipped']))
+        self.assertIn('Programs/SHEET.APP', names)
+        self.assertIn('Programs/Examples/Sheets/BUDGET.mks', names)
+        self.assertIn('Games/Turochamp/autoexec.m61', names)
+        self.assertFalse(any(p.startswith('Games/Br8kout/') for p in names))
+        self.assertTrue(any(s['package'] == 'CHIP-8 games' for s in selected['skipped']))
         self.cap['features']['basic'] = False; self.cap['features']['focal'] = False
         self.cap['features']['math'] = False; self.write_cap()
         selected = plan(self.bundle)
         names = {f['path'] for f in selected['files']}
-        self.assertNotIn('app/SHEET.APP', names)
-        self.assertFalse(any(p.startswith(('sheets/', 'games/Turochamp/', 'games/High Noon/')) for p in names))
-        self.assertIn('games/Runner/autoexec.m61', names)
+        self.assertNotIn('Programs/SHEET.APP', names)
+        self.assertFalse(any(p.startswith(('Programs/Examples/Sheets/', 'Games/Turochamp/', 'Games/High Noon/')) for p in names))
+        self.assertIn('Games/Runner/autoexec.m61', names)
     def test_f401_font_limits_and_case_only_update(self):
         selected = plan(self.bundle)
         self.assertNotIn('Fonts/DejaVu-14.FMK', {f['path'] for f in selected['files']})
         self.assertTrue(any('file limit 1536' in item['reason'] for item in selected['skipped']))
         session = MemorySession()
-        synchronize(self.selection({'library/Test.txt':b'old'}), session)
+        synchronize(self.selection({'Programs/Calculations/Test.txt':b'old'}), session)
         # A case-only name change must not delete the newly updated file.
-        session.dirs = {name.replace('/library','/Library') for name in session.dirs}
-        session.files = {name.replace('/library','/Library'):data for name,data in session.files.items()}
-        updated = self.selection({'library/test.txt':b'new'})
+        session.dirs = {name.replace('/Programs/Calculations','/Programs/CALCULATIONS') for name in session.dirs}
+        session.files = {name.replace('/Programs/Calculations','/Programs/CALCULATIONS'):data for name,data in session.files.items()}
+        updated = self.selection({'Programs/Calculations/test.txt':b'new'})
         synchronize(updated, session)
-        self.assertEqual(session.files['/Library/Test.txt'], b'new')
+        self.assertEqual(session.files['/Programs/CALCULATIONS/Test.txt'], b'new')
+
+    def test_quest_folder_and_local_save_survive_reinstall(self):
+        from tools.apps.urq.library import disk_games
+        selected = plan(self.bundle)
+        for title, leaf, source in disk_games():
+            if title == 'Джим из Космоса':
+                selected['files'].extend(self.selection({f'Games/{title}/{leaf}': source.read_bytes()})['files'])
+        session = MemorySession()
+        synchronize(selected, session, verify=True)
+        directory = '/Games/Джим из Космоса'
+        self.assertEqual(session.files[directory+'/Play.txt'], b'game.urq\n')
+        self.assertTrue(any(name.startswith(directory+'/p') for name in session.files))
+        self.assertIn('/Documents', session.dirs)
+        session.files[directory+'/slot1.urs'] = b'player progress'
+        self.assertEqual(synchronize(selected, session, verify=True)['installed'], 0)
+        self.assertEqual(session.files[directory+'/slot1.urs'], b'player progress')
 
     def test_no_graphics_no_sheet_and_wrong_cpu_rejected(self):
         self.cap['features'].update(graphics=False, bitmap=False, fonts=False);self.write_cap()
         selected = plan(self.bundle)
-        self.assertNotIn('app/SHEET.APP', {f['path'] for f in selected['files']})
+        self.assertNotIn('Programs/SHEET.APP', {f['path'] for f in selected['files']})
         self.cap.update(platform='picocalc', app_memory_limit=49152)
         (self.bundle/'apps').mkdir()
         for name in ('ELIZA', 'SHEET'):
@@ -130,24 +147,24 @@ class ProgramBundleTests(unittest.TestCase):
             plan(self.bundle)
     def test_updates_preserve_modified_and_unowned_files_delete_only_owned(self):
         session = MemorySession()
-        initial = self.selection({'sheets/BUDGET.mks':b'original', 'games/Test/old.txt':b'old', 'library/new.txt':b'first'})
+        initial = self.selection({'Programs/Examples/Sheets/BUDGET.mks':b'original', 'Games/Test/old.txt':b'old', 'Programs/Calculations/new.txt':b'first'})
         synchronize(initial, session)
         self.assertFalse(any(op == 'GET' for op, _ in session.calls), 'fresh uploads require no readback')
         self.assertTrue(all(len(data) <= 1536 for name, data in session.files.items() if name.endswith('.TXT')))
-        session.files['/sheets/BUDGET.mks'] = b'user values'
-        session.files['/games/Test/save.txt'] = b'user save'
-        update = self.selection({'sheets/BUDGET.mks':b'updated sample', 'library/new.txt':b'second'})
+        session.files['/Programs/Examples/Sheets/BUDGET.mks'] = b'user values'
+        session.files['/Games/Test/save.txt'] = b'user save'
+        update = self.selection({'Programs/Examples/Sheets/BUDGET.mks':b'updated sample', 'Programs/Calculations/new.txt':b'second'})
         result = synchronize(update, session, verify=True)
-        self.assertEqual(session.files['/sheets/BUDGET.mks'], b'user values')
-        self.assertEqual(session.files['/games/Test/save.txt'], b'user save')
-        self.assertNotIn('/games/Test/old.txt', session.files)
-        self.assertEqual(session.files['/library/new.txt'], b'second')
-        self.assertIn('sheets/BUDGET.mks', result['preserved'])
+        self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'], b'user values')
+        self.assertEqual(session.files['/Games/Test/save.txt'], b'user save')
+        self.assertNotIn('/Games/Test/old.txt', session.files)
+        self.assertEqual(session.files['/Programs/Calculations/new.txt'], b'second')
+        self.assertIn('Programs/Examples/Sheets/BUDGET.mks', result['preserved'])
         # Repeat update retains the sample's user ownership.
         synchronize(update, session)
-        self.assertEqual(session.files['/sheets/BUDGET.mks'], b'user values')
+        self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'], b'user values')
     def test_preflight_failure_has_no_writes(self):
-        selected = self.selection({'library/test.txt':b'first'})
+        selected = self.selection({'Programs/Calculations/test.txt':b'first'})
         Path(selected['files'][0]['source']).write_bytes(b'changed')
         session = MemorySession()
         with self.assertRaisesRegex(ValueError, 'changed after'):
@@ -155,29 +172,29 @@ class ProgramBundleTests(unittest.TestCase):
         self.assertFalse(any(op in ('PUT','REMOVE','MKDIR') for op, _ in session.calls))
     def test_unchanged_defaults_need_no_program_download(self):
         session=MemorySession()
-        original=self.selection({'sheets/BUDGET.mks':b'original'})
+        original=self.selection({'Programs/Examples/Sheets/BUDGET.mks':b'original'})
         synchronize(original,session)
-        session.files['/sheets/BUDGET.mks']=b'user edited values'
+        session.files['/Programs/Examples/Sheets/BUDGET.mks']=b'user edited values'
         session.calls.clear()
         synchronize(original,session)
-        self.assertNotIn(('GET','/sheets/BUDGET.mks'),session.calls)
-        self.assertEqual(session.files['/sheets/BUDGET.mks'],b'user edited values')
-        synchronize(self.selection({'sheets/BUDGET.mks':b'new default'}),session)
-        self.assertEqual(session.files['/sheets/BUDGET.mks'],b'user edited values')
+        self.assertNotIn(('GET','/Programs/Examples/Sheets/BUDGET.mks'),session.calls)
+        self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'],b'user edited values')
+        synchronize(self.selection({'Programs/Examples/Sheets/BUDGET.mks':b'new default'}),session)
+        self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'],b'user edited values')
 
     def test_corrupt_receipt_prevents_any_update(self):
         session=MemorySession()
-        selected=self.selection({'library/test.txt':b'original'})
+        selected=self.selection({'Programs/Calculations/test.txt':b'original'})
         synchronize(selected,session)
         session.files['/System/PROGRAMS.TXT']=b'{"format":1,"sha256":"' + b'0'*64 + b'","parts":257}'
         before=dict(session.files);session.calls.clear()
         with self.assertRaisesRegex(ValueError,'receipt index'):
-            synchronize(self.selection({'library/test.txt':b'new'}),session)
+            synchronize(self.selection({'Programs/Calculations/test.txt':b'new'}),session)
         self.assertEqual(session.files,before)
         self.assertFalse(any(op in ('PUT','REMOVE','MKDIR') for op,_ in session.calls))
 
     def test_missing_system_dependency_and_readback_failure(self):
-        selected = self.selection({'library/test.txt':b'first'})
+        selected = self.selection({'Programs/Calculations/test.txt':b'first'})
         selected['system_files'] = [dict(path='BASIC.APP', sha256='0'*64)]
         session = MemorySession()
         with self.assertRaisesRegex(ValueError, 'matching System'):
@@ -187,25 +204,36 @@ class ProgramBundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'readback mismatch'):
             synchronize(selected, session, verify=True)
     def test_export_has_no_host_paths_and_refuses_existing_destination(self):
-        selected = self.selection({'library/test.txt':'Привет →\n'.encode()})
+        selected = self.selection({'Programs/Calculations/test.txt':'Привет →\n'.encode()})
         selected.update(format=1, packages=[], skipped=[])
         output = self.base/'export'
         export(selected, output)
         text = (output/'programs-manifest.json').read_text()
         self.assertNotIn(str(self.base), text)
-        self.assertEqual((output/'library/test.txt').read_text(), 'Привет →\n')
+        self.assertEqual((output/'Programs/Calculations/test.txt').read_text(), 'Привет →\n')
         with self.assertRaisesRegex(ValueError, 'must not exist'):
             export(selected, output)
     def test_installer_uses_frozen_release_files_and_rejects_damage(self):
-        selected=self.selection({'library/release.txt':b'frozen release'})
-        selected.update(format=1,packages=['library'],skipped=[],system_files=[])
-        export(selected,self.bundle/'Programs')
+        selected=self.selection({'Programs/Calculations/release.txt':b'frozen release'})
+        selected.update(format=1,packages=['Programs/Calculations'],skipped=[],system_files=[])
+        export(selected,self.bundle/'Disk',manifest=self.bundle/'programs-manifest.json')
         Path(selected['files'][0]['source']).write_bytes(b'new unrelated checkout')
         frozen=plan(self.bundle)
         self.assertEqual(Path(frozen['files'][0]['source']).read_bytes(),b'frozen release')
-        (self.bundle/'Programs/library/release.txt').write_bytes(b'damaged')
+        (self.bundle/'Disk/Programs/Calculations/release.txt').write_bytes(b'damaged')
         with self.assertRaisesRegex(ValueError,'checksum mismatch'):
             plan(self.bundle)
+
+    def test_release_zip_keeps_cyrillic_paths_and_empty_documents(self):
+        from tools.programs.program_bundle import archive_disk
+        selected = self.selection({'Games/Джим из Космоса/Play.txt': b'game.urq\n'})
+        selected.update(format=1, packages=[], skipped=[], system_files=[])
+        export(selected, self.bundle/'Disk', manifest=self.bundle/'programs-manifest.json')
+        archive = self.base / 'release.zip'
+        archive_disk(self.bundle, archive)
+        with zipfile.ZipFile(archive) as actual:
+            self.assertEqual(actual.read('bundle/Disk/Games/Джим из Космоса/Play.txt'), b'game.urq\n')
+            self.assertIn('bundle/Disk/Documents/', actual.namelist())
 
     def test_compiler_resolves_defaults_and_last_definition(self):
         compiler = shutil.which('clang++') or shutil.which('g++')
@@ -262,12 +290,12 @@ class ProgramBundleTests(unittest.TestCase):
             else:target.unlink(missing_ok=True)
         preview=subprocess.run([*command,'--preview-programs'],env=environment,text=True,capture_output=True)
         self.assertEqual(preview.returncode,0,preview.stdout+preview.stderr)
-        self.assertIn('sheets',preview.stdout)
+        self.assertIn('Programs/Examples/Sheets',preview.stdout)
         self.assertFalse(list(device.iterdir()),'preview must not access/write the device')
         installed=subprocess.run([*command,'--install-all'],env=environment,text=True,capture_output=True)
         self.assertEqual(installed.returncode,0,installed.stdout+installed.stderr)
-        self.assertTrue((device/'app/SHEET.APP').exists())
-        self.assertTrue((device/'sheets/BUDGET.mks').exists())
+        self.assertTrue((device/'Programs/SHEET.APP').exists())
+        self.assertTrue((device/'Programs/Examples/Sheets/BUDGET.mks').exists())
         self.assertTrue((device/'System/BASIC.APP').exists())
         self.assertFalse((device/'Fonts/DejaVu-14.FMK').exists())
         if shutil.which('pwsh'):
@@ -288,17 +316,17 @@ class ProgramBundleTests(unittest.TestCase):
         for number, command in enumerate(commands):
             with self.subTest(command=command[0]):
                 device = self.base/f'device{number}'; device.mkdir()
-                selected = self.selection({'library/Тест.txt':'Привет →\n'.encode(), 'sheets/BUDGET.mks':b'old', 'games/Test/old.txt':b'old'})
+                selected = self.selection({'Programs/Calculations/Тест.txt':'Привет →\n'.encode(), 'Programs/Examples/Sheets/BUDGET.mks':b'old', 'Games/Test/old.txt':b'old'})
                 session = MkcSession(self.cap, mock=device, command=command)
                 try: synchronize(selected, session, verify=True)
                 finally: session.close()
-                (device/'sheets/BUDGET.mks').write_bytes(b'user')
-                updated = self.selection({'library/Тест.txt':'Обновление\n'.encode(), 'sheets/BUDGET.mks':b'new'})
+                (device/'Programs/Examples/Sheets/BUDGET.mks').write_bytes(b'user')
+                updated = self.selection({'Programs/Calculations/Тест.txt':'Обновление\n'.encode(), 'Programs/Examples/Sheets/BUDGET.mks':b'new'})
                 session = MkcSession(self.cap, mock=device, command=command)
                 try: synchronize(updated, session, verify=True)
                 finally: session.close()
-                self.assertEqual((device/'sheets/BUDGET.mks').read_bytes(), b'user')
-                self.assertFalse((device/'games/Test/old.txt').exists())
+                self.assertEqual((device/'Programs/Examples/Sheets/BUDGET.mks').read_bytes(), b'user')
+                self.assertFalse((device/'Games/Test/old.txt').exists())
 
 
 if __name__ == '__main__':

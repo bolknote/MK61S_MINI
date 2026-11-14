@@ -111,7 +111,8 @@ void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
                     custom?&icon:nullptr,index==selected);
     }
     if(!services.browser_count()) canvas.empty(services.browser_filtered()?
-        (ru?M8("Нет совпадений"):"No matches"):(ru?M8("Папка пуста"):"Folder empty"));
+        (ru?M8("Нет совпадений"):"No matches"):services.browser_games()?
+        (ru?M8("Нет игр"):"No games"):(ru?M8("Папка пуста"):"Folder empty"));
     if(height==320) {
         canvas.rectangle(0,299,width,1);
         canvas.text(10,303,services.footer(),12,width-20);

@@ -618,8 +618,7 @@ for index in "${!custom_app_names[@]}"; do
 done
 python3 "$root/tools/apps/urq/build_urq_app.py" --target stm32 \
   --toolchain "$(dirname "$compiler")" --build-dir "$work/urq" \
-  --output-dir "$bundle_stage/Apps" --library-output "$bundle_stage/Games/URQ" \
-  --licenses-output "$bundle_stage/licenses/urq"
+  --output-dir "$bundle_stage/Apps" --licenses-output "$bundle_stage/licenses/urq"
 mkdir -p "$bundle_stage/licenses/ryu"
 cp "$root/third_party/ryu/LICENSE-Apache2" "$root/third_party/ryu/LICENSE-Boost" \
   "$root/third_party/ryu/README.md" "$bundle_stage/licenses/ryu/"

@@ -3,6 +3,8 @@
 #include "mk8_literal.hpp"
 #include "loadable_system_api.h"
 #include "explorer_autoexec.hpp"
+#include "explorer_home.hpp"
+#include "fat_name.hpp"
 #include "storage_path.hpp"
 #include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
@@ -37,12 +39,19 @@ static bool directory_tree;
 static u32 fixture_revision=1;
 static unsigned icon_reads=0;
 static u8 icon_file[132];
+static const char* play_file;
 namespace program_store {
 u32 catalog_revision() {return fixture_revision;}
 bool read_id(u16 id,u8* out,u16 capacity,u16* copied) {
   ++icon_reads;
   if(id!=104 || capacity<sizeof(icon_file)) return false;
   memcpy(out,icon_file,sizeof(icon_file));*copied=sizeof(icon_file);return true;
+}
+bool read_range_id(u16 id, u16 offset, u8* out, u16 capacity, u16* copied) {
+  if(id!=106 || offset || !play_file || strlen(play_file)>capacity) return false;
+  *copied=(u16)strlen(play_file);
+  memcpy(out,play_file,*copied);
+  return true;
 }
 int child_count(u16 directory) {
   int count = 0;
@@ -238,31 +247,48 @@ static Entry entry(const char* name, ProgramType type, bool directory = false) {
   return result;
 }
 
-static void test_app_autoexec_uses_basename_and_type() {
+static bool legacy_launcher(u16 parent, u16& id) {
+  program_store::Entry game{};
+  if(!explorer_autoexec::find_game(parent,game)) return false;
+  id=game.id;
+  return true;
+}
+
+static void test_game_launcher() {
   auto script=entry("AUTOEXEC",ProgramType::MK61);script.id=101;script.parent_id=17;
   auto basic=entry("autoexec",ProgramType::TINYBASIC);basic.id=102;basic.parent_id=17;
   auto text=entry("autoexec",ProgramType::TEXT);text.id=103;text.parent_id=17;
   entries={basic,text,script};
   u16 id=program_store::INVALID_ID;
-  assert(app::autoexec(17,id) && id==script.id); // M61 priority, case-insensitive.
+  assert(legacy_launcher(17,id) && id==script.id);
   entries={text,basic};
-  assert(app::autoexec(17,id) && id==basic.id);
+  assert(legacy_launcher(17,id) && id==basic.id);
   entries={text};id=123;
-  assert(!app::autoexec(17,id) && id==123);
+  assert(!legacy_launcher(17,id) && id==123);
   script.parent_id=22;entries={script};resolve_from_parent=true;
-  assert(!app::autoexec(17,id) && id==123); // Never inherit a parent's autoexec.
+  assert(!legacy_launcher(17,id) && id==123);
   resolve_from_parent=false;
-  assert(!app::autoexec(0x7ffe,id) && id==123);
+  assert(!legacy_launcher(0x7ffe,id) && id==123);
   auto directory=entry("autoexec",ProgramType::MK61,true);
   directory.parent_id=17;entries={directory};
-  assert(!app::autoexec(17,id));
+  assert(!legacy_launcher(17,id));
   auto icon=entry("autoexec",ProgramType::IMAGE1);icon.id=104;icon.parent_id=17;
   entries={icon};program_store::Entry image{};
   assert(explorer_autoexec::find_icon(17,image) && image.id==104);
-  assert(!app::autoexec(17,id)); // An icon by itself must never launch a program.
+  assert(!legacy_launcher(17,id));
   icon.parent_id=22;entries={icon};resolve_from_parent=true;
   assert(!explorer_autoexec::find_icon(17,image));
   resolve_from_parent=false;
+
+  auto play=entry("Play",ProgramType::TEXT);play.id=106;play.parent_id=17;
+  auto quest=entry("game",ProgramType::URQ);quest.id=107;quest.parent_id=17;
+  play_file="GAME.URQ\r\n";play.data_len=strlen(play_file);entries={play,quest};
+  assert(legacy_launcher(17,id) && id==quest.id);
+  play_file="../game.urq\n";entries[0].data_len=strlen(play_file);
+  assert(!legacy_launcher(17,id));
+  play_file="game.urq\n";entries[0].data_len=strlen(play_file);entries[1].parent_id=22;
+  assert(!legacy_launcher(17,id));
+  play_file=nullptr;
 }
 
 static void expect_line(u8 row, const std::string& expected) {
@@ -350,14 +376,21 @@ static void test_select_flow(bool graphical) {
   auto folder = entry("games", ProgramType::TEXT, true); folder.id = 17;
   auto script = entry("AUTOEXEC", ProgramType::MK61); script.id = 101; script.parent_id = 17;
   auto basic = entry("autoexec", ProgramType::TINYBASIC); basic.id = 102; basic.parent_id = 17;
-  for(const auto& files : {std::vector<Entry>{folder, basic, script},
-                           std::vector<Entry>{folder, basic}}) {
-    entries = files;
-    auto state = session(); kbd::events({{KEY_OK}});
-    assert(app::select(state));
-    assert(state.action == ExplorerAction::AUTOEXEC && state.directory_id == 17);
-    assert(state.selected_id == files.back().id && state.search[0] == 0);
-  }
+  auto game = entry("Chess", ProgramType::TEXT, true);game.id=22;game.parent_id=17;
+  script.parent_id=22;basic.parent_id=22;
+  auto icon=entry("autoexec",ProgramType::IMAGE1);icon.id=104;icon.parent_id=17;
+  entries = {folder, icon, game, script, basic};
+  auto home = session();home.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
+  kbd::events({{KEY_OK}, {KEY_OK}});
+  assert(app::select(home));
+  assert(home.action == ExplorerAction::PLAY && home.directory_id == 17 && home.selected_id == 22);
+  kbd::events({{KEY_OK,0,true},{KEY_OK|(i32)key_state::RELEASED,1300},
+               {KEY_RIGHT,1301},{KEY_RIGHT,1302},{KEY_OK,1303},{KEY_OK,1304}});
+  assert(app::select(home) && home.action==ExplorerAction::LOAD && home.selected_id==101);
+
+  auto documents = session();documents.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_OK},{KEY_OK}});
+  assert(app::select(documents) && documents.action==ExplorerAction::OPEN_DOCUMENTS);
 
   auto program = entry("game1", ProgramType::MK61); program.id = 201;
   entries = {folder, program};
@@ -365,7 +398,7 @@ static void test_select_flow(bool graphical) {
   assert(app::select(state) && state.action == ExplorerAction::LOAD);
   assert(state.directory_id == program_store::ROOT_ID && state.selected_id == 201);
 
-  state = session(); kbd::events({{KEY_OK}, {KEY_ESC}, {KEY_ESC}});
+  state = session(); kbd::events({{KEY_OK}, {KEY_ESC}, {KEY_ESC}, {KEY_ESC}});
   assert(app::select(state) && state.action == ExplorerAction::EXIT);
 
   entries = {folder}; state = session(); kbd::events({{KEY_OK}, {KEY_OK}});
@@ -376,7 +409,7 @@ static void test_select_flow(bool graphical) {
   state = session(); kbd::events({{keyboard_layout::active().digit[1]}, {KEY_OK}});
   assert(app::select(state) && state.action == ExplorerAction::RUN);
   assert(state.selected_id == 201 && strcmp(state.search, "1") == 0);
-  kbd::events({{KEY_ESC}, {KEY_ESC}});
+  kbd::events({{KEY_ESC}, {KEY_ESC}, {KEY_ESC}});
   assert(app::select(state) && state.action == ExplorerAction::EXIT && state.search[0] == 0);
 
   program.type = ProgramType::MK61; entries = {program}; state = session();
@@ -385,7 +418,7 @@ static void test_select_flow(bool graphical) {
   assert(app::select(state) && state.action == ExplorerAction::VIEW && state.selected_id == 201);
 
   state = session(12345); bounded_string::copy(state.search, "stale");
-  kbd::events({{KEY_ESC}});
+  kbd::events({{KEY_ESC}, {KEY_ESC}});
   assert(app::select(state) && state.directory_id == program_store::ROOT_ID && state.search[0] == 0);
   state.size = 0; kbd::events({});
   assert(!app::select(state) && kbd::position == 0);
@@ -411,7 +444,7 @@ static void test_generic_explorer_flow(bool graphical) {
   entries = {file};
   auto state = session(); ExplorerFlowBackend backend;
   uint32_t result = 42;
-  kbd::events({{KEY_OK}, {KEY_ESC}});
+  kbd::events({{KEY_OK}, {KEY_ESC}, {KEY_ESC}});
   assert(app_flow::run(mk61_app_flow_to(MK61_APP_KIND_EXPLORER, 0xFFFF, 0),
       &state, sizeof(state), result, explorer_flow_backend, &backend) == MK61_FLOW_OK);
   assert(!result && backend.actions == 1 && state.action == loadable_module::ExplorerAction::EXIT);
@@ -464,37 +497,40 @@ static void test_native_browser() {
   memset(icon_file,0xFF,sizeof(icon_file));icon_file[0]=icon_file[1]=0;icon_file[2]=icon_file[3]=32;icon_file[4]=0x7F;
   surface.graphical=true;icon_reads=0;surface.frames=0;
   loadable_module::ExplorerSession session{};session.size=sizeof(session);session.directory_id=program_store::ROOT_ID;
-  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_LEFT},{KEY_LEFT},{KEY_ESC}});
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_LEFT},{KEY_LEFT},{KEY_ESC},{KEY_ESC}});
   assert(app::select(session));assert(session.action==loadable_module::ExplorerAction::EXIT);
   assert(icon_reads==1 && surface.frames>=5 && !surface.fullscreen && !language_workspace::active);
   assert(surface.bitmap[(16/8)*192+16]&(1U<<(16&7)));
   for(unsigned x=0;x<192;++x) assert(surface.bitmap[192+x]&8U); // native header, y=11
   // Page transitions reuse the same foreground allocation, never a resident array.
-  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_RIGHT},{KEY_ESC}});
+  session.reserved=0;session.active=0;
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_RIGHT},{KEY_ESC},{KEY_ESC}});
   assert(app::select(session));assert(session.active==3 && !language_workspace::active);
-  // A long OK menu can enter a folder without invoking its autoexec.
-  session.active=0;kbd::events({{KEY_OK,0,true},{KEY_OK|(i32)key_state::RELEASED,1400,false},
-      {KEY_OK,1450,false},{KEY_ESC,1460},{KEY_ESC,1470}});
+  // Both the file menu and short OK can browse a launchable folder.
+  session.reserved=0;session.active=0;kbd::events({{KEY_OK,0,true},{KEY_OK|(i32)key_state::RELEASED,1400,false},
+      {KEY_OK,1450,false},{KEY_ESC,1460},{KEY_ESC,1470},{KEY_ESC,1480}});
   assert(app::select(session));assert(session.action==loadable_module::ExplorerAction::EXIT);
   assert(session.directory_id==program_store::ROOT_ID && !surface.fullscreen && !language_workspace::active);
-  kbd::events({{KEY_OK}});assert(app::select(session));
-  assert(session.action==loadable_module::ExplorerAction::AUTOEXEC && session.selected_id==105);
+  session.reserved=0;session.active=0;
+  kbd::events({{KEY_OK},{KEY_RIGHT},{KEY_OK}});assert(app::select(session));
+  assert(session.action==loadable_module::ExplorerAction::LOAD && session.selected_id==105);
   assert(!surface.fullscreen && !language_workspace::active);
   // Revision changes invalidate an otherwise identical icon cache page.
   first.name[0]=0;bounded_string::copy(first.name,"a-very-long-folder-name");entries[0]=first;
   session.directory_id=program_store::ROOT_ID;session.active=0;icon_reads=0;revision_change_at=500;
-  kbd::events({{KEY_ESC,1100}});assert(app::select(session));assert(icon_reads==2);
+  kbd::events({{KEY_ESC,1100},{KEY_ESC}});assert(app::select(session));assert(icon_reads==2);
   // Invalid WBMP falls back and a busy shared arena retains the old text UI.
-  icon_file[2]=31;session.active=0;kbd::events({{KEY_ESC}});assert(app::select(session));
+  icon_file[2]=31;session.reserved=0;session.active=0;kbd::events({{KEY_ESC},{KEY_ESC}});assert(app::select(session));
   assert(!(surface.bitmap[(16/8)*192+16]&(1U<<(16&7))));
   language_workspace::available=false;const unsigned frames=surface.frames;
-  kbd::events({{KEY_ESC}});assert(app::select(session));assert(surface.frames==frames && !language_workspace::active);
+  session.reserved=0;
+  kbd::events({{KEY_ESC},{KEY_ESC}});assert(app::select(session));assert(surface.frames==frames && !language_workspace::active);
   language_workspace::available=true;directory_tree=false;
   puts("Explorer native state machine: cached icons/revision, paging, folder bypass, autoexec, modal cleanup and busy-arena fallback PASS");
 }
 #endif
 int main() {
-  test_app_autoexec_uses_basename_and_type();
+  test_game_launcher();
   test_extensions();
 #if MK61_EXPLORER_GRAPHICS
   test_native_browser();

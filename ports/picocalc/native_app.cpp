@@ -1475,7 +1475,7 @@ u8 Services::run_handled(const char *path, u16 magic) {
     if(!slash) break;
     if(slash==parent) slash[1]=0;else *slash=0;
   }
-  const char* roots[]={"/app","/Apps","/Applications","/System","/"};
+  const char* roots[]={"/System","/Programs","/app","/Apps","/Applications","/"};
   for(const char* root:roots)
     if(find_handler(root,magic,!std::strcmp(root,"/")?2:1,budget,candidate))
       return run_native(candidate,document.id);

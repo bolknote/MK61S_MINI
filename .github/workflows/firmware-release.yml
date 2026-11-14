@@ -265,25 +265,17 @@ jobs:
               throw "Invalid URQ APP report: $($report.name)"
             }
           }
-          foreach ($pair in @(
-            @('programs/urq', 'Games/URQ', @('.urq', '.uqd', '.wbmp')),
-            @('tools/apps/urq/sources', 'licenses/urq', @('.txt'))
-          )) {
-            $source = (Resolve-Path $pair[0]).Path
-            $destination = Join-Path $bundle $pair[1]
-            $expected = @(Get-ChildItem $source -Recurse -File | Where-Object {
-              $_.Extension -cin $pair[2]
-            } | ForEach-Object {
-              $relative = $_.FullName.Substring($source.Length).TrimStart([char[]]'\/')
-              $copied = Join-Path $destination $relative
-              if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash $copied).Hash) {
-                throw "URQ payload differs: $relative"
-              }
-              $relative
-            })
-            $actual = @(Get-ChildItem $destination -Recurse -File)
-            if ($actual.Count -ne $expected.Count) { throw "Unexpected URQ payload in $destination" }
-          }
+          $source = (Resolve-Path 'tools/apps/urq/sources').Path
+          $destination = Join-Path $bundle 'licenses/urq'
+          $expected = @(Get-ChildItem $source -Recurse -File -Filter '*.txt' | ForEach-Object {
+            $relative = $_.FullName.Substring($source.Length).TrimStart([char[]]'\/')
+            if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash (Join-Path $destination $relative)).Hash) {
+              throw "URQ licence differs: $relative"
+            }
+            $relative
+          })
+          $actual = @(Get-ChildItem $destination -Recurse -File -Filter '*.txt')
+          if ($actual.Count -ne $expected.Count) { throw "Unexpected URQ licence in $destination" }
 
       - name: Build F411 through native PowerShell without Python or host C++
         if: runner.os == 'Windows'

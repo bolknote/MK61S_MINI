@@ -128,8 +128,11 @@ def main():
     if args.zip:
         with zipfile.ZipFile(args.zip) as archive:
             assert archive.testzip() is None
-            prefix = "apps/SPECTRUM/games/"
-            assert set(archive.namelist()) == {prefix + name for name in manifest["files"]} | set(manifest["redistribution_notices"])
+            prefix = "Games/Spectrum Collection/"
+            assert set(archive.namelist()) == {prefix + name for name in manifest["files"]} | {
+                prefix + "Play.txt",
+            } | set(manifest["redistribution_notices"])
+            assert archive.read(prefix + "Play.txt") == b"GAMES.img\n"
             for name in manifest["files"]:
                 assert archive.read(prefix + name) == (folder / name).read_bytes()
             for name, expected in manifest["redistribution_notices"].items():

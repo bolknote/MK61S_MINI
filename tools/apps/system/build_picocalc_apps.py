@@ -15,7 +15,7 @@ import subprocess
 import sys
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 from explorer_icons import copy_icon
-from tools.apps.urq.library import copy_device_library, copy_licenses
+from tools.apps.urq.library import copy_licenses
 ROOT=Path(__file__).resolve().parents[3]
 APPS={
     'HELLO':(['examples/portable-apps/HELLO/main.c'],None),
@@ -37,7 +37,6 @@ SERVICES.APP    Math/formatting example; sqrt(3^2+4^2)=5; any key exits.
 ELIZA.APP       DOCTOR 1966; optional 256-KiB PSRAM memory, SRAM fallback.
 SHEET.APP       Spreadsheet; up to 128 undo steps with PSRAM, single undo otherwise.
 URQ.APP         Russian text adventures; DOS/Rip/Ak/UrqW, F8 RU/EN, colored text.
-URQ/            Russian text quests (CC0 / CC-BY-NC-SA); licenses in licenses/urq/.
 WBMP.APP        Image handler up to 4 MiB; PSRAM storage or a small SD read cache.
 SPECTRUM/      Spectrum/Pentagon 512K APP; PSRAM, AY/TurboSound, disk images.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
@@ -45,10 +44,9 @@ PATTERN.wbmp    Native 320x320 WBMP pixel-check example.
 BUDGET.mks   Spreadsheet with formulas and Russian headings.
 CYCLE.mks    Spreadsheet with an intentional reference cycle.
 
-Copy this directory to a new folder on microSD and open APPs in Explorer.
-Do not replace STM32 /System or /app with this M0+ collection.
-PicoCalc system services are resident in the UF2; no external System APPs
-are needed. M4/hard-float and M0+/soft-float containers are distinct.
+This directory contains build outputs. Use package_picocalc.py to prepare
+the release ZIP, then copy the contents of Disk/ to the microSD root.
+The M0+/soft-float APPs in this collection only run on Pico H.
 Sources and build information: manifest.json.
 '''
 def main():
@@ -84,7 +82,6 @@ def main():
     subprocess.run(spectrum_command,check=True)
     # Publish only after every compiler succeeded, including Rust and Spectrum.
     shutil.copytree(spectrum_dir,args.output_dir/'SPECTRUM',dirs_exist_ok=True)
-    copy_device_library(args.output_dir/'URQ')
     copy_licenses(args.output_dir.parent/'licenses/urq')
     shutil.copytree(ROOT/'third_party/ryu',args.output_dir.parent/'licenses/ryu',
                     ignore=shutil.ignore_patterns('ryu'),dirs_exist_ok=True)

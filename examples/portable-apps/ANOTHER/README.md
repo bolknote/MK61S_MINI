@@ -28,12 +28,12 @@
 движущегося эпизода, моно-микшер и переход к первой игровой части. Проверки
 и протокол M3 запускаются командой
 `sh tests/run_another_world_tests.sh`; чтобы включить прогон с локальными
-файлами игры, задайте `ANOTHER_WORLD_DATA=.build/game-library/sd/apps/ANOTHER`.
+файлами игры, задайте `ANOTHER_WORLD_DATA='.build/game-library/sd/Games/Another World'`.
 При установленном Unicorn ARM-код делителя и сохранение его состояния
 проверяются после сборки командой:
 `python3 tests/another_world_divider_arm_self_test.py .build/another-app/ANOTHER.elf`.
 Инкрементальная распаковка на ARM проверяется командой
-`python3 tests/another_world_prefetch_arm_self_test.py .build/game-library/sd/apps/ANOTHER`.
+`python3 tests/another_world_prefetch_arm_self_test.py '.build/game-library/sd/Games/Another World'`.
 На физическом PicoCalc с прошивкой 0.8.16 проверены запуск, ввод кода уровня,
 переход к первому игровому уровню и выход по Esc. Уменьшенные обновления
 экрана и сжатый кеш часто копируемой видеостраницы сокращают передачу данных.

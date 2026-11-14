@@ -9,6 +9,7 @@
 #include "loadable_app_services.h"
 #include "source_document.hpp"
 #include "explorer_view.hpp"
+#include "explorer_home.hpp"
 
 namespace picocalc {
 class MarkdownView;
@@ -80,16 +81,23 @@ public:
     bool browser_actions() const { return page_==ServicePage::FILE_ACTIONS; }
     unsigned browser_action_selection() const { return selection_; }
     bool russian() const { return russian_; }
-    explorer_view::Mode browser_mode() const { return browser_mode_; }
-    unsigned browser_count() const { return used_; }
+    explorer_view::Mode browser_mode() const {
+        return browser_page_ == explorer_home::Page::HOME || browser_games() ? explorer_view::Mode::LIST : browser_mode_;
+    }
+    unsigned browser_count() const {
+        return browser_page_ == explorer_home::Page::HOME ? explorer_home::COUNT : used_;
+    }
     unsigned browser_selection() const { return selection_ ? selection_-1 : 0; }
     unsigned browser_offset() const { return skip_; }
     bool browser_more() const { return more_; }
     bool browser_filtered() const { return filter_[0]!=0; }
-    bool browser_has_parent() const { return directory_[1]!=0; }
+    bool browser_has_parent() const { return browser_page_ != explorer_home::Page::HOME; }
+    bool browser_games() const { return browser_page_ == explorer_home::Page::GAMES; }
     void browser_title(char out[64]) const;
     bool browser_label(unsigned index,char out[64]) const;
-    bool browser_directory(unsigned index) const { return entries_ && index<used_ && entries_[index].directory; }
+    bool browser_directory(unsigned index) const {
+        return entries_ && index < used_ && entries_[index].directory && !browser_games();
+    }
     bool browser_icon(unsigned index,explorer_view::Icon& out) const;
     void filter_directory(const char* utf8);
     bool save_document(const char* path);
@@ -117,10 +125,15 @@ private:
     const char* tr(const char* en, const char* ru) const { return russian_ ? ru : en; }
     void message(const char* value, ServicePage parent);
     void browse(ServicePage parent);
+    void browse_section(explorer_home::Page page, unsigned selection = 1);
+    void browse_game_files();
+    void open_game(bool instructions = false);
     void refresh();
     void release_browser();
     void move_browser(int step);
-    unsigned file_action_count() const { return selected_directory_ ? 7U : 6U; }
+    unsigned file_action_count() const {
+        return browser_games() ? 3U : selected_game_ ? 7U : 6U;
+    }
     bool selected_path(char out[files::PATH_SIZE]) const;
     void parent_directory();
     void prompt(Prompt op, ServicePage parent, const char* initial = "");
@@ -202,8 +215,12 @@ private:
     files::Entry* entries_=nullptr;
     u32 browser_revision_=0;
     u16 browser_icon_mask_=0;
-    bool selected_directory_=false;
+    bool selected_directory_=false, selected_game_=false;
+    explorer_home::Page browser_page_=explorer_home::Page::DISK;
+    bool return_to_games_=false;
+    unsigned games_skip_=0;
     unsigned browser_return_selection_=1;
+    unsigned games_selection_=1;
     explorer_view::Mode browser_mode_=explorer_view::Mode::ICONS;
     shared_memory::Buffer image_;
     language_vm::State state_{};

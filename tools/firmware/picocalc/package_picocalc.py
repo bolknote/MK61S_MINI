@@ -14,21 +14,23 @@ from pathlib import Path
 import re
 import shutil
 import struct
+import tempfile
 import zipfile
 import zlib
 
-from tools.apps.system.build_picocalc_apps import APPS, ASSETS, ROOT
+from tools.apps.system.build_picocalc_apps import APPS, ROOT
 from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
 from seal_picocalc import verify as verify_firmware
+from program_collection import export, plan
 from explorer_icons import install_bundle_icons
-from tools.apps.urq.library import copy_device_library, copy_licenses
+from tools.apps.urq.library import copy_licenses
 
 README='''MK61S / PicoCalc / Pico H
 
 Copy mk61s-picocalc-pico-h.uf2 to the RPI-RP2 ROM bootloader volume.
 Use the native Micro-USB connector on Pico H. The case USB-C is UART.
-Copy apps/, games/, examples/ and Fonts/ to the microSD card root,
-including each folder's autoexec.wbmp icon.
+Copy the five folders inside Disk/ to the microSD card root.
+Open Explorer > Games and press Enter on a title to play.
 APP images in this bundle target Cortex-M0+ and cannot replace STM32 APPs.
 See README.md for controls, supported formats, clock and power limitations.
 '''
@@ -62,6 +64,11 @@ def main():
     parser.add_argument('--directory',type=Path,default=ROOT/'.build/firmware/picocalc-pico-h')
     parser.add_argument('--output',type=Path)
     args=parser.parse_args();directory=args.directory.resolve()
+    with tempfile.TemporaryDirectory(prefix='mk61-pico-disk-') as stage:
+        package(directory, args.output, Path(stage)/'Disk')
+
+
+def package(directory, output, disk):
     build=json.loads((directory/'manifest.json').read_text())
     version=build['prototype_version']
     if build['profile']!='picocalc-pico-h' or not re.fullmatch(r'\d+\.\d+\.\d+',version):
@@ -87,20 +94,8 @@ def main():
     for record in records:verify_app(apps/(record['name']+'.APP'),record,memory_limit)
     (directory/'README.txt').write_text(README)
     shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')
-    from program_collection import plan as program_plan, distribution_manifest
-    selection = program_plan(directory, prefer_bundle=False)
-    program_files = []
-    for record in selection['files']:
-        source = Path(record['source'])
-        target = directory / record['path']
-        target.parent.mkdir(parents=True, exist_ok=True)
-        if source.resolve() != target.resolve():
-            shutil.copy2(source, target)
-        program_files.append(target)
-    program_manifest = directory / 'programs-manifest.json'
-    program_manifest.write_text(json.dumps(distribution_manifest(selection), ensure_ascii=False, indent=2) + '\n')
-    font_files = []
-    game_files = program_files + [program_manifest, directory/'program-capabilities.json']
+    manifest=disk.parent/'programs-manifest.json'
+    export(plan(directory, prefer_bundle=False), disk, manifest=manifest)
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/fonts/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
@@ -110,30 +105,29 @@ def main():
     menu_license=directory/'licenses/LUCIDE.txt'
     shutil.copy2(ROOT/'ports/picocalc/MENU_ICONS_LICENSE.txt',menu_license)
     shutil.copy2(ROOT/'tools/device/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
-    files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
-        *font_files,*game_files,*(directory/name for name in licenses.FILES),menu_license,
-        apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
-    files=list(dict.fromkeys(files))
+    files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',
+           directory/'sync_picocalc_clock.py',directory/'program-capabilities.json',
+           *(directory/name for name in licenses.FILES),menu_license,apps/'manifest.json']
     spectrum=apps/'SPECTRUM'
     if spectrum.exists():
         record=json.loads((spectrum/'manifest.json').read_text())
         if any(Path(name).name in ('ROMCACHE.uf2','rom-cache.json')for name in record['files']):
             raise ValueError('Rebuild Spectrum SD assets: Flash ROM packs are no longer supported')
         verify_app(spectrum/'SPECTRUM.APP',record,memory_limit)
+        destination=disk/'Programs/Spectrum'
         for name,digest in record['files'].items():
             path=spectrum/name
             if not path.resolve().is_relative_to(spectrum.resolve()) or sha256(path)!=digest:
                 raise ValueError('Spectrum asset/manifest mismatch: '+name)
-        files += sorted(path for path in spectrum.rglob('*') if path.is_file() and path.name not in ('ROMCACHE.uf2','rom-cache.json'))
-    files += copy_device_library(apps/'URQ')
+            target=destination/path.relative_to(spectrum)
+            target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(path,target)
+        files.append(spectrum/'manifest.json')
     files += copy_licenses(directory/'licenses/urq')
     files += sorted(path for path in (directory/'licenses/ryu').rglob('*') if path.is_file())
-    folders={parent.relative_to(directory).as_posix() for path in files for parent in path.parents
-             if parent!=directory and parent.is_relative_to(directory)}
-    # Stale directories from an older output must not become new empty folders
-    # in the ZIP merely because they happen to have a stock icon mapping.
-    icon_files=install_bundle_icons(directory,folders)
-    files=list(dict.fromkeys([*files,*icon_files]))
+    license_folders={parent.relative_to(directory).as_posix() for path in files
+                     for parent in path.parents if parent.is_relative_to(directory/'licenses')}
+    files += install_bundle_icons(directory,license_folders)
     for report_name in ('hardware-parity-summary.json','hardware-apps-summary.json',
                         'hardware-software-summary.json','hardware-power-summary.json',
                         'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',
@@ -168,14 +162,23 @@ def main():
                     raise ValueError('Bumblebee hardware verification belongs to another game file')
         files.append(report)
     checksum_file=directory/f'bundle-sha256-{version}.json'
-    hashes={str(path.relative_to(directory)):sha256(path) for path in files}
-    checksum_file.write_text(json.dumps(hashes,indent=2)+'\n');files.append(checksum_file)
-    output=args.output or directory/f'mk61s-picocalc-pico-h-{version}.zip'
+    payload={path.relative_to(directory).as_posix():path for path in files}
+    payload[manifest.name]=manifest
+    payload.update({path.relative_to(disk.parent).as_posix():path
+                    for path in disk.rglob('*') if path.is_file()})
+    hashes={name:sha256(path) for name,path in payload.items()}
+    checksum_file.write_text(json.dumps(hashes,indent=2)+'\n')
+    payload[checksum_file.name]=checksum_file
+    output=output or directory/f'mk61s-picocalc-pico-h-{version}.zip'
     output.parent.mkdir(parents=True,exist_ok=True)
     temporary=output.with_suffix('.zip.tmp')
     try:
         with zipfile.ZipFile(temporary,'w',zipfile.ZIP_DEFLATED) as archive:
-            for path in files:archive.write(path,'mk61s-picocalc-pico-h/'+str(path.relative_to(directory)))
+            for name,path in sorted(payload.items(),key=lambda item:item[0].casefold()):
+                archive.write(path,'mk61s-picocalc-pico-h/'+name)
+            for path in disk.iterdir():
+                if path.is_dir() and not any(path.iterdir()):
+                    archive.write(path,'mk61s-picocalc-pico-h/'+path.relative_to(disk.parent).as_posix())
         with zipfile.ZipFile(temporary) as archive:
             if archive.testzip() is not None:raise ValueError('archive CRC mismatch')
             for name,digest in hashes.items():

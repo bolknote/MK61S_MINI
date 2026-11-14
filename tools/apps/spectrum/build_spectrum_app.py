@@ -13,7 +13,7 @@ import struct
 import subprocess
 import sys
 from tools.apps.spectrum.fetch_spectrum_devices import prepare as prepare_devices
-from tools.apps.spectrum.build_spectrum_library import prepare as prepare_games
+from tools.apps.spectrum.build_spectrum_library import LAUNCHER, prepare as prepare_games
 from tools.apps.spectrum.build_spectrum_m3 import build as build_sound_module
 
 from tools.firmware.picocalc.build_picocalc import compiler_bin
@@ -110,6 +110,7 @@ def main():
     parser.add_argument("--device-assets", type=Path, help="prepared folder from fetch_spectrum_devices.py")
     parser.add_argument("--fetch-devices", action="store_true", help="fetch pinned ROMs and create disk images")
     parser.add_argument("--with-games", action="store_true", help="include locally downloaded Spectrum library")
+    parser.add_argument("--games-output", type=Path, help="Write the collection to its own folder in Games")
     args = parser.parse_args()
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
                "--target", "picocalc-pico-h", "--shared-runtime", "--name", "SPECTRUM", "--handled-magic", "Z1",
@@ -133,7 +134,11 @@ def main():
         shutil.copytree(assets / "licenses", args.output_dir / "licenses", dirs_exist_ok=True)
     esxdos = assets / "esxdos089.zip" if assets else None
     if args.with_games:
-        prepare_games(args.output_dir / "games", esxdos if esxdos and esxdos.exists() else None)
+        games = args.games_output or args.output_dir / "games"
+        prepare_games(games, esxdos if esxdos and esxdos.exists() else None)
+        if args.games_output:
+            (games / "Play.txt").write_bytes(LAUNCHER)
+            copy_icon("games", games / "autoexec.wbmp")
     shutil.copy2(args.build_dir / "SPECTRUM.APP", args.output_dir / "SPECTRUM.APP")
     report = json.loads((args.build_dir / "SPECTRUM.json").read_text())
     report["sources"] = SOURCES

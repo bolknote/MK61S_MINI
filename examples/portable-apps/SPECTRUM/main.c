@@ -23,6 +23,7 @@ static spectrum* active_machine;
 #define machine (*active_machine)
 static uint8_t keys[32],previous_keys[32];
 static char *directory,*snapshot_path;
+static uint32_t opened_file;
 static bool started;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static spectrum_tape* tape;
@@ -123,7 +124,7 @@ static bool menu_draw(const char* title,const char* const* labels,unsigned count
         spectrum_ui_window(&osd,8,8,224,"Spectrum",root,ROOT_COUNT,root_selected);
     }
     spectrum_ui_window(&osd,nested?40:8,nested?40:8,nested?208:224,title,labels,count,selected);
-    spectrum_ui_footer(&osd,"Enter: select    Esc: back");
+    spectrum_ui_footer(&osd,selected<count?"Enter: select    Esc: back":"Press any key");
     return spectrum_ui_present(&osd);
 }
 static int menu_pick(const char* title,const char* const* labels,unsigned count,unsigned* selected,bool nested,const char* hotkeys) {
@@ -161,7 +162,7 @@ static void message(const char* value) {
     }
     wait_key();
 }
-static uint32_t file_call(unsigned op,const char* path,void* out,uint32_t offset,uint32_t bytes) {
+static __attribute__((noinline)) uint32_t file_call(unsigned op,const char* path,void* out,uint32_t offset,uint32_t bytes) {
     mk61_service_file_bytes r={path,out,offset,bytes};
     return services->call(MK61_SERVICE_FILE_BYTES,op,0,sizeof(r),&r);
 }
@@ -238,7 +239,7 @@ static bool choose_file(unsigned type) {
         else if(c==0xB6 || c==0xB7) { mk61_service_file_info next;if(entry(selected+1,&next,type)) ++selected; }
         else if(enter(c) && found) {
             if(!join_path(snapshot_path,directory,f.name)) { message("Path too long\n\nPress any key");continue; }
-            if(f.directory) { memcpy(directory,snapshot_path,strlen(snapshot_path)+1);selected=0; }
+            if(f.directory) { strcpy(directory,snapshot_path);selected=0; }
             else return true;
         }
     }
@@ -308,7 +309,7 @@ static bool disk_rom(unsigned mode) {
     const unsigned size=mode==SPECTRUM_DISK_BETA?16384:8192;
     mk61_service_file_info info;uint8_t bytes[256];
     if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory || info.size!=size) {
-        message("Disk interface ROM missing\nSee SPECTRUM/README.md\n\nPress any key");return false;
+        message("Disk interface ROM missing\nSee SPECTRUM/README.md");return false;
     }
     for(unsigned at=0;at<size;at+=sizeof(bytes))
         if(!read_source((void*)path,at,bytes,sizeof(bytes)) || !external_write(NULL,target+at,bytes,sizeof(bytes))) return false;
@@ -317,33 +318,33 @@ static bool disk_rom(unsigned mode) {
     return true;
 }
 static bool mount_selected_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return false; }
+    if(!machine.memory) { message("Disk interfaces require PSRAM");return false; }
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     const bool scl=suffix(snapshot_path,".scl");
     if(mode==SPECTRUM_DISK_DIVMMC && (info.size<1024*1024 || info.size%512)) {
-        message("SD image must be sector aligned\nand at least 1 MiB\n\nPress any key");return false;
+        message("SD image must be sector aligned\nand at least 1 MiB");return false;
     }
     if(mode==SPECTRUM_DISK_BETA && !scl && (info.size<4096 || info.size>SPECTRUM_TRD_BYTES || info.size%256)) {
-        message("Invalid TRD size\n\nPress any key");return false;
+        message("Invalid TRD size");return false;
     }
     if(!disk_rom(mode)) return false;
     if(scl) {
         const spectrum_source source={snapshot_path,info.size,read_source};
         const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
         if(spectrum_scl_unpack(&source,&io,SPECTRUM_EXTERNAL_BYTES)!=SPECTRUM_OK) {
-            message("Invalid SCL / checksum / SD error\n\nPress any key");return false;
+            message("Invalid SCL / checksum / SD error");return false;
         }
     }
     mounted_media* m=mode==SPECTRUM_DISK_BETA?&floppy:&sd_card;
-    memcpy(m->path,snapshot_path,strlen(snapshot_path)+1);m->scl=scl;
+    strcpy(m->path,snapshot_path);m->scl=scl;
     spectrum_disk_io* io=mode==SPECTRUM_DISK_BETA?&machine.disk.fdc.io:&machine.disk.spi.io;
     *io=(spectrum_disk_io){m,scl?SPECTRUM_TRD_BYTES:info.size,media_read,media_write,true,80,2};
     if(!spectrum_disk_mode(&machine,mode)) return false;
     reset_machine();started=false;return true;
 }
 static void mount_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM\n\nPress any key");return; }
+    if(!machine.memory) { message("Disk interfaces require PSRAM");return; }
     if(choose_file(mode==SPECTRUM_DISK_BETA?1:2)) (void)mount_selected_media(mode);
 }
 
@@ -369,7 +370,7 @@ static bool mount_tape(void) {
         return false;
     }
     *tape=candidate;
-    memcpy(tape_path,snapshot_path,strlen(snapshot_path)+1);
+    strcpy(tape_path,snapshot_path);
     tape->source.context=tape_path;tape->playing=true;
     machine.ear=spectrum_tape_ear;machine.ear_context=tape;
     if(!started) spectrum_reset(&machine);
@@ -399,10 +400,18 @@ static void tape_menu(void) {
 }
 static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspace) {
     if(!started) {message("Start a machine first\n\nPress any key");return true;}
-    char name[16];
+    char* name=snapshot_path;
+    unsigned prefix=0;
+    if(opened_file!=MK61_SERVICE_INVALID_ID) {
+        if(!file_call(MK61_FILE_BYTES_PATH,NULL,name,opened_file,256)) {
+            message("Cannot get game folder");return true;
+        }
+        for(unsigned i=0;name[i];++i) if(name[i]=='/') prefix=i+1;
+        if(prefix>245) {message("Save path too long");return true;}
+    }
     for(unsigned n=1;n<=9999;++n) {
         mk61_service_file_info info;
-        mk61_app_snprintf(services,name,sizeof(name),"ZX%04u.SZX",n);
+        mk61_app_snprintf(services,name+prefix,256-prefix,"ZX%04u.SZX",n);
         if(file_call(MK61_FILE_BYTES_STAT,name,&info,0,sizeof(info))) continue;
         // The CPU is paused. Spill the cache to PSRAM and let the SD journal
         // use this contiguous lease until the snapshot is published.
@@ -708,6 +717,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     tape_path=mounted_path;tape=&mounted_tape;
 #endif
     directory=paths[0];snapshot_path=paths[1];floppy.path=paths[2];sd_card.path=paths[3];
+    opened_file=file_id;
     directory[0]='.';directory[1]=snapshot_path[0]=floppy.path[0]=sd_card.path[0]=0;
     services=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_MEMORY|MK61_SERVICE_CAP_COLOR_DISPLAY|
         MK61_SERVICE_CAP_FILE_BYTES|MK61_SERVICE_CAP_UI|MK61_SERVICE_CAP_AUDIO_STREAM);
@@ -746,7 +756,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     uint32_t rom_size;
     if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
        (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES))) {
-        message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP\n\nPress any key");return 0;
+        message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP");return 0;
     }
     page_runs[0]=ram.data;page_runs[1]=rom.data;
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
@@ -757,26 +767,24 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
         if(!select_model(false)) return 0;
     }
     if(file_id!=MK61_SERVICE_INVALID_ID) {
-        mk61_service_file_bytes request={NULL,snapshot_path,file_id,256};
-        if(!services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(request),&request)) {
-            message("Cannot get selected file path\nUpdate PicoCalc firmware\n\nPress any key");
+        if(!file_call(MK61_FILE_BYTES_PATH,NULL,snapshot_path,file_id,256)) {
+            message("Cannot get selected file path\nUpdate PicoCalc firmware");
         } else {
-            memcpy(directory,snapshot_path,strlen(snapshot_path)+1);parent_directory();
-            const bool snapshot=is_snapshot(snapshot_path);
-            const bool disk=suffix(snapshot_path,".trd") || suffix(snapshot_path,".scl");
+            strcpy(directory,snapshot_path);parent_directory();
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             if(is_tape(snapshot_path)) {
                 if(mount_tape()) tape_ready();
             } else
 #endif
-            if((snapshot && load_snapshot()) || (disk && mount_selected_media(SPECTRUM_DISK_BETA))) {
+            if(is_snapshot(snapshot_path) ? load_snapshot() :
+               mount_selected_media(suffix(snapshot_path,".img") ? SPECTRUM_DISK_DIVMMC : SPECTRUM_DISK_BETA)) {
                 // The Explorer's opening Enter/F-key may still be held.
                 // Seed the normal guest-key blocker before starting the CPU.
                 const int key=scan_keys();
                 if(escape(key) || key==0x90) goto done;
                 started=true;emulate();
                 if(!started) goto done;
-            } else if(!snapshot && !disk) message("Unsupported Spectrum file\n\nPress any key");
+            }
         }
     }
 #ifdef SPECTRUM_HIL_AFTER_FILE
@@ -811,7 +819,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
             }
             continue;
         }
-        if(c=='o' || c=='O') { if(!choose_file(0) || !load_snapshot()) continue; }
+        if(c=='o' || c=='O') { if(!choose_file(FILE_SNAPSHOT) || !load_snapshot()) continue; }
         else if((c=='t' || c=='T') && machine.disk.mode==SPECTRUM_DISK_BETA && started) {
             if(machine.pentagon) (void)spectrum_memory_page(machine.memory,machine.memory->paging|16);
             spectrum_refresh_map(&machine);

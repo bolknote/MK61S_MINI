@@ -2,13 +2,16 @@
 #include "screen.hpp"
 #include "script.hpp"
 #include "m61_text.hpp"
+#include "mk61_ref.hpp"
 #include "mk8_literal.hpp"
 #include "shared_memory_buffer.hpp"
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <thread>
 #include <vector>
 
 extern u64 picocalc_host_read_count();
@@ -36,6 +39,41 @@ void preview(const Screen& screen) {
 void picocalc_explorer_test() {
     using namespace picocalc;
     {
+        Calculator calc;calc.init();Services service;
+        service.open(Action::EXPLORER,false,calc);
+        assert(service.browser_count()==4);
+        for(const char* label:{"Games","Programs","My files","All files"}) (void)find(service,label);
+        assert(service.input(0xB6) && service.input(0xB6) && service.input('\r'));
+        assert(files::exists("/Documents") && service.browser_count()==0);
+        assert(service.input(0x1B));
+        assert(files::mkdir("/Games") && files::mkdir("/Games/Chess") && files::mkdir("/Games/Arcade"));
+        assert(files::write_text("/Games/notes.txt","hidden from Games",17));
+        const char* m61="R0= 41\nwait 20\nret\n";
+        const char* basic="10 .R0=42\n20 END\n";
+        assert(files::write_text("/Games/Chess/autoexec.m61",m61,std::strlen(m61)));
+        assert(files::write_text("/Games/Arcade/Play.txt","play.tbi\n",9));
+        assert(files::write_text("/Games/Arcade/play.tbi",basic,std::strlen(basic)));
+        assert(service.input(0xB5) && service.input(0xB5) && service.input('\r'));
+        assert(service.browser_games() && service.browser_count()==2);
+        select(service,find(service,"Chess"));
+        assert(service.input('\r') && m61_text::active());
+        assert(service.take_calculator_request());
+        for(unsigned i=0;i<100 && m61_text::active();++i) {
+            m61_text::service();calc.tick();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        service.tick();
+        double value=0;
+        assert(!m61_text::active() && service.active() && service.browser_games());
+        assert(mk61_ref::read({mk61_ref::Kind::R,0},value) && value==41);
+        select(service,find(service,"Arcade"));
+        assert(service.input('\r'));
+        assert(mk61_ref::read({mk61_ref::Kind::R,0},value) && value==42);
+        assert(service.input(0x81) && service.input(0xB6) && service.input(0xB6) && service.input('\r'));
+        assert(!service.browser_games() && service.browser_count()==2);
+        assert(service.input(0x1B) && service.browser_games() && service.browser_selection()==find(service,"Arcade"));
+    }
+    {
         // Ordinary user folders need no custom icon. This is also the same
         // refresh path used by APP result -> Esc -> browser -> Esc -> closed.
         assert(files::mkdir("/NoIcon"));
@@ -46,6 +84,7 @@ void picocalc_explorer_test() {
         assert(service.enter_directory("/NoIcon",false));
         assert(service.input(0x1B) && service.active());
         assert(!files::error()[0]);
+        assert(service.input(0x1B) && service.active());
         assert(service.input(0x1B) && !service.active());
         assert(!files::error()[0]);
         assert(files::remove("/NoIcon"));
@@ -134,7 +173,7 @@ void picocalc_explorer_test() {
             const auto full=shared_memory::buffer_statistics();
             assert(full.external_used==external_bytes);
             assert(full.internal_used==before.internal_used+sizeof(files::Entry)*9+9*explorer_view::ICON_BYTES);
-            service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
+            service.input(0x1B);service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
             assert(shared_memory::buffer_statistics().internal_used==before.internal_used);
             assert(required.reset());service.open(Action::EXPLORER,true,calculator);
             assert(service.enter_directory("/ExplorerNative",false));
@@ -152,7 +191,7 @@ void picocalc_explorer_test() {
         service.input('\r');assert(!std::strcmp(service.page_name(),"PROMPT"));
         service.input(0x1B);assert(!std::strcmp(service.page_name(),"BROWSER"));
         assert(service.enter_directory("/ExplorerNative",false));select(service,launcher);
-        service.input(0x81);for(unsigned i=0;i<5;++i) service.input(0xB6);service.input('\r');
+        service.input(0x81);service.input('\r');
         assert(!std::strcmp(service.page_name(),"BROWSER") && !m61_text::active());
         assert(service.browser_count()==1);
         assert(service.enter_directory("/ExplorerNative",false));
@@ -169,7 +208,7 @@ void picocalc_explorer_test() {
         assert(std::fread(bytes,1,sizeof(bytes),asset)==sizeof(bytes));std::fclose(asset);
         assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",bytes,sizeof(bytes)));
         service.tick();select(service,good);screen.render(calculator.snapshot(),true,&ui,&service);preview(screen);
-        service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
+        service.input(0x1B);service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
     }
     const auto after=shared_memory::buffer_statistics();
     assert(after.internal_used==before.internal_used && after.active==before.active);

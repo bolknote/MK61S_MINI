@@ -22,8 +22,8 @@ def _file(path):
     return path.read_bytes()
 
 
-def _catalog():
-    report = json.loads((ROOT / 'tools/apps/urq/catalog-report.json').read_text())
+def _catalog(root):
+    report = json.loads((root / 'tools/apps/urq/catalog-report.json').read_text())
     known = {game['id'] for game in report['games']} | set(DEVICE_EXCLUSIONS)
     published = set(report['published']) - set(DEVICE_EXCLUSIONS)
     if not published <= known or any(not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*', key) for key in known):
@@ -31,9 +31,10 @@ def _catalog():
     return known, published
 
 
-def _device_plan():
-    known, published = _catalog()
-    source = ROOT / 'programs/urq'
+def _device_plan(root=None):
+    root = ROOT if root is None else root
+    known, published = _catalog(root)
+    source = root / 'programs/urq'
     _directory(source)
     files = {'autoexec.wbmp': _file(source / 'autoexec.wbmp')}
     for key in sorted(published):
@@ -53,6 +54,19 @@ def _device_plan():
 
 def _device_name(name):
     return re.fullmatch(r'game\.urq|p[0-9]{4}\.uqd|autoexec\.wbmp', name, re.I) is not None
+
+
+def disk_games(root=ROOT):
+    catalog = json.loads((root / 'dev/lib/program-catalog.json').read_text(encoding='utf-8'))
+    files, _, _ = _device_plan(root)
+    source = root / 'programs/urq'
+    for name in files:
+        key, _, leaf = name.partition('/')
+        if leaf:
+            title = catalog['urq_games'][key]
+            yield title, leaf, source / name
+            if leaf == 'game.urq':
+                yield title, 'Play.txt', source / 'Play.txt'
 
 
 def _prune_plan(destination, expected, known, licenses=False):

@@ -87,6 +87,12 @@ int main() {
     assert(!service.run_handled("/Games/Sub/Title.sna",spectrum_magic) && launched=="/Games/Sub/Local.App");
     reset();file("/Collection/ZX/Sub/Title.Z80");app("/Collection/ZX/SPECTRUM.APP");
     assert(!service.run_handled("/Collection/ZX/Sub/Title.Z80",spectrum_magic) && launched=="/Collection/ZX/SPECTRUM.APP");
+    reset();file("/Games/Spectrum Collection/GAMES.img");app("/Programs/Spectrum/SPECTRUM.APP");
+    assert(!service.run_handled("/Games/Spectrum Collection/GAMES.img",spectrum_magic) &&
+           launched=="/Programs/Spectrum/SPECTRUM.APP");
+    const auto urq_magic=program_store::TYPE_MAGIC_URQ;
+    reset();file("/Games/Quest/game.urq");app("/System/URQ/URQ.APP",urq_magic);
+    assert(!service.run_handled("/Games/Quest/game.urq",urq_magic) && launched=="/System/URQ/URQ.APP");
     reset();file("/Elsewhere/My Game.trd");app("/Apps/ZX/00broken.APP",spectrum_magic,true);app("/Apps/ZX/01other.APP",0x3143);app("/Apps/ZX/Spectrum.aPp");
     assert(!service.run_handled("/Elsewhere/My Game.trd",spectrum_magic) && launched=="/Apps/ZX/Spectrum.aPp");
     reset();file("/Games/Title.scl");app("/MK61S-HIL/SPECTRUM/SPECTRUM.APP");

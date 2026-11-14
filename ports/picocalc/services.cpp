@@ -9,11 +9,13 @@
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "menu_model.hpp"
+#include "explorer_autoexec.hpp"
 #include <cstdio>
 #include <cstring>
 #include <new>
 
 namespace picocalc {
+using BrowserPage = explorer_home::Page;
 namespace {
 bool back(u8 c) { return c == 0x1B || c == 0xB1; }
 bool enter(u8 c) { return c == '\r' || c == '\n'; }
@@ -65,11 +67,14 @@ bool Services::leave_for_script() {
 void Services::open(Action action, bool russian, Calculator& calculator) {
     calculator_ = &calculator; russian_ = russian; selection_ = 0;
     script::attach(calculator, *this);
+    return_to_games_ = false;
     if(action!=Action::EXPLORER) release_browser();
     if(action == Action::USB_DISK) {
         if(files::begin_usb()) page_ = ServicePage::USB_DISK;
         else message(files::error(), ServicePage::CLOSED);
-    } else if(action == Action::EXPLORER) browse(ServicePage::CLOSED);
+    } else if(action == Action::EXPLORER) {
+        browse(ServicePage::CLOSED);
+    }
     else if(action == Action::FORMAT) {
         page_ = ServicePage::CONFIRM; confirm_ = Confirm::FORMAT; confirm_parent_ = ServicePage::CLOSED;
     } else page_ = ServicePage::DEVELOPMENT;
@@ -79,26 +84,55 @@ void Services::browse(ServicePage parent) {
     viewing_=image_viewing_=runtime_graphics_=false;
     browser_parent_ = parent; page_ = ServicePage::BROWSER;
     browser_load_program_ = false;
-    filter_[0]=0;skip_ = selection_ = 0; refresh();
+    browse_section(BrowserPage::HOME);
+}
+void Services::browse_section(BrowserPage page, unsigned selection) {
+    browser_page_ = page;
+    const char* folder = explorer_home::folder(page);
+    std::snprintf(directory_, sizeof(directory_), "/%s", folder);
+    filter_[0] = 0;
+    skip_ = 0;
+    selection_ = selection;
+    page_ = ServicePage::BROWSER;
+    if(page == BrowserPage::DOCUMENTS && files::ready() && !files::exists(directory_) &&
+       !files::mkdir(directory_)) {
+        message(files::error(), ServicePage::BROWSER);
+        return;
+    }
+    refresh();
 }
 void Services::refresh() {
+    if(browser_page_ == BrowserPage::HOME) {
+        release_browser();
+        more_ = false;
+        browser_revision_ = files::revision();
+        ++graphics_revision_;
+        return;
+    }
     if(!browser_entries_.ok() && !browser_entries_.acquire(shared_memory::Owner::APPLICATION,
             sizeof(files::Entry)*BROWSER_PAGE_SIZE)) {
         entries_=nullptr;used_=0;message("Explorer memory busy",browser_parent_);return;
     }
     entries_=(files::Entry*)browser_entries_.data();
-    if(!files::list(directory_, skip_, entries_, BROWSER_PAGE_SIZE, used_, more_,filter_)) {
+    const bool section_root = directory_[0] == '/' && browser_page_ != BrowserPage::DISK &&
+        std::strcmp(directory_+1, explorer_home::folder(browser_page_)) == 0;
+    if(section_root && !files::exists(directory_) && files::ready()) {
+        used_ = 0;
+        more_ = false;
+    } else if(!files::list(directory_, skip_, entries_, BROWSER_PAGE_SIZE,
+                           used_, more_, filter_, browser_games())) {
         // A directory may disappear while USB or the terminal owns the card.
         // Re-enter a readable root instead of retaining an unusable browser.
         if(std::strcmp(directory_,"/") && files::list("/",0,entries_,BROWSER_PAGE_SIZE,used_,more_)) {
-            std::strcpy(directory_,"/");filter_[0]=0;skip_=selection_=0;status_[0]=0;
+            browse_section(BrowserPage::HOME);
+            return;
         } else { release_browser();message(files::error(), browser_parent_);return; }
     }
     if(selection_ > used_) selection_ = used_;
     if(used_ && !selection_) selection_=1;
     browser_icon_mask_=0;
-    if(browser_mode_!=explorer_view::Mode::ICONS) (void)browser_icons_.reset();
-    if(browser_mode_==explorer_view::Mode::ICONS && !browser_icons_.ok()) {
+    if(browser_mode()!=explorer_view::Mode::ICONS) (void)browser_icons_.reset();
+    if(browser_mode()==explorer_view::Mode::ICONS && !browser_icons_.ok()) {
         (void)browser_icons_.reset();
         const usize bytes=BROWSER_PAGE_SIZE*explorer_view::ICON_BYTES;
         if(!browser_icons_.acquire_cache(shared_memory::Owner::APPLICATION,bytes,
@@ -127,11 +161,22 @@ bool Services::browser_icon(unsigned index,explorer_view::Icon& out) const {
 void Services::browser_title(char out[64]) const {
     if(filter_[0]) { char value[62];label(filter_,value,sizeof(value));std::snprintf(out,64,"? %s",value);return; }
     const char* name=browser_actions()?std::strrchr(selected_file_,'/'):std::strrchr(directory_,'/');
-    label(name && name[1]?name+1:"microSD",out,64);
+    if(!browser_actions() && (browser_page_ == BrowserPage::HOME || directory_[1] == 0 ||
+       (name == directory_ && browser_page_ != BrowserPage::DISK &&
+        browser_page_ != BrowserPage::GAME_FILES)))
+        std::snprintf(out,64,"%s",explorer_home::label(browser_page_,russian_));
+    else label(name && name[1]?name+1:"microSD",out,64);
 }
 bool Services::browser_label(unsigned index,char out[64]) const {
+    if(browser_page_ == BrowserPage::HOME && index < explorer_home::COUNT) {
+        std::snprintf(out,64,"%s",explorer_home::label(explorer_home::ITEMS[index],russian_));
+        return true;
+    }
     if(!entries_ || index>=used_) {out[0]=0;return false;}
-    label(entries_[index].name,out,64);return true;
+    label(entries_[index].name,out,64);
+    if(browser_page_ == BrowserPage::PROGRAMS && !entries_[index].directory && extension(out,".app"))
+        *std::strrchr(out,'.') = 0;
+    return true;
 }
 void Services::move_browser(int step) {
     if(!used_) return;
@@ -147,6 +192,7 @@ void Services::move_browser(int step) {
     }
 }
 void Services::filter_directory(const char* utf8) {
+    if(browser_page_ == BrowserPage::HOME) return;
     std::snprintf(filter_,sizeof(filter_),"%s",utf8?utf8:"");
     skip_=selection_=0;refresh();
 }
@@ -155,11 +201,38 @@ bool Services::selected_path(char out[files::PATH_SIZE]) const {
 }
 void Services::parent_directory() {
     filter_[0]=0;
-    if(std::strcmp(directory_, "/") == 0) { page_ = browser_parent_; selection_ = 0; release_browser();return; }
+    if(browser_page_ == BrowserPage::HOME) {
+        page_ = browser_parent_; selection_ = 0; release_browser(); return;
+    }
+    if(browser_page_ == BrowserPage::GAME_FILES &&
+       std::strncmp(directory_, "/Games/", 7) == 0 && !std::strchr(directory_+7, '/')) {
+        browser_page_ = BrowserPage::GAMES;
+        std::strcpy(directory_, "/Games");
+        selection_ = games_selection_;
+        skip_ = games_skip_;
+        refresh();
+        return;
+    }
+    if(std::strcmp(directory_, "/") == 0 ||
+       std::strcmp(directory_+1, explorer_home::folder(browser_page_)) == 0) {
+        if(browser_parent_ == ServicePage::LANGUAGE) {
+            page_ = browser_parent_; selection_ = 0; release_browser(); return;
+        }
+        unsigned item = 0;
+        while(item + 1 < explorer_home::COUNT && explorer_home::ITEMS[item] != browser_page_) ++item;
+        browse_section(BrowserPage::HOME, item+1);
+        return;
+    }
     char* slash = std::strrchr(directory_, '/');
     if(slash == directory_) directory_[1] = 0;
     else if(slash) *slash = 0;
     skip_ = selection_ = 0; refresh();
+}
+void Services::browse_game_files() {
+    browser_page_ = BrowserPage::GAME_FILES;
+    games_skip_ = skip_;
+    games_selection_ = selection_;
+    (void)enter_directory(selected_file_, false);
 }
 void Services::new_document(Document kind) {
     release_browser();
@@ -375,22 +448,40 @@ bool Services::input(u8 code) {
         normalize_view(); return true;
     }
     if(page_ == ServicePage::BROWSER) {
+        if(browser_page_ == BrowserPage::HOME) {
+            if(cancel) parent_directory();
+            else if(accept && browser_selection() < explorer_home::COUNT)
+                browse_section(explorer_home::ITEMS[browser_selection()]);
+            else if(code >= 0xB4 && code <= 0xB7)
+                selection_ = 1 + menu_model::step(browser_selection(), explorer_home::COUNT,
+                    code == 0xB4 || code == 0xB5 ? -1 : 1);
+            return true;
+        }
         if(cancel && filter_[0]) { filter_directory("");return true; }
         if(cancel) { parent_directory(); return true; }
-        const int vertical=browser_mode_==explorer_view::Mode::ICONS?3:1;
+        const int vertical=browser_mode()==explorer_view::Mode::ICONS?3:1;
         if(code == 0xB5) move_browser(-vertical);
         else if(code == 0xB6) move_browser(vertical);
         else if(code == 0xB4) move_browser(-1);
         else if(code == 0xB7) move_browser(1);
-        else if(code == 0x88) {
+        else if(code == 0x88 && !browser_games()) {
             browser_mode_=browser_mode_==explorer_view::Mode::ICONS?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
             refresh();
+        }
+        else if(code == 0x86) prompt(Prompt::SEARCH,page_,filter_);
+        else if(browser_games()) {
+            if(!accept && code != 0x81 && code != 0x83) return true;
+            if(!selected_path(selected_file_)) return true;
+            if(code == 0x81) {
+                browser_return_selection_ = selection_;
+                page_ = ServicePage::FILE_ACTIONS;
+                selection_ = 0;
+            } else if(accept || code == 0x83) open_game();
         }
         else if(code == 0x82) prompt(Prompt::NEW_FILE, page_, "new.bas");
         else if(code == '/') prompt(Prompt::OPEN, page_);
         else if(code == 0x84) prompt(Prompt::MKDIR, page_, "NewFolder");
         else if(code == 0x85) prompt(Prompt::EXPORT, page_, "program.m61");
-        else if(code == 0x86) prompt(Prompt::SEARCH,page_,filter_);
         else if(code == 0x87 && selected_path(selected_file_)) prompt(Prompt::MOVE,page_,directory_);
         else if(accept || code == 0x81 || code == 0x83) {
             if(!selection_) {
@@ -400,11 +491,14 @@ bool Services::input(u8 code) {
             if(!selected_path(selected_file_)) { message("Path too long", page_); return true; }
             if(code == 0x81) {
                 selected_directory_=entries_[selection_-1].directory;
+                program_store::Entry directory{}, launch{};
+                selected_game_ = selected_directory_ && script::register_file(selected_file_, directory) &&
+                    explorer_autoexec::find_game(directory.id, launch);
                 browser_return_selection_=selection_;
                 page_ = ServicePage::FILE_ACTIONS; selection_ = 0;
             }
             else if(entries_[selection_ - 1].directory) {
-                (void)enter_directory(selected_file_);
+                (void)enter_directory(selected_file_, false);
             } else {
                 return_ = ServicePage::BROWSER;
                 if(load_document(selected_file_) && (code == 0x83 || (browser_load_program_ && document_ == Document::MK61))) pending_run_ = true;
@@ -416,15 +510,27 @@ bool Services::input(u8 code) {
         if(cancel) { page_ = ServicePage::BROWSER; selection_ = browser_return_selection_; refresh(); }
         else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, file_action_count(), code == 0xB5 ? -1 : 1);
         else if(accept) {
+            if(browser_games()) {
+                const unsigned action = selection_;
+                page_ = ServicePage::BROWSER;
+                selection_ = browser_return_selection_;
+                if(action == 2) browse_game_files();
+                else open_game(action == 1);
+                return true;
+            }
             if(selection_ < 2) {
                 return_ = ServicePage::BROWSER;
-                if(selected_directory_) (void)enter_directory(selected_file_);
+                if(selected_directory_) (void)enter_directory(selected_file_, false);
                 else if(load_document(selected_file_,selection_==0) && selection_ == 1) pending_run_ = true;
             }
             else if(selection_ == 2) prompt(Prompt::RENAME, ServicePage::BROWSER, std::strrchr(selected_file_, '/') + 1);
             else if(selection_ == 4) prompt(Prompt::MOVE,ServicePage::BROWSER,directory_);
             else if(selection_==3) { confirm_ = Confirm::DELETE_FILE; confirm_parent_ = page_; page_ = ServicePage::CONFIRM; }
-            else if(selected_directory_ && selection_==5) (void)enter_directory(selected_file_,false);
+            else if(selected_game_ && selection_ == 6) {
+                page_ = ServicePage::BROWSER;
+                selection_ = browser_return_selection_;
+                open_game();
+            }
             else {
                 browser_mode_=browser_mode_==explorer_view::Mode::ICONS?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
                 page_=ServicePage::BROWSER;selection_=browser_return_selection_;refresh();
@@ -446,17 +552,25 @@ bool Services::input(u8 code) {
     } else if(accept && page_ == ServicePage::LANGUAGE) {
         return_ = ServicePage::LANGUAGE;
         if(tool_ == Document::MK61) {
-            if(selection_ == 0) { browse(page_); browser_load_program_ = true; }
+            if(selection_ == 0) { browse(page_); browser_load_program_ = true; browse_section(BrowserPage::DISK); }
             else prompt(Prompt::EXPORT, page_, "program.m61");
         } else if(selection_ == 0) new_document(tool_);
-        else if(selection_ == 1) browse(page_);
+        else if(selection_ == 1) { browse(page_); browse_section(BrowserPage::DISK); }
         else if(tool_ != document_) message("Open or create a source for this language first", page_);
         else { page_ = ServicePage::EDITOR; if(selection_ == 3) pending_run_ = true; }
     }
     return true;
 }
 void Services::tick() {
-    if(page_==ServicePage::BROWSER && (!entries_ || browser_revision_!=files::revision())) refresh();
+    if(return_to_games_ && !calculator_requested_ && !m61_text::active() && !core_61::is_RUN()) {
+        return_to_games_ = false;
+        if(page_ == ServicePage::CLOSED) {
+            page_ = ServicePage::BROWSER;
+            refresh();
+        }
+    }
+    if(page_==ServicePage::BROWSER && browser_page_ != BrowserPage::HOME &&
+       (!entries_ || browser_revision_!=files::revision())) refresh();
     if(page_==ServicePage::CLOSED || page_==ServicePage::DEVELOPMENT || page_==ServicePage::LANGUAGE) release_browser();
     restore_script_editor();
     if(pending_run_) { pending_run_=false;run_document(); }
@@ -506,7 +620,10 @@ const char* Services::footer() const {
     if(markdown_) return tr("Up/Down: scroll  Left/Right: links  Enter", M8("Up/Down: текст  Left/Right: ссылки"));
     if(viewing_) return tr("Up/Down: scroll  Enter/Esc: close", M8("Up/Down: текст  Enter/Esc: назад"));
     if(page_ == ServicePage::EDITOR) return tr("F1: name F2: save F3: run F8: RU/EN", M8("F1: имя F2: запись F3: пуск F8: RU/EN"));
-    if(page_ == ServicePage::BROWSER) return tr("F1: file  F8: icons/list", M8("F1: файл  F8: значки/список"));
+    if(page_ == ServicePage::BROWSER && browser_games())
+        return tr("Enter: play  F1: menu  F6: search", M8("Enter: игра  F1: меню  F6: поиск"));
+    if(page_ == ServicePage::BROWSER && browser_page_ != BrowserPage::HOME)
+        return tr("F1: file  F8: icons/list", M8("F1: файл  F8: значки/список"));
     if(page_ == ServicePage::USB_DISK) return tr("Eject on computer, then Enter / Esc", M8("Извлечь на ПК, затем Enter / Esc"));
     if(usb_force_confirmation()) return tr("Enter: disconnect  Esc: cancel", M8("Enter: отключить  Esc: отмена"));
     if(page_ == ServicePage::CONSOLE) return running_ ? "Esc: STOP" : tr("Enter / Esc: editor", M8("Enter / Esc: редактор"));
@@ -525,6 +642,12 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
     } else if(page_ == ServicePage::CONSOLE) std::snprintf(out, COLS + 1, "%s",
         (console_frame_open_?front_console_:console_)[index % ROWS]);
     else if(page_ == ServicePage::BROWSER) {
+        if(browser_page_ == BrowserPage::HOME) {
+            if(index < explorer_home::COUNT)
+                std::snprintf(out, COLS+1, "%c %s", browser_selection() == index ? '>' : ' ',
+                    explorer_home::label(explorer_home::ITEMS[index], russian_));
+            return;
+        }
         if(index == 0) label(directory_, out, COLS + 1);
         else if(index == 1 && filter_[0]) { char value[COLS-2];label(filter_,value,sizeof(value));std::snprintf(out,COLS+1,"? %s",value); }
         else if(index == 2) std::snprintf(out, COLS + 1, "%c ..", selection_ == 0 ? '>' : ' ');
@@ -538,18 +661,22 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
             const char* dev[] = {tr("Explorer", M8("Проводник")), tr("MK61 files", M8("Файлы МК-61")), "FOCAL", "TinyBASIC"};
             const char* lang[] = {tr("New source", M8("Новый исходник")), tr("Open file...", M8("Открыть файл...")),
                 tr("Edit source", M8("Редактор")), tr("Run source", M8("Запуск"))};
-            const char* actions[] = {tr("Open / edit", M8("Открыть / править")), tr("Run", M8("Запуск")),
+            const char* view = browser_mode_==explorer_view::Mode::ICONS
+                ? tr("View: list",M8("Вид: список")) : tr("View: icons",M8("Вид: значки"));
+            const char* actions[] = {selected_directory_ ? tr("Open folder", M8("Открыть папку")) :
+                tr("Open / edit", M8("Открыть / править")), tr("Run", M8("Запуск")),
                 tr("Rename", M8("Переименовать")), tr("Delete", M8("Удалить")),tr("Move...",M8("Переместить...")),
-                selected_directory_?tr("Open folder",M8("Открыть папку")):
-                    browser_mode_==explorer_view::Mode::ICONS?tr("View: list",M8("Вид: список")):tr("View: icons",M8("Вид: значки")),
-                browser_mode_==explorer_view::Mode::ICONS?tr("View: list",M8("Вид: список")):tr("View: icons",M8("Вид: значки"))};
+                view, tr("Play", M8("Играть"))};
+            const char* game_actions[] = {tr("Play", M8("Играть")), tr("Instructions", M8("Инструкция")),
+                tr("Game files", M8("Файлы игры"))};
             if(page_ == ServicePage::LANGUAGE && tool_ == Document::MK61) {
                 if(index < 2) std::snprintf(out, COLS + 1, "%c %s", selection_ == index ? '>' : ' ',
                     index == 0 ? tr("Load MK61", M8("Загрузить МК-61")) : tr("Save MK61", M8("Сохранить МК-61")));
                 return;
             }
             std::snprintf(out, COLS + 1, "%c %s", selection_ == index ? '>' : ' ',
-                page_ == ServicePage::DEVELOPMENT ? dev[index] : page_ == ServicePage::LANGUAGE ? lang[index] : actions[index]);
+                page_ == ServicePage::DEVELOPMENT ? dev[index] : page_ == ServicePage::LANGUAGE
+                ? lang[index] : browser_games() ? game_actions[index] : actions[index]);
         }
     } else if(page_ == ServicePage::PROMPT) {
         if(index == 0) label(directory_, out, COLS + 1);

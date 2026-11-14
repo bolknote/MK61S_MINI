@@ -5,6 +5,8 @@
 #include "bounded_string.hpp"
 #include "config.h"
 #include "loadable_module_runtime.hpp"
+#include "explorer_autoexec.hpp"
+#include "explorer_home.hpp"
 #include "explorer_ui.hpp"
 #include "explorer_label.hpp"
 #include "exclusive_buffer.hpp"
@@ -20,6 +22,7 @@
 #include "language_workspace.hpp"
 #include "menu.hpp"
 #include "mk8_literal.hpp"
+#include "m61_text.hpp"
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 #include "storage_path.hpp"
@@ -1791,6 +1794,11 @@ static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinyba
 } // анонимное пространство имён
 
 u32 program_store_explorer_actions(const program_store::Entry& entry) {
+  if(entry.kind == program_store::NodeKind::DIRECTORY) {
+    program_store::Entry launch{};
+    if(explorer_autoexec::find_game(entry.id, launch)) return loadable_module::EXPLORER_CAN_RUN;
+    return 0;
+  }
   u32 result = 0;
   if(entry_can_load(entry)) result |= loadable_module::EXPLORER_CAN_LOAD;
   if(entry_can_run(entry)) result |= loadable_module::EXPLORER_CAN_RUN;
@@ -1861,9 +1869,37 @@ static loadable_module::RuntimeStatus explorer_flow_action(
     case loadable_module::ExplorerAction::RUN:
     case loadable_module::ExplorerAction::AUTOEXEC:
       result = has_entry && run_entry(entry); break;
-    case loadable_module::ExplorerAction::VIEW:
-      if(has_entry) view_entry(entry);
+    case loadable_module::ExplorerAction::PLAY: {
+      program_store::Entry launch{};
+      if(has_entry && entry.kind == program_store::NodeKind::DIRECTORY &&
+         explorer_autoexec::find_game(entry.id, launch)) {
+        if(run_entry(launch)) result = launch.type == program_store::ProgramType::MK61 && m61_text::active();
+      } else {
+        show_message("Game cannot start", M8("Нет запуска игры"), entry.name, entry.name);
+        delay(900);
+      }
       break;
+    }
+    case loadable_module::ExplorerAction::VIEW:
+      if(has_entry && entry.kind == program_store::NodeKind::DIRECTORY) {
+        program_store::Entry manual{};
+        if(explorer_autoexec::find_manual(entry.id, manual)) (void)run_entry(manual);
+        else {
+          show_message("No instructions", M8("Нет инструкции"), entry.name, entry.name);
+          delay(700);
+        }
+      } else if(has_entry) view_entry(entry);
+      break;
+    case loadable_module::ExplorerAction::OPEN_DOCUMENTS: {
+      u16 directory = program_store::INVALID_ID;
+      if(storage_path::create_directory(program_store::ROOT_ID, "/Documents", false, directory)
+          == storage_path::Status::OK) session.directory_id = directory;
+      else {
+        show_message("Cannot create folder", M8("Ошибка папки"), "Documents", "Documents");
+        delay(900);
+      }
+      break;
+    }
     case loadable_module::ExplorerAction::EDIT:
       if(has_entry) edit_entry(entry);
       break;
@@ -1894,11 +1930,16 @@ static app_flow::Status builtin_explorer_flow(
   return MK61_FLOW_OK;
 }
 #endif
+static loadable_module::ExplorerSession return_to_explorer{};
+
 bool program_store_explorer_select(void) {
   MK61DisplayTextScope text_scope(main_lcd());
-  loadable_module::ExplorerSession session = {
+  loadable_module::ExplorerSession session = return_to_explorer;
+  return_to_explorer.size = 0;
+  if(session.size == 0) session = {
       sizeof(loadable_module::ExplorerSession), program_store::ROOT_ID,
-      program_store::INVALID_ID, 0, loadable_module::ExplorerAction::NONE, 0, {0}};
+      program_store::INVALID_ID, 0, loadable_module::ExplorerAction::NONE,
+      explorer_home::session_flags(explorer_home::Page::HOME), {0}};
   const auto first = mk61_app_flow_to(
       MK61_APP_KIND_EXPLORER, MK61_APP_FLOW_SYSTEM_FILE, 0);
   u32 result = 0;
@@ -1915,7 +1956,15 @@ bool program_store_explorer_select(void) {
     kbd::get_key_wait();
     return action::MENU_BACK;
   }
+  if(result && session.action == loadable_module::ExplorerAction::PLAY &&
+     explorer_home::session_page(session.reserved) == explorer_home::Page::GAMES)
+    return_to_explorer = session;
   return result ? action::MENU_EXIT : action::MENU_BACK;
+}
+
+bool program_store_explorer_resume(void) {
+  if(!return_to_explorer.size || m61_text::active() || !core_61::is_CALC()) return false;
+  return program_store_explorer_select() == action::MENU_BACK;
 }
 
 bool program_store_view_entry(const program_store::Entry& entry) {
