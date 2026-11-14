@@ -1,0 +1,285 @@
+--- a/code/mk61_ai_kernels.c
++++ b/code/mk61_ai_kernels.c
+@@ -50,7 +50,19 @@
+   table->sum = (int16_t)total;
+ }
+ 
+-LUT8_OPT int32_t LUT8_RAM(mk61ai_dot_lut8_q4_a8_32)(const uint8_t planes[16],
++#if defined(PICO_ON_DEVICE) && defined(__ARM_ARCH_6M__) && defined(__GNUC__)
++/* Word loads are only valid for aligned plane bytes. The public API also
++ * accepts unaligned buffers. That uncommon scalar fallback stays in Flash
++ * to preserve SRAM for the shared LUT, APPs and inference workspace. */
++#define LUT8_SCALAR_NAME mk61ai_dot_lut8_q4_a8_32_unaligned
++#define LUT8_SCALAR_LINKAGE static __attribute__((used))
++#define LUT8_SCALAR_RAM(name) name
++#else
++#define LUT8_SCALAR_NAME mk61ai_dot_lut8_q4_a8_32
++#define LUT8_SCALAR_LINKAGE
++#define LUT8_SCALAR_RAM(name) LUT8_RAM(name)
++#endif
++LUT8_SCALAR_LINKAGE LUT8_OPT int32_t LUT8_SCALAR_RAM(LUT8_SCALAR_NAME)(const uint8_t planes[16],
+                                 const mk61ai_lut8x32 *table) {
+   int32_t p0 = 0, p1 = 0, p2 = 0, p3 = 0;
+   for (unsigned g = 0; g < 4; ++g) {
+@@ -62,6 +74,47 @@
+   }
+   return p0 + 2 * p1 + 4 * p2 + 8 * p3 - 8 * (int32_t)table->sum;
+ }
++#undef LUT8_SCALAR_NAME
++#undef LUT8_SCALAR_LINKAGE
++#undef LUT8_SCALAR_RAM
++
++#if defined(PICO_ON_DEVICE) && defined(__ARM_ARCH_6M__) && defined(__GNUC__)
++_Static_assert(sizeof(mk61ai_lut8x32)==2050,"Packed LUT8 layout");
++/* Four index bytes per word, exact signed int16 lookups, reverse Horner
++ * combination of planes. Same weight/table format and integer dot result.
++ * No SIO state, scratch allocation or change to FP32 reduction order. */
++__asm__(
++  ".pushsection .time_critical.mk61ai_dot_lut8_q4_a8_32,\"ax\",%progbits\n"
++  ".syntax unified\n.thumb\n.balign 4\n"
++  ".global mk61ai_dot_lut8_q4_a8_32\n"
++  ".type mk61ai_dot_lut8_q4_a8_32,%function\n.thumb_func\n"
++  "mk61ai_dot_lut8_q4_a8_32:\n"
++  "movs r2,#3\n"
++  "tst r0,r2\n"
++  "bne 2f\n"
++  "push {r4,r5,r6,r7,lr}\n"
++  "mov r12,r8\n"
++  "movs r6,#128\nlsls r6,r6,#2\n"
++  "adds r2,r1,r6\nadds r3,r2,r6\nadds r4,r3,r6\n"
++  "movs r7,#255\nlsls r7,r7,#1\n"
++  ".macro MK61_LUT8_PLANE offset,first=0\n"
++  "ldr r5,[r0,#\\offset]\n"
++  "lsls r6,r5,#1\nands r6,r7\nldrsh r6,[r1,r6]\nmov r8,r6\n"
++  "lsrs r6,r5,#7\nands r6,r7\nldrsh r6,[r2,r6]\nadd r8,r6\n"
++  "lsrs r6,r5,#15\nands r6,r7\nldrsh r6,[r3,r6]\nadd r8,r6\n"
++  "lsrs r6,r5,#23\nands r6,r7\nldrsh r6,[r4,r6]\nadd r8,r6\n"
++  ".if \\first\nmov lr,r8\n"
++  ".else\nadd lr,lr\nadd lr,r8\n.endif\n.endm\n"
++  "MK61_LUT8_PLANE 12,1\nMK61_LUT8_PLANE 8\n"
++  "MK61_LUT8_PLANE 4\nMK61_LUT8_PLANE 0\n"
++  "movs r5,#128\nlsls r5,r5,#4\nldrsh r1,[r1,r5]\nlsls r1,r1,#3\n"
++  "mov r0,lr\nsubs r0,r0,r1\nmov r8,r12\n"
++  "pop {r4,r5,r6,r7,pc}\n"
++  "2: ldr r2,=mk61ai_dot_lut8_q4_a8_32_unaligned\nbx r2\n"
++  ".ltorg\n.purgem MK61_LUT8_PLANE\n"
++  ".size mk61ai_dot_lut8_q4_a8_32,.-mk61ai_dot_lut8_q4_a8_32\n"
++  ".popsection\n");
++#endif
+ 
+ int32_t mk61ai_dot_q2_a8_32(const uint8_t codes[8], const int8_t x[32]) {
+   int32_t result = 0;
+--- a/code/mk61_ai_kernels.h
++++ b/code/mk61_ai_kernels.h
+@@ -19,8 +19,8 @@
+   int16_t sum;
+ } mk61ai_lut32;
+ 
+-/* Experimental g=8 tables. Same bit-plane weight bytes as g=4, eight times
+- * the table storage. Not selected by the production model dispatcher. */
++/* Exact g=8 tables. Used for128-column INT8 matrix inputs, shared read-only
++ * by both cores. Same bit-plane bytes as g=4, eight times the table storage. */
+ typedef struct {
+   int16_t subset[4][256];
+   int16_t sum;
+--- a/code/mk61_ai_linear.cpp
++++ b/code/mk61_ai_linear.cpp
+@@ -19,6 +19,10 @@
+ 
+ namespace mk61ai {
+ namespace {
++MK61_AI_INLINE bool finite(float value) {
++  std::uint32_t encoded;std::memcpy(&encoded,&value,sizeof(encoded));
++  return (encoded&0x7fffffffU)<0x7f800000U;
++}
+ MK61_AI_INLINE float half(std::uint16_t h) {
+   const unsigned sign = h >> 15, exponent = (h >> 10) & 31, mantissa = h & 1023;
+   if (exponent == 31)
+@@ -142,7 +146,7 @@
+ #endif
+       }
+     }
+-    if (!std::isfinite(value)) {
++    if (!finite(value)) {
+       b.status = ModelStatus::NUMERIC;
+       return;
+     }
+@@ -210,7 +214,7 @@
+                                : weighted - 8.0f * b.input_sums[g]) * scale;
+       }
+     }
+-    if (!std::isfinite(value)) {
++    if (!finite(value)) {
+       b.status = ModelStatus::NUMERIC;
+       return;
+     }
+@@ -248,7 +252,7 @@
+       value=exact_fp32::sum(value,exact_fp32::product(half_scaled_q4_dot(dot,h),b.activation_scales[g]));
+ #endif
+     }
+-    if(!std::isfinite(value)){b.status=ModelStatus::NUMERIC;return;}
++    if(!finite(value)){b.status=ModelStatus::NUMERIC;return;}
+     b.output[r]=value;
+   }
+ }
+--- a/code/mk61_ai_half_product.hpp
++++ b/code/mk61_ai_half_product.hpp
+@@ -5,6 +5,35 @@
+ #include <cstring>
+ 
+ namespace mk61ai {
++namespace half_product_detail {
++// AI-local int32 -> binary32, round to nearest, ties to even. The general
++// firmware EABI conversion uses a64-bit packer. Share one SRAM body on the
++// MCU so the LUT8 and direct kernels keep their existing memory budget.
++// Unsigned magnitude also handles INT32_MIN without signed overflow.
++#if defined(PICO_ON_DEVICE)
++inline __attribute__((section(".time_critical.mk61ai_from_integer"),noinline))
++#else
++inline __attribute__((always_inline))
++#endif
++float from_integer(std::int32_t value) {
++  std::uint32_t n=std::uint32_t(value),encoded=n&0x80000000U;
++  if(value<0)n=0U-n;
++  if(!n)return 0.0f;
++  unsigned exponent=158;
++  if(!(n&0xffff0000U)){n<<=16;exponent-=16;}
++  if(!(n&0xff000000U)){n<<=8;exponent-=8;}
++  if(!(n&0xf0000000U)){n<<=4;exponent-=4;}
++  if(!(n&0xc0000000U)){n<<=2;exponent-=2;}
++  if(!(n&0x80000000U)){n<<=1;--exponent;}
++  std::uint32_t significand=n>>8;
++  const auto remainder=n&255U;
++  significand+=remainder>128U || (remainder==128U && (significand&1U));
++  // significand includes the hidden bit; addition also carries rounding
++  // overflow into the exponent, including INT32_MAX -> 2^31.
++  encoded|=((exponent-1U)<<23)+significand;
++  float result;std::memcpy(&result,&encoded,sizeof(result));return result;
++}
++}
+ // For a32-element INT4 x INT8 dot, |sum|<=32768. Multiplying its
+ // integer value by the FP16 significand fits int32. One rounded int-to-float
+ // conversion followed by an exact exponent adjustment matches float(sum)*h.
+@@ -22,7 +51,7 @@
+     encoded=sign^(std::uint32_t(sum<0)<<31);
+   } else {
+     const std::int32_t product=sum*std::int32_t(mantissa+(exponent?1024U:0U));
+-    const float rounded=float(product);
++    const float rounded=half_product_detail::from_integer(product);
+     std::memcpy(&encoded,&rounded,sizeof(encoded));
+     const int power=exponent?int(exponent)-25:-24;
+     encoded+=std::uint32_t(power)*0x800000U;
+--- a/tests/mk61_ai_half_product_self_test.cpp
++++ b/tests/mk61_ai_half_product_self_test.cpp
+@@ -21,17 +21,31 @@
+   const float expected=input*scale,actual=mk61ai::half_scaled_q4_dot(sum,h);
+   assert((std::isnan(expected) && std::isnan(actual)) || bits(expected)==bits(actual));
+ }
++void check_integer(std::int32_t value) {
++  volatile std::int32_t input=value;
++  assert(bits(mk61ai::half_product_detail::from_integer(value))==bits(float(input)));
++}
+ }
+ int main() {
+   const std::int32_t edges[]={-32768,-32767,-16385,-8193,-2049,-513,-17,-1,
+       0,1,17,513,2049,8193,16385,32767,32768};
+   unsigned checked=0;
++  unsigned integer_checked=0;
++  check_integer(INT32_MIN);check_integer(INT32_MAX);check_integer(0);integer_checked+=3;
++  // Normalization, ties and rounding carry around each power of two.
++  for(unsigned bit=0;bit<31;++bit)for(int delta=-257;delta<=257;++delta) {
++    const std::int64_t value=(std::int64_t(1)<<bit)+delta;
++    if(value>=INT32_MIN && value<=INT32_MAX){check_integer(std::int32_t(value));++integer_checked;}
++    if(-value>=INT32_MIN && -value<=INT32_MAX){check_integer(std::int32_t(-value));++integer_checked;}
++  }
+   for(unsigned h=0;h<65536;++h) for(auto sum:edges) {
+     check(sum,std::uint16_t(h));++checked;
+   }
+   std::mt19937 rng(6132);
+   for(unsigned i=0;i<2000000;++i) {
+     check(std::int32_t(rng()%65537)-32768,std::uint16_t(rng()));++checked;
++    check_integer(std::int32_t(rng()));++integer_checked;
+   }
+   std::printf("FP16 dot scaling: %u exact results; signed zero, subnormal scales, rounding, extremes and nonfinite fallback PASS\n",checked);
++  std::printf("AI int32 to FP32: %u exact results; full signed range and ties-to-even PASS\n",integer_checked);
+ }
+--- a/tests/mk61_ai_lut8_native_arm_self_test.py
++++ b/tests/mk61_ai_lut8_native_arm_self_test.py
+@@ -3,6 +3,7 @@
+ import argparse
+ import hashlib
+ import json
++import random
+ from pathlib import Path
+ import struct
+ import sys
+@@ -28,6 +29,38 @@
+  m.allowed.append((pointer,pointer+4));m.call('_ZN6mk61ai4math10initializeEv',0,width=32)
+  lut=next(n for n in m.elf.symbols if n.startswith('_ZN6mk61ai22linear_batch_lut8_sram'))
+  direct=next(n for n in m.elf.symbols if n.startswith('_ZN6mk61ai17linear_batch_sram'))
++ from unicorn import UC_HOOK_CODE,UC_HOOK_MEM_READ
++ fallback=m.elf.symbols['mk61ai_dot_lut8_q4_a8_32_unaligned']&~1
++ assert 0x10000000<=fallback<0x10200000,'Rare fallback consumes SRAM'
++ fallback_entries=[0]
++ def fallback_entry(uc,address,size,user):fallback_entries[0]+=1
++ def aligned_word(uc,access,address,size,value,user):
++  if size==4:assert address%4==0,('unaligned weight word',hex(address))
++ m.uc.hook_add(UC_HOOK_CODE,fallback_entry,begin=fallback,end=fallback)
++ m.uc.hook_add(UC_HOOK_MEM_READ,aligned_word,begin=source,end=source+20)
++ # Execute the production ASM on every index byte, signed INT8 extremes,
++ # both table alignments and every weight alignment (scalar fallback).
++ rng=random.Random(0x1a8);dot_cases=[]
++ for x in ([-128]*32,[127]*32,[0]*32,[-128,127]*16,list(range(-16,16))):
++  for mask in (0,1,127,128,129,254,255):dot_cases.append((x,bytes([mask]*16)))
++ for mask in range(256):
++  dot_cases.append(([rng.randrange(-128,128)for _ in range(32)],bytes((mask+17*i)&255 for i in range(16))))
++ for _ in range(512):dot_cases.append(([rng.randrange(-128,128)for _ in range(32)],rng.randbytes(16)))
++ dot_checks=0
++ for x,w in dot_cases:
++  m.uc.mem_write(source+128,bytes(v&255 for v in x));expected=0
++  for j in range(32):
++   code=sum(((w[plane*4+j//8]>>(j%8))&1)<<plane for plane in range(4))
++   expected+=(code-8)*x[j]
++  for table_offset in (0,2):
++   m.call('mk61ai_prepare_lut8x32',source+128,tables+table_offset,width=32)
++   for weight_offset in range(4):
++    m.uc.mem_write(source+weight_offset,w)
++    before_fallback=fallback_entries[0]
++    actual=m.call('mk61ai_dot_lut8_q4_a8_32',source+weight_offset,tables+table_offset,width=32)[0]&0xffffffff
++    assert actual==expected&0xffffffff,(dot_checks,weight_offset,table_offset,actual,expected)
++    assert fallback_entries[0]-before_fallback==int(weight_offset!=0)
++    dot_checks+=1
+  cases=[]
+  for _,h,data in records(a.fixtures.read_bytes()):
+   m.uc.mem_write(source,data);rows,cols,groups=h[3:6];w=h[11]
+@@ -53,7 +86,30 @@
+    m.uc.mem_write(batch,struct.pack('<B3x13IB3x',1,*values,0));m.call(lut,batch,width=32)
+    assert m.uc.mem_read(batch+56,1)==b'\2','LUT8 accepted unsupported width/grid'
+   cases.append(dict(id=h[0],columns=cols,rows=rows,kernel='LUT8' if use_lut else 'direct',whole_and_split_bit_exact=True))
++ # All three validation classes remain: invalid shape/format, missing
++ # buffers and nonfinite arithmetic. A failed first row must not be stored.
++ assert cols==128
++ probe_values=values.copy();probe_values[3]=1;probe_values[-1]=out
++ original_scale=bytes(m.uc.mem_read(source+cols,4));numeric_checks=0
++ for scale in (0x7f800000,0xff800000,0x7fc00001,0xffc00001):
++  m.uc.mem_write(source+cols,struct.pack('<I',scale))
++  for kernel in (lut,direct):
++   m.uc.mem_write(out,b'\x61\xa1\xba\xad')
++   m.uc.mem_write(batch,struct.pack('<B3x13IB3x',1,*probe_values,0));m.call(kernel,batch,width=32)
++   assert m.uc.mem_read(batch+56,1)==b'\7',(kernel,'nonfinite accepted')
++   assert m.uc.mem_read(out,4)==b'\x61\xa1\xba\xad','Failed row was stored'
++   numeric_checks+=1
++ m.uc.mem_write(source+cols,original_scale)
++ invalid=[(0,384),(1,2),(2,0)]+[(i,0)for i in (5,7,10,11,12)]
++ for i,value in invalid:
++  bad=probe_values.copy();bad[i]=value
++  m.uc.mem_write(batch,struct.pack('<B3x13IB3x',1,*bad,0));m.call(lut,batch,width=32)
++  assert m.uc.mem_read(batch+56,1)==b'\2',('Invalid LUT8 field accepted',i)
+  result=dict(status='NATIVE_ARM_ROM_PASS',physical_io=False,cases=cases,whole_and_split_checks=2*len(cases),
++             integer_dot_cases=len(dot_cases),integer_dot_checks=dot_checks,
++             all_weight_byte_alignments=True,both_table_halfword_alignments=True,
++             unaligned_fallback_entries=fallback_entries[0],no_unaligned_weight_word_reads=True,
++             numeric_error_checks=numeric_checks,format_error_checks=len(invalid),failed_row_not_stored=True,
+              maximum_kernel_stack_bytes=SP-m.stack_lowest,
+              firmware_sha256=hashlib.sha256(a.firmware.read_bytes()).hexdigest(),
+              fixtures_sha256=hashlib.sha256(a.fixtures.read_bytes()).hexdigest(),
