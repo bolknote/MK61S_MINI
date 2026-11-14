@@ -281,13 +281,11 @@ public:
   static void graph_end() { current->display.bitmap_end();current->graphics = false; }
   static int ai_key() {
     auto& host=*current;KeyEvent event{};
-    for(unsigned scan=0;scan<2;++scan){
-      while(host.keyboard.text_event(event)) {
-        if(event.state==2 && ((event.code>=0x81 && event.code<=0x8C) || event.code=='\r' || event.code=='\n' || event.code==0x1B || event.code==0xB1 || event.code=='\t'))continue;
-        if(event.code=='\r'||event.code=='\n'||event.code==0x1B||event.code==0xB1||event.code=='\t')host.keyboard.handoff(controls::native_key(event),millis());
-        return event.code;
-      }
-      if(!scan)host.pump();
+    // The AI service pass already pumped input before draining the queue.
+    while(host.keyboard.text_event(event)) {
+      if(event.state==2 && ((event.code>=0x81 && event.code<=0x8C) || event.code=='\r' || event.code=='\n' || event.code==0x1B || event.code==0xB1 || event.code=='\t'))continue;
+      if(event.code=='\r'||event.code=='\n'||event.code==0x1B||event.code==0xB1||event.code=='\t')host.keyboard.handoff(controls::native_key(event),millis());
+      return event.code;
     }
     return -1;
   }

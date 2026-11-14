@@ -1725,10 +1725,13 @@ void UI::submit() {
   if (kind == 3) act(RUN_TESTS);
 }
 bool UI::pump() {
+#if defined(PICO_ON_DEVICE)
+  const auto micros = time_us_32();
+#else
   const auto micros = call(MK61_SERVICE_MICROS);
-  // The model checks cancellation at every tile. Full native service pumps
-  // twice (service and key input), so do that work at a bounded8ms cadence
-  // instead of thousands of times per token. Loading and normal UI stay live.
+#endif
+  // The model checks cancellation at every tile. Pump the native service
+  // at a bounded 8 ms cadence while computing, then drain its input queue.
   if (computing) {
     if (compute_polled && std::uint32_t(micros-compute_poll_stamp)<8000)
       return !cancel && !quit;

@@ -4,6 +4,7 @@
 #include "mk61_ai_kv_stream.hpp"
 #include "mk61_ai_kernels.h"
 #include "mk61_ai_linear.hpp"
+#include "mk61_ai_quantize.hpp"
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
@@ -298,7 +299,9 @@ ModelStatus Model::repack_lut8(bool (*service)(void*),void* context) {
   return transfer(package_,0,header_,sizeof(header_),true)?ModelStatus::OK:ModelStatus::IO;
 }
 std::size_t Model::parameter_cache_bytes() const {
-  return config_.layers ? descriptor_bytes() + config_.head_dim * sizeof(float) : 0;
+  if (!config_.layers) return 0;
+  return descriptor_bytes() + rotary_bytes() +
+      (config_.hidden + config_.layers * layer_norm_values()) * sizeof(float);
 }
 
 ModelStatus Model::cache_parameters(void *storage, std::size_t bytes) {
@@ -306,8 +309,23 @@ ModelStatus Model::cache_parameters(void *storage, std::size_t bytes) {
   if (!parameter_cache_bytes() || !storage || bytes < parameter_cache_bytes() ||
       reinterpret_cast<std::uintptr_t>(storage) % alignof(float))
     return ModelStatus::MEMORY;
-  if (!read(header_[15], storage, descriptor_bytes())) return ModelStatus::IO;
-  parameters_ = static_cast<std::uint8_t *>(storage);
+  auto *cached = static_cast<std::uint8_t *>(storage);
+  if (!read(header_[15], cached, descriptor_bytes())) return ModelStatus::IO;
+  auto *weights = cached + descriptor_bytes() + rotary_bytes();
+  auto load_norm = [&](unsigned index) {
+    Tensor t;
+    std::memcpy(&t, cached + index * sizeof(Tensor), sizeof(t));
+    if (!read(t.data, weights, t.bytes)) return false;
+    weights += t.bytes;
+    return true;
+  };
+  if (!load_norm(1)) return ModelStatus::IO;
+  for (unsigned layer = 0; layer < config_.layers; ++layer) {
+    const unsigned base = 2 + 11 * layer;
+    if (!load_norm(base) || !load_norm(base + 4) || !load_norm(base + 5) ||
+        !load_norm(base + 7)) return ModelStatus::IO;
+  }
+  parameters_ = cached;
   return ModelStatus::OK;
 }
 
@@ -463,24 +481,12 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     if (integer && prepare) {
       lut8_ready=false;
       for (unsigned g = 0; g < t.cols / 32; ++g) {
-        float maximum = 0;
-        for (unsigned j = 0; j < 32; ++j)
-          maximum = std::max(maximum, std::fabs(input[g * 32 + j]));
-        if (!std::isfinite(maximum)) {
+        // Keep the exact group sums separate from the shared LUT storage.
+        auto &sum = reinterpret_cast<std::int32_t *>(input_sums)[g];
+        if (!quantize_int8_group(input + 32 * g, activation_scales[g], quant + 32 * g, sum)) {
           status = ModelStatus::NUMERIC;
           return false;
         }
-        const float scale = math::div(maximum,127.0f);
-        activation_scales[g] = scale;
-        std::int32_t activation_sum=0;
-        for (unsigned j = 0; j < 32; ++j) {
-          quant[g * 32 + j] =
-              scale ? std::int8_t(math::round(math::div(input[g * 32 + j],scale))) : 0;
-          activation_sum+=quant[g * 32 + j];
-        }
-        // INT8 has no floating input sums. Keep exact group sums here so
-        // building LUT8 cannot overwrite the direct kernel's correction.
-        reinterpret_cast<std::int32_t*>(input_sums)[g]=activation_sum;
       }
     }
     if(use_lut8) {
@@ -872,14 +878,19 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     }
     return true;
   };
-  auto normalize = [&](unsigned index, const float *input, float *dest,
-                       unsigned groups, unsigned width) -> bool {
-    Tensor t{};
-    if (!tensor(index, t) || !read(t.data, raw, width * 4)) {
-      status = ModelStatus::IO;
-      return false;
+  const auto *cached_norms = parameters_ ? reinterpret_cast<const float *>(
+      parameters_ + descriptor_bytes() + rotary_bytes()) : nullptr;
+  auto normalize = [&](unsigned index, const float *cached, const float *input,
+                       float *dest, unsigned groups, unsigned width) -> bool {
+    const float *weights = cached;
+    if (!weights) {
+      Tensor t{};
+      if (!tensor(index, t) || !read(t.data, raw, width * 4)) {
+        status = ModelStatus::IO;
+        return false;
+      }
+      weights = reinterpret_cast<const float *>(raw);
     }
-    const auto *weights = reinterpret_cast<const float *>(raw);
     for (unsigned g = 0; g < groups; ++g) {
       float sum = 0;
       for (unsigned j = 0; j < width; ++j) {
@@ -903,10 +914,11 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     x[j] = weight(embedding, j);
   for (unsigned layer = 0; layer < c.layers; ++layer) {
     const unsigned base = 2 + 11 * layer;
-    if (!normalize(base, x, n, 1, c.hidden) || !linear(base + 1, n, q, false) ||
+    const auto *norms = cached_norms ? cached_norms + c.hidden + layer * layer_norm_values() : nullptr;
+    if (!normalize(base, norms, x, n, 1, c.hidden) || !linear(base + 1, n, q, false) ||
         !linear(base + 2, n, k, false,true) || !linear(base + 3, n, v, false,true) ||
-        !normalize(base + 4, q, q, c.heads, c.head_dim) ||
-        !normalize(base + 5, k, k, c.kv_heads, c.head_dim))
+        !normalize(base + 4, norms ? norms + c.hidden : nullptr, q, q, c.heads, c.head_dim) ||
+        !normalize(base + 5, norms ? norms + c.hidden + c.head_dim : nullptr, k, k, c.kv_heads, c.head_dim))
       return status;
     auto *rotary_bytes = parameters_ ? parameters_ + descriptor_bytes() : raw;
     if ((!parameters_ || layer == 0) &&
@@ -928,9 +940,9 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     }
     const auto attention_started=forward_stamp();
     const unsigned layer_offset = layer * c.context * kn * 8;
-    if (!transfer(cache_, layer_offset + position_ * kn * 8, k, kn * 4, true) ||
-        !transfer(cache_, layer_offset + position_ * kn * 8 + kn * 4, v, kn * 4,
-                  true))
+    // K and V are adjacent in the workspace and in PSRAM. Send one write
+    // so the PIO/DMA writer can keep its current packet configuration.
+    if (!transfer(cache_, layer_offset + position_ * kn * 8, k, kn * 8, true))
       return ModelStatus::IO;
     const float attention_scale = math::div(1.0f,math::sqrt(float(c.head_dim)));
     auto read_attention=[&](unsigned offset,float *out,unsigned bytes) {
@@ -1032,7 +1044,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       return status;
     for (unsigned j = 0; j < c.hidden; ++j)
       x[j] = math::add(x[j],o[j]);
-    if (!normalize(base + 7, x, n, 1, c.hidden) ||
+    if (!normalize(base + 7, norms ? norms + c.hidden + 2 * c.head_dim : nullptr, x, n, 1, c.hidden) ||
         !linear(base + 8, n, gate, false) || !linear(base + 9, n, up, false,true))
       return status;
     // Both projections are complete. Each half writes only its gate slice,
@@ -1053,7 +1065,7 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   const auto classifier_started = forward_stamp();
   compute_metrics_.layers_us = classifier_started - layers_started;
   if (output &&
-      (!normalize(1, x, n, 1, c.hidden) || !linear(0, n, nullptr, true)))
+      (!normalize(1, cached_norms, x, n, 1, c.hidden) || !linear(0, n, nullptr, true)))
     return status;
   if (output) compute_metrics_.classifier_us = forward_stamp() - classifier_started;
   ++position_;

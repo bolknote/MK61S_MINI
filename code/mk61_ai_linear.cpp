@@ -8,8 +8,10 @@
 #if defined(PICO_ON_DEVICE)
 #include "pico.h"
 #define MK61_AI_RAM(name) __not_in_flash_func(name)
+#define MK61_AI_COLD __attribute__((section(".ai_diagnostic_extension")))
 #else
 #define MK61_AI_RAM(name) name
+#define MK61_AI_COLD
 #endif
 #if defined(__GNUC__) || defined(__clang__)
 #define MK61_AI_INLINE inline __attribute__((always_inline))
@@ -256,9 +258,76 @@ MK61_AI_INLINE void lut8(LinearBatch &b) {
     b.output[r]=value;
   }
 }
+#if MK61_AI_FAST_MATH && defined(PICO_ON_DEVICE)
+// The activation scale exponent range keeps every nonzero term and every
+// nonzero partial sum normal. A nonzero Q4 dot times a finite FP16 scale
+// has magnitude in [2^-24, 2^31). With binary32 rounding, the smallest
+// possible spacing is 2^-126, and four terms cannot overflow either.
+// Qfplib can then be called without the general IEEE exceptional paths.
+MK61_AI_INLINE bool lut8_rom(LinearBatch &b) {
+  if (b.arithmetic != Arithmetic::INT8 || b.columns != 128 || b.bits != 4 || b.grid != 256 ||
+      !b.lookup || !b.activation_scales || !b.weights || !b.scales || !b.output)
+    return false;
+  const auto *rom = math::float_rom();
+  if (!rom) return false;
+  std::uint32_t scale_bases[4];
+  for (unsigned g = 0; g < 4; ++g) {
+    std::uint32_t scale;
+    std::memcpy(&scale, b.activation_scales + g, sizeof(scale));
+    if ((scale >> 23) - 48U > 216U - 48U) return false;
+    scale_bases[g] = scale - (25U << 23);
+  }
+  using Binary = float (*)(float, float);
+  const auto add = reinterpret_cast<Binary>(rom[0]);
+  const auto multiply = reinterpret_cast<Binary>(rom[2]);
+  const auto *tables = reinterpret_cast<const mk61ai_lut8x32 *>(b.lookup);
+  const auto *weights = b.weights;
+  const auto *scales = b.scales;
+  auto *output = b.output;
+  b.status = ModelStatus::OK;
+  for (unsigned r = 0; r < b.rows; ++r) {
+    float accumulator = 0;
+    for (unsigned g = 0; g < 4; ++g) {
+      const auto h = std::uint16_t(unsigned(scales[2*g]) | (unsigned(scales[2*g+1]) << 8));
+      const unsigned exponent = (h >> 10) & 31U;
+      if (exponent == 31U) {
+        b.status = ModelStatus::NUMERIC;
+        return true;
+      }
+      const auto dot = mk61ai_dot_lut8_q4_a8_32(weights + 16*g, tables + g);
+      if (!dot || !(h & 0x7fffU)) continue;
+      const unsigned mantissa = (h & 1023U) + (exponent ? 1024U : 0U);
+      // Moving the power of two from the rounded dot to its multiplier is
+      // exact in this exponent range. Both binary32 roundings are preserved.
+      const std::uint32_t encoded =
+          (scale_bases[g] + ((exponent ? exponent : 1U) << 23)) ^
+          (std::uint32_t(h & 0x8000U) << 16);
+      float scale;
+      std::memcpy(&scale, &encoded, sizeof(scale));
+      const float term = multiply(half_product_detail::from_integer(dot * int(mantissa)), scale);
+      std::uint32_t magnitude;
+      std::memcpy(&magnitude, &accumulator, sizeof(magnitude));
+      accumulator = magnitude << 1 ? add(accumulator, term) : term;
+    }
+    std::uint32_t magnitude;
+    std::memcpy(&magnitude, &accumulator, sizeof(magnitude));
+    *output++ = magnitude << 1 ? accumulator : 0.0f;
+    weights += 64;
+    scales += 8;
+  }
+  return true;
+}
+#endif
 } // namespace
 void linear_batch_flash(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
 void MK61_AI_RAM(linear_batch_sram)(void *raw) { dispatch(*static_cast<LinearBatch *>(raw)); }
-void linear_batch_lut8_flash(void *raw) { lut8(*static_cast<LinearBatch *>(raw)); }
-void MK61_AI_RAM(linear_batch_lut8_sram)(void *raw) { lut8(*static_cast<LinearBatch *>(raw)); }
+MK61_AI_COLD void linear_batch_lut8_flash(void *raw) { lut8(*static_cast<LinearBatch *>(raw)); }
+void MK61_AI_RAM(linear_batch_lut8_sram)(void *raw) {
+#if MK61_AI_FAST_MATH && defined(PICO_ON_DEVICE)
+  if (lut8_rom(*static_cast<LinearBatch *>(raw))) return;
+  linear_batch_lut8_flash(raw);
+#else
+  lut8(*static_cast<LinearBatch *>(raw));
+#endif
+}
 } // namespace mk61ai

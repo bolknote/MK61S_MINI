@@ -2,6 +2,7 @@
 // Keep the calculator/global EABI and all non-AI callers unchanged.
 #include "mk61_ai_math.hpp"
 #if MK61_AI_FAST_MATH && defined(PICO_ON_DEVICE)
+#include "mk61_ai_quantize.hpp"
 #include "native_eabi_m0.hpp"
 #include "pico.h"
 #include "pico/bootrom.h"
@@ -42,11 +43,21 @@ void initialize() {
  for(unsigned i=0;i<4;++i)if(!(sf[i]&1) || sf[i]>=0x4000)return;
  table.store(sf,std::memory_order_release);
 }
+const std::uint32_t *__not_in_flash_func(float_rom)() {
+  return table.load(std::memory_order_relaxed);
+}
 float __not_in_flash_func(add)(float a,float b){return binary<0>(a,b);}
 float __not_in_flash_func(sub)(float a,float b){return binary<1>(a,b);}
 float __not_in_flash_func(mul)(float a,float b){return binary<2>(a,b);}
 float __not_in_flash_func(div)(float a,float b){return binary<3>(a,b);}
 float __not_in_flash_func(sqrt)(float a){return mk61_m0_sqrtf(a);}
 float __not_in_flash_func(exp)(float a){return float(mk61_m0_exp(double(a)));}
+}
+namespace mk61ai {
+__attribute__((section(".ai_fp32_extension")))
+bool quantize_int8_group(const float *input, float &scale, std::int8_t *output,
+                         std::int32_t &sum) {
+  return quantize_detail::group(input, scale, output, sum, mk61_m0_math_udiv32);
+}
 }
 #endif

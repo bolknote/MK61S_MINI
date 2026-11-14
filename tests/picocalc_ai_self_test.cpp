@@ -290,6 +290,9 @@ struct FrozenInput {
   std::string keys;unsigned at=0,stage=0,frozen_calls=0,calls=0;
   bool benchmark=false;
   bool metrics_toggled=false;
+  // Count actual input service passes. The frozen display can span more
+  // than one token on the host, where the model runs much faster.
+  static constexpr unsigned input_delay = 4;
   static bool pump(void *raw,u8 &key) {
     auto &p=*static_cast<FrozenInput*>(raw);assert(++p.calls<40000);
     auto emit=[&](u8 code) { key=code;controls::event({1,code});controls::event({3,code}); };
@@ -302,13 +305,13 @@ struct FrozenInput {
       assert(!p.screen.render(p.calculator->snapshot(),true,nullptr,p.services) && p.screen.renders()==renders);
     }
     if(p.benchmark) {
-      if(p.stage==0 && held && ++p.frozen_calls>=20) { p.stage=1;emit(0x1b); }
+      if(p.stage==0 && held && ++p.frozen_calls>=input_delay) { p.stage=1;emit(0x1b); }
       return false;
     }
     if(p.stage==0 && held && !p.metrics_toggled) {
       p.metrics_toggled=true;emit(0x87);return false;
     }
-    if((p.stage==0 || p.stage==2) && held && ++p.frozen_calls>=20) {
+    if((p.stage==0 || p.stage==2) && held && ++p.frozen_calls>=input_delay) {
       emit(p.stage==0?0x85:0x1b);++p.stage;p.frozen_calls=0;return false;
     }
     if((p.stage==1 || p.stage==3) && !held) {

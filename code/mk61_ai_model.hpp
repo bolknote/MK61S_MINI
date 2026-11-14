@@ -148,6 +148,8 @@ private:
   bool read(std::uint32_t offset, void *out, unsigned bytes) const;
   bool tensor(unsigned index, Tensor &out) const;
   unsigned descriptor_bytes() const { return (2 + 11 * config_.layers) * sizeof(Tensor); }
+  unsigned rotary_bytes() const { return config_.head_dim * sizeof(float); }
+  unsigned layer_norm_values() const { return 2 * (config_.hidden + config_.head_dim); }
 };
 const char *model_status_text(ModelStatus status);
 } // namespace mk61ai

@@ -1,6 +1,7 @@
 #ifndef MK61_AI_MATH_HPP
 #define MK61_AI_MATH_HPP
 #include <cmath>
+#include <cstdint>
 #ifndef MK61_AI_FAST_MATH
 #define MK61_AI_FAST_MATH 0
 #endif
@@ -13,6 +14,7 @@ float mul(float,float);
 float div(float,float);
 float sqrt(float);
 float exp(float);
+const std::uint32_t *float_rom();
 #else
 inline void initialize() {}
 inline float add(float a,float b){return a+b;}
