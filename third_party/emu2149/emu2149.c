@@ -399,6 +399,9 @@ static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t see
   return seed;
 }
 #endif
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
 static void advance_state(PSG* psg,unsigned ticks)
 {
   for(unsigned i=0;i<3;++i) {
@@ -504,6 +507,9 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
   unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  if(count<period && ticks<period-count) {
+    psg->noise_count=(uint8_t)(count+ticks);return (seed&1)?all:0;
+  }
   if(psg->nmask[0] && psg->nmask[1] && psg->nmask[2]) {
     // Noise disabled by all three mixers: preserve its exact state, but
     // do not construct a bit mask which none of the channels will use.
@@ -554,6 +560,46 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
 #else
 #define PSG_INTERNAL_RESTRICT
 #endif
+#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+/* Keep changing envelopes out of the ordinary mixer to reduce register
+ * spills. Tone and noise are already included in the channel masks. */
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+static void mix_envelopes(PSG* psg,unsigned ticks,const uint32_t* envelopes,int32_t* channels)
+{
+  /* All envelope channels share one amplitude at a tick. Preserve the
+   * exact IIR weights while advancing the envelope once, rather than
+   * repeating all oscillator/mixer work for each internal tick. */
+  unsigned count=psg->env_count,ptr=psg->env_ptr,face=psg->env_face,pause=psg->env_pause;
+  const unsigned period=psg->env_freq;
+  const PSG_volume_t* volumes=psg->voltbl;
+  for(unsigned tick=0;tick<ticks;++tick) {
+    if(++count>=period) {
+      count=period?count-period:0;
+      if(!pause) {
+        ptr=(ptr+(face?1:63))&63;
+        if(ptr&32) {
+          if(psg->env_continue) {
+            if(psg->env_alternate^psg->env_hold)face^=1;
+            if(psg->env_hold)pause=1;
+            ptr=face?0:31;
+          } else {pause=1;ptr=0;}
+        }
+      }
+    }
+    /* Accumulate each channel once; pan only after all internal ticks.
+     * Mono and both stereo outputs then share these exact IIR weights. */
+    const int32_t amplitude=(int32_t)((volumes[ptr]<<4)<<tick);
+    if(envelopes[0]&(1u<<tick))channels[0]+=amplitude;
+    if(envelopes[1]&(1u<<tick))channels[1]+=amplitude;
+    if(envelopes[2]&(1u<<tick))channels[2]+=amplitude;
+  }
+  psg->env_count=count;psg->env_ptr=(uint8_t)ptr;psg->env_face=(uint8_t)face;psg->env_pause=(uint8_t)pause;
+  for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
+    psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(volumes[psg->env_ptr]<<4):0;
+}
+#endif
 static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32_t* PSG_INTERNAL_RESTRICT stereo,unsigned layout)
 {
   const PSG_volume_t* PSG_INTERNAL_RESTRICT volumes=psg->voltbl;
@@ -591,35 +637,7 @@ static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32
   }
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
   if(changing) {
-    /* All envelope channels share one amplitude at a tick. Preserve the
-     * exact IIR weights while advancing the envelope once, rather than
-     * repeating all oscillator/mixer work for each internal tick. */
-    unsigned count=psg->env_count,ptr=psg->env_ptr,face=psg->env_face,pause=psg->env_pause;
-    const unsigned period=psg->env_freq;
-    for(unsigned tick=0;tick<ticks;++tick) {
-      if(++count>=period) {
-        count=period?count-period:0;
-        if(!pause) {
-          ptr=(ptr+(face?1:63))&63;
-          if(ptr&32) {
-            if(psg->env_continue) {
-              if(psg->env_alternate^psg->env_hold)face^=1;
-              if(psg->env_hold)pause=1;
-              ptr=face?0:31;
-            } else {pause=1;ptr=0;}
-          }
-        }
-      }
-      /* Accumulate each channel once; pan only after all internal ticks.
-       * Mono and both stereo outputs then share these exact IIR weights. */
-      const int32_t amplitude=(int32_t)((volumes[ptr]<<4)<<tick);
-      if(envelopes[0]&(1u<<tick))channels[0]+=amplitude;
-      if(envelopes[1]&(1u<<tick))channels[1]+=amplitude;
-      if(envelopes[2]&(1u<<tick))channels[2]+=amplitude;
-    }
-    psg->env_count=count;psg->env_ptr=(uint8_t)ptr;psg->env_face=(uint8_t)face;psg->env_pause=(uint8_t)pause;
-    for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
-      psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(volumes[psg->env_ptr]<<4):0;
+    mix_envelopes(psg,ticks,envelopes,channels);
   } else
 #endif
   advance_envelope(psg,ticks);
@@ -637,6 +655,9 @@ static int16_t calc_quality(PSG* psg,unsigned ticks)
   while(ticks--) { update_output(psg);psg->out=(psg->out+mix_output(psg))>>1; }
   return psg->out;
 }
+#endif
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
 #endif
 int16_t PSG_calc(PSG* psg)
 {
@@ -699,6 +720,9 @@ void PSG_calcStereo(PSG* psg,int32_t stereo[2],unsigned layout)
 #endif
 }
 
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
 void
 PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
 {

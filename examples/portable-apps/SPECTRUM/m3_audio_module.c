@@ -9,7 +9,6 @@
 #else
 #define M3_COLD
 #endif
-
 typedef struct {
     PSG chips[2];
     int32_t filter_input,filter_output,stereo[6];
@@ -88,14 +87,24 @@ static M3_COLD bool render_valid(const stm3_job* job) {
 static inline uint8_t pwm_duty(int32_t sample,unsigned gain) {
     // The physical volume wheel leaves digital gain at unity. Keep exact
     // truncation toward zero, including negative PCM, for legacy gains too.
-#if (defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING) || (defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT)
+#if defined(SPECTRUM_M3_TIMING) && SPECTRUM_M3_TIMING
     return (uint8_t)(128+(sample*(int32_t)gain)/512000);
 #else
     return (uint8_t)(128+(gain==1000?sample/512:(sample*(int32_t)gain)/512000));
 #endif
 }
 
-static uint32_t render_step(stm3_job* restrict job) {
+static inline int32_t clamp_pcm16(int32_t value) {
+#if defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
+    __asm__ ("ssat %0, #16, %0" : "+r"(value));
+    return value;
+#else
+    return value>32767?32767:value < -32768?-32768:value;
+#endif
+}
+
+
+M3_COLD static uint32_t render_step(stm3_job* restrict job) {
     // Resident input/output arenas and module state are disjoint. Keeping
     // this contract explicit lets M3 retain mixer constants across stores.
     const uint8_t* restrict p=job->input;
@@ -107,53 +116,61 @@ static uint32_t render_step(stm3_job* restrict job) {
     if(flags&2){cv=p+at;at+=n;}
     if(flags&4){sd=p+at;at+=n;}
     at=synth.event_cursor;
+    // Cursors, fixed mixer mode and filter state belong to this slice.
+    // Only the PCM and PSG register writes are needed inside the loop.
+    const unsigned extensions=p[6],layout=synth.layout,pwm8=synth.pwm8,gain=synth.gain;
+    const unsigned bytes=job->input_bytes;
+    const unsigned stride=(pwm8?1u:2u)*(layout?2u:1u);
+    const unsigned end=n-first<SPECTRUM_M3_SLICE_SAMPLES?n:first+SPECTRUM_M3_SLICE_SAMPLES;
+    uint8_t* out=output_bytes+8+first*stride;
+    int32_t prev_l=synth.filter_input,prev_r=synth.stereo[4];
+    int32_t dc_l=synth.filter_output,dc_r=synth.stereo[5];
+    uint8_t beeper=p[8],covox=p[9],specdrum=p[10];
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
     const unsigned span=n-first<SPECTRUM_M3_SLICE_SAMPLES?n-first:SPECTRUM_M3_SLICE_SAMPLES;
     const bool silent=(p[6]&1) && synth.second_idle && advance_silent_second(span);
 #endif
-    /* A bounded sample slice per cooperative turn. No state changes while
-     * validating a render packet, and no callbacks into the loaded APP. */
-    for(unsigned i=first;i<n && i<first+SPECTRUM_M3_SLICE_SAMPLES;++i) {
-        while(at<job->input_bytes && p[at]<i)at+=3;
-        while(at<job->input_bytes && p[at]==i) {
+    /* A bounded sample slice per cooperative turn. */
+    for(unsigned i=first;i<end;++i,out+=stride) {
+        while(at<bytes && p[at]==i) {
             PSG_writeReg(&synth.chips[p[at+1]>>4],p[at+1]&15,p[at+2]);at+=3;
         }
-        synth.beeper=bits?((bits[i/8]>>(i&7))&1):p[8];synth.covox=cv?cv[i]:p[9];synth.specdrum=sd?sd[i]:p[10];
+        if(bits)beeper=(bits[i/8]>>(i&7))&1u;
+        if(cv)covox=cv[i];
+        if(sd)specdrum=sd[i];
         int32_t left,right;
-        if(synth.layout){PSG_calcStereo(&synth.chips[0],synth.stereo,synth.layout);left=synth.stereo[0];right=synth.stereo[1];}
+        if(layout){PSG_calcStereo(&synth.chips[0],synth.stereo,layout);left=synth.stereo[0];right=synth.stereo[1];}
         else left=right=PSG_calc(&synth.chips[0]);
-        if(p[6]&1) {
+        if(extensions&1u) {
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
             if(!silent) {
 #endif
-                if(synth.layout){PSG_calcStereo(&synth.chips[1],synth.stereo+2,synth.layout);left+=synth.stereo[2];right+=synth.stereo[3];}
+                if(layout){PSG_calcStereo(&synth.chips[1],synth.stereo+2,layout);left+=synth.stereo[2];right+=synth.stereo[3];}
                 else {const int32_t value=PSG_calc(&synth.chips[1]);left+=value;right+=value;}
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
             }
 #endif
         } else {left*=2;right*=2;}
-        int32_t common=synth.beeper?8192:0;
-        if(p[6]&2)common+=((int32_t)synth.covox-128)*64;
-        if(p[6]&4)common+=((int32_t)synth.specdrum-128)*64;
+        int32_t common=(int32_t)beeper*8192;
+        if(extensions&2u)common+=((int32_t)covox-128)*64;
+        if(extensions&4u)common+=((int32_t)specdrum-128)*64;
         left+=common;right+=common;
-        int32_t output=left-synth.filter_input+(synth.filter_output*255)/256;synth.filter_input=left;
-        if(output>32767)output=32767;else if(output < -32768)output=-32768;synth.filter_output=output;
-        int32_t right_output=output;
-        if(synth.layout) {
-            right_output=right-synth.stereo[4]+(synth.stereo[5]*255)/256;synth.stereo[4]=right;
-            if(right_output>32767)right_output=32767;else if(right_output < -32768)right_output=-32768;synth.stereo[5]=right_output;
+        dc_l=left-prev_l+(dc_l*255)/256;prev_l=left;
+        dc_l=clamp_pcm16(dc_l);
+        if(layout) {
+            dc_r=right-prev_r+(dc_r*255)/256;prev_r=right;
+            dc_r=clamp_pcm16(dc_r);
         }
-        const unsigned offset=8+i*(synth.layout?2:1)*(synth.pwm8?1:2);
-        if(synth.pwm8) {
-            output_bytes[offset]=pwm_duty(output,synth.gain);
-            if(synth.layout)output_bytes[offset+1]=pwm_duty(right_output,synth.gain);
+        if(pwm8) {
+            out[0]=pwm_duty(dc_l,gain);
+            if(layout)out[1]=pwm_duty(dc_r,gain);
         } else {
-            output_bytes[offset]=(uint8_t)output;output_bytes[offset+1]=(uint8_t)((uint32_t)output>>8);
-            if(synth.layout){output_bytes[offset+2]=(uint8_t)right_output;output_bytes[offset+3]=(uint8_t)((uint32_t)right_output>>8);}
+            out[0]=(uint8_t)dc_l;out[1]=(uint8_t)((uint32_t)dc_l>>8);
+            if(layout){out[2]=(uint8_t)dc_r;out[3]=(uint8_t)((uint32_t)dc_r>>8);}
         }
-        job->progress=i+1;
     }
-    synth.event_cursor=at;
+    synth.filter_input=prev_l;synth.filter_output=dc_l;synth.stereo[4]=prev_r;synth.stereo[5]=dc_r;
+    synth.beeper=beeper;synth.covox=covox;synth.specdrum=specdrum;synth.event_cursor=at;job->progress=end;
     return job->progress==n?STM3_DONE:STM3_MORE;
 }
 

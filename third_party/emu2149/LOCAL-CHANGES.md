@@ -42,5 +42,11 @@ this private build asserts that PSG, DAC table and stereo filter storage
 are disjoint; the ordinary library keeps its general entry points.
 Stereo uses the validated phase update directly; the silent mono batch
 retains the general tick counter. Zero LFSR shifts return without work.
-The module's unity PWM gain uses exact signed division by512; other gains
-retain the original mapping, including truncation of negative samples.
+
+The M3 build handles changing envelopes outside the ordinary weighted
+mixer to reduce register spills. It advances the noise counter directly
+when the next edge lies beyond the current sample. Imported counter
+phases outside their period continue through the original correction.
+The module retains filter state in local variables for each sample slice
+and uses signed saturation on Cortex-M3. PCM and exported state remain
+bit exact, including truncation toward zero at unity PWM gain.
