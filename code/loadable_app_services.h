@@ -275,7 +275,9 @@ enum mk61_color_operation { MK61_COLOR_AVAILABLE, MK61_COLOR_PRESENT, MK61_COLOR
    * transaction stays open: repaint every pixel, then retry END. COLOR_END
    * cancels an unfinished transaction. Old hosts return 0 for BEGIN, so callers
    * retain ordinary full redraws. No frame descriptor or snapshot size changes. */
-  MK61_COLOR_SCROLL_BEGIN, MK61_COLOR_SCROLL_END
+  MK61_COLOR_SCROLL_BEGIN, MK61_COLOR_SCROLL_END,
+  /* Returns a bit for each supported mk61_color_format. */
+  MK61_COLOR_FORMATS
 };
 typedef struct mk61_service_color_scroll {
   uint16_t top, height, previous, offset;
@@ -288,7 +290,10 @@ enum mk61_color_format {
   MK61_COLOR_TILE1,
   /* Same bitmap; two bytes per 8x8 tile: zero-bit index, one-bit index.
    * Indices are 0..63 in the separately copied 64-color palette. */
-  MK61_COLOR_TILE8
+  MK61_COLOR_TILE8,
+  /* MSB-first bitmap, with two little-endian RGB565 colors (paper, ink)
+   * per group of 8 pixels on every scanline. Width must be divisible by 8. */
+  MK61_COLOR_CELL565
 };
 #define MK61_COLOR_SNAPSHOT_BYTES 12800U
 /* With CAP_TEXT_COLORS, rectangle updates can retain pixels outside the

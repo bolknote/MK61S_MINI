@@ -13,13 +13,18 @@
 #define SPECTRUM_FRAME_TSTATES 69888U
 #define SPECTRUM_BITMAP_BYTES 6144U
 #define SPECTRUM_ATTRIBUTE_BYTES 768U
+#define SPECTRUM_RASTER_STRIP_ROWS 32U
+#define SPECTRUM_RASTER_STRIPS 8U
+#define SPECTRUM_RASTER_ROW_BYTES 200U
+#define SPECTRUM_RASTER_STRIP_BYTES (SPECTRUM_RASTER_ROW_BYTES*SPECTRUM_RASTER_STRIP_ROWS)
+#define SPECTRUM_RASTER_BYTES (SPECTRUM_RASTER_ROW_BYTES*SPECTRUM_RASTER_STRIP_ROWS*SPECTRUM_RASTER_STRIPS)
 
 typedef struct spectrum {
     z80 cpu;
     uint8_t* ram;
     const uint8_t* rom;
     uint8_t keys[8],joystick,border,beeper;
-    uint32_t frames,frame_tstates;
+    uint32_t frames,frame_tstates,frame_origin;
     spectrum_memory* memory; /* NULL: ordinary 48K; otherwise banked RAM. */
     bool pentagon;
     PSG ay;
@@ -28,6 +33,10 @@ typedef struct spectrum {
     spectrum_disk disk;
     void* ear_context;
     bool (*ear)(void*,const z80*);
+    void* video_context;
+    uint8_t* video_bytes;
+    bool (*video_store)(void*,unsigned,const uint8_t*);
+    uint16_t video_cell;
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,ulaplus_palette[64];
     uint32_t sample_rate,sample_phase;
@@ -51,6 +60,8 @@ void spectrum_attach_memory(spectrum*,spectrum_memory*);
 void spectrum_refresh_map(spectrum*);
 uint32_t spectrum_frame_cycles(const spectrum*);
 uint32_t spectrum_run(spectrum*,uint32_t tstates);
+void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
+void spectrum_raster_end(spectrum*);
 void spectrum_keyboard(spectrum*,const uint8_t wire_keys[32]);
 uint8_t spectrum_port_in(spectrum*,uint16_t port);
 void spectrum_video(const spectrum*,uint8_t bitmap[6144],uint8_t tiles[768]);

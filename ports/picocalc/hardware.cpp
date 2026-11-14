@@ -325,6 +325,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     }
     if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)payload);
     if(operation==MK61_COLOR_AVAILABLE) return 1;
+    if(operation==MK61_COLOR_FORMATS) return (2u<<MK61_COLOR_CELL565)-1;
     if(operation==MK61_COLOR_END) {
         if(color_active_) {
             io_worker::drain();

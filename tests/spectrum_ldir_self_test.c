@@ -9,7 +9,9 @@ static uint32_t reference_run(spectrum* s,uint32_t limit) {
     s->cpu.ldir_until=0;s->cpu.int_pending=s->frame_tstates<32;s->cpu.int_data=255;
     while(done<limit) {
         const unsigned long before=s->cpu.cyc;const uint32_t old=s->frame_tstates;
-        z80_step(&s->cpu);const uint32_t cycles=(uint32_t)(s->cpu.cyc-before);
+        if(s->pentagon) z80_step(&s->cpu);else (void)spectrum_run(s,1);
+        const uint32_t cycles=(uint32_t)(s->cpu.cyc-before);
+        if(!s->pentagon) {done+=cycles;continue;}
         done+=cycles;s->frame_tstates+=cycles;
         if(s->frame_tstates>=frame) { s->frame_tstates-=frame;++s->frames; }
         if(s->frame_tstates<32) s->cpu.int_pending=true;
@@ -22,6 +24,7 @@ static uint32_t random_state=0x49133711;
 static unsigned random_value(void) { random_state=random_state*1664525U+1013904223U;return random_state; }
 static void normalize(z80* z) {
     z->read_byte=NULL;z->write_byte=NULL;z->port_in=NULL;z->port_out=NULL;z->userdata=NULL;z->m1=NULL;
+    z->bus=z->io_at=0;z->wait=NULL;
     memset(z->read_map,0,sizeof(z->read_map));memset(z->write_map,0,sizeof(z->write_map));
     memset(z->read_pages,0,sizeof(z->read_pages));memset(z->write_pages,0,sizeof(z->write_pages));
 }

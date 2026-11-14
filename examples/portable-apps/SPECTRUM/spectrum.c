@@ -69,12 +69,89 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     return (port&0xFF)==0x1F && !s->joystick_mode?s->joystick:0xFF;
 }
 static uint8_t port_in(z80* cpu,uint16_t port) { return spectrum_port_in(cpu->userdata,port); }
+static unsigned ula_wait(void* raw,uint32_t cycles) {
+    const spectrum* s=raw;
+    const uint32_t at=cycles-s->frame_origin-14335;
+    if(at>=192*224 || at%224>=128) return 0;
+    const unsigned phase=at&7;
+    return phase<6?6-phase:0;
+}
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+enum { RASTER_START=14336-32*224-16, RASTER_COLUMNS=40, RASTER_ROWS=256,
+       RASTER_CELLS=RASTER_COLUMNS*SPECTRUM_RASTER_STRIP_ROWS };
+
+static unsigned ula_bitmap(unsigned y,unsigned x) {
+    return ((y&192)<<5)|((y&7)<<8)|((y&56)<<2)|x;
+}
+static unsigned ula_attribute(unsigned y,unsigned x) { return 6144+(y>>3)*32+x; }
+static const uint8_t* ula_screen(const spectrum* s) {
+    return s->memory?s->memory->cache:s->ram;
+}
+
+/* Flush cells before changes to screen RAM or the ULA latch. Each cell
+ * carries its bitmap and the two colors sampled for that scanline. */
+static void raster_until(spectrum* s,uint32_t cycles) {
+    int32_t elapsed=(int32_t)(cycles-s->frame_origin-RASTER_START);
+    if(elapsed<=0 || !s->video_bytes) return;
+    unsigned line=(unsigned)elapsed/224,through=(unsigned)elapsed%224;
+    unsigned end=line>=RASTER_ROWS?RASTER_ROWS*RASTER_COLUMNS:
+        line*RASTER_COLUMNS+(through<160?(through+3)/4:RASTER_COLUMNS);
+    const uint8_t* screen=ula_screen(s);
+    const uint16_t border=spectrum_border(s);
+    while(s->video_cell<end) {
+        const unsigned cell=s->video_cell++,y=cell/RASTER_COLUMNS,x=cell%RASTER_COLUMNS;
+        const unsigned inside=cell%RASTER_CELLS;
+        uint16_t paper=border,ink=border;
+        unsigned bits=0;
+        if((y-32u)<192 && (x-4u)<32) {
+            const unsigned row=y-32,column=x-4;
+            bits=screen[ula_bitmap(row,column)];
+            const uint8_t a=screen[ula_attribute(row,column)];
+            const unsigned group=s->ulaplus_mode?(a>>6)*16:(a&64)>>3;
+            ink=spectrum_palette(s,group+(a&7));
+            paper=spectrum_palette(s,group+((a>>3)&7)+(s->ulaplus_mode?8:0));
+            if(!s->ulaplus_mode && (a&128) && (s->frames&16)) {uint16_t swap=ink;ink=paper;paper=swap;}
+        }
+        uint8_t* pair=s->video_bytes+RASTER_CELLS+4*inside;
+        s->video_bytes[inside]=(uint8_t)bits;
+        pair[0]=(uint8_t)paper;pair[1]=(uint8_t)(paper>>8);
+        pair[2]=(uint8_t)ink;pair[3]=(uint8_t)(ink>>8);
+        if(inside==RASTER_CELLS-1 &&
+           !s->video_store(s->video_context,y/SPECTRUM_RASTER_STRIP_ROWS,s->video_bytes)) {
+            s->video_bytes=NULL;return;
+        }
+    }
+}
+static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
+    spectrum* s=context;
+    if((unsigned)address-0x4000u<6912) raster_until(s,cycles+1);
+}
+void spectrum_raster_begin(spectrum* s,uint8_t* buffer,void* context,
+                           bool (*store)(void*,unsigned,const uint8_t*)) {
+    s->video_context=context;s->video_bytes=store?buffer:NULL;s->video_store=store;s->video_cell=0;
+    s->cpu.before_store=s->video_bytes?before_video_store:NULL;
+}
+void spectrum_raster_end(spectrum* s) {
+    s->video_bytes=NULL;s->cpu.before_store=NULL;
+}
+#else
+void spectrum_raster_begin(spectrum* s,uint8_t* b,void* c,bool (*store)(void*,unsigned,const uint8_t*)) {
+    (void)s;(void)b;(void)c;(void)store;
+}
+void spectrum_raster_end(spectrum* s) { (void)s; }
+#endif
 static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     spectrum* s=cpu->userdata;
     if(!(s->extensions&SPECTRUM_TURBOSOUND)) s->sound.selected=0;
     if(spectrum_disk_out(s,port,value)) return;
     if(port==0xEFF7 && s->memory && s->pentagon) { (void)spectrum_memory_control(s->memory,value);spectrum_refresh_map(s); }
     if(!(port&1)) {
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(s->video_bytes && s->border!=(value&7)) {
+            // OUT FE latches new border color at an 8-pixel boundary.
+            raster_until(s,cpu->io_at-3);
+        }
+#endif
         s->border=value&7;
         if(s->beeper!=((value>>4)&1)) spectrum_sound_write(s,2,0,(value>>4)&1);
         s->beeper=(value>>4)&1;
@@ -96,6 +173,9 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     if(s->extensions&SPECTRUM_ULAPLUS) {
         if(port==0xBF3B) s->ulaplus_select=value;
         else if(port==0xFF3B) {
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(s->video_bytes) raster_until(s,cpu->io_at);
+#endif
             if((s->ulaplus_select&192)==0) s->ulaplus_palette[s->ulaplus_select&63]=value;
             else if((s->ulaplus_select&192)==64) s->ulaplus_mode=value&1;
         }
@@ -112,7 +192,8 @@ void spectrum_reset_cpu(spectrum* s) {
     z80_init(&s->cpu);s->cpu.read_byte=read_byte;s->cpu.write_byte=write_byte;
     s->cpu.port_in=port_in;s->cpu.port_out=port_out;s->cpu.userdata=s;
     spectrum_disk_filter(s);spectrum_refresh_map(s);
-    s->frames=s->frame_tstates=0;s->border=s->beeper=s->joystick=0;
+    s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=0;
+    s->video_bytes=NULL;
     memset(s->keys,0x1F,sizeof(s->keys));
     reset_ay(s);
     s->ulaplus_select=s->ulaplus_mode=0;
@@ -148,7 +229,7 @@ uint32_t spectrum_frame_cycles(const spectrum* s) { return s->pentagon?71680:SPE
 static void ldir_deadline(spectrum* s,uint32_t phase,uint32_t frame,uint32_t left) {
     uint32_t limit=phase<32?32-phase:frame-phase;
     if(limit>left) limit=left;
-    s->cpu.ldir_until=s->sample_rate?0:(uint32_t)s->cpu.cyc+limit;
+    s->cpu.ldir_until=s->sample_rate || s->cpu.wait?0:(uint32_t)s->cpu.cyc+limit;
 }
 
 uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
@@ -156,6 +237,8 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     const uint32_t frame=spectrum_frame_cycles(s);
     spectrum_memory* const memory=s->memory;
     const bool legacy_audio=s->sample_rate && s->audio_sample;
+    s->cpu.wait=s->pentagon?NULL:ula_wait;
+    s->frame_origin=(uint32_t)s->cpu.cyc-phase;
     // INT is a level during the first 32T. Keep the frame phase local;
     // neither MMU/port callbacks nor the asynchronous audio consumer use it.
     s->cpu.int_pending=phase<32;s->cpu.int_data=0xFF;
@@ -163,7 +246,8 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     while(elapsed<tstates && !(memory && memory->fault)) {
         const uint32_t old_phase=phase;
         const unsigned long before=s->cpu.cyc;
-        if(s->cpu.halted && !s->cpu.nmi_pending && !s->cpu.iff_delay &&
+        if(s->cpu.halted && (!s->cpu.wait || ((s->cpu.pc-1u)&0xc000)!=0x4000) &&
+           !s->cpu.nmi_pending && !s->cpu.iff_delay &&
            !(s->cpu.int_pending && s->cpu.iff1) && !s->sample_rate) {
             /* HALT repeats 4T refresh cycles without memory/port accesses.
              * Stop at the next frame boundary so INT is still sampled on
@@ -183,7 +267,14 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
         const uint32_t cycles=(uint32_t)(s->cpu.cyc-before);
         elapsed+=cycles;phase+=cycles;
         if(phase>=frame) {
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(s->video_bytes) {
+                raster_until(s,s->frame_origin+frame);
+                s->video_cell=0;
+            }
+#endif
             phase-=frame;++s->frames;
+            s->frame_origin+=frame;
             ldir_deadline(s,phase,frame,elapsed<tstates?tstates-elapsed:0);
         }
         if(phase<32) s->cpu.int_pending=true;

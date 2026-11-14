@@ -1,7 +1,7 @@
 # Игры для проверки Spectrum APP
 
-Для аппаратной проверки используем набор из
-готового образа `programs/spectrum/GAMES.img`.
+На SD установите APP и его ПЗУ в `/Programs/Spectrum/`. Для аппаратной
+проверки коллекции используйте образ `/Games/Spectrum Collection/GAMES.img`.
 Материалы сборки: [`third_party/spectrum-games/`](../../../third_party/spectrum-games/README.md).
 В распространяемом комплекте игры без найденного разрешения не сохраняются.
 Для Snow Trap Dizzy пользователь явно разрешил временную внутреннюю копию.
@@ -17,7 +17,7 @@
 - SHA-256: `e7e2c3579b8a9c53bf6906fb94e75cb6986bba2486360065c87d5edad915d9f2`.
 - Исходники и лицензия: [авторский репозиторий](https://github.com/fjpena/sword-of-ianna-zx).
 
-В подготовленном `games/GAMES.img` файлы находятся в `IANNA/`.
+В образе `GAMES.img` файлы находятся в `IANNA/`.
 Штатный способ запуска — NMI-браузер esxDOS → `IANNA/LOADER` либо
 `LOAD *"LOADER"` из этого каталога. Проверить загрузку, музыку AY,
 управление, начало уровня, паузу и возврат в APP.
@@ -79,8 +79,9 @@ Beta Disk: показаны заставка, меню и игровая ком�
 
 ## Подготовка и проверка
 
-`tools/apps/spectrum/build_spectrum_library.py` готовит образ для SD и, при
-передаче закреплённого `esxdos089.zip`, FAT16-образ `GAMES.img` на 32 МиБ.
+`tools/apps/spectrum/build_spectrum_library.py` готовит коллекцию для SD.
+При передаче закреплённого `esxdos089.zip` сборщик создаёт FAT16-образ
+`GAMES.img` на 32 МиБ в `Games/Spectrum Collection/`.
 `tests/spectrum_library_self_test.py` проверяет контрольные суммы,
 уведомления и чтение каждого файла обратно из образа.
 

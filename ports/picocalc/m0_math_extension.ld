@@ -201,5 +201,14 @@ SECTIONS {
            "AI FP32 helpers overlap AI math")
     ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= 0x101fe000,
            "AI math overlaps device settings")
+    /* Keep display planning outside the main image's fixed math boundary. */
+    .lcd_color_code 0x101b8000 : {
+        *(.lcd_color_code.*)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= ADDR(.lcd_color_code),
+           "AI math overlaps LCD color code")
+    ASSERT(ADDR(.lcd_color_code) + SIZEOF(.lcd_color_code) <= 0x101ba000,
+           "LCD color code exceeds its 8 KiB slot")
 }
 INSERT AFTER .flash_end;
