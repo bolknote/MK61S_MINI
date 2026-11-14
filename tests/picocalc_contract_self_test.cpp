@@ -50,6 +50,29 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     CHECK(io(MK61_FILE_BYTES_STAT) && info.size==raw.size() && !info.directory);
     u8 bytes[512]{};r.data=bytes;r.offset=65534;r.size=sizeof(bytes);
     CHECK(io(MK61_FILE_BYTES_READ) && !std::memcmp(bytes,raw.data()+65534,sizeof(bytes)));
+    std::vector<u8> snapshot(170+64*(16384+11));
+    for(unsigned i=0;i<snapshot.size();++i) snapshot[i]=(u8)(i^(i>>10));
+    struct RawSource { const std::vector<u8>& raw; bool fail; } input{snapshot,false};
+    auto read_binary=+[](void* context,u32 at,u8* out,u32 size)->int {
+        const auto& source=*(const RawSource*)context;
+        if((source.fail && at>=37000) || at>source.raw.size() || size>source.raw.size()-at) return 0;
+        std::memcpy(out,source.raw.data()+at,size);
+        return 1;
+    };
+    mk61_service_write_source binary_source{"new.szx",&input,read_binary,(u32)snapshot.size(),0};
+    const auto save_binary=[&] {
+        return s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(binary_source),&binary_source);
+    };
+    CHECK(save_binary());
+    std::vector<u8> copy(snapshot.size());
+    unsigned received=0;
+    CHECK(files::read("/Contract/new.szx",copy.data(),copy.size(),received) && received==snapshot.size() && copy==snapshot);
+    CHECK(!save_binary()); // Creating the same name never replaces it.
+    input.fail=true;binary_source.name="interrupted.szx";
+    CHECK(!save_binary());
+    files::Entry absent{};
+    CHECK(!files::stat("/Contract/interrupted.szx",absent));
+    CHECK(!files::exists("/Contract/.MK61-0.TMP"));
     CHECK(files::mkdir("/Contract/Игры"));
     CHECK(files::write("/Contract/Игры/Игра.Z80",raw.data(),raw.size()));
     program_store::Entry media{};CHECK(script::register_file("/Contract/Игры/Игра.Z80",media));

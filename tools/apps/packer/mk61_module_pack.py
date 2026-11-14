@@ -20,6 +20,7 @@ from pathlib import Path
 
 HEADER_SIZE = 64
 APP_MAX_MEMORY_SIZE = 20 * 1024
+PICO_APP_MAX_MEMORY_SIZE = 58 * 1024
 LOAD_ADDRESS = 0x20000000
 MAX_OFFSET = 32640
 
@@ -321,7 +322,7 @@ def type_magic(value: str | None) -> int:
 
 def pack(args: argparse.Namespace) -> bytes:
     pico_target = getattr(args, "target", "stm32") == "picocalc-pico-h"
-    memory_limit = 48 * 1024 if pico_target else APP_MAX_MEMORY_SIZE
+    memory_limit = PICO_APP_MAX_MEMORY_SIZE if pico_target else APP_MAX_MEMORY_SIZE
     image = args.image.read_bytes()
     table = args.relocations.read_bytes()
     memory_size = args.memory_size

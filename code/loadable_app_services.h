@@ -240,7 +240,11 @@ enum mk61_file_bytes_operation { MK61_FILE_BYTES_STAT, MK61_FILE_BYTES_READ, MK6
   /* Resolve a physical file/directory ID to its absolute M8 path.
    * path=NULL,data=char[capacity],offset=id,size=capacity incl NUL.
    * Returns 1/0; on failure the output is unchanged. */
-  MK61_FILE_BYTES_PATH
+  MK61_FILE_BYTES_PATH,
+  /* Atomically create a binary file from a synchronous write_source.
+   * b=0, c=sizeof(mk61_service_write_source), name is an M8 path relative
+   * to the APP or absolute. Existing files are rejected. No ID is assigned. */
+  MK61_FILE_BYTES_WRITE_SOURCE
 };
 typedef struct mk61_service_file_bytes {
   const char* path;

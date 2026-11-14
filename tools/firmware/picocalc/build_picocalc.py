@@ -16,6 +16,8 @@ import shutil
 import subprocess
 import sys
 
+from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
+
 ROOT = Path(__file__).resolve().parents[3]
 SDK_VERSION = "2.2.0"
 SDK_COMMIT = "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779"
@@ -30,9 +32,10 @@ def firmware_flash_budget(image_bytes):
 
 
 def audio_memory_budget(static_ram_bytes, enabled):
-    # Full48KiB APP + two15KiB fixed banks + two8KiB cache leases.
-    # Include4KiB for native/shared allocations and8KiB growth headroom.
-    minimum = (48 + 30 + 16 + 4 + 8) * 1024
+    # Allow the maximum APP, two 15 KiB banks and 10 KiB in cache leases.
+    # The other 6 KiB of cache use the foreground stack and display canvas.
+    # Reserve 8 KiB for resident allocations and the audio engine.
+    minimum = PICO_APP_MAX_MEMORY_SIZE + (30 + 10 + 8) * 1024
     available = 224 * 1024 - static_ram_bytes
     if enabled and available < minimum:
         raise ValueError(f"real-time audio APP SRAM budget: heap {available} < required {minimum} bytes")
@@ -254,6 +257,7 @@ def main():
             "main_ram_region_bytes": 224 * 1024,
             "stack_reserved_bytes": 32 * 1024,
             "source_editor_capacity_bytes": 65534,
+            "app_memory_limit": PICO_APP_MAX_MEMORY_SIZE,
             "settings_flash_offset": 2 * 1024 * 1024 - 8192,
             "settings_flash_bytes": 8192,
             "uf2_bytes": len(transport),

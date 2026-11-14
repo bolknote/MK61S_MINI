@@ -5,6 +5,8 @@ build="$(mktemp -d "${TMPDIR:-/tmp}/mk61-spectrum.XXXXXX")"
 trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
+app="$root/examples/portable-apps/SPECTRUM"
+media=("$app/tape.c" "$app/szx.c" "$app/pentagon_video.c" "$app/inflate.c")
 python3 "$root/tests/spectrum_rom_storage_self_test.py"
 python3 "$root/tests/spectrum_m3_observer_self_test.py"
 clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
@@ -32,7 +34,7 @@ for test in spectrum_hil_timing_self_test spectrum_hil_games_self_test spectrum_
         "$root/examples/portable-apps/SPECTRUM/memory.c" \
         "$root/examples/portable-apps/SPECTRUM/peripherals.c" "$root/examples/portable-apps/SPECTRUM/fdc.c" \
         "$root/examples/portable-apps/SPECTRUM/spi.c" "$root/examples/portable-apps/SPECTRUM/mapper.c" \
-        "$root/examples/portable-apps/SPECTRUM/media.c" "$root/examples/portable-apps/SPECTRUM/ui.c" \
+        "$root/examples/portable-apps/SPECTRUM/media.c" "$root/examples/portable-apps/SPECTRUM/ui.c" "${media[@]}" \
         "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/$test"
     "$build/$test" "$build/$test-wire.txt"
 done
@@ -54,6 +56,12 @@ for test in spectrum_disk_self_test spectrum_extensions_self_test spectrum_exter
         "$build/$test" "$root/third_party/spectrum-rom" "$SPECTRUM_DEVICE_ASSETS"
     else "$build/$test"; fi
 done
+clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/sdk/portable/include" -I"$root/code" \
+    "$root/tests/spectrum_media_features_self_test.c" "${media[@]}" \
+    "$app/spectrum.c" "$app/memory.c" "$app/mapper.c" "$app/peripherals.c" "$app/spi.c" "$app/fdc.c" \
+    "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -lz -o "$build/media-features"
+"$build/media-features" "$root/third_party/spectrum-rom/48.rom"
 if [[ -n "${SPECTRUM_DEVICE_ASSETS:-}" ]]; then
     python3 - "$root" "$SPECTRUM_DEVICE_ASSETS" "$build/app-assets" <<'PY'
 import sys, shutil
@@ -77,11 +85,11 @@ PY
         "$root/tests/spectrum_app_self_test.c" "$root/examples/portable-apps/SPECTRUM/spectrum.c" \
         "$root/examples/portable-apps/SPECTRUM/memory.c" "$root/examples/portable-apps/SPECTRUM/peripherals.c" \
         "$root/examples/portable-apps/SPECTRUM/fdc.c" "$root/examples/portable-apps/SPECTRUM/spi.c" \
-        "$root/examples/portable-apps/SPECTRUM/mapper.c" "$root/examples/portable-apps/SPECTRUM/media.c" \
+        "$root/examples/portable-apps/SPECTRUM/mapper.c" "$root/examples/portable-apps/SPECTRUM/media.c" "${media[@]}" \
         "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/app"
     "$build/app" "$build/app-assets"
     SPECTRUM_LEGACY_LCD=1 "$build/app" "$build/app-assets"
-    for selected in DEMO.sna DEMO128.sna OPEN.Z80 BLANK.trd OPEN.SCL; do
+    for selected in DEMO.sna DEMO128.sna OPEN.Z80 ZX0001.SZX BLANK.trd OPEN.SCL; do
         SPECTRUM_OPEN_FILE="$selected" "$build/app" "$build/app-assets"
     done
     for selected in missing unsupported.tap BROKEN.z80; do

@@ -79,8 +79,10 @@ public:
 }
 int main() {
     using namespace picocalc;Services service;
-    for(const char* path:{"/games/A.Z80","/games/A.sna","/games/A.TRD","/games/A.ScL"})assert(file_associations::handler(path)==spectrum_magic);
-    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap"})assert(!file_associations::handler(path));
+    for(const char* path:{"/games/A.Z80","/games/A.sna","/games/A.Szx","/games/A.TRD","/games/A.ScL","/A.tap","/X.TzX"})
+        assert(file_associations::handler(path)==spectrum_magic);
+    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak"})
+        assert(!file_associations::handler(path));
     reset();file("/Games/Sub/Title.sna");app("/Games/Sub/Local.App");app("/Apps/ZX/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Sub/Title.sna",spectrum_magic) && launched=="/Games/Sub/Local.App");
     reset();file("/Collection/ZX/Sub/Title.Z80");app("/Collection/ZX/SPECTRUM.APP");

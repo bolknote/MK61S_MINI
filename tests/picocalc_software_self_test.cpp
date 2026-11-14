@@ -141,9 +141,9 @@ void picocalc_software_test(const char* preview_path) {
     assert(script::file_type("/book.sheet")==program_store::ProgramType::SHEET);
     assert(script::file_type("/image.wbm")==program_store::ProgramType::IMAGE1);
     assert(script::file_type("/snapshot.state.txt")==program_store::ProgramType::MK61_STATE);
-    for(const char* path:{"/game.z80","/game.SNA","/game.TrD","/game.sCl"})
+    for(const char* path:{"/game.z80","/game.SNA","/game.szX","/game.TrD","/game.sCl","/game.tap","/game.TZX"})
         assert(script::file_type(path)==program_store::ProgramType::EXTERNAL_BINARY);
-    for(const char* path:{"/game.z80.txt","/game.sna/notes","/game.img","/game.tap"})
+    for(const char* path:{"/game.z80.txt","/game.sna/notes","/game.img","/game.tap.bak"})
         assert(script::file_type(path)==program_store::ProgramType::TEXT);
     assert(!program_store::text_content(program_store::ProgramType::EXTERNAL_BINARY));
     assert(files::mkdir("/Software/auto"));

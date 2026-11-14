@@ -19,7 +19,7 @@ typedef struct {
     bool (*clear)(void*,uint32_t,uint32_t);
 } spectrum_memory_io;
 typedef struct {
-    uint8_t *cache,*fixed2,*fixed_tail[2],*pages,*pages_tail,*window;
+    uint8_t *cache,*fixed2,*fixed_tail[2],*page_data[16],*window;
     const uint8_t *rom,*rom_banks[2];
     spectrum_memory_io io;
     uint16_t tag[16];
@@ -37,6 +37,9 @@ bool spectrum_memory_init_mapped(spectrum_memory*,uint8_t fixed[SPECTRUM_FIXED_B
 bool spectrum_memory_init_split(spectrum_memory*,uint8_t* fixed5,uint8_t* fixed2,uint8_t* tails[3],uint8_t* pages,const uint8_t* rom0,const uint8_t* rom1,spectrum_memory_io);
 /* Sixteen SRAM pages shared by external ROM, banked RAM and DivRAM. */
 bool spectrum_memory_init_external_rom(spectrum_memory*,uint8_t* fixed5,uint8_t* fixed2,uint8_t* tails[3],uint8_t* pages,spectrum_memory_io);
+/* Same sixteen page slots using runs of 8, 2, 4 and 2 contiguous pages. */
+bool spectrum_memory_init_fragmented(spectrum_memory*,uint8_t* fixed5,uint8_t* fixed2,
+    uint8_t* const tails[2],uint8_t* const runs[4],unsigned banks,spectrum_memory_io);
 uint8_t* spectrum_memory_external_byte(spectrum_memory*,uint32_t address,bool writing);
 uint8_t* spectrum_memory_cached_byte(spectrum_memory*,uint32_t address,bool writing);
 bool spectrum_memory_sync(spectrum_memory*);

@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "tools/apps/packer"))
 from tools.apps.packer.app_relocations import extract
+from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
 SYSTEM_MODULES = {
     "terminal-clock": ("CLOCK", "APPLICATION", ["terminal_command_module.cpp", "crash_dump_format.cpp", "virtual_fat_diagnostic.cpp"], None),
     "terminal": ("TERMINAL", "APPLICATION", ["terminal_command_module.cpp", "crash_dump_format.cpp", "virtual_fat_diagnostic.cpp"], None),
@@ -372,7 +373,7 @@ def build(args: argparse.Namespace) -> dict:
         print(run(stack_command), end="")
     elf = out / (args.name + ".elf")
     run([tool("g++"), *flags, "-nostdlib", "-nostartfiles",
-         *(["-Wl,--defsym=MK61_MODULE_BYTES=49152"] if pico_target else []),
+         *([f"-Wl,--defsym=MK61_MODULE_BYTES={PICO_APP_MAX_MEMORY_SIZE}"] if pico_target else []),
          "-Wl,--gc-sections,--emit-relocs", "-Wl,--defsym=MK61_MODULE_ORIGIN=0x20000000",
          "-Wl,-T," + str(ROOT / "tools/apps/packer/mk61_module.ld"),
          "-Wl,-Map," + str(out / (args.name + ".map")),

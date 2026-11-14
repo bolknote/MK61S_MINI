@@ -17,8 +17,8 @@ namespace picocalc { namespace files {
 struct WriteSession {
     FIL file{};
     char path[PATH_SIZE]{},temporary[PATH_SIZE]{};
-    u32 revision=0;
-    bool open=false,text=false;
+    u32 revision=0,staged_bytes=0;
+    bool open=false,text=false,create_only=false,checkpointed=false;
 };
 namespace {
 FATFS filesystem;
@@ -42,15 +42,7 @@ FRESULT close_reader() {
     reader.open=false;
     return f_close(&reader.file);
 }
-bool finish_transaction(bool success);
-void abort_write(WriteSession* value) {
-    if(!value || !value->open) return;
-    value->open=false;
-    if(writer==value) writer=nullptr;
-    // Discard the unsynced FatFs window too; closing it would flush an upload
-    // which the caller explicitly cancelled.
-    if(mounted && !usb) (void)finish_transaction(false);
-}
+void abort_write(WriteSession* value);
 struct TextCache {
     char path[PATH_SIZE]{};
     u32 generation=0,index[128]{};
@@ -93,6 +85,22 @@ bool finish_transaction(bool success) {
     if(undone && mount()) std::snprintf(problem,sizeof(problem),"%s",saved);
     else if(!undone) std::snprintf(problem,sizeof(problem),"%s",saved);
     return false;
+}
+void remove_staged_write(const WriteSession& value) {
+    if(!value.checkpointed || !mounted || usb) return;
+    char saved[sizeof(problem)];std::memcpy(saved,problem,sizeof(saved));
+    if(!start_transaction()) return;
+    const FRESULT result=f_unlink(value.temporary);
+    if(finish_transaction(result==FR_NO_FILE || fail(result))) std::memcpy(problem,saved,sizeof(problem));
+}
+void abort_write(WriteSession* value) {
+    if(!value || !value->open) return;
+    value->open=false;
+    if(writer==value) writer=nullptr;
+    // Discard the unsynced FatFs window too; closing it would flush an upload
+    // which the caller explicitly cancelled.
+    if(mounted && !usb) (void)finish_transaction(false);
+    remove_staged_write(*value);
 }
 bool private_name(const char* path, const char* suffix, char out[PATH_SIZE]) {
     const char* slash = std::strrchr(path, '/');
@@ -502,30 +510,60 @@ static bool write_impl(const char* path, const u8* data, unsigned size, bool tex
 }
 bool write(const char* path, const u8* data, unsigned size) { return write_impl(path, data, size, false); }
 bool write_text(const char* path, const char* data, unsigned size) { return write_impl(path, (const u8*)data, size, true); }
-WriteSession* begin_write(const char* path,bool m8) {
+WriteSession* begin_write(const char* path,bool m8,bool create_only) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
-    if(!available() || writer || !path || std::strlen(path)>=PATH_SIZE || storage_journal::reserved(path)) return nullptr;
+    if(!available() || writer || !path || std::strlen(path)>=PATH_SIZE || storage_journal::reserved(path) ||
+       (m8 && create_only)) return nullptr;
+    if(create_only) {
+        FILINFO info{};
+        const FRESULT found=f_stat(path,&info);
+        if(found!=FR_NO_FILE) { fail(found==FR_OK?FR_EXIST:found);return nullptr; }
+    }
     auto* value=new(std::nothrow) WriteSession;
     if(!value) { std::snprintf(problem,sizeof(problem),"Not enough transfer memory");return nullptr; }
     if(!start_transaction()) { delete value;return nullptr; }
     if(!private_name(path,"TMP",value->temporary)) { finish_transaction(false);delete value;return nullptr; }
     const FRESULT result=f_open(&value->file,value->temporary,FA_WRITE|FA_CREATE_NEW);
     if(result!=FR_OK) { fail(result);finish_transaction(false);delete value;return nullptr; }
-    std::strcpy(value->path,path);value->text=m8;value->open=true;value->revision=generation;writer=value;return value;
+    std::strcpy(value->path,path);value->text=m8;value->create_only=create_only;
+    value->open=true;value->revision=generation;writer=value;return value;
 }
 bool append_write(WriteSession* value,const u8* data,unsigned size) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!value || !value->open || value->revision!=generation || usb || (size && !data)) return false;
     if(!fail(close_reader())) { abort_write(value);return false; }
+    if(!value->text) {
+        // Keep enough undo records for FAT/bitmap clusters and directory
+        // sectors even on fragmented media. Only the hidden file grows.
+        constexpr unsigned window=32*1024;
+        while(size) {
+            unsigned count=size;
+            if(value->create_only) {
+                if(value->staged_bytes==window) {
+                    value->checkpointed=true;
+                    if(!fail(f_sync(&value->file)) || !storage_journal::checkpoint()) {
+                        abort_write(value);return false;
+                    }
+                    value->staged_bytes=0;
+                }
+                const unsigned room=window-value->staged_bytes;
+                if(count>room) count=room;
+            }
+            UINT written=0;
+            const FRESULT result=f_write(&value->file,data,count,&written);
+            if(result!=FR_OK || written!=count) { abort_write(value);return fail(result!=FR_OK?result:FR_DISK_ERR); }
+            value->staged_bytes+=written;data+=written;size-=written;
+        }
+        return true;
+    }
     for(unsigned at=0;at<size;) {
         u8 chunk[768];unsigned count=0;
         const unsigned end=at+256<size?at+256:size;
         while(at<end) {
             const u8 byte=data[at++];
-            if(value->text && !mk8::valid_byte(byte)) { abort_write(value);return fail(FR_INVALID_PARAMETER); }
+            if(!mk8::valid_byte(byte)) { abort_write(value);return fail(FR_INVALID_PARAMETER); }
             const auto utf8=mk8::utf8(byte);
-            if(!value->text) chunk[count++]=byte;
-            else for(unsigned i=0;i<utf8.size;++i) chunk[count++]=utf8.data[i];
+            for(unsigned i=0;i<utf8.size;++i) chunk[count++]=utf8.data[i];
         }
         UINT written=0;const FRESULT result=f_write(&value->file,chunk,count,&written);
         if(result!=FR_OK || written!=count) { abort_write(value);return fail(result!=FR_OK?result:FR_DISK_ERR); }
@@ -541,9 +579,13 @@ bool commit_write(WriteSession*& value) {
     if(result==FR_OK) result=closed;
     value->open=false;writer=nullptr;
     bool ok=false;
-    if(result==FR_OK) ok=replace_file(value->path,value->temporary);
+    if(result==FR_OK && value->create_only) {
+        ok=fail(f_rename(value->temporary,value->path));
+        if(ok) ++generation;
+    } else if(result==FR_OK) ok=replace_file(value->path,value->temporary);
     else fail(result);
     ok=finish_transaction(ok);
+    if(!ok) remove_staged_write(*value);
     delete value;value=nullptr;return ok;
 }
 bool mkdir(const char* path) {

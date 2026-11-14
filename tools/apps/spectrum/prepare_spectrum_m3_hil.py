@@ -12,6 +12,9 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT))
+from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
+
 PYTHON = sys.executable
 TARGET = 'mk61s-picocalc-pico-h'
 SOURCE_SUFFIXES = ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld', '.pio')
@@ -134,8 +137,8 @@ def prepare(args):
     budget = metadata['foreground_memory_budget']
     if budget['heap_capacity_bytes'] < 108544 or module['memory_bytes'] > 6144:
         raise ValueError('Real-time memory budget failed')
-    if any(app['memory_bytes'] > 49152 for app in apps.values()):
-        raise ValueError('APP exceeds the 48KiB lease')
+    if any(app['memory_bytes'] > PICO_APP_MAX_MEMORY_SIZE for app in apps.values()):
+        raise ValueError('APP exceeds the Pico H image limit')
     erase_end = (metadata['flash_bytes'] + 4095) // 4096 * 4096
     if erase_end > 0x180000:
         raise ValueError('Pico firmware overlaps protected fixtures')

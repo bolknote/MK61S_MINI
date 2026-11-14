@@ -1,4 +1,4 @@
-/* Fixed, read-only Cosmic fixture. Same emulator/optimization as production;
+/* Fixed, read-only game fixture. Same emulator/optimization as production;
  * only the start path, finite stop and timing observer differ. */
 #include "../examples/portable-apps/SPECTRUM/ui.h"
 static const mk61_app_services* observed_services(const mk61_app_api*,uint32_t);
@@ -30,6 +30,10 @@ static void observed_video(const spectrum*,uint8_t*,uint8_t*);
 #endif
 #ifndef S3_GAME_FOLDER
 #define S3_GAME_FOLDER "/Spectrum"
+#endif
+#ifndef S3_GAME_SNAPSHOT
+#define S3_GAME_SNAPSHOT "COSMIC.Z80"
+#define S3_GAME_PALETTE "COSMIC.ULP"
 #endif
 static const mk61_app_services* original;
 static mk61_app_services proxy;
@@ -184,7 +188,7 @@ static void strict_recover(void* context) {
 #endif
 static uint32_t observed_call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
     if(op==MK61_SERVICE_FILE_BYTES && a==MK61_FILE_BYTES_PATH) {
-        mk61_service_file_bytes* r=payload;const char path[]=S3_GAME_FOLDER "/COSMIC.Z80";
+        mk61_service_file_bytes* r=payload;const char path[]=S3_GAME_FOLDER "/" S3_GAME_SNAPSHOT;
         if(r->size<sizeof(path))return 0;
         memcpy(r->data,path,sizeof(path));return 1;
     }
@@ -294,9 +298,12 @@ static enum spectrum_error observed_load(spectrum* s,const spectrum_source* sour
     char line[80];mk61_app_snprintf(original,line,sizeof(line),"SP3 SOUND chip=%s layout=%s\n",
         s->sound_chip==SPECTRUM_YM?"YM":"AY",s->sound_layout==SPECTRUM_ABC?"ABC":s->sound_layout==SPECTRUM_ACB?"ACB":"MONO");report(line);
 #endif
-    uint8_t palette[65];mk61_service_file_bytes r={S3_GAME_FOLDER "/COSMIC.ULP",palette,0,sizeof(palette)};
+#ifdef S3_GAME_PALETTE
+    uint8_t palette[65];mk61_service_file_bytes r={S3_GAME_FOLDER "/" S3_GAME_PALETTE,palette,0,sizeof(palette)};
     if(!original->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(r),&r) || palette[0]>1)return SPECTRUM_IO;
-    s->ulaplus_mode=palette[0];memcpy(s->ulaplus_palette,palette+1,64);return SPECTRUM_OK;
+    s->ulaplus_mode=palette[0];memcpy(s->ulaplus_palette,palette+1,64);
+#endif
+    return SPECTRUM_OK;
 }
 int main(void){
 #if defined(S3_PRODUCER_PROFILE) && S3_PRODUCER_PROFILE

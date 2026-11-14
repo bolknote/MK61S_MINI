@@ -27,7 +27,11 @@ SOURCES = ["examples/portable-apps/SPECTRUM/main.c",
            "examples/portable-apps/SPECTRUM/mapper.c",
            "examples/portable-apps/SPECTRUM/media.c",
            "examples/portable-apps/SPECTRUM/ui.c",
-           "third_party/z80/z80.c", "third_party/emu2149/emu2149.c"]
+           "third_party/z80/z80.c", "third_party/emu2149/emu2149.c",
+           "examples/portable-apps/SPECTRUM/tape.c",
+           "examples/portable-apps/SPECTRUM/inflate.c",
+           "examples/portable-apps/SPECTRUM/szx.c",
+           "examples/portable-apps/SPECTRUM/pentagon_video.c"]
 
 
 def demo_snapshot(pentagon=False):

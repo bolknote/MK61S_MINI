@@ -183,14 +183,17 @@ bool recover() {
     if(state && state->header.state==RECORDING) ok=undo();
     state.reset();return ok;
 }
-bool begin() {
-    if(active()) return reject("Another file transaction is active");
-    if(!attach(true)) { state.reset();return false; }
+static bool start_recording() {
     if(state->header.state==RECORDING) { state.reset();return reject("File recovery must finish before writing"); }
     if(state->header.sequence>=UINT64_MAX-CAPACITY-3) { state.reset();return reject("Recovery journal sequence exhausted"); }
     const auto next=state->header.sequence+1;
     if(!store_header({next,RECORDING,state->binding,1-state->header.slot,next,0})) { state.reset();return false; }
-    state->recording=true;return true;
+    state->count=0;state->recording=true;return true;
+}
+bool begin() {
+    if(active()) return reject("Another file transaction is active");
+    if(!attach(true)) { state.reset();return false; }
+    return start_recording();
 }
 namespace {
 bool prepare_sector(u32 sector) {
@@ -231,13 +234,23 @@ bool sync() {
     if(active()) state->failed=true;
     return reject("microSD transaction sync error");
 }
-bool commit() {
+static bool commit_marker() {
     if(!active() || state->failed) return false;
     if(!sd::sync()) return reject("File transaction sync error");
     // After attempting the commit marker we must not undo: the marker may
     // already be on the medium even if the SD driver reports an I/O failure.
-    const bool ok=store_header({state->header.sequence+1,EMPTY,state->binding,1-state->header.slot});
-    state.reset();return ok;
+    if(!store_header({state->header.sequence+1,EMPTY,state->binding,1-state->header.slot})) {
+        state.reset();return false;
+    }
+    state->recording=false;
+    return true;
+}
+bool checkpoint() {
+    return commit_marker() && start_recording();
+}
+bool commit() {
+    if(!commit_marker()) return false;
+    state.reset();return true;
 }
 bool rollback() {
     if(!active()) { state.reset();return true; }

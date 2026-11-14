@@ -9,6 +9,8 @@ bool write_sectors(u32 sector,const u8* data,u32 count);
 bool sync();
 bool recover();
 bool begin();
+// Commit synced changes and begin another transaction on the same mounted card.
+bool checkpoint();
 bool commit();
 bool rollback();
 void reset();

@@ -15,7 +15,7 @@ static constexpr u32 SRAM_LAST_ADDRESS = 0x20038000UL; // Pico: exclude the rese
 static constexpr u32 SRAM_LAST_ADDRESS = 0x20020000UL;
 #endif
 #if defined(MK61_CORE_STANDALONE)
-static constexpr u32 APP_MAX_MEMORY_SIZE = 48U * 1024U;
+static constexpr u32 APP_MAX_MEMORY_SIZE = 58U * 1024U;
 #else
 static constexpr u32 APP_MAX_MEMORY_SIZE = 20U * 1024U;
 #endif

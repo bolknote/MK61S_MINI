@@ -41,7 +41,7 @@ bool read_text_stream(const char* path,bool (*write)(void*,const u8*,unsigned),
 bool text_size(const char* path,unsigned& size);
 bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned& used);
 struct WriteSession;
-WriteSession* begin_write(const char* path,bool m8=false);
+WriteSession* begin_write(const char* path,bool m8=false,bool create_only=false);
 bool append_write(WriteSession* session,const u8* data,unsigned size);
 bool commit_write(WriteSession*& session);
 void cancel_write(WriteSession*& session);

@@ -2,6 +2,8 @@
 #define MK61_SPECTRUM_UI_H
 #include "mk61_app.h"
 #include "spectrum.h"
+unsigned spectrum_video_mode(const spectrum*);
+bool spectrum_video_strip(const spectrum*,unsigned mode,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
 typedef struct {
     const mk61_app_services* api;
     const uint8_t* font;

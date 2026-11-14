@@ -86,7 +86,7 @@ def pico_capabilities(metadata, binary, features):
     return dict(format=1, platform='picocalc', mcu='rp2040', profile='picocalc-pico-h',
                 device_profile='picocalc-pico-h', build_id=metadata['build_id'].upper(), abi=6,
                 firmware=binary.name, firmware_sha256=sha(binary.read_bytes()),
-                features=features, system_apps={}, app_memory_limit=49152)
+                features=features, system_apps={}, app_memory_limit=metadata.get('app_memory_limit', 48 * 1024))
 
 
 def resolved_build_flags(database):

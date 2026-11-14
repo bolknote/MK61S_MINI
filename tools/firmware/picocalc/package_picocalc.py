@@ -18,6 +18,7 @@ import zipfile
 import zlib
 
 from tools.apps.system.build_picocalc_apps import APPS, ASSETS, ROOT
+from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
 from seal_picocalc import verify as verify_firmware
 from explorer_icons import install_bundle_icons
 from tools.apps.urq.library import copy_device_library, copy_licenses
@@ -37,7 +38,7 @@ def sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def verify_app(path, record):
+def verify_app(path, record, memory_limit=PICO_APP_MAX_MEMORY_SIZE):
     data=path.read_bytes()
     if record['target']!='picocalc-pico-h' or record['abi']!=6:
         raise ValueError(f'{path.name}: not a Pico H ABI 6 build')
@@ -48,7 +49,7 @@ def verify_app(path, record):
         raise ValueError(f'{path.name}: incompatible CPU/relocation flags')
     if 'native_display' in record and bool(flags&16)!=record['native_display']:
         raise ValueError(f'{path.name}: display flag/build manifest mismatch')
-    if not 0<image<=memory<=49152 or entry>=image or len(data)!=64+stored:
+    if not 0<image<=memory<=memory_limit or entry>=image or len(data)!=64+stored:
         raise ValueError(f'{path.name}: invalid APP bounds')
     if zlib.crc32(data[:60])!=struct.unpack_from('<I',data,60)[0] or zlib.crc32(data[64:])!=struct.unpack_from('<I',data,48)[0]:
         raise ValueError(f'{path.name}: APP checksum mismatch')
@@ -80,7 +81,10 @@ def main():
     apps=directory/'apps';records=json.loads((apps/'manifest.json').read_text())
     if [record['name'] for record in records]!=list(APPS):
         raise ValueError('APP manifest must contain the complete current collection')
-    for record in records:verify_app(apps/(record['name']+'.APP'),record)
+    memory_limit=build.get('app_memory_limit', 48 * 1024)
+    if not 0 < memory_limit <= PICO_APP_MAX_MEMORY_SIZE:
+        raise ValueError('invalid Pico H APP memory limit')
+    for record in records:verify_app(apps/(record['name']+'.APP'),record,memory_limit)
     (directory/'README.txt').write_text(README)
     shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')
     from program_collection import plan as program_plan, distribution_manifest
@@ -115,7 +119,7 @@ def main():
         record=json.loads((spectrum/'manifest.json').read_text())
         if any(Path(name).name in ('ROMCACHE.uf2','rom-cache.json')for name in record['files']):
             raise ValueError('Rebuild Spectrum SD assets: Flash ROM packs are no longer supported')
-        verify_app(spectrum/'SPECTRUM.APP',record)
+        verify_app(spectrum/'SPECTRUM.APP',record,memory_limit)
         for name,digest in record['files'].items():
             path=spectrum/name
             if not path.resolve().is_relative_to(spectrum.resolve()) or sha256(path)!=digest:

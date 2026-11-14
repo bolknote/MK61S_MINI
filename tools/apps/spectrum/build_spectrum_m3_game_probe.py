@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build identical finite Cosmic runs for local/M3 sound comparison."""
+"""Build identical finite game runs for local/M3 sound comparison."""
 import argparse
 import hashlib
 import json
@@ -10,6 +10,7 @@ import subprocess
 import sys
 from build_spectrum_app import ROOT,SOURCES
 from build_spectrum_m3 import compiler_bin
+from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
 
 RUNTIME_FILES=('AY.S3M','48.rom','128-0.rom','128-1.rom')
 ROM_BYTES={'48.rom':16384,'128-0.rom':16384,'128-1.rom':16384}
@@ -47,6 +48,7 @@ def main():
     ap.add_argument('--module-name',default='AY.S3M',help='Relative 8.3 module basename for an isolated A/B probe')
     ap.add_argument('--sound-layout',choices=['mono','ABC','ACB'],default='ABC')
     ap.add_argument('--sound-chip',choices=['AY','YM'],default='AY')
+    ap.add_argument('--game',choices=['cosmic','ianna'],default='cosmic')
     ap.add_argument('--snapshot-only',action='store_true',help='Omit media mounting from the fixed-checkpoint probe')
     args=ap.parse_args()
     # 30,000 Pentagon frames take about ten minutes and keep the unsigned
@@ -62,6 +64,7 @@ def main():
             '\n#define S3_SOUND_LAYOUT '+str(['mono','ABC','ACB'].index(args.sound_layout))+
             '\n#define S3_SOUND_CHIP '+str(['AY','YM'].index(args.sound_chip))+
             ('\n#define SPECTRUM_HIL_SNAPSHOT_ONLY 1' if args.snapshot_only else '')+
+            ('\n#define S3_GAME_SNAPSHOT "IANNA.Z80"' if args.game=='ianna' else '')+
             '\n#define S3_GAME_MODULE '+json.dumps(args.module_name)+
             '\n#define S3_FORCE_LOCAL '+str(int(local))+
             '\n#define S3_GAME_FOLDER '+json.dumps(args.fixture_dir)+'\n#define S3_GAME_FRAMES '+str(args.frames)+'u\n#include "'+str(ROOT/'tests/spectrum_m3_game_probe.c')+'"\n')
@@ -82,9 +85,10 @@ def main():
                     frame_trace_limit=args.frame_trace_limit,
                     module_name=args.module_name,
                     sound_layout=args.sound_layout,sound_chip=args.sound_chip,
-                    snapshot_only=args.snapshot_only,
+                    snapshot_only=args.snapshot_only,game=args.game,
                     runtime_files=runtime,source_pins={str(p):sha(p)for p in inputs})
         (folder/'manifest.json').write_text(json.dumps(meta,indent=2)+'\n')
-        print(('local' if local else 'M3')+': '+str(meta['memory_bytes'])+'/49152bytes')
+        mode = 'local' if local else 'M3'
+        print(f"{mode}: {meta['memory_bytes']}/{PICO_APP_MAX_MEMORY_SIZE} bytes")
 
 if __name__=='__main__':main()

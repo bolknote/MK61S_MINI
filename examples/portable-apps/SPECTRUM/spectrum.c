@@ -55,6 +55,7 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     uint8_t device;if(spectrum_disk_in(s,port,&device)) return device;
     if(!(port&1)) {
         uint8_t value=0xBF;
+        if(s->ear && s->ear(s->ear_context,&s->cpu)) value|=0x40;
         for(unsigned row=0;row<8;++row) if(!(port&(0x100U<<row))) value&=s->keys[row]|0xE0;
         return value;
     }
@@ -107,7 +108,7 @@ static void reset_ay(spectrum* s) {
     s->ay2=s->ay;spectrum_sound_reset(s);
     s->sample_phase=0;s->audio_input=s->audio_output=0;
 }
-static void reset_cpu(spectrum* s) {
+void spectrum_reset_cpu(spectrum* s) {
     z80_init(&s->cpu);s->cpu.read_byte=read_byte;s->cpu.write_byte=write_byte;
     s->cpu.port_in=port_in;s->cpu.port_out=port_out;s->cpu.userdata=s;
     spectrum_disk_filter(s);spectrum_refresh_map(s);
@@ -126,7 +127,7 @@ void spectrum_init(spectrum* s,uint8_t* ram,const uint8_t* rom) {
     spectrum_reset(s);
 }
 void spectrum_reset(spectrum* s) {
-    reset_cpu(s);
+    spectrum_reset_cpu(s);
     if(s->memory) {
         (void)spectrum_memory_reset(s->memory);
         /* Beta boots the 48K ROM with paging available. Selecting 48 BASIC
@@ -141,7 +142,7 @@ void spectrum_set_audio(spectrum* s,uint32_t rate,void (*sample)(void*,int16_t),
     // Preserve registers across pause/resume and only reconfigure the rate.
     PSG_setRate(&s->ay,rate?rate:25000);
 }
-void spectrum_attach_memory(spectrum* s,spectrum_memory* memory) { s->memory=memory;s->pentagon=memory!=NULL;reset_cpu(s); }
+void spectrum_attach_memory(spectrum* s,spectrum_memory* memory) { s->memory=memory;s->pentagon=memory!=NULL;spectrum_reset_cpu(s); }
 uint32_t spectrum_frame_cycles(const spectrum* s) { return s->pentagon?71680:SPECTRUM_FRAME_TSTATES; }
 
 static void ldir_deadline(spectrum* s,uint32_t phase,uint32_t frame,uint32_t left) {
@@ -415,7 +416,7 @@ enum spectrum_error spectrum_load_sna(spectrum* s,const spectrum_source* source)
         for(unsigned i=0;i<3 && !error;++i) error=load_bank(&r,s,banks[i],true);
     } else error=raw_page(&r,s->ram,SPECTRUM_RAM_BYTES);
     if(error) return error;
-    reset_cpu(s);z80* z=&s->cpu;
+    spectrum_reset_cpu(s);z80* z=&s->cpu;
     z->i=h[0];z->l_=h[1];z->h_=h[2];z->e_=h[3];z->d_=h[4];
     z->c_=h[5];z->b_=h[6];z->f_=h[7];z->a_=h[8];
     z->l=h[9];z->h=h[10];z->e=h[11];z->d=h[12];z->c=h[13];z->b=h[14];
@@ -501,7 +502,7 @@ enum spectrum_error spectrum_load_z80(spectrum* s,const spectrum_source* source)
     if(!error && s->memory && s->memory->extended) s->memory->control=4;
     if(!error) error=z80_pages(s,source,h,extra,banked,true);
     if(error) return error;
-    reset_cpu(s);z80* z=&s->cpu;
+    spectrum_reset_cpu(s);z80* z=&s->cpu;
     z->a=h[0];flags(z,h[1]);z->c=h[2];z->b=h[3];z->l=h[4];z->h=h[5];
     z->pc=pc;z->sp=word(h+8);z->i=h[10];z->r=(h[11]&127)|((h[12]&1)<<7);
     z->e=h[13];z->d=h[14];z->c_=h[15];z->b_=h[16];z->e_=h[17];z->d_=h[18];

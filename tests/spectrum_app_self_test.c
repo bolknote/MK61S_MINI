@@ -21,6 +21,7 @@ static bool legacy_lcd;
 static const char* opened_name;
 static bool open_error;
 static unsigned open_keys,open_path_calls,selected_reads;
+static unsigned snapshots_written;
 static uint8_t canvas[12800],*psram;
 static uint8_t* direct_sram[3];
 static unsigned psram_bytes,action;
@@ -35,6 +36,7 @@ static mk61_service_audio_synth generator;
 typedef struct { const char* screen;unsigned key,frames; } action_item;
 static const action_item script[]={
     {"Spectrum",13,0},{NULL,27,80},
+    {"Spectrum",'s',0},{"Spectrum",' ',0},
     {"Spectrum",'p',0},{"Options",'j',0},
     {"Options",'c',0},{"Options",'s',0},
     {"Options",'1',0},{"Options",'1',0},
@@ -90,7 +92,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(op==MK61_SERVICE_MICROS) { micros_now+=100;return micros_now; }
     if(op==MK61_SERVICE_MEMORY_ACQUIRE) {
         mk61_service_lease* r=payload;r->data=calloc(1,c);assert(r->data);r->size=c;r->fresh=1;
-        assert(a<=1 && c==8192);return 1;
+        assert((a==0 && c==8192) || (a==1 && c==2048));return 1;
     }
     if(op==MK61_SERVICE_MEMORY_RELEASE) { mk61_service_lease* r=payload;free(r->data);r->data=NULL;return 1; }
     if(op==MK61_SERVICE_BUFFER) {
@@ -119,6 +121,21 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         return 1;
     }
     if(op==MK61_SERVICE_FILE_BYTES) {
+        if(a==MK61_FILE_BYTES_WRITE_SOURCE) {
+            const mk61_service_write_source* request=payload;
+            assert(!b && c==sizeof(*request) && !generator.sample);
+            assert(request->size>512*1024 && suffix(request->name,".szx"));
+            char filename[1024];path(filename,request->name);
+            FILE* f=fopen(filename,"wbx");assert(f);
+            for(unsigned at=0;at<request->size;) {
+                uint8_t data[1024];
+                const unsigned remaining=request->size-at;
+                const unsigned n=remaining<sizeof(data)?remaining:sizeof(data);
+                assert(request->read(request->context,at,data,n));
+                assert(fwrite(data,1,n,f)==n);at+=n;
+            }
+            assert(!fclose(f));++snapshots_written;return 1;
+        }
         mk61_service_file_bytes* r=payload;
         if(a==MK61_FILE_BYTES_PATH) {
             assert(opened_name && !r->path && r->offset==42 && r->size==256);++open_path_calls;
@@ -163,7 +180,10 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(lcd_clock==(legacy_lcd?12000000:24000000));
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
         assert(machine.memory->paged_rom && !machine.rom && !machine.memory->window && machine.memory->page_count==16);
-        assert(machine.memory->pages==bank_window && machine.memory->pages_tail==bank_tails[2]);
+        assert(machine.memory->page_data[0]==page_runs[0] &&
+               machine.memory->page_data[8]==page_runs[1] &&
+               machine.memory->page_data[10]==page_runs[2] &&
+               machine.memory->page_data[14]==canvas+10752);
         assert((machine.keys[6]&1) && (machine.keys[2]&8)); // Menu Enter/R never leak into the guest.
         return frames_shown%3?1:2;
     }
@@ -232,9 +252,10 @@ int main(int argc,char** argv) {
         if(open_error) assert(!audio_opens && !audio_closes);
         else {
             assert(audio_opens==1 && audio_closes==1 && frames_shown>=12);
-            if(suffix(opened_name,".sna") || suffix(opened_name,".z80") || suffix(opened_name,".scl"))assert(selected_reads);
+            if(is_snapshot(opened_name) || suffix(opened_name,".scl"))assert(selected_reads);
         }
-    } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 && frames_shown>350 && graphics_ends==1 && saw_ym && saw_acb);
+    } else assert(action==sizeof(script)/sizeof(*script) && audio_opens==7 && audio_closes==7 &&
+        frames_shown>350 && graphics_ends==1 && saw_ym && saw_acb && snapshots_written==1);
     assert(lcd_clock_requests>=audio_opens && lcd_clock==12000000);
     if(remote_audio) {
         assert(remote_scans==audio_opens);

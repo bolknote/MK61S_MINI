@@ -615,38 +615,59 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   case MK61_SERVICE_RESOURCE_READ:
     return host.resource(a, b, payload);
   case MK61_SERVICE_FILE_BYTES: {
-    if(b || c!=sizeof(mk61_service_file_bytes) || !payload || a>MK61_FILE_BYTES_PATH) return 0;
-    const auto& r=*(const mk61_service_file_bytes*)payload;
+    if(b || !payload || a>MK61_FILE_BYTES_WRITE_SOURCE) return 0;
+    const bool stream=a==MK61_FILE_BYTES_WRITE_SOURCE;
+    if(c!=(stream?sizeof(mk61_service_write_source):sizeof(mk61_service_file_bytes))) return 0;
+    const auto* r=stream?nullptr:(const mk61_service_file_bytes*)payload;
     if(a==MK61_FILE_BYTES_PATH) {
-      if(r.path || !r.data || !r.size || r.size>files::PATH_SIZE || r.offset>0xFFFF) return 0;
-      const char* path=script::file_path((u16)r.offset);if(!path) return 0;
+      if(r->path || !r->data || !r->size || r->size>files::PATH_SIZE || r->offset>0xFFFF) return 0;
+      const char* path=script::file_path((u16)r->offset);if(!path) return 0;
       u8 encoded[files::PATH_SIZE];usize size=0;
-      if(!mk8::from_utf8((const u8*)path,std::strlen(path),encoded,sizeof(encoded)-1,size) || size>=r.size) return 0;
-      std::memcpy(r.data,encoded,size);((char*)r.data)[size]=0;return 1;
+      if(!mk8::from_utf8((const u8*)path,std::strlen(path),encoded,sizeof(encoded)-1,size) || size>=r->size) return 0;
+      std::memcpy(r->data,encoded,size);((char*)r->data)[size]=0;return 1;
     }
-    if(!r.path || !r.data || strnlen(r.path,files::PATH_SIZE)>=files::PATH_SIZE ||
-       (a==MK61_FILE_BYTES_READ || a==MK61_FILE_BYTES_WRITE ? !r.size || r.size>4096 : r.size!=sizeof(mk61_service_file_info))) return 0;
+    const auto* source=stream?(const mk61_service_write_source*)payload:nullptr;
+    const char* requested=stream?source->name:r->path;
+    if(!requested || strnlen(requested,files::PATH_SIZE)>=files::PATH_SIZE) return 0;
+    if(stream ? (!source->read || !source->size) :
+       (!r->data || (a==MK61_FILE_BYTES_READ || a==MK61_FILE_BYTES_WRITE ?
+                    !r->size || r->size>4096 : r->size!=sizeof(mk61_service_file_info)))) return 0;
     char name[files::PATH_SIZE],base[files::PATH_SIZE],path[files::PATH_SIZE];
-    if(!utf8(r.path,name,sizeof(name))) return 0;
+    if(!utf8(requested,name,sizeof(name))) return 0;
     std::snprintf(base,sizeof(base),"%s",s.path_);
     char* slash=std::strrchr(base,'/');
     if(!slash) std::strcpy(base,"/");else if(slash==base) slash[1]=0;else *slash=0;
     if(!script::normalize_path(base,name,path)) return 0;
-    if(a==MK61_FILE_BYTES_WRITE) return files::write_range(path,r.offset,(const u8*)r.data,r.size);
+    if(stream) {
+      auto* session=files::begin_write(path,false,true);
+      if(!session) return 0;
+      u8 block[1024];
+      for(u32 offset=0;offset<source->size;) {
+        const u32 left=source->size-offset;
+        const u32 n=left<sizeof(block)?left:sizeof(block);
+        if(!source->read(source->context,offset,block,n) || !files::append_write(session,block,n)) {
+          files::cancel_write(session);
+          return 0;
+        }
+        offset+=n;host.pump();
+      }
+      return files::commit_write(session);
+    }
+    if(a==MK61_FILE_BYTES_WRITE) return files::write_range(path,r->offset,(const u8*)r->data,r->size);
     if(a==MK61_FILE_BYTES_READ) {
       unsigned got=0;
-      return files::read_range(path,r.offset,(u8*)r.data,r.size,got) && got==r.size;
+      return files::read_range(path,r->offset,(u8*)r->data,r->size,got) && got==r->size;
     }
     files::Entry e{};
     if(a==MK61_FILE_BYTES_STAT) { if(!files::stat(path,e)) return 0; }
     else {
       unsigned used=0;bool more=false;
-      if(!files::list(path,r.offset,&e,1,used,more) || used!=1) return 0;
+      if(!files::list(path,r->offset,&e,1,used,more) || used!=1) return 0;
     }
     mk61_service_file_info info{};info.size=e.size;info.directory=e.directory;
     usize count=0;
     if(!mk8::from_utf8((const u8*)e.name,std::strlen(e.name),(u8*)info.name,sizeof(info.name)-1,count)) return 0;
-    info.name[count]=0;*(mk61_service_file_info*)r.data=info;return 1;
+    info.name[count]=0;*(mk61_service_file_info*)r->data=info;return 1;
   }
   case MK61_SERVICE_LANGUAGE_ERROR_TEXT:
     if (a > (u32)language_vm::Error::GRAPHICS_ARGUMENT || b > 1 || c || payload)

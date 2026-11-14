@@ -26,6 +26,8 @@ typedef struct spectrum {
     PSG ay2;
     spectrum_sound sound;
     spectrum_disk disk;
+    void* ear_context;
+    bool (*ear)(void*,const z80*);
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,ulaplus_palette[64];
     uint32_t sample_rate,sample_phase;
@@ -43,6 +45,7 @@ enum spectrum_error {
 };
 void spectrum_init(spectrum*,uint8_t* ram,const uint8_t* rom);
 void spectrum_reset(spectrum*);
+void spectrum_reset_cpu(spectrum*);
 void spectrum_set_audio(spectrum*,uint32_t rate,void (*sample)(void*,int16_t),void* context);
 void spectrum_attach_memory(spectrum*,spectrum_memory*);
 void spectrum_refresh_map(spectrum*);

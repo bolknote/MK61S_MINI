@@ -16,7 +16,7 @@ uint8_t* spectrum_memory_fixed(spectrum_memory* m,unsigned bank) {
     return base && m->fixed_tail[bank==2]==base+SPECTRUM_BANK_HEAP_BYTES?base:NULL;
 }
 static uint8_t* slot_bytes(spectrum_memory* m,unsigned slot) {
-    return slot>=8?m->pages_tail+(slot-8)*SPECTRUM_CACHE_PAGE_BYTES:m->pages+slot*SPECTRUM_CACHE_PAGE_BYTES;
+    return m->page_data[slot];
 }
 static unsigned bank_value(const spectrum_memory* m,uint8_t paging) {
     unsigned bank=paging&7;
@@ -170,14 +170,28 @@ bool spectrum_memory_init_split(spectrum_memory* m,uint8_t* fixed5,uint8_t* fixe
     if(!m || !fixed5 || !fixed2 || !tails || !tails[0] || !tails[1] || !pages || !rom0 ||
        (rom1 && !tails[2]) || !io.read || !io.write || !io.clear) return false;
     memset(m,0,sizeof(*m));m->cache=fixed5;m->fixed2=fixed2;m->fixed_tail[0]=tails[0];m->fixed_tail[1]=tails[1];
-    m->pages=pages;m->pages_tail=tails[2];m->page_count=rom1?16:2;m->rom=rom0;m->io=io;m->banks=32;
+    m->page_count=rom1?16:2;m->rom=rom0;m->io=io;m->banks=32;
+    for(unsigned slot=0;slot<m->page_count;++slot)
+        m->page_data[slot]=(slot<8?pages:tails[2])+(slot&7)*SPECTRUM_CACHE_PAGE_BYTES;
     if(rom1) { m->rom_banks[0]=rom0;m->rom_banks[1]=rom1; }
     return spectrum_memory_reset(m);
 }
 bool spectrum_memory_init_external_rom(spectrum_memory* m,uint8_t* fixed5,uint8_t* fixed2,uint8_t* tails[3],uint8_t* pages,spectrum_memory_io io) {
-    if(!m || !fixed5 || !fixed2 || !tails || !tails[0] || !tails[1] || !tails[2] || !pages || !io.read || !io.write || !io.clear)return false;
+    if(!tails || !tails[2]) return false;
+    uint8_t* runs[]={pages,tails[2],tails[2]+2048,tails[2]+6144};
+    return spectrum_memory_init_fragmented(m,fixed5,fixed2,tails,runs,32,io);
+}
+bool spectrum_memory_init_fragmented(spectrum_memory* m,uint8_t* fixed5,uint8_t* fixed2,
+        uint8_t* const tails[2],uint8_t* const runs[4],unsigned banks,spectrum_memory_io io) {
+    if(!m || !fixed5 || !fixed2 || !tails || !tails[0] || !tails[1] ||
+       !runs || !io.read || !io.write || !io.clear || (banks!=32 && banks!=64)) return false;
+    for(unsigned n=0;n<4;++n) if(!runs[n]) return false;
     memset(m,0,sizeof(*m));m->cache=fixed5;m->fixed2=fixed2;m->fixed_tail[0]=tails[0];m->fixed_tail[1]=tails[1];
-    m->pages=pages;m->pages_tail=tails[2];m->page_count=16;m->paged_rom=true;m->io=io;m->banks=32;
+    const unsigned lengths[]={8,2,4,2};
+    unsigned slot=0;
+    for(unsigned n=0;n<4;++n)
+        for(unsigned i=0;i<lengths[n];++i) m->page_data[slot++]=runs[n]+i*SPECTRUM_CACHE_PAGE_BYTES;
+    m->page_count=16;m->paged_rom=true;m->io=io;m->banks=banks;m->extended=banks==64;
     return spectrum_memory_reset(m);
 }
 bool spectrum_bank_read(spectrum_memory* m,unsigned bank,unsigned offset,uint8_t* out,unsigned bytes) {
