@@ -12,8 +12,10 @@
 #include "hardware/structs/clocks.h"
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
-#include <new>
 #include <cstdlib>
+#include <malloc.h>
+#include <memory>
+#include <new>
 #include <optional>
 
 namespace picocalc::m3_audio {
@@ -27,10 +29,10 @@ struct Clocks {
     static void clear1(uint32_t v){hw_clear_bits(&clocks_hw->sleep_en1,v);}
 };
 struct Context {
-    alignas(512) uint8_t receive[512]{};
-    void* allocation=nullptr;
+    static constexpr unsigned RX_BYTES=512;
+    uint8_t* receive=nullptr;
     m3::AudioEngine engine;
-    uint32_t crc_values[256];
+    std::unique_ptr<uint32_t[]> crc_values;
     stm3_pico_uart1 uart{};
     std::optional<SleepClockLease<Clocks>> clocks;
     int rx=-1,tx_dma=-1;
@@ -45,17 +47,21 @@ struct Context {
     bool service_running=false;
     LateBlock first_late{};
     uint32_t trace_started=0,trace_gap=0,trace_pump=0,trace_step=0,trace_tx=0;
-    Context() {
-        // Only an active M3 stream leases this 1 KiB. Keep random CRC
-        // lookups off XIP without reducing the resident APP heap budget.
-        std::memcpy(crc_values,m3::Wire::crc_table(),sizeof(crc_values));
-        engine.wire.crc_values=crc_values;
+    ~Context() {std::free(receive);}
+    bool allocate_buffers() {
+        // Only the DMA ring requires 512-byte alignment. The engine and
+        // CRC table can occupy separate fragments of the APP heap.
+        receive=(uint8_t*)::memalign(RX_BYTES,RX_BYTES);
+        crc_values.reset(new(std::nothrow) uint32_t[256]);
+        if(!receive || !crc_values)return false;
+        std::memcpy(crc_values.get(),m3::Wire::crc_table(),256*sizeof(uint32_t));
+        engine.wire.crc_values=crc_values.get();
+        return true;
     }
 };
 std::atomic<Context*> context{nullptr};
 Statistics last{};
 uint16_t last_sequence=0;
-void destroy(Context* c){void* memory=c->allocation;c->~Context();std::free(memory);}
 uint32_t micros(void*){return time_us_32();}
 struct TxPort {
     Context& c;
@@ -93,7 +99,7 @@ void pump(Context& c) {
     if(uart_get_hw(uart1)->rsr&15u) {
         uart_get_hw(uart1)->rsr=0;receive_error(c);
     }
-    const bool valid=m3::drain_receive<sizeof(c.receive)>(c.receive,c.tail,c.rx_bytes,[&c]{
+    const bool valid=m3::drain_receive<Context::RX_BYTES>(c.receive,c.tail,c.rx_bytes,[&c]{
         const uint32_t head=UINT32_MAX-dma_hw->ch[c.rx].transfer_count;__dmb();return head;
     },[&wire](const uint8_t* data,unsigned n){wire.feed(data,n);});
     if(!valid)receive_error(c);
@@ -159,7 +165,8 @@ bool setup(Context& c) {
         auto config=dma_channel_get_default_config((unsigned)c.rx);
         channel_config_set_transfer_data_size(&config,DMA_SIZE_8);
         channel_config_set_read_increment(&config,false);channel_config_set_write_increment(&config,true);
-        channel_config_set_ring(&config,true,9);channel_config_set_dreq(&config,uart_get_dreq(uart1,false));
+        channel_config_set_ring(&config,true,__builtin_ctz(Context::RX_BYTES));
+        channel_config_set_dreq(&config,uart_get_dreq(uart1,false));
         dma_channel_configure((unsigned)c.rx,&config,c.receive,&uart_get_hw(uart1)->dr,UINT32_MAX,false);
         if(c.tx_dma>=0) {
             auto tx_config=dma_channel_get_default_config((unsigned)c.tx_dma);
@@ -303,13 +310,13 @@ void fault(int error){auto* c=context.load(std::memory_order_acquire);if(c)c->en
 bool open(const mk61_service_audio_psg& request,unsigned gain,const mk61_service_audio_psg_config* config) {
     const auto options=psg_packets::options(config);
     if(context.load(std::memory_order_acquire) || !psg_packets::valid(request) || !psg_packets::valid(options) || !request.recover || gain>1000)return false;
-    void* memory=std::malloc(sizeof(Context)+alignof(Context)-1);if(!memory)return false;
-    const uintptr_t aligned=(uintptr_t(memory)+alignof(Context)-1)&~uintptr_t(alignof(Context)-1);
-    auto* c=new(reinterpret_cast<void*>(aligned)) Context;c->allocation=memory;
+    auto c=std::unique_ptr<Context>(new(std::nothrow) Context);
+    if(!c || !c->allocate_buffers())return false;
     c->engine.request=request;c->engine.options=options;last={};
-    if(!setup(*c)){destroy(c);return false;}
-    if(!load(*c,request.module_path,gain)){close();return false;}
-    io_worker::invoke(c,[](void* raw) {
+    if(!setup(*c))return false;
+    auto* active=c.release();
+    if(!load(*active,request.module_path,gain)){close();return false;}
+    io_worker::invoke(active,[](void* raw) {
         auto& c=*(Context*)raw;c.engine.wire.complete=false;c.engine.inline_input=c.inline_input;c.streaming=true;
     });
     return true;
@@ -371,7 +378,7 @@ void close() {
         }
         if(!empty)++last.unload_failures;
     }
-    io_worker::invoke(c,release);destroy(c);
+    io_worker::invoke(c,release);delete c;
 }
 Statistics statistics() {
     auto* c=context.load(std::memory_order_acquire);
