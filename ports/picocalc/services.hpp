@@ -36,6 +36,7 @@ public:
     bool active() const { return page_ != ServicePage::CLOSED; }
     bool usb_disk() const { return page_ == ServicePage::USB_DISK; }
     bool usb_force_confirmation() const { return page_ == ServicePage::CONFIRM && confirm_ == Confirm::USB_FORCE; }
+    bool dialog() const { return page_ == ServicePage::CONFIRM || page_ == ServicePage::PROMPT; }
     void open(Action action, bool russian, Calculator& calculator);
     bool input(u8 code);
     void tick();

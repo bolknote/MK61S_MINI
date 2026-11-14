@@ -17,7 +17,7 @@
 namespace picocalc {
 using BrowserPage = explorer_home::Page;
 namespace {
-bool back(u8 c) { return c == 0x1B || c == 0xB1; }
+bool escape(u8 c) { return c == 0x1B || c == 0xB1; }
 bool enter(u8 c) { return c == '\r' || c == '\n'; }
 bool join(const char* directory, const char* name, char out[files::PATH_SIZE]) {
     const int n = std::snprintf(out, files::PATH_SIZE, "%s%s%s", directory,
@@ -365,7 +365,8 @@ void Services::normalize_view() {
 bool Services::input(u8 code) {
     if(page_==ServicePage::EDITOR) release_cache();
     if(!active()) return false;
-    const bool cancel = back(code), accept = enter(code);
+    const bool cancel = escape(code), accept = enter(code);
+    const bool go_back = cancel || code == '\b'; // The BIOS sends Backspace for the physical Back key.
     if(page_ == ServicePage::USB_DISK) {
         if(code == 0x81 && files::usb_active() && !files::usb_ejected()) {
             confirm_ = Confirm::USB_FORCE;
@@ -378,19 +379,19 @@ bool Services::input(u8 code) {
         return true;
     }
     if(page_ == ServicePage::MESSAGE) {
-        if(cancel || accept) {page_ = message_parent_;if(page_==ServicePage::BROWSER) refresh();}
+        if(go_back || accept) {page_ = message_parent_;if(page_==ServicePage::BROWSER) refresh();}
         return true;
     }
     if(page_ == ServicePage::PROMPT) {
         if(code==0x88) input_russian_=!input_russian_;
         else if(cancel) page_ = prompt_parent_;
         else if(accept) accept_prompt();
-        else if(code == 8 || code == 0x7F || code == 0xD4) text_input::backspace_utf8(prompt_text_,prompt_length_);
+        else if(code == '\b' || code == 0x7F || code == 0xD4) text_input::backspace_utf8(prompt_text_,prompt_length_);
         else text_input::append_utf8(prompt_text_,prompt_length_,sizeof(prompt_text_),code,input_russian_);
         return true;
     }
     if(page_ == ServicePage::CONFIRM) {
-        if(cancel) page_ = confirm_parent_;
+        if(cancel || (go_back && !usb_force_confirmation())) page_ = confirm_parent_;
         else if(accept) {
             if(confirm_ == Confirm::USB_FORCE) {
                 if(files::force_end_usb()) { page_ = ServicePage::CLOSED; status_[0] = 0; }
@@ -436,7 +437,7 @@ bool Services::input(u8 code) {
         else if(code == 0xD5) cursor_ = source_.line_end(source_.line_start(cursor_));
         else if(code == 0xD6 || code == 0xD7) {
             for(unsigned i = 0; i < ROWS; ++i) source_.move_line(cursor_,code == 0xD6 ? -1 : 1);
-        } else if(code == 8) { if(cursor_) changed=source_.replace((u16)(cursor_-1),cursor_,"",cursor_); }
+        } else if(code == '\b') { if(cursor_) changed=source_.replace((u16)(cursor_-1),cursor_,"",cursor_); }
         else if(code == 0x7F || code == 0xD4) {
             if(cursor_ < length_) changed = source_.replace(cursor_,(u16)(cursor_+1),"",cursor_);
         } else if(accept || code == '\t' || (code >= 32 && code < 127)) {
@@ -449,7 +450,7 @@ bool Services::input(u8 code) {
     }
     if(page_ == ServicePage::BROWSER) {
         if(browser_page_ == BrowserPage::HOME) {
-            if(cancel) parent_directory();
+            if(go_back) parent_directory();
             else if(accept && browser_selection() < explorer_home::COUNT)
                 browse_section(explorer_home::ITEMS[browser_selection()]);
             else if(code >= 0xB4 && code <= 0xB7)
@@ -457,8 +458,8 @@ bool Services::input(u8 code) {
                     code == 0xB4 || code == 0xB5 ? -1 : 1);
             return true;
         }
-        if(cancel && filter_[0]) { filter_directory("");return true; }
-        if(cancel) { parent_directory(); return true; }
+        if(go_back && filter_[0]) { filter_directory("");return true; }
+        if(go_back) { parent_directory(); return true; }
         const int vertical=browser_mode()==explorer_view::Mode::ICONS?3:1;
         if(code == 0xB5) move_browser(-vertical);
         else if(code == 0xB6) move_browser(vertical);
@@ -507,7 +508,7 @@ bool Services::input(u8 code) {
         return true;
     }
     if(page_ == ServicePage::FILE_ACTIONS) {
-        if(cancel) { page_ = ServicePage::BROWSER; selection_ = browser_return_selection_; refresh(); }
+        if(go_back) { page_ = ServicePage::BROWSER; selection_ = browser_return_selection_; refresh(); }
         else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, file_action_count(), code == 0xB5 ? -1 : 1);
         else if(accept) {
             if(browser_games()) {
@@ -620,12 +621,22 @@ const char* Services::footer() const {
     if(markdown_) return tr("Up/Down: scroll  Left/Right: links  Enter", M8("Up/Down: текст  Left/Right: ссылки"));
     if(viewing_) return tr("Up/Down: scroll  Enter/Esc: close", M8("Up/Down: текст  Enter/Esc: назад"));
     if(page_ == ServicePage::EDITOR) return tr("F1: name F2: save F3: run F8: RU/EN", M8("F1: имя F2: запись F3: пуск F8: RU/EN"));
-    if(page_ == ServicePage::BROWSER && browser_games())
-        return tr("Enter: play  F1: menu  F6: search", M8("Enter: игра  F1: меню  F6: поиск"));
-    if(page_ == ServicePage::BROWSER && browser_page_ != BrowserPage::HOME)
-        return tr("F1: file  F8: icons/list", M8("F1: файл  F8: значки/список"));
+    if(page_ == ServicePage::BROWSER) {
+        if(browser_games()) return tr("Enter: play  F1: menu  F6: search  Back: back",
+                                     M8("Enter: игра  F1: меню  F6: поиск  Back: назад"));
+        if(browser_page_ != BrowserPage::HOME) return tr("F1: file  F8: icons/list  Back: back",
+                                                        M8("F1: файл  F8: значки/список  Back: назад"));
+    }
+    if(browser_actions()) return tr("Enter: select  Back/Esc: back", M8("Enter: выбрать  Back/Esc: назад"));
+    if(page_ == ServicePage::BROWSER) return tr("Enter: open  Back/Esc: back", M8("Enter: открыть  Back/Esc: назад"));
     if(page_ == ServicePage::USB_DISK) return tr("Eject on computer, then Enter / Esc", M8("Извлечь на ПК, затем Enter / Esc"));
     if(usb_force_confirmation()) return tr("Enter: disconnect  Esc: cancel", M8("Enter: отключить  Esc: отмена"));
+    if(page_ == ServicePage::CONFIRM) {
+        if(confirm_ == Confirm::DELETE_FILE)
+            return tr("Enter: delete  Back/Esc: cancel", M8("Enter: удалить  Back/Esc: отмена"));
+        return tr("Enter: confirm  Back/Esc: cancel", M8("Enter: подтвердить  Back/Esc: отмена"));
+    }
+    if(page_ == ServicePage::PROMPT) return tr("Enter: confirm  Esc: cancel", M8("Enter: принять  Esc: отмена"));
     if(page_ == ServicePage::CONSOLE) return running_ ? "Esc: STOP" : tr("Enter / Esc: editor", M8("Enter / Esc: редактор"));
     return tr("Up/Down  Enter: select  Esc: back", M8("Up/Down  Enter: выбор  Esc: назад"));
 }
@@ -688,19 +699,16 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
             first+=fonts::text_start(font,text+first,length-first,304);
             std::snprintf(out,COLS+1,"%s",text+first);
         }
-        if(index == 5) std::snprintf(out, COLS + 1, "Enter: OK   Esc: cancel");
     } else if(usb_force_confirmation()) {
         const char* warning = index == 0 ? tr("Unsaved writes from the computer", M8("Несохранённые записи с ПК")) :
             index == 1 ? tr("may be lost.", M8("могут потеряться.")) :
-            index == 3 ? tr("Files on the card may be damaged.", M8("Возможна порча файлов на карте.")) :
-            index == 5 ? footer() : "";
+            index == 3 ? tr("Files on the card may be damaged.", M8("Возможна порча файлов на карте.")) : "";
         std::snprintf(out, COLS + 1, "%s", warning);
     } else if(page_ == ServicePage::CONFIRM) {
         if(index == 0) std::snprintf(out, COLS + 1, "%s", confirm_ == Confirm::FORMAT ? tr("Erase ALL files on microSD?", M8("Стереть ВСЕ файлы microSD?")) :
             confirm_ == Confirm::OVERWRITE ? tr("Replace the existing file?", M8("Заменить существующий файл?")) :
             confirm_ == Confirm::DELETE_FILE ? tr("Delete selected file/directory?", M8("Удалить выбранный файл/папку?")) : tr("Discard unsaved changes?", M8("Отменить несохранённые изменения?")));
         if(index == 1 && (confirm_ == Confirm::DELETE_FILE || confirm_ == Confirm::OVERWRITE)) label(selected_file_, out, COLS + 1);
-        if(index == 3) std::snprintf(out, COLS + 1, "Enter: YES   Esc: cancel");
     } else if(page_ == ServicePage::USB_DISK) {
         const char* text[] = {tr("Card is connected to the computer.", M8("Карта подключена к компьютеру.")), "",
             tr("Editors are paused.", M8("Редакторы приостановлены.")), "", tr("Safely eject the disk on the PC", M8("Безопасно извлеките диск на ПК")),

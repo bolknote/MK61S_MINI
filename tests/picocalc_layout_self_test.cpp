@@ -461,7 +461,8 @@ void explorer_hints(Calculator& calc) {
         Settings face;face.russian=russian;Ui ui;ui.init(face);
         Services services;services.set_ui(ui);services.open(Action::EXPLORER,russian,calc);
         require(services.enter_directory("/ExplorerHints",false),"Explorer hint directory");
-        const char* expected=russian?M8("F1: файл  F8: значки/список"):"F1: file  F8: icons/list";
+        const char* expected=russian?M8("F1: файл  F8: значки/список  Back: назад"):
+            "F1: file  F8: icons/list  Back: back";
         const Text hint(face,expected,12);
         require(hint.width<=300,"Explorer shortcut hint fits the native footer");
         for(unsigned mode=0;mode<2;++mode) {
@@ -479,6 +480,42 @@ void explorer_hints(Calculator& calc) {
             preview(screen,russian?(mode?"-explorer-list-ru":"-explorer-icons-ru"):
                                    (mode?"-explorer-list-en":"-explorer-icons-en"));
         }
+        // Use the physical BIOS codes for Backspace, Delete and Escape.
+        require(services.input(0x81) && services.browser_actions(),"F1 opens actions");
+        Screen screen;screen.render(calc.snapshot(),true,&ui,&services);
+        const Text actions(face,russian?M8("Enter: выбрать  Back/Esc: назад"):
+                           "Enter: select  Back/Esc: back",12);
+        require(actions.matches(screen,10,303),"file actions display the Back shortcut");
+        for(unsigned i=0;i<3;++i) services.input(0xB6);
+        require(services.input('\r') && services.dialog(),"choose Delete");
+        const Text question(face,russian?M8("Удалить выбранный файл/папку?"):
+                            "Delete selected file/directory?",face.ui_font_size);
+        const Text confirmation(face,russian?M8("Enter: удалить  Back/Esc: отмена"):
+                                "Enter: delete  Back/Esc: cancel",12);
+        require(screen.render(calc.snapshot(),true,&ui,&services) &&
+                question.matches(screen,10,42) && confirmation.matches(screen,8,297),
+                "the delete dialog shows a single localized set of controls");
+        preview(screen,russian?"-explorer-delete-ru":"-explorer-delete-en");
+        char name[64];
+        require(services.input(0xD4) && services.dialog(),"Delete does not dismiss its confirmation");
+        require(services.input('\b') && services.browser_actions() && services.browser_action_selection()==3,
+                "Back cancels deletion and returns to the selected action");
+        require(services.input('\b') && !services.browser_actions() && services.browser_selection()==8 &&
+                services.browser_label(8,name),"Back returns to the original file");
+        const std::string path=std::string("/ExplorerHints/")+name;
+        require(files::exists(path.c_str()),"cancellation retains the file");
+        require(services.input(0x86) && services.input('x') && services.input('\b'),
+                "Backspace edits a search term");
+        char row[Services::COLS+1];services.row(2,row);
+        require(services.dialog() && !*row,"Backspace leaves the text prompt open");
+        require(services.input(0xB1),"physical Esc closes the prompt");
+        services.filter_directory("No match");
+        require(services.browser_filtered() && services.input('\b') &&
+                !services.browser_filtered() && services.browser_count()==9,
+                "Back clears a search before leaving the folder");
+        require(services.input('\b') && services.browser_has_parent(),"Back moves to the volume root");
+        require(services.input('\b') && !services.browser_has_parent(),"Back returns to Explorer home");
+        require(services.input('\b') && !services.active(),"Back closes Explorer from home");
     }
 }
 }
