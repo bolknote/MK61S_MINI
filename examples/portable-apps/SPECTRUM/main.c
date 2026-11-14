@@ -113,6 +113,9 @@ static void sound_yield(void* context) { (void)context;mk61_api->service(); }
 static uint32_t color(uint32_t operation,mk61_service_color_frame* frame) {
     return services->call(MK61_SERVICE_COLOR_DISPLAY,operation,0,frame?sizeof(*frame):0,frame);
 }
+static __attribute__((noinline)) void status_event(const char* text) {
+    services->call(MK61_SERVICE_DEBUG_WRITE,strlen(text),0,0,(void*)text);
+}
 static int scan_keys(void) {
     if(!services->call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,sizeof(keys),0,keys)) return -1;
     int first=-1;
@@ -224,7 +227,7 @@ static void parent_directory(void) {
     char* slash=NULL;
     for(char* p=directory;*p;++p) if(*p=='/') slash=p;
     if(slash==directory) directory[1]=0;
-    else if(slash) *slash=0;else { directory[0]='.';directory[1]=0; }
+    else if(slash) *slash=0;else { directory[0]='/';directory[1]=0; }
 }
 enum { FILE_SNAPSHOT, FILE_BETA, FILE_DIV, FILE_TAPE };
 static bool is_snapshot(const char* path) {
@@ -426,7 +429,10 @@ static bool mount_tape(void) {
     return true;
 }
 
-static void tape_ready(void) { message("Tape ready\nUse LOAD \"\" in BASIC\n\nPress any key"); }
+static void tape_ready(void) {
+    status_event("SP STATE=TAPE_READY\n");
+    message("Tape ready\nUse LOAD \"\" in BASIC\n\nPress any key");
+}
 
 static void tape_menu(void) {
     unsigned selected=0;
@@ -451,6 +457,7 @@ static bool tape_select(void) {
     char text[10][25];
     const char* labels[10];
     unsigned selected=0,top=0;
+    status_event("SP STATE=TAPE_CHOICE\n");
     for(;;) {
         for(unsigned i=0;i<count;++i) {
             labels[i]=text[i];
@@ -515,7 +522,7 @@ static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspac
             for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
                 bank_memory.page_data[i]=page_runs[0]+i*SPECTRUM_CACHE_PAGE_BYTES;
         }
-        if(saved) message(name);
+        if(saved) { status_event("SP STATE=SAVED\n");message(name); }
         else message("Cannot save snapshot");
         return true;
     }
@@ -706,6 +713,7 @@ static __attribute__((noinline)) void emulate_session(void) {
         spectrum_sound_end(&machine);(void)spectrum_disk_cache_end(&machine);
         message("Audio stream unavailable\n\nPress any key");return;
     }
+    status_event("SP STATE=PLAYING\n");
     /* A resumed frame may already be partly executed. Account for that
      * time instead of adding a full frame's wait to its remaining work. */
     uint32_t deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL)-machine.frame_tstates*2/7,last_frame=machine.frames;
@@ -820,6 +828,7 @@ done:
     /* Keep the borrowed canvas owned across the OSD: graphics_end would
      * redraw resident text over the RAM pages stored in its unused tail. */
     color(MK61_COLOR_END,NULL);
+    status_event("SP STATE=PAUSED\n");
     if(error) message(error);
 }
 static void emulate(void) {

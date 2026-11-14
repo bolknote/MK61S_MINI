@@ -14,6 +14,7 @@
 static const char* asset_dir;
 static char ui[600];
 static uint32_t micros_now,frames_shown,session_frames,calls,audio_opens,audio_closes;
+static unsigned play_events,pause_events;
 static unsigned palette_calls;
 static unsigned lcd_clock_requests;
 static uint32_t lcd_clock=12000000;
@@ -245,6 +246,18 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         if(ready) { ((uint8_t*)payload)[step.key/8]|=1U<<(step.key&7);++action;released=false;held_key=step.key;held_scans=2; }
         return 1;
     }
+    if(op==MK61_SERVICE_DEBUG_WRITE) {
+        assert(!b && !c && payload && a<=128 && !machine.sound.clock_running);
+        if(a==sizeof("SP STATE=PLAYING\n")-1 && !memcmp(payload,"SP STATE=PLAYING\n",a)) {
+            assert(generator.sample);++play_events;
+        } else if(a==sizeof("SP STATE=PAUSED\n")-1 && !memcmp(payload,"SP STATE=PAUSED\n",a)) {
+            assert(!generator.sample);++pause_events;
+        } else {
+            assert(a==sizeof("SP STATE=SAVED\n")-1 && !memcmp(payload,"SP STATE=SAVED\n",a));
+            assert(!generator.sample && snapshots_written);
+        }
+        return 1;
+    }
     assert(false);return 0;
 }
 static const mk61_app_services common={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(mk61_app_services),NULL,call,NULL,format,NULL};
@@ -262,6 +275,13 @@ int main(int argc,char** argv) {
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
     assert(!psram && !workspace && !generator.sample);
+    assert(play_events==audio_opens && pause_events==audio_closes);
+    char picker_path[256]=".";
+    directory=picker_path;
+    parent_directory();assert(!strcmp(picker_path,"/"));
+    parent_directory();assert(!strcmp(picker_path,"/"));
+    strcpy(picker_path,"/Programs/Spectrum");
+    parent_directory();assert(!strcmp(picker_path,"/Programs"));
     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
     if(opened_name) {
         assert(open_path_calls==1+save_opened_game && !action && graphics_ends==1);
