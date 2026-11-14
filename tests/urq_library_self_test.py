@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from tools.apps.urq.qst2urq import make_package
 from tools.apps.urq.adaptations import adapt
-from tools.apps.urq.library import SOURCES, copy_device_library, copy_licenses
+from tools.apps.urq.library import SOURCES, copy_device_library, copy_licenses, disk_games
 from tools.apps.urq.extra_games import locked_sources, prepare
 from tools.apps.urq import extra_games
 
@@ -212,9 +212,19 @@ class LibraryTests(unittest.TestCase):
                     self.assertEqual(source, text.encode())
                     self.assertEqual(manifest, generated_manifest)
 
-    def test_device_library_contains_only_games_and_icons(self):
+    def test_device_library_and_disk_launchers(self):
         self.assertEqual({p.name for p in LIBRARY.iterdir()},
-                         {"README.markdown", "autoexec.wbmp", "trapped_in_time_ru", "jim_from_outer_space_ru", *SEMION_ROUTES})
+                         {"README.markdown", "autoexec.wbmp", "Play.txt", "trapped_in_time_ru",
+                          "jim_from_outer_space_ru", *SEMION_ROUTES})
+        games = collections.defaultdict(dict)
+        for title, name, source in disk_games():
+            games[title][name] = source
+        self.assertEqual(len(games), 2 + len(SEMION_ROUTES))
+        for title, files in games.items():
+            with self.subTest(game=title):
+                self.assertIn("game.urq", files)
+                self.assertEqual(files["Play.txt"].read_bytes(), b"game.urq\n")
+
         with tempfile.TemporaryDirectory(prefix="urq-distribution-") as directory:
             target = Path(directory)
             payload = copy_device_library(target / "URQ")
