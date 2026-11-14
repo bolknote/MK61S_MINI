@@ -47,7 +47,7 @@ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 namespace picocalc::ai {
 namespace {
 using namespace mk61ai;
-enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK, HIGH_CLOCK };
+enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK, HIGH_CLOCK, NEAR_DEFAULT_CLOCK };
 static constexpr char isa[] =
 #include "terminal_classic_isa.inc"
     ;
@@ -2227,6 +2227,8 @@ AI_COLD_CODE unsigned UI::bench() {
         read_benchmark=ReadBenchmark::CLOCK;
       else if(!std::memcmp(config_text,"AIBURST3\n",9) && config.stress_ms && config.control==2)
         read_benchmark=ReadBenchmark::HIGH_CLOCK;
+      else if(!std::memcmp(config_text,"AIBURST4\n",9) && config.stress_ms && config.control==2)
+        read_benchmark=ReadBenchmark::NEAR_DEFAULT_CLOCK;
       else return 3;
     }
     return perf(directory,config,read_benchmark);
@@ -2845,8 +2847,13 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,Re
     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
   }
 #if defined(PICO_ON_DEVICE)
-  const auto *clock_dividers=read_benchmark==ReadBenchmark::HIGH_CLOCK?ai_psram_read_clock::high_burst_dividers:
-      read_benchmark==ReadBenchmark::CLOCK?ai_psram_read_clock::burst_dividers:nullptr;
+  const std::uint32_t *clock_dividers=nullptr;
+  switch(read_benchmark) {
+  case ReadBenchmark::CLOCK: clock_dividers=ai_psram_read_clock::burst_dividers;break;
+  case ReadBenchmark::HIGH_CLOCK: clock_dividers=ai_psram_read_clock::high_burst_dividers;break;
+  case ReadBenchmark::NEAR_DEFAULT_CLOCK: clock_dividers=ai_psram_read_clock::near_default_burst_dividers;break;
+  default: break;
+  }
   const bool sweep_clocks=clock_dividers!=nullptr;
   const unsigned burst_count=sweep_clocks?4:3;
   BurstResult bursts[4]{};
