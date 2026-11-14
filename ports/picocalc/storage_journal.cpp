@@ -88,7 +88,7 @@ bool initialize() {
     return (r==FR_OK && closed==FR_OK) || reject("Cannot initialize recovery journal");
 }
 // Returns true with no state if the card has never used the journal.
-bool attach(bool create) {
+__attribute__((noinline)) bool attach(bool create) {
     state.reset();problem="";
     FILINFO info{};FRESULT r=f_stat(FILE_NAME,&info);
     if(r==FR_NO_FILE) { if(!create) return true;if(!initialize()) return false; }
@@ -196,20 +196,26 @@ bool begin() {
     return start_recording();
 }
 namespace {
+__attribute__((noinline)) bool store_before_image(u32 sector,unsigned index) {
+    u8 bytes[512];
+    if(!sd::read(sector,bytes)) return reject("Cannot save recovery sector");
+    const u32 checksum=crc(bytes,sizeof(bytes));
+    if(!sd::write(state->map[3+index*2],bytes) || !sd::sync())
+        return reject("Cannot sync recovery record");
+    std::memset(bytes,0,sizeof(bytes));
+    std::memcpy(bytes,"MK61UNDO",8);put64(bytes+8,state->header.transaction);put32(bytes+16,index);
+    put32(bytes+20,sector);put32(bytes+24,checksum);put32(bytes+508,crc(bytes,508));
+    return (sd::write(state->map[2+index*2],bytes) && sd::sync()) || reject("Cannot sync recovery record");
+}
 bool prepare_sector(u32 sector) {
     if(state->failed || journal_sector(sector)) { state->failed=true;return reject("Recovery journal write rejected"); }
     bool known=false;for(unsigned i=0;i<state->count;++i) if(state->logged[i]==sector) known=true;
     if(!known) {
         if(state->count==CAPACITY) { state->failed=true;return reject("File transaction exceeds recovery capacity"); }
-        const unsigned i=state->count;u8 old[512],meta[512]{};
-        if(!sd::read(sector,old)) { state->failed=true;return reject("Cannot save recovery sector"); }
-        std::memcpy(meta,"MK61UNDO",8);put64(meta+8,state->header.transaction);put32(meta+16,i);put32(meta+20,sector);
-        put32(meta+24,crc(old,512));put32(meta+508,crc(meta,508));
         // The old sector and its checksummed descriptor are durable before
         // FatFs can modify the corresponding sector of the filesystem.
-        if(!sd::write(state->map[3+i*2],old) || !sd::sync() || !sd::write(state->map[2+i*2],meta) || !sd::sync()) {
-            state->failed=true;return reject("Cannot sync recovery record");
-        }
+        const unsigned i=state->count;
+        if(!store_before_image(sector,i)) { state->failed=true;return false; }
         Header next=state->header;++next.sequence;next.slot=1-next.slot;next.count=i+1;
         if(!store_header(next)) { state->failed=true;return false; }
         state->logged[state->count++]=sector;

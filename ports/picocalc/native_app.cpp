@@ -548,7 +548,7 @@ static __attribute__((noinline)) u32 write_binary(NativeHost& host,const char* p
   // Keep the transfer chunk out of the normal APP service frame.
   auto* session=files::begin_write(path,false,true);
   if(!session) return 0;
-  u8 block[1024];
+  u8 block[512];
   for(u32 offset=0;offset<source.size;) {
     const u32 left=source.size-offset;
     const u32 n=left<sizeof(block)?left:sizeof(block);
@@ -624,6 +624,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   if(op==MK61_SERVICE_COMPUTE)
     return !c && !payload ? compute_clock::service(a,b) : 0;
   auto &host = *current;
+  if(op==MK61_SERVICE_FILE_BYTES) return host.file_bytes(a,b,c,payload);
   host.display.settings(host.settings());
   auto &s = host.s;
   switch (op) {
@@ -683,7 +684,6 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     }
   case MK61_SERVICE_RESOURCE_READ:
     return host.resource(a, b, payload);
-  case MK61_SERVICE_FILE_BYTES:return host.file_bytes(a,b,c,payload);
   case MK61_SERVICE_LANGUAGE_ERROR_TEXT:
     if (a > (u32)language_vm::Error::GRAPHICS_ARGUMENT || b > 1 || c || payload)
       return 0;
