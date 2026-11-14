@@ -46,6 +46,7 @@ struct ComputeExecution {
   bool parallel_attention = true; // Independent query heads use both cores.
   bool share_kv = true; // Process up to two query heads per cached KV read.
   bool lut8 = false; // Exact INT8 LUT8 for plane-packed128-column matrices.
+  bool parallel_softmax = false;
   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
   // Optional coprocessor. prepare stages the immutable vector before PSRAM
   // prefetch and returns its row capacity. submit must leave no live job on
@@ -74,6 +75,7 @@ struct ComputeMetrics {
   std::uint32_t attention_worker_jobs = 0;
   std::uint32_t attention_us = 0, attention_io_us = 0;
   std::uint32_t lut8_preparations = 0, lut8_reuses = 0, lut8_rows = 0;
+  std::uint32_t softmax_worker_jobs = 0;
 };
 struct ModelConfig {
   std::uint32_t layers, hidden, intermediate, heads, kv_heads, head_dim;
@@ -92,6 +94,10 @@ public:
   ModelStatus repack_lut8(bool (*service)(void *) = nullptr, void *context = nullptr);
   const ModelConfig &config() const { return config_; }
   std::size_t workspace_bytes() const;
+  // Optional caller-owned SRAM, bound after repacking the model.
+  std::size_t parameter_cache_bytes() const;
+  ModelStatus cache_parameters(void *storage, std::size_t bytes);
+  void clear_parameter_cache() { parameters_ = nullptr; }
   std::uint32_t cache_bytes() const;
   ModelStatus bind(void *workspace, std::size_t bytes, Memory cache);
   void reset() { position_ = 0; }
@@ -102,6 +108,12 @@ public:
     return true;
   }
   unsigned position() const { return position_; }
+  // Diagnostic callers must initialize all KV rows earlier than position.
+  bool diagnostic_position(unsigned position) {
+    if (position >= config_.context) return false;
+    position_ = position;
+    return true;
+  }
   void execution(ComputeExecution value) { execution_ = value; }
   ComputeExecution execution() const { return execution_; }
   const ComputeMetrics &compute_metrics() const { return compute_metrics_; }
@@ -129,11 +141,13 @@ private:
   std::uint32_t header_[32]{};
   std::uint32_t position_ = 0;
   std::uint8_t *workspace_ = nullptr;
+  std::uint8_t *parameters_ = nullptr;
   std::size_t bound_ = 0;
   ComputeExecution execution_{};
   ComputeMetrics compute_metrics_{};
   bool read(std::uint32_t offset, void *out, unsigned bytes) const;
   bool tensor(unsigned index, Tensor &out) const;
+  unsigned descriptor_bytes() const { return (2 + 11 * config_.layers) * sizeof(Tensor); }
 };
 const char *model_status_text(ModelStatus status);
 } // namespace mk61ai

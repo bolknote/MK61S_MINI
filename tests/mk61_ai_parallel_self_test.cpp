@@ -216,16 +216,40 @@ int main(int argc, char **argv) {
   // equivalence is extrapolated into a long-context speed/quality claim.
   reference.model.reset();candidate.model.reset();candidate.refuse=false;
   candidate.configure(LinearKernel::SRAM,&worker);
-  const unsigned context=reference.model.config().context;
+  auto execution=candidate.model.execution();
+  execution.parallel_softmax=true;
+  candidate.model.execution(execution);
+  const auto &shape=reference.model.config();
+  const auto bytes_needed=candidate.model.parameter_cache_bytes();
+  std::vector<std::uint32_t> parameters((bytes_needed+3)/4);
+  assert(bytes_needed>0 &&
+      candidate.model.cache_parameters(parameters.data(),bytes_needed-1)==ModelStatus::MEMORY);
+  assert(candidate.model.cache_parameters(parameters.data(),bytes_needed)==ModelStatus::OK);
+  const unsigned context=shape.context;
+  const unsigned head_pairs=shape.layers*shape.kv_heads*(shape.heads/shape.kv_heads/2);
   for(unsigned p=0;p<context;++p) {
     const bool output=p==0 || p==context/4 || p==context/2 || p+1==context;
     assert(reference.forward(tokens[p%count],Arithmetic::LUT_FLOAT32,ar,output?a.data():nullptr,nullptr,output)==ModelStatus::OK);
     assert(candidate.forward(tokens[p%count],Arithmetic::LUT_FLOAT32,next,output?b.data():nullptr,nullptr,output)==ModelStatus::OK);
     assert(reference.model.compute_metrics().checksum==candidate.model.compute_metrics().checksum);
+    assert(candidate.model.compute_metrics().softmax_worker_jobs==(p>=127?head_pairs:0));
     if(output) { assert(ar==next && std::memcmp(a.data(),b.data(),vocab*sizeof(float))==0);++comparisons; }
   }
   assert(reference.cache==candidate.cache && candidate.model.position()==context);
   assert(candidate.forward(tokens[0],Arithmetic::LUT_FLOAT32,next)==ModelStatus::CONTEXT);
+  // A busy worker must leave the paired head on core 0 without changing KV
+  // or logits. Reuse the preceding prefix, leaving the parameter cache active.
+  if(context>=128 && head_pairs) {
+    const auto checksum=reference.model.compute_metrics().checksum;
+    assert(candidate.model.rewind(context-1));
+    candidate.refuse=true;
+    assert(candidate.forward(tokens[(context-1)%count],Arithmetic::LUT_FLOAT32,next,b.data())==ModelStatus::OK);
+    assert(!candidate.model.compute_metrics().softmax_worker_jobs);
+    assert(reference.cache==candidate.cache && candidate.model.compute_metrics().checksum==checksum);
+    assert(ar==next && std::memcmp(a.data(),b.data(),vocab*sizeof(float))==0);
+    ++comparisons;
+  }
+  candidate.model.clear_parameter_cache();
   std::printf("parallel: PASS; bit-identical full-logit comparisons=%u, worker_jobs=%u; context=%u KV=%zu bytes exact; mask/cancel/retry/io/numeric/refusal/join/thaw PASS\n",
               comparisons, worker.submitted,context,reference.cache.size());
 }

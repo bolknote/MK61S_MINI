@@ -44,6 +44,23 @@ MK61_ATTENTION_CODE inline void attention_pair(AttentionBatch (&jobs)[2],unsigne
     else AttentionBatch::run(&jobs[1]);
   }
 }
+
+struct SoftmaxJob {
+  float *scores;
+  unsigned length;
+  float maximum;
+  float sum = 0.0f;
+
+  MK61_ATTENTION_CODE static void run(void *raw) {
+    auto &head = *static_cast<SoftmaxJob *>(raw);
+    for (unsigned i = 0; i < head.length; ++i) {
+      float &score = head.scores[i];
+      score = math::exp(math::sub(score, head.maximum));
+      head.sum = math::add(head.sum, score);
+    }
+  }
+};
+
 }
 #undef MK61_ATTENTION_CODE
 #endif

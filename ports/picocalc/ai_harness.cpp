@@ -13,6 +13,8 @@
 #include "io_worker.hpp"
 #include "psram.hpp"
 #include "pico/stdio_usb.h"
+#include "pico/time.h"
+#include "hardware/structs/xip.h"
 #endif
 #include "mk61_ai_agent.hpp"
 #include "mk61emu_core.h"
@@ -191,6 +193,7 @@ struct UI {
   Model model;
   Agent agent;
   shared_memory::Buffer package, cache;
+  std::unique_ptr<std::uint32_t[]> parameter_cache;
   std::unique_ptr<std::uint64_t[]> workspace;
   bool model_ready = false, loading = false, cancel = false, quit = false,
        dirty = true, save_pending = false, typing = false, russian = true;
@@ -517,9 +520,14 @@ struct UI {
     e.tile_rows = benchmarking && m3_core ? 64 : 28;
     e.prefetch = double_buffer;
     e.lut8 = true;
+    e.parallel_softmax = dual_core;
+#if defined(PICO_ON_DEVICE)
+    e.micros = [](void *) { return time_us_32(); };
+#else
     e.micros = [](void *p) {
       return static_cast<UI *>(p)->call(MK61_SERVICE_MICROS);
     };
+#endif
     e.busy = [](void *raw, bool active) {
       auto &u = *static_cast<UI *>(raw);
       if (active && u.freeze_screen) {
@@ -584,6 +592,9 @@ struct UI {
   static unsigned fastest_burst(const BurstResult *results,unsigned count);
 #endif
   unsigned long_perf(const char *directory);
+#if defined(PICO_ON_DEVICE)
+  unsigned parameter_perf(const char *directory);
+#endif
   void sample_memory();
   void begin_measurements();
   bool write_metrics(const char *path);
@@ -743,6 +754,8 @@ AI_COLD_CODE bool UI::ensure_model() {
   package.reset();
   cache.reset();
   workspace.reset();
+  model.clear_parameter_cache();
+  parameter_cache.reset();
   const auto load_started = call(MK61_SERVICE_MICROS);
   cancel = false;
   loading = true;
@@ -816,6 +829,12 @@ AI_COLD_CODE bool UI::ensure_model() {
       status = model.bind(workspace.get(), model.workspace_bytes(),
                           {this, u32(cache.size()), cache_read, cache_write,cache_read_begin,cache_read_finish});
       ok = status == ModelStatus::OK;
+    }
+    if (ok) {
+      const auto bytes = model.parameter_cache_bytes();
+      parameter_cache.reset(new (std::nothrow) std::uint32_t[bytes / sizeof(std::uint32_t)]);
+      if (parameter_cache && model.cache_parameters(parameter_cache.get(), bytes) != ModelStatus::OK)
+        parameter_cache.reset();
     }
   }
   loading = false;
@@ -2206,6 +2225,14 @@ AI_COLD_CODE unsigned UI::bench() {
           : !files::mkdir(directory))
     return 3;
   char config_path[128],config_text[513];unsigned config_size=0;
+#if defined(PICO_ON_DEVICE)
+  std::snprintf(config_path,sizeof(config_path),"%s/READ.CFG",directory);
+  if(files::exists(config_path)) {
+    if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
+       config_size!=8 || std::memcmp(config_text,"AIREAD1\n",8)) return 3;
+    return parameter_perf(directory);
+  }
+#endif
   std::snprintf(config_path,sizeof(config_path),"%s/LONG.CFG",directory);
   if(files::exists(config_path)) {
     if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
@@ -2555,6 +2582,8 @@ AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
   return fits && files::write(path,reinterpret_cast<const u8*>(json.get()),used) && ok?0:3;
 }
 #if defined(PICO_ON_DEVICE)
+#include "ai_parameter_perf.inc"
+
 constexpr unsigned BURST_TRIALS=256,BURST_WEIGHTS=1792,BURST_SCALES=224;
 
 AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,

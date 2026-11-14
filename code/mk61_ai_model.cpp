@@ -82,6 +82,12 @@ float half(std::uint16_t h) {
     value = float(mantissa) * 0x1p-24f;
   return sign ? -value : value;
 }
+// For finite binary32 values this unsigned order agrees with >, with the
+// two zeros explicitly tied. The batch kernels already reject nonfinite rows.
+std::uint32_t finite_order(std::uint32_t bits) {
+  if (!(bits & 0x7fffffffU)) bits = 0;
+  return bits & 0x80000000U ? ~bits : bits ^ 0x80000000U;
+}
 unsigned code(const std::uint8_t *data, unsigned at, unsigned bits) {
   const unsigned bit = at * bits, shift = bit & 7;
   unsigned value = data[bit >> 3] >> shift;
@@ -107,13 +113,33 @@ unsigned tensor_code(const std::uint8_t *data, unsigned at, unsigned bits,
 bool Model::read(std::uint32_t offset, void *out, unsigned n) const {
   return transfer(package_, offset, out, n);
 }
+
+#if defined(PICO_ON_DEVICE)
+__attribute__((noinline))
+#endif
+static bool softmax_pair(float *scores, unsigned stride, unsigned length,
+    const float (&maximum)[2], float (&sum)[2], const ComputeExecution &execution) {
+  if (!execution.submit || !execution.join) return false;
+  SoftmaxJob heads[2] = {{scores, length, maximum[0]}, {scores + stride, length, maximum[1]}};
+  if (!execution.submit(execution.context, SoftmaxJob::run, &heads[1])) return false;
+  SoftmaxJob::run(&heads[0]);
+  execution.join(execution.context);
+  sum[0] = heads[0].sum;
+  sum[1] = heads[1].sum;
+  return true;
+}
 bool Model::tensor(unsigned index, Tensor &t) const {
+  if (parameters_) {
+    std::memcpy(&t, parameters_ + index * sizeof(Tensor), sizeof(t));
+    return true;
+  }
   return read(header_[15] + index * 32, &t, sizeof(t));
 }
 ModelStatus Model::open(Memory package, bool verify) {
   math::initialize();
   package_ = package;
   workspace_ = nullptr;
+  clear_parameter_cache();
   bound_ = 0;
   position_ = 0;
   cache_ = {};
@@ -218,6 +244,7 @@ __attribute__((section(".ai_diagnostic_extension"),noinline))
 #endif
 ModelStatus Model::repack_lut8(bool (*service)(void*),void* context) {
   if(workspace_ || !package_.write || !config_.layers)return ModelStatus::MEMORY;
+  clear_parameter_cache();
   const unsigned count=2+11*config_.layers;
   unsigned end=header_[15]+count*32;
   const unsigned metadata=std::min(std::min(header_[16],header_[17]),
@@ -270,6 +297,20 @@ ModelStatus Model::repack_lut8(bool (*service)(void*),void* context) {
   header_[31]=~crc(reinterpret_cast<const std::uint8_t*>(header_),124);
   return transfer(package_,0,header_,sizeof(header_),true)?ModelStatus::OK:ModelStatus::IO;
 }
+std::size_t Model::parameter_cache_bytes() const {
+  return config_.layers ? descriptor_bytes() + config_.head_dim * sizeof(float) : 0;
+}
+
+ModelStatus Model::cache_parameters(void *storage, std::size_t bytes) {
+  clear_parameter_cache();
+  if (!parameter_cache_bytes() || !storage || bytes < parameter_cache_bytes() ||
+      reinterpret_cast<std::uintptr_t>(storage) % alignof(float))
+    return ModelStatus::MEMORY;
+  if (!read(header_[15], storage, descriptor_bytes())) return ModelStatus::IO;
+  parameters_ = static_cast<std::uint8_t *>(storage);
+  return ModelStatus::OK;
+}
+
 std::size_t Model::workspace_bytes() const {
   const auto &c = config_;
   const unsigned columns =
@@ -485,18 +526,20 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       unsigned capacity=std::min<unsigned>(tile_rows,tile_bytes/(t.cols*9/16));
       // Even row counts keep the128/384-column scale spans16-byte aligned.
       if(tile_rows==28) capacity&=~1U;
-      const unsigned TILE=head && execution_.filter_head && allowed && !logits?
-          std::min(8U,capacity):capacity;
+      const bool sparse = head && execution_.filter_head && allowed && !logits;
+      const unsigned TILE = sparse ? std::min(8U, capacity) : capacity;
       const unsigned bytes = t.cols * t.bits / 8, scales = t.cols / 16;
       auto kernel = execution_.kernel == LinearKernel::SRAM
                         ? linear_batch_sram : linear_batch_flash;
       if(use_lut8)kernel=execution_.kernel==LinearKernel::SRAM?
           linear_batch_lut8_sram:linear_batch_lut8_flash;
       struct Tile {
+        explicit Tile(std::uint8_t *buffer) : data(buffer) {}
         std::uint8_t *data;
-        std::uint16_t indices[64]{};
         unsigned count = 0;
-      } tiles[2]{{tile}, {tile + tile_bytes}};
+        unsigned first = 0;
+        std::uint16_t indices[8]; // Only a sparse classifier uses explicit indices.
+      } tiles[]{Tile(tile), Tile(tile + tile_bytes)};
       // No service, tokenizer, KV or other PSRAM access is made while the
       // read is outstanding. Destruction drains even numeric/cancel exits.
       struct Pending {
@@ -530,66 +573,68 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         target.count = 0;
         if (r == t.rows) return true;
         if (!alive()) return false;
-        for (; r < t.rows && target.count < TILE; ++r) {
-          if (head && execution_.filter_head && allowed && !logits &&
-              !allowed(policy, std::uint16_t(r))) {
-            ++compute_metrics_.skipped_rows;
-            // A completely masked vocabulary still services Esc/USB.
-            if ((r & 31U) == 31 && !alive()) return false;
-            continue;
+        if (!sparse) {
+          target.first = r;
+          target.count = std::min<unsigned>(TILE, t.rows - r);
+          r += target.count;
+        } else {
+          for (; r < t.rows && target.count < TILE; ++r) {
+            if (!allowed(policy, std::uint16_t(r))) {
+              ++compute_metrics_.skipped_rows;
+              // A completely masked vocabulary still services Esc/USB.
+              if ((r & 31U) == 31 && !alive()) return false;
+              continue;
+            }
+            target.indices[target.count++] = std::uint16_t(r);
           }
-          target.indices[target.count++] = std::uint16_t(r);
         }
         if (!target.count) return true;
         auto *tile_scales = target.data + target.count * bytes;
-        block_io::ReadSpan spans[2 * 64];
-        unsigned span_count = 0;
-        for (unsigned part = 0; part < 2; ++part) {
-          const unsigned stride = part ? scales : bytes;
-          for (unsigned start = 0; start < target.count;) {
-            unsigned end = start + 1;
-            while (end < target.count && target.indices[end] == target.indices[end - 1] + 1) ++end;
-            spans[span_count++] = {
-                (part ? t.scale : t.data) + unsigned(target.indices[start]) * stride,
-                (part ? tile_scales : target.data) + start * stride,
-                (end - start) * stride};
-            start = end;
+        block_io::ReadSpan spans[16];
+        unsigned span_count = 2;
+        if (!sparse) {
+          spans[0] = {t.data + target.first * bytes, target.data, target.count * bytes};
+          spans[1] = {t.scale + target.first * scales, tile_scales, target.count * scales};
+        } else {
+          span_count = 0;
+          for (unsigned part = 0; part < 2; ++part) {
+            const unsigned stride = part ? scales : bytes;
+            for (unsigned start = 0; start < target.count;) {
+              unsigned end = start + 1;
+              while (end < target.count && target.indices[end] == target.indices[end - 1] + 1) ++end;
+              spans[span_count++] = {
+                  (part ? t.scale : t.data) + unsigned(target.indices[start]) * stride,
+                  (part ? tile_scales : target.data) + start * stride,
+                  (end - start) * stride};
+              start = end;
+            }
           }
         }
         const auto read_started = stamp();
         if (asynchronous) {
-          bool valid = true;
-          unsigned total = 0;
-          for (unsigned i = 0; i < span_count; ++i) {
-            valid = valid && extent(spans[i].offset, spans[i].bytes, package_.size);
-            total += spans[i].bytes;
-          }
-          if (valid && package_.read_begin(package_.context, spans, span_count)) {
+          // open() validated the whole weight and scale tensors. Each span
+          // above is contained in one of those ranges.
+          if (package_.read_begin(package_.context, spans, span_count)) {
             pending.active = true;
             ++compute_metrics_.prefetches;
-            compute_metrics_.prefetched_bytes += total;
+            compute_metrics_.prefetched_bytes += target.count * (bytes + scales);
             compute_metrics_.read_us += stamp() - read_started;
             return true;
           }
         }
-        // Coalesce adjacent rows. Sparse grammar masks do not fetch weights
-        // of rejected tokens; no tokenizer/embedding IDs are changed.
-        for (unsigned start = 0; start < target.count;) {
-          unsigned end = start + 1;
-          while (end < target.count && target.indices[end] == target.indices[end - 1] + 1) ++end;
-          if (!read(t.data + unsigned(target.indices[start]) * bytes,
-                    target.data + start * bytes, (end - start) * bytes) ||
-              !read(t.scale + unsigned(target.indices[start]) * scales,
-                    tile_scales + start * scales, (end - start) * scales)) {
+        for (unsigned i = 0; i < span_count; ++i) {
+          const auto &span = spans[i];
+          if (!read(span.offset, span.destination, span.bytes)) {
             status = ModelStatus::IO;
             return false;
           }
-          start = end;
         }
         compute_metrics_.read_us += stamp() - read_started;
         return true;
       };
       unsigned current = 0;
+      // The previous floating comparison initialized the winner at -FLT_MAX.
+      std::uint32_t best_order = finite_order(0xff7fffffU);
       if (!load(tiles[current], false)) return false;
       while (tiles[current].count) {
         auto &active = tiles[current];
@@ -674,21 +719,32 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         }
         compute_metrics_.rows += count;
         if(use_lut8)compute_metrics_.lut8_rows+=count;
-        for (unsigned j = 0; j < count; ++j) {
-          const unsigned at = active.indices[j];
-          const float value = tile_output[j];
-          record_value(value);
-          if (head) {
+        if (head) {
+          for (unsigned j = 0; j < count; ++j) {
+            const unsigned at = sparse ? active.indices[j] : active.first + j;
+            const float value = tile_output[j];
+            std::uint32_t bits;
+            std::memcpy(&bits, &value, sizeof(bits));
+            compute_metrics_.checksum = (compute_metrics_.checksum ^ bits) * 16777619U;
             if (logits) logits[at] = value;
-            if (value > maximum && (!allowed || allowed(policy, std::uint16_t(at)))) {
-              maximum = value;best = std::uint16_t(at);
+            const auto order = finite_order(bits);
+            if (order > best_order && (!allowed || allowed(policy, std::uint16_t(at)))) {
+              best_order = order;
+              best = std::uint16_t(at);
             }
-          } else dest[at] = value;
+          }
+        } else {
+          auto *output = dest + active.first;
+          for (unsigned j = 0; j < count; ++j) {
+            const float value = tile_output[j];
+            record_value(value);
+            output[j] = value;
+          }
         }
         if (!prefetch && !load(next, false)) return false;
         current ^= 1;
       }
-      if (head && maximum == -FLT_MAX) {
+      if (head && best_order == finite_order(0xff7fffffU)) {
         status = ModelStatus::FORMAT;
         return false;
       }
@@ -852,9 +908,11 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
         !normalize(base + 4, q, q, c.heads, c.head_dim) ||
         !normalize(base + 5, k, k, c.kv_heads, c.head_dim))
       return status;
-    if (!read(header_[26] + position_ * c.head_dim * 4, raw, c.head_dim * 4))
+    auto *rotary_bytes = parameters_ ? parameters_ + descriptor_bytes() : raw;
+    if ((!parameters_ || layer == 0) &&
+        !read(header_[26] + position_ * c.head_dim * 4, rotary_bytes, c.head_dim * 4))
       return ModelStatus::IO;
-    const auto *rotary = reinterpret_cast<const float *>(raw);
+    const auto *rotary = reinterpret_cast<const float *>(rotary_bytes);
     for (unsigned which = 0; which < 2; ++which) {
       float *values = which ? k : q;
       const unsigned heads = which ? c.kv_heads : c.heads;
@@ -937,10 +995,15 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
             maximum[lane]=std::max(maximum[lane],scores[lane*c.context+t+row]);
           stream.consume_chunk(offset,rows);t+=rows;
         }
+        const bool separate_cores = lanes == 2 && position_ >= 127 && execution_.parallel_softmax &&
+            softmax_pair(scores, c.context, position_ + 1, maximum, sum, execution_);
+        if (separate_cores) ++compute_metrics_.softmax_worker_jobs;
         for(unsigned lane=0;lane<lanes;++lane) {
-          for(unsigned t=0;t<=position_;++t) {
-            float &score=scores[lane*c.context+t];
-            score=math::exp(math::sub(score,maximum[lane]));sum[lane]=math::add(sum[lane],score);
+          if (!separate_cores) {
+            for(unsigned t=0;t<=position_;++t) {
+              float &score=scores[lane*c.context+t];
+              score=math::exp(math::sub(score,maximum[lane]));sum[lane]=math::add(sum[lane],score);
+            }
           }
           if(!std::isfinite(sum[lane]) || sum[lane]<=0) return ModelStatus::NUMERIC;
           const unsigned h=kh*queries+first+lane;
