@@ -3,6 +3,9 @@
 #include "mk8_codec.hpp"
 #include "diagnostics.hpp"
 #include "storage_journal.hpp"
+#if defined(PICO_ON_DEVICE)
+#include "usb_diagnostics.hpp"
+#endif
 #include <cstdio>
 #include <cstring>
 #include <new>
@@ -577,6 +580,19 @@ bool end_usb() {
     if(!usb) return true;
     if(!ejected) { std::snprintf(problem, sizeof(problem), "Eject the USB disk on the computer"); return false; }
     usb = false;
+    return mount();
+}
+bool force_end_usb() {
+    if(!usb || ejected) return end_usb();
+    // MSC callbacks run synchronously in the foreground USB task. A write
+    // already in a callback has returned. Stop accepting host I/O before
+    // handing the card back to FatFs.
+    usb = false;
+    recovery_required = true;
+#if defined(PICO_ON_DEVICE)
+    picocalc::usb::restart_after_disk_abort();
+#endif
+    if(!sd::sync()) return fail(FR_DISK_ERR);
     return mount();
 }
 bool format() {

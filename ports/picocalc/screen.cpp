@@ -736,6 +736,11 @@ void Screen::utility_page(utility::Mode mode,unsigned phase,const Ui& ui,const S
         if(ready) utility_caption(273,ru?M8("После записи: перезапуск"):"PicoCalc restarts after writing",14);
     }
     utility::rectangle(pixels_,12,288,296,2);
+    if(mode==utility::Mode::USB) {
+        utility_caption(295,ru?M8("Enter/Esc: назад  F1: аварийный выход"):"Enter/Esc: back  F1: force eject",14);
+        font_settings_=saved;
+        return;
+    }
     const char* footer=usb?(ru?M8("Enter / Esc: вернуться"):"Enter / Esc: return"):
         mode==utility::Mode::UF2_CONFIRM?(ru?M8("Enter: начать  Esc: назад"):"Enter: start  Esc: back"):
         mode==utility::Mode::UF2_ENTERING?(ru?M8("Включаем загрузчик..."):"Starting loader..."):
@@ -873,6 +878,22 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     if(!service_active) {
         header(ui->title(),keyboard_online);
         if(ui->page()==Page::SETTINGS) {settings_menu(*ui);return;}
+    }
+    if(service_active && services->usb_force_confirmation()) {
+        header(services->title(),keyboard_online);
+        const auto* saved=font_settings_;
+        Settings font{};font.ui_font_family=1;font_settings_=&font;
+        theme_.add(0,76,WIDTH,84,lcd::Ink::AMBER);
+        for(unsigned row=0;row<4;++row) {
+            char warning[Services::COLS+1];
+            services->row(row,warning);
+            text(12,76+row*22,warning,16);
+        }
+        theme_.add(12,288,296,1,lcd::Ink::LINE);
+        fill_rect(12,288,296,1);
+        text_center(12,296,300,services->footer(),14);
+        font_settings_=saved;
+        return;
     }
     if(service_active) {
         theme_.add(0,0,WIDTH,32,lcd::Ink::WHITE);

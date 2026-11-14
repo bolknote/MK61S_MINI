@@ -10,5 +10,6 @@ struct Counters {
     u32 max_read_us, max_read_bytes, max_read_lba;
 };
 const Counters& counters();
+void restart_after_disk_abort();
 } }
 #endif

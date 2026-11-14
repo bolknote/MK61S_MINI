@@ -31,8 +31,9 @@ struct {
 } panel;
 struct { bool holds=false;bool holds_frame() const { return holds; } } remote_screen;
 struct { bool online() const { return true; } int battery() const { return 0; } } keyboard;
-bool panel_ready=true;
-int ui=0,services=0;
+bool panel_ready=true,usb_force_warning_drawn=false;
+int ui=0;
+struct { bool warning=false;bool usb_force_confirmation() const { return warning; } } services;
 }
 namespace picocalc {
 namespace usb {
@@ -67,6 +68,13 @@ int main() {
     panel_ready=false;tick(163000);assert(screen.renders==5);
     panel_ready=true;screen.changed=false;tick(164000);
     assert(screen.renders==6 && panel.submissions==5); // Identical raster stays put.
+    host_disk=true;picocalc::usb::counter.active_read_bytes=8192;
+    screen.changed=true;services.warning=true;
+    tick(184000);assert(screen.renders==7 && usb_force_warning_drawn);
+    tick(204000);assert(screen.renders==7);
+    services.warning=false;
+    tick(204001);assert(screen.renders==8 && !usb_force_warning_drawn);
+    host_disk=false;
     render_cost=0;
     const u64 late=(u64(1)<<32)*1000+70000;tick(late);
     assert(next_frame==late+20000 && screen.tick_at==(u32)(late/1000));

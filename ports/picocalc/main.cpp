@@ -629,6 +629,7 @@ int main() {
     u64 next_frame = 0;
     u64 next_classic_step = 0;
     bool foreground_was_active=false;
+    bool usb_force_warning_drawn=false;
     u64 usb_retry = time_us_64() + 3000000;
     last_activity = time_us_64();
     power.activity(last_activity);
@@ -797,7 +798,9 @@ int main() {
             screen.animation_tick((u32)(frame_started/1000),usb.reads,usb.writes);
             // LCD owns an immutable snapshot until completion. Prepare the
             // newest frame when it is free; no hidden render or frame backlog.
-            if((!picocalc::files::usb_active() || !usb.active_read_bytes) && panel_ready &&
+            // A stalled MSC read must not hide the warning or its dismissal.
+            const bool usb_force_warning=services.usb_force_confirmation();
+            if((!picocalc::files::usb_active() || !usb.active_read_bytes || usb_force_warning!=usb_force_warning_drawn) && panel_ready &&
                (!remote_screen.holds_frame() || screen.bootloader_pending()) && !picocalc::io_worker::frame_pending()) {
                 const auto model = display_snapshot();
                 if(calculator_visible() && std::strcmp(previous_indicator, model.indicator) != 0) {
@@ -805,7 +808,10 @@ int main() {
                     std::printf("X=[%s]\n", model.indicator);
                 }
                 screen.render(model, keyboard.online(), &ui, &services,keyboard.battery());
-                if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) screen.presented();
+                if((screen.presentation_pending() || panel.needs_refresh()) && panel.flush(screen)) {
+                    screen.presented();
+                    usb_force_warning_drawn=usb_force_warning;
+                }
                 next_frame = picocalc::FrameSchedule::next(frame_started);
             }
         }

@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+void picocalc_host_fail_read(int after);
+
 namespace {
 using namespace picocalc;
 unsigned checks=0;
@@ -490,6 +492,7 @@ template<unsigned N> bool banner_matches(const picocalc::Screen& screen,const u8
 void picocalc_utility_test() {
     using namespace picocalc;
     Calculator calc;calc.init();
+    require(files::write_text("/USBTEST.TXT","saved",5),"file fixture for the USB remount");
     for(bool ru:{false,true}) {
         Settings settings;settings.russian=ru;
         // A deliberately different chosen UI font must not resize pixel artwork.
@@ -502,6 +505,8 @@ void picocalc_utility_test() {
         require(ru?banner_matches(screen,utility_art::title_usb_ru):banner_matches(screen,utility_art::title_usb_en),"native USB banner");
         const Text caption(native,ru?M8("Карта подключена к ПК"):"Card connected to computer",16,1,true);
         require(caption.width<=296 && caption.matches(screen,(320-caption.width)/2,227),"large centered native USB instructions");
+        const Text force_hint(native,ru?M8("Enter/Esc: назад  F1: аварийный выход"):"Enter/Esc: back  F1: force eject",14,1,true);
+        require(force_hint.width<=296 && force_hint.matches(screen,(320-force_hint.width)/2,295),"force eject is labelled on USB disk screen");
         require(!screen.render({},true,&ui,&service),"idle USB page retains raster");
         const std::vector<u8> before(screen.data(),screen.data()+Screen::BYTES);
         screen.animation_tick(1200,1,0);require(screen.render({},true,&ui,&service),"real USB read animates");
@@ -529,12 +534,42 @@ void picocalc_utility_test() {
             screen.render({},true,&ui,&service);
             char suffix[32];std::snprintf(suffix,sizeof(suffix),"-usb-step%u",step);preview(screen,suffix);
         }
-        require(!service.input('\r') || service.usb_disk(),"Enter cannot abandon mounted host filesystem");
+        require(service.input('\r') && service.usb_disk() && files::usb_active(),"Enter waits for host eject");
+        require(service.input(0x1b) && service.usb_disk() && files::usb_active(),"Esc waits for host eject");
+        require(service.input(0x81) && service.usb_force_confirmation() && files::usb_active(),
+                "F1 opens the warning and keeps the host session active");
+        require(screen.render({},true,&ui,&service),"force USB eject renders the warning");
+        const Text risk(native,ru?M8("Несохранённые записи с ПК"):"Unsaved writes from the computer",16);
+        const Text loss(native,ru?M8("могут потеряться."):"may be lost.",16);
+        const Text damage(native,ru?M8("Возможна порча файлов на карте."):"Files on the card may be damaged.",16);
+        const Text choices(native,ru?M8("Enter: отключить  Esc: отмена"):"Enter: disconnect  Esc: cancel",14);
+        require(risk.matches(screen,12,76) && loss.matches(screen,12,98) && damage.matches(screen,12,142),
+                "the entire warning is visible with the selected custom font");
+        require(choices.width<=296 && choices.matches(screen,(320-choices.width)/2,300),
+                "confirmation and cancellation controls are visible");
+        preview(screen,ru?"-usb-force-ru":"-usb-force-en");
+        require(service.input(0x81) && service.usb_force_confirmation() && files::usb_active(),
+                "F1 alone cannot confirm an eject");
+        require(service.input(0x1b) && service.usb_disk() && files::usb_active(),
+                "Esc cancels the warning and keeps the host session");
+        require(service.input(0x81) && service.usb_force_confirmation(),"force warning can be reopened");
         files::usb_eject();screen.animation_tick(2600,5,5);
+        require(service.input(0x1b) && service.usb_disk(),"host can eject while the warning is shown");
         require(screen.render({},true,&ui,&service),"safe eject changes scene");
         require(ru?banner_matches(screen,utility_art::title_ejected_ru):banner_matches(screen,utility_art::title_ejected_en),"ejected banner");
         if(ru)preview(screen,"-usb-ejected");
-        require(service.input('\r') && !service.active() && files::ready(),"safe eject returns native SD ownership");
+        require(service.input(ru?0x1b:'\r') && !service.active() && files::ready(),"safe eject returns native SD ownership");
+        service.open(Action::USB_DISK,ru,calc);
+        require(service.input(0x81) && service.usb_force_confirmation(),"a new session offers forced exit");
+        require(service.input('\r') && !service.active() && !files::usb_active() && files::ready(),
+                "confirmed force eject returns SD ownership without a host eject");
+        require(files::exists("/USBTEST.TXT"),"card contents still accessible after a forced remount");
+        service.open(Action::USB_DISK,ru,calc);
+        require(service.input(0x81) && service.usb_force_confirmation(),"warning shown before remount failure");
+        picocalc_host_fail_read(0);
+        require(service.input('\r') && !files::usb_active() && !files::ready() && !service.usb_disk() &&
+                std::strcmp(service.page_name(),"MESSAGE")==0,"failed remount reports an error with USB disconnected");
+        require(service.input(0x1b) && !service.active() && files::mount(),"remount failure can be dismissed and retried");
         require(ui.input('\t',calc) && ui.input('\r',calc) && ui.bootloader_confirmation(),"UF2 confirmation via actual UI");
         screen.animation_tick(3000,5,5);require(screen.render({},true,&ui,&service),"UF2 native confirmation");
         require(ru?banner_matches(screen,utility_art::title_uf2_ru):banner_matches(screen,utility_art::title_uf2_en),"UF2 banner");
@@ -555,7 +590,8 @@ void picocalc_utility_test() {
         if(ru)preview(screen,"-uf2-ready");
         screen.animation_tick(7000,5,5);require(!screen.render({},true,&ui,&service),"ROM last frame stays static");
     }
-    std::puts("Pico USB/UF2: native EN/RU text, compressed art, dirty-only animation, safe eject, cancel and ROM final frame PASS");
+    require(files::remove("/USBTEST.TXT"),"remove USB test file");
+    std::puts("Pico USB/UF2: EN/RU warning, normal and forced eject, animation, and ROM final frame PASS");
 }
 void picocalc_layout_self_test() {
     // This translation unit is only linked to the host tests. Its FatFs disk is

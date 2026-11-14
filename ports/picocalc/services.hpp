@@ -34,6 +34,7 @@ public:
     unsigned sound_volume() const { return ui_ ? ui_->settings().volume : 10; }
     bool active() const { return page_ != ServicePage::CLOSED; }
     bool usb_disk() const { return page_ == ServicePage::USB_DISK; }
+    bool usb_force_confirmation() const { return page_ == ServicePage::CONFIRM && confirm_ == Confirm::USB_FORCE; }
     void open(Action action, bool russian, Calculator& calculator);
     bool input(u8 code);
     void tick();
@@ -112,7 +113,7 @@ private:
     ColorDisplay color_display_=nullptr;
     void* color_context_=nullptr;
     enum class Prompt : u8 { SAVE, RENAME, MKDIR, NEW_FILE, EXPORT, OPEN, SEARCH, MOVE };
-    enum class Confirm : u8 { DELETE_FILE, DISCARD, FORMAT, OVERWRITE };
+    enum class Confirm : u8 { DELETE_FILE, DISCARD, FORMAT, OVERWRITE, USB_FORCE };
     const char* tr(const char* en, const char* ru) const { return russian_ ? ru : en; }
     void message(const char* value, ServicePage parent);
     void browse(ServicePage parent);

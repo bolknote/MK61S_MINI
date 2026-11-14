@@ -63,6 +63,7 @@ void release_read_cursor();
 bool write_range(const char* path,u32 offset,const u8* data,unsigned count);
 bool begin_usb();
 bool end_usb();
+bool force_end_usb();
 bool usb_active();
 bool usb_ejected();
 void usb_eject();

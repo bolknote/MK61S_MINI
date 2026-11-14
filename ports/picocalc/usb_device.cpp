@@ -21,7 +21,18 @@ const u8 configuration[] = {
     TUD_MSC_DESCRIPTOR(2, 5, 0x03, 0x83, 64)
 };
 }
-namespace picocalc { namespace usb { const Counters& counters() { return ::counters; } } }
+namespace picocalc::usb {
+const Counters& counters() { return ::counters; }
+void restart_after_disk_abort() {
+    // Drop queued transfers and give the host time to observe the detach.
+    // The composite port then returns with an empty MSC slot and working CDC.
+    tud_deinit(0);
+    ::counters.active_read_bytes = 0;
+    sleep_ms(200);
+    const tusb_rhport_init_t init{TUSB_ROLE_DEVICE, TUSB_SPEED_FULL};
+    (void)tusb_init(0, &init);
+}
+}
 extern "C" {
 const uint8_t* tud_descriptor_device_cb() { return (const uint8_t*)&device; }
 const uint8_t* tud_descriptor_configuration_cb(uint8_t) { return configuration; }
@@ -45,8 +56,9 @@ bool tud_msc_test_unit_ready_cb(uint8_t lun) {
     tud_msc_set_sense(lun, SCSI_SENSE_NOT_READY, 0x3A, 0);
     return false;
 }
-void tud_msc_capacity_cb(uint8_t, uint32_t* blocks, uint16_t* size) {
-    *size = 512; *blocks = picocalc::sd::sectors();
+void tud_msc_capacity_cb(uint8_t lun, uint32_t* blocks, uint16_t* size) {
+    *size = 512;
+    *blocks = tud_msc_test_unit_ready_cb(lun) ? picocalc::sd::sectors() : 0;
 }
 bool tud_msc_is_writable_cb(uint8_t lun) { return tud_msc_test_unit_ready_cb(lun); }
 bool tud_msc_start_stop_cb(uint8_t, uint8_t, bool start, bool load_eject) {
@@ -82,7 +94,10 @@ int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* 
 int32_t tud_msc_scsi_cb(uint8_t lun, const uint8_t command[16], void*, uint16_t) {
     counters.last_scsi = command[0];
     if(command[0] == SCSI_CMD_PREVENT_ALLOW_MEDIUM_REMOVAL) return 0;
-    if(command[0] == 0x35) return picocalc::sd::sync() ? 0 : -1; // SYNCHRONIZE CACHE.
+    if(command[0] == 0x35) { // SYNCHRONIZE CACHE.
+        if(!picocalc::files::usb_active() || picocalc::files::usb_ejected()) return 0;
+        return picocalc::sd::sync() ? 0 : -1;
+    }
     tud_msc_set_sense(lun, SCSI_SENSE_ILLEGAL_REQUEST, 0x20, 0);
     return -1;
 }

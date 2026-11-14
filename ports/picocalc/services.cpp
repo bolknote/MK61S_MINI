@@ -294,7 +294,11 @@ bool Services::input(u8 code) {
     if(!active()) return false;
     const bool cancel = back(code), accept = enter(code);
     if(page_ == ServicePage::USB_DISK) {
-        if(cancel || accept) {
+        if(code == 0x81 && files::usb_active() && !files::usb_ejected()) {
+            confirm_ = Confirm::USB_FORCE;
+            confirm_parent_ = page_;
+            page_ = ServicePage::CONFIRM;
+        } else if(cancel || accept) {
             if(!files::end_usb()) std::snprintf(status_, sizeof(status_), "%s", files::error());
             else { page_ = ServicePage::CLOSED; status_[0] = 0; }
         }
@@ -315,7 +319,10 @@ bool Services::input(u8 code) {
     if(page_ == ServicePage::CONFIRM) {
         if(cancel) page_ = confirm_parent_;
         else if(accept) {
-            if(confirm_ == Confirm::FORMAT) {
+            if(confirm_ == Confirm::USB_FORCE) {
+                if(files::force_end_usb()) { page_ = ServicePage::CLOSED; status_[0] = 0; }
+                else message(tr("Could not reopen microSD", M8("Не удалось открыть microSD")), ServicePage::CLOSED);
+            } else if(confirm_ == Confirm::FORMAT) {
                 if(files::format()) message("microSD formatted", ServicePage::CLOSED);
                 else message(files::error(), confirm_parent_);
             } else if(confirm_ == Confirm::DELETE_FILE) {
@@ -474,7 +481,9 @@ const char* Services::title() const {
         case ServicePage::PROMPT:
             return prompt_==Prompt::SEARCH?tr("Search",M8("Поиск")):
                 prompt_==Prompt::MOVE?tr("Destination",M8("Куда переместить")):tr("Filename", M8("Имя файла"));
-        case ServicePage::CONFIRM: return tr("Confirm", M8("Подтверждение"));
+        case ServicePage::CONFIRM:
+            if(usb_force_confirmation()) return tr("Force USB disk eject", M8("Аварийный выход из USB"));
+            return tr("Confirm", M8("Подтверждение"));
         case ServicePage::USB_DISK: return tr("USB disk / microSD", M8("USB-диск / microSD"));
         default: return "MK61S";
     }
@@ -499,6 +508,7 @@ const char* Services::footer() const {
     if(page_ == ServicePage::EDITOR) return tr("F1: name F2: save F3: run F8: RU/EN", M8("F1: имя F2: запись F3: пуск F8: RU/EN"));
     if(page_ == ServicePage::BROWSER) return tr("F1: file  F8: icons/list", M8("F1: файл  F8: значки/список"));
     if(page_ == ServicePage::USB_DISK) return tr("Eject on computer, then Enter / Esc", M8("Извлечь на ПК, затем Enter / Esc"));
+    if(usb_force_confirmation()) return tr("Enter: disconnect  Esc: cancel", M8("Enter: отключить  Esc: отмена"));
     if(page_ == ServicePage::CONSOLE) return running_ ? "Esc: STOP" : tr("Enter / Esc: editor", M8("Enter / Esc: редактор"));
     return tr("Up/Down  Enter: select  Esc: back", M8("Up/Down  Enter: выбор  Esc: назад"));
 }
@@ -552,6 +562,12 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
             std::snprintf(out,COLS+1,"%s",text+first);
         }
         if(index == 5) std::snprintf(out, COLS + 1, "Enter: OK   Esc: cancel");
+    } else if(usb_force_confirmation()) {
+        const char* warning = index == 0 ? tr("Unsaved writes from the computer", M8("Несохранённые записи с ПК")) :
+            index == 1 ? tr("may be lost.", M8("могут потеряться.")) :
+            index == 3 ? tr("Files on the card may be damaged.", M8("Возможна порча файлов на карте.")) :
+            index == 5 ? footer() : "";
+        std::snprintf(out, COLS + 1, "%s", warning);
     } else if(page_ == ServicePage::CONFIRM) {
         if(index == 0) std::snprintf(out, COLS + 1, "%s", confirm_ == Confirm::FORMAT ? tr("Erase ALL files on microSD?", M8("Стереть ВСЕ файлы microSD?")) :
             confirm_ == Confirm::OVERWRITE ? tr("Replace the existing file?", M8("Заменить существующий файл?")) :
