@@ -560,6 +560,27 @@ static __attribute__((noinline)) u32 write_binary(NativeHost& host,const char* p
   }
   return files::commit_write(session);
 }
+static __attribute__((noinline)) bool app_file_path(const char* app,const char* requested,char* path) {
+  char name[files::PATH_SIZE],base[files::PATH_SIZE];
+  if(!utf8(requested,name,sizeof(name))) return false;
+  std::snprintf(base,sizeof(base),"%s",app);
+  char* slash=std::strrchr(base,'/');
+  if(!slash) std::strcpy(base,"/");else if(slash==base) slash[1]=0;else *slash=0;
+  return script::normalize_path(base,name,path);
+}
+static __attribute__((noinline)) bool app_file_info(u32 operation,const char* path,
+                                                   const mk61_service_file_bytes& request) {
+  files::Entry entry{};
+  if(operation==MK61_FILE_BYTES_STAT) { if(!files::stat(path,entry)) return false; }
+  else {
+    unsigned used=0;bool more=false;
+    if(!files::list(path,request.offset,&entry,1,used,more) || used!=1) return false;
+  }
+  mk61_service_file_info info{};info.size=entry.size;info.directory=entry.directory;
+  usize count=0;
+  if(!mk8::from_utf8((const u8*)entry.name,std::strlen(entry.name),(u8*)info.name,sizeof(info.name)-1,count)) return false;
+  info.name[count]=0;*(mk61_service_file_info*)request.data=info;return true;
+}
 __attribute__((noinline)) u32 NativeHost::file_bytes(u32 a,u32 b,u32 c,void* payload) {
   if(b || !payload || a>MK61_FILE_BYTES_WRITE_SOURCE) return 0;
   const bool stream=a==MK61_FILE_BYTES_WRITE_SOURCE;
@@ -578,28 +599,16 @@ __attribute__((noinline)) u32 NativeHost::file_bytes(u32 a,u32 b,u32 c,void* pay
   if(stream ? (!source->read || !source->size) :
      (!r->data || (a==MK61_FILE_BYTES_READ || a==MK61_FILE_BYTES_WRITE ?
                   !r->size || r->size>4096 : r->size!=sizeof(mk61_service_file_info)))) return 0;
-  char name[files::PATH_SIZE],base[files::PATH_SIZE],path[files::PATH_SIZE];
-  if(!utf8(requested,name,sizeof(name))) return 0;
-  std::snprintf(base,sizeof(base),"%s",s.path_);
-  char* slash=std::strrchr(base,'/');
-  if(!slash) std::strcpy(base,"/");else if(slash==base) slash[1]=0;else *slash=0;
-  if(!script::normalize_path(base,name,path)) return 0;
+  // Resolve the name before FatFs takes its own long-name/sector scratch.
+  char path[files::PATH_SIZE];
+  if(!app_file_path(s.path_,requested,path)) return 0;
   if(stream) return write_binary(*this,path,*source);
   if(a==MK61_FILE_BYTES_WRITE) return files::write_range(path,r->offset,(const u8*)r->data,r->size);
   if(a==MK61_FILE_BYTES_READ) {
     unsigned got=0;
     return files::read_range(path,r->offset,(u8*)r->data,r->size,got) && got==r->size;
   }
-  files::Entry e{};
-  if(a==MK61_FILE_BYTES_STAT) { if(!files::stat(path,e)) return 0; }
-  else {
-    unsigned used=0;bool more=false;
-    if(!files::list(path,r->offset,&e,1,used,more) || used!=1) return 0;
-  }
-  mk61_service_file_info info{};info.size=e.size;info.directory=e.directory;
-  usize count=0;
-  if(!mk8::from_utf8((const u8*)e.name,std::strlen(e.name),(u8*)info.name,sizeof(info.name)-1,count)) return 0;
-  info.name[count]=0;*(mk61_service_file_info*)r->data=info;return 1;
+  return app_file_info(a,path,*r);
 }
 
 u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {

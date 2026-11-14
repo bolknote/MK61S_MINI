@@ -29,6 +29,7 @@ static spectrum_tape* tape;
 static char* tape_path;
 #endif
 static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
+enum { WORK_CACHE_BYTES=8192 };
 static bool banked_buffers;
 static spectrum_memory bank_memory;
 static mk61_service_buffer external;
@@ -164,6 +165,11 @@ static uint32_t file_call(unsigned op,const char* path,void* out,uint32_t offset
     mk61_service_file_bytes r={path,out,offset,bytes};
     return services->call(MK61_SERVICE_FILE_BYTES,op,0,sizeof(r),&r);
 }
+static __attribute__((noinline)) bool file_size(const char* path,uint32_t* size) {
+    mk61_service_file_info info;
+    if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory) return false;
+    *size=info.size;return true;
+}
 static bool read_source(void* path,uint32_t at,uint8_t* out,uint32_t bytes) {
     const bool ok=file_call(MK61_FILE_BYTES_READ,path,out,at,bytes)!=0;
     mk61_api->service();return ok;
@@ -238,11 +244,24 @@ static bool choose_file(unsigned type) {
     }
 }
 static bool load_rom(uint8_t* rom) {
-    mk61_service_file_info info;
-    if(!file_call(MK61_FILE_BYTES_STAT,"48.rom",&info,0,sizeof(info)) ||
-       info.directory || info.size!=SPECTRUM_ROM_BYTES) return false;
+    uint32_t size;
+    if(!file_size("48.rom",&size) || size!=SPECTRUM_ROM_BYTES) return false;
     for(unsigned at=0;at<SPECTRUM_ROM_BYTES;at+=4096)
         if(!read_source("48.rom",at,rom+at,4096)) return false;
+    return true;
+}
+/* Chunk storage is only live during each read, before any machine reset. */
+static __attribute__((noinline)) bool load_banked_roms(bool pentagon) {
+    uint8_t bytes[512];
+    for(unsigned bank=0;bank<2;++bank) {
+        const char* name=pentagon?(bank?"128-1.rom":"128-0.rom"):"48.rom";
+        uint32_t size;
+        if(!file_size(name,&size) || size!=SPECTRUM_ROM_BYTES) return false;
+        for(unsigned at=0;at<size;at+=sizeof(bytes)) {
+            if(!read_source((void*)name,at,bytes,sizeof(bytes)) ||
+               !external_write(NULL,SPECTRUM_ROM_BASE+bank*SPECTRUM_ROM_BYTES+at,bytes,sizeof(bytes))) return false;
+        }
+    }
     return true;
 }
 static bool select_model(unsigned model) {
@@ -261,20 +280,9 @@ static bool select_model(unsigned model) {
         message("Pentagon 512K requires PSRAM\n\nPress any key");return false;
     }
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
-    {
-      const char* names[]={pentagon?"128-0.rom":"48.rom",pentagon?"128-1.rom":"48.rom"};
-      uint8_t bytes[1024];
-      for(unsigned bank=0;bank<2;++bank) {
-        mk61_service_file_info info;
-        if(!file_call(MK61_FILE_BYTES_STAT,names[bank],&info,0,sizeof(info)) || info.size!=16384 || info.directory) return false;
-        for(unsigned at=0;at<16384;at+=sizeof(bytes)) {
-            if(!read_source((void*)names[bank],at,bytes,sizeof(bytes)) ||
-               !external_write(NULL,SPECTRUM_ROM_BASE+bank*16384+at,bytes,sizeof(bytes))) return false;
-        }
-      }
-      if(!spectrum_memory_init_fragmented(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,page_runs,
+    if(!load_banked_roms(pentagon) ||
+       !spectrum_memory_init_fragmented(&bank_memory,guest_blocks[0],guest_blocks[1],bank_tails,page_runs,
             model==2?64:32,io)) return false;
-    }
     stop_tape();
     spectrum_attach_memory(&machine,&bank_memory);machine.pentagon=pentagon;spectrum_disk_reset(&machine);started=false;return true;
 }
@@ -389,25 +397,41 @@ static void tape_menu(void) {
         break;
     }
 }
-static void save_snapshot(void) {
-    if(!started) {message("Start a machine first\n\nPress any key");return;}
+static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspace) {
+    if(!started) {message("Start a machine first\n\nPress any key");return true;}
     char name[16];
     for(unsigned n=1;n<=9999;++n) {
         mk61_service_file_info info;
         mk61_app_snprintf(services,name,sizeof(name),"ZX%04u.SZX",n);
         if(file_call(MK61_FILE_BYTES_STAT,name,&info,0,sizeof(info))) continue;
+        // The CPU is paused. Spill the cache to PSRAM and let the SD journal
+        // use this contiguous lease until the snapshot is published.
+        if(banked_buffers) {
+            if(!spectrum_memory_flush_pages(&bank_memory) ||
+               !services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,workspace)) {
+                message("Cannot save snapshot");return true;
+            }
+            memset(bank_memory.page_data,0,WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES*sizeof(bank_memory.page_data[0]));
+            spectrum_refresh_map(&machine);
+        }
         spectrum_szx_writer writer;
         mk61_service_write_source request={name,&writer,spectrum_szx_read,spectrum_szx_save(&writer,&machine),0};
         const bool saved=services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(request),&request)!=0;
-        if(!saved) message("Cannot save snapshot");
-        else {
-            char response[24];
-            mk61_app_snprintf(services,response,sizeof(response),"Saved %s",name);
-            message(response);
+        if(banked_buffers) {
+            if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,WORK_CACHE_BYTES,workspace)) {
+                started=false;
+                message("Cannot restore cache");return false;
+            }
+            page_runs[0]=workspace->data;
+            for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
+                bank_memory.page_data[i]=page_runs[0]+i*SPECTRUM_CACHE_PAGE_BYTES;
         }
-        return;
+        if(saved) message(name);
+        else message("Cannot save snapshot");
+        return true;
     }
     message("No free snapshot name");
+    return true;
 }
 
 static bool load_szx(const spectrum_source* source) {
@@ -462,15 +486,15 @@ static void settings(void) {
         }
     }
 }
-static bool load_snapshot(void) {
+static __attribute__((noinline)) bool load_snapshot(void) {
     if(machine.disk.mode==SPECTRUM_DISK_DIVMMC && !machine.disk.spi.reads) {
         message("Start esxDOS before opening\na snapshot with DivMMC enabled\n\nPress any key");return false;
     }
-    mk61_service_file_info info;
-    if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) {
+    uint32_t size;
+    if(!file_size(snapshot_path,&size)) {
         message("Cannot read snapshot\n\nPress any key");return false;
     }
-    const spectrum_source source={snapshot_path,info.size,read_source};
+    const spectrum_source source={snapshot_path,size,read_source};
     stop_tape();
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     if(suffix(snapshot_path,".szx")) return load_szx(&source);
@@ -714,14 +738,14 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
         }
     }
     if((!banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,SPECTRUM_RAM_BYTES,&ram)) ||
-       (banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,8192,&ram)) ||
+       (banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,WORK_CACHE_BYTES,&ram)) ||
        (banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,2048,&rom)) ||
        (!banked_buffers && !services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,SPECTRUM_ROM_BYTES,&rom))) {
         message("Not enough SRAM for Spectrum\n\nPress any key");return 0;
     }
-    mk61_service_file_info rom_info;
+    uint32_t rom_size;
     if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
-       (!file_call(MK61_FILE_BYTES_STAT,"48.rom",&rom_info,0,sizeof(rom_info)) || rom_info.directory || rom_info.size!=SPECTRUM_ROM_BYTES))) {
+       (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES))) {
         message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP\n\nPress any key");return 0;
     }
     page_runs[0]=ram.data;page_runs[1]=rom.data;
@@ -774,7 +798,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
         if(c=='p' || c=='P') { settings();continue; }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(c=='l') { tape_menu();continue; }
-        if(c=='s') { save_snapshot();continue; }
+        if(c=='s') { if(!save_snapshot(&ram)) break;continue; }
 #endif
         if(c=='d' || c=='D') { mount_media(SPECTRUM_DISK_BETA);continue; }
         if(c=='i' || c=='I') { mount_media(SPECTRUM_DISK_DIVMMC);continue; }

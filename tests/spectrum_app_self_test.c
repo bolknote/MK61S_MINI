@@ -24,6 +24,7 @@ static unsigned open_keys,open_path_calls,selected_reads;
 static unsigned snapshots_written;
 static uint8_t canvas[12800],*psram;
 static uint8_t* direct_sram[3];
+static uint8_t* workspace;
 static unsigned psram_bytes,action;
 static bool released=true;
 static unsigned held_key,held_scans;
@@ -92,9 +93,15 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(op==MK61_SERVICE_MICROS) { micros_now+=100;return micros_now; }
     if(op==MK61_SERVICE_MEMORY_ACQUIRE) {
         mk61_service_lease* r=payload;r->data=calloc(1,c);assert(r->data);r->size=c;r->fresh=1;
-        assert((a==0 && c==8192) || (a==1 && c==2048));return 1;
+        assert((a==MK61_SERVICE_WORKSPACE && c==WORK_CACHE_BYTES) || (a==MK61_SERVICE_SCRATCH && c==2048));
+        if(a==MK61_SERVICE_WORKSPACE) {assert(!workspace);workspace=r->data;}
+        return 1;
     }
-    if(op==MK61_SERVICE_MEMORY_RELEASE) { mk61_service_lease* r=payload;free(r->data);r->data=NULL;return 1; }
+    if(op==MK61_SERVICE_MEMORY_RELEASE) {
+        mk61_service_lease* r=payload;
+        if(a==MK61_SERVICE_WORKSPACE) {assert(workspace==r->data);workspace=NULL;}
+        free(r->data);*r=(mk61_service_lease){0};return 1;
+    }
     if(op==MK61_SERVICE_BUFFER) {
         mk61_service_buffer* r=payload;
         if(a==MK61_BUFFER_ACQUIRE) {
@@ -123,7 +130,9 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
     if(op==MK61_SERVICE_FILE_BYTES) {
         if(a==MK61_FILE_BYTES_WRITE_SOURCE) {
             const mk61_service_write_source* request=payload;
-            assert(!b && c==sizeof(*request) && !generator.sample);
+            assert(!b && c==sizeof(*request) && !workspace && !generator.sample);
+            for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
+                assert(!machine.memory->page_data[i] && machine.memory->tag[i]==UINT16_MAX);
             assert(request->size>512*1024 && suffix(request->name,".szx"));
             char filename[1024];path(filename,request->name);
             FILE* f=fopen(filename,"wbx");assert(f);
@@ -180,7 +189,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(lcd_clock==(legacy_lcd?12000000:24000000));
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
         assert(machine.memory->paged_rom && !machine.rom && !machine.memory->window && machine.memory->page_count==16);
-        assert(machine.memory->page_data[0]==page_runs[0] &&
+        assert(workspace && machine.memory->page_data[0]==workspace &&
                machine.memory->page_data[8]==page_runs[1] &&
                machine.memory->page_data[10]==page_runs[2] &&
                machine.memory->page_data[14]==canvas+10752);
@@ -245,7 +254,7 @@ int main(int argc,char** argv) {
     assert(mk61_app_open_file(MK61_SERVICE_INVALID_ID)==MK61_APP_INVALID_FILE);
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
-    assert(!psram && !generator.sample);
+    assert(!psram && !workspace && !generator.sample);
     for(unsigned i=0;i<3;++i)assert(!direct_sram[i]);
     if(opened_name) {
         assert(open_path_calls==1 && !action && graphics_ends==1);
