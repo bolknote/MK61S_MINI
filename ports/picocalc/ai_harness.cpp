@@ -47,7 +47,7 @@ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 namespace picocalc::ai {
 namespace {
 using namespace mk61ai;
-enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK };
+enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK, HIGH_CLOCK };
 static constexpr char isa[] =
 #include "terminal_classic_isa.inc"
     ;
@@ -579,7 +579,8 @@ struct UI {
     std::uint32_t expected_crc=0,actual_crc=0;
     bool ok=false,stress_failed=false;
   };
-  bool bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,bool clocks);
+  bool bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,
+                        const std::uint32_t *clock_dividers);
   static unsigned fastest_burst(const BurstResult *results,unsigned count);
 #endif
   unsigned long_perf(const char *directory);
@@ -2224,6 +2225,8 @@ AI_COLD_CODE unsigned UI::bench() {
       if(!std::memcmp(config_text,"AIBURST1\n",9)) read_benchmark=ReadBenchmark::PACKET_SIZE;
       else if(!std::memcmp(config_text,"AIBURST2\n",9) && config.stress_ms && config.control==2)
         read_benchmark=ReadBenchmark::CLOCK;
+      else if(!std::memcmp(config_text,"AIBURST3\n",9) && config.stress_ms && config.control==2)
+        read_benchmark=ReadBenchmark::HIGH_CLOCK;
       else return 3;
     }
     return perf(directory,config,read_benchmark);
@@ -2552,7 +2555,8 @@ AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
 #if defined(PICO_ON_DEVICE)
 constexpr unsigned BURST_TRIALS=256,BURST_WEIGHTS=1792,BURST_SCALES=224;
 
-AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,bool clocks) {
+AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResult *results,unsigned count,
+                                       const std::uint32_t *clock_dividers) {
   constexpr unsigned source_bytes=4096,read_bytes=BURST_WEIGHTS+BURST_SCALES;
   std::unique_ptr<u32[]> memory(new(std::nothrow) u32[(source_bytes+read_bytes)/4]);
   if(!memory) return false;
@@ -2560,7 +2564,7 @@ AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResu
   auto *target=source+source_bytes;
   u32 pattern=0xD84C1629U;
   for(unsigned i=0;i<count;++i) {
-    results[i].setting=clocks?ai_psram_read_clock::burst_dividers[i]:16U<<i;
+    results[i].setting=clock_dividers?clock_dividers[i]:16U<<i;
     results[i].ok=true;
   }
   // Rotate the order to reduce temperature and time-order effects. Both
@@ -2574,8 +2578,8 @@ AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResu
     for(unsigned i=0;i<count;++i) {
       auto &r=results[(i+pass)%count];
       if(!r.ok) continue;
-      r.ok=(!clocks || psram::diagnostic_read_clock(r.setting)) &&
-          psram::diagnostic_read_burst(clocks?64:r.setting);
+      r.ok=(!clock_dividers || psram::diagnostic_read_clock(r.setting)) &&
+          psram::diagnostic_read_burst(clock_dividers?64:r.setting);
       const auto before=psram::statistics().burst_retries;
       for(unsigned j=0;r.ok && j<BURST_TRIALS;++j) {
         if(!(j&31U) && !pump()) { cancel=true;return false; }
@@ -2585,7 +2589,7 @@ AI_COLD_CODE bool UI::bench_read_bursts(shared_memory::Buffer &scratch,BurstResu
         const auto start=call(MK61_SERVICE_MICROS);
         const bool read=scratch.read_begin(spans,2) && scratch.read_finish();
         r.elapsed[pass]+=call(MK61_SERVICE_MICROS)-start;
-        if(!read || (clocks && psram::diagnostic_clock_divider256()!=r.setting)) { r.ok=false;break; }
+        if(!read || (clock_dividers && psram::diagnostic_clock_divider256()!=r.setting)) { r.ok=false;break; }
         r.ok=!std::memcmp(target,source+weights,BURST_WEIGHTS) &&
             !std::memcmp(target+BURST_WEIGHTS,source+scales,BURST_SCALES);
         if(r.ok) ++r.verified;
@@ -2841,7 +2845,9 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,Re
     ok=ai_clock::begin(config.mhz,frequency);actual_hz=ai_clock::hz();
   }
 #if defined(PICO_ON_DEVICE)
-  const bool sweep_clocks=read_benchmark==ReadBenchmark::CLOCK;
+  const auto *clock_dividers=read_benchmark==ReadBenchmark::HIGH_CLOCK?ai_psram_read_clock::high_burst_dividers:
+      read_benchmark==ReadBenchmark::CLOCK?ai_psram_read_clock::burst_dividers:nullptr;
+  const bool sweep_clocks=clock_dividers!=nullptr;
   const unsigned burst_count=sweep_clocks?4:3;
   BurstResult bursts[4]{};
   unsigned burst_winner=0,clock_winner=0,burst_inference_retries=0,stress_burst_retries=0;
@@ -2856,7 +2862,7 @@ AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,Re
   if(ok && measure_bursts) {
     if(!sweep_clocks)
       packet_clock_override=psram::diagnostic_read_clock(ai_psram_read_clock::control_burst_divider);
-    ok=bench_read_bursts(scratch,bursts,burst_count,sweep_clocks) && select_burst();
+    ok=bench_read_bursts(scratch,bursts,burst_count,clock_dividers) && select_burst();
   }
 #endif
   auto run_stress=[&]() AI_COLD_CODE {

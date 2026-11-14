@@ -220,7 +220,7 @@ class QpiTests(unittest.TestCase):
             self.assertEqual(late_drops,[t+1 for t in drops])
             self.assertEqual(late_samples,[(t+1,i) for t,i in early_samples])
             frames,_,longest=delayed
-            for div in (419,384,346):
+            for div in (419,384,346,320,288,256):
                 self.assertLess((longest*div+255)//256,2160)  # CE# low < 8 us at 270 MHz.
                 for (edges,_,end) in frames:
                     self.assertGreaterEqual((end-edges[-1][0])*div//256,6)

@@ -4,8 +4,14 @@
 int main(){using picocalc::ai_psram_read_clock::divider256;
 using namespace picocalc::ai_psram_read_clock;
 static_assert(sweep_divider(461) && sweep_divider(419) && sweep_divider(384) && sweep_divider(346));
-static_assert(!sweep_divider(345) && !sweep_divider(385) && !sweep_divider(462));
+static_assert(sweep_divider(320) && sweep_divider(288) && sweep_divider(256));
+static_assert(!sweep_divider(255) && !sweep_divider(345) && !sweep_divider(385) && !sweep_divider(462));
 static_assert(!late_burst_sample(461) && late_burst_sample(419) && late_burst_sample(384) && late_burst_sample(346));
+static_assert(late_burst_sample(320) && late_burst_sample(288) && late_burst_sample(256));
+static_assert(high_burst_dividers[0]==default_burst_divider);
+static_assert(270000000ULL*256/(6*high_burst_dividers[1])==36000000);
+static_assert(270000000ULL*256/(6*high_burst_dividers[2])==40000000);
+static_assert(270000000ULL*256/(6*high_burst_dividers[3])==45000000);
 static_assert(default_burst_divider==346 && late_burst_sample(default_burst_divider));
 static_assert(control_burst_divider==461 && !late_burst_sample(control_burst_divider));
 static_assert(ai_profile(270000000,692) && !ai_profile(125000000,320) && !ai_profile(270000000,461));

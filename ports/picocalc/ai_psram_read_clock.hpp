@@ -5,8 +5,11 @@ namespace picocalc::ai_psram_read_clock {
 constexpr std::uint32_t burst_dividers[]={461,419,384,346};
 constexpr std::uint32_t control_burst_divider=burst_dividers[0];
 constexpr std::uint32_t default_burst_divider=burst_dividers[3];
+// At 270 MHz and six PIO cycles per SCK these are 33.3, 36, 40 and 45 MHz.
+constexpr std::uint32_t high_burst_dividers[]={default_burst_divider,320,288,256};
 constexpr bool sweep_divider(std::uint32_t div) {
   for(auto allowed:burst_dividers) if(div==allowed) return true;
+  for(auto allowed:high_burst_dividers) if(div==allowed) return true;
   return false;
 }
 constexpr bool late_burst_sample(std::uint32_t div) {
