@@ -1,0 +1,55 @@
+#ifndef MK61_MP3_SCREEN_HPP
+#define MK61_MP3_SCREEN_HPP
+
+#include "mk61_app.h"
+
+namespace mp3 {
+constexpr unsigned screen_width = 320, strip_height = 16;
+constexpr unsigned record_height = 256, rotation_frames = 128;
+constexpr unsigned record_strip_height = 32;
+constexpr unsigned record_bitmap_bytes = screen_width * record_strip_height / 8;
+constexpr unsigned record_tile_bytes = record_bitmap_bytes / 4;
+constexpr unsigned record_frame_bytes = record_bitmap_bytes + record_tile_bytes;
+constexpr unsigned record_page_bytes = 512;
+constexpr unsigned record_pages = (record_frame_bytes + record_page_bytes - 1) / record_page_bytes;
+constexpr unsigned record_header_bytes = 4 + 64 * 2;
+
+struct Screen {
+    const mk61_app_services* services;
+    uint8_t* strip;
+    uint8_t* record;
+    uint32_t angle;
+
+    enum Color { background = 0, ink = 1, light = 2, muted = 3, accent = 4, selected = 5 };
+    uint16_t palette[16];
+
+    void blank(unsigned y) { clear(y); }
+    void begin(const mk61_app_services* api, uint8_t* pixels, uint8_t* raster);
+    uint32_t spi_hz() const;
+    bool read_record(unsigned y, unsigned page);
+    bool use_record_palette();
+    void paint_label(unsigned y, const char* title, const char* artist);
+    uint32_t present_record(unsigned y, unsigned height);
+    uint32_t present(unsigned y, unsigned height);
+    void paint_deck(unsigned y, unsigned position, unsigned duration, unsigned volume,
+                    bool playing, bool shuffle, unsigned repeat, const char* status);
+    void files_header(unsigned y, const char* directory);
+    void file_row(unsigned y, const char* name, bool folder, bool active, bool current);
+    void files_footer(unsigned y, const char* status);
+
+private:
+    int top;
+    static constexpr unsigned label_width = 112;
+    uint8_t title_mask[2][8][label_width / 8];
+    char old_title[96], old_artist[96];
+    uint16_t record_palette[64];
+    bool palette_ready;
+    void clear(unsigned y);
+    void rect(int x, int y, unsigned width, unsigned height, unsigned color);
+    void pixel(int x, int y, unsigned color);
+    void text(int x, int y, const char* text, unsigned color, unsigned max_width, bool center = false);
+    void label(const char* title, const char* artist);
+    void record_ink(unsigned x, unsigned y);
+};
+}
+#endif

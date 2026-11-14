@@ -14,6 +14,7 @@ std::set<std::string> directories;
 unsigned scans=0,launches=0;
 std::string launched,message;
 constexpr auto spectrum_magic=program_store::make_type_magic('Z','1');
+constexpr auto mp3_magic=program_store::make_type_magic('A','3');
 void directory(std::string path) {
     while(!path.empty()) {
         directories.insert(path);
@@ -81,7 +82,8 @@ int main() {
     using namespace picocalc;Services service;
     for(const char* path:{"/games/A.Z80","/games/A.sna","/games/A.Szx","/games/A.TRD","/games/A.ScL","/A.tap","/X.TzX"})
         assert(file_associations::handler(path)==spectrum_magic);
-    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak"})
+    assert(file_associations::handler("/Music/Title.Mp3")==mp3_magic);
+    for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak","/Music/Title.mp3.bak"})
         assert(!file_associations::handler(path));
     reset();file("/Games/Sub/Title.sna");app("/Games/Sub/Local.App");app("/Apps/ZX/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Sub/Title.sna",spectrum_magic) && launched=="/Games/Sub/Local.App");
@@ -91,6 +93,8 @@ int main() {
     assert(!service.run_handled("/Elsewhere/My Game.trd",spectrum_magic) && launched=="/Apps/ZX/Spectrum.aPp");
     reset();file("/Games/Title.scl");app("/MK61S-HIL/SPECTRUM/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Title.scl",spectrum_magic) && launched=="/MK61S-HIL/SPECTRUM/SPECTRUM.APP");
+    reset();file("/Music/Title.MP3");app("/Apps/ZX/SPECTRUM.APP");app("/MP3/MP3.APP",mp3_magic);
+    assert(!service.run_handled("/Music/Title.MP3",mp3_magic) && launched=="/MP3/MP3.APP");
     reset();file("/Games/Title.sna");assert(service.run_handled("/Games/Title.sna",spectrum_magic)==1 && !launches && !message.empty());
     reset();for(unsigned i=0;i<5000;++i)file("/Apps/F"+std::to_string(i)+".txt");
     file("/Games/Title.sna");assert(service.run_handled("/Games/Title.sna",spectrum_magic)==1 && scans<1100);

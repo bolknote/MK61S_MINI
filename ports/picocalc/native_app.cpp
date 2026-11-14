@@ -1,5 +1,6 @@
 #include "app_flow.hpp"
 #include "compute_clock.hpp"
+#include "canvas.hpp"
 #include "menu_source.hpp"
 #include "basic_native_io.hpp"
 #include "builtin_font.hpp"
@@ -39,6 +40,7 @@
 #include "rtc_value.hpp"
 #include "native_keyboard.hpp"
 #include "loadable_buffer_services.hpp"
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -64,6 +66,12 @@ bool utf8(const char *source, char *out, unsigned capacity) {
     return false;
   out[used] = 0;
   return true;
+}
+bool has_native_output() {
+  const u8* frame = script::native_frame();
+  const unsigned bytes = frame ? canvas::BYTES : usb_screen::FRAME_BYTES;
+  if (!frame) frame = script::frame();
+  return std::any_of(frame, frame + bytes, [](u8 byte) { return byte != 0; });
 }
 bool join(const char *directory, const char *leaf, char out[files::PATH_SIZE]) {
   const int n = std::snprintf(out, files::PATH_SIZE, "%s%s%s", directory,
@@ -159,6 +167,7 @@ public:
   } leases[2];
   loadable_buffers::Session buffers;
   bool graphics = false;
+  bool fullscreen = false;
   unsigned font_sessions = 0;
   bool preview = false;
   bool ai_frozen = false;
@@ -259,7 +268,10 @@ public:
   static u32 height() { return current->display.height(); }
   static u32 graph_revision() { return current->display.revision(); }
   static u32 graph_begin() {
-    return current->graphics = current->display.bitmap_begin();
+    auto& host = *current;
+    host.graphics = host.display.bitmap_begin();
+    host.fullscreen |= host.graphics;
+    return host.graphics;
   }
   static u32 graph_present(const u8 *data, u32 n) {
     if (!current->graphics || !data || n != current->display.width()*current->display.height()/8)
@@ -761,7 +773,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   }
   case MK61_SERVICE_DISPLAY:
     return host.display.call(a,b,c,payload);
-  case MK61_SERVICE_COLOR_DISPLAY:
+  case MK61_SERVICE_COLOR_DISPLAY: {
     if(a==MK61_COLOR_SCROLL_BEGIN) {
       if(!s.color_display_ || b || c!=sizeof(mk61_service_color_scroll) || !payload) return 0;
       return host.present_color(a,payload);
@@ -776,7 +788,10 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     }
     if(!s.color_display_ || b ||
        (a==MK61_COLOR_PRESENT ? c!=sizeof(mk61_service_color_frame) || !payload : c || payload)) return 0;
-    return host.present_color(a,payload);
+    const u32 result = host.present_color(a,payload);
+    if (a == MK61_COLOR_PRESENT && result == 1) host.fullscreen = true;
+    return result;
+  }
   case MK61_SERVICE_AUDIO_STREAM:
 #if defined(PICO_ON_DEVICE)
     if(a==MK61_AUDIO_PSG_OPEN || a==MK61_AUDIO_PSG_ONLY_OPEN ||
@@ -1511,6 +1526,7 @@ u8 Services::run_native(const char *path, u16 file) {
   struct Backend {
     Services *self;
     u16 root, document;
+    bool fullscreen = false;
   } backend{this, root.id, file};
   alignas(8) u8 context[MK61_APP_FLOW_USER_CONTEXT_SIZE]{};
   auto first = mk61_app_flow_to(MK61_APP_KIND_APPLICATION, root.id, 0);
@@ -1530,22 +1546,41 @@ u8 Services::run_native(const char *path, u16 file) {
           return MK61_FLOW_INVALID_MODULE;
         const u8 code = backend.self->run_native_step(
             path, target.file_id == backend.root ? backend.document : 0xFFFF,
-            &step);
+            &step, backend.fullscreen);
         return code ? code == 3 ? MK61_FLOW_BUSY : MK61_FLOW_IO_ERROR
                     : MK61_FLOW_OK;
       },
       &backend);
-  if (status != MK61_FLOW_OK)
+  if (status != MK61_FLOW_OK) {
+    if (page_ == ServicePage::CONSOLE) finish_native(false);
     return status == MK61_FLOW_BUSY ? 3 : 2;
+  }
   std::printf("APP_FLOW_RESULT=%lu\n", (unsigned long)result);
   if (result) {
-    runtime_graphics_ = false;
     message("APP returned an error",
             m61_text::active() ? ServicePage::CLOSED : ServicePage::BROWSER);
-  }
+  } else finish_native(backend.fullscreen);
   return result < 256 ? (u8)result : 5;
 }
-u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
+void Services::finish_native(bool fullscreen) {
+  if (m61_text::active()) {
+    runtime_graphics_ = false;
+    page_ = ServicePage::CLOSED;
+  } else if (fullscreen && !has_native_output()) {
+    // Releasing a fullscreen surface can leave an empty console. Restore
+    // Explorer once the flow ends, after the APP has freed its memory.
+    runtime_graphics_ = viewing_ = false;
+    page_ = ServicePage::BROWSER;
+    status_[0] = 0;
+    refresh();
+  } else {
+    runtime_graphics_ = viewing_ = true;
+    page_ = ServicePage::CONSOLE;
+    std::snprintf(status_, sizeof(status_), "APP finished; Enter / Esc: files");
+  }
+}
+u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
+                            bool& fullscreen) {
   compute_clock::Owner clock_owner(true);
   diagnostics::Scope measure(diagnostics::Point::APP);
   diagnostics::context(diagnostics::State::APP,file);
@@ -1602,7 +1637,7 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
   const u32 address = (u32)(uintptr_t)memory;
 #else
   const u32 address =
-      0x20026000; // Decode-only host test; ARM code is never executed.
+      0x20026000; // Host tests decode the image and can supply a fixture entry.
 #endif
   if (!loadable_module::decode_image(header, reader, memory, address)) {
     std::free(allocation);
@@ -1618,7 +1653,13 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
   u32 result = 5;
   {
     NativeHost host(*this,(header.flags&MK61_APP_NATIVE_320_FLAG)!=0);
-#if defined(PICO_ON_DEVICE)
+#if !defined(PICO_ON_DEVICE)
+    if (test_native_entry_ && flow) {
+      result = test_native_entry_(test_native_context_, file, NativeHost::api, NativeHost::common);
+      mk61_app_flow_return(flow, result, MK61_FLOW_OK);
+      result = 0;
+    }
+#else
     __dmb();
     __isb();
     const auto entry =
@@ -1661,25 +1702,17 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
 #endif
     NativeHost::stop();
     script::led(false);
+    fullscreen |= host.fullscreen;
   }
   std::free(allocation);
-  runtime_graphics_ = true;
   running_ = false;
   runtime_ = "NONE";
   std::printf("APP_RESULT=%lu CRC=%08lX MEMORY=%lu\n", (unsigned long)result,
               (unsigned long)header.image_crc32,
               (unsigned long)header.memory_size);
   if (result) {
-    runtime_graphics_ = false;
     message("APP returned an error",
             m61_text::active() ? ServicePage::CLOSED : ServicePage::BROWSER);
-  } else if (m61_text::active()) {
-    runtime_graphics_ = false;
-    page_ = ServicePage::CLOSED;
-  } else {
-    viewing_ = true;
-    page_ = ServicePage::CONSOLE;
-    std::snprintf(status_, sizeof(status_), "APP finished; Enter / Esc: files");
   }
   return result < 256 ? (u8)result : 5;
 }

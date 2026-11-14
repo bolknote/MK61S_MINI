@@ -1,6 +1,9 @@
 #include "services.hpp"
 #include "native_display.hpp"
 #include "loadable_module_abi.hpp"
+#include "loadable_module_format.hpp"
+#include "lcd_color.hpp"
+#include "../sdk/portable/include/mk61_app.h"
 #include "canvas.hpp"
 #include "screen.hpp"
 #include "ui_font.hpp"
@@ -13,6 +16,7 @@
 #include "input.hpp"
 #include "keyboard_core.hpp"
 #include "shared_memory_buffer.hpp"
+#include "zx0.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -482,10 +486,94 @@ void themed_bitmap_contract() {
     display.bitmap_end();CHECK(!NativeDisplay::published_theme());
     std::puts("Native bitmap theme: staged publication, grid colors and lifecycle PASS");
 }
+void explorer_app_exit_contract() {
+    using namespace loadable_module;
+    constexpr char media[] = "/AppExit/Music/Соль.MP3";
+    constexpr char handler[] = "/AppExit/Player.APP";
+    CHECK(files::mkdir("/AppExit") && files::mkdir("/AppExit/Music"));
+    const u8 image[] = {0x70,0x47,0,0};
+    u8 work[256];
+    std::vector<u8> container(HEADER_SIZE);
+    zx0::EncodeResult packed{};
+    CHECK(zx0::encode(image,sizeof(image),work,sizeof(work),{&container,[](void* context,u8 byte) {
+        static_cast<std::vector<u8>*>(context)->push_back(byte);return true;
+    }},packed));
+    Header header{};
+    header.kind=Kind::APPLICATION;
+    header.compression=Compression::ZX0;
+    header.flags=MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG|MK61_APP_ARMV6M_FLAG|MK61_APP_NATIVE_320_FLAG;
+    header.load_address=MK61_PORTABLE_APP_ADDRESS;
+    header.stored_size=header.code_stored_size=packed.output_size;
+    header.memory_size=header.image_size=sizeof(image);
+    header.stored_crc32=crc32(container.data()+HEADER_SIZE,packed.output_size);
+    header.image_crc32=crc32(image,sizeof(image));
+    header.handled_type_magic=program_store::make_type_magic('A','3');
+    CHECK(encode_header(header,MAX_CONTAINER_SIZE,container.data()));
+    CHECK(files::write(handler,container.data(),container.size()));
+    CHECK(files::write(media,image,sizeof(image)));
+
+    Calculator calculator;calculator.init();Services service;
+    service.open(Action::EXPLORER,false,calculator);
+    CHECK(service.enter_directory("/AppExit/Music",false));
+    unsigned presentations=0;
+    service.set_color_display([](void* context,u32 operation,const void* payload)->u32 {
+        if(operation==MK61_COLOR_END) return 1;
+        CHECK(operation==MK61_COLOR_PRESENT && lcd::valid_color(*(const mk61_service_color_frame*)payload));
+        ++*static_cast<unsigned*>(context);return 1;
+    },&presentations);
+    enum class Display { COLOR, BITMAP, TEXT, ERROR } display=Display::COLOR;
+    service.set_test_native_entry([](void* context,u16 document,const mk61_app_api& api,const mk61_app_services& s)->u32 {
+        if(document!=0xFFFF) {
+            char path[384];
+            mk61_service_file_bytes request{nullptr,path,document,sizeof(path)};
+            CHECK(s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_PATH,0,sizeof(request),&request));
+            CHECK(!std::strcmp(path,M8("/AppExit/Music/Соль.MP3")));
+        }
+        switch(*static_cast<Display*>(context)) {
+        case Display::COLOR: {
+            CHECK(document!=0xFFFF);
+            const u8 pixel=0x10;
+            mk61_service_color_frame frame{};
+            frame.pixels=&pixel;frame.pixel_bytes=frame.width=frame.height=1;
+            CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PRESENT,0,sizeof(frame),&frame));
+            CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_END,0,0,nullptr));
+            break;
+        }
+        case Display::BITMAP: {
+            u8 frame[canvas::BYTES]{};frame[0]=1;
+            CHECK(api.graphics_begin() && api.graphics_present(frame,sizeof(frame)));
+            api.graphics_end();break;
+        }
+        case Display::TEXT:
+            CHECK(api.graphics_begin());api.graphics_end();
+            CHECK(api.display_write_m8(0,0,"RESULT",6));break;
+        case Display::ERROR: return MK61_APP_INVALID_FILE;
+        }
+        return MK61_APP_OK;
+    },&display);
+
+    CHECK(service.input('\r') && presentations==1 && !std::strcmp(service.path(),handler));
+    CHECK(!std::strcmp(service.page_name(),"BROWSER") && !std::strcmp(service.status(),""));
+    char label[64];CHECK(service.browser_label(service.browser_selection(),label) && !std::strcmp(label,M8("Соль.MP3")));
+    display=Display::BITMAP;
+    CHECK(service.input('\r') && !std::strcmp(service.page_name(),"BROWSER"));
+    display=Display::TEXT;
+    CHECK(service.input('\r') && !std::strcmp(service.page_name(),"VIEWER"));
+    script::text_row(0,label,sizeof(label));CHECK(!std::strncmp(label,"RESULT",6));
+    CHECK(service.input(0x1B) && !std::strcmp(service.page_name(),"BROWSER"));
+    display=Display::ERROR;
+    CHECK(service.input('\r') && !std::strcmp(service.page_name(),"MESSAGE"));
+    CHECK(!std::strcmp(service.status(),"APP returned an error"));
+    service.set_test_native_entry(nullptr,nullptr);
+    CHECK(files::remove(media) && files::remove(handler));
+    CHECK(files::remove("/AppExit/Music") && files::remove("/AppExit"));
+    std::puts("Explorer APP launch and exit: MP3 association, document ID, color/mono return, text and errors PASS");
+}
 }
 void picocalc_contract_test() {
     colored_text_contract();
     themed_bitmap_contract();
+    explorer_app_exit_contract();
     {
         Calculator calculator;calculator.init();Services service;
         const auto baseline=shared_memory::buffer_statistics();

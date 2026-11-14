@@ -104,12 +104,20 @@ public:
     u8 run_handled(const char* path, u16 magic);
 #if !defined(PICO_ON_DEVICE)
     void test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context,bool native=false);
+    using TestNativeEntry = u32 (*)(void*,u16,const mk61_app_api&,const mk61_app_services&);
+    void set_test_native_entry(TestNativeEntry entry,void* context) {
+        test_native_entry_=entry;test_native_context_=context;
+    }
 #endif
     const char* runtime_name() const { return runtime_; }
     void show_script_error(const char* text) { message(text, ServicePage::CLOSED); }
     bool take_calculator_request() { const bool value=calculator_requested_;calculator_requested_=false;return value; }
 private:
     friend class NativeHost;
+#if !defined(PICO_ON_DEVICE)
+    TestNativeEntry test_native_entry_=nullptr;
+    void* test_native_context_=nullptr;
+#endif
     ColorDisplay color_display_=nullptr;
     void* color_context_=nullptr;
     enum class Prompt : u8 { SAVE, RENAME, MKDIR, NEW_FILE, EXPORT, OPEN, SEARCH, MOVE };
@@ -147,7 +155,8 @@ private:
     bool flush_print(bool newline);
     double math(language_vm::Function, double, double);
     bool export_program(const char* path);
-    u8 run_native_step(const char* path,u16 file,mk61_app_flow* flow);
+    u8 run_native_step(const char* path,u16 file,mk61_app_flow* flow,bool& fullscreen);
+    void finish_native(bool fullscreen);
     static bool graph_capture(void*, u8*, size_t, u8, u8);
 
     ServicePage page_ = ServicePage::CLOSED, return_ = ServicePage::DEVELOPMENT;
