@@ -10,6 +10,7 @@
 #include <new>
 namespace picocalc {
 namespace {
+const lcd::ShellTheme* active_bitmap_theme=nullptr;
 bool text_length(const char* text,unsigned maximum,unsigned& size) {
     if(!text) return false;
     size=(unsigned)strnlen(text,maximum);
@@ -19,6 +20,10 @@ bool text_length(const char* text,unsigned maximum,unsigned& size) {
 NativeDisplay::NativeDisplay(const Settings& settings,bool native):native_(native),surface_(pixels_),settings_(settings) {
     surface_.begin({8,5,8,0},false,32);layout();
 }
+NativeDisplay::~NativeDisplay() {
+    if(active_bitmap_theme==&published_theme_) active_bitmap_theme=nullptr;
+}
+const lcd::ShellTheme* NativeDisplay::published_theme() { return active_bitmap_theme; }
 bool NativeDisplay::load_text_font() {
     font_.reset();font_bytes_.reset();
     unsigned size=0;const u8* data=script::active_font_data(size);
@@ -184,18 +189,26 @@ u32 NativeDisplay::call(u32 op,u32 b,u32 c,void* payload) {
     }
     flush();return 1;
 }
-bool NativeDisplay::bitmap_begin() { flush();bitmap_=native_?true:surface_.beginFullscreenBitmap();return bitmap_; }
+bool NativeDisplay::bitmap_begin() {
+    flush();staged_theme_.reset(lcd::Ink::MONO);
+    bitmap_=native_?true:surface_.beginFullscreenBitmap();return bitmap_;
+}
 bool NativeDisplay::bitmap_present(const u8* frame,unsigned size) {
     if(native_) {
         if(!bitmap_ || !frame || size!=canvas::BYTES) return false;
+        published_theme_=staged_theme_;active_bitmap_theme=&published_theme_;
         script::show_native_frame(frame);return true;
     }
     if(!bitmap_ || !surface_.showFullscreenBitmap(frame,size)) return false;
     flush();return true;
 }
-void NativeDisplay::bitmap_end() { if(!native_) surface_.endFullscreenBitmap();bitmap_=false;native_dirty_=true;color_dirty_rows_=~0U;flush(); }
+void NativeDisplay::bitmap_end() {
+    if(active_bitmap_theme==&published_theme_) active_bitmap_theme=nullptr;
+    if(!native_) surface_.endFullscreenBitmap();bitmap_=false;native_dirty_=true;color_dirty_rows_=~0U;flush();
+}
 
 void NativeDisplay::native_layout() {
+    if(active_bitmap_theme==&published_theme_) active_bitmap_theme=nullptr;
     color_dirty_rows_=~0U;
     bitmap_=false;update_=0;nx_=ny_=0;gutters_=tails_=0;
     (void)load_text_font();
@@ -427,6 +440,21 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
     case MK61_SERVICE_DISPLAY_FRAMEBUFFER:
         if(!bitmap_ || b!=sizeof(mk61_service_framebuffer) || !payload) return 0;
         *(mk61_service_framebuffer*)payload={canvas::frame(),canvas::BYTES,320,320};return 1;
+    case MK61_SERVICE_DISPLAY_FRAME_THEME: {
+        if(!bitmap_ || b!=sizeof(mk61_service_frame_theme) || c || !payload) return 0;
+        const auto& request=*(const mk61_service_frame_theme*)payload;
+        if(request.base>MK61_FRAME_GREEN || request.count>MK61_FRAME_THEME_COMMANDS) return 0;
+        lcd::ShellTheme candidate;candidate.reset((lcd::Ink)request.base);
+        for(unsigned i=0;i<request.count;++i) {
+            const auto& r=request.rects[i];
+            if(r.ink>MK61_FRAME_GRID || !r.width || !r.height || r.x>=320 || r.y>=320 ||
+               r.width>320-r.x || r.height>320-r.y) return 0;
+            if(r.ink==MK61_FRAME_GRID) {
+                if(!candidate.add_grid(r.x,r.y,r.width,r.height,r.column_width,r.row_pitch)) return 0;
+            } else if(!candidate.add(r.x,r.y,r.width,r.height,(lcd::Ink)r.ink)) return 0;
+        }
+        staged_theme_=candidate;return 1;
+    }
     case MK61_SERVICE_DISPLAY_FLOW_TEXT: {
         if(!payload) return 0;const auto& r=*(const mk61_service_text_flow*)payload;
         if(r.flags&~3U || !r.text || r.length>65535 || r.first_row>=nrows_ || !r.max_rows ||

@@ -60,8 +60,8 @@ int find_x(const Text& text,const Screen& screen,unsigned top,unsigned first=18,
     for(unsigned x=first;x<=last;++x) if(text.matches(screen,x,top)) return (int)x;
     return -1;
 }
-int find_y(const Text& text,const Screen& screen) {
-    for(unsigned y=40;y+text.height<282;++y) if(text.matches(screen,10,y)) return (int)y;
+int find_y(const Text& text,const Screen& screen,bool inverse=false) {
+    for(unsigned y=40;y+text.height<282;++y) if(text.matches(screen,10,y,inverse)) return (int)y;
     return -1;
 }
 std::string core_values() {
@@ -93,6 +93,16 @@ void preview(const Screen& screen,const char* suffix) {
     std::fprintf(file,"P4\n320 320\n");
     require(std::fwrite(screen.data(),1,Screen::BYTES,file)==Screen::BYTES,"preview raster");
     std::fclose(file);
+    const std::string color_path=std::string(prefix)+suffix+".ppm";
+    file=std::fopen(color_path.c_str(),"wb");require(file,"color preview output");
+    std::fprintf(file,"P6\n320 320\n255\n");
+    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x) {
+        const uint16_t c=screen.pixel(x,y)?lcd::color(screen.color_theme().at(x,y)):0;
+        const unsigned char rgb[3]={(unsigned char)(((c>>11)&31)*255/31),
+            (unsigned char)(((c>>5)&63)*255/63),(unsigned char)((c&31)*255/31)};
+        require(std::fwrite(rgb,1,sizeof(rgb),file)==sizeof(rgb),"color preview raster");
+    }
+    std::fclose(file);
 }
 void menu(Services& services,Ui& ui,Calculator& calc,unsigned count) {
     Screen screen;int previous=-1;
@@ -109,7 +119,7 @@ void menu(Services& services,Ui& ui,Calculator& calc,unsigned count) {
         if(browser) {
             for(unsigned y=40;y+text.height<282;++y)
                 if(text.matches(screen,16,y,true)) {top=(int)y;break;}
-        } else top=find_y(text,screen);
+        } else top=find_y(text,screen,true);
         require(top>=40,"complete menu item fits between header and footer");
         if(previous>=0) {
             require(top-previous>=27,"selection menu has the same minimum pitch as the main menu");
@@ -130,6 +140,13 @@ void check_choice(const Settings& settings,Calculator& calc) {
     const auto before=core_values();const auto model=calc.snapshot();
     Screen screen;BatteryStatus battery;battery.decode(0x0B,73);
     screen.render(model,true,&ui,nullptr,battery);
+    unsigned indicator_pixels=0;
+    for(unsigned y=91;y<126;++y) for(unsigned x=0;x<320;++x)
+        if(screen.pixel(x,y)) {
+            require(screen.color_theme().at(x,y)==lcd::Ink::GREEN,"indicator pixels use emerald ink");
+            ++indicator_pixels;
+        }
+    require(indicator_pixels>0,"indicator contains pixels");
     static const stack slots[]={X,Y,Z,T,X1};static const char* labels[]={"X","Y","Z","T","X1","X2"};
     int column=-1;
     for(unsigned i=0;i<6;++i) {
@@ -178,6 +195,12 @@ void check_choice(const Settings& settings,Calculator& calc) {
             require(name.matches(screen,left,top),"both columns have complete register labels");
             const int value_left=find_x(number,screen,top,left,left+64);
             require(value_left>=0 && value_left+(int)number.width<=(int)right,"full signed mantissa and exponent fit their own column");
+            for(unsigned y=0;y<name.height;++y) for(unsigned x=0;x<name.width;++x)
+                if(name.pixels[y*name.width+x]) require(screen.color_theme().at(left+x,top+y)==lcd::Ink::OCHRE,
+                    "register names use the muted ochre accent");
+            for(unsigned y=0;y<number.height;++y) for(unsigned x=0;x<number.width;++x)
+                if(number.pixels[y*number.width+x]) require(screen.color_theme().at((unsigned)value_left+x,top+y)==lcd::Ink::SOFT,
+                    "register values use muted text ink");
             require(value_left>=(int)(left+name.width+4),"register label and value stay apart");
             require(top+number.height<280,"both register columns stay clear of status and footer");
             if(value_columns[side]<0) value_columns[side]=value_left;

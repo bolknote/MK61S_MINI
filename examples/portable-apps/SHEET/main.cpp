@@ -21,6 +21,7 @@ struct App {
 #if defined(MK61_TARGET_PICOCALC)
   mk61_service_buffer undo_buffer;
   uint16_t undo_count,undo_next;
+  bool color;
 #endif
   const mk61_app_api* api;
   const mk61_app_services* services;
@@ -737,6 +738,10 @@ uint32_t run(uint32_t file_id) {
         result=MK61_APP_UNSUPPORTED_DISPLAY;break;
       }
       app.frame=borrowed.pixels;
+      // Older Pico residents simply decline the optional theme operation.
+      mk61_service_frame_theme color_probe={};color_probe.base=MK61_FRAME_SOFT;
+      app.color=app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAME_THEME,
+          sizeof(color_probe),0,&color_probe)!=0;
 #else
       if(!app.services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,FRAME_BYTES,&app.frame_lease)) {
         result=MK61_APP_BUSY;break;
@@ -751,6 +756,9 @@ uint32_t run(uint32_t file_id) {
       if(app.mode==Mode::EDIT) editor();
       else if(app.mode==Mode::TABLE || app.mode==Mode::REFERENCE || app.mode==Mode::COPY || app.mode==Mode::FILL) table();
       else if(app.mode==Mode::HELP || app.mode==Mode::DETAILS) help(); else menu_draw();
+#if defined(MK61_TARGET_PICOCALC)
+      if(app.color && !pico_sheet::publish_theme()) { result=MK61_APP_RUNTIME_ERROR;break; }
+#endif
       const bool presented=app.api->graphics_present(app.frame,FRAME_BYTES)!=0;
       #if !defined(MK61_TARGET_PICOCALC)
       app.services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_SCRATCH,0,0,&app.frame_lease);

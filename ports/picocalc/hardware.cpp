@@ -1,4 +1,5 @@
 #include "hardware.hpp"
+#include "lcd_shell_update.hpp"
 #include "diagnostics.hpp"
 #include "io_worker.hpp"
 #include "crc32.hpp"
@@ -211,19 +212,24 @@ bool Panel::flush(const Screen& screen) {
     apply_clock();
     // The retained BASIC/APP image is usually identical. Avoid walking all
     // dirty tiles at every UI poll while a chess search is computing.
-    if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return true;
+    const auto& theme=screen.color_theme();
+    if(valid_ && previous_theme_.same(theme) && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return true;
     diagnostics::Scope measure(diagnostics::Point::LCD);
     const auto region=screen.scroll_region();
     bool force=!valid_;
     if(force || scroll_.region!=region) {
         force|=scroll_.offset!=0;scroll_={region,0};
     }
-    const int delta=force?0:lcd::Scroll::find(previous_,screen.data(),region);
+    const bool scroll_safe=region.valid() && theme.scroll_safe(region.top,region.height) &&
+        previous_theme_.scroll_safe(region.top,region.height);
+    if(!scroll_safe && scroll_.offset) {scroll_={region,0};force=true;}
+    const int delta=force || !scroll_safe?0:lcd::Scroll::find(previous_,screen.data(),region);
     pending_scroll_rows_=delta<0?-delta:delta;
     if(delta) scroll_.rotate(previous_,delta);
-    update_.plan(previous_,screen.data(),force);
-    if(!update_.count && !delta) return true;
+    lcd::plan_shell(update_,previous_,screen.data(),previous_theme_,theme,force);
+    if(!update_.count && !delta) {previous_theme_=theme;return true;}
     std::memcpy(previous_,screen.data(),Screen::BYTES);
+    previous_theme_=theme;
     if(input_at_ && (!frame_input_at_ || input_at_<frame_input_at_)) frame_input_at_=input_at_;
     input_at_=0;
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
@@ -374,7 +380,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
                     // serviced between rows, not only between 3-row strips.
                     io_worker::service();
                 }
-                else lcd::scanline(previous_,rect,row,(u8*)out);
+                else lcd::shell_scanline(previous_,rect,row,previous_theme_,out);
             });
         // Count first, trigger address last; a DMA race can only cause a
         // harmless null/zero-count stop, subsequently resumed at the wire cursor.
@@ -511,12 +517,12 @@ void Panel::transfer() {
         if(chained_dma()) {
             ok=transfer_chain(rect,pauses);strips+=stream_.count;
         } else {
-          lcd::scanline(previous_,rect,0,(u8*)scanlines);
+          lcd::shell_scanline(previous_,rect,0,previous_theme_,scanlines);
           start_scanline(scanlines,rect.width);
           for(unsigned row=1;row<=rect.height;++row) {
             // Convert the next row while DMA sends the other buffer. Neither
             // the snapshot nor an in-flight scanline is modified by core 0.
-            if(row<rect.height) lcd::scanline(previous_,rect,row,(u8*)(scanlines+(row&1)*Screen::WIDTH));
+            if(row<rect.height) lcd::shell_scanline(previous_,rect,row,previous_theme_,scanlines+(row&1)*Screen::WIDTH);
             if(!finish_scanline()) { ok=false;break; }
             if(row<rect.height) start_scanline(scanlines+(row&1)*Screen::WIDTH,rect.width);
             io_worker::service();

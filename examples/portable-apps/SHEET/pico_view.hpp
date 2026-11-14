@@ -46,9 +46,10 @@ void fit(char* value,int maximum,int pixels,bool mark=true) {
   value[at]=0;
 }
 void header(const char* label,const char* status=nullptr) {
-  box(0,0,320,28);const int right=status?312-width(status):316;
-  text(8,6,label,true,16,right-4);
-  if(status) text(right,6,status,true);
+  if(!app.color) box(0,0,320,28);
+  const int right=status?312-width(status):316;
+  text(8,6,label,!app.color,16,right-4);
+  if(status) text(right,6,status,!app.color);
 }
 void footer(const char* first,const char* second=nullptr) {
   box(0,FOOTER-4,320,1);text(8,FOOTER,first);
@@ -99,11 +100,12 @@ void table() {
     } else { value_text(app.selected,value,sizeof(value));fit(value,304,16);text(8,34,value); }
   }
   const int count=columns(),row_count=rows(),height=pitch(),pixels=size(),cell_width=288/count;
-  box(0,GRID_TOP,320,height);
+  if(!app.color) box(0,GRID_TOP,320,height);
+  else box(LEFT,GRID_TOP+height-1,288,1);
   for(int col=0;col<count;++col) {
     char name[2]={(char)('A'+app.left_column+col),0};
     text(LEFT+col*cell_width+(cell_width-width(name,pixels))/2,
-         GRID_TOP+(height-pixels)/2,name,true,pixels);
+         GRID_TOP+(height-pixels)/2,name,!app.color,pixels);
   }
   for(int row=0;row<row_count;++row) {
     const uint16_t number=(uint16_t)(app.top_row+row+1);char digits[3];
@@ -223,4 +225,40 @@ void help() {
     for(unsigned i=0;i<5;++i) flow(lines[i],40+(int)i*46,0,0,false,2);
     footer(M8("Enter:СТРАНИЦА  Esc:НАЗАД"));
   }
+}
+
+namespace pico_sheet {
+// The resident colors the same one-bit image by semantic area. It retains
+// partial updates, so moving a selection need not resend a full RGB frame.
+bool publish_theme() {
+  mk61_service_frame_theme t={};t.base=MK61_FRAME_SOFT;
+  const auto add=[&](int x,int y,int w,int h,uint8_t ink,int column=0,int row=0) {
+    if(t.count>=MK61_FRAME_THEME_COMMANDS) return false;
+    auto& r=t.rects[t.count++];r.x=(uint16_t)x;r.y=(uint16_t)y;
+    r.width=(uint16_t)w;r.height=(uint16_t)h;r.ink=ink;
+    r.column_width=(uint16_t)column;r.row_pitch=(uint16_t)row;return true;
+  };
+  add(0,0,320,28,MK61_FRAME_WHITE);
+  add(0,FOOTER-4,320,1,MK61_FRAME_LINE);
+  const bool grid=app.mode==Mode::TABLE || app.mode==Mode::REFERENCE ||
+      app.mode==Mode::COPY || app.mode==Mode::FILL;
+  if(grid) {
+    const int height=pitch(),cell_width=288/columns();
+    add(0,34,320,GRID_TOP+height-34,MK61_FRAME_OCHRE);
+    add(0,GRID_TOP+height,LEFT-1,rows()*height,MK61_FRAME_OCHRE);
+    add(LEFT-1,GRID_TOP,320-(LEFT-1),(rows()+1)*height,MK61_FRAME_GRID,cell_width,height);
+    const int col=(int)(app.selected%sheet::COLUMNS)-(int)app.left_column;
+    const int row=(int)(app.selected/sheet::COLUMNS)-(int)app.top_row;
+    if(col>=0 && col<columns() && row>=0 && row<rows())
+      add(LEFT+col*cell_width+1,GRID_TOP+(row+1)*height+1,
+          cell_width-2,height-2,MK61_FRAME_OCHRE);
+  } else if(app.mode==Mode::EDIT) {
+    add(4,36,312,1,MK61_FRAME_LINE);add(4,201,312,1,MK61_FRAME_LINE);
+    add(4,36,1,166,MK61_FRAME_LINE);add(315,36,1,166,MK61_FRAME_LINE);
+  } else if(app.mode!=Mode::HELP && app.mode!=Mode::DETAILS) {
+    const unsigned top=app.menu>=8?app.menu-7:0;
+    add(4,38+(int)(app.menu-top)*29,312,26,MK61_FRAME_OCHRE);
+  }
+  return app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAME_THEME,sizeof(t),0,&t)!=0;
+}
 }

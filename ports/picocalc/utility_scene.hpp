@@ -94,6 +94,9 @@ inline void rectangle(u8* frame,int x,int y,unsigned w,unsigned h,bool on) {
         if(on)byte|=mask;else byte&=(u8)~mask;
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
 inline void eye(u8* out,int x,int y,bool closed) {
     if(closed) {rectangle(out,x,y+6,16,3);return;}
     rectangle(out,x,y+6,3,3);rectangle(out,x+3,y+3,3,3);rectangle(out,x+6,y,4,3);

@@ -2,6 +2,7 @@
 #define MK61_PICOCALC_NATIVE_DISPLAY_HPP
 #include "settings.hpp"
 #include "loadable_app_services.h"
+#include "shell_color.hpp"
 #include "usb_screen_surface.hpp"
 #include <memory>
 namespace picocalc {
@@ -10,6 +11,8 @@ namespace picocalc {
 class NativeDisplay {
 public:
     explicit NativeDisplay(const Settings& settings,bool native=false);
+    ~NativeDisplay();
+    static const lcd::ShellTheme* published_theme();
     unsigned width() const { return native_?320:192; }
     unsigned height() const { return native_?320:64; }
     void settings(const Settings& settings);
@@ -56,6 +59,7 @@ private:
     usb_screen::Surface surface_;
     Settings settings_;
     bool ui_=false,bitmap_=false;
+    lcd::ShellTheme staged_theme_{},published_theme_{};
     u32 font_revision_=0,ui_font_revision_=0,revision_=1,published_=0;
     std::unique_ptr<u8[]> font_bytes_;
     prepared_font::Face font_;

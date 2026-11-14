@@ -8,6 +8,10 @@ flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
     flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" -I"$root/code" \
+    "$root/tests/picocalc_shell_color_self_test.cpp" "$root/code/zx0.cpp" -o "$build_dir/shell-color-test"
+"$build_dir/shell-color-test"
 for unit in ff ffunicode; do
     clang -std=c11 -O2 "${flags[@]}" -I"$root/ports/picocalc" -I"$root/third_party/fatfs" \
         -c "$root/third_party/fatfs/$unit.c" -o "$build_dir/$unit.o"

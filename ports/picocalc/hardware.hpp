@@ -75,6 +75,7 @@ public:
     unsigned scroll_offset() const { return scroll_.offset; }
 private:
     u8 previous_[Screen::BYTES] = {};
+    lcd::ShellTheme previous_theme_{};
     bool valid_ = false;
     u32 spi_hz_ = 0;
     u32 color_spi_request_ = 0;

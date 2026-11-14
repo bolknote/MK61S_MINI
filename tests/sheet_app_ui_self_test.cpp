@@ -11,10 +11,12 @@ class MK61DisplayUpdate { public: explicit MK61DisplayUpdate(MK61Display&){} };
 #include "number_format.hpp"
 #if defined(MK61_TARGET_PICOCALC)
 #include "ui_font.hpp"
+#include "../ports/picocalc/shell_color.hpp"
 #endif
 #include <cassert>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -33,7 +35,9 @@ size_t input_index;
 uint32_t ticks,revision,starts,ends,writes,acquires,releases;
 #if defined(MK61_TARGET_PICOCALC)
 uint8_t borrowed_frame[12800];
-bool framebuffer_ok=true,expose_ui_font=true;
+bool framebuffer_ok=true,expose_ui_font=true,expose_theme=false;
+std::vector<mk61_service_frame_theme> themes;
+std::vector<mk61_service_frame_theme> presented_themes;
 #else
 uint8_t scratch[1600];
 #endif
@@ -53,6 +57,7 @@ uint32_t begin(){++starts;return 1;} void end(){++ends;}
 uint32_t present(const uint8_t* data,uint32_t size){
 #if defined(MK61_TARGET_PICOCALC)
   assert(!leased && data==borrowed_frame);
+  if(expose_theme) {assert(!themes.empty());presented_themes.push_back(themes.back());}
 #else
   assert(leased);
 #endif
@@ -75,6 +80,11 @@ uint32_t call(uint32_t operation,uint32_t a,uint32_t b,uint32_t c,void* payload)
   if(operation==MK61_SERVICE_BUFFER)return external.call(a,b,c,payload);
 #if defined(MK61_TARGET_PICOCALC)
   if(operation==MK61_SERVICE_DISPLAY){
+    if(a==MK61_SERVICE_DISPLAY_FRAME_THEME) {
+      assert(b==sizeof(mk61_service_frame_theme) && !c && payload);
+      if(!expose_theme) return 0;
+      themes.push_back(*(const mk61_service_frame_theme*)payload);return 1;
+    }
     assert(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER && b==sizeof(mk61_service_framebuffer));
     auto& f=*(mk61_service_framebuffer*)payload;f={};
     f.width=320;f.height=320;f.bytes=12800;if(framebuffer_ok)f.pixels=borrowed_frame;
@@ -148,7 +158,7 @@ void reset(){
   input_index=ticks=starts=ends=writes=acquires=releases=0;leased=false;frames.clear();
   available=present_ok=save_ok=target_ok=true;choose_id=0;
 #if defined(MK61_TARGET_PICOCALC)
-  framebuffer_ok=expose_ui_font=true;
+  framebuffer_ok=expose_ui_font=true;expose_theme=false;themes.clear();presented_themes.clear();
 #endif
   services={MK61_APP_SERVICES_MAGIC,MK61_APP_SERVICES_VERSION,sizeof(services),&keyboard_layout::ACTIVE,call,math_service,nullptr,nullptr};
   api={};api.magic=MK61_APP_API_MAGIC;api.version=MK61_APP_API_VERSION;api.struct_size=sizeof(api);
@@ -196,6 +206,38 @@ void native_checks(){
   reset();inputs={MK61_APP_KEY_FORWARD,7,OK,MK61_APP_KEY_BACKWARD,
       MK61_APP_KEY_RAW_BASE+'\t',ESC,ESC,RIGHT,OK};
   assert(sheet_app_entry()==MK61_APP_OK);done();assert(result(16)==7 && app.selected==0);
+  reset();expose_theme=true;inputs={RIGHT,USER,ESC,ESC};
+  assert(sheet_app_entry()==MK61_APP_OK);done();
+  bool grid=false,selection=false,menu_selection=false;
+  for(const auto& theme:themes) for(unsigned i=0;i<theme.count;++i) {
+    const auto& r=theme.rects[i];
+    if(r.ink==MK61_FRAME_GRID) {grid=true;assert(r.column_width==96 && r.row_pitch==24);}
+    if(r.ink==MK61_FRAME_OCHRE && r.width==94 && r.height==22) selection=true;
+    if(r.ink==MK61_FRAME_OCHRE && r.width==312 && r.height==26) menu_selection=true;
+  }
+  assert(grid && selection && menu_selection);
+  if(const char* prefix=std::getenv("MK61_SHEET_COLOR_PREVIEW_PREFIX")) {
+    assert(frames.size()==presented_themes.size());
+    for(unsigned frame=0;frame<frames.size();++frame) {
+      const auto& desc=presented_themes[frame];picocalc::lcd::ShellTheme theme;
+      theme.reset((picocalc::lcd::Ink)desc.base);
+      for(unsigned i=0;i<desc.count;++i) {
+        const auto& r=desc.rects[i];
+        if(r.ink==MK61_FRAME_GRID) assert(theme.add_grid(r.x,r.y,r.width,r.height,r.column_width,r.row_pitch));
+        else assert(theme.add(r.x,r.y,r.width,r.height,(picocalc::lcd::Ink)r.ink));
+      }
+      const std::string path=std::string(prefix)+std::to_string(frame)+".ppm";
+      FILE* out=std::fopen(path.c_str(),"wb");assert(out);std::fprintf(out,"P6\n320 320\n255\n");
+      for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x) {
+        const bool on=frames[frame][y/8*320+x]&(1U<<(y%8));
+        const uint16_t c=on?picocalc::lcd::color(theme.at(x,y)):0;
+        const unsigned char rgb[3]={(unsigned char)(((c>>11)&31)*255/31),
+            (unsigned char)(((c>>5)&63)*255/63),(unsigned char)((c&31)*255/31)};
+        assert(std::fwrite(rgb,1,sizeof(rgb),out)==sizeof(rgb));
+      }
+      std::fclose(out);
+    }
+  }
   reset();memset(&app,0,sizeof(app));app.api=&api;app.services=&services;app.frame=borrowed_frame;
   sheet::number_io(parse_number,format_number);
   char long_label[sheet::SOURCE_BYTES];memset(long_label,(unsigned char)M8("Ж")[0],95);long_label[95]=0;

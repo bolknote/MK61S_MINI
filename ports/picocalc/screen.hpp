@@ -7,6 +7,7 @@
 #include "calculator_face.hpp"
 #include "battery.hpp"
 #include "lcd_scroll.hpp"
+#include "shell_color.hpp"
 #include "utility_scene.hpp"
 
 namespace picocalc {
@@ -32,6 +33,7 @@ public:
     bool bootloader_timed_out() const { return animation_.timed_out(); }
     void logical_frame(const Ui& ui, const Services& services, u8 out[1536]) const;
     const u8* data() const { return pixels_; }
+    const lcd::ShellTheme& color_theme() const { return theme_; }
     lcd::Region scroll_region() const { return scroll_region_; }
     bool pixel(unsigned x, unsigned y) const {
         return x < WIDTH && y < HEIGHT && (pixels_[y * STRIDE + x / 8] & (0x80U >> (x % 8)));
@@ -53,6 +55,7 @@ private:
     RenderKey key(const Snapshot&,bool,const Ui&,const Services*,BatteryStatus) const;
     void paint(const Snapshot&,bool,const Ui*,const Services*,BatteryStatus);
     u8 pixels_[BYTES] = {};
+    lcd::ShellTheme theme_{};
     u8 face_[calculator_face::FRAME_BYTES] = {};
     const Settings* font_settings_ = nullptr;
     BatteryStatus battery_;
@@ -61,10 +64,13 @@ private:
     bool native_valid_ = false;
     utility::Animation animation_;
     utility::Mode utility_mode(const Ui&,const Services*) const;
+    void utility_theme(utility::Mode,unsigned phase);
     void utility_page(utility::Mode,unsigned phase,const Ui&,const Services*);
     void utility_caption(unsigned top,const char*,unsigned height=16);
     void set_pixel(unsigned x, unsigned y);
-    void text(unsigned x, unsigned y, const char* value, unsigned height = 14, unsigned right=WIDTH-8);
+    void clear_pixel(unsigned x, unsigned y);
+    void fill_rect(unsigned x,unsigned y,unsigned width,unsigned height);
+    void text(unsigned x, unsigned y, const char* value, unsigned height = 14, unsigned right=WIDTH-8, bool erase=false);
     void status_field(unsigned left, unsigned width, const char* value);
     void line(unsigned y);
     void bitmap(const u8* frame,unsigned width,unsigned height,unsigned left=0,unsigned top=0);

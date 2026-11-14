@@ -6,6 +6,7 @@
 #include "mk8_literal.hpp"
 #include "menu_model.hpp"
 #include "services.hpp"
+#include "native_display.hpp"
 #include "builtin_font.hpp"
 #include "m61_text.hpp"
 #include "script.hpp"
@@ -147,7 +148,14 @@ void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) c
 void Screen::set_pixel(unsigned x, unsigned y) {
     if(x < WIDTH && y < HEIGHT) pixels_[y * STRIDE + x / 8] |= (u8)(0x80U >> (x % 8));
 }
-void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, unsigned right) {
+void Screen::clear_pixel(unsigned x, unsigned y) {
+    if(x < WIDTH && y < HEIGHT) pixels_[y * STRIDE + x / 8] &= (u8)~(0x80U >> (x % 8));
+}
+void Screen::fill_rect(unsigned x,unsigned y,unsigned width,unsigned height) {
+    for(unsigned dy=0;dy<height && y+dy<HEIGHT;++dy)
+        for(unsigned dx=0;dx<width && x+dx<WIDTH;++dx) set_pixel(x+dx,y+dy);
+}
+void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, unsigned right, bool erase) {
     auto choice=font_settings_?*font_settings_:Settings{};
     if(choice.ui_font_family==1) choice.ui_font_size=(u8)height;
     const auto info=fonts::info(choice);
@@ -159,7 +167,9 @@ void Screen::text(unsigned x, unsigned y, const char* value, unsigned height, un
             const int px = (int)x + glyph.bearing_x + gx;
             const int py = (int)baseline - glyph.bearing_y + gy;
             const unsigned offset=gy*((glyph.width+7U)/8U)+gx/8U;
-            if(px >= 0 && (unsigned)px<right && py >= 0 && (glyph.pixels[offset] & (0x80U>>(gx%8U)))) set_pixel(px, py);
+            if(px >= 0 && (unsigned)px<right && py >= 0 && (glyph.pixels[offset] & (0x80U>>(gx%8U)))) {
+                if(erase) clear_pixel(px,py); else set_pixel(px,py);
+            }
         }
         x += glyph.advance;
     }
@@ -222,7 +232,13 @@ void Screen::segment_row(unsigned left,unsigned top,const u8 masks[12]) {
         if(mask&0x80) { set_pixel(x+9,top+11);set_pixel(x+9,top+12); }
     }
 }
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os", "no-jump-tables")))
+#endif
 void Screen::calculator(const Snapshot& model, const Ui& ui) {
+    theme_.add(0,63,WIDTH,1,lcd::Ink::LINE);
+    theme_.add(0,91,WIDTH,35,lcd::Ink::GREEN);
+    theme_.add(0,147,WIDTH,1,lcd::Ink::LINE);
     text_screen::Grid face_grid;
     face_grid.reset(2);
     char status[40];
@@ -305,6 +321,7 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     if(ui.view() == View::STACK) {
         auto font=ui.settings();if(font.ui_font_family==1) font.ui_font_size=16;
         const unsigned value_left=18+fonts::text_width(font,"X1",2)+8;
+        theme_.add(18,154,value_left-18-4,120,lcd::Ink::OCHRE);
         static constexpr const char* labels[]={"X","Y","Z","T","X1","X2"};
         for(unsigned i = 0; i < 6; ++i) {
             char raw[INDICATOR_STRING_LENGTH];
@@ -331,6 +348,8 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     } else if(ui.view() == View::REGISTERS) {
         const auto style=register_style(ui.settings());
         const auto* saved=font_settings_;font_settings_=&style.font;
+        theme_.add(8,154,style.label_width+2,120,lcd::Ink::OCHRE);
+        theme_.add(168,154,style.label_width+2,120,lcd::Ink::OCHRE);
         for(unsigned n = 0; n < Ui::VISIBLE_REGISTERS; ++n) {
             const unsigned index = ui.offset() + n;
             char raw[INDICATOR_STRING_LENGTH],label[4];
@@ -345,6 +364,7 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
         }
         font_settings_=saved;
     } else if(ui.view() == View::PROGRAM) {
+        theme_.add(18,154,44,120,lcd::Ink::OCHRE);
         for(unsigned row = 0; row < 6; ++row) {
             const unsigned address = ui.offset() + row;
             if(address >= core_61::program_steps()) break;
@@ -397,6 +417,20 @@ utility::Mode Screen::utility_mode(const Ui& ui,const Services* services) const 
     if((!services || !services->active()) && ui.bootloader_confirmation()) return utility::Mode::UF2_CONFIRM;
     return utility::Mode::NONE;
 }
+void Screen::utility_theme(utility::Mode mode,unsigned phase) {
+    using U=utility::Mode;using A=lcd::UtilityArt;
+    switch(mode) {
+    case U::USB: theme_.utility=A::USB;break;
+    case U::EJECTED: theme_.utility=A::EJECTED;break;
+    case U::UF2_CONFIRM: theme_.utility=A::UF2_CONFIRM;break;
+    case U::UF2_ENTERING: theme_.utility=A::UF2_ENTERING;break;
+    case U::UF2_READY: theme_.utility=A::UF2_READY;break;
+    default: theme_.utility=A::NONE;break;
+    }
+    theme_.phase=(u8)phase;
+    theme_.cartridge=(mode==U::UF2_CONFIRM || mode==U::UF2_ENTERING || mode==U::UF2_READY)
+        ?utility_art::cartridge_mask:nullptr;
+}
 #if defined(__GNUC__) && !defined(__clang__)
 __attribute__((optimize("Os")))
 #endif
@@ -430,6 +464,12 @@ void Screen::utility_caption(unsigned top,const char* value,unsigned height) {
 __attribute__((optimize("Os")))
 #endif
 void Screen::utility_page(utility::Mode mode,unsigned phase,const Ui& ui,const Services* services) {
+    theme_.add(0,0,WIDTH,27,lcd::Ink::WHITE);
+    theme_.add(0,34,WIDTH,24,lcd::Ink::OCHRE);
+    theme_.add(0,64,WIDTH,160,lcd::Ink::WHITE);
+    theme_.add(12,27,296,2,lcd::Ink::LINE);
+    theme_.add(12,288,296,2,lcd::Ink::LINE);
+    utility_theme(mode,phase);
     const auto* saved=font_settings_;Settings font{};
     font.ui_font_family=1;font.ui_font_key=0;font_settings_=&font;
     const bool ru=ui.settings().russian;
@@ -531,9 +571,10 @@ bool Screen::render(const Snapshot& model,bool keyboard,const Ui* ui,const Servi
     static const Ui defaults;if(!ui) ui=&defaults;
     const auto next=key(model,keyboard,*ui,services,battery);
     if(key_valid_ && key_.same(next)) { ++skipped_;return false; }
-    const bool partial=key_valid_ && key_.same_scene(next) &&
-        utility::redraw(pixels_,utility_mode(*ui,services),animation_.frame(utility_mode(*ui,services)));
-    if(partial) ++partial_renders_;
+    const auto mode=utility_mode(*ui,services);
+    const unsigned phase=animation_.frame(mode);
+    const bool partial=key_valid_ && key_.same_scene(next) && utility::redraw(pixels_,mode,phase);
+    if(partial) { utility_theme(mode,phase);++partial_renders_; }
     else paint(model,keyboard,ui,services,battery);
     // Rendering a custom console/graph can publish its completed canvas.
     // Remember that resulting generation, avoiding a second idle redraw.
@@ -547,19 +588,29 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     diagnostics::Scope measure(diagnostics::Point::DISPLAY);
     static const Ui default_ui;
     if(!ui) ui = &default_ui;
-    font_settings_=&ui->settings();battery_=battery;scroll_region_={};
+    font_settings_=&ui->settings();battery_=battery;scroll_region_={};theme_.reset();
     const bool service_active=services && services->active();
     if(service_active && services->browser_display()) {browser(*services);return;}
     const u8* graphics=service_active?services->graphics():nullptr;
     const u8* native=graphics?services->native_graphics():nullptr;
-    if(native && !services->graphical_document()) { scroll_region_={0,HEIGHT};native_bitmap(native);return; }
+    if(native && !services->graphical_document()) {
+        if(const auto* app_theme=NativeDisplay::published_theme()) theme_=*app_theme;
+        else theme_.reset(lcd::Ink::MONO);
+        scroll_region_={0,HEIGHT};native_bitmap(native);return;
+    }
     if(!service_active && ui->page()==Page::CALCULATOR && m61_text::display_owned()) {
-        if(const auto frame=script::native_frame()) { scroll_region_={0,HEIGHT};native_bitmap(frame);return; }
+        if(const auto frame=script::native_frame()) {
+            if(const auto* app_theme=NativeDisplay::published_theme()) theme_=*app_theme;
+            else theme_.reset(lcd::Ink::MONO);
+            scroll_region_={0,HEIGHT};native_bitmap(frame);return;
+        }
     }
     native_valid_=false;
     std::memset(pixels_, 0, sizeof(pixels_));
     const auto mode=utility_mode(*ui,services);
     if(mode!=utility::Mode::NONE) {utility_page(mode,animation_.frame(mode),*ui,services);return;}
+    theme_.add(0,0,WIDTH,32,lcd::Ink::WHITE);
+    theme_.add(0,32,WIDTH,1,lcd::Ink::LINE);
     char heading[64];
     if(services && services->active()) services->heading(heading);
     else std::snprintf(heading, sizeof(heading), "%s", ui->title());
@@ -578,6 +629,7 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
         if(graphics) {
             if(native) {
                 if(services->graphical_document()) {
+                    theme_.add(0,40,WIDTH,240,lcd::Ink::MONO);
                     scroll_region_={40,240};bitmap(native,320,240,0,40);
                     line(282);text(8,297,services->footer(),12);
                 } else {
@@ -587,13 +639,19 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
                 return;
             }
             // Legacy APP bitmaps have explicit 192x64 geometry: 1:1 centred.
+            theme_.add(64,96,192,64,lcd::Ink::MONO);
             bitmap(graphics,192,64,64,96);
             line(282);text(8,297,services->footer(),12);return;
         }
         if(services->fixed_text()) scroll_region_={42,238};
         for(unsigned row = 0; row < rows; ++row) {
             char value[Services::COLS + 1]; services->row(first + row, value);
-            if(!services->fixed_text()) { text(10, top + row * (menu_rows?menu_pitch:17), value, ui->settings().ui_font_size); continue; }
+            if(!services->fixed_text()) {
+                const unsigned y=top+row*(menu_rows?menu_pitch:17);
+                const bool selected=menu_rows && value[0]=='>';
+                if(selected) {fill_rect(8,y-2,304,25);theme_.add(8,y-2,304,25,lcd::Ink::OCHRE);}
+                text(10,y,value,ui->settings().ui_font_size,WIDTH-8,selected);continue;
+            }
             auto font=ui->settings();font.ui_font_family=1;font.ui_font_size=16;
             unsigned x=8;
             for(unsigned column=0;value[column];++column) {
@@ -625,6 +683,7 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
     if(ui->page() == Page::CALCULATOR) {
         if(m61_text::display_owned()) {
             // M61 owns every pixel between BASIC parts, including blank ones.
+            theme_.reset(lcd::Ink::MONO);
             std::memset(pixels_,0,sizeof(pixels_));
             if(const auto native=script::native_frame()) bitmap(native,320,320);
             else bitmap(script::frame(),192,64,64,96);
@@ -643,15 +702,35 @@ void Screen::paint(const Snapshot& model, bool keyboard_online, const Ui* ui, co
             if(row==0) std::snprintf(label,sizeof(label),"%s %s",info[row],VERSION);
             else std::snprintf(label, sizeof(label), "%s", info[row]);
         }
-        if(index == ui->selected() && ui->count() && ui->page() != Page::INFO && ui->page() != Page::HARDWARE)
-            text(10, 49 + row * 27, ">", ui->settings().ui_font_size);
-        text(28, 49 + row * 27, label, ui->settings().ui_font_size);
+        const unsigned y=49+row*27;
+        const bool selected=index==ui->selected() && ui->count() && ui->page()!=Page::INFO && ui->page()!=Page::HARDWARE;
+        if(selected) {
+            fill_rect(8,y-2,304,25);theme_.add(8,y-2,304,25,lcd::Ink::OCHRE);
+            text(10,y,">",ui->settings().ui_font_size,WIDTH-8,true);
+        }
+        text(28,y,label,ui->settings().ui_font_size,WIDTH-8,selected);
     }
+    theme_.add(0,280,WIDTH,1,lcd::Ink::LINE);
     line(280);
     text(10, 295, ui->footer(), 12);
 }
 void Screen::browser(const Services& services) {
     native_valid_=false;scroll_region_={};
     draw_browser(pixels_,sizeof(pixels_),explorer_view::Packing::ROW_MSB,WIDTH,HEIGHT,services);
+    theme_.add(0,0,WIDTH,31,lcd::Ink::WHITE);
+    theme_.add(0,31,WIDTH,1,lcd::Ink::LINE);
+    theme_.add(0,299,WIDTH,1,lcd::Ink::LINE);
+    if(!services.browser_actions() && services.browser_mode()==explorer_view::Mode::ICONS) {
+        // One band per row colors the icons without spending a separate
+        // region on every file. Labels sit outside these bands.
+        for(unsigned row=0;row<3 && row*3<services.browser_count();++row)
+            theme_.add(0,43+row*86+9,WIDTH,32,lcd::Ink::OCHRE);
+        const unsigned slot=services.browser_selection();
+        if(slot<services.browser_count() && slot<Services::BROWSER_PAGE_SIZE)
+            theme_.add(10+(slot%3)*100,43+(slot/3)*86+48,100,18,lcd::Ink::OCHRE);
+    } else {
+        const unsigned slot=services.browser_actions()?services.browser_action_selection():services.browser_selection();
+        if(slot<Services::BROWSER_PAGE_SIZE) theme_.add(10,48+slot*29,300,18,lcd::Ink::OCHRE);
+    }
 }
 } // namespace picocalc

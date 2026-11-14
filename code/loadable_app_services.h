@@ -519,8 +519,26 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_UI_COLORS,
   /* Optional per-character RGB565 colors for an existing UI row.
    * b=row, c=count (<=64), payload=uint16_t[count], copied synchronously. */
-  MK61_SERVICE_DISPLAY_UI_RUN_COLORS
+  MK61_SERVICE_DISPLAY_UI_RUN_COLORS,
+  /* Optional theme for the next native monochrome bitmap presentation.
+   * b=sizeof(mk61_service_frame_theme), c=0, payload=request. Returns 0 on
+   * older residents, allowing an APP to keep its original monochrome UI. */
+  MK61_SERVICE_DISPLAY_FRAME_THEME
 };
+enum mk61_service_frame_ink {
+  MK61_FRAME_MONO, MK61_FRAME_WHITE, MK61_FRAME_SOFT,
+  MK61_FRAME_LINE, MK61_FRAME_OCHRE, MK61_FRAME_GREEN, MK61_FRAME_GRID
+};
+#define MK61_FRAME_THEME_COMMANDS 7U
+typedef struct mk61_service_frame_ink_rect {
+  uint16_t x,y,width,height;
+  uint16_t column_width,row_pitch; /* Used only by MK61_FRAME_GRID. */
+  uint8_t ink;
+} mk61_service_frame_ink_rect;
+typedef struct mk61_service_frame_theme {
+  uint8_t base,count;
+  mk61_service_frame_ink_rect rects[MK61_FRAME_THEME_COMMANDS];
+} mk61_service_frame_theme;
 typedef struct mk61_service_framebuffer {
   uint8_t* pixels;
   uint32_t bytes;

@@ -208,6 +208,9 @@ def main():
                 'packing':'shared-stroke-glyphs' if name in LABELS else 'zx0',
                 'raw_sha256':hashlib.sha256(raw).hexdigest(),'packed_sha256':hashlib.sha256(packed).hexdigest()}
             emit(name,packed)
+            # Per-pixel color classification needs random access while the
+            # card moves; keep the exact same mask in flash, not static RAM.
+            if name=='cartridge': emit('cartridge_mask',raw)
     lines+=['} }','#endif','']
     outputs={ROOT/'ports/picocalc/utility_art.hpp':'\n'.join(lines),
              ROOT/'doc/picocalc-utility/manifest.json':json.dumps(records,indent=2)+'\n'}

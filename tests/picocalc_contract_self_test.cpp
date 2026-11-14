@@ -422,9 +422,31 @@ void colored_text_contract() {
     std::puts("Native colored damage: changed-row strips, unchanged-row zero traffic, neighboring pixels preserved PASS");
     display.call(MK61_SERVICE_DISPLAY_END_UI_TEXT,0,0,nullptr);CHECK(capture.ends==1);
 }
+void themed_bitmap_contract() {
+    Settings settings{};NativeDisplay display(settings,true);
+    CHECK(!NativeDisplay::published_theme());
+    CHECK(display.bitmap_begin());
+    mk61_service_frame_theme request{};request.base=MK61_FRAME_SOFT;request.count=3;
+    request.rects[0]={0,0,320,28,0,0,MK61_FRAME_WHITE};
+    request.rects[1]={31,56,289,216,96,24,MK61_FRAME_GRID};
+    request.rects[2]={33,81,94,22,0,0,MK61_FRAME_OCHRE};
+    CHECK(display.call(MK61_SERVICE_DISPLAY_FRAME_THEME,sizeof(request),0,&request));
+    CHECK(!NativeDisplay::published_theme()); // Changes become visible with the frame.
+    CHECK(display.bitmap_present(canvas::frame(),canvas::BYTES));
+    const auto* theme=NativeDisplay::published_theme();CHECK(theme);
+    CHECK(theme->at(3,3)==lcd::Ink::WHITE);
+    CHECK(theme->at(31,70)==lcd::Ink::LINE && theme->at(35,79)==lcd::Ink::LINE);
+    CHECK(theme->at(40,84)==lcd::Ink::OCHRE && theme->at(140,85)==lcd::Ink::SOFT);
+    request.rects[1].column_width=0;
+    CHECK(!display.call(MK61_SERVICE_DISPLAY_FRAME_THEME,sizeof(request),0,&request));
+    CHECK(theme->at(31,70)==lcd::Ink::LINE); // A rejected request is atomic.
+    display.bitmap_end();CHECK(!NativeDisplay::published_theme());
+    std::puts("Native bitmap theme: staged publication, grid colors and lifecycle PASS");
+}
 }
 void picocalc_contract_test() {
     colored_text_contract();
+    themed_bitmap_contract();
     {
         Calculator calculator;calculator.init();Services service;
         const auto baseline=shared_memory::buffer_statistics();
