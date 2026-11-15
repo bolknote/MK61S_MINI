@@ -23,11 +23,12 @@ bool sync();
 namespace files {
 constexpr unsigned PATH_SIZE = 384;
 struct Entry { char name[256]; bool directory; u32 size; };
+enum class ListView : u8 { NORMAL, FOLDERS, HOME, FULL };
 bool mount();
 bool ready();
 const char* error();
 bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,
-          const char* filter=nullptr, bool directories_only=false);
+          const char* filter=nullptr, ListView view=ListView::NORMAL);
 // Recursive operations include dotfiles, but never . / .. or the journal.
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more);
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used);
@@ -41,7 +42,7 @@ bool read_text_stream(const char* path,bool (*write)(void*,const u8*,unsigned),
 bool text_size(const char* path,unsigned& size);
 bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned& used);
 struct WriteSession;
-WriteSession* begin_write(const char* path,bool m8=false,bool create_only=false);
+WriteSession* begin_write(const char* path,bool m8=false,bool create_only=false,bool staged=false);
 bool append_write(WriteSession* session,const u8* data,unsigned size);
 bool commit_write(WriteSession*& session);
 void cancel_write(WriteSession*& session);

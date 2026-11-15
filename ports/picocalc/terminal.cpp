@@ -290,12 +290,13 @@ bool Terminal::put(const char *args) {
       return false;
     args=terminal_core::skip_spaces(args);
     const bool m8=!std::strncmp(args,"m8",2) && terminal_core::at_end(args+2);
+    const bool staged=!std::strncmp(args,"staged",6) && terminal_core::at_end(args+6);
     // Raw SD assets (models, images, archives) use physical 32-bit lengths.
     // Only decoded M8 editor text retains the 16-bit logical size limit.
-    if((!terminal_core::at_end(args) && !m8) || (m8 && size>65534) ||
+    if((!terminal_core::at_end(args) && !m8 && !staged) || (m8 && size>65534) ||
        (m8 && !program_store::text_content(script::file_type(name)))) return false;
     cancel_upload();
-    upload_ = files::begin_write(name,m8);
+    upload_ = files::begin_write(name,m8,false,staged);
     if (!upload_)
       return false;
     upload_size_ = (u32)size;

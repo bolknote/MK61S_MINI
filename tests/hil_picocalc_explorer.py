@@ -183,7 +183,7 @@ def main():
         return frame
     def browse():
         calculator(p);keys(b'\t'+bytes([ord('1')+explorer])+b'\r')
-        p.expect('SERVICE=BROWSER');keys(b'\xb6\xb6\xb6\r/')
+        p.expect('SERVICE=BROWSER');keys(b'/')
         p.expect('SERVICE=PROMPT')
         keys(directory.encode()+b'\r');p.expect('SERVICE=BROWSER')
     try:

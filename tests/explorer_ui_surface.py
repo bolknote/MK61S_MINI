@@ -62,12 +62,12 @@ def main():
             "static constexpr u16 SCROLL_STEP_MS", "static constexpr u16 SCROLL_EDGE_MS",
             "static constexpr u8 MAX_LINES", "static constexpr usize LINE_BYTES",
             "static constexpr ExplorerAction OPEN_DIRECTORY", "static constexpr ExplorerAction TOGGLE_VIEW",
-            "static constexpr ExplorerAction GAME_FILES", "static constexpr u16 MISSING_DIRECTORY",
+            "static constexpr ExplorerAction GAME_FILES",
             "static constexpr u8 LIST_VIEW"]) +
         body(app, "struct Location", True) + body(app, "struct Search", True) + body(app, "struct Scroll", True) +
         body(app, "struct Line", True) +
         functions(app, ["static bool reached(", "static usize bounded_length(",
-            "static void copy_text(", "static bool entry_at(", "static u16 section_directory(",
+            "static void copy_text(", "static bool entry_at(", "static int folder_index(",
             "static void row_name(", "static const char* empty_text(", "static void cursor_off(",
             "static i32 wait_key(", "static bool wait_ok_release(", "static void wait_handoff(",
             "static void clear_lines(", "static void render(", "static bool search_active(",

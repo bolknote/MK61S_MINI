@@ -136,6 +136,36 @@ void staged_binary_cuts() {
     assert(files::remove(path));
     std::puts("PASS staged binary: cuts before and after both checkpoints and final publication");
 }
+void staged_replacement_cuts() {
+    constexpr const char* path="/record.lp";
+    const std::string old(1638532,'O'), replacement(65537,'N');
+    raw_write(path,old);
+    auto* writer=files::begin_write(path,false,false,true);
+    assert(writer && files::append_write(writer,(const u8*)replacement.data(),replacement.size()));
+    const auto before=disk;
+    changed.clear();trace.clear();tracing=true;
+    assert(files::commit_write(writer));
+    tracing=false;
+    const auto writes=trace;
+    std::vector<unsigned> markers;
+    for(unsigned i=0;i<writes.size();++i)
+        if(!std::memcmp(writes[i].bytes.data(),"MK61JNL1",8) && writes[i].bytes[16]==2) markers.push_back(i);
+    assert(markers.size()==2);
+    for(unsigned marker:markers) for(unsigned committed=0;committed<2;++committed) {
+        restore_changed(before);
+        for(unsigned i=0;i<marker+committed;++i) save_sector(writes[i].sector,writes[i].bytes.data());
+        mount();
+        const bool published=marker>markers[0] || committed;
+        const auto& expected=published?replacement:old;
+        std::vector<u8> copy(expected.size());unsigned size=0;
+        assert(files::read(path,copy.data(),copy.size(),size) && size==expected.size());
+        assert(!std::memcmp(expected.data(),copy.data(),size));
+        ++cuts;
+    }
+    assert(!files::exists("/.MK61-0.TMP") && !files::exists("/.MK61-0.BAK"));
+    assert(files::remove(path));
+    std::puts("PASS staged replacement: cuts at publication and old-file cleanup");
+}
 void suite(BYTE type,const char* name) {
     format(type);
     // Exercise first-use provisioning independently of an already valid journal.
@@ -169,6 +199,7 @@ void suite(BYTE type,const char* name) {
         return files::commit_write(writer);
     });
     staged_binary_cuts();
+    staged_replacement_cuts();
     check("mkdir",[] { return files::mkdir("/Исходники/каталог"); });
     check("move/rename",[&] { return files::rename(path.c_str(),"/Исходники/каталог/после.bas"); });
     check("delete",[] { return files::remove("/Исходники/каталог/после.bas"); });

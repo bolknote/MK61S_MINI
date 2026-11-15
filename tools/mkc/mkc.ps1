@@ -1277,8 +1277,11 @@ function Convert-BytesToHex {
 }
 
 function Send-RemoteFile {
-    param([string]$Source, [string]$Destination)
-    try { [byte[]]$bytes = Get-M8UploadBytes $Source $Destination }
+    param([string]$Source, [string]$Destination, [string]$Mode = 'auto')
+    try {
+        [byte[]]$bytes = if ($Mode -eq 'auto') { Get-M8UploadBytes $Source $Destination }
+                        else { [IO.File]::ReadAllBytes($Source) }
+    }
     catch {
         $script:StatusText = 'Текст содержит неверный UTF-8 или символ вне M8'
         return $false
@@ -1295,7 +1298,10 @@ function Send-RemoteFile {
     $size = $bytes.Length
     $crc = Get-PosixChecksumBytes $bytes
     $begin = 'fsput begin {0} {1} {2}' -f (Format-RemoteQuotedPath $Destination), $size, $crc
-    if ($script:DetectedProfile -eq 'picocalc-pico-h' -and (Test-M8TextPath $Destination)) { $begin += ' m8' }
+    if ($script:DetectedProfile -eq 'picocalc-pico-h') {
+        if ($Mode -eq 'staged') { $begin += ' staged' }
+        elseif ($Mode -eq 'auto' -and (Test-M8TextPath $Destination)) { $begin += ' m8' }
+    }
     if (-not (Send-RemoteLine $begin) -or -not (Wait-RemoteMarker '@MKC:READY ')) { return $false }
     if ($script:MarkerLine.Substring(11).Trim() -ne [string]$size) {
         $script:StatusText = 'Неверный ответ fsput begin'
@@ -1321,11 +1327,12 @@ function Send-RemoteFile {
 }
 
 function Receive-RemoteFile {
-    param([string]$Source, [string]$Destination)
+    param([string]$Source, [string]$Destination, [string]$Mode = 'auto')
     if (-not [string]::IsNullOrEmpty($script:MockRoot)) {
         try {
             [byte[]]$bytes = [IO.File]::ReadAllBytes((Get-MockPath $Source))
-            Write-M8Download $bytes $Source $Destination
+            if ($Mode -eq 'auto') { Write-M8Download $bytes $Source $Destination }
+            else { [IO.File]::WriteAllBytes($Destination, $bytes) }
             return $true
         } catch {
             $script:StatusText = "Не удалось прочитать $Source"
@@ -1334,7 +1341,7 @@ function Receive-RemoteFile {
     }
     $request = 'fsget ' + (Format-RemoteQuotedPath $Source)
     $headerTimeout = if ($script:DetectedProfile -eq 'picocalc-pico-h') { 120000 } else { 5000 }
-    if ($script:DetectedProfile -eq 'picocalc-pico-h' -and (Test-M8TextPath $Source)) { $request += ' m8' }
+    if ($Mode -eq 'auto' -and $script:DetectedProfile -eq 'picocalc-pico-h' -and (Test-M8TextPath $Source)) { $request += ' m8' }
     if (-not (Send-RemoteLine $request) -or
         -not (Wait-RemoteMarker '@MKC:GET ' $headerTimeout)) { return $false }
     $header = $script:MarkerLine.Substring(9).Trim() -split ' ', 2
@@ -1381,7 +1388,10 @@ function Receive-RemoteFile {
         $script:StatusText = 'Ошибка контрольной суммы fsget'
         return $false
     }
-    try { Write-M8Download $result $Source $Destination }
+    try {
+        if ($Mode -eq 'auto') { Write-M8Download $result $Source $Destination }
+        else { [IO.File]::WriteAllBytes($Destination, $result) }
+    }
     catch { $script:StatusText = "Не удалось записать $Destination"; return $false }
     return $true
 }
@@ -1457,7 +1467,10 @@ function Invoke-ProgramBundleSession {
                     $ok = $true
                 }
                 'GET' { $ok = Receive-RemoteFile $remote $localFile }
+                'GET-RAW' { $ok = Receive-RemoteFile $remote $localFile 'raw' }
                 'PUT' { $ok = Send-RemoteFile $localFile $remote }
+                'PUT-RAW' { $ok = Send-RemoteFile $localFile $remote 'raw' }
+                'PUT-STAGED' { $ok = Send-RemoteFile $localFile $remote 'staged' }
                 'MKDIR' { $ok = New-RemoteDirectory $remote }
                 'REMOVE' { $ok = Remove-RemoteItem $remote }
                 default { throw 'unknown program bundle operation' }

@@ -20,6 +20,11 @@ RECEIPT = '/System/PROGRAMS.TXT'
 TEXT = {'.m61', '.foc', '.tbi', '.txt', '.md'}
 PROGRAM_SYSTEM_FILES = {'System/URQ/URQ.APP', 'System/URQ/URQUI.APP', 'System/WBMP.APP'}
 DISK_FOLDERS = ('Games', 'Programs', 'Documents', 'System', 'Fonts')
+PICO_APP_FOLDERS = {'SPECTRUM': 'Programs/Spectrum', 'MP3': 'Programs/MP3'}
+
+
+def disk_folders(cap):
+    return (*DISK_FOLDERS, 'Music') if cap['platform'] == 'picocalc' else DISK_FOLDERS
 
 
 def owned_path(name):
@@ -31,10 +36,10 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def logical(data, name):
+def logical(data, name, *, raw=False):
     # Hash the bytes represented by a text file on the device, independently
     # of its host UTF-8/M8 representation and BOM.
-    if PurePosixPath(name).suffix.lower() in TEXT:
+    if not raw and PurePosixPath(name).suffix.lower() in TEXT:
         text = data.decode('utf-8-sig')
         return m8_decode(m8_encode(text)).encode('utf-8')
     return data
@@ -94,7 +99,8 @@ def pico_capabilities(metadata, binary, features):
     return dict(format=1, platform='picocalc', mcu='rp2040', profile='picocalc-pico-h',
                 device_profile='picocalc-pico-h', build_id=metadata['build_id'].upper(), abi=6,
                 firmware=binary.name, firmware_sha256=sha(binary.read_bytes()),
-                features=features, system_apps={}, app_memory_limit=metadata.get('app_memory_limit', 48 * 1024))
+                features=features, system_apps={}, staged_raw_transfer=True,
+                app_memory_limit=metadata.get('app_memory_limit', 48 * 1024))
 
 
 def resolved_build_flags(database):
@@ -168,7 +174,7 @@ def load_capabilities(bundle):
     return cap
 
 
-def validate_app(path, cap):
+def validate_app(path, cap, *, build=None):
     data = path.read_bytes()
     if (len(data) < 64 or data[:8] != b'MK61APP\0' or struct.unpack_from('<HHH', data, 8) != (1, 64, cap['abi'])
             or data[14] != 4 or data[15] not in (0, 1)):
@@ -180,7 +186,58 @@ def validate_app(path, cap):
             or len(data) != 64 + stored or zlib.crc32(data[:60]) != struct.unpack_from('<I', data, 60)[0]
             or zlib.crc32(data[64:]) != struct.unpack_from('<I', data, 48)[0]):
         raise ValueError(str(path) + ': incompatible CPU, memory bounds or checksum')
+    if build is not None:
+        if build['target'] != cap['profile'] or build['abi'] != cap['abi'] or data[15] != 1 or flags & 13 != 13:
+            raise ValueError(str(path) + ': incompatible CPU or build manifest')
+        if 'native_display' in build and bool(flags & 16) != build['native_display']:
+            raise ValueError(str(path) + ': display flag/build manifest mismatch')
+        if len(data) != build['app_bytes'] or sha(data) != build['app_sha256']:
+            raise ValueError(str(path) + ': build manifest mismatch')
     return data
+
+
+def pico_app_asset(cap, name):
+    return cap['platform'] == 'picocalc' and any(
+        name.casefold().startswith(folder.casefold() + '/') for folder in PICO_APP_FOLDERS.values())
+
+
+def pico_app_records(bundle, cap, *, disk=None):
+    if cap['platform'] != 'picocalc':
+        return []
+    records = []
+    bundle_root = bundle.resolve()
+    source_root = disk.resolve() if disk is not None else bundle_root
+    for name, folder in PICO_APP_FOLDERS.items():
+        build_dir = bundle/'apps'/name
+        source_dir = disk/folder if disk is not None else build_dir
+        if not build_dir.exists() and not source_dir.exists():
+            continue
+        if not source_dir.resolve().is_relative_to(source_root):
+            raise ValueError('unsafe native app directory: ' + str(source_dir))
+        manifest = build_dir/'manifest.json'
+        if manifest.is_symlink() or not manifest.resolve().is_relative_to(bundle_root) or not manifest.is_file():
+            raise ValueError('missing/unsafe native app manifest: ' + str(manifest))
+        report = json.loads(manifest.read_text(encoding='utf-8'))
+        app = name + '.APP'
+        hashes = report['files']
+        if app not in hashes or hashes[app] != report['app_sha256']:
+            raise ValueError(f'incomplete {name} asset manifest')
+        for leaf, digest in sorted(hashes.items(), key=lambda item: (item[0] == app, item[0])):
+            path = safe_path(leaf)
+            if path.name.casefold() in ('romcache.uf2', 'rom-cache.json'):
+                raise ValueError('Rebuild Spectrum SD assets: Flash ROM packs are no longer supported')
+            source = source_dir/path
+            if (source.is_symlink() or not source.resolve().is_relative_to(source_dir.resolve()) or
+                    not source.is_file()):
+                raise ValueError(f'missing/unsafe {name} asset: {leaf}')
+            raw = source.read_bytes()
+            if sha(raw) != digest:
+                raise ValueError(f'{name} asset/manifest mismatch: {leaf}')
+            if source.suffix.lower() == '.app':
+                validate_app(source, cap, build=report if leaf == app else None)
+            records.append(dict(path=folder + '/' + leaf, source=str(source.resolve()),
+                                size=len(raw), sha256=digest, package=folder))
+    return records
 
 
 def frozen_plan(directory, cap):
@@ -188,10 +245,20 @@ def frozen_plan(directory, cap):
     if manifest.get('format') != 1 or manifest.get('capabilities') != cap or not isinstance(manifest.get('files'), list):
         raise ValueError('program manifest belongs to another firmware bundle')
     records, names = [], set()
+    assets = {record['path']: record for record in pico_app_records(directory.parent, cap, disk=directory)}
     for record in manifest['files']:
         name = record['path']
         if not owned_path(name):
             raise ValueError('unexpected distribution destination: ' + name)
+        if name.casefold() in names:
+            raise ValueError('case-insensitive distribution collision')
+        names.add(name.casefold())
+        if pico_app_asset(cap, name):
+            expected = assets.pop(name, None)
+            if expected is None or any(record[key] != expected[key] for key in ('size', 'sha256', 'package')):
+                raise ValueError('distribution file checksum or app manifest mismatch: ' + name)
+            records.append(expected)
+            continue
         source = directory/name
         if source.is_symlink() or not source.resolve().is_relative_to(directory.resolve()) or not source.is_file():
             raise ValueError('missing/unsafe distribution source: ' + name)
@@ -202,17 +269,21 @@ def frozen_plan(directory, cap):
             validate_app(source, cap)
         if wire_size(data, name) > file_limit(cap, source.suffix.lower()):
             raise ValueError('distribution file exceeds device limit: ' + name)
+        records.append({**record, 'source':str(source.resolve())})
+    # Older ZIPs included these files and per-app hashes alongside Disk/.
+    for name, record in assets.items():
         if name.casefold() in names:
             raise ValueError('case-insensitive distribution collision')
         names.add(name.casefold())
-        records.append({**record, 'source':str(source.resolve())})
+        records.append(record)
     for record in manifest.get('system_files', []):
         safe_path(record['path'])
         original = directory.parent/'System'/record['path']
         packaged = directory/'System'/record['path']
         if any(sha(path.read_bytes()) != record['sha256'] for path in (original, packaged)):
             raise ValueError('distribution System dependency mismatch')
-    return {**manifest, 'files':records}
+    packages = list(dict.fromkeys([*manifest['packages'], *(r['package'] for r in assets.values())]))
+    return {**manifest, 'files': records, 'packages': packages, 'total_bytes': sum(r['size'] for r in records)}
 
 
 def plan(bundle, root=ROOT, *, prefer_bundle=True):
@@ -253,6 +324,9 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
         else:
             add(source, spec['destination'], spec['destination'])
             packages.append(spec['destination'])
+    assets = pico_app_records(bundle, cap)
+    files.extend(assets)
+    packages.extend(dict.fromkeys(record['package'] for record in assets))
     features['sheet'] = 'Programs/SHEET.APP' in packages
     for folder, group in catalog['groups'].items():
         if folder == 'app':
@@ -355,8 +429,11 @@ def plan(bundle, root=ROOT, *, prefer_bundle=True):
         module = cap.get('system_apps', {}).get(feature)
         if module and not (bundle / 'System' / module).is_file():
             raise ValueError('incomplete firmware bundle: missing System/' + module)
-    system_files = [dict(path=p.relative_to(bundle/'System').as_posix(), sha256=sha(p.read_bytes()))
-                    for p in sorted((bundle/'System').rglob('*.APP'))] if (bundle/'System').is_dir() else []
+    system_files = []
+    if cap['platform'] == 'stm32':
+        system = bundle/'System'
+        system_files = [dict(path=p.relative_to(system).as_posix(), sha256=sha(p.read_bytes()))
+                        for p in sorted(system.rglob('*.APP'))]
     return dict(format=1, capabilities=cap, packages=packages, skipped=skipped, files=files,
                 system_files=system_files, total_bytes=sum(f['size'] for f in files))
 
@@ -445,8 +522,9 @@ def synchronize(selection, session, *, verify=False):
             return parent.rstrip('/') + '/' + (item[1] if item else path.name)
         def get(name):
             path = temp / 'download'
-            session.call('GET', actual_name(name), path)
-            return logical(path.read_bytes(), name)
+            raw = pico_app_asset(cap, name.lstrip('/'))
+            session.call('GET-RAW' if raw else 'GET', actual_name(name), path)
+            return logical(path.read_bytes(), name, raw=raw)
         def mkdir(parent):
             if parent == '/':
                 return
@@ -499,7 +577,8 @@ def synchronize(selection, session, *, verify=False):
         operations = []
         for name, record in incoming.items():
             source = Path(record['source'])
-            data = logical(source.read_bytes(), name)
+            raw = pico_app_asset(cap, name)
+            data = logical(source.read_bytes(), name, raw=raw)
             if sha(data) != record['sha256']:
                 raise ValueError('source changed after preflight: ' + str(source))
             remote = '/' + name
@@ -517,9 +596,14 @@ def synchronize(selection, session, *, verify=False):
                 if receipt_folded.get(name.casefold()) != current:
                     retained.append(name)
                     continue
-            staged = temp / ('upload-' + str(len(operations)))
-            staged.write_bytes(data)
-            operations.append(('PUT', remote, staged, record['sha256']))
+            if raw and not cap.get('staged_raw_transfer') and len(data) >= 512 * 512:
+                raise ValueError(f'{name}: this PicoCalc firmware cannot upload the file over CDC; copy Disk/ to the microSD card')
+            upload = temp / ('upload-' + str(len(operations)))
+            upload.write_bytes(data)
+            operation = 'PUT'
+            if raw:
+                operation = 'PUT-STAGED' if cap.get('staged_raw_transfer') else 'PUT-RAW'
+            operations.append((operation, remote, upload, record['sha256']))
             owned[name] = record['sha256']
         for name, digest in receipt.items():
             if name.casefold() not in incoming_names and exists('/' + name):
@@ -527,21 +611,22 @@ def synchronize(selection, session, *, verify=False):
                     operations.append(('REMOVE', actual_name('/' + name), None, digest))
                 else:
                     retained.append(name)
-        for folder in DISK_FOLDERS:
+        folders = disk_folders(cap)
+        for folder in folders:
             if exists('/' + folder) and entries('/')[folder.casefold()][0] != 'd':
                 raise ValueError('destination is not a directory: /' + folder)
-        for folder in DISK_FOLDERS:
+        for folder in folders:
             mkdir('/' + folder)
         for operation, remote, source, expected in operations:
-            if operation == 'PUT':
+            if operation != 'REMOVE':
                 mkdir(str(PurePosixPath(remote).parent))
-                session.call('PUT', actual_name(remote), source)
+                session.call(operation, actual_name(remote), source)
                 if verify and sha(get(remote)) != expected:
                     raise ValueError('readback mismatch: ' + remote)
             else:
                 session.call('REMOVE', remote)
             cache.pop(str(PurePosixPath(remote).parent).casefold(), None)
-            print(operation.lower() + ' ' + remote)
+            print(('remove ' if operation == 'REMOVE' else 'put ') + remote)
         result = dict(format=1, build_id=cap['build_id'], files=owned)
         raw = (json.dumps(result, ensure_ascii=True, sort_keys=True) + '\n').encode('utf-8')
         packed = base64.b64encode(zlib.compress(raw))
@@ -568,7 +653,7 @@ def synchronize(selection, session, *, verify=False):
                 session.call('REMOVE', name)
         for name in retained:
             print('preserved user file /' + name)
-        return dict(installed=sum(op[0] == 'PUT' for op in operations), removed=sum(op[0] == 'REMOVE' for op in operations), preserved=retained)
+        return dict(installed=sum(op[0] != 'REMOVE' for op in operations), removed=sum(op[0] == 'REMOVE' for op in operations), preserved=retained)
 
 
 def export(selection, output, *, system=None, manifest=None):
@@ -577,7 +662,8 @@ def export(selection, output, *, system=None, manifest=None):
     if output.exists():
         raise ValueError('export directory must not exist: ' + str(output))
     snapshots = {}
-    if system and system.is_dir():
+    cap = selection['capabilities']
+    if cap['platform'] == 'stm32' and system and system.is_dir():
         for source in sorted(system.rglob('*')):
             if source.is_file():
                 name = source.relative_to(system).as_posix()
@@ -591,13 +677,13 @@ def export(selection, output, *, system=None, manifest=None):
     for record in selection['files']:
         source = Path(record['source'])
         raw = source.read_bytes()
-        if sha(logical(raw, record['path'])) != record['sha256']:
+        if sha(logical(raw, record['path'], raw=pico_app_asset(cap, record['path']))) != record['sha256']:
             raise ValueError('source changed after planning')
         if record['path'] in snapshots:
             raise ValueError('duplicate disk file: ' + record['path'])
         snapshots[record['path']] = raw
     output.mkdir(parents=True)
-    for folder in DISK_FOLDERS:
+    for folder in disk_folders(cap):
         (output / folder).mkdir()
     for name, raw in sorted(snapshots.items(), key=lambda item: item[0].casefold()):
         target = output / name

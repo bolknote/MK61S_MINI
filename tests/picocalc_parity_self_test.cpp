@@ -227,6 +227,30 @@ void picocalc_parity_test() {
     }
   }
   assert(files::read("/Parity/large.bin",large_copy.data(),large_copy.size(),large_used) && large_copy==large_binary);
+  // Transfer an asset the size of MP3's artwork through the real command
+  // parser. A failed CRC after a checkpoint must keep the existing asset.
+  const char* record_path="/Parity/RECORD.LP";
+  std::vector<u8> record(1638532);
+  for(unsigned i=0;i<record.size();++i) record[i]=(u8)(i^(i>>12));
+  const auto upload_record=[&](const u8* bytes,unsigned length,u32 checksum) {
+    std::snprintf(request,sizeof(request),"fsput begin %s %u %lu staged",record_path,length,(unsigned long)checksum);
+    assert(terminal.execute(request));
+    for(unsigned at=0;at<length;) {
+      const unsigned count=std::min(96U,length-at);
+      const auto head=std::snprintf(request,sizeof(request),"fsput data %u ",at);
+      for(unsigned i=0;i<count;++i) std::snprintf(request+head+2*i,3,"%02X",bytes[at+i]);
+      output.clear();command(terminal,request);
+      at+=count;
+      assert(output.find("@MKC:ACK "+std::to_string(at)+"\r\n")!=std::string::npos);
+    }
+  };
+  upload_record(record.data(),record.size(),terminal_file_transfer::checksum(record.data(),record.size()));
+  assert(!files::exists(record_path) && terminal.execute("fsput end"));
+  upload_record(large_binary.data(),large_binary.size(),0);
+  assert(!terminal.execute("fsput end") && !storage_journal::active());
+  std::vector<u8> sound_asset(record.size());
+  assert(files::read(record_path,sound_asset.data(),sound_asset.size(),large_used) && sound_asset==record);
+  assert(files::remove(record_path));
   const std::string russian(65534,(char)0xC6); // Ж: two UTF-8 bytes per logical M8 byte.
   const u32 text_crc=terminal_file_transfer::checksum((const u8*)russian.data(),russian.size());
   std::snprintf(request,sizeof(request),"fsput begin /Parity/maximum.txt %u %lu m8",(unsigned)russian.size(),(unsigned long)text_crc);

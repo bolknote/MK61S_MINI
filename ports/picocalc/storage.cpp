@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "explorer_home.hpp"
 #include "shared_memory_buffer.hpp"
 #include "mk8_codec.hpp"
 #include "diagnostics.hpp"
@@ -18,9 +19,11 @@ struct WriteSession {
     FIL file{};
     char path[PATH_SIZE]{},temporary[PATH_SIZE]{};
     u32 revision=0,staged_bytes=0;
-    bool open=false,text=false,create_only=false,checkpointed=false;
+    bool open=false,text=false,create_only=false,staged=false,checkpointed=false;
 };
 namespace {
+// Bound payload and filesystem metadata written between journal checkpoints.
+constexpr unsigned WRITE_WINDOW=32*1024;
 FATFS filesystem;
 bool mounted = false, usb = false, ejected = false, recovery_required=false;
 u32 generation = 1;
@@ -86,11 +89,11 @@ bool finish_transaction(bool success) {
     else if(!undone) std::snprintf(problem,sizeof(problem),"%s",saved);
     return false;
 }
-void remove_staged_write(const WriteSession& value) {
-    if(!value.checkpointed || !mounted || usb) return;
+void remove_staged_file(const char* path) {
+    if(!mounted || usb) return;
     char saved[sizeof(problem)];std::memcpy(saved,problem,sizeof(saved));
     if(!start_transaction()) return;
-    const FRESULT result=f_unlink(value.temporary);
+    const FRESULT result=f_unlink(path);
     if(finish_transaction(result==FR_NO_FILE || fail(result))) std::memcpy(problem,saved,sizeof(problem));
 }
 void abort_write(WriteSession* value) {
@@ -100,7 +103,7 @@ void abort_write(WriteSession* value) {
     // Discard the unsynced FatFs window too; closing it would flush an upload
     // which the caller explicitly cancelled.
     if(mounted && !usb) (void)finish_transaction(false);
-    remove_staged_write(*value);
+    if(value->checkpointed) remove_staged_file(value->temporary);
 }
 bool private_name(const char* path, const char* suffix, char out[PATH_SIZE]) {
     const char* slash = std::strrchr(path, '/');
@@ -243,9 +246,8 @@ bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     if(ok) { ++generation;text_cache.valid=false; }
     return ok;
 }
-static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capacity,
-                      unsigned& used, bool& more, const char* filter, bool include_hidden,
-                      bool directories_only = false) {
+bool list(const char* path, unsigned skip, Entry* out, unsigned capacity,
+          unsigned& used, bool& more, const char* filter, ListView view) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used = 0; more = false;
     if(!available()) return false;
@@ -255,24 +257,23 @@ static bool list_impl(const char* path, unsigned skip, Entry* out, unsigned capa
     FILINFO info;
     while((result = f_readdir(&directory, &info)) == FR_OK && info.fname[0]) {
         if(!std::strcmp(info.fname,".") || !std::strcmp(info.fname,"..") ||
-           (!include_hidden && info.fname[0] == '.') || storage_journal::reserved(info.fname)) continue;
-        if((directories_only && !(info.fattrib & AM_DIR)) || !contains(info.fname,filter)) continue;
+           (view != ListView::FULL && info.fname[0] == '.') || storage_journal::reserved(info.fname)) continue;
+        const bool is_directory = (info.fattrib & AM_DIR) != 0;
+        if((view == ListView::FOLDERS || view == ListView::HOME) && !is_directory) continue;
+        if((view == ListView::HOME && !explorer_home::user_folder(info.fname)) ||
+           !contains(info.fname,filter)) continue;
         if(skip) { --skip; continue; }
         if(used == capacity) { more = true; break; }
         auto& entry = out[used++];
         std::snprintf(entry.name, sizeof(entry.name), "%s", info.fname);
-        entry.directory = (info.fattrib & AM_DIR) != 0;
+        entry.directory = is_directory;
         entry.size = info.fsize > UINT32_MAX ? UINT32_MAX : (u32)info.fsize;
     }
     const FRESULT closed = f_closedir(&directory);
     return fail(result == FR_OK ? closed : result);
 }
-bool list(const char* path, unsigned skip, Entry* out, unsigned capacity,
-          unsigned& used, bool& more, const char* filter, bool directories_only) {
-    return list_impl(path,skip,out,capacity,used,more,filter,false,directories_only);
-}
 bool list_all(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more) {
-    return list_impl(path,skip,out,capacity,used,more,nullptr,true);
+    return list(path,skip,out,capacity,used,more,nullptr,ListView::FULL);
 }
 static bool read_impl(const char* path, u8* out, unsigned capacity, unsigned& used,bool optional) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
@@ -442,9 +443,9 @@ bool text_window(u16 logical) {
     }
     text_cache.window_start=(u16)start;text_cache.window_size=(u16)length;return true;
 }
-bool replace_file(const char* path,const char* temporary) {
+bool replace_file(const char* path,const char* temporary,char backup[PATH_SIZE],bool staged=false) {
     if(!fail(close_reader())) return false;
-    char backup[PATH_SIZE];FILINFO info;
+    FILINFO info;
     const FRESULT status=f_stat(path,&info);
     if((status==FR_OK && (info.fattrib&AM_DIR)) || (status!=FR_OK && status!=FR_NO_FILE)) {
         f_unlink(temporary);return fail(status==FR_OK?FR_DENIED:status);
@@ -461,7 +462,12 @@ bool replace_file(const char* path,const char* temporary) {
         if(replace) (void)f_rename(backup,path);
         f_unlink(temporary);return fail(result);
     }
-    if(replace) (void)f_unlink(backup);
+    // Publish the rename first when replacing a large staged file. Freeing
+    // the old cluster chain can itself need a separate journal transaction.
+    if(!replace || !staged || info.fsize<=WRITE_WINDOW) {
+        if(replace) (void)f_unlink(backup);
+        backup[0]=0;
+    }
     ++generation;return fail(FR_OK);
 }
 }
@@ -485,7 +491,7 @@ static bool write_impl(const char* path, const u8* data, unsigned size, bool tex
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!path || (size && !data) || storage_journal::reserved(path)) return fail(FR_INVALID_NAME);
     if(!start_transaction()) return false;
-    char temporary[PATH_SIZE];
+    char temporary[PATH_SIZE],backup[PATH_SIZE];
     if(!private_name(path, "TMP", temporary)) return finish_transaction(false);
     FIL file;
     FRESULT result = f_open(&file, temporary, FA_WRITE | FA_CREATE_NEW);
@@ -509,14 +515,14 @@ static bool write_impl(const char* path, const u8* data, unsigned size, bool tex
     const FRESULT closed = f_close(&file);
     if(result == FR_OK) result = closed;
     if(result != FR_OK) { fail(result);return finish_transaction(false); }
-    return finish_transaction(replace_file(path,temporary));
+    return finish_transaction(replace_file(path,temporary,backup));
 }
 bool write(const char* path, const u8* data, unsigned size) { return write_impl(path, data, size, false); }
 bool write_text(const char* path, const char* data, unsigned size) { return write_impl(path, (const u8*)data, size, true); }
-WriteSession* begin_write(const char* path,bool m8,bool create_only) {
+WriteSession* begin_write(const char* path,bool m8,bool create_only,bool staged) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!available() || writer || !path || std::strlen(path)>=PATH_SIZE || storage_journal::reserved(path) ||
-       (m8 && create_only)) return nullptr;
+       (m8 && (create_only || staged))) return nullptr;
     if(create_only) {
         FILINFO info{};
         const FRESULT found=f_stat(path,&info);
@@ -528,7 +534,7 @@ WriteSession* begin_write(const char* path,bool m8,bool create_only) {
     if(!private_name(path,"TMP",value->temporary)) { finish_transaction(false);delete value;return nullptr; }
     const FRESULT result=f_open(&value->file,value->temporary,FA_WRITE|FA_CREATE_NEW);
     if(result!=FR_OK) { fail(result);finish_transaction(false);delete value;return nullptr; }
-    std::strcpy(value->path,path);value->text=m8;value->create_only=create_only;
+    std::strcpy(value->path,path);value->text=m8;value->create_only=create_only;value->staged=staged || create_only;
     value->open=true;value->revision=generation;writer=value;return value;
 }
 bool append_write(WriteSession* value,const u8* data,unsigned size) {
@@ -538,18 +544,17 @@ bool append_write(WriteSession* value,const u8* data,unsigned size) {
     if(!value->text) {
         // Keep enough undo records for FAT/bitmap clusters and directory
         // sectors even on fragmented media. Only the hidden file grows.
-        constexpr unsigned window=32*1024;
         while(size) {
             unsigned count=size;
-            if(value->create_only) {
-                if(value->staged_bytes==window) {
+            if(value->staged) {
+                if(value->staged_bytes==WRITE_WINDOW) {
                     value->checkpointed=true;
                     if(!fail(f_sync(&value->file)) || !storage_journal::checkpoint()) {
                         abort_write(value);return false;
                     }
                     value->staged_bytes=0;
                 }
-                const unsigned room=window-value->staged_bytes;
+                const unsigned room=WRITE_WINDOW-value->staged_bytes;
                 if(count>room) count=room;
             }
             UINT written=0;
@@ -582,13 +587,15 @@ bool commit_write(WriteSession*& value) {
     if(result==FR_OK) result=closed;
     value->open=false;writer=nullptr;
     bool ok=false;
+    char backup[PATH_SIZE]{};
     if(result==FR_OK && value->create_only) {
         ok=fail(f_rename(value->temporary,value->path));
         if(ok) ++generation;
-    } else if(result==FR_OK) ok=replace_file(value->path,value->temporary);
+    } else if(result==FR_OK) ok=replace_file(value->path,value->temporary,backup,value->staged);
     else fail(result);
     ok=finish_transaction(ok);
-    if(!ok) remove_staged_write(*value);
+    if(ok && backup[0]) remove_staged_file(backup);
+    if(!ok && value->checkpointed) remove_staged_file(value->temporary);
     delete value;value=nullptr;return ok;
 }
 bool mkdir(const char* path) {

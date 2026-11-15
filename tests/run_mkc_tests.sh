@@ -525,6 +525,28 @@ tr '\r' '\n' < "$work/fsput.commands" > "$work/fsput.commands.lines"
 test "$(awk '$1 == "fsput" && $2 == "data" { print length($4) }' \
   "$work/fsput.commands.lines")" = "$(printf '96\n96\n8')"
 
+# PicoCalc must send native resources verbatim even when named *.md.
+printf '\360\237\216\265\000\n' > "$work/raw.md"
+raw_crc=$(file_checksum "$work/raw.md")
+raw_hex=$(file_to_hex "$work/raw.md")
+{
+  printf '@MKC:READY 6\n@MKC:ACK 6\n@MKC:DONE 6 %s\n' "$raw_crc"
+  printf '@MKC:GET 6 %s\n@MKC:DATA 0 %s\n@MKC:END 6 %s\n' "$raw_crc" "$raw_hex" "$raw_crc"
+} > "$work/pico-raw.responses"
+old_profile=$DETECTED_PROFILE
+DETECTED_PROFILE=picocalc-pico-h
+exec 7> "$work/pico-raw.commands"
+exec 8< "$work/pico-raw.responses"
+remote_put_file "$work/raw.md" '/Programs/MP3/README.md' staged
+remote_get_file '/Programs/MP3/README.md' "$work/raw-copy.md" raw
+exec 7>&-
+exec 8<&-
+DETECTED_PROFILE=$old_profile
+cmp "$work/raw.md" "$work/raw-copy.md"
+tr '\r' '\n' < "$work/pico-raw.commands" > "$work/pico-raw.commands.lines"
+grep -Fx "fsput begin \"/Programs/MP3/README.md\" 6 $raw_crc staged" "$work/pico-raw.commands.lines"
+grep -Fx 'fsget "/Programs/MP3/README.md"' "$work/pico-raw.commands.lines"
+
 # Потеря первой строки сразу после открытия CDC не должна превращаться в
 # тихо усечённую правую панель: число в финале `ls` заставляет сделать retry.
 {

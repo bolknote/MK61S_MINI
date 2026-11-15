@@ -43,11 +43,11 @@ class MemorySession:
                     if name != '/' and str(Path(name).parent) == remote:
                         rows.append(f'{kind}\t0\t{Path(name).name}')
             Path(local).write_text('\n'.join(rows), encoding='utf-8')
-        elif operation == 'GET':
+        elif operation in ('GET', 'GET-RAW'):
             Path(local).write_bytes(self.files[remote] + (b'broken' if self.corrupt else b''))
-        elif operation == 'PUT':
+        elif operation in ('PUT', 'PUT-RAW', 'PUT-STAGED'):
             assert str(Path(remote).parent) in self.dirs
-            self.files[remote] = logical(Path(local).read_bytes(), remote)
+            self.files[remote] = logical(Path(local).read_bytes(), remote, raw=operation != 'PUT')
         elif operation == 'MKDIR':
             self.dirs.add(remote)
         elif operation == 'REMOVE':
@@ -181,6 +181,20 @@ class ProgramBundleTests(unittest.TestCase):
         self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'],b'user edited values')
         synchronize(self.selection({'Programs/Examples/Sheets/BUDGET.mks':b'new default'}),session)
         self.assertEqual(session.files['/Programs/Examples/Sheets/BUDGET.mks'],b'user edited values')
+
+    def test_legacy_pico_cannot_partially_install_a_large_asset(self):
+        self.cap['platform'] = 'picocalc'
+        name = 'Programs/MP3/RECORD.LP'
+        selected = self.selection({'Programs/ELIZA.APP':b'app', name:bytes(1638532)})
+        session = MemorySession()
+        with self.assertRaisesRegex(ValueError, 'copy Disk/'):
+            synchronize(selected, session)
+        self.assertEqual(session.files, {})
+        self.assertTrue(all(op == 'LIST' for op, _ in session.calls))
+        self.cap['staged_raw_transfer'] = True
+        synchronize(selected, session, verify=True)
+        self.assertIn(('PUT-STAGED','/' + name), session.calls)
+        self.assertEqual(session.files['/' + name], bytes(1638532))
 
     def test_corrupt_receipt_prevents_any_update(self):
         session=MemorySession()
@@ -327,6 +341,33 @@ class ProgramBundleTests(unittest.TestCase):
                 finally: session.close()
                 self.assertEqual((device/'Programs/Examples/Sheets/BUDGET.mks').read_bytes(), b'user')
                 self.assertFalse((device/'Games/Test/old.txt').exists())
+
+    def test_real_mkc_pico_asset_bytes_and_ownership(self):
+        self.cap.update(platform='picocalc', device_profile='picocalc-pico-h', staged_raw_transfer=True)
+        raw_name = 'Programs/MP3/README.md'
+        name = 'Programs/MP3/RECORD.LP'
+        document = '# UTF-8\n🎵\n'.encode('utf-8')
+        source = self.base/'readme-source.md';source.write_bytes(document)
+        commands = [['bash', str(ROOT/'tools/mkc/mkc.sh')]]
+        if shutil.which('pwsh'):
+            commands.append(['pwsh','-NoLogo','-NoProfile','-File',str(ROOT/'tools/mkc/mkc.ps1')])
+        for number, command in enumerate(commands):
+            with self.subTest(command=command[0]):
+                device = self.base/f'pico-{number}';device.mkdir()
+                initial = self.selection({name:bytes(1638532)})
+                initial['files'].append(dict(path=raw_name, source=str(source), size=len(document), sha256=sha(document)))
+                session = MkcSession(self.cap, mock=device, command=command)
+                try:
+                    synchronize(initial, session, verify=True)
+                    self.assertEqual((device/raw_name).read_bytes(),document)
+                    (device/raw_name).write_bytes(document+b'user edit')
+                    update = self.selection({name:b'new artwork'})
+                    result=synchronize(update, session, verify=True)
+                    self.assertEqual(result['preserved'],[raw_name])
+                    self.assertEqual((device/raw_name).read_bytes(),document+b'user edit')
+                    self.assertEqual((device/name).read_bytes(),b'new artwork')
+                finally:
+                    session.close()
 
 
 if __name__ == '__main__':

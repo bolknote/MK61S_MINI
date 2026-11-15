@@ -12,7 +12,7 @@ constexpr usize MAX_ICON_FILE_BYTES = 140;
 constexpr const char* ICON_NAME = "autoexec.wbmp";
 enum class Mode : u8 { ICONS, LIST };
 enum class Packing : u8 { ROW_MSB, PAGE_LSB };
-enum class Kind : u8 { FILE, DIRECTORY };
+enum class Kind : u8 { FILE, DIRECTORY, DISK };
 struct Icon { u8 pixels[ICON_BYTES]; };
 struct Glyph {
   u8 width, height, advance, bearing_x;

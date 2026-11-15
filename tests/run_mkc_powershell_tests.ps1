@@ -702,6 +702,41 @@ try {
     Assert-True ($remoteEntries.Count -eq 1 -and $remoteEntries[0].Name -eq 'moved.foc') 'mock listing failed'
     Assert-True (Remove-RemoteItem '/Programs/moved.foc') 'mock delete failed'
 
+    & {
+        $oldMockRoot = $script:MockRoot
+        $oldProfile = $script:DetectedProfile
+        $script:MockRoot = ''
+        $script:DetectedProfile = 'picocalc-pico-h'
+        try {
+            $source = Join-Path $tempRoot 'raw.md'
+            $copy = Join-Path $tempRoot 'raw-copy.md'
+            [byte[]]$bytes = 240,159,142,181,0,10
+            [IO.File]::WriteAllBytes($source, $bytes)
+            $crc = Get-PosixChecksumBytes $bytes
+            $hex = Convert-BytesToHex $bytes
+            $commands = [Collections.Generic.List[string]]::new()
+            $replies = [Collections.Generic.Queue[string]]::new()
+            foreach ($reply in @('@MKC:READY 6', '@MKC:ACK 6', "@MKC:DONE 6 $crc",
+                                  "@MKC:GET 6 $crc", "@MKC:DATA 0 $hex", "@MKC:END 6 $crc")) {
+                $replies.Enqueue($reply)
+            }
+            function Send-RemoteLine([string]$Command) { $commands.Add($Command); return $true }
+            function Read-SerialLine([int]$TimeoutMilliseconds) {
+                if ($replies.Count -eq 0) { return $false }
+                $script:SerialLine = $replies.Dequeue()
+                return $true
+            }
+            Assert-True (Send-RemoteFile $source '/Programs/MP3/README.md' 'staged') 'PicoCalc staged upload failed'
+            Assert-True (Receive-RemoteFile '/Programs/MP3/README.md' $copy 'raw') 'PicoCalc raw download failed'
+            Assert-True ($commands[0] -ceq ('fsput begin "/Programs/MP3/README.md" 6 {0} staged' -f $crc)) 'staged option missing'
+            Assert-True ($commands[3] -ceq 'fsget "/Programs/MP3/README.md"') 'raw read requested M8'
+            Assert-True ((Convert-BytesToHex ([IO.File]::ReadAllBytes($copy))) -eq $hex) 'raw round trip changed bytes'
+        } finally {
+            $script:MockRoot = $oldMockRoot
+            $script:DetectedProfile = $oldProfile
+        }
+    }
+
     $braille = @(Convert-WbmpToBrailleLines (Join-Path $local 'preview.wbmp') 20 10)
     Assert-True ($braille[0] -eq '8×2 · Braille preview') 'WBMP dimensions were not decoded'
     Assert-True ($braille[2] -eq '⠉⠉⠒⠒') 'WBMP Braille fallback differs from shell port'

@@ -106,7 +106,7 @@ void draw_browser(u8* pixels,unsigned bytes,explorer_view::Packing packing,
         for(unsigned slot=0;slot<geometry.page_size() && first+slot<services.browser_count();++slot) {
             const unsigned index=first+slot;char name[64];if(!services.browser_label(index,name)) continue;
             explorer_view::Icon icon{};const bool custom=services.browser_icon(index,icon);
-            canvas.item((u8)slot,name,services.browser_directory(index)?explorer_view::Kind::DIRECTORY:explorer_view::Kind::FILE,
+            canvas.item((u8)slot,name,services.browser_kind(index),
                         custom?&icon:nullptr,index==selected);
         }
         if(!services.browser_count()) canvas.empty(services.browser_filtered()?
@@ -774,7 +774,7 @@ Screen::RenderKey Screen::key(const Snapshot& m,bool keyboard,const Ui& ui,const
             if(services->browser_actions()) for(unsigned row=0;row<services->selection_menu_rows();++row) {
                 char value[Services::COLS+1];services->row(row,value);out.text(value);
             } else for(unsigned row=0;row<services->browser_count();++row) {
-                char value[64];services->browser_label(row,value);out.text(value);out.number(services->browser_directory(row));
+                char value[64];services->browser_label(row,value);out.text(value);out.number((u32)services->browser_kind(row));
             }
             return out;
         }

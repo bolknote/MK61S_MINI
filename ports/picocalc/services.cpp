@@ -91,52 +91,48 @@ void Services::browse(ServicePage parent) {
     viewing_=image_viewing_=runtime_graphics_=false;
     browser_parent_ = parent; page_ = ServicePage::BROWSER;
     browser_load_program_ = false;
-    browse_section(BrowserPage::HOME);
+    home_cursor_ = 0;
+    browse_section(parent == ServicePage::LANGUAGE ? BrowserPage::DISK : BrowserPage::HOME);
 }
-void Services::browse_section(BrowserPage page, unsigned selection) {
+void Services::browse_section(BrowserPage page, const char* path, unsigned offset) {
     browser_page_ = page;
-    const char* folder = explorer_home::folder(page);
-    std::snprintf(directory_, sizeof(directory_), "/%s", folder);
+    std::snprintf(directory_, sizeof(directory_), "%s", path);
     filter_[0] = 0;
-    skip_ = 0;
-    selection_ = selection;
+    selection_ = offset % BROWSER_PAGE_SIZE + 1;
+    skip_ = offset - offset % BROWSER_PAGE_SIZE;
     page_ = ServicePage::BROWSER;
-    if(page == BrowserPage::DOCUMENTS && files::ready() && !files::exists(directory_) &&
-       !files::mkdir(directory_)) {
-        message(files::error(), ServicePage::BROWSER);
-        return;
-    }
     refresh();
 }
 void Services::refresh() {
     // Loading an APP pumps USB and the display. Do not recreate Explorer's
     // disposable buffers between reserving the image and starting the APP.
     if(native_loading_) return;
-    if(browser_page_ == BrowserPage::HOME) {
-        release_browser();
-        more_ = false;
-        browser_revision_ = files::revision();
-        ++graphics_revision_;
-        return;
-    }
     if(!browser_entries_.ok() && !browser_entries_.acquire(shared_memory::Owner::APPLICATION,
             sizeof(files::Entry)*BROWSER_PAGE_SIZE)) {
         entries_=nullptr;used_=0;message("Explorer memory busy",browser_parent_);return;
     }
     entries_=(files::Entry*)browser_entries_.data();
-    const bool section_root = directory_[0] == '/' && browser_page_ != BrowserPage::DISK &&
-        std::strcmp(directory_+1, explorer_home::folder(browser_page_)) == 0;
-    if(section_root && !files::exists(directory_) && files::ready()) {
+    const bool home = browser_page_ == BrowserPage::HOME;
+    const auto view = home ? files::ListView::HOME :
+        browser_games() ? files::ListView::FOLDERS :
+        browser_page_ == BrowserPage::DISK ? files::ListView::FULL : files::ListView::NORMAL;
+    if(home && !files::ready()) {
         used_ = 0;
         more_ = false;
+        skip_ = 0;
     } else if(!files::list(directory_, skip_, entries_, BROWSER_PAGE_SIZE,
-                           used_, more_, filter_, browser_games())) {
+                           used_, more_, filter_, view)) {
         // A directory may disappear while USB or the terminal owns the card.
         // Re-enter a readable root instead of retaining an unusable browser.
         if(std::strcmp(directory_,"/") && files::list("/",0,entries_,BROWSER_PAGE_SIZE,used_,more_)) {
             browse_section(BrowserPage::HOME);
             return;
         } else { release_browser();message(files::error(), browser_parent_);return; }
+    }
+    if(home && !more_) {
+        // An empty name is reserved for the full-disk tile after the real folders.
+        if(used_ < BROWSER_PAGE_SIZE) entries_[used_++] = {};
+        else more_ = true;
     }
     if(selection_ > used_) selection_ = used_;
     if(used_ && !selection_) selection_=1;
@@ -168,22 +164,33 @@ bool Services::browser_icon(unsigned index,explorer_view::Icon& out) const {
     return index<used_ && (browser_icon_mask_&(1U<<index)) && browser_icons_.ok() &&
         browser_icons_.read(index*explorer_view::ICON_BYTES,out.pixels,sizeof(out.pixels));
 }
+explorer_view::Kind Services::browser_kind(unsigned index) const {
+    using explorer_view::Kind;
+    if(!entries_ || index >= used_) return Kind::FILE;
+    if(browser_page_ == BrowserPage::HOME && !entries_[index].name[0]) return Kind::DISK;
+    return entries_[index].directory ? Kind::DIRECTORY : Kind::FILE;
+}
 void Services::browser_title(char out[64]) const {
     if(filter_[0]) { char value[62];label(filter_,value,sizeof(value));std::snprintf(out,64,"? %s",value);return; }
     const char* name=browser_actions()?std::strrchr(selected_file_,'/'):std::strrchr(directory_,'/');
-    if(!browser_actions() && (browser_page_ == BrowserPage::HOME || directory_[1] == 0 ||
-       (name == directory_ && browser_page_ != BrowserPage::DISK &&
-        browser_page_ != BrowserPage::GAME_FILES)))
+    if(!browser_actions() && (browser_page_ == BrowserPage::HOME || directory_[1] == 0)) {
         std::snprintf(out,64,"%s",explorer_home::label(browser_page_,russian_));
+        return;
+    }
+    const char* translated = !browser_actions() && name == directory_ && browser_page_ != BrowserPage::DISK
+        ? explorer_home::folder_label(name+1, russian_) : nullptr;
+    if(translated) std::snprintf(out,64,"%s",translated);
     else label(name && name[1]?name+1:"microSD",out,64);
 }
 bool Services::browser_label(unsigned index,char out[64]) const {
-    if(browser_page_ == BrowserPage::HOME && index < explorer_home::COUNT) {
-        std::snprintf(out,64,"%s",explorer_home::label(explorer_home::ITEMS[index],russian_));
-        return true;
-    }
     if(!entries_ || index>=used_) {out[0]=0;return false;}
-    label(entries_[index].name,out,64);
+    const char* name = entries_[index].name;
+    if(browser_page_ == BrowserPage::HOME) {
+        const char* caption = *name ? explorer_home::folder_label(name, russian_)
+            : explorer_home::label(BrowserPage::DISK, russian_);
+        if(caption) { std::snprintf(out,64,"%s",caption); return true; }
+    }
+    label(name,out,64);
     if(browser_page_ == BrowserPage::PROGRAMS && !entries_[index].directory && extension(out,".app"))
         *std::strrchr(out,'.') = 0;
     return true;
@@ -207,33 +214,31 @@ void Services::filter_directory(const char* utf8) {
     skip_=selection_=0;refresh();
 }
 bool Services::selected_path(char out[files::PATH_SIZE]) const {
-    return selection_ && selection_ <= used_ && join(directory_, entries_[selection_ - 1].name, out);
+    return selection_ && selection_ <= used_ && entries_[selection_ - 1].name[0] &&
+        join(directory_, entries_[selection_ - 1].name, out);
 }
 void Services::parent_directory() {
     filter_[0]=0;
     if(browser_page_ == BrowserPage::HOME) {
         page_ = browser_parent_; selection_ = 0; release_browser(); return;
     }
-    if(browser_page_ == BrowserPage::GAME_FILES &&
-       std::strncmp(directory_, "/Games/", 7) == 0 && !std::strchr(directory_+7, '/')) {
+    char* slash = std::strrchr(directory_, '/');
+    if(browser_page_ == BrowserPage::GAME_FILES && slash && slash != directory_ &&
+       slash == std::strchr(directory_ + 1, '/')) {
         browser_page_ = BrowserPage::GAMES;
-        std::strcpy(directory_, "/Games");
+        *slash = 0;
         selection_ = games_selection_;
         skip_ = games_skip_;
         refresh();
         return;
     }
-    if(std::strcmp(directory_, "/") == 0 ||
-       std::strcmp(directory_+1, explorer_home::folder(browser_page_)) == 0) {
+    if(!directory_[1] || (slash == directory_ && browser_page_ != BrowserPage::DISK)) {
         if(browser_parent_ == ServicePage::LANGUAGE) {
             page_ = browser_parent_; selection_ = 0; release_browser(); return;
         }
-        unsigned item = 0;
-        while(item + 1 < explorer_home::COUNT && explorer_home::ITEMS[item] != browser_page_) ++item;
-        browse_section(BrowserPage::HOME, item+1);
+        browse_section(BrowserPage::HOME, "/", home_cursor_);
         return;
     }
-    char* slash = std::strrchr(directory_, '/');
     if(slash == directory_) directory_[1] = 0;
     else if(slash) *slash = 0;
     skip_ = selection_ = 0; refresh();
@@ -460,15 +465,6 @@ MK61_SERVICE_INPUT_CODE bool Services::input(u8 code) {
         normalize_view(); return true;
     }
     if(page_ == ServicePage::BROWSER) {
-        if(browser_page_ == BrowserPage::HOME) {
-            if(go_back) parent_directory();
-            else if(accept && browser_selection() < explorer_home::COUNT)
-                browse_section(explorer_home::ITEMS[browser_selection()]);
-            else if(code >= 0xB4 && code <= 0xB7)
-                selection_ = 1 + menu_model::step(browser_selection(), explorer_home::COUNT,
-                    code == 0xB4 || code == 0xB5 ? -1 : 1);
-            return true;
-        }
         if(go_back && filter_[0]) { filter_directory("");return true; }
         if(go_back) { parent_directory(); return true; }
         const int vertical=browser_mode()==explorer_view::Mode::ICONS?3:1;
@@ -476,6 +472,16 @@ MK61_SERVICE_INPUT_CODE bool Services::input(u8 code) {
         else if(code == 0xB6) move_browser(vertical);
         else if(code == 0xB4) move_browser(-1);
         else if(code == 0xB7) move_browser(1);
+        else if(browser_page_ == BrowserPage::HOME) {
+            if(code == '/') prompt(Prompt::OPEN, page_);
+            else if(accept && selection_) {
+                home_cursor_ = skip_ + browser_selection();
+                if(browser_kind(browser_selection()) == explorer_view::Kind::DISK)
+                    browse_section(BrowserPage::DISK);
+                else if(selected_path(selected_file_))
+                    browse_section(explorer_home::folder_page(entries_[browser_selection()].name), selected_file_);
+            }
+        }
         else if(code == 0x88 && !browser_games()) {
             browser_mode_=browser_mode_==explorer_view::Mode::ICONS?explorer_view::Mode::LIST:explorer_view::Mode::ICONS;
             refresh();
@@ -564,10 +570,10 @@ MK61_SERVICE_INPUT_CODE bool Services::input(u8 code) {
     } else if(accept && page_ == ServicePage::LANGUAGE) {
         return_ = ServicePage::LANGUAGE;
         if(tool_ == Document::MK61) {
-            if(selection_ == 0) { browse(page_); browser_load_program_ = true; browse_section(BrowserPage::DISK); }
+            if(selection_ == 0) { browse(page_); browser_load_program_ = true; }
             else prompt(Prompt::EXPORT, page_, "program.m61");
         } else if(selection_ == 0) new_document(tool_);
-        else if(selection_ == 1) { browse(page_); browse_section(BrowserPage::DISK); }
+        else if(selection_ == 1) browse(page_);
         else if(tool_ != document_) message("Open or create a source for this language first", page_);
         else { page_ = ServicePage::EDITOR; if(selection_ == 3) pending_run_ = true; }
     }
@@ -582,8 +588,7 @@ void Services::tick() {
             refresh();
         }
     }
-    if(page_==ServicePage::BROWSER && browser_page_ != BrowserPage::HOME &&
-       (!entries_ || browser_revision_!=files::revision())) refresh();
+    if(page_==ServicePage::BROWSER && (!entries_ || browser_revision_!=files::revision())) refresh();
     if(page_==ServicePage::CLOSED || page_==ServicePage::DEVELOPMENT || page_==ServicePage::LANGUAGE) release_browser();
     restore_script_editor();
     if(pending_run_) { pending_run_=false;run_document(); }
@@ -666,9 +671,10 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         (console_frame_open_?front_console_:console_)[index % ROWS]);
     else if(page_ == ServicePage::BROWSER) {
         if(browser_page_ == BrowserPage::HOME) {
-            if(index < explorer_home::COUNT)
-                std::snprintf(out, COLS+1, "%c %s", browser_selection() == index ? '>' : ' ',
-                    explorer_home::label(explorer_home::ITEMS[index], russian_));
+            char name[64];
+            if(browser_label(index,name))
+                std::snprintf(out, COLS+1, "%c %.*s", browser_selection() == index ? '>' : ' ',
+                    (int)(COLS-2), name);
             return;
         }
         if(index == 0) label(directory_, out, COLS + 1);

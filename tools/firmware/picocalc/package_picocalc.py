@@ -13,16 +13,14 @@ import json
 from pathlib import Path
 import re
 import shutil
-import struct
 import tempfile
 import zipfile
-import zlib
 
 from tools.apps.system.build_picocalc_apps import APPS, ROOT
 from tools.apps.mp3.build_mp3_app import SD_FILES as MP3_SD_FILES
 from tools.apps.packer.mk61_module_pack import PICO_APP_MAX_MEMORY_SIZE
 from seal_picocalc import verify as verify_firmware
-from program_collection import export, plan
+from program_collection import PICO_APP_FOLDERS, export, plan, validate_app
 from explorer_icons import install_bundle_icons
 from tools.apps.urq.library import copy_licenses
 
@@ -30,7 +28,7 @@ README='''MK61S / PicoCalc / Pico H
 
 Copy mk61s-picocalc-pico-h.uf2 to the RPI-RP2 ROM bootloader volume.
 Use the native Micro-USB connector on Pico H. The case USB-C is UART.
-Copy the five folders inside Disk/ to the microSD card root.
+Copy the folders inside Disk/ to the microSD card root.
 Open Explorer > Games and press Enter on a title to play.
 APP images in this bundle target Cortex-M0+ and cannot replace STM32 APPs.
 See README.md for controls, supported formats, clock and power limitations.
@@ -42,32 +40,8 @@ def sha256(path):
 
 
 def verify_app(path, record, memory_limit=PICO_APP_MAX_MEMORY_SIZE):
-    data=path.read_bytes()
-    if record['target']!='picocalc-pico-h' or record['abi']!=6:
-        raise ValueError(f'{path.name}: not a Pico H ABI 6 build')
-    if len(data)<64 or data[:8]!=b'MK61APP\0' or struct.unpack_from('<HHHBB',data,8)!=(1,64,6,4,1):
-        raise ValueError(f'{path.name}: invalid user APP header')
-    flags,base,stored,image,memory,entry=struct.unpack_from('<6I',data,16)
-    if flags&13!=13 or flags&~31 or base!=0x20000000:
-        raise ValueError(f'{path.name}: incompatible CPU/relocation flags')
-    if 'native_display' in record and bool(flags&16)!=record['native_display']:
-        raise ValueError(f'{path.name}: display flag/build manifest mismatch')
-    if not 0<image<=memory<=memory_limit or entry>=image or len(data)!=64+stored:
-        raise ValueError(f'{path.name}: invalid APP bounds')
-    if zlib.crc32(data[:60])!=struct.unpack_from('<I',data,60)[0] or zlib.crc32(data[64:])!=struct.unpack_from('<I',data,48)[0]:
-        raise ValueError(f'{path.name}: APP checksum mismatch')
-    if len(data)!=record['app_bytes'] or sha256(path)!=record['app_sha256']:
-        raise ValueError(f'{path.name}: build manifest mismatch')
-
-
-def copy_app_assets(source, destination, hashes):
-    for name,digest in hashes.items():
-        path=source/name
-        if not path.resolve().is_relative_to(source.resolve()) or sha256(path)!=digest:
-            raise ValueError(f'{source.name} asset/manifest mismatch: {name}')
-        target=destination/path.relative_to(source)
-        target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copy2(path,target)
+    cap=dict(platform='picocalc', profile='picocalc-pico-h', abi=6, app_memory_limit=memory_limit)
+    validate_app(path,cap,build=record)
 
 
 def main():
@@ -103,10 +77,21 @@ def package(directory, output, disk):
     if not 0 < memory_limit <= PICO_APP_MAX_MEMORY_SIZE:
         raise ValueError('invalid Pico H APP memory limit')
     for record in records:verify_app(apps/(record['name']+'.APP'),record,memory_limit)
+    selection=plan(directory, prefer_bundle=False)
+    if selection['capabilities']['app_memory_limit'] != memory_limit:
+        raise ValueError('Pico H APP memory limit does not match build manifest')
+    if missing := set(PICO_APP_FOLDERS.values()) - set(selection['packages']):
+        raise ValueError('incomplete Pico H APP collection: ' + ', '.join(sorted(missing)))
+    assets={name:{Path(record['path']).relative_to(folder).as_posix() for record in selection['files']
+                  if record['package']==folder} for name,folder in PICO_APP_FOLDERS.items()}
+    if assets['MP3']!=set(MP3_SD_FILES):
+        raise ValueError('incomplete MP3 asset manifest')
+    if not {'48.rom','128-0.rom','128-1.rom','AY.S3M'}<=assets['SPECTRUM']:
+        raise ValueError('incomplete Spectrum asset manifest')
     (directory/'README.txt').write_text(README)
     shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')
     manifest=disk.parent/'programs-manifest.json'
-    export(plan(directory, prefer_bundle=False), disk, manifest=manifest)
+    export(selection, disk, manifest=manifest)
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/fonts/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
@@ -118,23 +103,8 @@ def package(directory, output, disk):
     shutil.copy2(ROOT/'tools/device/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',
            directory/'sync_picocalc_clock.py',directory/'program-capabilities.json',
-           *(directory/name for name in licenses.FILES),menu_license,apps/'manifest.json']
-    spectrum=apps/'SPECTRUM'
-    if spectrum.exists():
-        record=json.loads((spectrum/'manifest.json').read_text())
-        if any(Path(name).name in ('ROMCACHE.uf2','rom-cache.json')for name in record['files']):
-            raise ValueError('Rebuild Spectrum SD assets: Flash ROM packs are no longer supported')
-        verify_app(spectrum/'SPECTRUM.APP',record,memory_limit)
-        copy_app_assets(spectrum,disk/'Programs/Spectrum',record['files'])
-        files.append(spectrum/'manifest.json')
-    mp3=apps/'MP3'
-    if mp3.exists():
-        record=json.loads((mp3/'manifest.json').read_text())
-        if set(record['files'])!=set(MP3_SD_FILES):
-            raise ValueError('incomplete MP3 asset manifest')
-        verify_app(mp3/'MP3.APP',record,memory_limit)
-        copy_app_assets(mp3,disk/'Programs/MP3',record['files'])
-        files.append(mp3/'manifest.json')
+           *(directory/name for name in licenses.FILES),menu_license,apps/'manifest.json',
+           *(apps/name/'manifest.json' for name in PICO_APP_FOLDERS)]
     files += copy_licenses(directory/'licenses/urq')
     files += sorted(path for path in (directory/'licenses/ryu').rglob('*') if path.is_file())
     license_folders={parent.relative_to(directory).as_posix() for path in files
@@ -199,7 +169,7 @@ def package(directory, output, disk):
         temporary.replace(output)
     finally:
         temporary.unlink(missing_ok=True)
-    print(f'{output}: {len(records)+int(spectrum.exists())+int(mp3.exists())} native APPs, {output.stat().st_size} bytes')
+    print(f'{output}: {len(records)+len(PICO_APP_FOLDERS)} native APPs, {output.stat().st_size} bytes')
 
 
 if __name__=='__main__':main()

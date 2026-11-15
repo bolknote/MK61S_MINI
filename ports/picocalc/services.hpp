@@ -83,11 +83,9 @@ public:
     unsigned browser_action_selection() const { return selection_; }
     bool russian() const { return russian_; }
     explorer_view::Mode browser_mode() const {
-        return browser_page_ == explorer_home::Page::HOME || browser_games() ? explorer_view::Mode::LIST : browser_mode_;
+        return browser_page_ == explorer_home::Page::HOME || browser_games() ? explorer_view::Mode::ICONS : browser_mode_;
     }
-    unsigned browser_count() const {
-        return browser_page_ == explorer_home::Page::HOME ? explorer_home::COUNT : used_;
-    }
+    unsigned browser_count() const { return used_; }
     unsigned browser_selection() const { return selection_ ? selection_-1 : 0; }
     unsigned browser_offset() const { return skip_; }
     bool browser_more() const { return more_; }
@@ -96,9 +94,7 @@ public:
     bool browser_games() const { return browser_page_ == explorer_home::Page::GAMES; }
     void browser_title(char out[64]) const;
     bool browser_label(unsigned index,char out[64]) const;
-    bool browser_directory(unsigned index) const {
-        return entries_ && index < used_ && entries_[index].directory && !browser_games();
-    }
+    explorer_view::Kind browser_kind(unsigned index) const;
     bool browser_icon(unsigned index,explorer_view::Icon& out) const;
     void filter_directory(const char* utf8);
     bool save_document(const char* path);
@@ -135,7 +131,7 @@ private:
     const char* tr(const char* en, const char* ru) const { return russian_ ? ru : en; }
     void message(const char* value, ServicePage parent);
     void browse(ServicePage parent);
-    void browse_section(explorer_home::Page page, unsigned selection = 1);
+    void browse_section(explorer_home::Page page, const char* path = "/", unsigned offset = 0);
     void browse_game_files();
     void open_game(bool instructions = false);
     void refresh();
@@ -230,6 +226,7 @@ private:
     bool selected_directory_=false, selected_game_=false;
     explorer_home::Page browser_page_=explorer_home::Page::DISK;
     bool return_to_games_=false;
+    unsigned home_cursor_=0;
     unsigned games_skip_=0;
     unsigned browser_return_selection_=1;
     unsigned games_selection_=1;

@@ -379,7 +379,18 @@ static void test_select_flow(bool graphical) {
   auto game = entry("Chess", ProgramType::TEXT, true);game.id=22;game.parent_id=17;
   script.parent_id=22;basic.parent_id=22;
   auto icon=entry("autoexec",ProgramType::IMAGE1);icon.id=104;icon.parent_id=17;
-  entries = {folder, icon, game, script, basic};
+  auto music=entry("Music",ProgramType::TEXT,true);music.id=30;
+  auto documents=entry("Documents",ProgramType::TEXT,true);documents.id=31;
+  auto system=entry("system",ProgramType::TEXT,true);system.id=32;
+  auto fonts=entry("FONTS",ProgramType::TEXT,true);fonts.id=33;
+  auto rootfile=entry("game1",ProgramType::MK61);rootfile.id=34;
+  entries = {rootfile, system, folder, fonts, music, documents, icon, game, script, basic};
+  const app::Location root(program_store::ROOT_ID,explorer_home::Page::HOME);
+  program_store::Entry selected{};
+  assert(app::match_position(root,root.count(),"")==4);
+  assert(app::entry_at(root,app::match_at(root,0,""),selected) && selected.id==17);
+  assert(app::entry_at(root,app::match_at(root,1,""),selected) && selected.id==30);
+  assert(app::entry_at(root,app::match_at(root,3,""),selected) && selected.id==program_store::INVALID_ID);
   auto home = session();home.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
   kbd::events({{KEY_OK}, {KEY_OK}});
   assert(app::select(home));
@@ -388,9 +399,15 @@ static void test_select_flow(bool graphical) {
                {KEY_RIGHT,1301},{KEY_RIGHT,1302},{KEY_OK,1303},{KEY_OK,1304}});
   assert(app::select(home) && home.action==ExplorerAction::LOAD && home.selected_id==101);
 
-  auto documents = session();documents.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
+  auto home_documents = session();
+  home_documents.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
   kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_OK},{KEY_OK}});
-  assert(app::select(documents) && documents.action==ExplorerAction::OPEN_DOCUMENTS);
+  assert(app::select(home_documents) && home_documents.action==ExplorerAction::NEW_DIRECTORY &&
+         home_documents.directory_id==31);
+
+  auto disk = session();disk.reserved=explorer_home::session_flags(explorer_home::Page::HOME);
+  kbd::events({{KEY_LEFT},{KEY_OK},{KEY_OK}});
+  assert(app::select(disk) && disk.action==ExplorerAction::LOAD && disk.selected_id==rootfile.id);
 
   auto program = entry("game1", ProgramType::MK61); program.id = 201;
   entries = {folder, program};
@@ -497,14 +514,16 @@ static void test_native_browser() {
   memset(icon_file,0xFF,sizeof(icon_file));icon_file[0]=icon_file[1]=0;icon_file[2]=icon_file[3]=32;icon_file[4]=0x7F;
   surface.graphical=true;icon_reads=0;surface.frames=0;
   loadable_module::ExplorerSession session{};session.size=sizeof(session);session.directory_id=program_store::ROOT_ID;
-  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_LEFT},{KEY_LEFT},{KEY_ESC},{KEY_ESC}});
+  const u8 home_view=explorer_home::session_flags(explorer_home::Page::HOME);
+  session.reserved=home_view;
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_LEFT},{KEY_LEFT},{KEY_ESC}});
   assert(app::select(session));assert(session.action==loadable_module::ExplorerAction::EXIT);
   assert(icon_reads==1 && surface.frames>=5 && !surface.fullscreen && !language_workspace::active);
   assert(surface.bitmap[(16/8)*192+16]&(1U<<(16&7)));
   for(unsigned x=0;x<192;++x) assert(surface.bitmap[192+x]&8U); // native header, y=11
   // Page transitions reuse the same foreground allocation, never a resident array.
-  session.reserved=0;session.active=0;
-  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_RIGHT},{KEY_ESC},{KEY_ESC}});
+  session.reserved=home_view;session.active=0;
+  kbd::events({{KEY_RIGHT},{KEY_RIGHT},{KEY_RIGHT},{KEY_ESC}});
   assert(app::select(session));assert(session.active==3 && !language_workspace::active);
   // Both the file menu and short OK can browse a launchable folder.
   session.reserved=0;session.active=0;kbd::events({{KEY_OK,0,true},{KEY_OK|(i32)key_state::RELEASED,1400,false},
@@ -517,14 +536,14 @@ static void test_native_browser() {
   assert(!surface.fullscreen && !language_workspace::active);
   // Revision changes invalidate an otherwise identical icon cache page.
   first.name[0]=0;bounded_string::copy(first.name,"a-very-long-folder-name");entries[0]=first;
-  session.directory_id=program_store::ROOT_ID;session.active=0;icon_reads=0;revision_change_at=500;
-  kbd::events({{KEY_ESC,1100},{KEY_ESC}});assert(app::select(session));assert(icon_reads==2);
+  session.reserved=home_view;session.directory_id=program_store::ROOT_ID;session.active=0;icon_reads=0;revision_change_at=500;
+  kbd::events({{KEY_ESC,1100}});assert(app::select(session));assert(icon_reads==2);
   // Invalid WBMP falls back and a busy shared arena retains the old text UI.
-  icon_file[2]=31;session.reserved=0;session.active=0;kbd::events({{KEY_ESC},{KEY_ESC}});assert(app::select(session));
+  icon_file[2]=31;session.reserved=home_view;session.active=0;kbd::events({{KEY_ESC}});assert(app::select(session));
   assert(!(surface.bitmap[(16/8)*192+16]&(1U<<(16&7))));
   language_workspace::available=false;const unsigned frames=surface.frames;
-  session.reserved=0;
-  kbd::events({{KEY_ESC},{KEY_ESC}});assert(app::select(session));assert(surface.frames==frames && !language_workspace::active);
+  session.reserved=home_view;
+  kbd::events({{KEY_ESC}});assert(app::select(session));assert(surface.frames==frames && !language_workspace::active);
   language_workspace::available=true;directory_tree=false;
   puts("Explorer native state machine: cached icons/revision, paging, folder bypass, autoexec, modal cleanup and busy-arena fallback PASS");
 }
@@ -534,6 +553,7 @@ int main() {
   test_extensions();
 #if MK61_EXPLORER_GRAPHICS
   test_native_browser();
+  test_select_flow(true);
 #else
   test_browser(false);
   test_scrolling(false);

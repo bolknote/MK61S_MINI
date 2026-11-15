@@ -5,9 +5,7 @@
 
 namespace explorer_home {
 
-enum class Page : u8 { DISK, HOME, GAMES, PROGRAMS, DOCUMENTS, GAME_FILES };
-constexpr unsigned COUNT = 4;
-constexpr Page ITEMS[COUNT] = {Page::GAMES, Page::PROGRAMS, Page::DOCUMENTS, Page::DISK};
+enum class Page : u8 { DISK, HOME, GAMES, PROGRAMS, DOCUMENTS, GAME_FILES, FOLDER };
 
 inline Page session_page(u8 flags) { return (Page)(flags >> 1); }
 inline u8 session_flags(Page page, u8 previous = 0) {
@@ -24,13 +22,28 @@ inline const char* label(Page page, bool russian) {
   }
 }
 
-inline const char* folder(Page page) {
-  switch(page) {
-    case Page::GAMES: return "Games";
-    case Page::PROGRAMS: return "Programs";
-    case Page::DOCUMENTS: return "Documents";
-    default: return "";
-  }
+// The reserved folder names are ASCII letters in both UTF-8 and M8.
+inline bool named(const char* name, const char* lower) {
+  while(*lower)
+    if(((u8)*name++ | 0x20U) != (u8)*lower++) return false;
+  return *name == 0;
+}
+
+inline bool user_folder(const char* name) {
+  return name[0] != '.' && !named(name, "system") && !named(name, "fonts");
+}
+
+inline Page folder_page(const char* name) {
+  if(named(name, "games")) return Page::GAMES;
+  if(named(name, "programs")) return Page::PROGRAMS;
+  if(named(name, "documents")) return Page::DOCUMENTS;
+  return Page::FOLDER;
+}
+
+inline const char* folder_label(const char* name, bool russian) {
+  const auto page = folder_page(name);
+  if(page != Page::FOLDER) return label(page, russian);
+  return russian && named(name, "music") ? M8("Музыка") : nullptr;
 }
 
 } // namespace explorer_home

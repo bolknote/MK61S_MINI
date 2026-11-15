@@ -4,6 +4,7 @@
 #include "m61_text.hpp"
 #include "mk61_ref.hpp"
 #include "mk8_literal.hpp"
+#include "fat_name.hpp"
 #include "shared_memory_buffer.hpp"
 #include "loadable_module_format.hpp"
 #include <cassert>
@@ -23,9 +24,10 @@ unsigned find(const Services& service,const char* name) {
     for(unsigned i=0;i<service.browser_count();++i) {
         char label[64];if(service.browser_label(i,label) && !std::strcmp(label,name)) return i;
     }
-    assert(false);return 0;
+    return service.browser_count();
 }
 void select(Services& service,unsigned index) {
+    assert(index<service.browser_count());
     while(service.browser_selection()<index) assert(service.input(0xB7));
     while(service.browser_selection()>index) assert(service.input(0xB4));
 }
@@ -42,20 +44,69 @@ void picocalc_explorer_test() {
     {
         Calculator calc;calc.init();Services service;
         service.open(Action::EXPLORER,false,calc);
-        assert(service.browser_count()==4);
-        for(const char* label:{"Games","Programs","My files","All files"}) (void)find(service,label);
-        assert(service.input(0xB6) && service.input(0xB6) && service.input('\r'));
-        assert(files::exists("/Documents") && service.browser_count()==0);
-        assert(service.input(0x1B));
-        assert(files::mkdir("/Games") && files::mkdir("/Games/Chess") && files::mkdir("/Games/Arcade"));
+        assert(service.browser_mode()==explorer_view::Mode::ICONS && service.browser_count()==1 &&
+               service.browser_kind(0)==explorer_view::Kind::DISK);
+        for(const char* path:{"/Games","/Programs","/Documents","/Music","/Photos","/System","/Fonts"})
+            assert(files::exists(path) || files::mkdir(path));
+        assert(files::write_text("/readme.txt","root file",9));
+        assert(files::write_text("/.hidden.txt","hidden file",11));
+        assert(files::write_text("/Programs/ELIZA.APP","fixture",7));
+        assert(files::write_text("/Programs/SHEET.APP","fixture",7));
+        service.tick();
+        assert(service.browser_count()==6);
+        for(const char* label:{"Games","Programs","My files","Music","Photos","All files"})
+            assert(find(service,label)<service.browser_count());
+        for(const char* label:{"System","Fonts","readme.txt",".hidden.txt"})
+            assert(find(service,label)==service.browser_count());
+        select(service,find(service,"Programs"));
+        assert(service.input('\r') && service.browser_mode()==explorer_view::Mode::ICONS);
+        for(const char* label:{"ELIZA","SHEET"}) assert(find(service,label)<service.browser_count());
+        assert(service.input(0x1B) && service.browser_selection()==find(service,"Programs"));
+        select(service,find(service,"Music"));
+        assert(service.input('\r') && service.browser_has_parent() && service.browser_count()==0);
+        assert(service.input(0x1B) && service.browser_selection()==find(service,"Music"));
+
+        for(const char* path:{"/Reports","/Notes","/Books","/Backups"}) assert(files::mkdir(path));
+        service.tick();
+        assert(service.browser_count()==9 && service.browser_more());
+        select(service,8);
+        assert(service.input(0xB7) && service.browser_offset()==9 && service.browser_count()==1 &&
+               service.browser_kind(0)==explorer_view::Kind::DISK);
+        assert(service.input('\r') && service.browser_has_parent() && service.browser_offset()==0);
+        std::vector<std::string> disk_items;
+        for(;;) {
+            for(unsigned i=0;i<service.browser_count();++i) {
+                char label[64];assert(service.browser_label(i,label));disk_items.emplace_back(label);
+            }
+            if(!service.browser_more()) break;
+            select(service,service.browser_count()-1);
+            assert(service.input(0xB7));
+        }
+        for(const char* expected:{"System","Fonts","readme.txt",".hidden.txt"}) {
+            bool found=false;
+            for(const auto& item:disk_items) found |= fat_name::equal(item.c_str(),expected);
+            if(!found) {
+                std::fprintf(stderr,"Full disk missing %s. Listed:",expected);
+                for(const auto& item:disk_items) std::fprintf(stderr," [%s]",item.c_str());
+                std::fputc('\n',stderr);
+            }
+            assert(found);
+        }
+        assert(service.input(0x1B) && !service.browser_has_parent() && service.browser_offset()==9 &&
+               service.browser_kind(service.browser_selection())==explorer_view::Kind::DISK);
+        assert(service.input(0xB4) && service.browser_offset()==0);
+
+        assert(files::mkdir("/Games/Chess") && files::mkdir("/Games/Arcade"));
         assert(files::write_text("/Games/notes.txt","hidden from Games",17));
         const char* m61="R0= 41\nwait 20\nret\n";
         const char* basic="10 .R0=42\n20 END\n";
         assert(files::write_text("/Games/Chess/autoexec.m61",m61,std::strlen(m61)));
         assert(files::write_text("/Games/Arcade/Play.txt","play.tbi\n",9));
         assert(files::write_text("/Games/Arcade/play.tbi",basic,std::strlen(basic)));
-        assert(service.input(0xB5) && service.input(0xB5) && service.input('\r'));
-        assert(service.browser_games() && service.browser_count()==2);
+        select(service,find(service,"Games"));
+        assert(service.input('\r'));
+        assert(service.browser_games() && service.browser_count()==2 &&
+               service.browser_mode()==explorer_view::Mode::ICONS);
         select(service,find(service,"Chess"));
         assert(service.input('\r') && m61_text::active());
         assert(service.take_calculator_request());

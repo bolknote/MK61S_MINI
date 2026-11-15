@@ -39,6 +39,7 @@ class PackageTests(unittest.TestCase):
             (stale_urq/'catalog-report.json').write_text('{}')
             (target/'System/VMCache').mkdir(parents=True)
             (target/'System/old.txt').write_text('stale output, outside this Pico bundle')
+            (target/'System/old.APP').write_bytes(b'stale STM32 module')
             command=[sys.executable,str(ROOT/'tools/firmware/picocalc/package_picocalc.py'),'--directory',str(target)]
             subprocess.run(command,check=True,capture_output=True,text=True)
             version=json.loads((target/'manifest.json').read_text())['prototype_version']
@@ -53,6 +54,7 @@ class PackageTests(unittest.TestCase):
                 self.assertEqual(len(reader.namelist()),len(set(reader.namelist())))
                 disk=prefix+'Disk/'
                 self.assertIn(disk+'Documents/',reader.namelist())
+                self.assertTrue(reader.getinfo(disk+'Music/').is_dir())
                 self.assertFalse(any(name.startswith(prefix+path) for name in reader.namelist()
                                      for path in ('urq/','games/','examples/','apps/URQ/')))
                 for title, name, source in disk_games():
@@ -82,6 +84,10 @@ class PackageTests(unittest.TestCase):
                 hashes=json.loads(reader.read(prefix+f'bundle-sha256-{version}.json'))
                 for name,digest in hashes.items():
                     self.assertEqual(hashlib.sha256(reader.read(prefix+name)).hexdigest(),digest,name)
+                packed=json.loads(reader.read(prefix+'programs-manifest.json'))
+                disk_files={item.filename[len(disk):] for item in reader.infolist()
+                            if item.filename.startswith(disk) and not item.is_dir()}
+                self.assertEqual(disk_files,{entry['path'] for entry in packed['files']})
                 for font in ('DejaVu-12.FMK','DejaVu-14.FMK'):
                     self.assertEqual(reader.read(disk+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
                 for game_dir in sorted((ROOT/'programs/games').iterdir()):
@@ -93,9 +99,49 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(reader.read(disk+'Programs/Examples/'+name),(ROOT/'programs/examples'/name).read_bytes())
                 # A release can be installed without consulting the local source tree.
                 reader.extractall(target/'extracted')
-            from program_collection import plan
-            frozen=plan(target/'extracted/mk61s-picocalc-pico-h')
-            self.assertIn('Games/Runner/autoexec.m61',{entry['path'] for entry in frozen['files']})
+            from program_collection import distribution_manifest, export, plan
+            extracted=target/'extracted/mk61s-picocalc-pico-h'
+            self.assertEqual(distribution_manifest(plan(extracted)),packed)
+            self.assertEqual(distribution_manifest(plan(target)),packed)
+            output=target/'export'
+            export(plan(target),output,system=target/'System')
+            self.assertFalse((output/'System/old.APP').exists())
+            self.assertTrue((output/'Music').is_dir())
+            # An older archive listed these assets only in the app manifests.
+            file=extracted/'programs-manifest.json'
+            native={'Programs/Spectrum','Programs/MP3'}
+            legacy={**packed,'packages':[p for p in packed['packages'] if p not in native],
+                    'files':[r for r in packed['files'] if r['package'] not in native]}
+            legacy['total_bytes']=sum(r['size'] for r in legacy['files'])
+            file.write_text(json.dumps(legacy),encoding='utf-8')
+            restored=distribution_manifest(plan(extracted))
+            self.assertCountEqual(restored['files'],packed['files'])
+            self.assertCountEqual(restored['packages'],packed['packages'])
+            self.assertEqual(restored['total_bytes'],packed['total_bytes'])
+            mp3_manifest=extracted/'apps/MP3/manifest.json'
+            original=mp3_manifest.read_text(encoding='utf-8')
+            mp3=json.loads(original)
+            old_mp3={'MP3.APP','RECORD.LP','README.md','LIBMAD-LICENSE.txt'}
+            mp3['files']={name:digest for name,digest in mp3['files'].items() if name in old_mp3}
+            mp3_manifest.write_text(json.dumps(mp3),encoding='utf-8')
+            self.assertEqual({Path(r['path']).name for r in plan(extracted)['files']
+                              if r['package']=='Programs/MP3'},old_mp3)
+            mp3_manifest.write_text(original,encoding='utf-8')
+            file.write_text(json.dumps(packed),encoding='utf-8')
+            device=target/'mock-device';(device/'Music').mkdir(parents=True)
+            (device/'Music/my-track.mp3').write_bytes(b'my-track')
+            install=[sys.executable,str(ROOT/'tools/programs/program_bundle.py'),'--bundle',str(extracted),
+                     '--install','--verify','--mock',str(device)]
+            installed=subprocess.run(install,capture_output=True,text=True)
+            self.assertEqual(installed.returncode,0,installed.stdout+installed.stderr)
+            self.assertIn(f'"installed": {len(disk_files)}',installed.stdout)
+            self.assertTrue(all((device/name).is_file() for name in disk_files))
+            for folder in native:
+                for asset in (extracted/'Disk'/folder).rglob('*'):
+                    if asset.is_file():
+                        self.assertEqual((device/asset.relative_to(extracted/'Disk')).read_bytes(),asset.read_bytes())
+            self.assertEqual((device/'Music/my-track.mp3').read_bytes(),b'my-track')
+            self.assertTrue((device/'Documents').is_dir())
             report=target/'hardware-software-summary.json'
             build=json.loads((target/'manifest.json').read_text())
             before=archive.read_bytes()

@@ -102,6 +102,9 @@ void Canvas::item(u8 slot,const char* name,Kind kind,const Icon* icon,bool selec
     if(icon) {
       for(u8 y=0;y<32;++y) for(u8 x=0;x<32;++x)
         if(icon->pixels[y*4+x/8]&(0x80U>>(x&7))) pixel(left+x,top+y);
+    } else if(kind==Kind::DISK) {
+      rectangle(left+3,top+5,26,22);rectangle(left+5,top+7,22,18,false);
+      rectangle(left+5,top+19,22,1);rectangle(left+9,top+22,4,1);
     } else if(kind==Kind::DIRECTORY) {
       rectangle(left+3,top+5,10,1);rectangle(left+3,top+5,1,22);
       rectangle(left+13,top+6,1,1);rectangle(left+14,top+7,1,1);

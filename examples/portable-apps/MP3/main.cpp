@@ -613,7 +613,7 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         if (app.start(app.path)) app.build_playlist(active);
         else app.toggle_files();
     } else {
-        if (!app.use_directory("/Documents/Music") && !app.use_directory("/Music") && !app.use_directory("/Documents")) {
+        if (!app.use_directory("/Music") && !app.use_directory("/Documents/Music") && !app.use_directory("/Documents")) {
             if (app_id != UINT32_MAX &&
                 app.call_file(MK61_FILE_BYTES_PATH, nullptr, app_id, app.directory, sizeof(app.directory))) {
                 app.parent();

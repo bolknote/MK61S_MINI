@@ -150,8 +150,6 @@ void picocalc_software_test(const char* preview_path) {
     text("/Software/auto/autoexec.m61","poke X 61\n");
     text("/Software/auto/autoexec.tbi","10 .X=17\n20 END\n");
     services.open(Action::EXPLORER,false,calculator);
-    for(unsigned i=0;i<3;++i) assert(services.input(0xB6));
-    assert(services.input('\r')); // All files
     services.input('/');
     for(char ch:std::string("/Software/auto")) services.input((u8)ch);
     services.input('\r');

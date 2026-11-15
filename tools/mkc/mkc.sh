@@ -768,24 +768,31 @@ start_monitor() {
 
 remote_send() {
   [ -n "$MONITOR_INPUT_FD" ] || return 1
-  local encoded
-  encoded=$(printf '%s' "$1" | iconv -f UTF-8 -t WINDOWS-1251) || {
-    STATUS_TEXT='Команда содержит символ, которого нет в CP1251'
-    return 1
-  }
+  local encoded=$1 LC_ALL=C
+  case "$encoded" in
+    *[!$'\001'-$'\177']*)
+      encoded=$(printf '%s' "$encoded" | iconv -f UTF-8 -t WINDOWS-1251) || {
+        STATUS_TEXT='Команда содержит символ, которого нет в CP1251'
+        return 1
+      }
+      ;;
+  esac
   printf '%s\r' "$encoded" >&7
 }
 
 serial_read_line() {
-  local timeout=${1:-5}
+  local timeout=${1:-5} LC_ALL=C
   SERIAL_LINE=
   IFS= read -r -t "$timeout" SERIAL_LINE <&8 || return 1
   SERIAL_LINE=${SERIAL_LINE%$'\r'}
-  SERIAL_LINE=$(printf '%s' "$SERIAL_LINE" |
-    iconv -f WINDOWS-1251 -t UTF-8) || {
-      STATUS_TEXT='Калькулятор прислал неверную строку CP1251'
-      return 1
-    }
+  case "$SERIAL_LINE" in
+    *[!$'\001'-$'\177']*)
+      SERIAL_LINE=$(printf '%s' "$SERIAL_LINE" | iconv -f WINDOWS-1251 -t UTF-8) || {
+        STATUS_TEXT='Калькулятор прислал неверную строку CP1251'
+        return 1
+      }
+      ;;
+  esac
   if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then
     case "$SERIAL_LINE" in 'mk61> '*) SERIAL_LINE=${SERIAL_LINE#'mk61> '} ;; esac
   fi
@@ -1068,8 +1075,8 @@ hex_file_to_binary() {
 }
 
 remote_put_file() {
-  local source=$1 destination=$2 payload=$1 size crc hex offset=0 chunk expected wire_mode=
-  if is_text_path "$destination"; then
+  local source=$1 destination=$2 mode=${3:-auto} payload=$1 size crc offset=0 chunk expected wire_mode=
+  if [ "$mode" = auto ] && is_text_path "$destination"; then
     payload="$SESSION_DIR/upload.m8"
     if ! utf8_to_m8_file "$source" "$payload" 2>/dev/null; then
       STATUS_TEXT='Текст содержит неверный UTF-8 или символ вне M8'
@@ -1084,20 +1091,24 @@ remote_put_file() {
   fi
   size=$(wc -c < "$payload" | tr -d '[:space:]')
   crc=$(file_checksum "$payload") || return 1
-  if [ "$DETECTED_PROFILE" = picocalc-pico-h ] && is_text_path "$destination"; then wire_mode=' m8'; fi
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then
+    if [ "$mode" = staged ]; then wire_mode=' staged'
+    elif [ "$mode" = auto ] && is_text_path "$destination"; then wire_mode=' m8'
+    fi
+  fi
+  (set -o pipefail; file_to_hex "$payload" | fold -w "$((FS_PUT_CHUNK_BYTES * 2))") > "$SESSION_DIR/upload.hex" || return 1
   remote_send "fsput begin \"$destination\" $size $crc$wire_mode" || return 1
   wait_for_marker '@MKC:READY ' || return 1
   expected=${MARKER_LINE#@MKC:READY }
   [ "$expected" = "$size" ] || { STATUS_TEXT='Неверный ответ fsput begin'; return 1; }
-  hex=$(file_to_hex "$payload") || return 1
-  while [ "$offset" -lt "$size" ]; do
-    chunk=${hex:$((offset * 2)):$((FS_PUT_CHUNK_BYTES * 2))}
+  while IFS= read -r chunk || [ -n "$chunk" ]; do
     remote_send "fsput data $offset $chunk" || return 1
     wait_for_marker '@MKC:ACK ' || return 1
     offset=$((offset + ${#chunk} / 2))
     expected=${MARKER_LINE#@MKC:ACK }
     [ "$expected" = "$offset" ] || { STATUS_TEXT='Неверное смещение ACK'; return 1; }
-  done
+  done < "$SESSION_DIR/upload.hex"
+  [ "$offset" = "$size" ] || { STATUS_TEXT='Размер fsput не совпал'; return 1; }
   remote_send 'fsput end' || return 1
   wait_for_marker '@MKC:DONE ' || return 1
   case "$MARKER_LINE" in "@MKC:DONE $size $crc") return 0 ;; esac
@@ -1106,10 +1117,10 @@ remote_put_file() {
 }
 
 remote_get_file() {
-  local source=$1 destination=$2 header_size header_crc line rest offset hex
+  local source=$1 destination=$2 mode=${3:-auto} header_size header_crc line rest offset hex
   local received=0 end_size end_crc actual_size actual_crc
   if [ -n "$MOCK_ROOT" ]; then
-    if is_text_path "$source"; then
+    if [ "$mode" = auto ] && is_text_path "$source"; then
       m8_to_utf8_file "$(mock_path "$source")" "$destination" 2>/dev/null || {
         STATUS_TEXT="Файл $source содержит неверный M8"; return 1;
       }
@@ -1123,7 +1134,7 @@ remote_get_file() {
   : > "$SESSION_DIR/download.hex"
   local wire_mode= header_timeout=5
   if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then header_timeout=120; fi
-  if [ "$DETECTED_PROFILE" = picocalc-pico-h ] && is_text_path "$source"; then wire_mode=' m8'; fi
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ] && [ "$mode" = auto ] && is_text_path "$source"; then wire_mode=' m8'; fi
   remote_send "fsget \"$source\"$wire_mode" || return 1
   wait_for_marker '@MKC:GET ' "$header_timeout" || return 1
   rest=${MARKER_LINE#@MKC:GET }
@@ -1163,7 +1174,7 @@ remote_get_file() {
   [ "$actual_size" = "$header_size" ] && [ "$actual_crc" = "$header_crc" ] || {
     STATUS_TEXT='Ошибка контрольной суммы fsget'; return 1;
   }
-  if is_text_path "$source"; then
+  if [ "$mode" = auto ] && is_text_path "$source"; then
     m8_to_utf8_file "$SESSION_DIR/download.bin" "$destination" 2>/dev/null || {
       STATUS_TEXT='Калькулятор прислал текст с неверным M8'
       return 1
@@ -3584,7 +3595,10 @@ bundle_session() {
     case "$operation" in
       LIST) remote_list_raw "$remote" "$local_file" && ok=1 ;;
       GET) remote_get_file "$remote" "$local_file" && ok=1 ;;
+      GET-RAW) remote_get_file "$remote" "$local_file" raw && ok=1 ;;
       PUT) remote_put_file "$local_file" "$remote" && ok=1 ;;
+      PUT-RAW) remote_put_file "$local_file" "$remote" raw && ok=1 ;;
+      PUT-STAGED) remote_put_file "$local_file" "$remote" staged && ok=1 ;;
       MKDIR) remote_mkdir "$remote" && ok=1 ;;
       REMOVE) remote_delete "$remote" && ok=1 ;;
       *) return 1 ;;
