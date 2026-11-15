@@ -18,6 +18,11 @@ static bool read_bytes(void* raw,uint32_t at,uint8_t* out,uint32_t n) {
     if(at>source->size || n>source->size-at) return false;
     memcpy(out,source->bytes+at,n);return true;
 }
+static unsigned wide_reads;
+static bool read_wide(void* raw,uint32_t at,uint8_t* out,uint32_t n) {
+    ++wide_reads;
+    return read_bytes(raw,at,out,n);
+}
 static bool write_bytes(void* raw,uint32_t at,const uint8_t* in,uint32_t n) {
     bytes* source=raw;
     if(at>source->size || n>source->size-at) return false;
@@ -252,7 +257,8 @@ static void raster_test(void) {
     timed_cpu(out,sizeof(out),0x8000,screen-32*224-16,false);
     machine.cpu.a=2;
     spectrum_raster_begin(&machine,buffer,frame,raster_copy);
-    spectrum_run(&machine,69888-machine.frame_tstates);
+    spectrum_run(&machine,32*224);
+    assert(machine.frames==0 && machine.video_cell>=32*40);
     assert(raster_pixel(frame,8,0)==0 && raster_pixel(frame,16,0)==spectrum_color(2));
     assert(raster_pixel(frame,0,1)==spectrum_color(2));
 
@@ -288,6 +294,49 @@ static void compressed_page_test(void) {
         encoded[source.size-1]^=1;
         assert(spectrum_inflate(&source,0,source.size,&out,&used)==SPECTRUM_FORMAT);
     }
+}
+
+static uint8_t wide_byte(unsigned bank,unsigned offset) {
+    return (uint8_t)(offset*7u+(offset>>8)*11u+bank*19u);
+}
+
+static void wide_scanlines(void) {
+    for(unsigned bank=4;bank<=7;++bank) {
+        for(unsigned offset=0;offset<sizeof(workspace);++offset) workspace[offset]=wide_byte(bank,offset);
+        assert(spectrum_bank_write(&memory,bank,0,workspace,sizeof(workspace)));
+    }
+    memory.io.read=read_wide;
+    for(unsigned screen=0;screen<2;++screen) {
+        const unsigned bank=screen?7:5;
+        assert(spectrum_memory_page(&memory,screen?8:0));
+        machine.frames=screen?16:0;
+        for(unsigned strip=0;strip<3;++strip) {
+            uint8_t lcd[10240];
+            mk61_service_color_frame frame;
+            const unsigned rows=strip<2?104:96;
+            wide_reads=0;
+            assert(spectrum_video_strip(&machine,64,strip,lcd,&frame));
+            assert(frame.width==320 && frame.height==rows && frame.y==8+104*strip);
+            assert(wide_reads<=54); // three areas, two planes, eight phases and attributes
+            for(unsigned line=0;line<rows;++line) {
+                const unsigned y=104*strip+line;
+                const unsigned row=y<64?y:y<256?y-64:y-256;
+                const unsigned page=y>=64 && y<256?bank:bank-1;
+                const unsigned bitmap=(row&7)*256+(row&56)*4+(row&192)*32+(y>=256?0x1800:0);
+                const unsigned attrs=(y<64?0x1000:y<256?0x1800:0x1300)+(row/8)*32;
+                for(unsigned x=0;x<40;++x) {
+                    const unsigned column=x<4?28+x:x<36?8192+x-4:8+x-36;
+                    assert(lcd[line*40+x]==wide_byte(page,bitmap+column));
+                    if(line%8) continue;
+                    const unsigned attr=wide_byte(page,attrs+column),bright=(attr&64)>>3;
+                    unsigned ink=(attr&7)|bright,paper=((attr>>3)&7)|bright;
+                    if((attr&128) && screen) {const unsigned t=ink;ink=paper;paper=t;}
+                    assert(frame.tiles[(line/8)*40+x]==(paper<<4|ink));
+                }
+            }
+        }
+    }
+    memory.io.read=read_bytes;
 }
 
 static void snapshot_test(unsigned model) {
@@ -367,6 +416,7 @@ static void snapshot_test(unsigned model) {
         assert(frame.width==320 && frame.height==104 && frame.y==8 && lcd[0]==0x97);
         assert(spectrum_video_strip(&machine,64,1,lcd,&frame) && frame.y==112);
         assert(spectrum_video_strip(&machine,64,2,lcd,&frame) && frame.y==216 && frame.height==96);
+        wide_scanlines();
     }
 }
 

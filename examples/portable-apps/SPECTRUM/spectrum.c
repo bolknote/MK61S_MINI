@@ -96,11 +96,12 @@ static void raster_until(spectrum* s,uint32_t cycles) {
     unsigned line=(unsigned)elapsed/224,through=(unsigned)elapsed%224;
     unsigned end=line>=RASTER_ROWS?RASTER_ROWS*RASTER_COLUMNS:
         line*RASTER_COLUMNS+(through<160?(through+3)/4:RASTER_COLUMNS);
+    unsigned cell=s->video_cell;
+    if(cell>=end) return;
+    unsigned y=cell/RASTER_COLUMNS,x=cell%RASTER_COLUMNS,inside=cell%RASTER_CELLS;
     const uint8_t* screen=ula_screen(s);
     const uint16_t border=spectrum_border(s);
-    while(s->video_cell<end) {
-        const unsigned cell=s->video_cell++,y=cell/RASTER_COLUMNS,x=cell%RASTER_COLUMNS;
-        const unsigned inside=cell%RASTER_CELLS;
+    for(;cell<end;++cell) {
         uint16_t paper=border,ink=border;
         unsigned bits=0;
         if((y-32u)<192 && (x-4u)<32) {
@@ -116,11 +117,15 @@ static void raster_until(spectrum* s,uint32_t cycles) {
         s->video_bytes[inside]=(uint8_t)bits;
         pair[0]=(uint8_t)paper;pair[1]=(uint8_t)(paper>>8);
         pair[2]=(uint8_t)ink;pair[3]=(uint8_t)(ink>>8);
-        if(inside==RASTER_CELLS-1 &&
-           !s->video_store(s->video_context,y/SPECTRUM_RASTER_STRIP_ROWS,s->video_bytes)) {
-            s->video_bytes=NULL;return;
+        if(++inside==RASTER_CELLS) {
+            if(!s->video_store(s->video_context,y/SPECTRUM_RASTER_STRIP_ROWS,s->video_bytes)) {
+                s->video_bytes=NULL;return;
+            }
+            inside=0;
         }
+        if(++x==RASTER_COLUMNS) {x=0;++y;}
     }
+    s->video_cell=end;
 }
 static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
     spectrum* s=context;
@@ -296,6 +301,11 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     }
     s->frame_tstates=phase;s->cpu.ldir_until=0;
     spectrum_sound_publish(s);
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    // Quiet screen regions still have a beam. Capture them a CPU slice
+    // at a time so a frame of pixels cannot delay the next audio events.
+    if(s->video_bytes) raster_until(s,(uint32_t)s->cpu.cyc);
+#endif
     return elapsed;
 }
 static bool down(const uint8_t* keys,unsigned c) { return (keys[c/8]&(1U<<(c&7)))!=0; }
