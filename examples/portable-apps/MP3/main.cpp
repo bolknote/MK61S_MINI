@@ -627,8 +627,11 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     app.screen.cache_tapes();
     if (!app.screen.select_tape(TapeView::cassette)) (void)app.screen.select_tape(TapeView::reel);
     app.loop();
+    const unsigned finished_at = mk61_api->millis_ms();
+    // Preserve the last stereo sample for the output driver's shutdown ramp.
+    app.close_audio();
     app.mute();
-    app.animate(mk61_api->millis_ms());
+    app.animate(finished_at);
     const auto& queue = app.work->queue;
     const unsigned rendered = __atomic_load_n(&queue.rendered, __ATOMIC_RELAXED);
     if (rendered) {
@@ -648,7 +651,6 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         if (length > 0 && length < (int)sizeof(line))
             s->call(MK61_SERVICE_DEBUG_WRITE, (unsigned)length, 0, 0, line);
     }
-    app.close_audio();
     s->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, nullptr);
     app.screen.release_tapes();
     if (art.handle) mk61_app_buffer_release(s, art.handle);

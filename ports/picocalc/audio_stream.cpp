@@ -235,7 +235,7 @@ struct AlarmEntryPort {
         irq_remove_handler(irq,before);irq_set_exclusive_handler(irq,after);
     }
 };
-void remote_quiesce() {
+void remote_quiesce(bool park_at_center) {
     synth_dma.store(false,std::memory_order_release);
     if(remote_pacer>=0)dma_timer_set_fraction((unsigned)remote_pacer,0,1);
     if(remote_channel>=0) {
@@ -243,7 +243,7 @@ void remote_quiesce() {
         channel_config_set_enable(&config,false);dma_channel_set_config((unsigned)remote_channel,&config,false);
         dma_channel_abort((unsigned)remote_channel);
     }
-    pwm_set_both_levels(pwm_gpio_to_slice_num(26),128,128);
+    if(park_at_center) pwm_set_both_levels(pwm_gpio_to_slice_num(26),128,128);
 }
 void remote_release() {
     const bool had_remote=remote_channel>=0 || remote_pacer>=0 || remote_alarm_live;
@@ -254,7 +254,7 @@ void remote_release() {
     const bool owned=remote_priority.active;const unsigned irq=remote_priority.irq,previous=remote_priority.previous;
     const bool restored=remote_priority.release(priority_port);
     if(owned)refill_restored.store(entry_restored && restored && priority_port.priority(irq)==previous);
-    remote_quiesce();
+    remote_quiesce(false);
     // Both DMA and the diagnostic IRQ owner are now stopped. Preserve the
     // record in the inactive remote PWM buffer before local DMA reuses128B.
     if(had_remote)remote_samples_storage.retain(mk61_audio_dma_storage.remote);
@@ -265,7 +265,7 @@ bool remote_tick(repeating_timer* alarm) {
     if(!synth_dma.load(std::memory_order_acquire))return false;
     const uint32_t started=time_us_32();
     mk61_remote_alarm_trace.callback();
-    if(m3_audio::failed()){remote_quiesce();remote_alarm_live=false;return false;}
+    if(m3_audio::failed()){remote_quiesce(true);remote_alarm_live=false;return false;}
     const uint32_t filled=remote_ring.filled;
     uint32_t before=0,after=0;unsigned reads=0;
     const bool busy=dma_channel_is_busy((unsigned)remote_channel);
@@ -282,7 +282,7 @@ bool remote_tick(repeating_timer* alarm) {
         refill_late_stage.store(!busy?1:reads==1?2:3,std::memory_order_relaxed);
         refill_head_before.store(before,std::memory_order_relaxed);refill_head_after.store(after,std::memory_order_relaxed);refill_filled.store(filled,std::memory_order_relaxed);
         synth_underruns.fetch_add(1,std::memory_order_relaxed);m3_audio::fault(-31);
-        remote_quiesce();remote_alarm_live=false;return false;
+        remote_quiesce(true);remote_alarm_live=false;return false;
     }
     alarm->delay_us=DutyRing::next_delay(result,before,filled);
     mk61_remote_alarm_trace.planned((int32_t)alarm->delay_us);
@@ -335,6 +335,28 @@ void silence_pwm() {
     pwm_set_enabled(pwm_gpio_to_slice_num(26),false);
     for(unsigned pin=26;pin<=27;++pin) { gpio_init(pin);gpio_set_dir(pin,GPIO_OUT);gpio_put(pin,false); }
 }
+void fade_pwm_to_zero() {
+    // Timer/DMA are already stopped. Slew the last actual stereo duties to
+    // zero, including the 50% bias left by a silent PCM stream. The handoff
+    // to GPIO low then has no step and needs no live APP callback.
+    const unsigned slice=pwm_gpio_to_slice_num(26);
+    const uint32_t levels=pwm_hw->slice[slice].cc;
+    const auto clamp=[](unsigned value) { return value<256u?value:256u; };
+    const unsigned left=clamp(uint16_t(levels)),right=clamp(levels>>16);
+    if(!left && !right)return;
+    constexpr unsigned steps=128,scale=steps*steps*steps;
+    for(unsigned remaining=steps;remaining--;) {
+        const uint32_t start=time_us_32();
+        do {
+            io_worker::service();
+            busy_wait_us_32(40);
+        } while(time_us_32()-start<200);
+        // Smoothstep has zero slope at both ends of the 25.6 ms ramp.
+        const unsigned weight=remaining*remaining*(3*steps-2*remaining);
+        pwm_set_both_levels(slice,(left*weight+scale/2)/scale,(right*weight+scale/2)/scale);
+    }
+    busy_wait_us_32(8); // Let the double-buffered compare latch at wrap.
+}
 bool tick(repeating_timer*) {
     const auto mode=playback.load(std::memory_order_acquire);
     if(mode==Playback::IDLE) return false;
@@ -364,7 +386,8 @@ bool ensure_pool() {
 bool start_timer() {
     return ensure_pool() && alarm_pool_add_repeating_timer_us(pool,-40,tick,nullptr,&timer);
 }
-void stop(void*) {
+void stop(bool smooth_close=false) {
+    const auto mode=playback.load(std::memory_order_acquire);
     bool dma_owned=false;
 #if defined(PICO_ON_DEVICE)
     if(remote_channel>=0){remote_release();dma_owned=true;}
@@ -372,9 +395,11 @@ void stop(void*) {
 #if MK61_PICOCALC_SYNTH_DMA
     if(synth_timer>=0){dma_release();dma_owned=true;}
 #endif
-    if(!dma_owned && playback.load(std::memory_order_acquire)!=Playback::IDLE) cancel_repeating_timer(&timer);
-    generator={};generator_duties=false;playback.store(Playback::IDLE,std::memory_order_release);
+    if(!dma_owned && mode!=Playback::IDLE) cancel_repeating_timer(&timer);
+    generator={};generator_duties=false;
+    if(smooth_close && mode==Playback::STREAM) fade_pwm_to_zero();
     silence_pwm();
+    playback.store(Playback::IDLE,std::memory_order_release);
     auto* old=queue;queue=nullptr;delete old;
 }
 void prepare_pwm(uint16_t center=128) {
@@ -452,7 +477,7 @@ void close_impl(bool preserve_pool) {
     // pieces. Create and destroy it on core 1, its IRQ owner.
     if(playback.load(std::memory_order_acquire)!=Playback::IDLE || (!preserve_pool && pool)) {
         io_worker::invoke(&preserve_pool,[](void* raw) {
-            if(playback.load(std::memory_order_acquire)!=Playback::IDLE) stop(nullptr);
+            if(playback.load(std::memory_order_acquire)!=Playback::IDLE) stop(true);
             if(!*(const bool*)raw && pool) { alarm_pool_destroy(pool);pool=nullptr; }
         });
     }
@@ -464,7 +489,7 @@ void close_impl(bool preserve_pool) {
 }
 void close() { close_impl(false); }
 void stop_key_click() {
-    if(playback.load(std::memory_order_acquire)==Playback::KEY_CLICK) io_worker::invoke(nullptr,stop);
+    if(playback.load(std::memory_order_acquire)==Playback::KEY_CLICK) io_worker::invoke(nullptr,[](void*) { stop(); });
 }
 KeyClickStatistics key_click_statistics() {
     return {clicks_started.load(std::memory_order_acquire),clicks_completed.load(std::memory_order_acquire),
@@ -482,11 +507,11 @@ bool key_click() {
     bool ok=false;
     io_worker::invoke(&ok,[](void* raw) {
         if(active()) return;
-        stop(nullptr);click.reset();prepare_pwm(0);
+        stop();click.reset();prepare_pwm(0);
         playback.store(Playback::KEY_CLICK,std::memory_order_release);
         *(bool*)raw=start_timer();
         if(*(bool*)raw) clicks_started.store(clicks_started.load(std::memory_order_relaxed)+1,std::memory_order_release);
-        else stop(nullptr);
+        else stop();
     });
     return ok;
 }
@@ -507,7 +532,7 @@ uint32_t start_generator(const mk61_service_audio_synth& r,unsigned master,bool 
 #endif
         if(MK61_PICOCALC_AUDIO_DMA && !generator_duties && start_dma()) { *(bool*)raw=true;return; }
 #endif
-        *(bool*)raw=start_timer();if(!*(bool*)raw) stop(nullptr);
+        *(bool*)raw=start_timer();if(!*(bool*)raw) stop();
     });
     if(!ok && boost){cosmic_clock::audio_end();clock_owned=false;}
     return ok;
@@ -533,7 +558,7 @@ void poll() {
     if(!remote || !m3_audio::failed())return;
     const auto saved=recovery;const unsigned master=recovery_master;
     const bool required=remote_only;
-    if(active())io_worker::invoke(nullptr,stop);
+    if(active())io_worker::invoke(nullptr,[](void*) { stop(); });
     m3_audio::close();remote=false;remote_only=false;recovery={};
     saved.recover(saved.local.context);
     if(required)return;
@@ -566,7 +591,7 @@ uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master) {
         bool ok=false;
         io_worker::invoke(&ok,[](void* raw) {
             prepare_pwm();playback.store(Playback::STREAM,std::memory_order_release);
-            *(bool*)raw=start_timer();if(!*(bool*)raw) stop(nullptr);
+            *(bool*)raw=start_timer();if(!*(bool*)raw) stop();
         });
         if(!ok) { close();return 0; }
     } else if(operation==MK61_AUDIO_WRITE) {

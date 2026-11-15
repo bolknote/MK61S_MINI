@@ -16,10 +16,7 @@ DMA_HEADER=r'''
 enum { DMA_IRQ_1=12,DMA_SIZE_32=2,PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY=128,clk_sys=0 };
 struct dma_channel_config { unsigned channel=0,chain=0,dreq=0,ring=0,size=0;bool enabled=true,read_increment=false,write_increment=false; };
 struct fake_dma_hw { uint32_t ints1=0; };
-struct fake_pwm_slice { uint32_t cc=0; };
-struct fake_pwm_hw { fake_pwm_slice slice[8]; };
 extern fake_dma_hw* dma_hw;
-extern fake_pwm_hw* pwm_hw;
 unsigned clock_get_hz(unsigned);
 int dma_claim_unused_channel(bool);int dma_claim_unused_timer(bool);
 void dma_channel_unclaim(unsigned);void dma_timer_unclaim(unsigned);

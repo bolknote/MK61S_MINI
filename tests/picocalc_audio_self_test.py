@@ -14,6 +14,9 @@ using repeating_timer_t=repeating_timer;
 using repeating_timer_callback_t=bool(*)(repeating_timer*);
 struct repeating_timer { repeating_timer_callback_t callback=nullptr; };
 struct alarm_pool_t {};
+struct fake_pwm_slice { uint32_t cc=0; };
+struct fake_pwm_hw { fake_pwm_slice slice[8]; };
+extern fake_pwm_hw* pwm_hw;
 alarm_pool_t* alarm_pool_create_with_unused_hardware_alarm(unsigned);
 void alarm_pool_destroy(alarm_pool_t*);
 bool alarm_pool_add_repeating_timer_us(alarm_pool_t*,int64_t,repeating_timer_callback_t,void*,repeating_timer*);
@@ -23,6 +26,7 @@ void gpio_init(unsigned);void gpio_set_dir(unsigned,bool);void gpio_put(unsigned
 unsigned pwm_gpio_to_slice_num(unsigned);
 void pwm_set_both_levels(unsigned,uint16_t,uint16_t);void pwm_set_enabled(unsigned,bool);
 void pwm_set_clkdiv_int_frac4(unsigned,unsigned,unsigned);void pwm_set_wrap(unsigned,unsigned);
+uint32_t time_us_32();void busy_wait_us_32(uint32_t);
 """
 
 with tempfile.TemporaryDirectory(prefix="picocalc-audio-") as temp:

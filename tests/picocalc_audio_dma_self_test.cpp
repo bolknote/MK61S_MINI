@@ -15,7 +15,6 @@ struct Channel {
 };
 std::array<Channel,12> channels;
 fake_dma_hw dma_registers;
-fake_pwm_hw pwm_registers;
 bool timer_claimed=false,force_timer_failure=false;
 int channel_budget=12;
 unsigned numerator=0,denominator=0;
@@ -65,7 +64,6 @@ uint32_t expected(unsigned i) {
 }
 }
 fake_dma_hw* dma_hw=&dma_registers;
-fake_pwm_hw* pwm_hw=&pwm_registers;
 unsigned clock_get_hz(unsigned clock) {
     assert(clock==clk_sys);
 #if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
@@ -128,7 +126,9 @@ int main() {
     for(unsigned i=0;i<wire.size();++i) assert(wire[i]==expected(i));
     // A shared DMA interrupt must preserve another owner's pending bit.
     dma_registers.ints1|=1U<<11;dispatch_irq();assert(dma_registers.ints1==(1U<<11));
-    close();resources_released();assert(dma_registers.ints1==(1U<<11) && !enabled && !active());
+    const auto generated=state.calls;
+    trace_close();close();check_fade();
+    resources_released();assert(state.calls==generated && dma_registers.ints1==(1U<<11) && !active());
     dma_registers.ints1=0;
     for(int budget:{0,1,2}) {
         channel_budget=budget;force_timer_failure=budget==2;state={};
