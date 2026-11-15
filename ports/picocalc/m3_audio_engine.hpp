@@ -24,7 +24,7 @@ struct AudioEngine {
     std::atomic<int> error{0};
     std::atomic<bool> stopping{false},stopped{false};
     uint32_t module=0,job=0,blocks=0,samples=0,max_slice=0,underruns=0;
-    uint32_t render_started=0,max_render_us=0,starve_stage=0,starve_request_us=0;
+    uint32_t render_started=0,max_render_us=0,starve_stage=0,starve_request_us=0,missing_since=0;
     uint32_t min_render_us=UINT32_MAX,late_blocks=0,ready_polls=0,prime_started=0,prime_us=0,min_queued=CAPACITY;
     uint32_t first_late_index=0,first_late_us=0,first_late_request_us=0,first_late_count=0,first_late_bytes=0,first_late_queued=0,first_late_command=0;
     uint64_t block_us=0;
@@ -163,11 +163,15 @@ struct AudioEngine {
             primed=true;prime_us=now-prime_started;
         }
         if(r==w) {
+            if(!missing)missing_since=now;
             if(!underruns) {
                 starve_ahead=int32_t(__atomic_load_n(request.produced,__ATOMIC_ACQUIRE)-*request.time);
                 starve_stage=unsigned(stage);starve_request_us=wire.pending?now-wire.started:0;
             }
-            ++underruns;if(++missing>=16)fail(-29);
+            // DMA can ask for 16 future duties in one interrupt. Count
+            // each gap, but wait for 640us of continuous starvation before
+            // handing off a still-running stream to the local synth.
+            ++underruns;if(++missing>=16 && now-missing_since>=16*40)fail(-29);
             return 0x00800080u;
         }
         missing=0;const uint32_t duty=duties[r&(CAPACITY-1)];

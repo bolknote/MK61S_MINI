@@ -110,6 +110,27 @@ int main() {
     }
     std::puts("PCM startup: minimum queue, two nominal block periods, both layouts and clock wrap PASS");
     {
+        AudioEngine engine;
+        Producer producer;
+        engine.request=producer.request;
+        engine.primed=true;
+        uint32_t block[16];
+        constexpr uint32_t start=UINT32_MAX-1580;
+        engine.fill_samples(block,16,[]{return start;});
+        assert(engine.underruns==16 && !engine.error.load());
+        for(uint32_t value:block)assert(value==0x00800080u);
+        for(unsigned i=0;i<16;++i)engine.duties[i]=0x4123;
+        engine.write.store(16);
+        engine.fill_samples(block,16,[]{return start+640;});
+        assert(engine.underruns==16 && !engine.error.load() && !engine.missing);
+        for(uint32_t value:block)assert(value==0x00410023u);
+        engine.fill_samples(block,16,[]{return start+1280;});
+        assert(!engine.error.load());
+        engine.fill_samples(block,16,[]{return start+1920;});
+        assert(engine.error.load()==-29 && engine.underruns==33);
+    }
+    std::puts("PCM starvation: one empty refill recovers, continuous 640us still falls back, timer wrap PASS");
+    {
         // Actual pushed transport CRC/sequence, compressed payload, ring wrap,
         // both PCM channels and both 16-bit sequence wraps remain exact.
         Server s;s.stereo=s.repeat=true;AudioEngine e;Producer p;int32_t filters[6]{};
