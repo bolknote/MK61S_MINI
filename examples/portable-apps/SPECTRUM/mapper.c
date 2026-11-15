@@ -130,14 +130,17 @@ void spectrum_disk_reset(spectrum* s) {
     spectrum_disk_filter(s);spectrum_refresh_map(s);
 }
 bool spectrum_disk_snapshot(spectrum* s) {
-    /* Snapshot formats contain no DivMMC state. Keep the running esxDOS
-     * kernel in DivRAM, so its IM1 and NMI hooks remain usable after load. */
+    /* Legacy snapshots leave the running esxDOS kernel in DivRAM. */
     if(!flush(s)) return false;
     if(s->memory && s->memory->paged_rom && !spectrum_memory_sync(s->memory)) return false;
     spectrum_disk* d=&s->disk;d->mapped=d->automap=false;d->control&=64;
     spectrum_fdc_reset(&d->fdc);spectrum_spi_select(&d->spi,255);
     spectrum_disk_filter(s);spectrum_refresh_map(s);
     return true;
+}
+bool spectrum_div_restore(spectrum* s,uint8_t control,bool automap,uint8_t spi_data) {
+    s->disk.control=control;s->disk.automap=automap;s->disk.spi_data=spi_data;
+    return mapping(s,automap||(control&128));
 }
 void spectrum_disk_m1(void* raw,uint16_t pc,bool before) {
     spectrum* s=raw;spectrum_disk* d=&s->disk;

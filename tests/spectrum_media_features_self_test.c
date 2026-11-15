@@ -311,28 +311,32 @@ static void wide_scanlines(void) {
         const unsigned bank=screen?7:5;
         assert(spectrum_memory_page(&memory,screen?8:0));
         machine.frames=screen?16:0;
-        for(unsigned strip=0;strip<3;++strip) {
-            uint8_t lcd[10240];
+        for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
+            uint8_t lcd[SPECTRUM_VIDEO_WORK_BYTES];
             mk61_service_color_frame frame;
-            const unsigned rows=strip<2?104:96;
+            const unsigned first=strip*SPECTRUM_WIDE_STRIP_ROWS;
+            const unsigned rows=strip+1==SPECTRUM_WIDE_STRIPS?304-first:SPECTRUM_WIDE_STRIP_ROWS;
             wide_reads=0;
             assert(spectrum_video_strip(&machine,64,strip,lcd,&frame));
-            assert(frame.width==320 && frame.height==rows && frame.y==8+104*strip);
+            assert(frame.width==320 && frame.height==rows && frame.y==8+first);
+            assert((frame.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_INDEX4);
             assert(wide_reads<=54); // three areas, two planes, eight phases and attributes
             for(unsigned line=0;line<rows;++line) {
-                const unsigned y=104*strip+line;
+                const unsigned y=first+line;
                 const unsigned row=y<64?y:y<256?y-64:y-256;
                 const unsigned page=y>=64 && y<256?bank:bank-1;
                 const unsigned bitmap=(row&7)*256+(row&56)*4+(row&192)*32+(y>=256?0x1800:0);
                 const unsigned attrs=(y<64?0x1000:y<256?0x1800:0x1300)+(row/8)*32;
-                for(unsigned x=0;x<40;++x) {
-                    const unsigned column=x<4?28+x:x<36?8192+x-4:8+x-36;
-                    assert(lcd[line*40+x]==wide_byte(page,bitmap+column));
-                    if(line%8) continue;
+                for(unsigned x=0;x<320;++x) {
+                    const unsigned source=(6*x+3)/5,cell=source/8;
+                    const unsigned column=cell<8?24+cell:cell<40?8192+cell-8:8+cell-40;
                     const unsigned attr=wide_byte(page,attrs+column),bright=(attr&64)>>3;
                     unsigned ink=(attr&7)|bright,paper=((attr>>3)&7)|bright;
                     if((attr&128) && screen) {const unsigned t=ink;ink=paper;paper=t;}
-                    assert(frame.tiles[(line/8)*40+x]==(paper<<4|ink));
+                    const unsigned mask=128u>>(source&7);
+                    const unsigned expect=wide_byte(page,bitmap+column)&mask?ink:paper;
+                    const unsigned sample=lcd[line*160+x/2];
+                    assert((x&1?sample&15:sample>>4)==expect);
                 }
             }
         }
@@ -363,9 +367,21 @@ static void snapshot_test(unsigned model) {
     machine.cpu.iff2=true;machine.cpu.halted=true;machine.cpu.mem_ptr=0x4444;
     machine.frame_tstates=164;machine.border=6;machine.beeper=1;machine.ulaplus_mode=1;
     machine.ulaplus_palette[31]=0x98;machine.ay.adr=7;PSG_writeReg(&machine.ay,0,89);
+    machine.sound.selected=1;machine.ay2.adr=13;
+    PSG_writeReg(&machine.ay2,0,123);PSG_writeReg(&machine.ay2,8,15);
+    if(model==1) {
+        machine.disk.spi.io=(spectrum_disk_io){.context=&backing,.bytes=1048576,.read=read_bytes,.readonly=true};
+        assert(spectrum_disk_mode(&machine,SPECTRUM_DISK_DIVMMC));
+        for(unsigned i=0;i<128*1024;++i)psram[SPECTRUM_DIV_RAM+i]=(uint8_t)((i>>9)^i);
+        assert(spectrum_disk_out(&machine,0xe3,0xc5));
+        spectrum_disk_write_memory(&machine,0x2310,0xa7);
+        spectrum_spi* card=&machine.disk.spi;
+        card->idle=false;card->selected=true;card->high_capacity=true;card->data_mode=1;
+        card->cursor=50;card->block[49]=0x23;card->reads=77;machine.disk.spi_data=0x17;
+    }
     spectrum_szx_writer writer;
     const unsigned size=spectrum_szx_save(&writer,&machine);
-    assert(size<=sizeof(packed));
+    assert(size && size<=sizeof(packed));
     for(unsigned at=0;at<size;) {
         const unsigned n=size-at<667?size-at:667;
         assert(spectrum_szx_read(&writer,at,packed+at,n));at+=n;
@@ -390,12 +406,26 @@ static void snapshot_test(unsigned model) {
     packed[first_page-5]=packed[first_page-4]=0;packed[first_page-3]=1;
     data.size=source.size=size-16384+(unsigned)n;
     spectrum_reset(&machine);
+    if(model==1) {
+        machine.disk.spi.io.bytes+=512;
+        assert(spectrum_load_szx(&machine,&source,workspace,workspace+12288)==SPECTRUM_MEDIA);
+        machine.disk.spi.io.bytes-=512;
+    }
     assert(spectrum_load_szx(&machine,&source,workspace,workspace+12288)==SPECTRUM_OK);
     assert(machine.cpu.pc==0xbaca && machine.cpu.a==0x99 && machine.cpu.bc_==0x1234 &&
         machine.cpu.mem_ptr==0x4444 && machine.cpu.halted && !machine.cpu.iff1 && machine.cpu.iff2);
     assert(machine.frame_tstates==164 && machine.border==6 && machine.beeper &&
         machine.ulaplus_mode==1 && machine.ulaplus_palette[31]==0x98);
     assert(machine.ay.adr==7 && machine.ay.reg[0]==89);
+    assert(machine.sound.selected==1 && machine.sound.selected_reg[1]==13 &&
+           machine.ay2.adr==13 && machine.ay2.reg[0]==123 && machine.ay2.reg[8]==15);
+    if(model==1) {
+        assert(machine.disk.control==0xc5 && machine.disk.mapped && machine.disk.spi_data==0x17);
+        assert(!machine.disk.spi.idle && machine.disk.spi.selected && machine.disk.spi.reads==77);
+        assert(spectrum_spi_transfer(&machine.disk.spi,255)==0x23);
+        for(unsigned i=0;i<128*1024;++i)
+            assert(psram[SPECTRUM_DIV_RAM+i]==(i==5*8192+0x310?0xa7:(uint8_t)((i>>9)^i)));
+    }
     if(model) {
         for(unsigned bank=0;bank<memory.banks;++bank) {
             assert(spectrum_bank_read(&memory,bank,0,workspace,sizeof(workspace)));
@@ -412,11 +442,7 @@ static void snapshot_test(unsigned model) {
         assert(spectrum_video_mode(&machine)==0x41);
         assert(spectrum_video_strip(&machine,1,0,lcd,&frame));
         assert(frame.width==256 && frame.height==64 && lcd[0]==0x92 && lcd[1]==0x65);
-        fill=0x97;assert(spectrum_bank_write(&memory,6,0x001c,&fill,1));
-        assert(spectrum_video_strip(&machine,64,0,lcd,&frame));
-        assert(frame.width==320 && frame.height==104 && frame.y==8 && lcd[0]==0x97);
-        assert(spectrum_video_strip(&machine,64,1,lcd,&frame) && frame.y==112);
-        assert(spectrum_video_strip(&machine,64,2,lcd,&frame) && frame.y==216 && frame.height==96);
+        assert(!spectrum_video_strip(&machine,64,SPECTRUM_WIDE_STRIPS,lcd,&frame));
         wide_scanlines();
     }
 }

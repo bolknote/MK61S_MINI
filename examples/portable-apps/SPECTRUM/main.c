@@ -519,7 +519,8 @@ static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspac
         }
         spectrum_szx_writer writer;
         mk61_service_write_source request={name,&writer,spectrum_szx_read,spectrum_szx_save(&writer,&machine),0};
-        const bool saved=services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(request),&request)!=0;
+        const bool saved=request.size &&
+            services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(request),&request)!=0;
         if(banked_buffers) {
             if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,WORK_CACHE_BYTES,workspace)) {
                 started=false;
@@ -552,7 +553,8 @@ static bool load_szx(const spectrum_source* source) {
     }
     if(error) {
         if(error==SPECTRUM_IO) {reset_machine();started=false;}
-        message(error==SPECTRUM_UNSUPPORTED?"Unsupported SZX format":"Cannot read snapshot");
+        message(error==SPECTRUM_UNSUPPORTED?"Unsupported SZX format":
+            error==SPECTRUM_MEDIA?"Mount original DivMMC image\nStart esxDOS for old SZX":"Cannot read snapshot");
         return false;
     }
     started=true;
@@ -600,18 +602,18 @@ static void settings(void) {
     }
 }
 static __attribute__((noinline)) bool load_snapshot(void) {
-    if(machine.disk.mode==SPECTRUM_DISK_DIVMMC && !machine.disk.spi.reads) {
-        message("Start esxDOS before loading\nDivMMC snapshots");return false;
-    }
     uint32_t size;
     if(!file_size(snapshot_path,&size)) {
         message("Cannot read snapshot");return false;
     }
     const spectrum_source source={snapshot_path,size,read_source};
-    stop_tape();
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    if(suffix(snapshot_path,".szx")) return load_szx(&source);
+    if(suffix(snapshot_path,".szx")) {stop_tape();return load_szx(&source);}
 #endif
+    if(machine.disk.mode==SPECTRUM_DISK_DIVMMC && !machine.disk.spi.reads) {
+        message("Start esxDOS before loading\nDivMMC snapshots");return false;
+    }
+    stop_tape();
     const enum spectrum_error error=suffix(snapshot_path,".sna")?spectrum_load_sna(&machine,&source):
         spectrum_load_z80(&machine,&source);
     if(error) {
@@ -667,7 +669,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
     return true;
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-static __attribute__((noinline)) void prime_48k_audio(void) {
+static __attribute__((noinline)) void prime_audio(void) {
     // Generate real guest events one frame ahead of PWM. A dense program
     // can fill half the event ring early. Each 512T slice fits in the free
     // half even with two events per OUT, so it never waits on gated audio.
@@ -690,10 +692,10 @@ static __attribute__((noinline)) void emulate_session(void) {
     if(!mk61_api->graphics_begin()) return;
     mk61_service_framebuffer scratch={0};
     if(!services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(scratch),0,&scratch) ||
-       !scratch.pixels || scratch.bytes<10240+SPECTRUM_DISK_CACHE_BYTES) {
+       !scratch.pixels || scratch.bytes<SPECTRUM_VIDEO_WORK_BYTES+SPECTRUM_DISK_CACHE_BYTES) {
         message("Framebuffer unavailable");return;
     }
-    if(!spectrum_disk_cache_begin(&machine,scratch.pixels+7680)) {
+    if(!spectrum_disk_cache_begin(&machine,scratch.pixels+SPECTRUM_VIDEO_WORK_BYTES)) {
         message("PSRAM I/O error");return;
     }
     // Resolve the first instruction/stack pages before starting real-time
@@ -739,7 +741,8 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     const bool raster=exact_raster && !machine.pentagon && external.handle &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
-    if(audio_mode==2 && !machine.pentagon && (raster || tape->playing)) prime_48k_audio();
+    if(audio_mode==2 && (spectrum_video_mode(&machine)==64 ||
+       (!machine.pentagon && (raster || tape->playing)))) prime_audio();
 #endif
     status_event("SP STATE=PLAYING\n");
     /* A resumed frame may already be partly executed. Account for that
@@ -757,6 +760,8 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     unsigned mode=spectrum_video_mode(&machine),strip=0;
     bool clear_mode=mode!=0;
+    bool wide_ready=false;
+    mk61_service_color_frame wide_frame;
     const unsigned present_budget=3;
     unsigned present_attempts=0;
     raster_output output={.next=SPECTRUM_RASTER_STRIPS,.clear=true};
@@ -785,6 +790,13 @@ static __attribute__((noinline)) void emulate_session(void) {
                 ++present_attempts;
                 if(!raster_present(scratch.pixels,&output)) {error="Raster output failed";break;}
             }
+            if(mode==64 && !clear_mode) {
+                if(!wide_ready && !spectrum_video_strip(&machine,mode,strip,scratch.pixels,&wide_frame)) goto memory_error;
+                const uint32_t result=color(MK61_COLOR_PRESENT,&wide_frame);
+                if(!result) {error="Color output failed";break;}
+                wide_ready=result==2;
+                if(result==1 && ++strip==SPECTRUM_WIDE_STRIPS) strip=0;
+            }
 #endif
             continue;
         }
@@ -808,7 +820,7 @@ static __attribute__((noinline)) void emulate_session(void) {
             }
             const unsigned next_mode=spectrum_video_mode(&machine);
             if(next_mode!=mode) {
-                mode=next_mode;strip=0;clear_mode=mode!=0;
+                mode=next_mode;strip=0;clear_mode=mode!=0;wide_ready=false;
             }
             if(clear_mode) {
                 mk61_service_color_frame clear={0};clear.pixels=scratch.pixels;
@@ -820,6 +832,7 @@ static __attribute__((noinline)) void emulate_session(void) {
                 if(result==1) clear_mode=false;
                 goto paced;
             }
+            if(mode==64) goto paced;
             if(mode) {
                 mk61_service_color_frame part;
                 if(!spectrum_video_strip(&machine,mode,strip,scratch.pixels,&part)) goto memory_error;

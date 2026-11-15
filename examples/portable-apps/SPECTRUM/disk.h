@@ -54,6 +54,7 @@ struct spectrum;
 bool spectrum_disk_mode(struct spectrum*,unsigned mode);
 void spectrum_disk_reset(struct spectrum*);
 bool spectrum_disk_snapshot(struct spectrum*);
+bool spectrum_div_restore(struct spectrum*,uint8_t control,bool automap,uint8_t spi_data);
 bool spectrum_disk_cache_begin(struct spectrum*,uint8_t cache[SPECTRUM_DISK_CACHE_BYTES]);
 bool spectrum_disk_cache_end(struct spectrum*);
 uint8_t spectrum_disk_read_memory(struct spectrum*,uint16_t);

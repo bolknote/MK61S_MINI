@@ -1,10 +1,19 @@
 #include "szx.h"
 #include "inflate.h"
+#include <stddef.h>
 #include <string.h>
 
 enum { Z80_BYTES=37, ULA_BYTES=8, AY_BYTES=18, PALETTE_BYTES=67, CHUNK=8,
-       PAGE=SPECTRUM_BANK_BYTES, PAGE_BLOCK=PAGE+11 };
+       PAGE=SPECTRUM_BANK_BYTES, PAGE_BLOCK=PAGE+11,
+       STATE_BYTES=26, DIV_RAM_BYTES=SPECTRUM_EXTERNAL_BYTES-SPECTRUM_DIV_RAM,
+       SPI_BODY=offsetof(spectrum_spi,command),
+       SPI_BYTES=offsetof(spectrum_spi,writes)+sizeof(uint32_t)-SPI_BODY };
 #define ID(a,b,c,d) ((uint32_t)(a)|((uint32_t)(b)<<8)|((uint32_t)(c)<<16)|((uint32_t)(d)<<24))
+/* MK61 v1 stores the second AY and optional DivMMC state. Keep the card
+ * callbacks and mounted image outside the file. The SPI body is little endian. */
+_Static_assert(SPI_BYTES==584 && offsetof(spectrum_spi,cursor)-SPI_BODY==546 &&
+    offsetof(spectrum_spi,reads)-SPI_BODY==576 && STATE_BYTES+CHUNK==sizeof(((spectrum_szx_writer*)0)->extension),
+    "SZX state representation changed");
 
 static uint16_t word(const uint8_t* p) { return (uint16_t)(p[0]|p[1]<<8); }
 static uint32_t dword(const uint8_t* p) { return word(p)|((uint32_t)word(p+2)<<16); }
@@ -28,9 +37,11 @@ static uint8_t* save_z80(uint8_t* p,const spectrum* s) {
     return p+Z80_BYTES;
 }
 
-uint32_t spectrum_szx_save(spectrum_szx_writer* writer,const spectrum* s) {
+uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
     uint8_t* p=writer->header;
     memset(writer,0,sizeof(*writer));
+    const bool div=s->disk.mode==SPECTRUM_DISK_DIVMMC && s->disk.spi.io.bytes;
+    if(div && (!spectrum_disk_cache_end(s) || !spectrum_memory_sync(s->memory))) return 0;
     writer->machine=s;writer->banks=s->pentagon?s->memory->banks:3;
     memcpy(p,"ZXST\x01\x05",6);
     p[6]=s->pentagon?(s->memory->extended?14:13):1;
@@ -50,7 +61,15 @@ uint32_t spectrum_szx_save(spectrum_szx_writer* writer,const spectrum* s) {
         p+=PALETTE_BYTES;
     }
     writer->prefix=(unsigned)(p-writer->header);
-    return writer->prefix+writer->banks*PAGE_BLOCK;
+    const unsigned div_bytes=div?SPI_BYTES+DIV_RAM_BYTES:0;
+    p=header(writer->extension,ID('M','K','6','1'),STATE_BYTES+div_bytes);
+    p[0]=1;p[1]=(s->extensions&SPECTRUM_TURBOSOUND)|(s->sound.selected<<1);p[2]=s->ay2.adr;
+    memcpy(p+6,s->ay2.reg,16);
+    if(div) {
+        p[3]=s->disk.control;p[4]=s->disk.automap;p[5]=s->disk.spi_data;
+        put32(p+22,s->disk.spi.io.bytes);
+    }
+    return writer->bytes=writer->prefix+writer->banks*PAGE_BLOCK+sizeof(writer->extension)+div_bytes;
 }
 
 static unsigned flat_bank(unsigned n) {
@@ -62,14 +81,14 @@ static unsigned flat_index(unsigned bank) { return bank==5?0:bank==2?1:2; }
 int spectrum_szx_read(void* context,uint32_t offset,uint8_t* out,uint32_t bytes) {
     const spectrum_szx_writer* writer=context;
     const spectrum* s=writer->machine;
-    const uint32_t size=writer->prefix+writer->banks*PAGE_BLOCK;
-    if(offset>size || bytes>size-offset) return 0;
+    const uint32_t base=writer->prefix+writer->banks*PAGE_BLOCK;
+    if(offset>writer->bytes || bytes>writer->bytes-offset) return 0;
     while(bytes) {
         uint32_t take;
         if(offset<writer->prefix) {
             take=writer->prefix-offset;if(take>bytes) take=bytes;
             memcpy(out,writer->header+offset,take);
-        } else {
+        } else if(offset<base) {
             const uint32_t at=offset-writer->prefix,index=at/PAGE_BLOCK,part=at%PAGE_BLOCK;
             const unsigned bank=s->pentagon?index:flat_bank(index);
             if(part<11) {
@@ -84,6 +103,19 @@ int spectrum_szx_read(void* context,uint32_t offset,uint8_t* out,uint32_t bytes)
                 if(s->memory) {
                     if(!spectrum_bank_read(s->memory,bank,in_page,out,take)) return 0;
                 } else memcpy(out,s->ram+flat_index(bank)*PAGE+in_page,take);
+            }
+        } else {
+            const unsigned part=offset-base;
+            const unsigned spi_end=sizeof(writer->extension)+SPI_BYTES;
+            if(part<sizeof(writer->extension)) {
+                take=sizeof(writer->extension)-part;if(take>bytes)take=bytes;
+                memcpy(out,writer->extension+part,take);
+            } else if(part<spi_end) {
+                take=spi_end-part;if(take>bytes)take=bytes;
+                memcpy(out,(const uint8_t*)&s->disk.spi+SPI_BODY+part-sizeof(writer->extension),take);
+            } else {
+                take=bytes;
+                if(!s->memory->io.read(s->memory->io.context,SPECTRUM_DIV_RAM+part-spi_end,out,take))return 0;
             }
         }
         offset+=take;out+=take;bytes-=take;
@@ -109,6 +141,8 @@ typedef struct {
     uint32_t ram[64];
     uint32_t compressed[64];
     uint8_t cpu[Z80_BYTES],ula[ULA_BYTES],ay[AY_BYTES],palette[PALETTE_BYTES];
+    uint8_t extension[STATE_BYTES];
+    uint32_t spi;
     bool has_ay,has_palette;
 } snapshot;
 
@@ -133,6 +167,15 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
             out=state->ay;length=AY_BYTES;state->has_ay=true;break;
         case ID('P','L','T','T'): if(state->has_palette) return SPECTRUM_FORMAT;
             out=state->palette;length=size==66?66:PALETTE_BYTES;state->has_palette=true;break;
+        case ID('M','K','6','1'):
+            if(state->extension[0] || size<STATE_BYTES) return SPECTRUM_FORMAT;
+            if(!source->read(source->context,at,state->extension,STATE_BYTES))return SPECTRUM_IO;
+            if(state->extension[0]!=1)return SPECTRUM_UNSUPPORTED;
+            if(state->extension[1]>3 || state->extension[2]>15 ||
+               (state->extension[3]&0x30) || state->extension[4]>1)return SPECTRUM_FORMAT;
+            if(dword(state->extension+22))state->spi=at+STATE_BYTES;
+            if(size!=STATE_BYTES+(state->spi?SPI_BYTES+DIV_RAM_BYTES:0))return SPECTRUM_FORMAT;
+            break;
         case ID('R','A','M','P'): {
             uint8_t page[3];
             if(size<sizeof(page)) return SPECTRUM_FORMAT;
@@ -175,6 +218,17 @@ static void restore_cpu(spectrum* s,const uint8_t* p) {
     z->cyc=s->frame_tstates=dword(p+29);
 }
 
+static bool spi_valid(const uint8_t* p,const spectrum_disk_io* io) {
+#define BYTE(member) p[offsetof(spectrum_spi,member)-SPI_BODY]
+    const unsigned cursor=word(p+offsetof(spectrum_spi,cursor)-SPI_BODY);
+    for(unsigned i=offsetof(spectrum_spi,idle)-SPI_BODY;i<=offsetof(spectrum_spi,selected)-SPI_BODY;++i)
+        if(p[i]>1)return false;
+    return BYTE(command_size)<6 && BYTE(response_size)<=24 && BYTE(response_at)<=BYTE(response_size) &&
+        BYTE(data_mode)<=2 && BYTE(write_mode)<=2 && BYTE(write_state)<=3 && cursor<=514 &&
+        (!BYTE(write_mode) || (io->write && !io->readonly && (BYTE(write_state)!=1 || cursor<512)));
+#undef BYTE
+}
+
 enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,uint8_t* low,uint8_t* high) {
     unsigned model;
     enum spectrum_error result=spectrum_szx_model(source,&model);
@@ -183,6 +237,14 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     snapshot state={0};
     result=inspect(source,&state,model);
     if(result) return result;
+    uint8_t buffer[SPI_BYTES];
+    if(state.spi) {
+        const spectrum_disk_io* card=&s->disk.spi.io;
+        if(!s->memory || s->disk.mode!=SPECTRUM_DISK_DIVMMC || !card->read ||
+           card->bytes!=dword(state.extension+22)) return SPECTRUM_MEDIA;
+        if(!source->read(source->context,state.spi,buffer,SPI_BYTES))return SPECTRUM_IO;
+        if(!spi_valid(buffer,card))return SPECTRUM_FORMAT;
+    } else if(s->disk.mode==SPECTRUM_DISK_DIVMMC && !s->disk.spi.reads)return SPECTRUM_MEDIA;
     const spectrum_inflate_output output={.first=low,.second=high,.split=12288,.limit=PAGE};
     bool packed=false;
     for(unsigned bank=0;bank<64;++bank) packed|=state.compressed[bank]!=0;
@@ -202,7 +264,6 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(!spectrum_disk_snapshot(s)) return SPECTRUM_IO;
     spectrum_reset_cpu(s);
     if(s->memory && !spectrum_memory_reset(s->memory)) return SPECTRUM_IO;
-    uint8_t buffer[512];
     for(unsigned bank=0;bank<64;++bank) if(state.ram[bank]) {
         if(state.compressed[bank]) {
             unsigned used;
@@ -216,10 +277,10 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
             }
             continue;
         }
-        for(unsigned at=0;at<PAGE;at+=sizeof(buffer)) {
+        for(unsigned at=0;at<PAGE;at+=512) {
             uint8_t* target=s->memory?buffer:s->ram+flat_index(bank)*PAGE+at;
-            if(!source->read(source->context,state.ram[bank]+at,target,sizeof(buffer)) ||
-               (s->memory && !spectrum_bank_write(s->memory,bank,at,buffer,sizeof(buffer)))) return SPECTRUM_IO;
+            if(!source->read(source->context,state.ram[bank]+at,target,512) ||
+               (s->memory && !spectrum_bank_write(s->memory,bank,at,buffer,512))) return SPECTRUM_IO;
         }
     }
     if(model && (!spectrum_memory_control(s->memory,state.ula[2]) ||
@@ -229,6 +290,24 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(state.has_ay) {
         for(unsigned i=0;i<16;++i) PSG_writeReg(&s->ay,i,state.ay[i+2]);
         s->ay.adr=state.ay[1];s->sound.selected_reg[0]=s->ay.adr;
+    }
+    if(state.extension[0]) {
+        const uint8_t* p=state.extension;
+        s->extensions=(s->extensions&~SPECTRUM_TURBOSOUND)|(p[1]&1);
+        s->sound.selected=(p[1]>>1)&(p[1]&1);
+        s->ay2.adr=s->sound.selected_reg[1]=p[2];
+        for(unsigned i=0;i<16;++i)PSG_writeReg(&s->ay2,i,p[6+i]);
+        if(state.spi) {
+            const spectrum_memory_io* io=&s->memory->io;
+            for(unsigned at=0;at<DIV_RAM_BYTES;at+=512) {
+                if(!source->read(source->context,state.spi+SPI_BYTES+at,buffer,512) ||
+                   !io->write(io->context,SPECTRUM_DIV_RAM+at,buffer,512))return SPECTRUM_IO;
+            }
+            if(!source->read(source->context,state.spi,buffer,SPI_BYTES) || !spi_valid(buffer,&s->disk.spi.io))
+                return SPECTRUM_IO;
+            memcpy((uint8_t*)&s->disk.spi+SPI_BODY,buffer,SPI_BYTES);
+            if(!spectrum_div_restore(s,p[3],p[4]!=0,p[5]))return SPECTRUM_IO;
+        }
     }
     if(state.has_palette) {
         s->ulaplus_mode=state.palette[0]&1;s->ulaplus_select=state.palette[1];

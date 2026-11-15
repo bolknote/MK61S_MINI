@@ -274,7 +274,7 @@ static void bounded_audio_prefill(void) {
     rom[0]=0x76; // HALT: one quiet guest frame is available immediately.
     state.cpu.cyc=UINT32_MAX-99;
     spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
-    prime_48k_audio();
+    prime_audio();
     assert((uint32_t)(state.cpu.cyc-(UINT32_MAX-99U))==SPECTRUM_FRAME_TSTATES);
     assert(atomic_load(&state.sound.produced)==(uint32_t)state.cpu.cyc);
     assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
@@ -282,7 +282,7 @@ static void bounded_audio_prefill(void) {
     const uint8_t loop[]={0x3e,0x10,0xd3,0xfe,0xee,0x10,0x18,0xfa};
     memcpy(rom,loop,sizeof(loop));spectrum_reset(&state);
     spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
-    prime_48k_audio();
+    prime_audio();
     const unsigned events=atomic_load(&state.sound.write);
     assert(events>SPECTRUM_SOUND_QUEUE_EVENTS/2 && events<SPECTRUM_SOUND_QUEUE_EVENTS);
     assert(state.cpu.cyc<SPECTRUM_FRAME_TSTATES && !atomic_load(&state.sound.clock_running));

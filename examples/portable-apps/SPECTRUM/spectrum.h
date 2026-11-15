@@ -52,7 +52,7 @@ typedef struct {
     bool (*read)(void*,uint32_t,uint8_t*,uint32_t);
 } spectrum_source;
 enum spectrum_error {
-    SPECTRUM_OK, SPECTRUM_IO, SPECTRUM_FORMAT, SPECTRUM_UNSUPPORTED
+    SPECTRUM_OK, SPECTRUM_IO, SPECTRUM_FORMAT, SPECTRUM_UNSUPPORTED, SPECTRUM_MEDIA
 };
 void spectrum_init(spectrum*,uint8_t* ram,const uint8_t* rom);
 void spectrum_reset(spectrum*);
