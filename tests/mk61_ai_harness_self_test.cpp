@@ -104,15 +104,43 @@ int main(int argc, char **argv) {
   assert(!decode_session(wire, n, sentinel) && sentinel.id == 999);
   wire[n - 1] ^= 1;
   assert(!decode_session(wire, n - 1, sentinel));
-  // Commit failure leaves the current program intact; an orphan is never
-  // reused.
-  disk.writes = 1;
+  auto &checked = s.results[0];
+  checked.version = s.program.version;
+  checked.task_revision = s.task_revision;
+  checked.test_revision = s.tests[0].revision;
+  checked.status = Execution::STOPPED;
+  checked.x = checked.actual[15] = 12;
+  checked.passed = true;
+  assert(all_passed(s));
+  assert(save_session(disk.store(), s));
+  const auto current = disk.files.at("/AI/SESSIONS/00000017.AIS");
+
+  // Fail each write in turn, including the final replacement of the session.
   const unsigned char other[] = {9, 0x50};
-  assert(!accept_program(disk.store(), s, other, 2));
-  assert(s.program.version == 1);
+  for (int allowed = 0; allowed <= 2; ++allowed) {
+    disk.writes = allowed;
+    assert(!accept_program(disk.store(), s, other, 2));
+    assert(s.program.version == 1 && s.last_version == 1 && all_passed(s));
+    assert(disk.files.at("/AI/SESSIONS/00000017.AIS") == current);
+  }
+  const auto orphan = disk.files.at("/AI/SESSIONS/00000017-00000003.AIV");
   disk.writes = -1;
-  assert(accept_program(disk.store(), s, other, 2) && s.program.version == 3);
-  assert(select_program(disk.store(), s, 1) && s.program.bytes[0] == 0x60);
+  unsigned allocation_samples = 0;
+  allocation_observer([](void *p) { ++*static_cast<unsigned *>(p); },
+                      &allocation_samples);
+  assert(accept_program(disk.store(), s, other, 2));
+  allocation_observer(nullptr, nullptr);
+  assert(allocation_samples == 1);
+  assert(s.program.version == 4 && s.last_version == 4 && !result_current(s, 0));
+  assert(disk.files.at("/AI/SESSIONS/00000017-00000003.AIV") == orphan);
+  n = encode_session(s, wire, sizeof(wire));
+  assert(n);
+  const std::vector<std::uint8_t> encoded(wire, wire + n);
+  assert(disk.files.at("/AI/SESSIONS/00000017-00000004.AIV") == encoded);
+  assert(disk.files.at("/AI/SESSIONS/00000017-00000004.AIR") == encoded);
+  assert(disk.files.at("/AI/SESSIONS/00000017.AIS") == encoded);
+  assert(select_program(disk.store(), s, 1) && s.program.bytes[0] == 0x60 &&
+         all_passed(s));
   core_61::set_expanded_program_mode(false);
   core_61::enable();
   MK61Emu_SetAngleUnit(GRADE);

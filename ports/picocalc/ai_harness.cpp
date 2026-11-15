@@ -53,25 +53,42 @@ enum class ReadBenchmark { NONE, PACKET_SIZE, CLOCK, HIGH_CLOCK, NEAR_DEFAULT_CL
 static constexpr char isa[] =
 #include "terminal_classic_isa.inc"
     ;
-bool store_read(void *, const char *path, void *out, unsigned cap,
+const char *store_path(void *context, const char *path, char (&target)[160]) {
+  if (!context) return path;
+  const char *base = std::strrchr(path, '/');
+  if (!base) return nullptr;
+  const int n = std::snprintf(target, sizeof(target), "%s%s", static_cast<const char *>(context), base);
+  return n > 0 && unsigned(n) < sizeof(target) ? target : nullptr;
+}
+bool store_read(void *context, const char *path, void *out, unsigned cap,
                 unsigned &used) {
+  char target[160];
+  path = store_path(context, path, target);
   files::Entry e{};
-  return files::stat(path, e) && !e.directory && e.size <= cap &&
+  return path && files::stat(path, e) && !e.directory && e.size <= cap &&
          files::read(path, static_cast<u8 *>(out), cap, used) && used == e.size;
 }
-bool store_write(void *, const char *path, const void *bytes, unsigned n) {
-  return files::write(path, static_cast<const u8 *>(bytes), n);
+bool store_write(void *context, const char *path, const void *bytes, unsigned n) {
+  char target[160];
+  path = store_path(context, path, target);
+  return path && files::write(path, static_cast<const u8 *>(bytes), n);
 }
-bool store_exists(void *, const char *path) { return files::exists(path); }
-bool store_size(void *, const char *path, unsigned &n) {
+bool store_exists(void *context, const char *path) {
+  char target[160];
+  path = store_path(context, path, target);
+  return path && files::exists(path);
+}
+bool store_size(void *context, const char *path, unsigned &n) {
+  char target[160];
+  path = store_path(context, path, target);
   files::Entry e{};
-  if (!files::stat(path, e) || e.directory)
+  if (!path || !files::stat(path, e) || e.directory)
     return false;
   n = e.size;
   return true;
 }
-Store disk() {
-  return {nullptr, store_read, store_write, store_exists, store_size};
+Store disk(const char *diagnostic) {
+  return {const_cast<char *>(diagnostic), store_read, store_write, store_exists, store_size};
 }
 unsigned m8(const char *text, char *out, unsigned cap) {
   unsigned used = 0;
@@ -179,7 +196,7 @@ bool parse_code(const char *source, u8 out[PROGRAM_SIZE], unsigned &count) {
   return count != 0;
 }
 struct UI {
-  explicit UI(const Host &h) : host(h), store(disk()), agent(s, store, model) {
+  explicit UI(const Host &h) : host(h), store(disk(h.diagnostic_directory)), agent(s, store, model) {
     auto memory_plan=model.execution();memory_plan.tile_rows=28;memory_plan.lut8=true;
     model.execution(memory_plan);
     agent.clock(
@@ -595,6 +612,7 @@ struct UI {
   unsigned long_perf(const char *directory);
 #if defined(PICO_ON_DEVICE)
   unsigned parameter_perf(const char *directory, bool overlap_only);
+  unsigned request_perf(const char *directory);
 #endif
   void sample_memory();
   void begin_measurements();
@@ -2227,6 +2245,12 @@ AI_COLD_CODE unsigned UI::bench() {
     return 3;
   char config_path[128],config_text[513];unsigned config_size=0;
 #if defined(PICO_ON_DEVICE)
+  std::snprintf(config_path, sizeof(config_path), "%s/REQUEST.CFG", directory);
+  if (files::exists(config_path)) {
+    if (!files::read_text(config_path, config_text, sizeof(config_text) - 1, config_size) ||
+        config_size != 9 || std::memcmp(config_text, "AIMODEL2\n", 9)) return 3;
+    return request_perf(directory);
+  }
   std::snprintf(config_path,sizeof(config_path),"%s/READ.CFG",directory);
   if(files::exists(config_path)) {
     if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
@@ -2586,6 +2610,7 @@ AI_COLD_CODE unsigned UI::long_perf(const char *directory) {
 }
 #if defined(PICO_ON_DEVICE)
 #include "ai_parameter_perf.inc"
+#include "ai_q4_request_perf.inc"
 
 constexpr unsigned BURST_TRIALS=256,BURST_WEIGHTS=1792,BURST_SCALES=224;
 

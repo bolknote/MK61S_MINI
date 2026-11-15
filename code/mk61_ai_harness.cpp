@@ -153,19 +153,37 @@ bool example_valid(const Example &e) {
   }
   return true;
 }
-template <class S> void fields(Wire &w, S &s, bool v2 = true) {
+template <class S>
+void fields(Wire &w, S &s, bool v2, const Program *replacement = nullptr) {
+  auto &program = [&]() -> auto & {
+    if constexpr (std::is_const<S>::value)
+      return replacement ? *replacement : s.program;
+    else
+      return s.program;
+  }();
+  auto result_at = [&](unsigned i) -> auto & {
+    if constexpr (std::is_const<S>::value) {
+      static constexpr Result empty{};
+      return replacement ? empty : s.results[i];
+    } else {
+      return s.results[i];
+    }
+  };
+  auto last_version = replacement ? replacement->version : s.last_version;
   w.u32(s.id);
   w.u32(s.task_revision);
-  w.u32(s.last_version);
+  w.u32(last_version);
+  if constexpr (!std::is_const<S>::value)
+    s.last_version = last_version;
   w.u32(s.event);
-  w.u32(s.program.version);
-  w.u32(s.program.task_revision);
-  w.u16(s.program.size);
-  if (s.program.size > PROGRAM_SIZE) {
+  w.u32(program.version);
+  w.u32(program.task_revision);
+  w.u16(program.size);
+  if (program.size > PROGRAM_SIZE) {
     w.ok = false;
     return;
   }
-  w.bytes(s.program.bytes, s.program.size);
+  w.bytes(program.bytes, program.size);
   w.u16(s.attempts);
   w.u16(s.attempt_limit);
   w.u8(s.test_count);
@@ -213,7 +231,7 @@ template <class S> void fields(Wire &w, S &s, bool v2 = true) {
       w.ok = false;
       return;
     }
-    auto &r = s.results[i];
+    auto &r = result_at(i);
     w.u32(r.version);
     w.u32(r.task_revision);
     w.u32(r.test_revision);
@@ -258,7 +276,7 @@ template <class S> void fields(Wire &w, S &s, bool v2 = true) {
         w.u8(a.output_index);
         w.u8(a.key);
       }
-      auto &r = s.results[i];
+      auto &r = result_at(i);
       for (auto &value : r.actual)
         w.number(value);
       for (auto &value : r.stage_values)
@@ -289,7 +307,7 @@ template <class S> void fields(Wire &w, S &s, bool v2 = true) {
     if constexpr (!std::is_const<S>::value)
       s.planning = planning != 0;
     if (s.failed_program_count > 8 || s.failed_reply_count > 8 ||
-        s.best_score > TEST_COUNT || s.best_version > s.last_version)
+        s.best_score > TEST_COUNT || s.best_version > last_version)
       w.ok = false;
   } else if constexpr (!std::is_const<S>::value) {
     for (unsigned i = 0; i < s.test_count; ++i)
@@ -340,16 +358,58 @@ bool read_record(Store store, const char *name, Session &s) {
   return buffer && store.read(store.context, name, buffer.get(), cap, n) &&
          decode_into(buffer.get(), n, s);
 }
+// Session serialization fits in the PicoCalc flash region shared by cold AI code.
+#if defined(PICO_ON_DEVICE)
+__attribute__((section(".ai_diagnostic_extension"), noinline))
+#endif
+unsigned encode_record(const Session &s, std::uint8_t *out, unsigned cap,
+                       const Program *replacement = nullptr) {
+  if (cap < 16)
+    return 0;
+  Wire w{out, nullptr, 16, std::min<unsigned>(cap, SESSION_BYTES), true};
+  fields(w, s, true, replacement);
+  if (!w.ok)
+    return 0;
+  if (!out)
+    return w.at;
+  std::memcpy(out, "M61SES2\0", 8);
+  const std::uint32_t size = w.at, crc = checksum(out + 16, size - 16);
+  for (unsigned j = 0; j < 4; ++j) {
+    out[8 + j] = std::uint8_t(size >> (8 * j));
+    out[12 + j] = std::uint8_t(crc >> (8 * j));
+  }
+  return size;
+}
+struct EncodedSession {
+  EncodedSession(const Session &s, const Program *replacement = nullptr)
+      : size(encode_record(s, nullptr, SESSION_BYTES, replacement)) {
+    if (!size)
+      return;
+    bytes.reset(new (std::nothrow) std::uint8_t[size]);
+    sample_memory();
+    if (bytes && encode_record(s, bytes.get(), size, replacement) != size)
+      bytes.reset();
+  }
+  bool write(Store store, const char *name) const {
+    return bytes && store.write &&
+           store.write(store.context, name, bytes.get(), size);
+  }
+  bool save(Store store, std::uint32_t id, std::uint32_t version) const {
+    char name[96];
+    if (version) {
+      path(name, id, "AIR", version);
+      if (!write(store, name))
+        return false;
+    }
+    path(name, id, "AIS");
+    return write(store, name);
+  }
+
+  unsigned size;
+  std::unique_ptr<std::uint8_t[]> bytes;
+};
 bool write_record(Store store, const char *name, const Session &s) {
-  if (!store.write)
-    return false;
-  const unsigned n = encode_session(s, nullptr, SESSION_BYTES);
-  if (!n)
-    return false;
-  std::unique_ptr<std::uint8_t[]> buffer(new (std::nothrow) std::uint8_t[n]);
-  sample_memory();
-  return buffer && encode_session(s, buffer.get(), n) == n &&
-         store.write(store.context, name, buffer.get(), n);
+  return store.write && EncodedSession(s).write(store, name);
 }
 } // namespace
 void allocation_observer(void (*sample)(void *), void *context) {
@@ -921,21 +981,7 @@ bool build_prompt(const Session &s, char *out, unsigned cap,
   return ok;
 }
 unsigned encode_session(const Session &s, std::uint8_t *out, unsigned cap) {
-  if (cap < 16)
-    return 0;
-  Wire w{out, nullptr, 16, std::min<unsigned>(cap, SESSION_BYTES), true};
-  fields(w, s);
-  if (!w.ok)
-    return 0;
-  if (!out)
-    return w.at;
-  std::memcpy(out, "M61SES2\0", 8);
-  const std::uint32_t size = w.at, crc = checksum(out + 16, size - 16);
-  for (unsigned j = 0; j < 4; ++j) {
-    out[8 + j] = std::uint8_t(size >> (8 * j));
-    out[12 + j] = std::uint8_t(crc >> (8 * j));
-  }
-  return size;
+  return encode_record(s, out, cap);
 }
 bool decode_session(const std::uint8_t *data, unsigned n, Session &out) {
   std::unique_ptr<Session> next(new (std::nothrow) Session);
@@ -946,14 +992,7 @@ bool decode_session(const std::uint8_t *data, unsigned n, Session &out) {
   return true;
 }
 bool save_session(Store store, const Session &s) {
-  char name[96];
-  if (s.program.version) {
-    path(name, s.id, "AIR", s.program.version);
-    if (!write_record(store, name, s))
-      return false;
-  }
-  path(name, s.id, "AIS");
-  return write_record(store, name, s);
+  return store.write && EncodedSession(s).save(store, s.id, s.program.version);
 }
 bool load_session(Store store, std::uint32_t id, Session &s) {
   char name[96];
@@ -1030,11 +1069,8 @@ bool append_event(Store store, Session &s, const char *type, const char *text) {
 }
 bool accept_program(Store store, Session &s, const std::uint8_t *bytes,
                     unsigned n, bool source_import) {
-  if (!bytes || !n || n > PROGRAM_SIZE ||
+  if (!store.write || !bytes || !n || n > PROGRAM_SIZE ||
       (s.intent == Intent::EXPLAIN && !source_import))
-    return false;
-  std::unique_ptr<Session> next(new (std::nothrow) Session(s));
-  if (!next)
     return false;
   unsigned version = s.last_version;
   char name[96];
@@ -1043,16 +1079,18 @@ bool accept_program(Store store, Session &s, const std::uint8_t *bytes,
       return false;
     path(name, s.id, "AIV", ++version);
   } while (store.exists && store.exists(store.context, name));
-  next->program = {};
-  next->program.version = version;
-  next->program.task_revision = s.task_revision;
-  next->program.size = std::uint16_t(n);
-  std::memcpy(next->program.bytes, bytes, n);
-  next->last_version = version;
-  invalidate(*next);
-  if (!archive_program(store, *next) || !save_session(store, *next))
+  Program program{};
+  program.version = version;
+  program.task_revision = s.task_revision;
+  program.size = std::uint16_t(n);
+  std::memcpy(program.bytes, bytes, n);
+  // Publish the archive and result snapshot before replacing the active session.
+  const EncodedSession record(s, &program);
+  if (!record.write(store, name) || !record.save(store, s.id, version))
     return false;
-  s = *next;
+  s.program = program;
+  s.last_version = version;
+  invalidate(s);
   return true;
 }
 bool reserve_session_id(Store store, std::uint32_t floor, std::uint32_t &id) {
