@@ -111,6 +111,25 @@ int main() {
     assert(a.reset()); online=true;
   }
   clean();
+  // A growing cache can use the high end of a gap so later required
+  // allocations remain packed at the bottom. Alignment must hold even if
+  // an injected backend has an unaligned capacity.
+  assert(configure_buffer_backend({(usize)memory.size()-3, ready, read, write, foreground}));
+  {
+    Buffer low,high,second,required,invalid;cache=&high;
+    assert(!invalid.acquire_cache_high(Owner::USB_CACHE,33,nullptr));
+    assert(low.acquire(Owner::APPLICATION,33,BufferAccess::EXTERNAL_ONLY));
+    assert(high.acquire_cache_high(Owner::USB_CACHE,33,evict));
+    assert(second.acquire_cache_high(Owner::USB_CACHE,33,evict));
+    assert(required.acquire(Owner::APPLICATION,33,BufferAccess::EXTERNAL_ONLY));
+    assert(low.fill(0x11) && high.fill(0x22) && second.fill(0x33) && required.fill(0x44));
+    const usize aligned_end=(memory.size()-3)&~usize(31);
+    assert(memory[0]==0x11 && memory[64]==0x44);
+    assert(memory[aligned_end-64]==0x22 && memory[aligned_end-128]==0x33);
+    assert(validate_buffer_invariants());
+  }
+  clean();
+  assert(configure_buffer_backend({(usize)memory.size(), ready, read, write, foreground}));
   {
     Buffer optional, user; cache=&optional;
     assert(optional.acquire_cache(Owner::LOADABLE_MODULE, memory.size(), evict));

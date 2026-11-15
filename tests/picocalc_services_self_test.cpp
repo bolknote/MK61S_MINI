@@ -76,6 +76,16 @@ void picocalc_services_test(const char* preview) {
             assert(used==expected && !std::memcmp(window.data(),logical.data()+std::min(offset,(unsigned)logical.size()),used));
         }
     }
+    // Dropping the disposable text index must not discard the document or
+    // change UTF-8 window boundaries. It is rebuilt on the next access.
+    files::release_text_cache();files::release_text_cache();
+    unsigned after_release=0;
+    assert(files::text_size("/Sources/window.txt",after_release) && after_release==logical.size());
+    unsigned window_used=0;
+    assert(files::read_text_range("/Sources/window.txt",511,window.data(),800,window_used) &&
+           window_used==800 && !std::memcmp(window.data(),logical.data()+511,800));
+    assert(!files::text_size(nullptr,after_release) && after_release==0);
+    files::release_text_cache();
     assert(files::mkdir("/Sources/preserved"));
     assert(!files::write_text("/Sources/preserved","X",1));
     files::Entry preserved{};assert(files::stat("/Sources/preserved",preserved) && preserved.directory);

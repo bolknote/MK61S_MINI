@@ -12,6 +12,15 @@
 #include <array>
 #include <algorithm>
 namespace picocalc::diagnostics { void feed_watchdog() {} u64 timestamp() { static u64 tick=0;return ++tick; } }
+namespace {
+bool fail_cache_read=false,fail_cache_write=false;
+bool cache_read(u32 at,void* data,usize bytes) {
+    return !fail_cache_read && picocalc::psram::read(at,data,(unsigned)bytes);
+}
+bool cache_write(u32 at,const void* data,usize bytes) {
+    return !fail_cache_write && picocalc::psram::write(at,data,(unsigned)bytes);
+}
+}
 int main() {
     using namespace picocalc;
     assert(!psram::ready() && !external_cache::init());
@@ -138,6 +147,7 @@ int main() {
     external_cache::store_module(19,image.data(),image.size());
     // The full external chip belongs to one allocator. A required 6 MiB
     // user buffer reclaims caches; rebuilding them cannot touch its bytes.
+    const auto rejected_before_growth=external_cache::statistics().rejected;
     {
         shared_memory::Buffer large;
         assert(large.acquire(shared_memory::Owner::APPLICATION,6U*1024*1024,
@@ -147,6 +157,24 @@ int main() {
         external_cache::store_sector(77,sector.data());
         assert(external_cache::module(777,decoded.data(),decoded.size(),used) && decoded==image);
         assert(external_cache::sector(77,read.data()) && read==sector);
+        // With 6 MiB still owned by the APP neither the old cache nor the
+        // required buffer may be evicted just to enlarge the sector cache.
+        assert(external_cache::statistics().sector_bytes==1024U*1024);
+        for(unsigned i=0;i<1500;++i) {
+            const unsigned lba=100+i+(i>=1200?1:0); // Reserve 1300 for corruption.
+            sector.fill((u8)i);external_cache::store_sector(lba,sector.data());
+        }
+        sector.fill(0x31);external_cache::store_sector(42,sector.data());
+        sector.fill(0x72);external_cache::store_sector(42+external_cache::SECTOR_SLOTS,sector.data());
+        for(unsigned i=0;i<sector.size();++i) sector[i]=(u8)(i*i+17*i+3);
+        external_cache::store_sector(1300,sector.data());
+        auto corrupt=std::search(ram.begin(),ram.end(),sector.begin(),sector.end());
+        assert(corrupt!=ram.end());corrupt[17]^=1;
+        const auto reclaims=shared_memory::buffer_statistics().reclaims;
+        assert(!external_cache::grow_sectors());
+        assert(shared_memory::buffer_statistics().reclaims==reclaims);
+        assert(external_cache::sector(42,read.data()) && read[0]==0x31);
+        assert(external_cache::sector(42+external_cache::SECTOR_SLOTS,read.data()) && read[0]==0x72);
         assert(external_cache::statistics().evictions>=2);
         std::array<u8,513> verify{};
         for(unsigned at:{0U,1023U,4095U,6U*1024*1024-513}) {
@@ -155,6 +183,21 @@ int main() {
         }
         assert(shared_memory::validate_buffer_invariants());
     }
+    // On APP exit the smaller cache grows in freed PSRAM. Valid entries are
+    // rehashed, including the ordinary collision rule in the larger table.
+    assert(external_cache::grow_sectors());
+    assert(external_cache::statistics().sector_bytes==4U*1024*1024);
+    for(unsigned i=0;i<1500;++i) {
+        const unsigned lba=100+i+(i>=1200?1:0);
+        assert(external_cache::sector(lba,read.data()));
+        for(u8 b:read) assert(b==(u8)i);
+    }
+    assert(!external_cache::sector(42,read.data()));
+    assert(external_cache::sector(42+external_cache::SECTOR_SLOTS,read.data()) && read[0]==0x72);
+    assert(!external_cache::sector(1300,read.data()));
+    assert(external_cache::statistics().rejected==rejected_before_growth+1);
+    assert(external_cache::module(777,decoded.data(),decoded.size(),used) && decoded==image);
+    assert(shared_memory::validate_buffer_invariants());
     // Editor originals/drafts and an unsaved parent snapshot share the same
     // PSRAM owner with both packed caches and a large native APP allocation.
     {
@@ -199,6 +242,26 @@ int main() {
     assert(external_cache::init()); // MCU reset with retained powered PSRAM.
     assert(!external_cache::module(19,decoded.data(),decoded.size(),used));
     assert(dma_support::crc32((const u8*)"123456789",9)==0xCBF43926U);
+    // A failed tentative expansion leaves the previous cache and its valid
+    // data intact; no partly initialized replacement becomes visible.
+    external_cache::suspend();
+    assert(shared_memory::configure_buffer_backend({psram::CAPACITY,psram::ready,cache_read,cache_write}));
+    assert(external_cache::init());
+    {
+        shared_memory::Buffer large;
+        assert(large.acquire(shared_memory::Owner::APPLICATION,6U*1024*1024,
+                             shared_memory::BufferAccess::EXTERNAL_ONLY));
+        sector.fill(0x39);external_cache::store_sector(123,sector.data());
+        assert(external_cache::sector(123,read.data()) && read==sector);
+    }
+    const auto old_bytes=external_cache::statistics().sector_bytes;
+    assert(old_bytes<4U*1024*1024);
+    fail_cache_write=true;assert(!external_cache::grow_sectors());fail_cache_write=false;
+    assert(external_cache::statistics().sector_bytes==old_bytes && external_cache::sector(123,read.data()) && read==sector);
+    fail_cache_read=true;assert(!external_cache::grow_sectors());fail_cache_read=false;
+    assert(external_cache::statistics().sector_bytes==old_bytes && external_cache::sector(123,read.data()) && read==sector);
+    assert(external_cache::grow_sectors() && external_cache::sector(123,read.data()) && read==sector);
+    assert(shared_memory::validate_buffer_invariants());
     psram::test_memory(nullptr,0);assert(!psram::init());
     assert(!external_cache::sector(0,read.data()));
     assert(!external_cache::statistics().ready);

@@ -49,9 +49,10 @@ namespace io_worker {bool frame_pending(){return false;}}
 namespace diagnostics {enum class Point{PUMP};struct Scope{explicit Scope(Point){}};}
 namespace controls {
 enum class Source {PHYSICAL,REMOTE};
-std::array<bool,256> held{};unsigned events=0,pulses=0;
-void event(KeyEvent e,Source){++events;held[e.code]=e.state!=3;}
-void pulse(u8 code,u32){assert(code!=POWER_BUTTON);++pulses;held[code]=true;}
+std::array<bool,256> held{};unsigned events=0,pulses=0;u32 pulse_at=0;
+bool advance_release=false;
+void event(KeyEvent e,Source){++events;held[e.code]=e.state!=3;if(e.state==3 && advance_release)clock_us+=2000;}
+void pulse(u8 code,u32 now){assert(code!=POWER_BUTTON);++pulses;held[code]=true;pulse_at=now;}
 }
 namespace console {
 std::deque<int> bytes;
@@ -107,6 +108,7 @@ struct {
     bool live=false,foreground=false;unsigned inputs=0;
     bool active(){return live;}
     bool running(){return foreground;}
+    bool native_loading(){return false;}
     bool input(u8){++inputs;assert(false);return false;}
 }services;
 struct {
@@ -157,7 +159,8 @@ void reset(){
     screen={};calculator={};panel={};keyboard={};remote_screen={};services={};ui={};
     panel_ready=true;sleep_applied=physical_event=false;
     physical_keys=0;last_physical_key=0;last_activity=0;clicks=0;
-    picocalc::controls::held={};picocalc::controls::events=picocalc::controls::pulses=0;picocalc::console::bytes.clear();
+    picocalc::controls::held={};picocalc::controls::events=picocalc::controls::pulses=0;
+    picocalc::controls::pulse_at=0;picocalc::controls::advance_release=false;picocalc::console::bytes.clear();
     for(unsigned i=0;i<state.size();++i)state[i]=(u8)(i*17+43);saved_state=state;
 }
 void preserved(){
@@ -190,6 +193,13 @@ int main(){
     reset();services.live=services.foreground=true;wake_mode=3;
     picocalc::console::bytes.push_back(picocalc::POWER_BUTTON);u8 key=0xA5;
     assert(!service_pump(nullptr,key) && key==0xA5);preserved();assert(power.button_presses()==2 && !entries);
+    // A key-up listener can consume time before a serial byte is handled in
+    // the same foreground pump. The pulse must use the new clock value.
+    reset();services.live=services.foreground=true;picocalc::controls::advance_release=true;
+    keyboard.events.push_back({3,'x'});picocalc::console::bytes.push_back('y');key=0;
+    assert(service_pump(nullptr,key) && key=='y');
+    assert(picocalc::controls::events==1 && picocalc::controls::pulses==1 &&
+           picocalc::controls::pulse_at==millis());
     reset();input(picocalc::POWER_BUTTON,false);keyboard.inflight=true;
     assert(!apply_sleep() && !sleep_applied && !panel.calls && !entries);
     keyboard.inflight=false;assert(apply_sleep() && entries==1);

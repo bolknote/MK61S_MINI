@@ -130,6 +130,76 @@ void picocalc_runtime_test() {
   require(!in_bitmap('a') && in_bitmap('z') && in_bitmap(0xFF) && !in_bitmap('1'),
           "bitmap uses one expiry timestamp and a physical release preserves a remote hold");
   controls::clear();
+  std::vector<KeyEvent> pulses;
+  controls::set_listener([](void* raw,KeyEvent event) {
+    ((std::vector<KeyEvent>*)raw)->push_back(event);
+  },&pulses);
+  for(unsigned c=1;c<256;++c) controls::pulse((u8)c,1000);
+  controls::bitmap(bitmap,1179);
+  for(unsigned c=1;c<256;++c) require(in_bitmap(c),"all serial pulses remain independently pressed");
+  controls::service(1179);
+  require(pulses.size()==255,"serial pulses must not release early");
+  controls::service(1180);
+  require(pulses.size()==510,"each expired serial pulse emits exactly one release");
+  for(unsigned c=1;c<256;++c)
+    require(pulses[254+c].state==3 && pulses[254+c].code==c,"serial release order and code");
+  controls::service(100000);
+  require(pulses.size()==510 && !controls::any_pressed(100000),"long gaps cannot revive expired keys");
+  controls::pulse('a',0xFFFFFF4CU); // Expiry itself is exactly the 32-bit wrap.
+  require(controls::pressed('a',0xFFFFFFFFU) && !controls::pressed('a',0),"pulse ending at clock wrap");
+  controls::pulse('a',1); // Repeated press replaces an expired, undelivered release.
+  controls::service(1);
+  require(pulses.size()==512 && controls::raw_pressed(controls::native_key({1,'a'}),1),
+          "repeated pulse replaces pending release");
+  controls::service(181);
+  require(pulses.size()==513 && pulses.back().state==3 && pulses.back().code=='a',
+          "repeated pulse releases once at the renewed deadline");
+  controls::clear();pulses.clear();
+  controls::pulse('x',100);controls::pulse('y',190);
+  require(controls::pressed('x',279) && controls::pressed('y',279),"staggered pulses before expiry");
+  controls::bitmap(bitmap,280);
+  require(!in_bitmap('x') && in_bitmap('y'),"one staggered pulse expires without expiring the other");
+  controls::service(280);controls::pulse('x',281);controls::service(370);
+  require(controls::pressed('x',370) && !controls::pressed('y',370),"renewed key retains its own deadline");
+  controls::service(461);
+  require(pulses.size()==6 && pulses[2].state==3 && pulses[2].code=='x' &&
+          pulses[4].state==3 && pulses[4].code=='y' && pulses[5].state==3 && pulses[5].code=='x',
+          "staggered and renewed pulses each release once");
+  // Compare mixed pulses, queries and delayed service with independent
+  // absolute deadlines, including a wrap of the 32-bit millisecond clock.
+  controls::clear();pulses.clear();
+  u32 deadline[256]{};bool pending[256]{};std::vector<KeyEvent> expected_events;
+  u32 random=0x91E10DA5U,test_tick=0xFFFF0000U;unsigned compared_events=0;
+  auto word=[&] { random^=random<<13;random^=random>>17;return random^=random<<5; };
+  for(unsigned step=0;step<6000;++step) {
+    test_tick+=word()%250;const u8 code=(u8)(1+word()%255);
+    switch(word()%4) {
+    case 0:
+      deadline[code]=test_tick+180;pending[code]=true;expected_events.push_back({1,code});
+      controls::pulse(code,test_tick);break;
+    case 1:
+      for(unsigned c=1;c<256;++c) if(pending[c] && (i32)(test_tick-deadline[c])>=0) {
+        pending[c]=false;expected_events.push_back({3,(u8)c});
+      }
+      controls::service(test_tick);break;
+    case 2:
+      require(controls::pressed(code,test_tick)==(pending[code] && (i32)(deadline[code]-test_tick)>0),
+              "serial pulse matches independent deadline");break;
+    default:
+      controls::bitmap(bitmap,test_tick);
+      for(unsigned c=1;c<256;++c)
+        require(in_bitmap(c)==(pending[c] && (i32)(deadline[c]-test_tick)>0),
+                "serial bitmap matches independent deadlines");
+      break;
+    }
+    require(pulses.size()==expected_events.size(),"serial event count matches deadline model");
+    for(unsigned i=compared_events;i<pulses.size();++i)
+      require(pulses[i].state==expected_events[i].state && pulses[i].code==expected_events[i].code,
+              "serial events match deadline model");
+    compared_events=(unsigned)pulses.size();
+  }
+  controls::set_listener(nullptr,nullptr);
+  controls::clear();
   require(controls::logical(0x1B) == MK61_APP_KEY_ESC, "native Escape key");
   Link link;
   for (unsigned i = 0; i < 1536; ++i)

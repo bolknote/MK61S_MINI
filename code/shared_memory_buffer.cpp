@@ -44,6 +44,17 @@ u32 Buffer::gap(usize size) {
   }
   return at <= backend.capacity && size <= backend.capacity - at ? (u32)at : UINT32_MAX;
 }
+u32 Buffer::gap_high(usize size) {
+  usize at = 0;
+  u32 highest = UINT32_MAX;
+  for(Buffer* p = external; p; p = p->next_) {
+    if(size <= p->address_ - at) highest = (u32)(p->address_ - size);
+    at = p->address_ + p->reserved_;
+  }
+  const usize end = backend.capacity & ~(ALIGNMENT - 1);
+  if(at <= end && size <= end - at) highest = (u32)(end - size);
+  return highest;
+}
 bool Buffer::reclaim_one() {
   for(Buffer* p = external; p; p = p->next_) {
     if(!p->eviction_ || p->pins_) continue;
@@ -78,7 +89,11 @@ bool Buffer::acquire_cache(Owner owner, usize size, EvictionPrepare prepare) {
   if(!prepare) return false;
   return acquire_impl(owner, size, BufferAccess::EXTERNAL_ONLY, prepare);
 }
-bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, EvictionPrepare prepare) {
+bool Buffer::acquire_cache_high(Owner owner, usize size, EvictionPrepare prepare) {
+  if(!prepare) return false;
+  return acquire_impl(owner, size, BufferAccess::EXTERNAL_ONLY, prepare, true);
+}
+bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, EvictionPrepare prepare, bool high) {
   if(!foreground() || transitioning || !size || owner == Owner::NONE || owner >= Owner::COUNT ||
      access > BufferAccess::EXTERNAL_ONLY || size > std::numeric_limits<usize>::max() - (ALIGNMENT - 1)) {
     increment(counters.failures); return false;
@@ -90,7 +105,7 @@ bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, Eviction
   const usize reserved = (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
   u32 at = UINT32_MAX;
   if(access != BufferAccess::DIRECT && available() && reserved <= backend.capacity) {
-    at = gap(reserved);
+    at = high ? gap_high(reserved) : gap(reserved);
     while(at == UINT32_MAX && !prepare && reclaim_one()) at = gap(reserved);
   }
   if(at != UINT32_MAX) {

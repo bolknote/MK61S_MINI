@@ -9,14 +9,36 @@ namespace controls {
 namespace {
 u8 held[2][32]{};
 u8 native_held[2][64]{};
-u32 pulse_until[256]{};
+// Serial key presses all last 180 ms. Keep their remaining lifetime in one
+// byte each; the bitmap retains expired presses until service sends key-up.
+// Advancing all lifetimes from one 32-bit clock also handles long idle gaps
+// and the wrapping millisecond counter without resurrecting stale keys.
+u8 pulse_remaining[256]{};
+u8 pulse_pending[32]{};
+u32 pulse_clock=0;
+u16 pulse_active=0,pulse_pending_count=0;
+bool pulse_clock_valid=false;
 Listener listener=nullptr;
 void* listener_context=nullptr;
+void advance_pulses(u32 now) {
+  if(!pulse_clock_valid) { pulse_clock=now;pulse_clock_valid=true;return; }
+  const u32 elapsed=now-pulse_clock;pulse_clock=now;
+  if(!elapsed || !pulse_active) return;
+  if(elapsed>=180) {
+    std::memset(pulse_remaining,0,sizeof(pulse_remaining));pulse_active=0;return;
+  }
+  for(u8& remaining:pulse_remaining) if(remaining) {
+    if(remaining<=elapsed) { remaining=0;--pulse_active; }
+    else remaining-=(u8)elapsed;
+  }
+}
 } // namespace
 void clear() {
   std::memset(held, 0, sizeof(held));
   std::memset(native_held, 0, sizeof(native_held));
-  std::memset(pulse_until, 0, sizeof(pulse_until));
+  std::memset(pulse_remaining, 0, sizeof(pulse_remaining));
+  std::memset(pulse_pending, 0, sizeof(pulse_pending));
+  pulse_active=0;pulse_pending_count=0;pulse_clock_valid=false;
 }
 void event(KeyEvent e, Source source) {
   if (!e.code || e.state < 1 || e.state > 3)
@@ -36,25 +58,40 @@ void event(KeyEvent e, Source source) {
   if(listener) listener(listener_context,e);
 }
 void pulse(u8 code, u32 now) {
-  pulse_until[code] = now + 180;
+  advance_pulses(now);
+  if(!pulse_remaining[code]) ++pulse_active;
+  pulse_remaining[code]=180;
+  // Code zero is excluded from the wire bitmap and never receives key-up.
+  if(code) {
+    const u8 bit=(u8)(1U<<(code&7));
+    if(!(pulse_pending[code/8]&bit)) ++pulse_pending_count;
+    pulse_pending[code/8]|=bit;
+  }
   if(listener) listener(listener_context,KeyEvent{1,code});
 }
 void set_listener(Listener callback,void* context) { listener=callback;listener_context=context; }
 void service(u32 now) {
-  for(unsigned c=1;c<256;++c) if(pulse_until[c] && (i32)(now-pulse_until[c])>=0) {
-    pulse_until[c]=0;if(listener) listener(listener_context,KeyEvent{3,(u8)c});
+  advance_pulses(now);
+  // The APP pump calls this even without input. Avoid a 255-key scan on
+  // every poll while still retaining expired presses until their key-up.
+  if(!pulse_pending_count) return;
+  for(unsigned c=1;c<256;++c) if((pulse_pending[c/8]&(1U<<(c&7))) && !pulse_remaining[c]) {
+    pulse_pending[c/8]&=(u8)~(1U<<(c&7));--pulse_pending_count;
+    if(listener) listener(listener_context,KeyEvent{3,(u8)c});
   }
 }
 bool pressed(u8 code, u32 now) {
+  advance_pulses(now);
   const u8 bit = (u8)(1U << (code % 8));
   return ((held[0][code / 8] | held[1][code / 8]) & bit) ||
-         (pulse_until[code] && (i32)(pulse_until[code] - now) > 0);
+         pulse_remaining[code];
 }
 void bitmap(u8 bits[32],u32 now) {
+  advance_pulses(now);
   for(unsigned i=0;i<32;++i) bits[i]=held[0][i]|held[1][i];
   bits[0]&=0xFE; // Wire code zero is excluded from the APP keyboard bitmap.
   for(unsigned c=1;c<256;++c)
-    if(pulse_until[c] && (i32)(pulse_until[c]-now)>0)
+    if(pulse_remaining[c])
       bits[c/8]|=(u8)(1U<<(c&7));
 }
 int scan(u8 code) {
@@ -88,9 +125,10 @@ int native_key(KeyEvent event) {
 }
 bool raw_pressed(i32 key,u32 now) {
   if(key<0 || key>=512) return false;
+  advance_pulses(now);
   if((native_held[0][key/8]|native_held[1][key/8])&(1U<<(key%8))) return true;
   for(unsigned c=1;c<256;++c)
-    if(native_key({1,(u8)c})==key && pulse_until[c] && (i32)(pulse_until[c]-now)>0) return true;
+    if(pulse_remaining[c] && native_key({1,(u8)c})==key) return true;
   return false;
 }
 bool any_pressed(u32 now) {

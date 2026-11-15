@@ -52,7 +52,10 @@ struct TextCache {
     u16 length=0,window_start=0,window_size=0;
     bool valid=false;
     u8 window[512]{};
-} text_cache;
+};
+// The UTF-8 index and window are disposable. Keep them only while a text
+// reader needs them, so a foreground APP can use their SRAM as well.
+TextCache* text_cache=nullptr;
 bool fail(FRESULT result) {
     if(result == FR_OK) { problem[0] = 0; return true; }
     const char* text = result == FR_NO_FILE || result == FR_NO_PATH ? "File or directory not found" :
@@ -228,6 +231,7 @@ bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned&
     return fail(result);
 }
 void release_read_cursor() { (void)close_reader(); }
+void release_text_cache() { delete text_cache;text_cache=nullptr; }
 bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     if(!path || !data || !count || count>4096 || storage_journal::reserved(path)) return fail(FR_INVALID_PARAMETER);
@@ -243,7 +247,7 @@ bool write_range(const char* path,u32 offset,const u8* data,unsigned count) {
     const FRESULT closed=f_close(&file);if(result==FR_OK) result=closed;
     if(result!=FR_OK) { fail(result);return finish_transaction(false); }
     const bool ok=finish_transaction(true);
-    if(ok) { ++generation;text_cache.valid=false; }
+    if(ok) { ++generation;if(text_cache) text_cache->valid=false; }
     return ok;
 }
 bool list(const char* path, unsigned skip, Entry* out, unsigned capacity,
@@ -408,40 +412,46 @@ struct TextStream {
 };
 bool cache_text(const char* path) {
     if(!available()) return false;
-    if(text_cache.valid && text_cache.generation==generation && !std::strcmp(text_cache.path,path)) return true;
-    text_cache.valid=false;text_cache.window_size=0;
     if(!path || std::strlen(path)>=PATH_SIZE) return fail(FR_INVALID_NAME);
+    if(!text_cache) {
+        text_cache=new(std::nothrow) TextCache;
+        if(!text_cache) { std::snprintf(problem,sizeof(problem),"Not enough memory for text cache");return false; }
+    }
+    auto& cache=*text_cache;
+    if(cache.valid && cache.generation==generation && !std::strcmp(cache.path,path)) return true;
+    cache.valid=false;cache.window_size=0;
     FIL file;FRESULT result=f_open(&file,path,FA_READ);
     if(result!=FR_OK) return fail(result);
-    TextStream reader{file};text_cache.index[0]=0;
+    TextStream reader{file};cache.index[0]=0;
     if(f_size(&file)>196608) reader.valid=false;
     u8 value=0;
     while(reader.valid && reader.next(value)>0) {
         if(reader.logical>65534) { reader.valid=false;break; }
-        if(!(reader.logical%512)) text_cache.index[reader.logical/512]=reader.physical;
+        if(!(reader.logical%512)) cache.index[reader.logical/512]=reader.physical;
     }
     result=reader.result;const FRESULT closed=f_close(&file);
     if(result!=FR_OK || closed!=FR_OK) return fail(result!=FR_OK?result:closed);
     if(!reader.valid) { std::snprintf(problem,sizeof(problem),"Invalid UTF-8/M8 character or source too large");return false; }
-    std::strcpy(text_cache.path,path);text_cache.length=(u16)reader.logical;
-    text_cache.generation=generation;text_cache.valid=true;return fail(FR_OK);
+    std::strcpy(cache.path,path);cache.length=(u16)reader.logical;
+    cache.generation=generation;cache.valid=true;return fail(FR_OK);
 }
 bool text_window(u16 logical) {
+    auto& cache=*text_cache;
     const unsigned start=logical/512*512;
-    const unsigned length=text_cache.length-start<512?text_cache.length-start:512;
-    const u32 position=text_cache.index[start/512];
-    text_cache.window_size=0;
-    FIL file;FRESULT result=f_open(&file,text_cache.path,FA_READ);
+    const unsigned length=cache.length-start<512?cache.length-start:512;
+    const u32 position=cache.index[start/512];
+    cache.window_size=0;
+    FIL file;FRESULT result=f_open(&file,cache.path,FA_READ);
     if(result!=FR_OK) return fail(result);
     result=f_lseek(&file,position);
     TextStream reader{file};reader.physical=position;reader.logical=start;
-    if(result==FR_OK) for(unsigned i=0;i<length;++i) if(reader.next(text_cache.window[i])!=1) { reader.valid=false;break; }
+    if(result==FR_OK) for(unsigned i=0;i<length;++i) if(reader.next(cache.window[i])!=1) { reader.valid=false;break; }
     const FRESULT closed=f_close(&file);
     if(result==FR_OK) result=reader.result;
     if(result!=FR_OK || closed!=FR_OK || !reader.valid) {
-        text_cache.valid=false;return fail(result!=FR_OK?result:closed!=FR_OK?closed:FR_DISK_ERR);
+        cache.valid=false;return fail(result!=FR_OK?result:closed!=FR_OK?closed:FR_DISK_ERR);
     }
-    text_cache.window_start=(u16)start;text_cache.window_size=(u16)length;return true;
+    cache.window_start=(u16)start;cache.window_size=(u16)length;return true;
 }
 bool replace_file(const char* path,const char* temporary,char backup[PATH_SIZE],bool staged=false) {
     if(!fail(close_reader())) return false;
@@ -473,17 +483,17 @@ bool replace_file(const char* path,const char* temporary,char backup[PATH_SIZE],
 }
 bool text_size(const char* path,unsigned& size) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
-    size=0;if(!cache_text(path)) return false;size=text_cache.length;return true;
+    size=0;if(!cache_text(path)) return false;size=text_cache->length;return true;
 }
 bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned& used) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
     used=0;if((count && !out) || !cache_text(path)) return false;
-    while(used<count && offset<text_cache.length) {
-        if(offset<text_cache.window_start || offset>=text_cache.window_start+text_cache.window_size)
+    while(used<count && offset<text_cache->length) {
+        if(offset<text_cache->window_start || offset>=text_cache->window_start+text_cache->window_size)
             if(!text_window((u16)offset)) return false;
-        unsigned n=text_cache.window_start+text_cache.window_size-offset;
+        unsigned n=text_cache->window_start+text_cache->window_size-offset;
         if(n>count-used) n=count-used;
-        std::memcpy(out+used,text_cache.window+offset-text_cache.window_start,n);used+=n;offset+=n;
+        std::memcpy(out+used,text_cache->window+offset-text_cache->window_start,n);used+=n;offset+=n;
     }
     return true;
 }

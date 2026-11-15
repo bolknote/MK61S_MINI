@@ -32,6 +32,7 @@ jobs:
           MK61_TEST_SANITIZERS=1 bash tests/run_basic_graphics_tests.sh
           bash tests/run_m61_text_tests.sh
           python3 tests/picocalc_version_self_test.py
+          MK61_TEST_SANITIZERS=1 python3 tests/picocalc_power_button_self_test.py
           python3 tests/picocalc_cold_evidence_self_test.py
           python3 tests/picocalc_resources_ci_self_test.py
           python3 tests/picocalc_explorer_hil_self_test.py
@@ -68,6 +69,8 @@ jobs:
           .build/arm-tests/bin/python -m pip install unicorn==2.1.4
           .build/arm-tests/bin/python tests/portable_rust_app_arm_self_test.py --output .build/arm-tests/result.json
           .build/arm-tests/bin/python tests/picocalc_heap_arm_self_test.py --json .build/arm-tests/heap.json
+          .build/arm-tests/bin/python tests/picocalc_app_arena_arm_self_test.py --firmware .build/picocalc-pico-h/mk61s-picocalc-pico-h.elf
+          .build/arm-tests/bin/python tests/picocalc_idle_input_arm_self_test.py --firmware .build/picocalc-pico-h/mk61s-picocalc-pico-h.elf
           .build/arm-tests/bin/python tests/picocalc_pmu_async_arm_self_test.py --output .build/arm-tests/pmu-async.json
           .build/arm-tests/bin/python tests/spectrum_m3_audio_arm_self_test.py --build-dir .build/spectrum-ci
       - name: Verify memory operation bounds, ABI and linked Pico ROM memset bridge

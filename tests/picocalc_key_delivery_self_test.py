@@ -27,7 +27,7 @@ struct {
 } calculator;
 struct {bool pending=false;bool bootloader_pending(){return pending;}}screen;
 struct {bool sleeping=false;unsigned activities=0,buttons=0;void note_button(){++buttons;}unsigned button_presses(){return buttons;}bool asleep(){return sleeping;}void activity(u64){++activities;}void sleep(){sleeping=true;}}power;
-struct {bool opened=false,accept=false;unsigned calls=0;bool active(){return opened;}bool input(u8){++calls;return accept;}}services;
+struct {bool opened=false,accept=false;unsigned calls=0;bool active(){return opened;}bool native_loading(){return false;}bool input(u8){++calls;return accept;}}services;
 struct {
     picocalc::Page value=picocalc::Page::MAIN;bool accept=true;unsigned calls=0;
     picocalc::Page page(){return value;}

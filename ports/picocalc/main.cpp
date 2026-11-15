@@ -515,7 +515,9 @@ bool service_pump(void*, u8& key) {
         const bool skip=picocalc::console::routing.skip_lf(c);
         if(!skip) {
             if(c==picocalc::POWER_BUTTON) { input((u8)c,false);wait_for_wake();return false; }
-            key=(u8)c;picocalc::controls::pulse(key,(u32)(now/1000));power.activity(now);
+            // A key-release listener above may already have advanced the
+            // input clock. Timestamp this serial pulse at its delivery time.
+            key=(u8)c;picocalc::controls::pulse(key,millis());power.activity(now);
             return true;
         }
     }

@@ -60,6 +60,8 @@ bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned&
 // Drop the bounded read-only cursor at APP ownership boundaries. Ordinary
 // writes, remounts and USB handoff also close it automatically.
 void release_read_cursor();
+// The decoded-text index and window are a rebuildable cache, not document state.
+void release_text_cache();
 // Bounded, journaled overwrite of existing physical bytes; never grows a file.
 bool write_range(const char* path,u32 offset,const u8* data,unsigned count);
 bool begin_usb();

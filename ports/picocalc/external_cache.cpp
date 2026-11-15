@@ -18,7 +18,9 @@ struct Record { Header header;u32 next;u16 owner_size,reserved; };
 static_assert(sizeof(Record)==32);
 constexpr unsigned SECTOR_STRIDE=sizeof(Header)+512;
 constexpr unsigned INDEX_BYTES=MODULE_SLOTS*sizeof(u32);
-Buffer modules,sectors;
+Buffer modules,sector_buffers[2];
+unsigned active_sector=0;
+Buffer& sectors() { return sector_buffers[active_sector]; }
 Statistics state{};
 u32 module_generation=1,sector_generation=1;
 u32 module_head=INDEX_BYTES,module_tail=INDEX_BYTES,module_used=0;
@@ -37,10 +39,10 @@ EvictionDecision evict_sectors() {
     sector_slots=0;++state.evictions;return EvictionDecision::RELEASE;
 }
 struct Busy { bool& flag; explicit Busy(bool& f):flag(f){flag=true;} ~Busy(){flag=false;} };
-bool clear_sectors() {
+bool clear_sectors(Buffer& buffer,unsigned slots) {
     const u32 invalid=0;
-    for(unsigned i=0;i<sector_slots;++i) {
-        if(!sectors.write(i*SECTOR_STRIDE,&invalid,sizeof(invalid))) return false;
+    for(unsigned i=0;i<slots;++i) {
+        if(!buffer.write(i*SECTOR_STRIDE,&invalid,sizeof(invalid))) return false;
         if(!(i&63)) diagnostics::feed_watchdog();
     }
     return true;
@@ -55,17 +57,17 @@ void abandon_modules() {
 }
 bool ensure(bool module) {
     if(!enabled || !psram::ready()) return false;
-    Buffer& buffer=module?modules:sectors;
+    Buffer& buffer=module?modules:sectors();
     if(buffer.ok()) return module || sector_slots!=0;
     const auto free=shared_memory::buffer_statistics().external_largest;
-    const bool other_live=module?sectors.ok():modules.ok();
+    const bool other_live=module?sectors().ok():modules.ok();
     const unsigned limit=!other_live && free>=32768?free/2:free;
     for(unsigned bytes=4U*1024*1024;bytes>=16384;bytes/=2) {
         if(bytes>limit) continue;
         if(buffer.acquire_cache(module?Owner::LOADABLE_MODULE:Owner::USB_CACHE,
                 bytes,module?evict_modules:evict_sectors)) {
             if(!module) sector_slots=bytes/SECTOR_STRIDE;
-            if(module?clear_modules():clear_sectors()) return true;
+            if(module?clear_modules():clear_sectors(sectors(),sector_slots)) return true;
             buffer.reset();if(!module) sector_slots=0;return false;
         }
     }
@@ -149,8 +151,8 @@ bool init() {
 }
 void suspend() {
     enabled=false;
-    if(!modules.reset() || !sectors.reset()) __builtin_trap();
-    empty_modules();sector_slots=0;state.ready=false;
+    if(!modules.reset() || !sector_buffers[0].reset() || !sector_buffers[1].reset()) __builtin_trap();
+    active_sector=0;empty_modules();sector_slots=0;state.ready=false;
 }
 void invalidate_modules() {
     if(++module_generation==0) module_generation=1;
@@ -161,14 +163,54 @@ void invalidate_modules() {
 }
 void invalidate_sectors() {
     if(++sector_generation==0) {
-        if(sectors.ok() && !clear_sectors()) sectors.reset();
+        if(sectors().ok() && !clear_sectors(sectors(),sector_slots)) { sectors().reset();sector_slots=0; }
         sector_generation=1;
     }
-    if(!sector_busy && sectors.ok() && sectors.size()<4U*1024*1024 &&
-       shared_memory::buffer_statistics().external_largest>=sectors.size()) {
-        sectors.reset();sector_slots=0;
+    if(!sector_busy && sectors().ok() && sectors().size()<4U*1024*1024 &&
+       shared_memory::buffer_statistics().external_largest>=sectors().size()) {
+        sectors().reset();sector_slots=0;
     }
 }
+// Grow an under-sized sector cache once a foreground APP has released PSRAM.
+// Keep the old allocation and its data usable until a larger, fully cleared
+// buffer has been populated successfully; allocation never evicts user data.
+bool grow_sectors() {
+    constexpr unsigned max_bytes=4U*1024*1024;
+    if(!enabled || !psram::ready() || sector_busy || module_busy) return false;
+    Buffer& old=sectors();
+    if(!old.ok() || !sector_slots || old.size()>=max_bytes) return old.ok();
+    const auto free=shared_memory::buffer_statistics().external_largest;
+    Buffer& next=sector_buffers[active_sector^1U];
+    if(next.ok()) return false;
+    unsigned bytes=max_bytes;
+    while(bytes>old.size() && bytes>free) bytes/=2;
+    if(bytes<=old.size()) return false;
+    Busy busy(sector_busy);
+    if(!next.acquire_cache_high(Owner::USB_CACHE,bytes,evict_sectors)) return false;
+    const unsigned next_slots=bytes/SECTOR_STRIDE;
+    bool ok=clear_sectors(next,next_slots);
+    u8 payload[512];
+    for(unsigned i=0;ok && i<sector_slots;++i) {
+        Header header{};
+        if(!old.read(i*SECTOR_STRIDE,&header,sizeof(header))) { ok=false;break; }
+        if(header.magic==MAGIC && header.generation==sector_generation &&
+           header.key<=UINT32_MAX && header.count==sizeof(payload)) {
+            if(!old.read(i*SECTOR_STRIDE+sizeof(header),payload,sizeof(payload))) { ok=false;break; }
+            if(dma_support::crc32(payload,sizeof(payload))!=header.crc) { ++state.rejected;continue; }
+            const u32 at=(u32)(header.key%next_slots)*SECTOR_STRIDE;
+            // Publish the header last, preserving the usual torn-write rule.
+            const u32 invalid=0;
+            ok=next.write(at,&invalid,sizeof(invalid)) &&
+               next.write(at+sizeof(header),payload,sizeof(payload)) &&
+               next.write(at,&header,sizeof(header));
+        }
+        if(!(i&63)) diagnostics::feed_watchdog();
+    }
+    if(!ok) { if(!next.reset()) __builtin_trap();return false; }
+    if(!old.reset()) __builtin_trap();
+    active_sector^=1U;sector_slots=next_slots;return true;
+}
+
 bool module(u64 key,void* bytes,unsigned capacity,unsigned& count,const char* owner) {
     count=0;const unsigned owner_size=owner_bytes(owner);
     if(!bytes || owner_size>OWNER_LIMIT || !ensure(true)) return false;
@@ -210,9 +252,9 @@ bool sector(u32 lba,u8 bytes[512]) {
     if(!bytes || !ensure(false)) return false;
     Busy busy(sector_busy);Header header{};
     const u32 address=(lba%sector_slots)*SECTOR_STRIDE;
-    bool found=sectors.read(address,&header,sizeof(header)) && header.magic==MAGIC &&
+    bool found=sectors().read(address,&header,sizeof(header)) && header.magic==MAGIC &&
         header.generation==sector_generation && header.key==lba && header.count==512;
-    if(found && (!sectors.read(address+sizeof(header),bytes,512) || dma_support::crc32(bytes,512)!=header.crc)) {
+    if(found && (!sectors().read(address+sizeof(header),bytes,512) || dma_support::crc32(bytes,512)!=header.crc)) {
         ++state.rejected;found=false;
     }
     if(found) ++state.sector_hits;else ++state.sector_misses;return found;
@@ -221,17 +263,17 @@ void store_sector(u32 lba,const u8 bytes[512]) {
     if(!bytes || !ensure(false)) return;
     Busy busy(sector_busy);const u32 address=(lba%sector_slots)*SECTOR_STRIDE,invalid=0;
     const Header header{MAGIC,sector_generation,lba,512,dma_support::crc32(bytes,512)};
-    if(sectors.write(address,&invalid,sizeof(invalid)) &&
-       sectors.write(address+sizeof(header),bytes,512) && sectors.write(address,&header,sizeof(header))) ++state.stores;
+    if(sectors().write(address,&invalid,sizeof(invalid)) &&
+       sectors().write(address+sizeof(header),bytes,512) && sectors().write(address,&header,sizeof(header))) ++state.stores;
 }
 void invalidate_sector(u32 lba) {
-    if(!enabled || !sectors.ok() || !sector_slots) return;
+    if(!enabled || !sectors().ok() || !sector_slots) return;
     Busy busy(sector_busy);const u32 invalid=0;
-    (void)sectors.write((lba%sector_slots)*SECTOR_STRIDE,&invalid,sizeof(invalid));
+    (void)sectors().write((lba%sector_slots)*SECTOR_STRIDE,&invalid,sizeof(invalid));
 }
 Statistics statistics() {
     auto result=state;result.ready=enabled && psram::ready();
-    result.module_bytes=modules.size();result.sector_bytes=sectors.size();
+    result.module_bytes=modules.size();result.sector_bytes=sectors().size();
     result.module_entries=module_entries;result.module_payload=module_payload;result.module_used=module_used;
     result.sector_slots=sector_slots;return result;
 }

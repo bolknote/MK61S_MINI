@@ -36,6 +36,7 @@
 #include "fonts.hpp"
 #include "ui_font_catalog.hpp"
 #include "diagnostics.hpp"
+#include "external_cache.hpp"
 #include "native_display.hpp"
 #include "rtc_value.hpp"
 #include "native_keyboard.hpp"
@@ -1610,8 +1611,12 @@ MK61_APP_LOADER_CODE u8 Services::run_native_step(const char *path, u16 file, mk
   heap_trace::mark(heap_trace::BEFORE_RELEASE);
 #endif
   release_browser();
+  files::release_text_cache();
+  // A previous APP may have forced the disposable SD cache to shrink. Grow
+  // it again before reading the next APP when released PSRAM permits it.
+  (void)external_cache::grow_sectors();
   struct ReadLease {
-    ~ReadLease() { files::release_read_cursor(); }
+    ~ReadLease() { files::release_read_cursor();files::release_text_cache(); }
   } read_lease;
   u8 encoded[64];
   unsigned used = 0;

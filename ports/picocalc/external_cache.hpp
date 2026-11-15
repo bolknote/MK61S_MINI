@@ -10,6 +10,9 @@ bool init();
 void suspend();
 void invalidate_modules();
 void invalidate_sectors();
+// Opportunistically expand a reduced sector cache without evicting live
+// buffers, preserving verified entries if sufficient contiguous PSRAM exists.
+bool grow_sectors();
 bool module(u64 key,void* bytes,unsigned capacity,unsigned& count,const char* owner=nullptr);
 void store_module(u64 key,const void* bytes,unsigned count,const char* owner=nullptr);
 bool sector(u32 lba,u8 bytes[512]);

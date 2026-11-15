@@ -45,6 +45,9 @@ class [[nodiscard]] Buffer {
   // Optional external caches yield to required buffers. The callback prepares
   // a fallback and returns RELEASE; the manager itself revokes the lease.
   bool acquire_cache(Owner owner, usize size, EvictionPrepare prepare);
+  // Place a disposable cache in the highest suitable gap, leaving low
+  // addresses available for required buffers that may outlive the cache.
+  bool acquire_cache_high(Owner owner, usize size, EvictionPrepare prepare);
   bool reset(); // Refuses while a window is live; parent must outlive windows.
   bool ok() const;
   u8* data() const { return storage_ == BufferStorage::INTERNAL ? memory_ : nullptr; }
@@ -71,9 +74,10 @@ class [[nodiscard]] Buffer {
   bool view_ = false;
   Owner owner_ = Owner::NONE;
   BufferStorage storage_ = BufferStorage::NONE;
-  bool acquire_impl(Owner, usize, BufferAccess, EvictionPrepare);
+  bool acquire_impl(Owner, usize, BufferAccess, EvictionPrepare, bool high = false);
   void release_impl();
   static u32 gap(usize size);
+  static u32 gap_high(usize size);
   static bool reclaim_one();
   friend class BufferWindow;
   friend BufferStatistics buffer_statistics();
