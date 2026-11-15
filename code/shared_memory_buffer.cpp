@@ -58,6 +58,22 @@ bool Buffer::reclaim_one() {
 bool Buffer::acquire(Owner owner, usize size, BufferAccess access) {
   return acquire_impl(owner, size, access, nullptr);
 }
+bool Buffer::acquire_slice(Buffer& parent, usize offset, usize size) {
+  if(!foreground() || transitioning || storage_ != BufferStorage::NONE ||
+     &parent == this || parent.view_ || parent.storage_ != BufferStorage::INTERNAL ||
+     !size || offset > parent.size_ || size > parent.size_ - offset ||
+     parent.pins_ == UINT32_MAX) {
+    increment(counters.failures); return false;
+  }
+  ++parent.pins_; ++counters.pinned;
+  memory_ = parent.memory_ + offset; parent_ = &parent; view_ = true;
+  size_ = reserved_ = size; owner_ = parent.owner_; storage_ = BufferStorage::INTERNAL;
+  next_ = internal; internal = this;
+  if(!++next_generation) ++next_generation;
+  generation_ = next_generation;
+  ++counters.active; increment(counters.acquisitions);
+  return true;
+}
 bool Buffer::acquire_cache(Owner owner, usize size, EvictionPrepare prepare) {
   if(!prepare) return false;
   return acquire_impl(owner, size, BufferAccess::EXTERNAL_ONLY, prepare);
@@ -68,7 +84,7 @@ bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, Eviction
     increment(counters.failures); return false;
   }
   if(storage_ != BufferStorage::NONE)
-    return ok() && owner_ == owner && size <= size_ && eviction_ == prepare &&
+    return !view_ && ok() && owner_ == owner && size <= size_ && eviction_ == prepare &&
       (access != BufferAccess::DIRECT || data()) &&
       (access != BufferAccess::EXTERNAL_ONLY || storage_ == BufferStorage::EXTERNAL_DEVICE);
   const usize reserved = (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
@@ -109,11 +125,14 @@ void Buffer::release_impl() {
   *link = next_;
   if(storage_ == BufferStorage::EXTERNAL_DEVICE) {
     counters.external_used -= reserved_; --counters.external_active;
+  } else if(view_) {
+    if(!parent_ || !parent_->pins_) __builtin_trap();
+    --parent_->pins_; --counters.pinned;
   } else {
     counters.internal_used -= size_; std::free(memory_);
   }
   --counters.active; increment(counters.releases);
-  memory_ = nullptr; next_ = nullptr; eviction_ = nullptr;
+  memory_ = nullptr; next_ = nullptr; view_ = false; eviction_ = nullptr;
   size_ = reserved_ = 0; address_ = generation_ = 0; pins_ = 0;
   owner_ = Owner::NONE; storage_ = BufferStorage::NONE;
 }
@@ -211,10 +230,18 @@ bool validate_buffer_invariants() {
   for(Buffer* p = internal; p; p = p->next_) {
     if(++active > counters.active || !p->memory_ || !p->size_ || !p->generation_ ||
        p->storage_ != BufferStorage::INTERNAL || p->owner_ == Owner::NONE || p->owner_ >= Owner::COUNT) return false;
-    internal_used += p->size_; pinned += p->pins_;
+    if(p->view_) {
+      const Buffer* parent=p->parent_;
+      if(!parent || parent->view_ || parent->storage_ != BufferStorage::INTERNAL ||
+         parent->owner_ != p->owner_ || !parent->pins_ ||
+         (uintptr_t)p->memory_ < (uintptr_t)parent->memory_ ||
+         (uintptr_t)p->memory_ - (uintptr_t)parent->memory_ > parent->size_ ||
+         p->size_ > parent->size_ - ((uintptr_t)p->memory_ - (uintptr_t)parent->memory_)) return false;
+    } else internal_used += p->size_;
+    pinned += p->pins_;
   }
   for(Buffer* p = external; p; p = p->next_) {
-    if(++active > counters.active || p->memory_ || !p->size_ || !p->generation_ ||
+    if(++active > counters.active || p->memory_ || p->view_ || !p->size_ || !p->generation_ ||
        p->storage_ != BufferStorage::EXTERNAL_DEVICE || p->owner_ == Owner::NONE || p->owner_ >= Owner::COUNT ||
        p->address_ < at || (p->address_ & (ALIGNMENT-1)) || p->size_ > p->reserved_ ||
        p->reserved_ > backend.capacity || p->address_ > backend.capacity - p->reserved_) return false;

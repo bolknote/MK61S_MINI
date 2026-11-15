@@ -7,7 +7,8 @@ import tempfile
 ROOT=Path(__file__).resolve().parents[1]
 source=(ROOT/'ports/picocalc/native_app.cpp').read_text()
 helpers=source[source.index('bool join(const char *directory'):source.index('} // namespace')]
-dispatch=source[source.index('u8 Services::run_handled('):source.index('u8 Services::run_native(')]
+helpers=helpers.replace('MK61_APP_LOADER_CODE ', '__attribute__((noinline)) ')
+dispatch=source[source.index('u8 Services::run_handled('):source.index('MK61_APP_LOADER_CODE u8 Services::run_native(')]
 with tempfile.TemporaryDirectory(prefix='picocalc-file-handler-') as directory:
     work=Path(directory)
     (work/'picocalc_file_handler_production.inc').write_text(helpers+'\n'+dispatch)

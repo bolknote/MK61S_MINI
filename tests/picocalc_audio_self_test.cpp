@@ -48,11 +48,16 @@ Statistics statistics(){return {};}
 }
 static std::mutex executor;
 static repeating_timer* alarm;
-static unsigned pools,cancels,left_level,right_level,disabled;
+static unsigned pools,pool_destroys,cancels,left_level,right_level,disabled;
+static bool pool_live;
 static bool enabled;
 static bool timer_failure;
 alarm_pool_t* alarm_pool_create_with_unused_hardware_alarm(unsigned n) {
-    assert(core1 && n==2);static alarm_pool_t pool;++pools;return &pool;
+    assert(core1 && n==2 && !pool_live);static alarm_pool_t pool;++pools;pool_live=true;return &pool;
+}
+void alarm_pool_destroy(alarm_pool_t* pool) {
+    assert(core1 && pool && pool_live && (!alarm || !alarm->callback));
+    pool_live=false;++pool_destroys;
 }
 bool alarm_pool_add_repeating_timer_us(alarm_pool_t*,int64_t delay,repeating_timer_callback_t cb,void*,repeating_timer* timer) {
     assert(core1 && delay==-40);alarm=timer;
@@ -110,7 +115,7 @@ int main() {
     const int16_t data[]={32767,-32768};r.samples=data;r.count=2;assert(call(MK61_AUDIO_WRITE,&r,10) && r.count==2);
     sample();assert(left_level==191 && right_level==191);sample();assert(left_level==64 && right_level==64);
     sample();assert(left_level==128);assert(call(MK61_AUDIO_STATUS,&r,10) && r.underruns==1);
-    close();assert(!active() && !enabled && cancels==1 && disabled==2);
+    close();assert(!active() && !enabled && cancels==1 && disabled==2 && !pool_live && pool_destroys==1);
     Synth state;mk61_service_audio_synth request{render,&state,25000,100};assert(synth(request,10));
 #if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
     assert(clock_mhz==200 && boosts==1 && !restores);
@@ -124,18 +129,21 @@ int main() {
     while(!state.entered.load(std::memory_order_acquire)) std::this_thread::yield();
     std::thread closer([&] { close();closed.store(true,std::memory_order_release); });
     assert(!closed.load());state.release.store(true,std::memory_order_release);irq.join();closer.join();
-    assert(closed.load() && !active() && !enabled && !alarm->callback && cancels==2 && pools==1);
+    assert(closed.load() && !active() && !enabled && !alarm->callback && cancels==2 && !pool_live && pool_destroys==pools);
     close();assert(cancels==2);
     existing_tone.wrap=100;assert(!key_click());existing_tone={};
     existing_tone.software=true;assert(!key_click());existing_tone={};
-    assert(key_click() && !active() && enabled && left_level==0 && pools==1);
+    assert(key_click() && !active() && enabled && left_level==0 && pool_live);
     for(unsigned n=0;n<KeyClick::SAMPLES;++n) {
         assert(sample()==(n+1<KeyClick::SAMPLES));
         assert(left_level==right_level && left_level<=63);
         if(n==0 || n+1==KeyClick::SAMPLES) assert(!left_level);
     }
     auto clicks=key_click_statistics();
-    assert(!clicks.active && clicks.started==1 && clicks.completed==1 && !enabled && !alarm->callback);
+    assert(!clicks.active && clicks.started==1 && clicks.completed==1 && !enabled && !alarm->callback && pool_live);
+    // A finished key click can leave the pool idle; the next APP loader
+    // explicitly closes it before allocating its image.
+    close();assert(!pool_live && pool_destroys==pools);
     assert(key_click());sample();assert(key_click()); // Retrigger restarts the finite impulse.
     for(unsigned n=0;n<KeyClick::SAMPLES;++n) sample();
     clicks=key_click_statistics();assert(clicks.started==3 && clicks.completed==2 && !clicks.active);
@@ -147,7 +155,7 @@ int main() {
     assert(!key_click());stop_key_click();assert(active() && key_click_statistics().started==before);
     sample();assert(left_level==128 && right_level==128);close();
     timer_failure=true;assert(!key_click() && !enabled && !key_click_statistics().active);
-    timer_failure=false;assert(key_click());close();assert(!enabled && !alarm->callback && pools==1);
+    timer_failure=false;assert(key_click());close();assert(!enabled && !alarm->callback && !pool_live && pool_destroys==pools);
     request.rate=25000;timer_failure=true;
     assert(!synth(request,10) && !active() && !enabled);
     timer_failure=false;
@@ -186,6 +194,19 @@ int main() {
     assert(clock_mhz==200 && boosts==old_boosts+1);
 #endif
     close();assert(!active());
+    // Preparing allocates the required queue and timer pool without starting
+    // playback. UI key sounds cannot destroy the reserved queue.
+    r={};r.rate=25000;r.volume=100;
+    assert(call(MK61_AUDIO_PREPARE,&r,10) && !active() && !enabled && prepared_queue);
+    auto* reserved=prepared_queue;const auto creates_before_open=pools,destroys_before_open=pool_destroys;
+    assert(key_click());sample();stop_key_click();assert(prepared_queue==reserved);
+    assert(call(MK61_AUDIO_OPEN,&r,10) && active() && !prepared_queue && queue==reserved);
+    assert(pool_live && pools==creates_before_open && pool_destroys==destroys_before_open);
+    sample();close();assert(!queue && !prepared_queue && !active() && !pool_live && pool_destroys==pools);
+    assert(call(MK61_AUDIO_PREPARE,&r,10) && prepared_queue && pool_live);close();assert(!prepared_queue && !pool_live);
+    assert(call(MK61_AUDIO_PREPARE,&r,10));timer_failure=true;
+    assert(!call(MK61_AUDIO_OPEN,&r,10) && !prepared_queue && !queue && !active() && !pool_live);
+    timer_failure=false;
     puts("Core-1 PCM/synth ownership, strict remote failure without boost/fallback, ordinary remote recovery, finite clicks and APP unload: PASS");
     return 0;
 }

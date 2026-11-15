@@ -38,6 +38,10 @@ class [[nodiscard]] Buffer {
   Buffer(const Buffer&) = delete;
   Buffer& operator=(const Buffer&) = delete;
   bool acquire(Owner owner, usize size, BufferAccess access = BufferAccess::DIRECT);
+  // A direct, pinned view of an existing internal allocation. The parent is
+  // charged once and cannot be released until every view is released. The
+  // caller manages non-overlap when independent writable views are needed.
+  bool acquire_slice(Buffer& parent, usize offset, usize size);
   // Optional external caches yield to required buffers. The callback prepares
   // a fallback and returns RELEASE; the manager itself revokes the lease.
   bool acquire_cache(Owner owner, usize size, EvictionPrepare prepare);
@@ -59,11 +63,12 @@ class [[nodiscard]] Buffer {
  private:
   u8* memory_ = nullptr;
   Buffer* next_ = nullptr;
-  EvictionPrepare eviction_ = nullptr;
+  union { EvictionPrepare eviction_ = nullptr; Buffer* parent_; };
   usize size_ = 0, reserved_ = 0;
   u32 address_ = 0, generation_ = 0;
   unsigned pins_ = 0;
   bool read_pending_ = false;
+  bool view_ = false;
   Owner owner_ = Owner::NONE;
   BufferStorage storage_ = BufferStorage::NONE;
   bool acquire_impl(Owner, usize, BufferAccess, EvictionPrepare);

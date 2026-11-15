@@ -29,6 +29,14 @@ static bool acquire_direct(mk61_service_buffer *buffer, unsigned bytes) {
     *buffer = mk61_app_buffer_request();
     return false;
 }
+static bool acquire_frames(bool *paired) {
+    if (acquire_direct(&screen, 2 * AW_VIDEO_PAGE_BYTES)) {
+        *paired = true; previous_frame.data = screen.data + AW_VIDEO_PAGE_BYTES; return true;
+    }
+    if (!acquire_direct(&screen, AW_VIDEO_PAGE_BYTES)) return false;
+    (void)acquire_direct(&previous_frame, AW_VIDEO_PAGE_BYTES);
+    return true;
+}
 static void drop_background(void) {
     video.background = video.background_tail = NULL;
     video.background_valid = video.background_attempted = false;
@@ -173,21 +181,30 @@ int main(void) {
     aw_vm vm_state = {0}; vm = &vm_state;
     aw_display_compact compact_state; compact_display = &compact_state;
     int16_t pending_samples[AW_AUDIO_BLOCK]; pending = pending_samples;
-    const char *error = NULL; bool graphics = false, paired_frames = false; uint32_t compute = 0;
+    const char *error = NULL; bool graphics = false, paired_frames = false;
+    bool audio_prepared = false, arena_reserved = false; uint32_t compute = 0;
     services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM);
     if (!services) { message("Update PicoCalc", "firmware / PSRAM"); return 0; }
     if (!mk61_app_buffer_acquire(services, EXTERNAL_BYTES, MK61_BUFFER_EXTERNAL, &external)) {
         error = "Not enough memory"; goto done;
     }
-    /* Adjacent pages use one service slot, leaving two for a background
-     * cache even when the free heap is split into smaller blocks. */
-    if (acquire_direct(&screen, 2 * AW_VIDEO_PAGE_BYTES)) {
-        paired_frames = true;
-        previous_frame.data = screen.data + AW_VIDEO_PAGE_BYTES;
-    } else {
-        if (!acquire_direct(&screen, AW_VIDEO_PAGE_BYTES)) { error = "Not enough memory"; goto done; }
-        (void)acquire_direct(&previous_frame, AW_VIDEO_PAGE_BYTES);
+    /* Reserve required PCM first, then place both video pages and the
+     * optional cache in one APP-owned arena if it fits. Older firmware and
+     * fragmented heaps retain the existing individual-allocation fallback. */
+    mk61_service_audio request = {0}; request.rate = AW_AUDIO_RATE; request.volume = 100;
+    audio_prepared = services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_PREPARE, 0, sizeof(request), &request) != 0;
+    if (audio_prepared)
+        arena_reserved = mk61_app_buffer_reserve(services, 2 * AW_VIDEO_PAGE_BYTES + 6144) != 0;
+    if (!acquire_frames(&paired_frames)) {
+        /* A premature PCM reservation must not prevent the mandatory page.
+         * Retry the original allocation order before reporting failure. */
+        if (arena_reserved) { (void)mk61_app_buffer_unreserve(services); arena_reserved = false; }
+        if (audio_prepared) {
+            (void)services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_CLOSE, 0, 0, NULL);
+            audio_prepared = false;
+        }
+        if (!acquire_frames(&paired_frames)) { error = "Not enough memory"; goto done; }
     }
     if (previous_frame.data) aw_display_init(&display, previous_frame.data);
     mk61_service_file_info info;
@@ -247,7 +264,6 @@ int main(void) {
     if (!aw_vm_init(vm, &assets, &video, host, (uint16_t)mk61_api->millis_ms())) { error = "VM init failed"; goto done; }
     aw_audio_init(&audio, &assets, vm);
     if (!aw_vm_set_part(vm, AW_VM_FIRST_PART)) { error = "Cannot load game"; goto done; }
-    mk61_service_audio request = {0}; request.rate = AW_AUDIO_RATE; request.volume = 100;
     if (!services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_OPEN, 0, sizeof(request), &request)) {
         error = "Audio unavailable"; goto done;
     }
@@ -273,12 +289,13 @@ int main(void) {
     }
     if (pump_failed && !input.quit) error = "Audio or input error";
 done:
-    if (audio_open) services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_CLOSE, 0, 0, NULL);
+    if (audio_open || audio_prepared) services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_CLOSE, 0, 0, NULL);
     if (compute) (void)mk61_app_compute_end(services, compute);
     if (graphics) { services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, NULL); mk61_api->graphics_end(); }
     drop_background();
     if (previous_frame.handle) mk61_app_buffer_release(services, previous_frame.handle);
     if (screen.handle) mk61_app_buffer_release(services, screen.handle);
+    if (arena_reserved) (void)mk61_app_buffer_unreserve(services);
     if (external.handle) mk61_app_buffer_release(services, external.handle);
     if (error) message(error, "Press any key");
     return 0;

@@ -55,5 +55,40 @@ int main(){
   r={};r.size=32;assert(!s.call(MK61_BUFFER_ACQUIRE,r));
  }
  assert(buffer_statistics().active==0 && validate_buffer_invariants());
+ {
+  Session s;mk61_service_buffer r{};r.size=1024;
+  assert(s.call(MK61_BUFFER_RESERVE,r));
+  assert(!s.call(MK61_BUFFER_RESERVE,r));
+  auto reserved=buffer_statistics();assert(reserved.internal_used==1024 && s.statistics().arena_bytes==1024);
+  mk61_service_buffer a{};a.size=401;a.access=MK61_BUFFER_DIRECT;assert(s.call(MK61_BUFFER_ACQUIRE,a));
+  mk61_service_buffer b{};b.size=200;b.access=MK61_BUFFER_DIRECT;assert(s.call(MK61_BUFFER_ACQUIRE,b));
+  assert(b.data==a.data+408 && buffer_statistics().internal_used==1024);
+  assert(validate_buffer_invariants());
+  r={};assert(!s.call(MK61_BUFFER_UNRESERVE,r));
+  const auto old=a.handle;assert(s.call(MK61_BUFFER_RELEASE,a));
+  a={};a.size=400;a.access=MK61_BUFFER_DIRECT;assert(s.call(MK61_BUFFER_ACQUIRE,a));
+  assert(a.handle!=old && a.data+408==b.data);
+  // A larger direct request falls back to the regular heap without affecting
+  // the reserved memory. Windows on an arena slice retain normal pin rules.
+  mk61_service_buffer extra{};extra.size=800;extra.access=MK61_BUFFER_DIRECT;
+  assert(s.call(MK61_BUFFER_ACQUIRE,extra));assert(buffer_statistics().internal_used==1824);
+  assert(s.call(MK61_BUFFER_RELEASE,extra));
+  a.offset=0;a.size=20;a.flags=MK61_BUFFER_WINDOW_WRITABLE;
+  std::memset(a.data,0x2A,20);assert(s.call(MK61_BUFFER_WINDOW_OPEN,a));
+  std::memset(a.data,0x7B,20);assert(!s.call(MK61_BUFFER_RELEASE,a));
+  assert(s.call(MK61_BUFFER_WINDOW_COMMIT,a) && s.call(MK61_BUFFER_WINDOW_CLOSE,a));
+  a.offset=0;a.size=20;u8 bytes[20]{};a.data=bytes;assert(s.call(MK61_BUFFER_READ,a));
+  for(u8 value:bytes) assert(value==0x7B);
+  assert(s.call(MK61_BUFFER_RELEASE,a) && s.call(MK61_BUFFER_RELEASE,b));
+  r={};assert(s.call(MK61_BUFFER_UNRESERVE,r));assert(!s.statistics().arena_bytes);
+  assert(buffer_statistics().active==0 && buffer_statistics().internal_used==0 && validate_buffer_invariants());
+ }
+ {
+  Session s;mk61_service_buffer r{};r.size=512;assert(s.call(MK61_BUFFER_RESERVE,r));
+  r={};r.size=128;assert(s.call(MK61_BUFFER_ACQUIRE,r));
+  r.offset=0;r.size=16;assert(s.call(MK61_BUFFER_WINDOW_OPEN,r));
+  // APP returns without closing the window or releasing the slice/arena.
+ }
+ assert(buffer_statistics().active==0 && buffer_statistics().pinned==0 && validate_buffer_invariants());
  std::puts("APP buffers: 6 MiB, bounds, slots, stale handles, transactional windows, pinning, return cleanup and SRAM fallback PASS");
 }

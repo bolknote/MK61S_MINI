@@ -62,6 +62,7 @@ if(NOT MK61_PICOCALC_M0_LIBC_CANDIDATE STREQUAL "0")
     add_compile_definitions(MK61_M0_LIBC_UNROLL=${MK61_PICOCALC_M0_LIBC_CANDIDATE})
 endif()
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
+option(MK61_PICOCALC_HEAP_TRACE "Diagnostic-only bounded allocation trace" OFF)
 option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing control" ON)
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp ai_chat.cpp ai_math.cpp
@@ -149,6 +150,16 @@ target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     PICO_STACK_SIZE=32768
     PICO_CORE1_STACK_SIZE=2048
     PICO_STDIO_DEFAULT_CRLF=1)
+if(MK61_PICOCALC_HEAP_TRACE)
+    # Replace only the SDK's public malloc wrappers; retain their mutex. The
+    # extra newlib wraps capture direct _r calls without double counting nested
+    # public calls. Nothing is reserved in ordinary firmware builds.
+    set_property(TARGET pico_malloc PROPERTY INTERFACE_SOURCES "${CMAKE_CURRENT_LIST_DIR}/heap_trace_malloc.cpp")
+    target_sources(mk61s-picocalc-pico-h PRIVATE heap_trace.cpp)
+    target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_HEAP_TRACE=1)
+    target_link_options(mk61s-picocalc-pico-h PRIVATE
+        -Wl,--wrap=_malloc_r -Wl,--wrap=_calloc_r -Wl,--wrap=_realloc_r -Wl,--wrap=_free_r)
+endif()
 target_compile_options(mk61s-picocalc-pico-h PRIVATE
     -fstack-usage
     $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wno-unused-parameter;-Wno-unused-variable>)

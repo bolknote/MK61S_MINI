@@ -72,6 +72,7 @@ extern "C" { picocalc::AudioIrqEntry mk61_remote_irq_trace;picocalc::AudioAlarmT
 namespace picocalc::audio_stream {
 namespace {
 Queue* queue=nullptr;
+Queue* prepared_queue=nullptr; // Core 0 owns this until OPEN or CLOSE.
 repeating_timer timer{};
 alarm_pool_t* pool=nullptr;
 mk61_service_audio_synth generator{};
@@ -356,9 +357,12 @@ bool tick(repeating_timer*) {
     pwm_set_both_levels(pwm_gpio_to_slice_num(26),(uint16_t)levels,(uint16_t)(levels>>16));
     return true;
 }
-bool start_timer() {
+bool ensure_pool() {
     if(!pool) pool=alarm_pool_create_with_unused_hardware_alarm(2);
-    return pool && alarm_pool_add_repeating_timer_us(pool,-40,tick,nullptr,&timer);
+    return pool!=nullptr;
+}
+bool start_timer() {
+    return ensure_pool() && alarm_pool_add_repeating_timer_us(pool,-40,tick,nullptr,&timer);
 }
 void stop(void*) {
     bool dma_owned=false;
@@ -441,12 +445,24 @@ void report_alarm_trace() {
         (unsigned long)alarm.snapshot.callback_at,(unsigned long)alarm.snapshot.callback_head,(unsigned long)alarm.snapshot.callback_filled);
 }
 bool active() { return playback.load(std::memory_order_acquire)==Playback::STREAM; }
-void close() {
-    if(playback.load(std::memory_order_acquire)!=Playback::IDLE) io_worker::invoke(nullptr,stop);
+namespace {
+void close_impl(bool preserve_pool) {
+    // The SDK pool owns two heap allocations. Keeping them after an APP
+    // exits can split the next APP's otherwise free SRAM into two unusable
+    // pieces. Create and destroy it on core 1, its IRQ owner.
+    if(playback.load(std::memory_order_acquire)!=Playback::IDLE || (!preserve_pool && pool)) {
+        io_worker::invoke(&preserve_pool,[](void* raw) {
+            if(playback.load(std::memory_order_acquire)!=Playback::IDLE) stop(nullptr);
+            if(!*(const bool*)raw && pool) { alarm_pool_destroy(pool);pool=nullptr; }
+        });
+    }
+    delete prepared_queue;prepared_queue=nullptr;
     m3_audio::close();remote=false;remote_only=false;recovery={};
     cosmic_clock::audio_end();
     clock_owned=false;
 }
+}
+void close() { close_impl(false); }
 void stop_key_click() {
     if(playback.load(std::memory_order_acquire)==Playback::KEY_CLICK) io_worker::invoke(nullptr,stop);
 }
@@ -528,10 +544,23 @@ uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master) {
     if(operation==MK61_AUDIO_CLOSE) { close();return 1; }
     if(!request) return 0;
     auto& r=*request;
-    if(operation==MK61_AUDIO_OPEN) {
+    if(operation==MK61_AUDIO_PREPARE) {
         if(r.rate!=25000 || r.volume>100 || master>10 || r.samples || r.count) return 0;
         close();script::tone(0,0);
-        queue=new(std::nothrow) Queue;
+        auto* candidate=new(std::nothrow) Queue;
+        if(!candidate) return 0;
+        bool ok=false;
+        io_worker::invoke(&ok,[](void* raw) { *(bool*)raw=ensure_pool(); });
+        if(!ok) { delete candidate;return 0; }
+        prepared_queue=candidate;return 1;
+    }
+    if(operation==MK61_AUDIO_OPEN) {
+        if(r.rate!=25000 || r.volume>100 || master>10 || r.samples || r.count) return 0;
+        auto* prepared=prepared_queue;prepared_queue=nullptr;
+        // PREPARE deliberately places the pool before the APP's large
+        // buffers. Do not destroy and reallocate it during OPEN.
+        close_impl(prepared!=nullptr);script::tone(0,0);
+        queue=prepared?prepared:new(std::nothrow) Queue;
         if(!queue) return 0;
         gain=master*r.volume;
         bool ok=false;
@@ -539,7 +568,7 @@ uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master) {
             prepare_pwm();playback.store(Playback::STREAM,std::memory_order_release);
             *(bool*)raw=start_timer();if(!*(bool*)raw) stop(nullptr);
         });
-        if(!ok) return 0;
+        if(!ok) { close();return 0; }
     } else if(operation==MK61_AUDIO_WRITE) {
         if(!queue || r.count>Queue::CAPACITY || (!r.samples && r.count)) return 0;
         r.count=queue->push(r.samples,r.count);

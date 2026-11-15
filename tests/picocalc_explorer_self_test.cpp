@@ -5,6 +5,7 @@
 #include "mk61_ref.hpp"
 #include "mk8_literal.hpp"
 #include "shared_memory_buffer.hpp"
+#include "loadable_module_format.hpp"
 #include <cassert>
 #include <chrono>
 #include <cstdio>
@@ -209,6 +210,36 @@ void picocalc_explorer_test() {
         assert(files::write("/ExplorerNative/IconOnly/autoexec.wbmp",bytes,sizeof(bytes)));
         service.tick();select(service,good);screen.render(calculator.snapshot(),true,&ui,&service);preview(screen);
         service.input(0x1B);service.input(0x1B);service.input(0x1B);service.tick();assert(!service.active());
+    }
+    // Re-entering the UI while a damaged APP is being decoded must neither
+    // recreate Explorer's discarded buffers nor permit another launch. The
+    // error path must still allow the browser to rebuild after acknowledgement.
+    {
+        using namespace loadable_module;
+        Header h{};h.kind=Kind::APPLICATION;h.compression=Compression::ZX0;
+        h.flags=MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG|MK61_APP_ARMV6M_FLAG;
+        h.load_address=MK61_PORTABLE_APP_ADDRESS;
+        h.stored_size=h.code_stored_size=16;h.image_size=h.memory_size=32;
+        u8 image[80]{};assert(encode_header(h,MAX_CONTAINER_SIZE,image));
+        assert(files::write("/ExplorerNative/bad.APP",image,sizeof(image)));
+        Services service;service.set_ui(ui);service.open(Action::EXPLORER,false,calculator);
+        assert(service.enter_directory("/ExplorerNative",false));
+        struct Pump { Services* service;usize baseline;unsigned calls; } pump{
+            &service,before.internal_used,0};
+        service.set_pump([](void* raw,u8&) {
+            auto& p=*(Pump*)raw;++p.calls;
+            assert(p.service->native_loading());
+            p.service->tick();
+            assert(p.service->input(0xB7));
+            assert(p.service->run_native("/ExplorerNative/bad.APP")==3);
+            assert(shared_memory::buffer_statistics().internal_used==p.baseline);
+            return false;
+        },&pump);
+        assert(service.run_native("/ExplorerNative/bad.APP")!=0 && pump.calls);
+        service.set_pump(nullptr,nullptr);
+        assert(!service.native_loading() && !std::strcmp(service.page_name(),"MESSAGE"));
+        assert(service.input('\r') && !std::strcmp(service.page_name(),"BROWSER"));
+        assert(service.browser_count());
     }
     const auto after=shared_memory::buffer_statistics();
     assert(after.internal_used==before.internal_used && after.active==before.active);

@@ -40,6 +40,9 @@
 #include "rtc_value.hpp"
 #include "native_keyboard.hpp"
 #include "loadable_buffer_services.hpp"
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+#include "heap_trace.hpp"
+#endif
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -49,6 +52,9 @@
 #include "hardware/sync.h"
 #include "pico/stdlib.h"
 #include "io_worker.hpp"
+#define MK61_APP_LOADER_CODE __attribute__((noinline,noclone,section(".ai_diagnostic_extension")))
+#else
+#define MK61_APP_LOADER_CODE __attribute__((noinline))
 #endif
 
 namespace picocalc {
@@ -78,7 +84,7 @@ bool join(const char *directory, const char *leaf, char out[files::PATH_SIZE]) {
                               !std::strcmp(directory, "/") ? "" : "/", leaf);
   return n > 0 && n < (int)files::PATH_SIZE;
 }
-__attribute__((noinline)) bool find_handler(const char* directory,u16 magic,unsigned depth,unsigned& budget,
+MK61_APP_LOADER_CODE bool find_handler(const char* directory,u16 magic,unsigned depth,unsigned& budget,
                   char out[files::PATH_SIZE]) {
   // Return the path before entering APP code: no directory buffers or
   // recursive search frames remain on the APP's small resident stack.
@@ -118,9 +124,7 @@ __attribute__((noinline)) bool find_handler(const char* directory,u16 magic,unsi
 class NativeHost {
 public:
   static Services& prepare(Services& service) {
-    // Image loading pumps the resident UI. An Explorer page can rebuild
-    // its catalog after load_document released it, so drop it again before
-    // the APP/font/guest allocations begin.
+    // Keep the handoff defensive for callers that construct a host directly.
     service.release_browser();service.graph_.reset();return service;
   }
   explicit NativeHost(Services &service,bool native=false) : s(prepare(service)), display(settings(),native) {
@@ -501,7 +505,7 @@ NativeHost *NativeHost::current = nullptr;
 Services::NativeBufferStatistics Services::native_buffer_statistics() const {
   if(!NativeHost::current) return {};
   const auto s=NativeHost::current->buffers.statistics();
-  return {s.count,s.bytes,s.external_bytes,s.windows};
+  return {s.count,s.bytes,s.external_bytes,s.windows,s.arena_bytes};
 }
 const mk61_service_keyboard NativeHost::mapping = [] {
   mk61_service_keyboard m{};
@@ -1495,9 +1499,9 @@ u8 Services::run_handled(const char *path, u16 magic) {
   message("Install a Pico H APP for this file type", ServicePage::BROWSER);
   return 1;
 }
-u8 Services::run_native(const char *path, u16 file) {
+MK61_APP_LOADER_CODE u8 Services::run_native(const char *path, u16 file) {
   compute_clock::Owner clock_owner;
-  if (NativeHost::current || running_ || files::usb_active())
+  if (NativeHost::current || running_ || native_loading_ || files::usb_active())
     return 3;
   release_cache();
   (void)source_.park();
@@ -1577,13 +1581,35 @@ void Services::finish_native(bool fullscreen) {
     std::snprintf(status_, sizeof(status_), "APP finished; Enter / Esc: files");
   }
 }
-u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
-                            bool& fullscreen) {
+MK61_APP_LOADER_CODE u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
+                                                 bool& fullscreen) {
   compute_clock::Owner clock_owner(true);
   diagnostics::Scope measure(diagnostics::Point::APP);
   diagnostics::context(diagnostics::State::APP,file);
-  if (NativeHost::current || running_ || files::usb_active())
+  if (NativeHost::current || running_ || native_loading_ || files::usb_active())
     return 3;
+  struct Loading {
+    bool& active;
+    explicit Loading(bool& value) : active(value) { active=true; }
+    void finish() { active=false; }
+    ~Loading() {
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+      if(active) heap_trace::mark(heap_trace::LOAD_FAILED);
+#endif
+      finish();
+    }
+  } loading(native_loading_);
+  // Neither a failed read nor a nested UI pump may leave Explorer's cache
+  // allocated in front of the image. USB and key polling continue normally.
+#if defined(PICO_ON_DEVICE)
+  // An earlier key click may have left the SDK's audio alarm pool idle.
+  // Release its heap blocks before placing a new application's image.
+  audio_stream::close();
+#endif
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+  heap_trace::mark(heap_trace::BEFORE_RELEASE);
+#endif
+  release_browser();
   struct ReadLease {
     ~ReadLease() { files::release_read_cursor(); }
   } read_lease;
@@ -1614,6 +1640,9 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
     message("APP: not enough RAM", ServicePage::BROWSER);
     return 3;
   }
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+  heap_trace::mark(heap_trace::IMAGE_RESERVED,header.memory_size);
+#endif
   auto *memory = (u8 *)(((uintptr_t)allocation + 7) & ~(uintptr_t)7);
   struct Source {
     const char *path;
@@ -1642,6 +1671,7 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
     message("APP: damaged image / CRC / relocation", ServicePage::BROWSER);
     return 1;
   }
+  loading.finish();
   std::snprintf(path_, sizeof(path_), "%s", path);
   page_ = ServicePage::CONSOLE;
   runtime_ = "APP";
@@ -1651,6 +1681,9 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
   u32 result = 5;
   {
     NativeHost host(*this,(header.flags&MK61_APP_NATIVE_320_FLAG)!=0);
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+    heap_trace::mark(heap_trace::ENTER_APP);
+#endif
 #if !defined(PICO_ON_DEVICE)
     if (test_native_entry_ && flow) {
       result = test_native_entry_(test_native_context_, file, NativeHost::api, NativeHost::common);
@@ -1702,7 +1735,13 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow,
     script::led(false);
     fullscreen |= host.fullscreen;
   }
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+  heap_trace::mark(heap_trace::EXIT_APP);
+#endif
   std::free(allocation);
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+  heap_trace::mark(heap_trace::IMAGE_FREED);
+#endif
   running_ = false;
   runtime_ = "NONE";
   std::printf("APP_RESULT=%lu CRC=%08lX MEMORY=%lu\n", (unsigned long)result,

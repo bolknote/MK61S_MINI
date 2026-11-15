@@ -31,16 +31,22 @@ def firmware_flash_budget(image_bytes):
         raise ValueError("Firmware overlaps the device settings at 0x101FE000")
 
 
-def audio_memory_budget(static_ram_bytes, enabled):
+def audio_memory_budget(static_ram_bytes, enabled, heap_trace=False):
     # Allow the maximum APP, two 15 KiB banks and 10 KiB in cache leases.
     # The other 6 KiB of cache use the foreground stack and display canvas.
     # Reserve 8 KiB for resident allocations and the audio engine.
-    minimum = PICO_APP_MAX_MEMORY_SIZE + (30 + 10 + 8) * 1024
+    production_minimum = PICO_APP_MAX_MEMORY_SIZE + (30 + 10 + 8) * 1024
+    # An explicitly requested trace build uses a fixed 2 KiB log and a few
+    # bookkeeping words. It cannot qualify the production APP memory budget;
+    # still reject anything smaller than that budget minus the bounded trace.
+    minimum = production_minimum - (2112 if heap_trace else 0)
     available = 224 * 1024 - static_ram_bytes
     if enabled and available < minimum:
         raise ValueError(f"real-time audio APP SRAM budget: heap {available} < required {minimum} bytes")
     return {"minimum_heap_bytes": minimum if enabled else None,
-            "heap_capacity_bytes": available}
+            "heap_capacity_bytes": available,
+            "production_minimum_heap_bytes": production_minimum if enabled else None,
+            "diagnostic_only": heap_trace}
 
 
 def run(command, **kwargs):
@@ -107,6 +113,7 @@ def main():
     parser.add_argument("--compiler-runtime", action="store_true",
                         help="Control build using GCC arithmetic instead of the owned M0 runtime")
     parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
+    parser.add_argument("--heap-trace", action="store_true", help="Build diagnostic-only bounded allocation tracing")
     parser.add_argument("--psram-spi", action="store_true", help="Control build without four-bit PSRAM")
     parser.add_argument("--cosmic-clock-diagnostic", action="store_true", help="Prepare temporary125/200/250MHz diagnostic image")
     parser.add_argument("--ai-overclock-diagnostic", action="store_true", help="AI diagnostic at qualified270MHz; stock voltage")
@@ -153,6 +160,8 @@ def main():
             source_hash.update(source.read_bytes())
         if args.sampling_profile:
             source_hash.update(b'picocalc-sampling-profile=1\0')
+        if args.heap_trace:
+            source_hash.update(b'picocalc-heap-trace=1\0')
         if args.compiler_runtime:
             source_hash.update(b'picocalc-compiler-runtime=1\0')
         if args.psram_spi:
@@ -187,7 +196,8 @@ def main():
              f"-DMK61_PICOCALC_M0_LIBC_CANDIDATE={args.m0_libc_candidate}",
              f"-DMK61_PICOCALC_LCD_COLOR_CHAIN={'ON' if args.lcd_color_chain else 'OFF'}",
              f"-DMK61_PICOCALC_LCD_SPI_HZ={args.lcd_spi_hz}",
-             f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
+             f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}",
+             f"-DMK61_PICOCALC_HEAP_TRACE={'ON' if args.heap_trace else 'OFF'}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
         attributes = run([toolchain / ("arm-none-eabi-readelf" + suffix), "-A", build / (TARGET + ".elf")],
@@ -206,7 +216,7 @@ def main():
         static_ram_bytes=int(ram_end[1],16)-0x20000000
         if not 0 < static_ram_bytes <= 224 * 1024:
             raise ValueError('static SRAM overlaps the reserved stack region')
-        foreground_budget=audio_memory_budget(static_ram_bytes,args.audio_clock and not args.cosmic_clock_diagnostic)
+        foreground_budget=audio_memory_budget(static_ram_bytes,args.audio_clock and not args.cosmic_clock_diagnostic,args.heap_trace)
         match=re.search(r'^([0-9a-fA-F]+) [A-Za-z] mk61_picocalc_firmware_footer$',symbols,re.M)
         if not match:raise ValueError('required firmware footer was discarded by the linker')
         footer_offset=int(match[1],16)-BASE
@@ -233,6 +243,7 @@ def main():
             "profile": args.profile, "prototype_version": re.search(r'VERSION\[\]\s*=\s*"(\d+\.\d+\.\d+)"',
                 (ROOT / 'ports/picocalc/version.hpp').read_text())[1], "mcu": "RP2040",
             "sampling_profile": args.sampling_profile,
+            "heap_trace": args.heap_trace,
             "automatic_audio_clock_mhz": 200 if args.audio_clock and not args.cosmic_clock_diagnostic and not ai_clock_support else None,
             "ai_overclock_diagnostic": args.ai_overclock_diagnostic,
             "ai_fast_clock": ai_clock_support,

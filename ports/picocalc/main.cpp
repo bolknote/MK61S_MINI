@@ -129,7 +129,7 @@ void input(u8 code, bool physical) {
     if(accepted) {
         panel.note_input(pressed_at);
         last_activity = time_us_64();
-        key_click();
+        if(!services.native_loading()) key_click();
         if(physical) { ++physical_keys; last_physical_key = code; }
     }
     if(!menu_navigation) calculator.wake_core();
@@ -203,10 +203,10 @@ void report(unsigned math_failures) {
     }
     const auto heap=mallinfo();
     const auto heap_capacity=(uintptr_t)&__HeapLimit-(uintptr_t)&__end__;
-    std::printf("HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu\n",
+    std::printf("HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu HEAP_TOP_CHUNK=%lu\n",
         (unsigned long)heap_capacity,(unsigned long)heap.uordblks,
         (unsigned long)(heap_capacity-heap.uordblks),(unsigned long)heap.arena,
-        (unsigned long)heap.ordblks,(unsigned long)heap.keepcost);
+        (unsigned long)heap.ordblks,(unsigned long)heap.keepcost,(unsigned long)heap.keepcost);
     std::printf("M3_BLOCK_US=%lu M3_STARVE_STAGE=%lu M3_STARVE_REQUEST_US=%lu M3_STARVE_AHEAD=%ld\n",
         (unsigned long)m3.max_render_us,(unsigned long)m3.starve_stage,
         (unsigned long)m3.starve_request_us,(long)m3.starve_ahead);
@@ -253,9 +253,9 @@ void report(unsigned math_failures) {
         (unsigned long)external.sector_bytes,(unsigned long)external.evictions);
     const auto buffers=shared_memory::buffer_statistics();
     const auto app_buffers=services.native_buffer_statistics();
-    std::printf("APP_BUFFERS=%lu APP_BUFFER_BYTES=%lu APP_EXTERNAL_BYTES=%lu APP_WINDOWS=%lu\n",
+    std::printf("APP_BUFFERS=%lu APP_BUFFER_BYTES=%lu APP_EXTERNAL_BYTES=%lu APP_WINDOWS=%lu APP_ARENA_BYTES=%lu\n",
         (unsigned long)app_buffers.count,(unsigned long)app_buffers.bytes,
-        (unsigned long)app_buffers.external_bytes,(unsigned long)app_buffers.windows);
+        (unsigned long)app_buffers.external_bytes,(unsigned long)app_buffers.windows,(unsigned long)app_buffers.arena_bytes);
     std::printf("BUFFERS=shared SRAM_USED=%lu PSRAM_USED=%lu PSRAM_CAPACITY=%lu LARGEST=%lu ACTIVE=%lu EXTERNAL=%lu PINNED=%lu RECLAIMS=%lu IO_ERRORS=%lu VALID=%u\n",
         (unsigned long)buffers.internal_used,(unsigned long)buffers.external_used,(unsigned long)buffers.external_capacity,
         (unsigned long)buffers.external_largest,(unsigned long)buffers.active,(unsigned long)buffers.external_active,
@@ -499,7 +499,7 @@ bool service_pump(void*, u8& key) {
     picocalc::KeyEvent event{};
     if(key_event(event) && event.pressed()) {
         key = event.code;
-        key_click();
+        if(!services.native_loading()) key_click();
         if(physical_event) { ++physical_keys;last_physical_key=key; } last_activity=now;power.activity(now);return true;
     }
     if(power.asleep()) { wait_for_wake();return false; }

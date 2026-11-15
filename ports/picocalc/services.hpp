@@ -21,7 +21,7 @@ enum class Document : u8 { BASIC, FOCAL, MK61, TEXT };
 // STM32. Only the device loop, QWERTY input and FAT paths are board adapters.
 class Services {
 public:
-    struct NativeBufferStatistics { u32 count,bytes,external_bytes,windows; };
+    struct NativeBufferStatistics { u32 count,bytes,external_bytes,windows,arena_bytes; };
     NativeBufferStatistics native_buffer_statistics() const;
     SourceDocument::Statistics source_memory_statistics() const { return source_.statistics(); }
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
@@ -111,6 +111,7 @@ public:
     u8 run_chip8(const char* path);
     u8 run_native(const char* path, u16 file = 0xFFFF);
     u8 run_handled(const char* path, u16 magic);
+    bool native_loading() const { return native_loading_; }
 #if !defined(PICO_ON_DEVICE)
     void test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context,bool native=false);
     using TestNativeEntry = u32 (*)(void*,u16,const mk61_app_api&,const mk61_app_services&);
@@ -186,6 +187,7 @@ private:
     bool russian_ = true, dirty_ = false, more_ = false, pending_run_ = false;
     bool browser_load_program_ = false;
     bool running_ = false, stopped_ = false, waiting_ = false, graph_visible_ = false;
+    bool native_loading_ = false;
     bool serial_output_ = false;
     bool presentation_suspended_ = false;
     bool viewing_ = false;

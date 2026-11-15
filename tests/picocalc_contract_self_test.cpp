@@ -17,6 +17,7 @@
 #include "keyboard_core.hpp"
 #include "shared_memory_buffer.hpp"
 #include "zx0.hpp"
+#include <algorithm>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -85,6 +86,35 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     files::Entry absent{};
     CHECK(!files::stat("/Contract/interrupted.szx",absent));
     CHECK(!files::exists("/Contract/.MK61-0.TMP"));
+    // A streamed create can itself read source files through the APP byte
+    // service. This is used by bounded transfers that join large assets.
+    CHECK(files::write("/Contract/part-a.bin",raw.data(),35000));
+    CHECK(files::write("/Contract/part-b.bin",raw.data()+35000,35000));
+    struct FileSource { const mk61_app_services* services;bool fail; } file_source{&s,false};
+    auto read_parts=+[](void* context,u32 at,u8* out,u32 n)->int {
+        const auto& input=*(const FileSource*)context;
+        while(n) {
+            const char* name=at<35000?"part-a.bin":"part-b.bin";
+            const u32 offset=at<35000?at:at-35000;
+            const u32 count=std::min(n,35000U-offset);
+            if(input.fail && at>=35000)return 0;
+            mk61_service_file_bytes request{name,out,offset,count};
+            if(!count || !input.services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(request),&request))return 0;
+            at+=count;out+=count;n-=count;
+        }
+        return 1;
+    };
+    mk61_service_write_source joined{"joined.bin",&file_source,read_parts,(u32)raw.size(),0};
+    CHECK(s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(joined),&joined));
+    std::vector<u8> joined_copy(raw.size());unsigned joined_used=0;
+    CHECK(files::read("/Contract/joined.bin",joined_copy.data(),joined_copy.size(),joined_used));
+    CHECK(joined_used==raw.size() && joined_copy==raw);
+    CHECK(!s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(joined),&joined));
+    joined.name="failed-join.bin";file_source.fail=true;
+    CHECK(!s.call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(joined),&joined));
+    CHECK(!files::stat("/Contract/failed-join.bin",absent));
+    CHECK(files::remove("/Contract/joined.bin"));
+    CHECK(files::remove("/Contract/part-a.bin"));CHECK(files::remove("/Contract/part-b.bin"));
     CHECK(files::mkdir("/Contract/Игры"));
     CHECK(files::write("/Contract/Игры/Игра.Z80",raw.data(),raw.size()));
     program_store::Entry media{};CHECK(script::register_file("/Contract/Игры/Игра.Z80",media));
@@ -579,6 +609,8 @@ void picocalc_contract_test() {
     themed_bitmap_contract();
     explorer_app_exit_contract();
     {
+        // The isolated contract target starts with a freshly formatted card.
+        CHECK(files::mkdir("/ContractProbe"));
         Calculator calculator;calculator.init();Services service;
         const auto baseline=shared_memory::buffer_statistics();
         service.open(Action::EXPLORER,false,calculator);
@@ -595,6 +627,7 @@ void picocalc_contract_test() {
         // Returning to the Explorer can rebuild its catalog normally.
         service.tick();CHECK(service.browser_count());CHECK(service.input(0x1B));service.tick();
         CHECK(shared_memory::buffer_statistics().internal_used==baseline.internal_used);
+        CHECK(files::remove("/ContractProbe"));
     }
     {
         Settings settings{};settings.ui_font_family=1;settings.ui_font_size=16;

@@ -3,11 +3,14 @@
 #include "loadable_app_services.h"
 #include "shared_memory_buffer.hpp"
 #include <cstring>
+#include <cstdint>
 namespace loadable_buffers {
 // Never reuse a token, including across APP returns. Exhaustion is a clean
 // allocation failure instead of aliasing an old application's handle.
 inline u32 token() { static u32 sequence=0;return sequence==UINT32_MAX?0:++sequence; }
 class Session {
+    // Destruction order is windows, slices, then their pinned parent arena.
+    shared_memory::Buffer arena_;
     struct Slot { shared_memory::Buffer buffer;u32 handle=0; } slots_[4];
     struct Window { shared_memory::BufferWindow window;u32 handle=0; } windows_[2];
     Slot* find(u32 handle) {
@@ -18,8 +21,28 @@ class Session {
         for(auto& s:windows_) if(handle && s.handle==handle) return &s;
         return nullptr;
     }
+    bool acquire_arena(shared_memory::Buffer& out,u32 bytes) {
+        if(!arena_.data() || bytes>arena_.size()) return false;
+        usize at=0;
+        for(;;) {
+            usize next=arena_.size();const shared_memory::Buffer* occupied=nullptr;
+            for(const auto& s:slots_) if(s.handle && s.buffer.data()) {
+                const uintptr_t base=(uintptr_t)arena_.data(),p=(uintptr_t)s.buffer.data();
+                if(p<base || p-base>=arena_.size()) continue;
+                const usize offset=p-base;
+                if(offset>=at && offset<next) { next=offset;occupied=&s.buffer; }
+            }
+            if(bytes<=next-at) return out.acquire_slice(arena_,at,bytes);
+            if(!occupied) return false;
+            if(occupied->size()>arena_.size()-next) return false;
+            const usize end=next+occupied->size(),padding=(8U-(end&7U))&7U;
+            if(padding>arena_.size()-end) return false;
+            at=end+padding;
+            if(at>arena_.size()) return false;
+        }
+    }
 public:
-    struct Statistics { u32 count=0,bytes=0,external_bytes=0,windows=0; };
+    struct Statistics { u32 count=0,bytes=0,external_bytes=0,windows=0,arena_bytes=0; };
     Statistics statistics() const {
         Statistics r;
         for(const auto& s:slots_) if(s.handle) {
@@ -28,7 +51,7 @@ public:
             if(!s.buffer.data()) r.external_bytes+=s.buffer.size();
         }
         for(const auto& w:windows_) if(w.handle) ++r.windows;
-        return r;
+        r.arena_bytes=arena_.size();return r;
     }
     Session()=default;
     Session(const Session&)=delete;
@@ -37,11 +60,19 @@ public:
     // returning with live windows releases its pins and all allocations.
     bool call(u32 operation,mk61_service_buffer& r) {
         using namespace shared_memory;
+        if(operation==MK61_BUFFER_RESERVE || operation==MK61_BUFFER_UNRESERVE) {
+            if(r.handle || r.offset || r.data || r.access || r.storage || r.window || r.flags) return false;
+            if(operation==MK61_BUFFER_UNRESERVE) return !r.size && arena_.reset();
+            if(!r.size || arena_.ok()) return false;
+            for(const auto& s:slots_) if(s.handle && s.buffer.data()) return false;
+            return arena_.acquire(Owner::APPLICATION,r.size,BufferAccess::DIRECT);
+        }
         if(operation==MK61_BUFFER_ACQUIRE) {
             if(r.handle || !r.size || r.access>MK61_BUFFER_EXTERNAL) return false;
             for(auto& s:slots_) if(!s.handle) {
                 const auto id=token();
-                if(!id || !s.buffer.acquire(Owner::APPLICATION,r.size,(BufferAccess)r.access)) return false;
+                if(!id || (!(r.access==MK61_BUFFER_DIRECT && acquire_arena(s.buffer,r.size)) &&
+                    !s.buffer.acquire(Owner::APPLICATION,r.size,(BufferAccess)r.access))) return false;
                 s.handle=id;r.handle=id;r.storage=(u32)s.buffer.storage();r.data=s.buffer.data();return true;
             }
             return false;

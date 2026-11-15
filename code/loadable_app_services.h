@@ -168,7 +168,11 @@ enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS
   MK61_AUDIO_PSG_ONLY_OPEN,
   /* Optional v2 request: c=sizeof(mk61_service_audio_psg_config).
    * Older residents reject it, allowing a correctly configured local synth. */
-  MK61_AUDIO_PSG_CONFIG_OPEN, MK61_AUDIO_PSG_CONFIG_ONLY_OPEN
+  MK61_AUDIO_PSG_CONFIG_OPEN, MK61_AUDIO_PSG_CONFIG_ONLY_OPEN,
+  /* Optional PCM reservation: same request as OPEN, but no playback or IRQ.
+   * OPEN consumes the reservation; CLOSE and APP return release it. Old
+   * residents return 0 and callers can proceed directly to OPEN. */
+  MK61_AUDIO_PREPARE
 };
 typedef struct mk61_service_audio_synth {
   uint32_t (*sample)(void*);
@@ -312,7 +316,13 @@ enum mk61_buffer_operation {
   MK61_BUFFER_ACQUIRE, MK61_BUFFER_RELEASE, MK61_BUFFER_INFO,
   MK61_BUFFER_READ, MK61_BUFFER_WRITE, MK61_BUFFER_FILL,
   MK61_BUFFER_WINDOW_OPEN, MK61_BUFFER_WINDOW_COMMIT, MK61_BUFFER_WINDOW_CLOSE,
-  MK61_BUFFER_PRESENT
+  MK61_BUFFER_PRESENT,
+  /* Optional per-invocation SRAM arena. RESERVE takes size and succeeds only
+   * before any direct buffer is acquired; UNRESERVE needs no live slices.
+   * Later DIRECT acquisitions use it when a contiguous slice fits and retain
+   * the ordinary heap fallback. All reservations expire on APP return. Older
+   * ABI 6 residents return 0; callers can use ordinary buffer acquisition. */
+  MK61_BUFFER_RESERVE, MK61_BUFFER_UNRESERVE
 };
 enum mk61_buffer_access { MK61_BUFFER_DIRECT, MK61_BUFFER_BLOCK, MK61_BUFFER_EXTERNAL };
 enum mk61_buffer_storage { MK61_BUFFER_NONE, MK61_BUFFER_SRAM, MK61_BUFFER_PSRAM };

@@ -6,6 +6,9 @@
 #include "mk8_codec.hpp"
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
+#if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+#include "heap_trace.hpp"
+#endif
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -291,14 +294,26 @@ bool command(u8 id,const char* arguments,const char* cwd,Writer write,void* raw)
     if(!std::strncmp(args,"cosmic ",7))return cosmic_clock::command(args+7,write,raw);
 #endif
 #if defined(PICO_ON_DEVICE)
+    #if defined(MK61_PICOCALC_HEAP_TRACE) && MK61_PICOCALC_HEAP_TRACE
+    if(!std::strcmp(args,"heap start")) {
+      heap_trace::start();
+      static const char text[]="HEAP_TRACE started\r\n";
+      if(write) write(raw,text,sizeof(text)-1);
+      return write!=nullptr;
+    }
+    if(!std::strcmp(args,"heap stop")) {
+      heap_trace::stop();return heap_trace::report(write,raw);
+    }
+    if(!std::strcmp(args,"heap show")) return heap_trace::report(write,raw);
+    #endif
     if(!std::strcmp(args,"heap")) {
       const auto heap=mallinfo();
       const auto capacity=(uintptr_t)&__HeapLimit-(uintptr_t)&__end__;
       size=std::snprintf(report,sizeof(report),
-          "HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu\r\n",
+          "HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu HEAP_TOP_CHUNK=%lu\r\n",
           (unsigned long)capacity,(unsigned long)heap.uordblks,
           (unsigned long)(capacity-heap.uordblks),(unsigned long)heap.arena,
-          (unsigned long)heap.ordblks,(unsigned long)heap.keepcost);
+          (unsigned long)heap.ordblks,(unsigned long)heap.keepcost,(unsigned long)heap.keepcost);
       if(write) write(raw,report,size);
       return write!=nullptr;
     }

@@ -59,6 +59,14 @@ static inline uint32_t mk61_app_buffer_acquire(const mk61_app_services* services
   *out=mk61_app_buffer_request();out->size=bytes;out->access=access;
   return mk61_app_buffer_call(services,MK61_BUFFER_ACQUIRE,out);
 }
+static inline uint32_t mk61_app_buffer_reserve(const mk61_app_services* services,uint32_t bytes) {
+  mk61_service_buffer r=mk61_app_buffer_request();r.size=bytes;
+  return mk61_app_buffer_call(services,MK61_BUFFER_RESERVE,&r);
+}
+static inline uint32_t mk61_app_buffer_unreserve(const mk61_app_services* services) {
+  mk61_service_buffer r=mk61_app_buffer_request();
+  return mk61_app_buffer_call(services,MK61_BUFFER_UNRESERVE,&r);
+}
 static inline uint32_t mk61_app_buffer_read(const mk61_app_services* services,
     uint32_t handle,uint32_t offset,void* target,uint32_t bytes) {
   mk61_service_buffer r=mk61_app_buffer_request();r.handle=handle;r.offset=offset;r.size=bytes;r.data=(uint8_t*)target;

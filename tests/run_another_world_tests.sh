@@ -104,6 +104,24 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
   "$build_dir/app" "$ANOTHER_WORLD_DATA" pair-fallback
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split-tail-failure
+  # Exercise the actual shared-buffer session and its arena, including the
+  # old individual-buffer fallback and retry when the PCM reservation blocks
+  # the mandatory first frame.
+  for unit in assets prepared video vm text audio display display_compact; do
+    ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
+      -c "$root/examples/portable-apps/ANOTHER/$unit.c" -o "$build_dir/real-$unit.o"
+  done
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_TEST_REAL_SESSION=1 \
+    -I"$root/sdk/portable/include" -I"$root/code" \
+    -c "$root/tests/another_world_app_host_test.c" -o "$build_dir/real-app.o"
+  ${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror -I"$root/code" \
+    -c "$root/tests/another_world_buffer_session_fixture.cpp" -o "$build_dir/real-session.o"
+  ${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror -I"$root/code" \
+    -c "$root/code/shared_memory_buffer.cpp" -o "$build_dir/real-buffer.o"
+  ${CXX:-c++} "$build_dir"/real-*.o "$build_dir/main.o" -o "$build_dir/real-app"
+  "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena
+  "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena-no-reserve
+  "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena-screen-retry
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \

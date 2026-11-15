@@ -9,10 +9,21 @@
 
 static const char *directory;
 static uint8_t *buffers[5], borrowed_frame[12800];
-static uint32_t sizes[5], now_ms, presents, audio_samples, audio_queued, releases, graphics;
+static uint32_t now_ms, presents, audio_samples, audio_queued, releases, graphics;
+#if !defined(AW_TEST_REAL_SESSION)
+static uint32_t sizes[5];
+#endif
 static bool busy_once, ended, reject_previous, reject_borrowed, reject_background, reject_pair, split_background, reject_tail;
 static bool saw_pair, saw_background, saw_head, saw_tail;
 static unsigned unexpected_extra_acquisitions;
+#if defined(AW_TEST_REAL_SESSION)
+extern void aw_test_buffers_begin(void);
+extern unsigned aw_test_buffers_call(unsigned,mk61_service_buffer*);
+extern void aw_test_buffers_end(void);
+static bool prepared, reject_reservation, retry_frames, reserved;
+static unsigned prepare_calls, close_calls;
+static uint8_t *arena_frame;
+#endif
 const mk61_app_api *mk61_api;
 uint32_t mk61_app_image_crc, mk61_app_current_kind;
 int another_app_main(void);
@@ -27,16 +38,34 @@ static uint32_t write_text(uint32_t x, uint32_t y, const char *s, uint32_t n) {
 static int32_t key_wait(void) { return 0; }
 static uint32_t graphics_begin(void) { ++graphics; return 1; }
 static void graphics_end(void) { assert(graphics); --graphics; }
+#if !defined(AW_TEST_REAL_SESSION)
 static unsigned frame_buffers(void) {
     unsigned n = 0; for (unsigned i = 2; i < 5; ++i) n += buffers[i] && sizes[i] == AW_VIDEO_PAGE_BYTES;
     return n;
 }
+#endif
 static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payload) {
     (void)b; (void)c;
     if (op == MK61_SERVICE_CAPABILITIES) return MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM;
     if (op == MK61_SERVICE_BUFFER) {
         mk61_service_buffer *r = payload;
+#if defined(AW_TEST_REAL_SESSION)
+        if (a == MK61_BUFFER_RESERVE && reject_reservation) return 0;
+        if (a == MK61_BUFFER_ACQUIRE && r->access == MK61_BUFFER_DIRECT && retry_frames && prepared &&
+            (r->size == AW_VIDEO_PAGE_BYTES || r->size == 2 * AW_VIDEO_PAGE_BYTES)) return 0;
+        const unsigned size = r->size, result = aw_test_buffers_call(a, r);
+        if (a == MK61_BUFFER_RESERVE && result) reserved = true;
+        if (a == MK61_BUFFER_UNRESERVE && result) reserved = false;
+        if (a == MK61_BUFFER_RELEASE && result) ++releases;
+        if (a == MK61_BUFFER_ACQUIRE && result && r->access == MK61_BUFFER_DIRECT) {
+            saw_pair |= size == 2 * AW_VIDEO_PAGE_BYTES;
+            saw_background |= size == 6144; saw_head |= size == 4096; saw_tail |= size == 2048;
+            if (reserved && size == 2 * AW_VIDEO_PAGE_BYTES) arena_frame = r->data;
+            if (reserved && size == 6144) assert(arena_frame && r->data == arena_frame + 2 * AW_VIDEO_PAGE_BYTES);
+        }
+        return result;
+#else
         if (a == MK61_BUFFER_ACQUIRE) {
             const unsigned id = r->access == MK61_BUFFER_EXTERNAL ? 1 : !buffers[2] ? 2 : !buffers[3] ? 3 : 4;
             if (r->size == 2 * AW_VIDEO_PAGE_BYTES && (reject_pair || reject_previous)) return 0;
@@ -58,6 +87,7 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
         else if (a == MK61_BUFFER_WRITE) memcpy(buffers[r->handle] + r->offset, r->data, r->size);
         else return 0;
         return 1;
+#endif
     }
     if (op == MK61_SERVICE_FILE_BYTES) {
         mk61_service_file_bytes *r = payload; char path[1024];
@@ -83,8 +113,17 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
     }
     if (op == MK61_SERVICE_AUDIO_STREAM) {
         mk61_service_audio *r = payload;
+#if defined(AW_TEST_REAL_SESSION)
+        if (a == MK61_AUDIO_PREPARE) {
+            assert(r && r->rate == 25000 && r->volume == 100 && !prepared);
+            ++prepare_calls;prepared = true;return 1;
+        }
+        if (a == MK61_AUDIO_CLOSE) { ++close_calls;prepared = false;ended = true;return 1; }
+        if (a == MK61_AUDIO_OPEN) { assert(r && r->rate == 25000 && r->volume == 100);prepared = false;return 1; }
+#else
         if (a == MK61_AUDIO_CLOSE) { ended = true; return 1; }
         if (a == MK61_AUDIO_OPEN) return r && r->rate == 25000 && r->volume == 100;
+#endif
         if (a == MK61_AUDIO_WRITE) {
             const unsigned room = 1024 - audio_queued;
             if (r->count > room) r->count = room;
@@ -113,6 +152,12 @@ static const void *query(uint32_t id, uint32_t version) {
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION ? &services : NULL;
 }
 int main(int argc, char **argv) {
+#if defined(AW_TEST_REAL_SESSION)
+    if (argc != 3 || (strcmp(argv[2],"arena") && strcmp(argv[2],"arena-no-reserve") &&
+                      strcmp(argv[2],"arena-screen-retry"))) return 2;
+    directory=argv[1];reject_reservation=strcmp(argv[2],"arena")!=0;
+    retry_frames=!strcmp(argv[2],"arena-screen-retry");aw_test_buffers_begin();
+#else
     if (argc != 2 && argc != 3) { fprintf(stderr, "usage: %s DATA_DIR [no-previous|no-framebuffer|no-background|pair-fallback|split|split-tail-failure]\n", argv[0]); return 2; }
     directory = argv[1]; reject_previous = argc == 3 && !strcmp(argv[2], "no-previous");
     reject_borrowed = argc == 3 && !strcmp(argv[2], "no-framebuffer");
@@ -122,6 +167,7 @@ int main(int argc, char **argv) {
     reject_tail = argc == 3 && !strcmp(argv[2], "split-tail-failure");
     if (argc == 3 && !reject_previous && !reject_borrowed && !reject_background &&
         !reject_pair && !split_background && !reject_tail) return 2;
+#endif
     mk61_app_api api = {0}; api.magic = MK61_APP_API_MAGIC; api.version = MK61_APP_API_VERSION; api.struct_size = sizeof(api);
     api.millis_ms = now; api.service = service; api.display_clear = clear; api.display_write_m8 = write_text;
     api.key_wait = key_wait; api.graphics_begin = graphics_begin; api.graphics_end = graphics_end; api.query_service = query;
@@ -135,6 +181,11 @@ int main(int argc, char **argv) {
     if (split_background) assert(saw_head && saw_tail && !saw_background);
     if (reject_tail) assert(saw_head && !saw_tail && !saw_background);
     if (reject_background || reject_previous || reject_borrowed) assert(!saw_background && !saw_head && !saw_tail);
+#if defined(AW_TEST_REAL_SESSION)
+    assert(prepare_calls == 1 && close_calls == (retry_frames ? 2u : 1u));
+    assert(!prepared && !reserved && (reject_reservation || arena_frame));
+    aw_test_buffers_end();
+#endif
     printf("APP host run%s%s%s%s%s%s: %u display strips, %u audio samples, clean shutdown\n",
            reject_previous ? " without previous frame" : "",
            reject_borrowed ? " without borrowed framebuffer" : "", reject_background ? " without background cache" : "",

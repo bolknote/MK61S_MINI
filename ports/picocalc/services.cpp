@@ -13,6 +13,13 @@
 #include <cstdio>
 #include <cstring>
 #include <new>
+#if defined(PICO_ON_DEVICE)
+// Menu/editor input is a cold UI path; keeping it in the existing extension
+// leaves room in the main flash region for the foreground APP services.
+#define MK61_SERVICE_INPUT_CODE __attribute__((noinline,section(".ai_diagnostic_extension")))
+#else
+#define MK61_SERVICE_INPUT_CODE
+#endif
 
 namespace picocalc {
 using BrowserPage = explorer_home::Page;
@@ -102,6 +109,9 @@ void Services::browse_section(BrowserPage page, unsigned selection) {
     refresh();
 }
 void Services::refresh() {
+    // Loading an APP pumps USB and the display. Do not recreate Explorer's
+    // disposable buffers between reserving the image and starting the APP.
+    if(native_loading_) return;
     if(browser_page_ == BrowserPage::HOME) {
         release_browser();
         more_ = false;
@@ -362,7 +372,8 @@ void Services::normalize_view() {
     if(n<=COLS && source_.read((u16)(active+horizontal_),(u8*)text,(u16)n))
         horizontal_+=(u16)fonts::text_start(font,text,n,304);
 }
-bool Services::input(u8 code) {
+MK61_SERVICE_INPUT_CODE bool Services::input(u8 code) {
+    if(native_loading_) return true;
     if(page_==ServicePage::EDITOR) release_cache();
     if(!active()) return false;
     const bool cancel = escape(code), accept = enter(code);
@@ -563,6 +574,7 @@ bool Services::input(u8 code) {
     return true;
 }
 void Services::tick() {
+    if(native_loading_) return;
     if(return_to_games_ && !calculator_requested_ && !m61_text::active() && !core_61::is_RUN()) {
         return_to_games_ = false;
         if(page_ == ServicePage::CLOSED) {

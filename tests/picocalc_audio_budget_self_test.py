@@ -13,4 +13,13 @@ else:
     raise AssertionError('firmware which cannot start Spectrum was accepted')
 assert audio_memory_budget(120000,True)['heap_capacity_bytes']==109376
 assert audio_memory_budget(130224,False)['minimum_heap_bytes'] is None
+trace=audio_memory_budget(122648,True,True)
+assert trace['heap_capacity_bytes']==106728 and trace['minimum_heap_bytes']==106432
+assert trace['production_minimum_heap_bytes']==108544 and trace['diagnostic_only']
+try:
+    audio_memory_budget(123000,True,True)
+except ValueError:
+    pass
+else:
+    raise AssertionError('diagnostic build below its bounded trace budget was accepted')
 print('Combined AI/Spectrum firmware SRAM regression rejected before packaging: PASS')

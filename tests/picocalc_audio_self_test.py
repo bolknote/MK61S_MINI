@@ -15,6 +15,7 @@ using repeating_timer_callback_t=bool(*)(repeating_timer*);
 struct repeating_timer { repeating_timer_callback_t callback=nullptr; };
 struct alarm_pool_t {};
 alarm_pool_t* alarm_pool_create_with_unused_hardware_alarm(unsigned);
+void alarm_pool_destroy(alarm_pool_t*);
 bool alarm_pool_add_repeating_timer_us(alarm_pool_t*,int64_t,repeating_timer_callback_t,void*,repeating_timer*);
 bool cancel_repeating_timer(repeating_timer*);
 enum { GPIO_OUT=1,GPIO_FUNC_PWM=4 };
