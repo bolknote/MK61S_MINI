@@ -520,6 +520,47 @@ static inline void cp(z80* const z, const uint8_t val) {
   z->f = (z->f & ~0x28U) | (val & 0x28);
 }
 
+#if defined(MK61_TARGET_PICOCALC)
+/* Repeat LD (HL),n / DEC HL / CP H / JR NZ backwards on a hot page.
+ * Each taken iteration costs 32T, plus any delay on its mapped store.
+ * Leave the terminating branch and any observable stores to the interpreter. */
+static void repeat_fill(z80* z,unsigned budget) {
+  const unsigned pc=z->pc,hl=z->hl;
+  if(z->m1 || z->before_store || z->nmi_pending || z->iff_delay || (z->int_pending && z->iff1) ||
+     (pc&0xc000)==0x4000 || (z->i&0xc0)==0x40 || (pc&1023)>1018) return;
+  const uint8_t* code=z->read_pages[pc>>10];
+  uint8_t* dst=z->write_pages[hl>>10];
+  if(!code || !dst) return;
+  code+=pc&1023;
+  if(code[0]!=0x36 || code[2]!=0x2b || code[3]!=0xbc || code[4]!=0x20 || code[5]!=0xfa) return;
+  const unsigned next=(uint16_t)(hl-1);
+  if((next>>8)==z->a) return;
+  const unsigned taken=(uint16_t)(next-((z->a<<8)|255));
+  unsigned count=budget/32,available=(hl&1023)+1;
+  if(count>taken) count=taken;
+  if(count>available) count=available;
+  if(count<4) return;
+  dst+=available-count;
+  if((uintptr_t)dst<(uintptr_t)code+6 && (uintptr_t)dst+count>(uintptr_t)code) return;
+  unsigned elapsed=count*32;
+  if((hl&0xc000)==0x4000) {
+    const uint32_t store=(uint32_t)z->cyc+7;
+    unsigned done=0;elapsed=0;
+    while(done<count && budget-elapsed>=32) {
+      const unsigned wait=z->wait(z->userdata,store+elapsed);
+      if(wait>budget-elapsed-32) break;
+      elapsed+=32+wait;++done;
+    }
+    count=done;
+    if(count<4) return;
+  }
+  memset(z->write_pages[hl>>10]+available-count,code[1],count);
+  z->hl=(uint16_t)(hl-count);cp(z,z->h);
+  z->r=(z->r&128)|((z->r+count*4)&127);
+  z->cyc+=elapsed;z->bus=(uint32_t)z->cyc;
+}
+#endif
+
 // 0xCB opcodes
 // rotate left with carry
 static inline uint8_t cb_rlc(z80* const z, uint8_t val) {
@@ -1159,7 +1200,18 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
 
   case 0x10: idle_bus(z,ir(z),1);cond_jr(z,--z->b!=0); break; // djnz *
   case 0x18: jr(z,nextb(z)); break; // jr *
-  case 0x20: cond_jr(z, z->zf == 0); break; // jr nz, *
+  case 0x20: {
+#if defined(MK61_TARGET_PICOCALC)
+    const uint16_t after=z->pc+1;
+#endif
+    cond_jr(z, z->zf == 0);
+#if defined(MK61_TARGET_PICOCALC)
+    if(z->wait && (uint16_t)(after-z->pc)==6 && (!stop || !*stop)) {
+      const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
+      if(budget>=4*32) repeat_fill(z,(unsigned)budget);
+    }
+#endif
+  } break; // jr nz, *
   case 0x28: cond_jr(z, z->zf == 1); break; // jr z, *
   case 0x30: cond_jr(z, z->cf == 0); break; // jr nc, *
   case 0x38: cond_jr(z, z->cf == 1); break; // jr c, *

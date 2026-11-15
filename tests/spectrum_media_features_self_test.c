@@ -241,8 +241,9 @@ static void contention_test(void) {
 }
 
 static bool raster_copy(void* context,unsigned strip,const uint8_t* source) {
-    const unsigned size=SPECTRUM_RASTER_BYTES/SPECTRUM_RASTER_STRIPS;
-    memcpy((uint8_t*)context+strip*size,source,size);return true;
+    uint8_t* part=(uint8_t*)context+strip*SPECTRUM_RASTER_STRIP_BYTES;
+    memcpy(part,source,SPECTRUM_RASTER_PACKED_STRIP_BYTES);
+    spectrum_raster_expand(part);return true;
 }
 static unsigned raster_pixel(const uint8_t* frame,unsigned x,unsigned y) {
     const unsigned cells=SPECTRUM_RASTER_STRIP_ROWS*40,cell=(y%SPECTRUM_RASTER_STRIP_ROWS)*40+x/8;

@@ -32,6 +32,7 @@ void spectrum_sound_end(struct spectrum*);
 void spectrum_sound_recover(void*);
 uint32_t spectrum_sound_render(void*);
 void spectrum_sound_publish(struct spectrum*);
+void spectrum_sound_publish_before_io(struct spectrum*);
 /* Change only while the sound consumers are stopped; keeps guest registers. */
 void spectrum_sound_configure(struct spectrum*,unsigned chip,unsigned layout);
 #endif

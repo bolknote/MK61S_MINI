@@ -57,7 +57,7 @@ struct z80 {
   /* Optional bus timing. BUS starts at the beginning of the instruction;
    * cyc retains the instruction total, including inserted wait states. */
   uint32_t bus,io_at;
-  unsigned (*wait)(void*,uint32_t);
+  unsigned (*wait)(void*,uint32_t); /* Pure query of the delay at a bus timestamp. */
   void (*before_store)(void*,uint16_t,uint32_t);
 };
 

@@ -67,6 +67,20 @@ static void startup_gate(void) {
     for(unsigned i=0;i<100;++i)assert(spectrum_sound_render(&lagging)==spectrum_sound_render(&reference));
     assert(lagging.sound.time==14000);spectrum_sound_end(&lagging);spectrum_sound_end(&reference);
 }
+static void io_keeps_current_timestamp_open(void) {
+    configure(&lagging,ram[0]);
+    lagging.cpu.cyc=UINT32_MAX-60;spectrum_sound_begin(&lagging,NULL,NULL);
+    const uint32_t first=lagging.sound.time;
+    lagging.cpu.cyc+=140;spectrum_sound_publish_before_io(&lagging);
+    assert(atomic_load(&lagging.sound.produced)-first==139);
+    spectrum_sound_write(&lagging,2,0,1);
+    assert(atomic_load(&lagging.sound.produced)-first==139);
+    spectrum_sound_publish(&lagging);spectrum_sound_publish_before_io(&lagging);
+    assert(atomic_load(&lagging.sound.produced)-first==140);
+    (void)spectrum_sound_render(&lagging);
+    assert(atomic_load(&lagging.sound.read)==1 && lagging.sound.beeper);
+    spectrum_sound_end(&lagging);
+}
 static void recover_full(void* unused) {
     (void)unused;++yields;spectrum_sound_recover(&lagging);
 }
@@ -95,6 +109,6 @@ static void strict_remote_stop_inside_backpressure(void) {
 }
 int main(int argc,char** argv) {
     if(argc==2 && !strcmp(argv[1],"late-full"))late_full_queue_can_drain();
-    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();lost_coprocessor_recovers_inside_backpressure();strict_remote_stop_inside_backpressure();}
+    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();io_keeps_current_timestamp_open();lost_coprocessor_recovers_inside_backpressure();strict_remote_stop_inside_backpressure();}
     puts("Audio clock: AY phase continues through underrun, late full queue drains, unpublished events stay queued, timestamps wrap: PASS");
 }

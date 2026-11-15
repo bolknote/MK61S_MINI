@@ -265,6 +265,30 @@ static const void* query(uint32_t id,uint32_t version) { assert(id==MK61_APP_SER
 static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_VERSION,.struct_size=sizeof(mk61_app_api),
     .service=pump,.delay_ms=delay,.display_clear=clear_screen,.graphics_begin=graphics_begin,.graphics_end=graphics_end,.query_service=query};
 const mk61_app_api* mk61_api=&api;
+static void bounded_audio_prefill(void) {
+    static uint8_t ram[SPECTRUM_RAM_BYTES],rom[SPECTRUM_ROM_BYTES];
+    spectrum state;
+    spectrum_tape empty={0};
+    active_machine=&state;tape=&empty;
+    spectrum_init(&state,ram,rom);
+    rom[0]=0x76; // HALT: one quiet guest frame is available immediately.
+    state.cpu.cyc=UINT32_MAX-99;
+    spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
+    prime_48k_audio();
+    assert((uint32_t)(state.cpu.cyc-(UINT32_MAX-99U))==SPECTRUM_FRAME_TSTATES);
+    assert(atomic_load(&state.sound.produced)==(uint32_t)state.cpu.cyc);
+    assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
+
+    const uint8_t loop[]={0x3e,0x10,0xd3,0xfe,0xee,0x10,0x18,0xfa};
+    memcpy(rom,loop,sizeof(loop));spectrum_reset(&state);
+    spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
+    prime_48k_audio();
+    const unsigned events=atomic_load(&state.sound.write);
+    assert(events>SPECTRUM_SOUND_QUEUE_EVENTS/2 && events<SPECTRUM_SOUND_QUEUE_EVENTS);
+    assert(state.cpu.cyc<SPECTRUM_FRAME_TSTATES && !atomic_load(&state.sound.clock_running));
+    active_machine=NULL;tape=NULL;
+    puts("48K M3 prefill: real guest frame, clock wrap and bounded dense event queue PASS");
+}
 int main(int argc,char** argv) {
     assert(argc==2);asset_dir=argv[1];
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
@@ -298,6 +322,7 @@ int main(int argc,char** argv) {
         assert(remote_scans==audio_opens);
         puts("Actual M3 APP startup: first frame produced before first keyboard pump, release and exit PASS");
     }
+    if(remote_audio && !opened_name) bounded_audio_prefill();
     if(opened_name) printf("Actual FILE_OPEN %s: external path, %s, held Enter blocked, readonly media, complete cleanup PASS\n",opened_name,open_error?"error handled":"started and F10 exited");
     else puts("Actual APP menus, SD ROM->PSRAM/shared16KiB cache, Beta/DivMMC, snapshots, key handoff and exit: PASS");
     return 0;

@@ -113,7 +113,8 @@ def main():
     parser.add_argument("--games-output", type=Path, help="Write the collection to its own folder in Games")
     args = parser.parse_args()
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
-               "--target", "picocalc-pico-h", "--shared-runtime", "--name", "SPECTRUM", "--handled-magic", "Z1",
+               "--target", "picocalc-pico-h", "--shared-runtime", "--optimize-size",
+               "--name", "SPECTRUM", "--handled-magic", "Z1",
                "--arm-toolchain-bin", str(compiler_bin(args.toolchain)),
                "--output-dir", str(args.build_dir)]
     for source in SOURCES:

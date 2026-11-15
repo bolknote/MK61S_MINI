@@ -45,6 +45,14 @@ void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned valu
 void spectrum_sound_publish(spectrum* s) {
     if(s->sound.asynchronous) atomic_store_explicit(&s->sound.produced,(uint32_t)s->cpu.cyc,memory_order_release);
 }
+void spectrum_sound_publish_before_io(spectrum* s) {
+    if(!s->sound.asynchronous) return;
+    // A synchronous SD or PSRAM operation can block inside an opcode.
+    // Leave its timestamp available for any sound write that still follows.
+    const uint32_t until=(uint32_t)s->cpu.cyc-1;
+    if((int32_t)(until-atomic_load_explicit(&s->sound.produced,memory_order_relaxed))>0)
+        atomic_store_explicit(&s->sound.produced,until,memory_order_release);
+}
 void spectrum_sound_begin(spectrum* s,void (*yield)(void*),void* context) {
     spectrum_sound* q=&s->sound;
     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);

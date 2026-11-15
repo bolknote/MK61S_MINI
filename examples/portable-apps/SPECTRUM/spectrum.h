@@ -15,9 +15,11 @@
 #define SPECTRUM_ATTRIBUTE_BYTES 768U
 #define SPECTRUM_RASTER_STRIP_ROWS 32U
 #define SPECTRUM_RASTER_STRIPS 8U
-#define SPECTRUM_RASTER_ROW_BYTES 200U
-#define SPECTRUM_RASTER_STRIP_BYTES (SPECTRUM_RASTER_ROW_BYTES*SPECTRUM_RASTER_STRIP_ROWS)
-#define SPECTRUM_RASTER_BYTES (SPECTRUM_RASTER_ROW_BYTES*SPECTRUM_RASTER_STRIP_ROWS*SPECTRUM_RASTER_STRIPS)
+#define SPECTRUM_RASTER_CELLS (40U*SPECTRUM_RASTER_STRIP_ROWS)
+#define SPECTRUM_RASTER_STRIP_BYTES (5U*SPECTRUM_RASTER_CELLS)
+#define SPECTRUM_RASTER_BYTES (SPECTRUM_RASTER_STRIP_BYTES*SPECTRUM_RASTER_STRIPS)
+#define SPECTRUM_RASTER_PACKED_STRIP_BYTES (3U*SPECTRUM_RASTER_CELLS+SPECTRUM_RASTER_CELLS/8U)
+#define SPECTRUM_RASTER_PACKED_BYTES (SPECTRUM_RASTER_PACKED_STRIP_BYTES*SPECTRUM_RASTER_STRIPS)
 
 typedef struct spectrum {
     z80 cpu;
@@ -62,6 +64,8 @@ uint32_t spectrum_frame_cycles(const spectrum*);
 uint32_t spectrum_run(spectrum*,uint32_t tstates);
 void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
 void spectrum_raster_end(spectrum*);
+/* Expand a stored strip in a SPECTRUM_RASTER_STRIP_BYTES buffer for LCD. */
+void spectrum_raster_expand(uint8_t*);
 void spectrum_keyboard(spectrum*,const uint8_t wire_keys[32]);
 uint8_t spectrum_port_in(spectrum*,uint16_t port);
 void spectrum_video(const spectrum*,uint8_t bitmap[6144],uint8_t tiles[768]);
