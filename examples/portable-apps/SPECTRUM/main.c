@@ -34,7 +34,7 @@ enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
        2*SPECTRUM_TAPE_SLOT_BYTES };
-typedef struct { unsigned capture,shown,next;bool clear,ready; } raster_output;
+typedef struct { unsigned next;bool clear,ready; } raster_output;
 static bool exact_raster;
 static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
 #endif
@@ -77,13 +77,13 @@ static bool external_write(void* context,uint32_t at,const uint8_t* in,uint32_t 
 /* The raster buffer is live during a Z80 bus callback. Keep the transfer
  * bounded and avoid re-entering the guest while the beam is being caught up. */
 static bool raster_store(void* context,unsigned strip,const uint8_t* data) {
-    raster_output* raster=context;
-    const uint32_t at=RASTER_BASE+raster->capture*SPECTRUM_RASTER_BYTES+strip*SPECTRUM_RASTER_STRIP_BYTES;
+    (void)context;
+    const uint32_t at=RASTER_BASE+strip*SPECTRUM_RASTER_STRIP_BYTES;
     return external_write(NULL,at,data,SPECTRUM_RASTER_STRIP_BYTES);
 }
 static bool raster_present(uint8_t* buffer,raster_output* raster) {
     if(!raster->ready) {
-        const uint32_t at=RASTER_BASE+raster->shown*SPECTRUM_RASTER_BYTES+raster->next*SPECTRUM_RASTER_STRIP_BYTES;
+        const uint32_t at=RASTER_BASE+raster->next*SPECTRUM_RASTER_STRIP_BYTES;
         if(!external_read(NULL,at,buffer,SPECTRUM_RASTER_STRIP_BYTES)) return false;
         raster->ready=true;
     }
@@ -309,7 +309,7 @@ static bool select_model(unsigned model) {
     }
     const unsigned external_bytes=
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        RASTER_BASE+2*SPECTRUM_RASTER_BYTES;
+        RASTER_BASE+SPECTRUM_RASTER_BYTES;
 #else
         SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES;
 #endif
@@ -734,7 +734,6 @@ static __attribute__((noinline)) void emulate_session(void) {
     const bool raster=exact_raster && !machine.pentagon && external.handle &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
     raster_output output={.next=SPECTRUM_RASTER_STRIPS,.clear=true};
-    if(raster) spectrum_raster_begin(&machine,scratch.pixels,&output,raster_store);
 #endif
     for(;;) {
         // The pacing guard already polled input. Produce the next CPU/audio
@@ -751,7 +750,7 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(tape && tape->fault) {tape->fault=false;error="Tape read failed\n\nPress any key";break;}
         if(tape->choices) break;
-        if(raster && !machine.video_bytes) goto memory_error;
+        if(raster && machine.cpu.before_store && !machine.video_bytes) goto memory_error;
 #endif
         if(machine.frames==last_frame) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -771,9 +770,13 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             if(raster) {
                 present_attempts=0;
-                output.ready=false;
-                if(output.next==SPECTRUM_RASTER_STRIPS) {
-                    output.shown=output.capture;output.capture^=1;output.next=0;
+                // Capture a full frame after audio has produced its first
+                // frame, and only when LCD has accepted the previous one.
+                if(machine.video_bytes) {
+                    spectrum_raster_end(&machine);
+                    output.next=0;
+                } else if(output.next==SPECTRUM_RASTER_STRIPS) {
+                    spectrum_raster_begin(&machine,scratch.pixels,NULL,raster_store);
                 }
                 goto paced;
             }
