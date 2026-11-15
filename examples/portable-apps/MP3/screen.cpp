@@ -59,6 +59,7 @@ void Screen::begin(const mk61_app_services* api, uint8_t* pixels, uint8_t* raste
 
 void Screen::use_record() {
     tape = TapeView::none;
+    invalidate_tape();
     const uint16_t colors[16] = {rgb(20,20,19), rgb(33,46,83), rgb(243,237,223), rgb(182,174,157),
         rgb(239,209,142), rgb(57,47,33), rgb(12,11,10), rgb(17,16,15), rgb(26,24,22), rgb(39,35,32),
         rgb(57,52,47), rgb(82,74,66), rgb(121,112,100), rgb(215,199,175), rgb(230,215,189), rgb(244,226,199)};
@@ -112,12 +113,17 @@ void Screen::clear(unsigned y) {
 }
 
 uint32_t Screen::present(unsigned y, unsigned height) {
+    return present_indexed(strip, 0, y, screen_width, height);
+}
+
+uint32_t Screen::present_indexed(const uint8_t* pixels, unsigned x, unsigned y, unsigned width, unsigned height) {
     mk61_service_color_frame frame{};
-    frame.pixels = strip;
-    frame.pixel_bytes = height * screen_width / 2;
+    frame.pixels = pixels;
+    frame.pixel_bytes = height * (width / 2);
     std::memcpy(frame.palette, palette, sizeof(palette));
+    frame.x = (uint16_t)x;
     frame.y = (uint16_t)y;
-    frame.width = screen_width;
+    frame.width = (uint16_t)width;
     frame.height = (uint16_t)height;
     frame.background = palette[background];
     frame.format = MK61_COLOR_INDEX4 | MK61_COLOR_PRESERVE_OUTSIDE;

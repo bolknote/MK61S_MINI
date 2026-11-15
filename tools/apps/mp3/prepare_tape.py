@@ -8,7 +8,7 @@ import struct
 import numpy as np
 from PIL import Image, ImageDraw
 
-WIDTH, HEIGHT, BAND, PHASES = 320, 320, 16, 32
+WIDTH, HEIGHT, BAND, PHASES = 320, 320, 16, 64
 RINGS = 16
 PALETTES = {
     'cassette': ('11100f', '6b5b49', 'faead2', 'a4927c', 'cc7948', '302c27', '201e1b', '494239',
@@ -155,16 +155,19 @@ def pack(source, kind):
         color = np.median(texture[section], axis=0)
         nearest = ((np.array(colors) - color) ** 2 * [3, 5, 2]).sum(axis=1)
         rings.append(nearest.argmin())
-    header = b'TV01' + struct.pack('<16H', *palette) + bytes(rings)
+    header = b'TV02' + struct.pack('<16H', *palette) + bytes(rings)
     cursor = len(header) + len(strips) * 6
     offsets = bytearray()
     payload = bytearray()
+    locations = {}
     for band in strips:
-        encoded = packbits(band)
+        encoded = bytes(packbits(band))
         assert len(encoded) <= 2580
-        offsets.extend(struct.pack('<IH', cursor, len(encoded)))
-        payload.extend(encoded)
-        cursor += len(encoded)
+        if encoded not in locations:
+            locations[encoded] = cursor
+            payload.extend(encoded)
+            cursor += len(encoded)
+        offsets.extend(struct.pack('<IH', locations[encoded], len(encoded)))
     return header + offsets + payload
 
 

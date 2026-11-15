@@ -299,6 +299,7 @@ struct Player {
     }
     void toggle_files() {
         browsing = !browsing;
+        screen.invalidate_tape();
         if (browsing) {
             const unsigned playing = playing_entry();
             for (unsigned i = 0; i < count; ++i)
@@ -492,7 +493,7 @@ struct Player {
                                   playing, shuffle, repeat, message);
                 strip_ready = true;
             }
-            if (submit(screen.present(y, strip_height))) {
+            if (submit(screen.present_tape(y))) {
                 strip_ready = false;
                 read_page = 0;
                 draw_y += strip_height;
@@ -588,7 +589,6 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     mk61_service_buffer art{};
     (void)mk61_app_buffer_acquire(s, tape_chunk_bytes, MK61_BUFFER_DIRECT, &art);
     app.screen.begin(s, app.work->strip, art.data);
-    if (!app.screen.select_tape(TapeView::cassette)) (void)app.screen.select_tape(TapeView::reel);
     if (id != UINT32_MAX) {
         if (!app.call_file(MK61_FILE_BYTES_PATH, nullptr, id, app.path, sizeof(app.path))) {
             if (art.handle) mk61_app_buffer_release(s, art.handle);
@@ -624,6 +624,8 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         app.scan();
         app.toggle_files();
     }
+    app.screen.cache_tapes();
+    if (!app.screen.select_tape(TapeView::cassette)) (void)app.screen.select_tape(TapeView::reel);
     app.loop();
     app.mute();
     app.animate(mk61_api->millis_ms());
@@ -648,6 +650,7 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     }
     app.close_audio();
     s->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, nullptr);
+    app.screen.release_tapes();
     if (art.handle) mk61_app_buffer_release(s, art.handle);
     mk61_app_buffer_release(s, memory.handle);
     return app.display_failed ? MK61_APP_UNSUPPORTED_DISPLAY : MK61_APP_OK;

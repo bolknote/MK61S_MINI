@@ -3,10 +3,11 @@
 
 namespace mp3 {
 namespace {
-constexpr unsigned tape_header_bytes = 52, phases = 32;
+constexpr unsigned tape_header_bytes = 52;
 constexpr unsigned half_width = screen_width / 2;
 constexpr unsigned base_bands = screen_width / strip_height;
 constexpr unsigned transparent = 0;
+constexpr TapeView tape_views[] = {TapeView::cassette, TapeView::reel};
 
 const char* tape_path(TapeView view) {
     return view == TapeView::cassette ? "CASSETTE.TV" : "REEL.TV";
@@ -16,6 +17,8 @@ bool read_at(const mk61_app_services* services, const char* path, void* data, un
     mk61_service_file_bytes request{path, data, at, size};
     return services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_READ, 0, sizeof(request), &request);
 }
+
+unsigned tape_slot(TapeView view) { return view == TapeView::cassette ? 0 : 1; }
 
 unsigned root(unsigned value) {
     unsigned result = 0;
@@ -27,24 +30,86 @@ unsigned root(unsigned value) {
 }
 }
 
+void Screen::cache_tapes() {
+    if (!raster || tape_handle) return;
+    constexpr unsigned max_tape_bytes = 2 * 1024 * 1024;
+    unsigned total = 0;
+    for (const auto view : tape_views) {
+        mk61_service_file_info info{};
+        mk61_service_file_bytes stat{tape_path(view), &info, 0, sizeof(info)};
+        if (services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(stat), &stat) &&
+            !info.directory && info.size >= tape_header_bytes && info.size <= max_tape_bytes) {
+            cached[tape_slot(view)] = {total, info.size};
+            total += (info.size + 3) & ~3u;
+        }
+    }
+    mk61_service_buffer cache{};
+    if (!total || !mk61_app_buffer_acquire(services, total + tape_band_bytes * base_bands,
+                                          MK61_BUFFER_EXTERNAL, &cache)) return;
+    tape_handle = cache.handle;
+    tape_shadow = total;
+    for (const auto view : tape_views) {
+        auto& asset = cached[tape_slot(view)];
+        for (unsigned at = 0; at < asset.size;) {
+            const unsigned left = asset.size - at;
+            const unsigned n = left < tape_chunk_bytes ? left : tape_chunk_bytes;
+            if (!read_at(services, tape_path(view), raster, at, n) ||
+                !tape_buffer(MK61_BUFFER_WRITE, asset.offset + at, raster, n)) {
+                asset.size = 0;
+                break;
+            }
+            at += n;
+            mk61_api->service();
+        }
+    }
+    if (!cached[0].size && !cached[1].size) release_tapes();
+}
+
+void Screen::release_tapes() {
+    if (tape_handle) mk61_app_buffer_release(services, tape_handle);
+    tape_handle = 0;
+    invalidate_tape();
+}
+
+bool Screen::tape_buffer(unsigned operation, unsigned offset, void* data, unsigned size) {
+    mk61_service_buffer request{};
+    request.handle = tape_handle;
+    request.offset = offset;
+    request.size = size;
+    request.data = static_cast<uint8_t*>(data);
+    return services->call(MK61_SERVICE_BUFFER, operation, 0, sizeof(request), &request);
+}
+
+bool Screen::read_tape(TapeView view, void* data, unsigned offset, unsigned size) {
+    auto& asset = cached[tape_slot(view)];
+    if (tape_handle && asset.size) {
+        if (offset > asset.size || size > asset.size - offset) return false;
+        if (tape_buffer(MK61_BUFFER_READ, asset.offset + offset, data, size)) return true;
+        asset.size = 0;
+    }
+    return read_at(services, tape_path(view), data, offset, size);
+}
+
 bool Screen::select_tape(TapeView view) {
     uint8_t header[tape_header_bytes];
-    if (!raster || view == TapeView::none ||
-        !read_at(services, tape_path(view), header, 0, sizeof(header)) || std::memcmp(header, "TV01", 4)) return false;
+    if (!raster || view == TapeView::none || !read_tape(view, header, 0, sizeof(header))) return false;
+    const unsigned bits = !std::memcmp(header, "TV02", 4) ? 6 : !std::memcmp(header, "TV01", 4) ? 5 : 0;
+    if (!bits) return false;
     for (unsigned i = 36; i < sizeof(header); ++i) if (header[i] >= 16) return false;
     for (unsigned i = 0; i < 16; ++i) palette[i] = header[4 + i * 2] | (header[5 + i * 2] << 8);
     std::memcpy(ring_color, header + 36, sizeof(ring_color));
+    phase_bits = bits;
     tape = view;
+    invalidate_tape();
     return true;
 }
 
 bool Screen::read_tape_chunk(unsigned id, int side) {
     uint8_t entry[6];
-    const char* path = tape_path(tape);
-    if (!read_at(services, path, entry, tape_header_bytes + id * sizeof(entry), sizeof(entry))) return false;
+    if (!read_tape(tape, entry, tape_header_bytes + id * sizeof(entry), sizeof(entry))) return false;
     const uint32_t offset = uint32_t(entry[0]) | uint32_t(entry[1]) << 8 | uint32_t(entry[2]) << 16 | uint32_t(entry[3]) << 24;
     const unsigned size = entry[4] | (entry[5] << 8);
-    if (!size || size > tape_chunk_bytes || !read_at(services, path, raster, offset, size)) return false;
+    if (!size || size > tape_chunk_bytes || !read_tape(tape, raster, offset, size)) return false;
     const unsigned row_bytes = side < 0 ? screen_width / 2 : half_width / 2;
     const unsigned expected = row_bytes * strip_height;
     unsigned input = 0, output = 0, column = 0;
@@ -157,9 +222,49 @@ bool Screen::read_tape_band(unsigned y, unsigned layer) {
     const unsigned art_top = tape_top(), bands = cassette ? 4 : 12;
     if (y < art_top || y >= art_top + bands * strip_height) return true;
     const unsigned side = layer - 1;
-    const unsigned phase = (spool_phase[side] >> 11) & (phases - 1);
+    const unsigned phases = 1u << phase_bits;
+    const unsigned phase = (spool_phase[side] >> (16 - phase_bits)) & (phases - 1);
     paint_spool(side);
     return read_tape_chunk(base_bands + (side * phases + phase) * bands + (y - art_top) / strip_height, side);
+}
+
+uint32_t Screen::present_tape(unsigned y) {
+    if (!tape_handle) return present(y, strip_height);
+    constexpr unsigned stride = screen_width / 2;
+    const unsigned band = y / strip_height;
+    const uint32_t bit = 1u << band, offset = tape_shadow + band * tape_band_bytes;
+    unsigned x0 = 0, x1 = stride, y0 = 0, y1 = strip_height;
+    if ((tape_valid & bit) && tape_buffer(MK61_BUFFER_READ, offset, raster, tape_band_bytes)) {
+        x0 = stride;
+        x1 = y1 = 0;
+        y0 = strip_height;
+        for (unsigned row = 0; row < strip_height; ++row) {
+            const auto* old = raster + row * stride;
+            const auto* current = strip + row * stride;
+            if (!std::memcmp(old, current, stride)) continue;
+            unsigned left = 0, right = stride;
+            while (old[left] == current[left]) ++left;
+            while (old[right - 1] == current[right - 1]) --right;
+            if (left < x0) x0 = left;
+            if (right > x1) x1 = right;
+            if (row < y0) y0 = row;
+            y1 = row + 1;
+        }
+        if (!y1) return 1;
+    }
+    const unsigned width = x1 - x0, height = y1 - y0;
+    const uint8_t* pixels = strip + y0 * stride;
+    if (width != stride) {
+        for (unsigned row = 0; row < height; ++row)
+            std::memcpy(raster + row * width, pixels + row * stride + x0, width);
+        pixels = raster;
+    }
+    const uint32_t accepted = present_indexed(pixels, 2 * x0, y + y0, 2 * width, height);
+    if (accepted == 1) {
+        tape_valid &= ~bit;
+        if (tape_buffer(MK61_BUFFER_WRITE, offset, strip, tape_band_bytes)) tape_valid |= bit;
+    }
+    return accepted;
 }
 
 void Screen::paint_tape(unsigned y, const char* title, const char* artist, unsigned position, unsigned duration,
