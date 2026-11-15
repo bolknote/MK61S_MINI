@@ -57,7 +57,7 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
         uint8_t value=0xBF;
         if(s->ear && s->ear(s->ear_context,&s->cpu)) value|=0x40;
         const uint8_t* key=s->keys;
-        for(unsigned rows=(port>>8)^255u;rows;rows>>=1,++key)
+        for(unsigned rows=s->key_rows&~(port>>8);rows;rows>>=1,++key)
             if(rows&1) value&=*key|0xE0;
         return value;
     }
@@ -71,12 +71,13 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     return (port&0xFF)==0x1F && !s->joystick_mode?s->joystick:0xFF;
 }
 static uint8_t port_in(z80* cpu,uint16_t port) { return spectrum_port_in(cpu->userdata,port); }
+enum { ULA_CONTENTION_START=14335, ULA_CONTENTION_END=ULA_CONTENTION_START+192*224 };
 /* Within a frame, floor(t/224) is floor((t/32)/7). The reciprocal is
  * exact on this bounded input and needs only a Thumb-1 multiply/shift. */
 static unsigned ula_line(unsigned time) { return ((time>>5)*2341u)>>14; }
 static unsigned ula_wait(void* raw,uint32_t cycles) {
     const spectrum* s=raw;
-    const uint32_t at=cycles-s->frame_origin-14335;
+    const uint32_t at=cycles-s->frame_origin-ULA_CONTENTION_START;
     const unsigned phase=at&7;
     if(at>=192*224 || phase>=6 || at-ula_line(at)*224>=128) return 0;
     return 6-phase;
@@ -236,7 +237,7 @@ void spectrum_reset_cpu(spectrum* s) {
     z80_init(&s->cpu);s->cpu.read_byte=read_byte;s->cpu.write_byte=write_byte;
     s->cpu.port_in=port_in;s->cpu.port_out=port_out;s->cpu.userdata=s;
     spectrum_disk_filter(s);spectrum_refresh_map(s);
-    s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=0;
+    s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=s->key_rows=0;
     s->video_bytes=NULL;
     memset(s->keys,0x1F,sizeof(s->keys));
     reset_ay(s);
@@ -273,7 +274,13 @@ uint32_t spectrum_frame_cycles(const spectrum* s) { return s->pentagon?71680:SPE
 static void ldir_deadline(spectrum* s,uint32_t phase,uint32_t frame,uint32_t left) {
     uint32_t limit=phase<32?32-phase:frame-phase;
     if(limit>left) limit=left;
-    s->cpu.ldir_until=s->sample_rate || s->cpu.wait?0:(uint32_t)s->cpu.cyc+limit;
+    if(s->cpu.wait && phase<ULA_CONTENTION_END) {
+        // The bulk copy omits individual bus accesses. On 48K it may
+        // only run outside screen contention and before any IRQ edge.
+        const uint32_t free_cycles=phase<ULA_CONTENTION_START?ULA_CONTENTION_START-phase:0;
+        if(limit>free_cycles) limit=free_cycles;
+    }
+    s->cpu.ldir_until=s->sample_rate || s->cpu.before_store || !limit?0:(uint32_t)s->cpu.cyc+limit;
 }
 
 uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
@@ -348,7 +355,9 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     return elapsed;
 }
 static bool down(const uint8_t* keys,unsigned c) { return (keys[c/8]&(1U<<(c&7)))!=0; }
-static void key(spectrum* s,unsigned row,unsigned column) { s->keys[row]&=(uint8_t)~(1U<<column); }
+static void key(spectrum* s,unsigned row,unsigned column) {
+    s->keys[row]&=(uint8_t)~(1U<<column);s->key_rows|=(uint8_t)(1U<<row);
+}
 static void character(spectrum* s,unsigned c) {
     static const char rows[8][6]={" zxcv","asdfg","qwert","12345","09876","poiuy","\rlkjh","  mnb"};
     for(unsigned row=0;row<8;++row) for(unsigned column=0;column<5;++column)
@@ -356,7 +365,7 @@ static void character(spectrum* s,unsigned c) {
     if(c==' ') key(s,7,0);
 }
 void spectrum_keyboard(spectrum* s,const uint8_t wire[32]) {
-    memset(s->keys,0x1F,sizeof(s->keys));s->joystick=0;
+    memset(s->keys,0x1F,sizeof(s->keys));s->joystick=s->key_rows=0;
     const bool alt=down(wire,0xA1) || down(wire,0xA4);
     if(down(wire,0xA5)) key(s,0,0); // PicoCalc Ctrl -> Caps Shift.
     if(alt) key(s,7,1);

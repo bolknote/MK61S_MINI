@@ -28,31 +28,38 @@ static const uint8_t cyc_00[256] = {4, 10, 7, 6, 4, 4, 7, 4, 4, 11, 7, 6, 4, 4,
     10, 11, 7, 11, 5, 4, 10, 4, 10, 0, 7, 11, 5, 10, 10, 4, 10, 11, 7, 11, 5, 6,
     10, 4, 10, 0, 7, 11};
 
-static const uint8_t cyc_ed[256] = {8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 12,
-    12, 15, 20, 8, 14, 8, 9, 12, 12, 15, 20, 8, 14, 8, 9, 12, 12, 15, 20, 8, 14,
-    8, 9, 12, 12, 15, 20, 8, 14, 8, 9, 12, 12, 15, 20, 8, 14, 8, 18, 12, 12, 15,
-    20, 8, 14, 8, 18, 12, 12, 15, 20, 8, 14, 8, 8, 12, 12, 15, 20, 8, 14, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 16, 16, 16, 16, 8, 8, 8, 8, 16, 16, 16, 16, 8, 8, 8, 8,
-    16, 16, 16, 16, 8, 8, 8, 8, 16, 16, 16, 16, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-    8, 8, 8, 8, 8, 8, 8};
+static unsigned ed_cycles(unsigned opcode) {
+  static const uint8_t columns[]={12,12,15,20,8,14,8};
+  static const uint8_t last_column[]={9,9,9,9,18,18,8,8};
+  if((opcode&0xc0)==0x40) {
+    const unsigned column=opcode&7;
+    return column==7?last_column[(opcode>>3)&7]:columns[column];
+  }
+  return (opcode&0xe4)==0xa0?16:8; // Block instructions and undefined opcodes.
+}
 
-static const uint8_t cyc_ddfd[256] = {4, 4, 4, 4, 4, 4, 4, 4, 4, 15, 4, 4, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 15, 4, 4, 4, 4, 4, 4, 4, 14, 20, 10, 8, 8,
-    11, 4, 4, 15, 20, 10, 8, 8, 11, 4, 4, 4, 4, 4, 23, 23, 19, 4, 4, 15, 4, 4,
-    4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4, 4, 8,
-    8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 8, 8, 8, 8, 8, 8, 19, 8, 8, 8, 8, 8, 8,
-    8, 19, 8, 19, 19, 19, 19, 19, 19, 4, 19, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4,
-    4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4,
-    4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4,
-    4, 8, 8, 19, 4, 4, 4, 4, 4, 8, 8, 19, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 4, 23, 4,
-    15, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 10, 4, 4, 4, 4,
-    4, 4};
+static const uint8_t cyc_ddfd_low[64] = {
+     4,  4,  4,  4,  4,  4,  4,  4,  4, 15,  4,  4,  4,  4,  4,  4,
+     4,  4,  4,  4,  4,  4,  4,  4,  4, 15,  4,  4,  4,  4,  4,  4,
+     4, 14, 20, 10,  8,  8, 11,  4,  4, 15, 20, 10,  8,  8, 11,  4,
+     4,  4,  4,  4, 23, 23, 19,  4,  4, 15,  4,  4,  4,  4,  4,  4,
+};
+static const uint8_t cyc_ddfd_high[32] = {
+     4, 14,  4, 23,  4, 15,  4,  4,  4,  8,  4,  4,  4,  4,  4,  4,
+     4,  4,  4,  4,  4,  4,  4,  4,  4, 10,  4,  4,  4,  4,  4,  4,
+};
+
+static unsigned ddfd_cycles(unsigned opcode) {
+  if(opcode<0x40) return cyc_ddfd_low[opcode];
+  if(opcode>=0xe0) return cyc_ddfd_high[opcode&31];
+  if(opcode>=0xc0) return opcode==0xcb?0:4;
+  if(opcode==0x76) return 4; // HALT ignores the prefix.
+  // LD and ALU use the same operand encoding. Only LD can write an
+  // indexed register or (IX/IY+d), so consider its destination as well.
+  const unsigned src=opcode&7,dst=opcode<0x80?(opcode>>3)&7:0;
+  if(src==6 || dst==6) return 19;
+  return (src&6)==4 || (dst&6)==4?8:4;
+}
 
 // MARK: helpers
 
@@ -103,6 +110,7 @@ static unsigned block_copy(z80* z,unsigned budget) {
     z->mem_ptr=(uint16_t)(pc+1);
     const unsigned cycles=21*count-(z->bc?0:5);
     z->cyc+=cycles;if(!z->bc) z->pc+=2;
+    if(z->wait) z->bus=(uint32_t)z->cyc;
     return cycles;
 }
 
@@ -116,9 +124,13 @@ static unsigned block_copy(z80* z,unsigned budget) {
 #define Z80_HOT_INLINE
 #endif
 
-static void bus_cycle(z80* z,uint16_t address,unsigned duration) {
-  const unsigned delay=(address&0xc000)==0x4000?z->wait(z->userdata,z->bus):0;
+static void contend_bus(z80* z,unsigned duration) {
+  const unsigned delay=z->wait(z->userdata,z->bus);
   z->bus+=duration+delay;z->cyc+=delay;
+}
+static inline Z80_HOT_INLINE void bus_cycle(z80* z,uint16_t address,unsigned duration) {
+  if((address&0xc000)==0x4000) contend_bus(z,duration);
+  else z->bus+=duration;
 }
 
 /* Internal cycles may keep a contended address on the bus for several
@@ -126,7 +138,7 @@ static void bus_cycle(z80* z,uint16_t address,unsigned duration) {
 static void idle_bus(z80* z,uint16_t address,unsigned count) {
   if(!z->wait) return;
   if((address&0xc000)!=0x4000) z->bus+=count;
-  else while(count--) bus_cycle(z,address,1);
+  else while(count--) contend_bus(z,1);
 }
 static uint16_t ir(const z80* z) { return (uint16_t)((z->i<<8)|z->r); }
 
@@ -220,10 +232,8 @@ static inline uint16_t nextw(z80* const z) {
 static void io_cycle(z80* z,uint16_t port) {
   if(!z->wait) {z->io_at=(uint32_t)z->cyc;return;}
   bus_cycle(z,port,1);
-  if(!(port&1)) {
-    const unsigned delay=z->wait(z->userdata,z->bus);
-    z->bus+=3+delay;z->cyc+=delay;
-  } else idle_bus(z,port,3);
+  if(!(port&1)) contend_bus(z,3);
+  else idle_bus(z,port,3);
   z->io_at=z->bus;
 }
 static uint8_t input(z80* z,uint16_t port) { io_cycle(z,port);return z->port_in(z,port); }
@@ -434,55 +444,15 @@ static inline void sbchl(z80* const z, uint16_t val) {
 
 /* Carry is preserved; the other INC/DEC flags depend only on the result.
  * These tables avoid per-opcode half-carry/overflow reconstruction. */
-static const uint8_t inc_flags[256] = {
-  0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
-  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
-  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
-  0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
-  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-  0x30, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28,
-  0x94, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
-  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
-  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-  0x90, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88, 0x88,
-  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
-  0xb0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
-};
-static const uint8_t dec_flags[256] = {
-  0x42, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
-  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
-  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
-  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
-  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
-  0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x0a, 0x1a,
-  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3a,
-  0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x22, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x2a, 0x3e,
-  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
-  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
-  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
-  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
-  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
-  0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x82, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x8a, 0x9a,
-  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
-  0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xa2, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xba,
-};
-// increments a byte value
-static inline uint8_t inc(z80* const z, uint8_t a) {
-  const uint8_t result = (uint8_t)(a + 1);
-  z->f = (z->f & 1) | inc_flags[result];
+static uint8_t adjust_byte(z80* z, uint8_t a, bool decrement) {
+  const unsigned subtract = (unsigned)decrement * 2;
+  const uint8_t result = (uint8_t)(a + 1 - subtract);
+  z->f = (z->f & 1) | (szp_flags[result] & ~4U) | ((a ^ result) & 16) |
+         (a == 0x7f + (unsigned)decrement ? 4 : 0) | subtract;
   return result;
 }
-
-// decrements a byte value
-static inline uint8_t dec(z80* const z, uint8_t a) {
-  const uint8_t result = (uint8_t)(a - 1);
-  z->f = (z->f & 1) | dec_flags[result];
-  return result;
-}
+static inline uint8_t inc(z80* z,uint8_t a) { return adjust_byte(z,a,false); }
+static inline uint8_t dec(z80* z,uint8_t a) { return adjust_byte(z,a,true); }
 
 // MARK: bitwise
 
@@ -521,42 +491,105 @@ static inline void cp(z80* const z, const uint8_t val) {
 }
 
 #if defined(MK61_TARGET_PICOCALC)
-/* Repeat LD (HL),n / DEC HL / CP H / JR NZ backwards on a hot page.
- * Each taken iteration costs 32T, plus any delay on its mapped store.
- * Leave the terminating branch and any observable stores to the interpreter. */
-static void repeat_fill(z80* z,unsigned budget) {
-  const unsigned pc=z->pc,hl=z->hl;
-  if(z->m1 || z->before_store || z->nmi_pending || z->iff_delay || (z->int_pending && z->iff1) ||
-     (pc&0xc000)==0x4000 || (z->i&0xc0)==0x40 || (pc&1023)>1018) return;
-  const uint8_t* code=z->read_pages[pc>>10];
-  uint8_t* dst=z->write_pages[hl>>10];
+static uint32_t dec_memory_end(z80* z,uint32_t time) {
+  time+=3+z->wait(z->userdata,time);
+  time+=1+z->wait(z->userdata,time);
+  return time+3+z->wait(z->userdata,time);
+}
+
+static const uint8_t* repeat_code(const z80* z,unsigned length) {
+  const unsigned pc=z->pc,offset=pc&1023;
+  if(z->m1 || z->nmi_pending || z->iff_delay || (z->int_pending && z->iff1) ||
+     (pc&0xc000)==0x4000 || (z->i&0xc0)==0x40 || offset>1024-length) return NULL;
+  const uint8_t* page=z->read_pages[pc>>10];
+  return page?page+offset:NULL;
+}
+
+/* The tape ROM's delay loops have no data accesses. Leave the final
+ * iteration to the interpreter and keep the refresh register exact. */
+static void repeat_delay_loop(z80* z,unsigned budget,bool djnz) {
+  static const uint8_t wait_b[]={0x10,0xfe};
+  static const uint8_t wait_a[]={0x3d,0x20,0xfd};
+  const unsigned length=djnz?sizeof(wait_b):sizeof(wait_a);
+  const unsigned step=djnz?13:16;
+  const unsigned counter=djnz?z->b:z->a;
+  if(counter<5) return;
+  const uint8_t* code=repeat_code(z,length);
+  if(!code || memcmp(code,djnz?wait_b:wait_a,length)) return;
+  unsigned count=budget/step;
+  if(count>=counter) count=counter-1;
+  if(djnz) z->b=(uint8_t)(counter-count);
+  else z->a=dec(z,(uint8_t)(counter-count+1));
+  z->r=(z->r&128)|((z->r+count*(djnz?1:2))&127);
+  z->cyc+=count*step;z->bus=(uint32_t)z->cyc;
+}
+
+/* Batch the taken iterations of exact fill and verify/clear loops. The
+ * writable view must be stable and no instruction or store observer may
+ * need the intermediate state. Exits and mismatches use scalar execution. */
+static void repeat_memory_loop(z80* z,unsigned budget,bool verify) {
+  static const uint8_t check[]={0xa7,0xed,0x52,0x19,0x23,0x30,0x06,0x35,0x28,0x03,0x35,0x28,0xf3};
+  static const uint8_t fill[]={0x36,0x02,0x2b,0xbc,0x20,0xfa};
+  const unsigned hl=z->hl;
+  const unsigned length=verify?sizeof(check):6;
+  if(z->before_store) return;
+  const uint8_t* code=repeat_code(z,length);
+  if(verify && hl>=z->de) return;
+  const unsigned address=hl+verify,page=address>>10;
+  uint8_t* dst=z->write_pages[page];
   if(!code || !dst) return;
-  code+=pc&1023;
-  if(code[0]!=0x36 || code[2]!=0x2b || code[3]!=0xbc || code[4]!=0x20 || code[5]!=0xfa) return;
-  const unsigned next=(uint16_t)(hl-1);
-  if((next>>8)==z->a) return;
-  const unsigned taken=(uint16_t)(next-((z->a<<8)|255));
-  unsigned count=budget/32,available=(hl&1023)+1;
+  unsigned taken;
+  if(memcmp(code,verify?check:fill,length)) return;
+  if(verify) {
+    if(z->read_pages[page]!=dst) return;
+    taken=z->de-hl;
+  } else {
+    const unsigned next=(uint16_t)(hl-1);
+    if((next>>8)==z->a) return;
+    taken=(uint16_t)(next-((z->a<<8)|255));
+  }
+  const unsigned offset=address&1023,available=verify?1024-offset:offset+1;
+  unsigned count=verify?budget/84:budget/32;
   if(count>taken) count=taken;
   if(count>available) count=available;
   if(count<4) return;
-  dst+=available-count;
-  if((uintptr_t)dst<(uintptr_t)code+6 && (uintptr_t)dst+count>(uintptr_t)code) return;
-  unsigned elapsed=count*32;
-  if((hl&0xc000)==0x4000) {
-    const uint32_t store=(uint32_t)z->cyc+7;
+  uint8_t* first=dst+(verify?offset:available-count);
+  if((uintptr_t)first<(uintptr_t)code+length && (uintptr_t)first+count>(uintptr_t)code) return;
+  const bool contended=(address&0xc000)==0x4000;
+  unsigned elapsed;
+  if(verify) {
+    // From AND A to the first read of DEC (HL) is 47T. There are 11T
+    // from its store to the second read and 12T from the final store
+    // to the end of the taken JR Z. Both DEC instructions preserve C.
+    const uint32_t start=(uint32_t)z->cyc;
     unsigned done=0;elapsed=0;
-    while(done<count && budget-elapsed>=32) {
-      const unsigned wait=z->wait(z->userdata,store+elapsed);
-      if(wait>budget-elapsed-32) break;
-      elapsed+=32+wait;++done;
+    while(done<count && first[done]==2) {
+      const uint32_t now=start+elapsed;
+      const unsigned cycles=contended?dec_memory_end(z,dec_memory_end(z,now+47)+11)+12-now:84;
+      if(cycles>budget-elapsed) break;
+      first[done++]=0;elapsed+=cycles;
     }
-    count=done;
-    if(count<4) return;
+    if(!done) return;
+    z->hl=(uint16_t)(hl+done);z->f=0x43;
+    count=done*10;
+  } else {
+    elapsed=count*32;
+    if(contended) {
+      const uint32_t store=(uint32_t)z->cyc+7;
+      unsigned done=0;elapsed=0;
+      while(done<count && budget-elapsed>=32) {
+        const unsigned wait=z->wait(z->userdata,store+elapsed);
+        if(wait>budget-elapsed-32) break;
+        elapsed+=32+wait;++done;
+      }
+      count=done;
+      if(count<4) return;
+    }
+    memset(dst+available-count,2,count);
+    z->hl=(uint16_t)(hl-count);cp(z,z->h);
+    count*=4;
   }
-  memset(z->write_pages[hl>>10]+available-count,code[1],count);
-  z->hl=(uint16_t)(hl-count);cp(z,z->h);
-  z->r=(z->r&128)|((z->r+count*4)&127);
+  z->r=(z->r&128)|((z->r+count)&127);
   z->cyc+=elapsed;z->bus=(uint32_t)z->cyc;
 }
 #endif
@@ -1072,31 +1105,14 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0x00: break; // nop
   case 0x76: z->halted = 1; break; // halt
 
-  case 0x3C: z->a = inc(z, z->a); break; // inc a
-  case 0x04: z->b = inc(z, z->b); break; // inc b
-  case 0x0C: z->c = inc(z, z->c); break; // inc c
-  case 0x14: z->d = inc(z, z->d); break; // inc d
-  case 0x1C: z->e = inc(z, z->e); break; // inc e
-  case 0x24: z->h = inc(z, z->h); break; // inc h
-  case 0x2C: z->l = inc(z, z->l); break; // inc l
-  case 0x34: {
-    uint8_t result = inc(z, rb(z, get_hl(z)));
-    idle_bus(z,z->hl,1);
-    wb(z, get_hl(z), result);
-  } break; // inc (hl)
-
-  case 0x3D: z->a = dec(z, z->a); break; // dec a
-  case 0x05: z->b = dec(z, z->b); break; // dec b
-  case 0x0D: z->c = dec(z, z->c); break; // dec c
-  case 0x15: z->d = dec(z, z->d); break; // dec d
-  case 0x1D: z->e = dec(z, z->e); break; // dec e
-  case 0x25: z->h = dec(z, z->h); break; // dec h
-  case 0x2D: z->l = dec(z, z->l); break; // dec l
-  case 0x35: {
-    uint8_t result = dec(z, rb(z, get_hl(z)));
-    idle_bus(z,z->hl,1);
-    wb(z, get_hl(z), result);
-  } break; // dec (hl)
+  case 0x04: case 0x0c: case 0x14: case 0x1c: case 0x24: case 0x2c: case 0x34: case 0x3c:
+  case 0x05: case 0x0d: case 0x15: case 0x1d: case 0x25: case 0x2d: case 0x35: case 0x3d: {
+    const unsigned reg=(opcode>>3)&7;
+    const uint8_t old=reg_byte(z,reg);
+    const uint8_t result=adjust_byte(z,old,opcode&1);
+    if(reg==6) idle_bus(z,z->hl,1);
+    set_reg_byte(z,reg,result);
+  } break;
 
   case 0x03: idle_bus(z,ir(z),2);set_bc(z, get_bc(z) + 1); break; // inc bc
   case 0x13: idle_bus(z,ir(z),2);set_de(z, get_de(z) + 1); break; // inc de
@@ -1198,21 +1214,35 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xF2: cond_jump(z, z->sf == 0); break; // jp p, **
   case 0xFA: cond_jump(z, z->sf == 1); break; // jp m, **
 
-  case 0x10: idle_bus(z,ir(z),1);cond_jr(z,--z->b!=0); break; // djnz *
+  case 0x10: {
+#if defined(MK61_TARGET_PICOCALC)
+    const uint16_t pc=z->pc-1;
+#endif
+    idle_bus(z,ir(z),1);cond_jr(z,--z->b!=0);
+#if defined(MK61_TARGET_PICOCALC)
+    if(z->wait && z->pc==pc && (!stop || !*stop)) {
+      const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
+      if(budget>=52) repeat_delay_loop(z,(unsigned)budget,true);
+    }
+#endif
+  } break; // djnz *
   case 0x18: jr(z,nextb(z)); break; // jr *
-  case 0x20: {
+  case 0x20: case 0x28: {
 #if defined(MK61_TARGET_PICOCALC)
     const uint16_t after=z->pc+1;
 #endif
-    cond_jr(z, z->zf == 0);
+    const bool verify=opcode==0x28;
+    cond_jr(z, z->zf==verify);
 #if defined(MK61_TARGET_PICOCALC)
-    if(z->wait && (uint16_t)(after-z->pc)==6 && (!stop || !*stop)) {
+    const unsigned back=(uint16_t)(after-z->pc);
+    if(z->wait && (back==(verify?13:6) || (!verify && back==3)) && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
-      if(budget>=4*32) repeat_fill(z,(unsigned)budget);
+      if(back==3) {
+        if(budget>=64) repeat_delay_loop(z,(unsigned)budget,false);
+      } else if(budget>=4*32) repeat_memory_loop(z,(unsigned)budget,verify);
     }
 #endif
-  } break; // jr nz, *
-  case 0x28: cond_jr(z, z->zf == 1); break; // jr z, *
+  } break; // jr nz/z, *
   case 0x30: cond_jr(z, z->cf == 0); break; // jr nc, *
   case 0x38: cond_jr(z, z->cf == 1); break; // jr c, *
 
@@ -1305,7 +1335,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
 
 // executes a DD/FD opcode (IZ = IX or IY)
 void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
-  z->cyc += cyc_ddfd[opcode];
+  z->cyc += ddfd_cycles(opcode);
   inc_r(z);
 
 #define IZD index_address(z,*iz,5)
@@ -1584,7 +1614,7 @@ void exec_opcode_dcb(z80* const z, uint8_t opcode, uint16_t addr) {
 
 // executes a ED opcode
 void exec_opcode_ed(z80* const z, uint8_t opcode) {
-  z->cyc += cyc_ed[opcode];
+  z->cyc += ed_cycles(opcode);
   inc_r(z);
   switch (opcode) {
   case 0x47: idle_bus(z,ir(z),1);z->i = z->a; break; // ld i,a

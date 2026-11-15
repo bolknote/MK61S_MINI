@@ -927,7 +927,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     uint32_t rom_size;
     if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
        (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES))) {
-        message("48.rom (16384 bytes) is required\nnext to SPECTRUM.APP");return 0;
+        message("Put 16 KiB 48.rom\nnext to SPECTRUM.APP");return 0;
     }
     page_runs[0]=ram.data;page_runs[1]=rom.data;
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);

@@ -38,8 +38,9 @@ static void equal(const spectrum* a,const spectrum* b,unsigned test) {
         abort();
     }
 }
-static void test_fill_loop(void) {
-    static const uint8_t code[]={0x36,0x02,0x2b,0xbc,0x20,0xfa,0x76};
+static void test_memory_loop(bool verify) {
+    static const uint8_t fill[]={0x36,0x02,0x2b,0xbc,0x20,0xfa,0x76};
+    static const uint8_t check[]={0xa7,0xed,0x52,0x19,0x23,0x30,0x06,0x35,0x28,0x03,0x35,0x28,0xf3,0x76};
     static const uint16_t pc[]={0x11db,0x8120,0x47fa,0x83fc};
     static const uint16_t hl[]={0xffff,0xc019,0x83ff,0x8127,0x4040,0x9140,0x8003,0x0001};
     static const unsigned phases[]={0,30,32,14334,69880};
@@ -48,11 +49,18 @@ static void test_fill_loop(void) {
         spectrum a,b;
         memset(rom_l,0,sizeof(rom_l));rom_l[0x38]=rom_l[0x66]=0xc9;
         spectrum_init(&a,left,rom_l);spectrum_init(&b,right,rom_r);
+        if(verify) {
+            memset(left,2,sizeof(left));
+            const unsigned next=hl[test%8]+43u;
+            if(test%3==0 && next>=0x4000 && next<0x10000) left[next-0x4000]=1;
+        }
         const unsigned address=pc[(test/8)%4];
-        memcpy(address<0x4000?rom_l+address:left+address-0x4000,code,sizeof(code));
+        memcpy(address<0x4000?rom_l+address:left+address-0x4000,
+               verify?check:fill,verify?sizeof(check):sizeof(fill));
         memcpy(right,left,sizeof(left));memcpy(rom_r,rom_l,sizeof(rom_l));
         a.cpu.pc=b.cpu.pc=address;a.cpu.hl=b.cpu.hl=hl[test%8];
         a.cpu.a=b.cpu.a=test%7==0?(uint8_t)(a.cpu.h-1):0x3f;
+        a.cpu.de=b.cpu.de=test%11==0?a.cpu.hl+7:0xffff;
         a.cpu.i=b.cpu.i=test%17==0?0x40:0x3f;
         a.cpu.r=b.cpu.r=(uint8_t)random_value();a.cpu.f=b.cpu.f=(uint8_t)random_value();
         a.cpu.sp=b.cpu.sp=0xfdec;
@@ -65,6 +73,11 @@ static void test_fill_loop(void) {
             // The guest's fill page aliases the physical instruction page.
             a.cpu.write_pages[0x9000>>10]=left+0x4000;
             b.cpu.write_pages[0x9000>>10]=right+0x4000;
+            if(verify) {
+                a.cpu.hl=b.cpu.hl=0x90ff;
+                a.cpu.read_pages[0x9000>>10]=a.cpu.write_pages[0x9000>>10];
+                b.cpu.read_pages[0x9000>>10]=b.cpu.write_pages[0x9000>>10];
+            }
         }
         const unsigned slice=slices[(test/5)%6];
         for(unsigned part=0;part<3;++part) {
@@ -72,11 +85,41 @@ static void test_fill_loop(void) {
             equal(&a,&b,6000+test);
         }
     }
-    puts("48K fill loops: exact scalar state and timing, exits, IRQ, contended buses and aliased code PASS");
+    printf("48K %s loops: exact scalar state and timing, exits, IRQ, contended buses and aliased code PASS\n",
+           verify?"verify/clear":"fill");
+}
+static void test_delay_loops(void) {
+    static const uint8_t djnz[]={0x10,0xfe,0x76};
+    static const uint8_t dec_a[]={0x3d,0x20,0xfd,0x76};
+    static const unsigned phases[]={10,32,14340,57345,69875};
+    static const uint16_t locations[]={0x05e9,0x07ff,0x4030,0x8ffe};
+    for(unsigned test=0;test<1024;++test) {
+        const unsigned address=locations[(test/2)%4];
+        const bool is_djnz=(test&1)!=0;
+        spectrum a,b;
+        memset(rom_l,0,sizeof(rom_l));rom_l[0x38]=rom_l[0x66]=0xc9;
+        spectrum_init(&a,left,rom_l);spectrum_init(&b,right,rom_r);
+        uint8_t* bytes=address<0x4000?rom_l+address:left+address-0x4000;
+        memcpy(bytes,is_djnz?djnz:dec_a,is_djnz?sizeof(djnz):sizeof(dec_a));
+        memcpy(right,left,sizeof(left));memcpy(rom_r,rom_l,sizeof(rom_l));
+        a.cpu.pc=b.cpu.pc=address;a.cpu.sp=b.cpu.sp=0xfeff;
+        a.cpu.a=b.cpu.a=a.cpu.b=b.cpu.b=(uint8_t)(test/4);
+        a.cpu.r=b.cpu.r=(uint8_t)random_value();a.cpu.f=b.cpu.f=(uint8_t)random_value();
+        a.cpu.i=b.cpu.i=test%7==0?0x40:0x3f;
+        a.cpu.iff1=b.cpu.iff1=test%9==0;
+        a.cpu.iff_delay=b.cpu.iff_delay=test%19==0;
+        a.cpu.nmi_pending=b.cpu.nmi_pending=test%31==0;
+        a.frame_tstates=b.frame_tstates=phases[(test/8)%5];
+        if(test&2) a.cpu.cyc=b.cpu.cyc=UINT32_MAX-70;
+        const unsigned budget=52+test%3000;
+        assert(spectrum_run(&a,budget)==reference_run(&b,budget));
+        equal(&a,&b,7000+test);
+    }
+    puts("48K tape delay loops: exact scalar state and timing, wrapping counters, IRQ and buses PASS");
 }
 int main(void) {
     static const unsigned counts[]={0,1,2,3,4,5,16,127,255,256,1024,16384,65535};
-    static const unsigned phases[]={0,4,11,28,31,32,35,69800,69867,69887};
+    static const unsigned phases[]={0,4,11,28,31,32,35,14240,14335,14400,57342,57343,69800,69867,69887};
     static const unsigned slices[]={1,20,21,22,83,84,85,2048,4096,10000};
     static const unsigned sources[]={0,0x1000,0x4000,0x7FFC,0x8000,0xBFFC,0xC000,0xFFFC};
     static const unsigned destinations[]={0x4000,0x4001,0x7FFE,0x8000,0x8001,0xBFFC,0xC000,0xFFFC};
@@ -91,7 +134,7 @@ int main(void) {
         left[0x4000]=0xED;left[0x4001]=0xB0;left[0x4002]=0x76;
         memcpy(right,left,sizeof(left));
         a.pentagon=b.pentagon=(test&1)!=0;
-        const unsigned frame=spectrum_frame_cycles(&a),phase=phases[test%10];
+        const unsigned frame=spectrum_frame_cycles(&a),phase=phases[(test/2)%(sizeof(phases)/sizeof(*phases))];
         a.frame_tstates=b.frame_tstates=phase>=69800?frame-69888+phase:phase;
         a.cpu.pc=b.cpu.pc=0x8000;a.cpu.sp=b.cpu.sp=0xFF00;
         if(test%5==0) a.cpu.cyc=b.cpu.cyc=UINT32_MAX-(test*17U%2048);
@@ -129,5 +172,5 @@ int main(void) {
         }
     }
     puts("6000 LDIR differential cases: flags, BC=0, overlap, self-modification, aliases, page/wrap edges, INT/NMI/EI and slice/frame boundaries PASS");
-    test_fill_loop();
+    test_memory_loop(false);test_memory_loop(true);test_delay_loops();
 }

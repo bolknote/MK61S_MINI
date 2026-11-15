@@ -25,7 +25,7 @@ typedef struct spectrum {
     z80 cpu;
     uint8_t* ram;
     const uint8_t* rom;
-    uint8_t keys[8],joystick,border,beeper;
+    uint8_t keys[8],joystick,border,beeper,key_rows;
     uint32_t frames,frame_tstates,frame_origin;
     spectrum_memory* memory; /* NULL: ordinary 48K; otherwise banked RAM. */
     bool pentagon;
