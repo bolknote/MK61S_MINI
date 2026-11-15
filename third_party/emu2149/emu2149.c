@@ -471,15 +471,21 @@ static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
   uint16_t count=psg->count[channel];const uint16_t period=psg->freq[channel];
   unsigned edge=psg->edge[channel];uint32_t bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+  // With no tone edge in this sample, only the counter changes.
+  const unsigned total=count+ticks;
+  if(total<period) {
+    psg->count[channel]=(uint16_t)total;
+    return edge?all:0;
+  }
   if(!period) {
     bits=0x5555u;if(edge)bits^=all;
     psg->count[channel]=0;psg->edge[channel]=(uint8_t)(edge^(ticks&1));return bits&all;
   }
   if(count<period) {
     if(period>=ticks) {
-      const unsigned remaining=period-count;
-      bits=edge?all:0;count=(uint16_t)(count+ticks);
-      if(remaining<=ticks){bits^=(all<<(remaining-1))&all;count=(uint16_t)(count-period);edge^=1;}
+      bits=(all<<(period-count-1))&all;
+      if(edge)bits^=all;
+      count=(uint16_t)(total-period);edge^=1;
     } else {
       /* Internal tick i observes phase count+i+1. Short square waves fit
        * in a32-bit word; M3 UDIV advances the final phase exactly. */
@@ -488,7 +494,7 @@ static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
         0xf803fe00u,0xc00ffc00u,0x003ff800u,0x00fff000u,0x03ffe000u,
         0x0fffc000u,0x3fff8000u};
       bits=(waves[period]>>(count+1))&all;if(edge)bits^=all;
-      const unsigned total=count+ticks,edges=total/period;
+      const unsigned edges=total/period;
       count=(uint16_t)(total-edges*period);edge^=edges&1;
     }
     psg->count[channel]=count;psg->edge[channel]=(uint8_t)edge;return bits;
@@ -507,7 +513,7 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
   unsigned scaler=psg->noise_scaler;uint32_t seed=psg->noise_seed,bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
-  if(count<period && ticks<period-count) {
+  if(count+ticks<period) {
     psg->noise_count=(uint8_t)(count+ticks);return (seed&1)?all:0;
   }
   if(psg->nmask[0] && psg->nmask[1] && psg->nmask[2]) {
@@ -618,10 +624,13 @@ static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32
   int32_t left=stereo?stereo[0]:0,right=stereo?stereo[1]:0;
   const unsigned centre=layout==2?2:1;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
-  const bool changing=((psg->volume[0]|psg->volume[1]|psg->volume[2])&32) && !psg->env_pause &&
-    (psg->env_freq<=psg->env_count || psg->env_freq-psg->env_count<=ticks);
-  uint32_t envelopes[3]={0,0,0};
-  int32_t channels[3]={0,0,0};
+  // Advance a stable envelope here and prepare per-channel spans only for a change.
+  const unsigned env_count=psg->env_count,env_period=psg->env_freq;
+  const bool env_stable=env_count<env_period && ticks<env_period-env_count;
+  const bool changing=!env_stable && !psg->env_pause &&
+    ((psg->volume[0]|psg->volume[1]|psg->volume[2])&32);
+  uint32_t envelopes[3];
+  int32_t channels[3];
 #endif
   for(unsigned i=0;i<3;++i) {
     uint32_t bits=tone_mask(psg,i,ticks,all);
@@ -629,7 +638,12 @@ static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32
     if((psg->mask&PSG_MASK_CH(i)) ||
        (psg->freq_limit && psg->freq[i]<=psg->freq_limit && psg->nmask[i] && !psg->tmask[i]))bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
-    if(changing && (psg->volume[i]&32)){envelopes[i]=bits;continue;}
+    if(changing && (psg->volume[i]&32)) {
+      envelopes[i]=bits;
+      channels[i]=0;
+      continue;
+    }
+    if(changing)envelopes[i]=0;
 #endif
     const unsigned amplitude=volumes[(psg->volume[i]&32)?psg->env_ptr:psg->volume[i]&31]<<4;
     const int32_t weighted=(int32_t)(amplitude*bits);
@@ -646,7 +660,9 @@ static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32
     psg->ch_out[i]=(bits&(1U<<(ticks-1)))?(int16_t)amplitude:0;
   }
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
-  if(changing) {
+  if(env_stable) {
+    psg->env_count=env_count+ticks;
+  } else if(changing) {
     mix_envelopes(psg,ticks,envelopes,channels);
   } else
 #endif
