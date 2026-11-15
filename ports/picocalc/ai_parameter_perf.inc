@@ -1,4 +1,4 @@
-AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
+AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_only) {
   using namespace mk61ai::long_bench;
   constexpr unsigned rounds = 4;
   constexpr unsigned lengths[] = {128, 256, 512};
@@ -38,14 +38,24 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
     u32 short_tokens[4]{}, short_checksums[4]{};
     Sample short_samples[2][rounds]{};
     LongCase long_cases[3]{};
-  } report;
+  };
+  struct AttentionSample {
+    u32 attention_us = 0, io_us = 0;
+  };
+  struct {
+    Result timings;
+    AttentionSample attention[4][2][rounds]; // Short, then 128, 256 and 512.
+  } report_data;
   static_assert(sizeof(Result) == 1664);
+  static_assert(sizeof(report_data) == 1920);
+  auto &report = report_data.timings;
+  report.bytes = overlap_only ? sizeof(report_data) : sizeof(report);
   for (unsigned i = 0; i < 3; ++i) report.long_cases[i].context = lengths[i];
 
   char result_path[128];
   const int path_length = std::snprintf(result_path, sizeof(result_path), "%s/READ.BIN", directory);
   if (path_length < 0 || unsigned(path_length) >= sizeof(result_path) ||
-      !files::write(result_path, reinterpret_cast<const u8 *>(&report), sizeof(report))) return 3;
+      !files::write(result_path, reinterpret_cast<const u8 *>(&report_data), report.bytes)) return 3;
 
   std::snprintf(path, sizeof(path), "%s/KVSEED.BIN", directory);
   std::uint8_t seed[16];
@@ -87,16 +97,18 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
 
   auto select_mode = [&](bool enabled) {
     auto execution = production;
-    execution.parallel_softmax = enabled;
+    execution.parallel_softmax = overlap_only || enabled;
+    if (overlap_only) execution.overlap_kv = enabled;
     model.execution(execution);
-    if (!enabled) {
+    if (!overlap_only && !enabled) {
       model.clear_parameter_cache();
       return true;
     }
     status = model.cache_parameters(parameter_cache.get(), cache_bytes);
     return status == ModelStatus::OK;
   };
-  auto step = [&](std::uint16_t id, bool output, std::uint16_t &next, Sample &sample) {
+  auto step = [&](std::uint16_t id, bool output, std::uint16_t &next, Sample &sample,
+                  AttentionSample &attention) {
     const auto hits_before = xip_ctrl_hw->ctr_hit;
     const auto accesses_before = xip_ctrl_hw->ctr_acc;
     const auto started = call(MK61_SERVICE_MICROS);
@@ -116,6 +128,8 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
     sample.wait_us += metrics.wait_us;
     sample.prefetches += metrics.prefetches;
     sample.prefetched_bytes += metrics.prefetched_bytes;
+    attention.attention_us += metrics.attention_us;
+    attention.io_us += metrics.attention_io_us;
     return status == ModelStatus::OK;
   };
   auto kv_hash = [&](unsigned position, u32 &result) {
@@ -127,13 +141,15 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
     }
     return true;
   };
-  auto measure_long = [&](LongCase &result, unsigned mode, unsigned round) {
+  auto measure_long = [&](unsigned index, unsigned mode, unsigned round) {
+    auto &result = report.long_cases[index];
     auto &sample = result.samples[mode][round];
+    auto &attention = report_data.attention[index + 1][mode][round];
     const unsigned position = result.context - 1;
     std::uint16_t next = 0;
     u32 row_hash = 0;
     if (!select_mode(mode != 0) || !model.diagnostic_position(position) ||
-        !step(input(ids, count, position), true, next, sample) || !kv_hash(position, row_hash)) return false;
+        !step(input(ids, count, position), true, next, sample, attention) || !kv_hash(position, row_hash)) return false;
     const auto digest = model.compute_metrics().checksum;
     if (!mode && !round) {
       result.token = next;
@@ -141,7 +157,7 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
       result.kv = row_hash;
     }
     return result.token == next && result.logits == digest && result.kv == row_hash &&
-        sample.softmax_jobs == (mode ? cfg.layers * cfg.kv_heads : 0U);
+        sample.softmax_jobs == (overlap_only || mode ? cfg.layers * cfg.kv_heads : 0U);
   };
   auto measure_short = [&](unsigned mode, unsigned round) {
     if (!select_mode(mode != 0)) return false;
@@ -149,8 +165,10 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
     for (unsigned i = 0; i < 4; ++i) {
       std::uint16_t next = 0;
       Sample prefill;
+      AttentionSample prefill_attention;
       auto &sample = i < 2 ? prefill : report.short_samples[mode][round];
-      if (!step(tokens[i], i != 0, next, sample)) return false;
+      auto &attention = i < 2 ? prefill_attention : report_data.attention[0][mode][round];
+      if (!step(tokens[i], i != 0, next, sample, attention)) return false;
       const auto digest = model.compute_metrics().checksum;
       if (next != word(reference, 20 + i * 8) || digest != word(reference, 24 + i * 8)) return false;
       report.short_tokens[i] = next;
@@ -168,7 +186,7 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
     dirty = true;
     for (unsigned round = 0; ok && round < rounds; ++round) {
       const unsigned first = round & 1U;
-      ok = measure_long(result, first, round) && measure_long(result, first ^ 1U, round);
+      ok = measure_long(remaining - 1, first, round) && measure_long(remaining - 1, first ^ 1U, round);
     }
   }
   if (ok) report.stage = 1;
@@ -192,6 +210,6 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory) {
       ram_before.burst_retries == ram_after.burst_retries && io_before.i2c_timeouts == io_after.i2c_timeouts &&
       io_before.i2c_aborts == io_after.i2c_aborts;
   workspace.reset();
-  const bool saved = files::write_range(result_path, 0, reinterpret_cast<const u8 *>(&report), sizeof(report));
+  const bool saved = files::write_range(result_path, 0, reinterpret_cast<const u8 *>(&report_data), report.bytes);
   return report.ok && saved ? 0 : 3;
 }

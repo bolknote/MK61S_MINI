@@ -594,7 +594,7 @@ struct UI {
 #endif
   unsigned long_perf(const char *directory);
 #if defined(PICO_ON_DEVICE)
-  unsigned parameter_perf(const char *directory);
+  unsigned parameter_perf(const char *directory, bool overlap_only);
 #endif
   void sample_memory();
   void begin_measurements();
@@ -2230,8 +2230,10 @@ AI_COLD_CODE unsigned UI::bench() {
   std::snprintf(config_path,sizeof(config_path),"%s/READ.CFG",directory);
   if(files::exists(config_path)) {
     if(!files::read_text(config_path,config_text,sizeof(config_text)-1,config_size) ||
-       config_size!=8 || std::memcmp(config_text,"AIREAD1\n",8)) return 3;
-    return parameter_perf(directory);
+       config_size!=8) return 3;
+    if (!std::memcmp(config_text,"AIREAD1\n",8)) return parameter_perf(directory, false);
+    if (!std::memcmp(config_text,"AIREAD2\n",8)) return parameter_perf(directory, true);
+    return 3;
   }
 #endif
   std::snprintf(config_path,sizeof(config_path),"%s/LONG.CFG",directory);

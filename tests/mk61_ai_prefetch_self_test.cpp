@@ -24,6 +24,8 @@ struct Runtime {
   bool pending = false, busy = false, refuse = false;
   bool cache_pending=false,refuse_cache=false,fail_cache=false;
   block_io::ReadSpan cache_spans[16];unsigned cache_count=0,cache_batches=0;
+  int fail_cache_after = -1;
+  unsigned cache_overlapped = 0;
   int cancel_after = -1, fail_finish_after = -1;
   unsigned began = 0, finished = 0, overlapped = 0;
   unsigned row_limit=8;
@@ -32,12 +34,12 @@ struct Runtime {
   bool lut8=false;
   void owner() const { assert(std::this_thread::get_id() == foreground); }
   static bool read(void *p, std::uint32_t at, void *out, unsigned n) {
-    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
+    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending);
     if (at > r.package.size() || n > r.package.size() - at) return false;
     std::memcpy(out, r.package.data() + at, n);return true;
   }
   static bool read_kv(void *p, std::uint32_t at, void *out, unsigned n) {
-    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
+    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending);
     if (at > r.cache.size() || n > r.cache.size() - at) return false;
     std::memcpy(out, r.cache.data() + at, n);return true;
   }
@@ -57,20 +59,23 @@ struct Runtime {
   }
   static bool finish_kv(void *p) {
     auto &r=*static_cast<Runtime*>(p);r.owner();assert(r.cache_pending);
+    const bool fail = r.fail_cache || r.fail_cache_after == 0;
+    if (r.fail_cache_after >= 0) --r.fail_cache_after;
+    assert(r.cpu.submitted == r.cpu.joined);
     for(unsigned i=0;i<r.cache_count;++i) {
       const auto &span=r.cache_spans[i];
       std::memcpy(span.destination,r.cache.data()+span.offset,span.bytes);
-      if(r.fail_cache)break;
+      if(fail)break;
     }
-    r.cache_pending=false;return !r.fail_cache;
+    r.cache_pending=false;return !fail;
   }
   static bool write_kv(void *p, std::uint32_t at, const void *in, unsigned n) {
-    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
+    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending);
     if (at > r.cache.size() || n > r.cache.size() - at) return false;
     std::memcpy(r.cache.data() + at, in, n);return true;
   }
   static bool begin(void *p, const block_io::ReadSpan *spans, unsigned count) {
-    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending);
+    auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending);
     if (r.refuse) return false;
     assert(count && count <= 16);
     unsigned total = 0;
@@ -123,13 +128,14 @@ struct Runtime {
     e.lut8=lut8;
     e.busy = [](void *p, bool active) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
-      assert(r.busy != active && !r.pending && r.began == r.finished);
+      assert(r.busy != active && !r.pending && !r.cache_pending && r.began == r.finished);
       assert(r.cpu.submitted == r.cpu.joined && r.dma.submitted == r.dma.joined);
       r.busy = active;
     };
     e.submit = [](void *p, void (*fn)(void *), void *job) {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       if (r.pending) ++r.overlapped;
+      if (r.cache_pending) ++r.cache_overlapped;
       return r.cpu.submit(fn, job);
     };
     e.join = [](void *p) { static_cast<Runtime *>(p)->cpu.join(); };
@@ -139,7 +145,7 @@ struct Runtime {
                       float *logits = nullptr, bool output = true,
                       bool (*allowed)(void *, std::uint16_t) = nullptr) {
     const auto result = model.forward(token, output, best, [](void *p) {
-      auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && r.busy);
+      auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending && r.busy);
       return r.cancel_after < 0 || r.cancel_after-- > 0;
     }, this, arithmetic, logits, allowed, this);
     assert(!busy && !pending && !cache_pending && began == finished && cpu.submitted == cpu.joined);
@@ -235,6 +241,21 @@ int main(int argc, char **argv) {
     const unsigned length=candidate.lut8?candidate.model.config().context:256;
     compare(Arithmetic::INT8,length,false);context_checked=length;
   }
+  const auto &cfg = candidate.model.config();
+  if (context_checked >= 128 && cfg.heads == 2 * cfg.kv_heads && cfg.hidden == 128 &&
+      cfg.intermediate == 384 && cfg.head_dim == 32) {
+    assert(candidate.cache_overlapped > 0);
+    assert(control.model.diagnostic_position(127) && candidate.model.diagnostic_position(127));
+    candidate.fail_cache_after = 1; // Fail only after the first overlapped compute job.
+    const unsigned before = candidate.cache_overlapped;
+    assert(candidate.forward(tokens[0], Arithmetic::INT8, right) == ModelStatus::IO);
+    assert(candidate.model.position() == 127 && candidate.cache_overlapped == before + 1);
+    assert(candidate.fail_cache_after == -1);
+    assert(control.forward(tokens[0], Arithmetic::INT8, left, a.data()) == ModelStatus::OK);
+    assert(candidate.forward(tokens[0], Arithmetic::INT8, right, b.data()) == ModelStatus::OK);
+    assert(left == right && !std::memcmp(a.data(), b.data(), vocab * sizeof(float)));
+    assert(control.cache == candidate.cache);
+  }
   assert(candidate.layout_refusals==0);
   assert(candidate.began > 0 && candidate.overlapped > 0);
   // Sparse/non-aligned spans and a refused backend retain the serial path.
@@ -276,5 +297,5 @@ int main(int argc, char **argv) {
   assert(bad.began && bad.model.position() == 0);
   std::printf("prefetch: PASS; %u full-logit comparisons, %u-position KV exact, %u DMA requests, %u overlapping worker jobs; sparse/refusal/cancel/retry/DMA-fault/numeric/join/thaw/guards PASS\n",
               comparisons, context_checked,candidate.began, candidate.overlapped);
-  std::printf("KV gather: %u joined batches; bounded shared scratch, exact transactions/bytes, refusal and partial-write failure PASS\n",candidate.cache_batches);
+  std::printf("KV gather: %u joined batches, %u overlapping worker jobs; bounded scratch, exact transactions/bytes, refusal and partial-write failure PASS\n",candidate.cache_batches,candidate.cache_overlapped);
 }

@@ -413,7 +413,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       ~std::uintptr_t(3));
   auto *input_sums = activation_scales + columns / 32;
   auto *lookup = input_sums + columns / 32;
-  auto *tile = reinterpret_cast<std::uint8_t *>(lookup)+lookup_bytes(columns,execution_.lut8);
+  const unsigned scratch_bytes = lookup_bytes(columns, execution_.lut8);
+  auto *tile = reinterpret_cast<std::uint8_t *>(lookup) + scratch_bytes;
   const unsigned tile_rows = row_limit(execution_.tile_rows);
   const unsigned tile_bytes = weight_tile_bytes(columns,c.hidden,tile_rows);
   auto *tile_output = reinterpret_cast<float *>(tile + 2 * tile_bytes);
@@ -985,7 +986,22 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
     }
     } else {
       const unsigned queries=c.heads/c.kv_heads;
-      KVStream stream{cache_,lookup,std::min<unsigned>(2048,columns*16),compute_metrics_,execution_.batch_kv};
+      const unsigned width = c.head_dim * sizeof(float), step = kn * 8;
+      KVStream stream{cache_, lookup, std::min(2048U, columns * 16), compute_metrics_, execution_.batch_kv};
+      if (execution_.overlap_kv && position_ >= 127 && stream.enabled &&
+          cache_.read_begin && cache_.read_finish && scratch_bytes >= 2 * stream.capacity)
+        stream.alternate = lookup + stream.capacity / sizeof(float);
+      auto prefetch = [&](unsigned offset, unsigned remaining) {
+        const auto started = forward_stamp();
+        stream.prefetch(offset, width, step, remaining);
+        compute_metrics_.attention_io_us += forward_stamp() - started;
+      };
+      auto wait = [&]() {
+        const auto started = forward_stamp();
+        const bool ok = stream.wait();
+        compute_metrics_.attention_io_us += forward_stamp() - started;
+        return ok;
+      };
       for(unsigned kh=0;kh<c.kv_heads;++kh) for(unsigned first=0;first<queries;first+=2) {
         const unsigned lanes=std::min<unsigned>(2,queries-first);
         float maximum[2]={-FLT_MAX,-FLT_MAX},sum[2]={0,0};
@@ -993,10 +1009,12 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           if(!alive()) return status;
           const unsigned offset=layer_offset+t*kn*8+kh*c.head_dim*4;
           const auto io_started=forward_stamp();
-          const float *keys=stream.read(offset,c.head_dim*4,kn*8,position_+1-t);
+          const unsigned remaining = position_ + 1 - t;
+          const float *keys=stream.read(offset,width,step,remaining);
           compute_metrics_.attention_io_us+=forward_stamp()-io_started;
           if(!keys) return ModelStatus::IO;
-          const unsigned rows=stream.chunk_count();
+          const unsigned rows=stream.rows;
+          if (stream.alternate && remaining - rows > 1) prefetch(offset, remaining);
           AttentionBatch jobs[2];
           for(unsigned lane=0;lane<lanes;++lane) {
             const unsigned h=kh*queries+first+lane;
@@ -1005,7 +1023,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           attention_pair(jobs,lanes,execution_,compute_metrics_);
           for(unsigned row=0;row<rows;++row) for(unsigned lane=0;lane<lanes;++lane)
             maximum[lane]=std::max(maximum[lane],scores[lane*c.context+t+row]);
-          stream.consume_chunk(offset,rows);t+=rows;
+          if (stream.staged_rows && !wait()) return ModelStatus::IO;
+          t+=rows;
         }
         const bool separate_cores = lanes == 2 && position_ >= 127 && execution_.parallel_softmax &&
             softmax_pair(scores, c.context, position_ + 1, maximum, sum, execution_);
@@ -1025,17 +1044,20 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           if(!alive()) return status;
           const unsigned offset=layer_offset+t*kn*8+kn*4+kh*c.head_dim*4;
           const auto io_started=forward_stamp();
-          const float *values=stream.read(offset,c.head_dim*4,kn*8,position_+1-t);
+          const unsigned remaining = position_ + 1 - t;
+          const float *values=stream.read(offset,width,step,remaining);
           compute_metrics_.attention_io_us+=forward_stamp()-io_started;
           if(!values) return ModelStatus::IO;
-          const unsigned rows=stream.chunk_count();
+          const unsigned rows=stream.rows;
+          if (stream.alternate && remaining - rows > 1) prefetch(offset, remaining);
           AttentionBatch jobs[2];
           for(unsigned lane=0;lane<lanes;++lane) {
             const unsigned h=kh*queries+first+lane;
             jobs[lane]={nullptr,values,scores+lane*c.context+t,a+h*c.head_dim,rows,c.head_dim,0,sum[lane]};
           }
           attention_pair(jobs,lanes,execution_,compute_metrics_);
-          stream.consume_chunk(offset,rows);t+=rows;
+          if (stream.staged_rows && !wait()) return ModelStatus::IO;
+          t+=rows;
         }
       }
     }

@@ -8,47 +8,57 @@
 #define MK61_KV_STREAM_CODE
 #endif
 namespace mk61ai {
-// The activation lookup table is dead throughout attention. Borrow at most
-// 2048 bytes of it to gather up to16 adjacent positions into one PSRAM DMA.
-// Every read is joined here: no DMA or borrowed pointer survives attention.
+// Borrow the inactive activation lookup table to gather up to 16 KV rows per
+// DMA. When there is room for two buffers, start the next block while both
+// cores use the current one. Wait before calling service or reusing either
+// buffer. Service can itself access PSRAM.
 struct KVStream {
   const Memory &memory;
   float *scratch;
   unsigned capacity;
   ComputeMetrics &metrics;
   bool enabled;
-  unsigned used=0,count=0,bytes=0,stride=0;
-  std::uint32_t next=0;
-  unsigned chunk_count() const { return count-used+1; }
-  void consume_chunk(unsigned offset,unsigned rows) { used=count;next=offset+rows*stride; }
-  MK61_KV_STREAM_CODE const float *read(std::uint32_t offset,unsigned width,
-                                       unsigned step,unsigned remaining) {
-    if(used<count && offset==next && width==bytes && step==stride) {
-      const float *out=scratch+used*(width/sizeof(float));
-      ++used;next+=step;return out;
-    }
-    used=count=0;bytes=width;stride=step;
-    if(!width || width%sizeof(float) || width>capacity) return nullptr;
-    const unsigned take=enabled && memory.read_begin && memory.read_finish?
-        std::min(std::min(remaining,16U),capacity/width):1U;
-    if(take>1) {
-      block_io::ReadSpan spans[16];
-      for(unsigned i=0;i<take;++i)
-        spans[i]={offset+i*step,scratch+i*(width/sizeof(float)),width};
-      if(memory.read_begin(memory.context,spans,take)) {
-        ++metrics.attention_batches;++metrics.attention_read_transactions;
-        metrics.attention_read_bytes+=take*width;
-        if(!memory.read_finish(memory.context)) return nullptr;
-        count=take;
-      }
-    }
-    if(!count) {
-      ++metrics.attention_read_transactions;metrics.attention_read_bytes+=width;
-      if(!memory.read(memory.context,offset,scratch,width)) return nullptr;
-      count=1;
-    }
-    used=1;next=offset+step;return scratch;
+  float *alternate = nullptr;
+  unsigned rows = 0;
+  unsigned staged_rows = 0;
+
+  MK61_KV_STREAM_CODE unsigned begin(float *buffer, std::uint32_t offset,
+                                      unsigned width, unsigned step, unsigned remaining) {
+    const unsigned take = std::min(std::min(remaining, 16U), capacity / width);
+    if (take < 2) return 0;
+    block_io::ReadSpan spans[16];
+    for (unsigned i = 0; i < take; ++i)
+      spans[i] = {offset + i * step, buffer + i * (width / sizeof(float)), width};
+    if (!memory.read_begin(memory.context, spans, take)) return 0;
+    ++metrics.attention_batches;
+    ++metrics.attention_read_transactions;
+    metrics.attention_read_bytes += take * width;
+    return take;
   }
+
+  MK61_KV_STREAM_CODE const float *read(std::uint32_t offset, unsigned width,
+                                       unsigned step, unsigned remaining) {
+    if (staged_rows) {
+      std::swap(scratch, alternate);
+      rows = staged_rows;
+      staged_rows = 0;
+      return scratch;
+    }
+    if (!width || width % sizeof(float) || width > capacity) return nullptr;
+    if (enabled && memory.read_begin && memory.read_finish) {
+      rows = begin(scratch, offset, width, step, remaining);
+      if (rows) return memory.read_finish(memory.context) ? scratch : nullptr;
+    }
+    ++metrics.attention_read_transactions;
+    metrics.attention_read_bytes += width;
+    rows = 1;
+    return memory.read(memory.context, offset, scratch, width) ? scratch : nullptr;
+  }
+
+  void prefetch(std::uint32_t offset, unsigned width, unsigned step, unsigned remaining) {
+    staged_rows = begin(alternate, offset + rows * step, width, step, remaining - rows);
+  }
+  bool wait() { return !staged_rows || memory.read_finish(memory.context); }
 };
 }
 #undef MK61_KV_STREAM_CODE

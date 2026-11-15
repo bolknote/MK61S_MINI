@@ -47,6 +47,7 @@ struct ComputeExecution {
   bool share_kv = true; // Process up to two query heads per cached KV read.
   bool lut8 = false; // Exact INT8 LUT8 for plane-packed128-column matrices.
   bool parallel_softmax = false;
+  bool overlap_kv = true; // Prefetch KV blocks during long-context attention.
   std::uint32_t (*micros)(void *) = nullptr; // Optional diagnostic timing only.
   // Optional coprocessor. prepare stages the immutable vector before PSRAM
   // prefetch and returns its row capacity. submit must leave no live job on
