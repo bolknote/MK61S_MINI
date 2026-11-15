@@ -85,6 +85,30 @@ struct Producer {
     }
 };
 int main() {
+    for(unsigned layout:{0u,1u,2u}) {
+        AudioEngine engine;
+        Producer producer;
+        engine.options.layout=layout;
+        engine.request=producer.request;
+        const unsigned block=layout?AudioEngine::STEREO_BLOCK:AudioEngine::BLOCK;
+        const uint32_t started=UINT32_MAX-5;
+        engine.duties[0]=0x4123;
+        engine.write.store((AudioEngine::PRIME_BLOCKS-1)*block);
+        assert(engine.sample(started)==0x00800080u && !engine.primed);
+        assert(engine.sample(started+2*block*40)==0x00800080u && !engine.primed);
+        engine.write.store(AudioEngine::PRIME_BLOCKS*block);
+        assert(engine.sample(started+2*block*40)==0x00410023u && engine.primed);
+        assert(engine.prime_us==2*block*40 && engine.read.load()==1);
+        AudioEngine fast;
+        fast.options.layout=layout;
+        fast.request=producer.request;
+        fast.write.store(AudioEngine::PRIME_BLOCKS*block);
+        fast.duties[0]=0x4123;
+        assert(fast.sample(started)==0x00800080u);
+        assert(fast.sample(started+2*block*40-1)==0x00800080u && !fast.primed);
+        assert(fast.sample(started+2*block*40)==0x00410023u && fast.primed);
+    }
+    std::puts("PCM startup: minimum queue, two nominal block periods, both layouts and clock wrap PASS");
     {
         // Actual pushed transport CRC/sequence, compressed payload, ring wrap,
         // both PCM channels and both 16-bit sequence wraps remain exact.

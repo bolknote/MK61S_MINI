@@ -155,7 +155,11 @@ struct AudioEngine {
         const uint32_t r=read.load(std::memory_order_relaxed),w=write.load(std::memory_order_acquire);
         if(!primed){
             if(!prime_waiting){prime_waiting=true;prime_started=now;}
-            if(w-r<PRIME_BLOCKS*(options.layout?STEREO_BLOCK:BLOCK))return 0x00800080u;
+            // A fast first frame can build the queue before the Z80 reaches
+            // its first pacing wait. Keep two block periods of elapsed
+            // lead for event publication and the DMA's advance refill.
+            const unsigned block=options.layout?STEREO_BLOCK:BLOCK;
+            if(w-r<PRIME_BLOCKS*block || now-prime_started<2*block*40)return 0x00800080u;
             primed=true;prime_us=now-prime_started;
         }
         if(r==w) {

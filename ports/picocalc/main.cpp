@@ -150,6 +150,7 @@ void report_battery_diagnostics() {
     std::printf(format,(unsigned long)keyboard.battery_unknown_reads(),(unsigned long)keyboard.selection_restarts(),
         fault.phase,fault.reg,fault.value,fault.selected,fault.count,(unsigned long)fault.selection_us,(unsigned long)fault.at_us);
 }
+__attribute__((noinline,section(".input_diagnostics")))
 void report_color_history() {
     picocalc::Panel::ColorHistory history;
     if(!panel.color_history(history)) return;

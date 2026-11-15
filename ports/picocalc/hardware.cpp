@@ -679,9 +679,9 @@ void Panel::transfer_color() {
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
     const u32 crc=dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();});
     frame_crc_.store(crc,std::memory_order_relaxed);
-    // Monochrome OSD updates must leave completed guest strips available
-    // for a report after a pause or an application exit.
-    if((color_frame_.format&~MK61_COLOR_PRESERVE_OUTSIDE)!=MK61_COLOR_TILE1) {
+    // Full TILE1 OSD updates leave completed guest strips available after
+    // pause. Pentagon wide strips use TILE1 with PRESERVE_OUTSIDE.
+    if(color_frame_.format!=MK61_COLOR_TILE1) {
         color_history_.crc[color_history_.frames%ColorHistory::CAPACITY]=crc;
         ++color_history_.frames;
     }
