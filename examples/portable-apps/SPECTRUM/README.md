@@ -103,8 +103,9 @@ Spectrum 48K учитывает задержки ULA в области 0x4000–
 включите **Options → Raster**. Режим требует PSRAM и поддержку CELL565
 в прошивке PicoCalc. Он записывает цвет для каждого восьмипиксельного
 участка строки с привязкой к гостевому времени. LCD принимает кадр
-полосами. В обычном режиме используется компактный кадр с атрибутами
-8×8. Частота показа полос зависит от пропускной способности LCD.
+полосами. Захват следующего кадра начинается после приёма последней
+полосы предыдущего. В обычном режиме используется компактный кадр
+с атрибутами 8×8. Частота показа полос зависит от пропускной способности LCD.
 
 ## Диски
 
@@ -163,8 +164,8 @@ Pentagon 1024K: 64 банка по 16 КиБ. При сброшенном бит
 Дополнительное ПЗУ для мегабайта памяти не требуется.
 
 В PSRAM зарезервированы 1 МиБ Spectrum RAM, ПЗУ, 128 КиБ DivRAM,
-место под развёрнутый SCL, два индекса TZX с буферами CSW и два
-растровых кадра. Второй буфер TZX позволяет проверить новую ленту до
+место под развёрнутый SCL, две области TZX с индексом и буфером CSW
+и один растровый кадр. Вторая область TZX позволяет проверить новую ленту до
 замены текущей. SRAM содержит код и данные APP, 32 КиБ постоянно доступных банков RAM,
 общий кэш из 16 страниц по 1 КиБ и очередь из 256 звуковых событий.
 Кэш обслуживает ROM, верхние банки RAM, нижнюю RAM0 у Pentagon 1024K
@@ -445,8 +446,8 @@ python3 tools/apps/spectrum/prepare_spectrum_m3_hil.py --output .build/spectrum-
 первый участок CPU после него свободным. Молчащий AY2 продвигается пакетами
 с сохранением всех фаз; активный AY2 использует обычный точный путь.
 
-Обычный APP занимает 47968 байт, модуль M3 — 6132 из 6144 байт. Полный
-комплект включает три ROM рядом с APP и `AY.S3M`. Каталог проводника и его
+В сборке от 8 ноября APP занимал 47 968 байт, модуль M3 — 6132 из 6144 байт.
+Полный комплект включает три ROM рядом с APP и `AY.S3M`. Каталог проводника и его
 необязательный графический буфер освобождаются непосредственно перед входом
 в APP; это устраняет повторный `Not enough SRAM` после обслуживания UI
 загрузчиком. [Итоговые журналы и измерения](../../../doc/measurements/picocalc-spectrum-strict-20261108.json).
@@ -472,11 +473,17 @@ TR-DOS-флаг SNA при включённом Beta Disk. 128K-снимки з�
 циклы ULA, палитры и меню APP.
 
 На Pico H и STM32 M3 при 125/72 МГц Cosmic Payback прошёл четыре
-комбинации AY/YM и ABC/ACB. В длинном прогоне на 30 000 кадров
-запоздавших звуковых блоков и underrun было 0, наибольшее запаздывание
-кадра составило 543 мкс. Отдельно проверен цикл открытия, сохранения
-и повторной загрузки SZX со всеми 32 банками Pentagon 512K.
-[Замеры на PicoCalc от 14 ноября](../../../doc/measurements/picocalc-spectrum-memory-20261114.md).
+комбинации AY/YM и ABC/ACB и два длинных прогона на 30 000 кадров.
+Запоздавших звуковых блоков и underrun было 0, наибольшее запаздывание
+кадра составило 543 мкс. The Sword of Ianna также прошла строгую проверку.
+[Замеры на PicoCalc от 14 и 15 ноября](../../../doc/measurements/picocalc-spectrum-memory-20261114.md).
+
+На PicoCalc также проверены 16C, 384×304, Raster, сжатые SZX от Fuse,
+сохранение и открытие SZX со всеми 64 банками Pentagon 1024K и загрузка
+TAP, TZX Generalized/Select и CSW Z-RLE через штатный BASIC. Полный APP
+занимает 59 200 из 59 392 байт SRAM в области загрузки и 47 598 байт на SD.
+При запуске 48K BASIC с лентой и при захвате Raster нагрузка Z80 может
+опустошить очередь PCM. В этом случае звук переключается на Pico 200 МГц.
 
 В образ `GAMES.img` входят The Sword of Ianna 1.1, Cosmic Payback и файлы
 коллекции ULAplus. Дополнение устанавливает образ и `Play.txt` в
@@ -503,10 +510,10 @@ SPECTRUM_DEVICE_ASSETS=.build/spectrum-app/devices MK61_TEST_SANITIZERS=1 bash t
 `tools/apps/spectrum/spectrum_media.py blank.trd` создаёт TRD; с `--esxdos ZIP` создаёт
 FAT16 SD-образ с файлами указанного релиза esxDOS.
 
-### Stereo transport candidate (2026-11-08)
+### Early stereo transport tests (2026-11-08)
 
-The lossless PWM3 repeat-pair codec is a HOST-qualified candidate, not yet
-hardware-qualified. It keeps 118 stereo frames per block, 8-bit channels and
+The initial lossless PWM3 repeat-pair codec was qualified on the host.
+It keeps 118 stereo frames per block, 8-bit channels and
 25 kHz, with a raw PWM2 fallback whenever compression would grow a block.
 The resident and both Pico clients use wire version 2. Commands 11/12 now
 return `min(actual_output_bytes, result_ceiling)` bytes; there are no alternate
@@ -518,8 +525,8 @@ the new Pico client and BIOSUPD.APP. The candidate install target is the
 boot-preserving BIOS.M3U, not the unrelocated async BIOS binary. Mixed wire
 versions fail before a module job can execute. HOST/ARM checks pass, including
 exact PCM and PSG state, replay, actual package readback and recovery models.
-Four Cosmic traces predict 62–70% less reply traffic; physical strict tests at
-125/72 MHz remain pending. All four short cases must pass before the long run.
+Four Cosmic traces predicted 62–70% less reply traffic. The long hardware
+run requires all four short cases to pass at 125/72 MHz.
 
 On 2026-11-09 all four short strict Cosmic tests passed at 125/72 MHz. The
 30000-frame run still failed the unchanged zero-late-block condition: one of
