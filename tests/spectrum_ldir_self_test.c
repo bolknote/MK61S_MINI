@@ -24,7 +24,7 @@ static uint32_t random_state=0x49133711;
 static unsigned random_value(void) { random_state=random_state*1664525U+1013904223U;return random_state; }
 static void normalize(z80* z) {
     z->read_byte=NULL;z->write_byte=NULL;z->port_in=NULL;z->port_out=NULL;z->userdata=NULL;z->m1=NULL;
-    z->bus=z->io_at=0;z->wait=NULL;
+    z->bus=z->io_at=0;z->wait=NULL;z->port_span=NULL;
     memset(z->read_map,0,sizeof(z->read_map));memset(z->write_map,0,sizeof(z->write_map));
     memset(z->read_pages,0,sizeof(z->read_pages));memset(z->write_pages,0,sizeof(z->write_pages));
 }
@@ -117,6 +117,62 @@ static void test_delay_loops(void) {
     }
     puts("48K tape delay loops: exact scalar state and timing, wrapping counters, IRQ and buses PASS");
 }
+typedef struct {
+    spectrum machine;
+    uint32_t edge;
+    bool initial_level,space;
+} pulse_input;
+static uint8_t edge_value(const z80* cpu) {
+    const pulse_input* tape=cpu->userdata;
+    const bool level=tape->initial_level^((int32_t)(tape->edge-(uint32_t)cpu->cyc)<=0);
+    return (tape->space?0xbe:0xbf)|(level?0x40:0);
+}
+static uint8_t edge_read(z80* cpu,uint16_t port) {
+    (void)port;
+    return edge_value(cpu);
+}
+static uint32_t edge_span(const z80* cpu,uint16_t port,uint8_t mask,uint8_t match) {
+    assert(port==0x7ffe);
+    const pulse_input* tape=cpu->userdata;
+    const int32_t until=(int32_t)(tape->edge-(uint32_t)cpu->cyc);
+    return until>0 && (edge_value(cpu)&mask)==match?(uint32_t)until:0;
+}
+static void test_edge_poll(void) {
+    static const uint8_t loop[]={0x04,0xc8,0x3e,0x7f,0xdb,0xfe,0x1f,0xd0,0xa9,0xe6,0x20,0x28,0xf3,0x76};
+    static const unsigned phases[]={8,32,14301,14335,14341,14456,57342,69851};
+    for(unsigned test=0;test<1024;++test) {
+        pulse_input a,b;
+        memset(rom_l,0,sizeof(rom_l));rom_l[0x38]=rom_l[0x66]=0xc9;
+        memcpy(rom_l+0x05ed,loop,sizeof(loop));memcpy(rom_r,rom_l,sizeof(rom_l));
+        spectrum* s=&a.machine,*r=&b.machine;
+        spectrum_init(s,left,rom_l);spectrum_init(r,right,rom_r);
+        left[0x4000]=right[0x4000]=0x76;
+        left[0xbffc]=right[0xbffc]=0;left[0xbffd]=right[0xbffd]=0x80;
+        s->cpu.pc=r->cpu.pc=test%11==0?0x05f8:0x05ed;s->cpu.sp=r->cpu.sp=0xfffc;
+        s->cpu.userdata=&a;r->cpu.userdata=&b;
+        s->cpu.port_in=r->cpu.port_in=edge_read;s->cpu.port_span=edge_span;
+        s->cpu.a=r->cpu.a=(uint8_t)random_value();
+        s->cpu.f=r->cpu.f=(uint8_t)random_value();s->cpu.r=r->cpu.r=(uint8_t)random_value();
+        s->cpu.b=r->cpu.b=test%17==0?0xfd:(uint8_t)random_value();
+        s->cpu.i=r->cpu.i=test%7==0?0x40:0x3f;
+        s->cpu.iff1=r->cpu.iff1=test%9==0;
+        s->cpu.iff_delay=r->cpu.iff_delay=test%19==0;
+        s->cpu.nmi_pending=r->cpu.nmi_pending=test%31==0;
+        s->frame_tstates=r->frame_tstates=phases[test%8];
+        if(test&8) s->cpu.cyc=r->cpu.cyc=UINT32_MAX-600;
+        a.initial_level=b.initial_level=(test&16)!=0;
+        a.space=b.space=test%13==0;
+        s->cpu.c=r->cpu.c=a.initial_level^(test%5==0)?0x20:0;
+        a.edge=b.edge=(uint32_t)s->cpu.cyc+test*101%2600;
+        const unsigned budget=128+test*47%2500;
+        for(unsigned part=0;part<2;++part) {
+            assert(spectrum_run(s,budget)==reference_run(r,budget));
+            assert(s->cpu.io_at==r->cpu.io_at);
+            equal(s,r,8000+test);
+        }
+    }
+    puts("48K EAR polling: exact scalar state, keyboard abort, pulse edges, contention and cycle wrap PASS");
+}
 int main(void) {
     static const unsigned counts[]={0,1,2,3,4,5,16,127,255,256,1024,16384,65535};
     static const unsigned phases[]={0,4,11,28,31,32,35,14240,14335,14400,57342,57343,69800,69867,69887};
@@ -172,5 +228,5 @@ int main(void) {
         }
     }
     puts("6000 LDIR differential cases: flags, BC=0, overlap, self-modification, aliases, page/wrap edges, INT/NMI/EI and slice/frame boundaries PASS");
-    test_memory_loop(false);test_memory_loop(true);test_delay_loops();
+    test_memory_loop(false);test_memory_loop(true);test_delay_loops();test_edge_poll();
 }

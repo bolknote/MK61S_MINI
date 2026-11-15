@@ -349,7 +349,7 @@ static bool disk_rom(unsigned mode) {
     const unsigned size=mode==SPECTRUM_DISK_BETA?16384:8192;
     mk61_service_file_info info;uint8_t bytes[256];
     if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory || info.size!=size) {
-        message("Disk interface ROM missing\nSee SPECTRUM/README.md");return false;
+        message("Disk ROM missing\nSee README.md");return false;
     }
     for(unsigned at=0;at<size;at+=sizeof(bytes))
         if(!read_source((void*)path,at,bytes,sizeof(bytes)) || !external_write(NULL,target+at,bytes,sizeof(bytes))) return false;
@@ -358,12 +358,12 @@ static bool disk_rom(unsigned mode) {
     return true;
 }
 static bool mount_selected_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM");return false; }
+    if(!machine.memory) { message("PSRAM required");return false; }
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     const bool scl=suffix(snapshot_path,".scl");
     if(mode==SPECTRUM_DISK_DIVMMC && (info.size<1024*1024 || info.size%512)) {
-        message("SD image must be sector aligned\nand at least 1 MiB");return false;
+        message("SD image at least 1 MiB\nMultiple of 512 bytes");return false;
     }
     if(mode==SPECTRUM_DISK_BETA && !scl && (info.size<4096 || info.size>SPECTRUM_TRD_BYTES || info.size%256)) {
         message("Invalid TRD size");return false;
@@ -373,7 +373,7 @@ static bool mount_selected_media(unsigned mode) {
         const spectrum_source source={snapshot_path,info.size,read_source};
         const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
         if(spectrum_scl_unpack(&source,&io,SPECTRUM_EXTERNAL_BYTES)!=SPECTRUM_OK) {
-            message("Invalid SCL / checksum / SD error");return false;
+            message("Invalid SCL or SD error");return false;
         }
     }
     mounted_media* m=mode==SPECTRUM_DISK_BETA?&floppy:&sd_card;
@@ -384,7 +384,7 @@ static bool mount_selected_media(unsigned mode) {
     reset_machine();started=false;return true;
 }
 static void mount_media(unsigned mode) {
-    if(!machine.memory) { message("Disk interfaces require PSRAM");return; }
+    if(!machine.memory) { message("PSRAM required");return; }
     if(choose_file(mode==SPECTRUM_DISK_BETA?1:2)) (void)mount_selected_media(mode);
 }
 
@@ -552,7 +552,7 @@ static bool load_szx(const spectrum_source* source) {
     }
     if(error) {
         if(error==SPECTRUM_IO) {reset_machine();started=false;}
-        message(error==SPECTRUM_UNSUPPORTED?"Unsupported SZX format":"Cannot load SZX");
+        message(error==SPECTRUM_UNSUPPORTED?"Unsupported SZX format":"Cannot read snapshot");
         return false;
     }
     started=true;
@@ -601,7 +601,7 @@ static void settings(void) {
 }
 static __attribute__((noinline)) bool load_snapshot(void) {
     if(machine.disk.mode==SPECTRUM_DISK_DIVMMC && !machine.disk.spi.reads) {
-        message("Start esxDOS before opening\na snapshot with DivMMC enabled");return false;
+        message("Start esxDOS before loading\nDivMMC snapshots");return false;
     }
     uint32_t size;
     if(!file_size(snapshot_path,&size)) {
@@ -618,7 +618,7 @@ static __attribute__((noinline)) bool load_snapshot(void) {
         // A mid-read SD error can leave RAM partially loaded. Never resume
         // that state or the previous CPU over the partially replaced RAM.
         reset_machine();started=false;
-        message(error==SPECTRUM_UNSUPPORTED?"Unsupported snapshot/model\nUse Pentagon for 128K files":
+        message(error==SPECTRUM_UNSUPPORTED?"Unsupported snapshot\n128K files need Pentagon":
             error==SPECTRUM_IO?"SD read error":"Invalid or truncated snapshot");
         return false;
     }
@@ -691,7 +691,7 @@ static __attribute__((noinline)) void emulate_session(void) {
     mk61_service_framebuffer scratch={0};
     if(!services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(scratch),0,&scratch) ||
        !scratch.pixels || scratch.bytes<10240+SPECTRUM_DISK_CACHE_BYTES) {
-        message("Native framebuffer unavailable");return;
+        message("Framebuffer unavailable");return;
     }
     if(!spectrum_disk_cache_begin(&machine,scratch.pixels+7680)) {
         message("PSRAM I/O error");return;
@@ -905,7 +905,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
         if(!mk61_api->graphics_begin() ||
            !services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(canvas),0,&canvas) ||
            !canvas.pixels || canvas.bytes<12800) {
-            message("Native framebuffer unavailable");return 0;
+            message("Framebuffer unavailable");return 0;
         }
         /* The OSD uses up to byte 9983. Reserve the final two 1K pages
          * across gameplay and menus. The other slots use heap and stack. */
@@ -939,7 +939,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
     }
     if(file_id!=MK61_SERVICE_INVALID_ID) {
         if(!file_call(MK61_FILE_BYTES_PATH,NULL,snapshot_path,file_id,256)) {
-            message("Cannot get selected file path\nUpdate PicoCalc firmware");
+            message("Update firmware for file launch");
         } else {
             strcpy(directory,snapshot_path);parent_directory();
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -986,7 +986,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id) {
             const int picked=menu_pick("Machine",models,3,&model,true,NULL);
             if(picked<0) continue;
             if(!select_model((unsigned)picked)) {
-                message("Cannot initialize ROM / PSRAM");(void)select_model(false);
+                message("ROM or PSRAM not ready");(void)select_model(false);
             }
             continue;
         }

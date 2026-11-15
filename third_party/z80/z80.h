@@ -59,6 +59,9 @@ struct z80 {
   uint32_t bus,io_at;
   unsigned (*wait)(void*,uint32_t); /* Pure query of the delay at a bus timestamp. */
   void (*before_store)(void*,uint16_t,uint32_t);
+  /* Stable, side-effect-free input matching the masked value for this many
+   * T-states after cyc. Zero disables port polling optimization. */
+  uint32_t (*port_span)(const z80*,uint16_t,uint8_t,uint8_t);
 };
 
 void z80_init(z80* const z);

@@ -505,23 +505,44 @@ static const uint8_t* repeat_code(const z80* z,unsigned length) {
   return page?page+offset:NULL;
 }
 
-/* The tape ROM's delay loops have no data accesses. Leave the final
- * iteration to the interpreter and keep the refresh register exact. */
-static void repeat_delay_loop(z80* z,unsigned budget,bool djnz) {
-  static const uint8_t wait_b[]={0x10,0xfe};
-  static const uint8_t wait_a[]={0x3d,0x20,0xfd};
-  const unsigned length=djnz?sizeof(wait_b):sizeof(wait_a);
-  const unsigned step=djnz?13:16;
-  const unsigned counter=djnz?z->b:z->a;
-  if(counter<5) return;
-  const uint8_t* code=repeat_code(z,length);
-  if(!code || memcmp(code,djnz?wait_b:wait_a,length)) return;
-  unsigned count=budget/step;
-  if(count>=counter) count=counter-1;
-  if(djnz) z->b=(uint8_t)(counter-count);
-  else z->a=dec(z,(uint8_t)(counter-count+1));
-  z->r=(z->r&128)|((z->r+count*(djnz?1:2))&127);
-  z->cyc+=count*step;z->bus=(uint32_t)z->cyc;
+/* DJNZ -2 has no data accesses. Leave its final iteration to the
+ * interpreter and keep the refresh register exact. */
+static void repeat_djnz(z80* z,unsigned budget) {
+  if(z->b<5) return;
+  const uint8_t* code=repeat_code(z,2);
+  if(!code || code[0]!=0x10 || code[1]!=0xfe) return;
+  unsigned count=budget/13;
+  if(count>=z->b) count=z->b-1;
+  z->b=(uint8_t)(z->b-count);
+  z->r=(z->r&128)|((z->r+count)&127);
+  z->cyc+=count*13;z->bus=(uint32_t)z->cyc;
+}
+
+/* Read loops in the 48K ROM until the next EAR edge or CPU slice. At the
+ * taken JR Z, INC B cannot wrap and both conditional returns stay untaken.
+ * An input span certifies the keyboard bit and the EAR level separately. */
+static void repeat_edge_poll(z80* z,unsigned budget) {
+  static const uint8_t loop[]={0x04,0xc8,0x3e,0x7f,0xdb,0xfe,0x1f,0xd0,0xa9,0xe6,0x20,0x28,0xf3};
+  const uint8_t* code=repeat_code(z,sizeof(loop));
+  if(!code || memcmp(code,loop,sizeof(loop))) return;
+  const unsigned span=z->port_span(z,0x7ffe,0x41,(uint8_t)(1+((z->c&0x20)<<1)));
+  if(budget>span) budget=span;
+  const uint32_t begin=(uint32_t)z->cyc;
+  unsigned elapsed=0,count=0;
+  while(budget-elapsed>=59 && count<255u-z->b) {
+    // The IN's first bus cycle starts at 23T. Both parts of port
+    // 7FFE are contended, even when the routine is sourced from ROM.
+    const uint32_t first=begin+elapsed+23;
+    const unsigned wait=z->wait(z->userdata,first);
+    const unsigned duration=59+wait+z->wait(z->userdata,first+1+wait);
+    if(duration>budget-elapsed) break;
+    elapsed+=duration;++count;
+  }
+  if(!count) return;
+  z->b=(uint8_t)(z->b+count);z->a=0;z->f=0x54;
+  z->r=(z->r&128)|((z->r+9*count)&127);
+  z->io_at=begin+elapsed-32;
+  z->cyc+=elapsed;z->bus=(uint32_t)z->cyc;
 }
 
 /* Batch the taken iterations of exact fill and verify/clear loops. The
@@ -886,7 +907,7 @@ void z80_init(z80* const z) {
   for(unsigned i=0;i<4;++i) { z->read_map[i]=NULL;z->write_map[i]=NULL; }
   for(unsigned i=0;i<64;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
   z->ldir_until=0;
-  z->wait=NULL;z->before_store=NULL;z->bus=z->io_at=0;
+  z->wait=NULL;z->before_store=NULL;z->port_span=NULL;z->bus=z->io_at=0;
 
   z->cyc = 0;
 
@@ -1222,7 +1243,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
 #if defined(MK61_TARGET_PICOCALC)
     if(z->wait && z->pc==pc && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
-      if(budget>=52) repeat_delay_loop(z,(unsigned)budget,true);
+      if(budget>=52) repeat_djnz(z,(unsigned)budget);
     }
 #endif
   } break; // djnz *
@@ -1235,11 +1256,12 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
     cond_jr(z, z->zf==verify);
 #if defined(MK61_TARGET_PICOCALC)
     const unsigned back=(uint16_t)(after-z->pc);
-    if(z->wait && (back==(verify?13:6) || (!verify && back==3)) && (!stop || !*stop)) {
+    if(z->wait && back==(verify?13:6) && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
-      if(back==3) {
-        if(budget>=64) repeat_delay_loop(z,(unsigned)budget,false);
-      } else if(budget>=4*32) repeat_memory_loop(z,(unsigned)budget,verify);
+      if(budget>=4*32) {
+        if(verify && z->pc==0x05ed && z->port_span) repeat_edge_poll(z,(unsigned)budget);
+        else repeat_memory_loop(z,(unsigned)budget,verify);
+      }
     }
 #endif
   } break; // jr nz/z, *

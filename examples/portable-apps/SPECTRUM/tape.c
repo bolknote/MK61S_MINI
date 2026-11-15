@@ -525,10 +525,22 @@ broken:
     return 0;
 }
 
+static uint32_t tape_port_span(const z80* cpu,uint16_t port,uint8_t mask,uint8_t match) {
+    const spectrum* machine=cpu->userdata;
+    if(port!=0x7ffe || machine->ear!=spectrum_tape_ear || machine->disk.mode ||
+       (!(machine->extensions&SPECTRUM_TURBOSOUND) && machine->sound.selected)) return 0;
+    const spectrum_tape* tape=machine->ear_context;
+    // A fault or pending Select block stops playback in spectrum_tape_ear.
+    if(!tape->playing || !tape->timed) return 0;
+    const uint8_t value=0xA0|machine->keys[7]|(tape->level?0x40:0);
+    const int32_t left=(int32_t)(tape->deadline-(uint32_t)cpu->cyc);
+    return (value&mask)==match && left>0?(uint32_t)left:0;
+}
+
 bool spectrum_tape_ear(void* context,const z80* cpu) {
     spectrum_tape* tape=context;
     if(!tape->playing) return false;
-    const spectrum* machine=cpu->userdata;
+    spectrum* machine=cpu->userdata;
     const uint32_t now=(uint32_t)cpu->cyc;
     if(!tape->timed) {
         // The BASIC keyboard scanner also reads FE. Start at the ROM tape
@@ -545,5 +557,6 @@ bool spectrum_tape_ear(void* context,const z80* cpu) {
         }
         tape->deadline+=duration;
     }
+    machine->cpu.port_span=tape_port_span;
     return tape->level;
 }

@@ -11,7 +11,7 @@ extern "C"
 {
 #endif
 
-#if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+#if defined(MK61_TARGET_PICOCALC) || (defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO)
   typedef uint8_t PSG_volume_t;
 #else
   typedef uint32_t PSG_volume_t;
