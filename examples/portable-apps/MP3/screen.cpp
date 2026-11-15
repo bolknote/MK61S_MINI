@@ -40,13 +40,11 @@ void clock_text(char (&text)[12], unsigned sec) {
 void Screen::begin(const mk61_app_services* api, uint8_t* pixels, uint8_t* raster) {
     services = api;
     strip = pixels;
+    this->raster = raster;
     record = raster;
     angle = 0;
     palette_ready = false;
-    const uint16_t colors[16] = {rgb(20,20,19), rgb(33,46,83), rgb(243,237,223), rgb(182,174,157),
-        rgb(239,209,142), rgb(57,47,33), rgb(12,11,10), rgb(17,16,15), rgb(26,24,22), rgb(39,35,32),
-        rgb(57,52,47), rgb(82,74,66), rgb(121,112,100), rgb(215,199,175), rgb(230,215,189), rgb(244,226,199)};
-    std::memcpy(palette, colors, sizeof(colors));
+    use_record();
     old_title[0] = old_artist[0] = 0;
     std::memset(title_mask, 0, sizeof(title_mask));
     uint8_t header[record_header_bytes];
@@ -57,6 +55,14 @@ void Screen::begin(const mk61_app_services* api, uint8_t* pixels, uint8_t* raste
         return;
     }
     for (unsigned i = 0; i < 64; ++i) record_palette[i] = header[4 + i * 2] | (header[5 + i * 2] << 8);
+}
+
+void Screen::use_record() {
+    tape = TapeView::none;
+    const uint16_t colors[16] = {rgb(20,20,19), rgb(33,46,83), rgb(243,237,223), rgb(182,174,157),
+        rgb(239,209,142), rgb(57,47,33), rgb(12,11,10), rgb(17,16,15), rgb(26,24,22), rgb(39,35,32),
+        rgb(57,52,47), rgb(82,74,66), rgb(121,112,100), rgb(215,199,175), rgb(230,215,189), rgb(244,226,199)};
+    std::memcpy(palette, colors, sizeof(colors));
 }
 
 uint32_t Screen::spi_hz() const {
@@ -132,25 +138,30 @@ void Screen::rect(int x, int y, unsigned width, unsigned height, unsigned color)
         for (unsigned col = 0; col < width; ++col) pixel(x + (int)col, row, color);
 }
 
-void Screen::text(int x, int y, const char* words, unsigned color, unsigned max_width, bool center) {
-    if (y + 8 <= top || y >= top + (int)strip_height) return;
+void Screen::text(int x, int y, const char* words, unsigned color, unsigned max_width, bool center, unsigned scale) {
+    if (y + (int)(8 * scale) <= top || y >= top + (int)strip_height) return;
     const unsigned length = (unsigned)std::strlen(words);
-    const unsigned count = length < max_width / 6 ? length : max_width / 6;
-    if (center) x -= (int)count * 3;
+    const unsigned columns = max_width / (6 * scale);
+    const unsigned count = length < columns ? length : columns;
+    if (center) x -= (int)(count * 3 * scale);
     for (unsigned i = 0; i < count; ++i) {
         mk61_service_glyph glyph{};
         if (length > count && i + 1 == count) {
-            for (int dot = 0; dot < 5; dot += 2) pixel(x + dot, y + 6, color);
+            for (unsigned dot = 0; dot < 5; dot += 2)
+                rect(x + (int)(dot * scale), y + (int)(6 * scale), scale, scale, color);
         } else {
             const uint32_t cp = mk8::codepoint((uint8_t)words[i]);
             if (services->call(MK61_SERVICE_FONT, 0, cp, sizeof(glyph), &glyph) ||
                 services->call(MK61_SERVICE_FONT, 0, '?', sizeof(glyph), &glyph)) {
                 for (unsigned row = 0; row < glyph.height && row < 8; ++row)
                     for (unsigned col = 0; col < glyph.width && col < 5; ++col)
-                        if (glyph.pixels[row] & (0x80 >> col)) pixel(x + (int)col, y + (int)row, color);
+                        if (glyph.pixels[row] & (0x80 >> col)) {
+                            if (scale == 1) pixel(x + (int)col, y + (int)row, color);
+                            else rect(x + (int)(col * scale), y + (int)(row * scale), scale, scale, color);
+                        }
             }
         }
-        x += 6;
+        x += (int)(6 * scale);
     }
 }
 
@@ -285,16 +296,54 @@ void Screen::paint_deck(unsigned y, unsigned position, unsigned duration, unsign
         text(188, 277, playing ? M8("Пробел Пауза") : M8("Пробел Играть"), light, 115);
         return;
     }
-    rect(12, 289, 296, 1, 11);
+    transport_keys(shuffle, repeat, false);
+}
+
+void Screen::transport_keys(bool shuffle, unsigned repeat, bool view_key) {
+    if (!view_key) rect(12, 289, 296, 1, 11);
     constexpr int centers[] = {39, 102, 169, 227, 283};
-    const char* keys[] = {"F1", "F2", "F3", "F4", "F5"};
+    const char* keys[] = {"F1", "F2", "F3", "F4", "F5", "V"};
     const char* labels[] = {M8("Файлы"), M8("Случайно"), repeat == 2 ? M8("Повтор 1") : repeat ? M8("Список") : M8("Повтор"),
-                            M8("Пред."), M8("След.")};
-    for (unsigned i = 0; i < 5; ++i) {
+                            M8("Пред."), M8("След."), M8("Вид")};
+    for (unsigned i = 0; i < (view_key ? 6U : 5U); ++i) {
+        const int x = view_key ? 26 + (int)i * 53 : centers[i];
         const unsigned color = ((i == 1 && shuffle) || (i == 2 && repeat)) ? accent : muted;
-        text(centers[i], 294, keys[i], color == accent ? accent : light, 24, true);
-        text(centers[i], 306, labels[i], color, 56, true);
+        text(x, 294, keys[i], color == accent ? accent : light, 24, true);
+        text(x, 306, labels[i], color, 54, true);
     }
+}
+
+void Screen::tape_status(unsigned position, unsigned duration, unsigned volume, bool playing,
+                         const char* status) {
+    const bool cassette = tape == TapeView::cassette;
+    const bool timer_visible = cassette ? top == 224 : top == 192 || top == 208;
+    if (timer_visible) {
+        char elapsed[12], total[12];
+        clock_text(elapsed, position);
+        clock_text(total, duration);
+        if (cassette) {
+            text(13, 232, elapsed, light, 45);
+            text(307 - (int)std::strlen(total) * 6, 232, total, muted, 45);
+        } else {
+            text(116, 201, elapsed, accent, 60, false, 2);
+            text(205 - (int)std::strlen(total) * 6, 210, total, muted, 30);
+        }
+        const unsigned width = cassette ? 202 : 96;
+        const unsigned left = cassette ? 59 : 112, y = cassette ? 234 : 223;
+        rect(left, y, width, 2, 7);
+        if (duration) rect(left, y, position >= duration ? width : (uint64_t(width) * position) / duration, 2, accent);
+    }
+    if (top < 240) return;
+    const unsigned status_y = cassette ? 256 : 262;
+    if (status) text(13, status_y, status, light, 206);
+    else {
+        text(cassette ? 13 : 266, cassette ? 256 : 243, M8("←→ 5 с"), muted, 50);
+        char level[14];
+        mk61_app_snprintf(services, level, sizeof(level), M8("↑↓ %u%%"), volume);
+        text(158, status_y, level, muted, 70, cassette);
+    }
+    const char* action = playing ? M8("Пробел Пауза") : M8("Пробел Играть");
+    text(307 - (int)std::strlen(action) * 6, status_y, action, light, 115);
 }
 
 void Screen::files_header(unsigned y, const char* directory) {

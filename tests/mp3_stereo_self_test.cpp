@@ -90,6 +90,13 @@ int main(int argc, char** argv) {
         return (uint16_t)value == value >> 16;
     }));
     assert(energy(mono, 0, 2, 8) > 1e10);
+    mp3::Loudness loudness;
+    assert(loudness.process(0xF8300FA0u) == 0xF0601F40u); // -2000 / 4000, +6 dB.
+    const auto limited = loudness.process(0xC0008000u);
+    assert((int16_t)limited == -32640 && (int16_t)(limited >> 16) == -16320);
+    assert(loudness.process(0) == 0);
+    for (unsigned sample = 0; sample < mp3::output_rate; ++sample) loudness.process(0);
+    assert(loudness.process(0xF8300FA0u) == 0xF0601F40u);
     mp3::StereoQueue queue{};
     queue.reset();
     queue.volume(50);

@@ -16,6 +16,7 @@ struct Workspace {
     Decoder decoder;
     StereoQueue queue;
     Resampler resampler;
+    Loudness loudness;
     uint16_t entries[max_entries], playlist[max_entries];
     uint8_t strip[screen_width * strip_height / 2];
 };
@@ -33,7 +34,7 @@ struct Player {
     unsigned tracks = 0, current = no_index, repeat = 0;
     mk61_service_file_info visible_entry;
     bool visible_entry_ok = false;
-    unsigned volume = 70, draw_y = screen_width, draw_end = screen_width, deck_second = UINT32_MAX;
+    unsigned volume = 100, draw_y = screen_width, draw_end = screen_width, deck_second = UINT32_MAX;
     unsigned read_page = 0, lcd_hz = 0, power_check = 0, next_frame = 0;
     unsigned record_frames = 0, animation_started = 0, animation_ms = 0;
     unsigned angle_phase = 0, angle_at = 0;
@@ -41,6 +42,7 @@ struct Player {
     bool strip_ready = false, scan_limit = false, shuffle = false, browsing = false, have_track = false,
          paused = false, output = false, playing = false, running = true, display_failed = false;
     bool deck_dirty = true, clock_running = false, have_animation_frames = false;
+    bool tape_pose_pending = false;
     uint8_t key_state[32]{};
 
     bool call_file(unsigned operation, const char* name, uint32_t offset, void* data, unsigned size) {
@@ -142,7 +144,7 @@ struct Player {
                         // The producer is the only writer; this snapshot
                         // gives a lower bound on the number of free slots.
                         if (queued < StereoQueue::capacity) {
-                            work->queue.push(frame);
+                            work->queue.push(work->loudness.process(frame));
                             ++enqueued;
                             ++queued;
                         } else {
@@ -174,6 +176,7 @@ struct Player {
         if (output) work->queue.discard();
         else work->queue.reset();
         work->resampler.reset();
+        work->loudness = {};
         const File file{this, read, duration.end};
         work->decoder.reset(file, duration.offset(at), duration.end);
         deck_second = UINT32_MAX;
@@ -382,7 +385,11 @@ struct Player {
                 if (!(pressed & mask)) continue;
                 pressed &= ~mask;
                 const int key = physical(i * 8 + bit);
-                if (browsing) file_key(key);
+                if ((key == MK61_APP_KEY_RAW_BASE + 'v' || key == MK61_APP_KEY_RAW_BASE + 'V') &&
+                    screen.tape_view() != TapeView::none) {
+                    const TapeView next = screen.tape_view() == TapeView::cassette ? TapeView::reel : TapeView::cassette;
+                    if (screen.select_tape(next)) redraw();
+                } else if (browsing) file_key(key);
                 else player_key(key);
             }
         }
@@ -393,6 +400,7 @@ struct Player {
         draw_end = screen_width;
         strip_ready = false;
         read_page = 0;
+        tape_pose_pending = true;
     }
     void refresh_deck() { deck_dirty = true; }
     void display_clock(unsigned now) {
@@ -401,7 +409,7 @@ struct Player {
         power_check = now + 500;
     }
     void animate(unsigned now) {
-        const bool running_now = playing && !browsing && screen.record;
+        const bool running_now = playing && !browsing && (screen.record || screen.tape_view() != TapeView::none);
         if (clock_running) angle_phase = (angle_phase + now - angle_at) % turn_ms;
         if (clock_running != running_now) {
             if (clock_running) animation_ms += now - animation_started;
@@ -448,13 +456,14 @@ struct Player {
         const unsigned now = mk61_api->millis_ms();
         animate(now);
         const unsigned position = have_track ? played_seconds() : 0;
+        const bool tape = screen.tape_view() != TapeView::none;
         if (draw_y == draw_end && !browsing) {
             if (deck_dirty || deck_second != position) {
-                redraw(record_height);
+                redraw(tape ? (paused ? screen.tape_top() : 192) : record_height);
                 deck_dirty = false;
             } else if (clock_running && (int32_t)(now - next_frame) >= 0) {
-                redraw();
-                draw_end = record_height;
+                redraw(tape ? screen.tape_top() : 0);
+                draw_end = tape ? screen.tape_end() : record_height;
                 // Finish each picture before starting another. Derive the
                 // angle from time so fast mode keeps the same rotation speed.
                 screen.angle = angle_phase * rotation_frames / turn_ms;
@@ -464,6 +473,37 @@ struct Player {
         if (draw_y == draw_end) return;
         if (playing && work->queue.queued() < StereoQueue::capacity / 2 && !work->decoder.eof) return;
         const unsigned y = draw_y;
+        if (tape && !browsing) {
+            if (tape_pose_pending) {
+                const uint32_t levels = playing ? __atomic_load_n(&work->queue.level, __ATOMIC_RELAXED) : 0;
+                screen.tape_pose(position, duration.seconds(), animation_ms + (clock_running ? now - animation_started : 0), levels);
+                tape_pose_pending = false;
+            }
+            if (read_page < 3) {
+                if (!screen.read_tape_band(y, read_page++)) {
+                    screen.use_record();
+                    message = M8("Оформление недоступно");
+                    redraw();
+                }
+                return;
+            }
+            if (!strip_ready) {
+                screen.paint_tape(y, metadata.title, metadata.artist, position, duration.seconds(), volume,
+                                  playing, shuffle, repeat, message);
+                strip_ready = true;
+            }
+            if (submit(screen.present(y, strip_height))) {
+                strip_ready = false;
+                read_page = 0;
+                draw_y += strip_height;
+                if (draw_y == screen_width) deck_second = position;
+                else if (clock_running && draw_y == screen.tape_end()) {
+                    have_animation_frames = true;
+                    ++record_frames;
+                }
+            }
+            return;
+        }
         if (!browsing && y < record_height) {
             const unsigned height = screen.record ? record_strip_height : strip_height;
             if (draw_record()) {
@@ -546,12 +586,12 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     app.work->queue.volume(app.volume);
 
     mk61_service_buffer art{};
-    (void)mk61_app_buffer_acquire(s, record_frame_bytes, MK61_BUFFER_DIRECT, &art);
+    (void)mk61_app_buffer_acquire(s, tape_chunk_bytes, MK61_BUFFER_DIRECT, &art);
     app.screen.begin(s, app.work->strip, art.data);
-    if (art.handle && !app.screen.record) mk61_app_buffer_release(s, art.handle);
+    if (!app.screen.select_tape(TapeView::cassette)) (void)app.screen.select_tape(TapeView::reel);
     if (id != UINT32_MAX) {
         if (!app.call_file(MK61_FILE_BYTES_PATH, nullptr, id, app.path, sizeof(app.path))) {
-            if (app.screen.record) mk61_app_buffer_release(s, art.handle);
+            if (art.handle) mk61_app_buffer_release(s, art.handle);
             mk61_app_buffer_release(s, memory.handle);
             return MK61_APP_INVALID_FILE;
         }

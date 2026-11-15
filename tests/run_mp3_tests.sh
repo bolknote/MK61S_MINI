@@ -25,3 +25,9 @@ done
   "$app/metadata.cpp" "$app/audio.cpp" "$work/"*.o -o "$work/test"
 "$work/test" "$work/stereo.mp3" "$work/mono.mp3"
 echo 'MP3: ID3v2.3/v2.4, CBR/VBR seek, real stereo channel separation, mono and volume passed.'
+
+"${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+  -I"$app" -I"$mad" -I"$root/code" -I"$root/sdk/portable/include" -I"$root/ports/picocalc" \
+  "$root/tests/mp3_tape_self_test.cpp" "$app/metadata.cpp" "$app/audio.cpp" "$app/screen.cpp" \
+  "$app/tape.cpp" "$work/"*.o -o "$work/tape-test"
+"$work/tape-test" "$app/CASSETTE.TV" "$app/REEL.TV"

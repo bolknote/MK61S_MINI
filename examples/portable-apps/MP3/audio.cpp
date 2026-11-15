@@ -96,6 +96,22 @@ void Resampler::advance(uint32_t current, unsigned source_rate) {
     have_previous = true;
 }
 
+uint32_t Loudness::process(uint32_t sample) {
+    const int left = (int16_t)sample, right = (int16_t)(sample >> 16);
+    const unsigned left_peak = left < 0 ? -left : left;
+    const unsigned right_peak = right < 0 ? -right : right;
+    const unsigned peak = left_peak > right_peak ? left_peak : right_peak;
+    // Allow up to +6 dB. A shared envelope preserves the stereo balance.
+    // A louder sample can reduce gain immediately; recovery takes hundreds of ms.
+    envelope -= (envelope + 8191) >> 13;
+    if (peak > envelope) envelope = peak;
+    constexpr unsigned unity = 256, limit = 32767 * unity;
+    if (!step || peak * gain > limit)
+        gain = envelope < 16384 ? 2 * unity : limit / envelope;
+    step = (step + 1) & 31;
+    return stereo(left * (int)gain / (int)unity, right * (int)gain / (int)unity);
+}
+
 // RP2040 needs only aligned atomic loads/stores on this SPSC queue. The IRQ
 // is the sole reader and must finish before read/write indices are reset.
 void StereoQueue::reset() {
@@ -106,6 +122,7 @@ void StereoQueue::reset() {
     __atomic_store_n(&separated, 0, __ATOMIC_RELAXED);
     __atomic_store_n(&finished, 0, __ATOMIC_RELAXED);
     __atomic_store_n(&state, MUTED, __ATOMIC_RELAXED);
+    __atomic_store_n(&level, 0, __ATOMIC_RELAXED);
 }
 unsigned StereoQueue::queued() const {
     return __atomic_load_n(&write, __ATOMIC_RELAXED) - __atomic_load_n(&read, __ATOMIC_ACQUIRE);
@@ -167,6 +184,8 @@ uint32_t StereoQueue::consume(void* context) {
         const unsigned separated = __atomic_load_n(&queue.separated, __ATOMIC_RELAXED);
         __atomic_store_n(&queue.separated, separated + 1, __ATOMIC_RELAXED);
     }
-    return stereo(left, right);
+    const auto output = stereo(left, right);
+    if (!(rendered & 31)) __atomic_store_n(&queue.level, output, __ATOMIC_RELAXED);
+    return output;
 }
 }

@@ -72,11 +72,12 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(reader.read(disk+relative),(target/'apps'/(name+'.APP')).read_bytes())
                 expected=['Disk/Programs/Spectrum/SPECTRUM.APP','Disk/Programs/Spectrum/48.rom',
                     'Disk/Programs/MP3/MP3.APP','Disk/Programs/MP3/RECORD.LP',
+                    'Disk/Programs/MP3/CASSETTE.TV','Disk/Programs/MP3/REEL.TV',
                     'Disk/Programs/Examples/PATTERN.wbmp','Disk/Programs/Examples/Sheets/BUDGET.mks',
                     'README.txt','README.md','Disk/Fonts/DejaVu-12.FMK','Disk/Fonts/DejaVu-14.FMK',
                     'licenses/ui-fonts/LICENSE-Ark-Pixel.txt','licenses/ui-fonts/LICENSE-DejaVu.txt']
                 for name in expected:self.assertIn(prefix+name,reader.namelist())
-                for name in ('MP3.APP','RECORD.LP','README.md','LIBMAD-LICENSE.txt'):
+                for name in ('MP3.APP','RECORD.LP','CASSETTE.TV','REEL.TV','README.md','LIBMAD-LICENSE.txt'):
                     self.assertEqual(reader.read(disk+'Programs/MP3/'+name),(target/'apps/MP3'/name).read_bytes())
                 hashes=json.loads(reader.read(prefix+f'bundle-sha256-{version}.json'))
                 for name,digest in hashes.items():

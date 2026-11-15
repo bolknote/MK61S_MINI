@@ -40,10 +40,15 @@ struct Resampler {
     void advance(uint32_t current, unsigned source_rate);
 };
 
+struct Loudness {
+    unsigned envelope = 0, gain = 512, step = 0;
+    uint32_t process(uint32_t sample);
+};
+
 struct StereoQueue {
     static constexpr unsigned capacity = 1024;
     enum State : uint32_t { MUTED, PLAYING, DISCARD };
-    alignas(4) uint32_t write, read, underruns, rendered, separated, gain, finished, state;
+    alignas(4) uint32_t write, read, underruns, rendered, separated, gain, finished, state, level;
     uint32_t samples[capacity];
 
     // Called by the producer only, with the consumer stopped when resetting.
