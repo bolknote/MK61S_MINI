@@ -75,9 +75,14 @@ static inline bool bus_timed(const z80* z) {
  * Read/write views must already be hot; a clean cached page traps its first
  * store before it becomes writable here. Keep forward-overlap semantics and
  * reject a destination that can modify either opcode byte through an alias. */
-static unsigned block_copy(z80* z,unsigned budget) {
-    if(z->nmi_pending || z->iff_delay || z->halted || (z->int_pending && z->iff1)) return 0;
-    const unsigned pc=z->pc,offset=pc&16383;
+static void block_copy(z80* z) {
+    const unsigned pc=z->pc,hl=z->hl,de=z->de,mask=z->contention_mask;
+    const bool timed=bus_timed(z);
+    const bool contended=timed && ((pc&mask)==0x4000 || (hl&mask)==0x4000 || (de&mask)==0x4000);
+    const uint32_t end=contended?z->ldir_contended_until:z->ldir_until;
+    const int32_t budget=(int32_t)(end-(uint32_t)z->cyc);
+    if(budget<4*21 || z->nmi_pending || z->iff_delay || z->halted || (z->int_pending && z->iff1)) return;
+    const unsigned offset=pc&16383;
     const uint8_t* code=z->read_map[pc>>14];
     unsigned code_left=16384-offset;
     if(code) code+=offset;
@@ -85,11 +90,10 @@ static unsigned block_copy(z80* z,unsigned budget) {
         code=z->read_pages[pc>>10];code_left=1024-(pc&1023);
         if(code) code+=pc&1023;
     }
-    if(!code || code_left<2 || code[0]!=0xED || code[1]!=0xB0) return 0;
-    if(z->m1 && ((uint16_t)(pc-z->m1_start)<=z->m1_limit || (uint16_t)(pc+1-z->m1_start)<=z->m1_limit)) return 0;
-    unsigned count=budget/21;
+    if(!code || code_left<2 || code[0]!=0xED || code[1]!=0xB0) return;
+    if(z->m1 && ((uint16_t)(pc-z->m1_start)<=z->m1_limit || (uint16_t)(pc+1-z->m1_start)<=z->m1_limit)) return;
+    unsigned count=(unsigned)budget/21;
     if(count>z->bc) count=z->bc;
-    const unsigned hl=z->hl,de=z->de;
     const uint8_t* from=z->read_map[hl>>14];
     uint8_t* to=z->write_map[de>>14];
     unsigned src_left=16384-(hl&16383),dst_left=16384-(de&16383);
@@ -103,13 +107,14 @@ static unsigned block_copy(z80* z,unsigned budget) {
         to=z->write_pages[de>>10];dst_left=1024-(de&1023);
         if(to) to+=de&1023;
     }
-    if(!from || !to) return 0;
+    if(!from || !to) return;
     if(count>src_left) count=src_left;
     if(count>dst_left) count=dst_left;
-    if(count<4) return 0;
+    if(count<4) return;
     const uintptr_t src=(uintptr_t)from,dst=(uintptr_t)to,instruction=(uintptr_t)code;
-    if(dst<instruction+2 && dst+count>instruction) return 0;
-    if((src>=dst && src-dst>=count) || (dst>=src && dst-src>=count)) memcpy(to,from,count);
+    if(dst<instruction+2 && dst+count>instruction) return;
+    if(dst==src+1) memset(to,*from,count);
+    else if((src>=dst && src-dst>=count) || (dst>=src && dst-src>=count)) memcpy(to,from,count);
     else for(unsigned i=0;i<count;++i) to[i]=from[i];
     const uint8_t result=(uint8_t)(to[count-1]+z->a);
     z->hl=(uint16_t)(hl+count);z->de=(uint16_t)(de+count);z->bc-=count;
@@ -118,8 +123,7 @@ static unsigned block_copy(z80* z,unsigned budget) {
     z->mem_ptr=(uint16_t)(pc+1);
     const unsigned cycles=21*count-(z->bc?0:5);
     z->cyc+=cycles;if(!z->bc) z->pc+=2;
-    if(bus_timed(z)) z->bus=(uint32_t)z->cyc;
-    return cycles;
+    if(timed) z->bus=(uint32_t)z->cyc;
 }
 
 
@@ -945,7 +949,7 @@ void z80_init(z80* const z) {
   z->m1_start=0;z->m1_limit=65535;
   for(unsigned i=0;i<4;++i) { z->read_map[i]=NULL;z->write_map[i]=NULL; }
   for(unsigned i=0;i<64;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
-  z->ldir_until=0;
+  z->ldir_until=z->ldir_contended_until=0;
   z->wait=NULL;z->before_store=NULL;z->port_span=NULL;z->bus=z->io_at=0;z->contention_mask=0xc000;
 
   z->cyc = 0;
@@ -1581,8 +1585,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
       z->pc -= 2;
       z->cyc += 5;
       z->mem_ptr = z->pc + 1;
-      const int32_t budget=(int32_t)(z->ldir_until-(uint32_t)z->cyc);
-      if(z->ldir_until && budget>0) (void)block_copy(z,(unsigned)budget);
+      if(z->ldir_until) block_copy(z);
     }
   } break; // ldir
 

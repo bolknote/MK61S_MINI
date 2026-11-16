@@ -53,8 +53,8 @@ struct z80 {
   const uint8_t* read_pages[64];
   uint8_t* write_pages[64];
   /* Optional LDIR batching deadline in virtual cycles; zero disables it.
-   * Caller caps it before the next interrupt edge and clears it after a run. */
-  uint32_t ldir_until;
+   * A batch touching a contended address also ends before ULA contention. */
+  uint32_t ldir_until,ldir_contended_until;
   /* Optional bus timing. BUS starts at the beginning of the instruction;
    * cyc retains the instruction total, including inserted wait states. */
   uint32_t bus,io_at;

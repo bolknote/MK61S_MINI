@@ -190,6 +190,7 @@ int main(void) {
         left[0x4000]=0xED;left[0x4001]=0xB0;left[0x4002]=0x76;
         memcpy(right,left,sizeof(left));
         a.pentagon=b.pentagon=(test&1)!=0;
+        if(test&4) a.cpu.contention_mask=b.cpu.contention_mask=0x4000; // Switchable odd 128K bank.
         const unsigned frame=spectrum_frame_cycles(&a),phase=phases[(test/2)%(sizeof(phases)/sizeof(*phases))];
         a.frame_tstates=b.frame_tstates=phase>=69800?frame-69888+phase:phase;
         a.cpu.pc=b.cpu.pc=0x8000;a.cpu.sp=b.cpu.sp=0xFF00;

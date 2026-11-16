@@ -52,9 +52,12 @@ bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectr
                !capture_range(s,saved,bank-1,plane+0x1800,2048,work)) return false;
         return true;
     }
-    for(unsigned n=mode==SPECTRUM_VIDEO_HICOLOR?1:0;n<2;++n) {
-        const unsigned page=bank-1+n;
-        if(!capture_range(s,saved,page,0,14336,work)) return false;
+    if(!SPECTRUM_HAS_PENTAGON || mode==SPECTRUM_VIDEO_HICOLOR)
+        return capture_range(s,saved,bank,0,14336,work);
+    for(unsigned page=bank-1;page<=bank;++page) {
+        // The two packed planes have a 2 KiB gap that the renderer skips.
+        if(!capture_range(s,saved,page,0,SPECTRUM_BITMAP_BYTES,work) ||
+           !capture_range(s,saved,page,8192,SPECTRUM_BITMAP_BYTES,work)) return false;
     }
     return true;
 }

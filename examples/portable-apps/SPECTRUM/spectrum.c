@@ -311,13 +311,14 @@ static void ldir_deadline(spectrum* s,uint32_t phase,uint32_t frame,uint32_t lef
     const unsigned irq=sinclair128?36:32;
     uint32_t limit=phase<irq?irq-phase:frame-phase;
     if(limit>left) limit=left;
+    s->cpu.ldir_until=s->sample_rate || s->cpu.before_store || !limit?0:(uint32_t)s->cpu.cyc+limit;
     const unsigned start=sinclair128?ULA_128_CONTENTION_START:ULA_CONTENTION_START;
-    if(s->cpu.wait && phase<start+192*(sinclair128?228:224)) {
-        // Bulk LDIR omits individual bus accesses and must stop before contention.
+    if(phase<start+192*(sinclair128?228:224)) {
+        // Only batches that touch contended addresses need the shorter budget.
         const uint32_t free_cycles=phase<start?start-phase:0;
         if(limit>free_cycles) limit=free_cycles;
     }
-    s->cpu.ldir_until=s->sample_rate || s->cpu.before_store || !limit?0:(uint32_t)s->cpu.cyc+limit;
+    s->cpu.ldir_contended_until=(uint32_t)s->cpu.cyc+limit;
 }
 
 uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
@@ -384,7 +385,7 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
             }
         }
     }
-    s->frame_tstates=phase;s->cpu.ldir_until=0;
+    s->frame_tstates=phase;s->cpu.ldir_until=s->cpu.ldir_contended_until=0;
     spectrum_sound_publish(s);
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     // Quiet screen regions still have a beam. Capture them a CPU slice

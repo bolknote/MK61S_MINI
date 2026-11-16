@@ -544,6 +544,20 @@ static void snapshot_test(unsigned model) {
         assert(spectrum_video_mode(&machine)==SPECTRUM_VIDEO_16C);
         assert(spectrum_video_strip(&machine,1,0,lcd,&frame));
         assert(frame.width==256 && frame.height==64 && lcd[0]==0x92 && lcd[1]==0x65);
+        uint8_t expected[256*64/2];
+        bytes copy={packed,2*SPECTRUM_BANK_BYTES};
+        const spectrum_memory_io capture_io={&copy,read_bytes,write_bytes,clear_bytes};
+        spectrum_video_snapshot captured={.io=&capture_io};
+        memset(packed,0xcd,copy.size);
+        assert(spectrum_video_capture(&machine,SPECTRUM_VIDEO_16C,lcd,&captured));
+        for(unsigned bank=0;bank<2;++bank) for(unsigned offset=6144;offset<8192;++offset)
+            assert(packed[bank*SPECTRUM_BANK_BYTES+offset]==0xcd);
+        for(unsigned strip=0;strip<3;++strip) {
+            assert(spectrum_video_strip(&machine,1,strip,lcd,&frame));
+            memcpy(expected,lcd,sizeof(expected));
+            assert(spectrum_video_snapshot_strip(&machine,&captured,1,strip,lcd,&frame));
+            assert(!memcmp(expected,lcd,sizeof(expected)));
+        }
         assert(!spectrum_video_strip(&machine,64,SPECTRUM_WIDE_STRIPS,lcd,&frame));
         wide_scanlines();
     }
