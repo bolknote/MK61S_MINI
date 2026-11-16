@@ -18,7 +18,8 @@ from tools.firmware.picocalc.build_picocalc import compiler_bin
 APP = ROOT / "examples/portable-apps/MP3"
 MAD = ROOT / "third_party/libmad"
 MAD_SOURCES = ("bit", "fixed", "frame", "huffman", "layer3", "stream", "synth", "timer")
-SD_FILES = ("MP3.APP", "RECORD.LP", "CASSETTE.TV", "REEL.TV", "README.md", "LIBMAD-LICENSE.txt")
+SD_FILES = ("MP3.APP", "RECORD.LP", "CASSETTE.TV", "REEL.TV", "README.md",
+            "LIBMAD-LICENSE.txt", "RP2040-LICENSE.txt")
 
 
 def build(toolchain: Path, work: Path, output: Path, packer: Path | None) -> None:
@@ -39,10 +40,11 @@ def build(toolchain: Path, work: Path, output: Path, packer: Path | None) -> Non
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
                "--target", "picocalc-pico-h", "--name", "MP3",
                "--arm-toolchain-bin", str(toolchain), "--output-dir", str(work),
-               "--handled-magic", "A3", "--optimize-size", "--include", str(MAD),
+               "--handled-magic", "A3", "--optimize-size", "--shared-runtime", "--include", str(MAD),
                "--library", str(lib)]
     for name in ("main.cpp", "metadata.cpp", "audio.cpp", "screen.cpp", "tape.cpp"):
         command.extend(["--source", str(APP / name)])
+    command.extend(["--source", str(ROOT / "sdk/portable/rp2040_divide.S")])
     if packer:
         command.extend(["--packer", str(packer)])
     subprocess.run(command, check=True, cwd=ROOT)
@@ -52,6 +54,7 @@ def build(toolchain: Path, work: Path, output: Path, packer: Path | None) -> Non
     for name in ("RECORD.LP", "CASSETTE.TV", "REEL.TV", "README.md"):
         shutil.copy2(APP / name, output / name)
     shutil.copy2(MAD / "COPYING", output / "LIBMAD-LICENSE.txt")
+    shutil.copy2(ROOT / "third_party/rp2040-softfloat/LICENSE.TXT", output / "RP2040-LICENSE.txt")
     report = json.loads((work / "MP3.json").read_bytes())
     report["files"] = {name: hashlib.sha256((output / name).read_bytes()).hexdigest() for name in SD_FILES}
     report["app_sha256"] = report["files"]["MP3.APP"]

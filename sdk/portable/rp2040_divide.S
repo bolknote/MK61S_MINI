@@ -3,7 +3,7 @@
  *
  * Unsigned 32-bit EABI divider, adapted from Pico SDK divider_hardware.S
  * and hardware/divider_helper.S for the standalone RP2040 APP build.
- * License: ../../../third_party/rp2040-softfloat/LICENSE.TXT */
+ * License: ../../third_party/rp2040-softfloat/LICENSE.TXT */
 .syntax unified
 .cpu cortex-m0plus
 .thumb

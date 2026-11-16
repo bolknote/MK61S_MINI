@@ -14,8 +14,7 @@ sys.path.insert(0, str(ROOT))
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 from dev.tools.explorer_icons import copy_icon
 
-SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "display_pages.c", "vm.c", "audio.c", "text.c",
-           "rp2040_divide.S"]
+SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "display_pages.c", "vm.c", "audio.c", "text.c"]
 
 
 def main():
@@ -30,6 +29,7 @@ def main():
                "--arm-toolchain-bin", str(compiler_bin(args.toolchain)), "--output-dir", str(args.build_dir)]
     for name in SOURCES:
         command += ["--source", str(src / name)]
+    command += ["--source", str(ROOT / "sdk/portable/rp2040_divide.S")]
     subprocess.run(command, check=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(args.build_dir / "ANOTHER.APP", args.output_dir / "ANOTHER.APP")

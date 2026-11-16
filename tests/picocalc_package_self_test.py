@@ -79,7 +79,8 @@ class PackageTests(unittest.TestCase):
                     'README.txt','README.md','Disk/Fonts/DejaVu-12.FMK','Disk/Fonts/DejaVu-14.FMK',
                     'licenses/ui-fonts/LICENSE-Ark-Pixel.txt','licenses/ui-fonts/LICENSE-DejaVu.txt']
                 for name in expected:self.assertIn(prefix+name,reader.namelist())
-                for name in ('MP3.APP','RECORD.LP','CASSETTE.TV','REEL.TV','README.md','LIBMAD-LICENSE.txt'):
+                for name in ('MP3.APP','RECORD.LP','CASSETTE.TV','REEL.TV','README.md',
+                             'LIBMAD-LICENSE.txt','RP2040-LICENSE.txt'):
                     self.assertEqual(reader.read(disk+'Programs/MP3/'+name),(target/'apps/MP3'/name).read_bytes())
                 hashes=json.loads(reader.read(prefix+f'bundle-sha256-{version}.json'))
                 for name,digest in hashes.items():
