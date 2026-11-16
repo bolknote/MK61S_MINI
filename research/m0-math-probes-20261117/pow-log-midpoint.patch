@@ -1,0 +1,117 @@
+--- a/code/native_eabi_m0_pow_interval.inc
++++ b/code/native_eabi_m0_pow_interval.inc
+@@ -120,8 +120,7 @@
+   static I ln2() {
+     B lo;for(unsigned i=0;i<F;++i) lo.w[i]=ln2_1024[(1024-P)/16+i];return {lo,increment(lo)};
+   }
+-  static I log_mantissa(U significand) {
+-    const U hidden=U(1)<<52;
++  static I log_mantissa(U significand,U hidden=U(1)<<52) {
+     const I t=ratio(significand-hidden,significand+hidden);
+     const I square={product(t.lo,t.lo,false),product(t.hi,t.hi,true)};
+     I power=t,sum{};
+--- a/code/native_eabi_m0_cr.cpp
++++ b/code/native_eabi_m0_cr.cpp
+@@ -144,4 +144,8 @@
+ #undef UINT128_T
+ #undef roundeven_finite
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#include "pow_midpoint_probe.inc"
+ #endif
++
++#endif
+--- a/ports/picocalc/CMakeLists.txt
++++ b/ports/picocalc/CMakeLists.txt
+@@ -265,3 +265,6 @@
+
+ # Optional LLM coprocessor transport; independent of the audio UART engine.
+ target_sources(mk61s-picocalc-pico-h PRIVATE ai_m3.cpp "${MK61_ROOT}/sdk/coproc/stm3_client.c")
++
++target_link_options(mk61s-picocalc-pico-h PRIVATE
++    "-Wl,-u,mk61_probe_pow_logcmp512" "-Wl,-u,mk61_probe_pow_logcmp1024")
+--- /dev/null
++++ b/code/pow_midpoint_probe.inc
+@@ -0,0 +1,82 @@
++// Research only. Given the encodings L and L+1, select which side of their
++// RNE boundary contains |x|^y. Return -1 for <=L after rounding, 1 for >L,
++// 0 when the directed enclosures overlap, and 2 for out-of-scope inputs.
++#include "native_eabi_m0_pow_interval.inc"
++#include "native_eabi_m0_pow_exact.inc"
++
++namespace pow_midpoint_probe {
++using U = uint64_t;
++
++template<unsigned P> struct Probe {
++    using Fixed = m0_pow_interval::Fixed<P>;
++    using Interval = typename Fixed::I;
++
++    static Interval log_magnitude(U significand, int exponent, unsigned fraction_width) {
++        const Interval l2=Fixed::ln2();
++        const Interval mantissa=Fixed::log_mantissa(significand,U(1)<<fraction_width);
++        if(exponent<0) {
++            return {Fixed::subtract(Fixed::times(l2.lo,unsigned(-exponent)),mantissa.hi),
++                    Fixed::subtract(Fixed::times(l2.hi,unsigned(-exponent)),mantissa.lo)};
++        }
++        return {Fixed::add(Fixed::times(l2.lo,unsigned(exponent)),mantissa.lo),
++                Fixed::add(Fixed::times(l2.hi,unsigned(exponent)),mantissa.hi)};
++    }
++
++    static Interval shift_down(const Interval& x, int amount) {
++        return {Fixed::shift(x.lo,-amount,false),Fixed::shift(x.hi,-amount,true)};
++    }
++
++    static int compare(U x, U y, U lower) {
++        constexpr U mask=UINT64_C(0x7FFFFFFFFFFFFFFF);
++        constexpr U one=UINT64_C(0x3FF0000000000000);
++        constexpr U inf=UINT64_C(0x7FF0000000000000);
++        x&=mask;
++        const U ym=y&mask;
++        if(!x || x>=inf || ym>=inf || lower>=inf) return 2;
++        if(x==one || !ym) return one<=lower?-1:1;
++        const bool negative_q=(x<one)^bool(y>>63);
++        const bool negative_m=lower<one;
++        if(negative_q!=negative_m) return negative_q?-1:1;
++        if(ym>=UINT64_C(0x43E0000000000000)) return negative_q?-1:1;
++
++        U rounded;
++        if(Fixed::exact_boundary(x,y,rounded)) return rounded<=lower?-1:1;
++
++        U midpoint;
++        int midpoint_exponent;
++        if(!m0_pow_exact::midpoint(lower,lower+1,midpoint,midpoint_exponent)) return 2;
++        // Normalize the exact integer, preserving all 54 bits of a normal
++        // midpoint and all subnormal cases including zero/minsub.
++        while(midpoint<(U(1)<<53)) {
++            midpoint<<=1;
++            --midpoint_exponent;
++        }
++        midpoint_exponent+=53;
++
++        U sx,sy;
++        int ex,ey;
++        Fixed::normalize(x,sx,ex);
++        Fixed::normalize(ym,sy,ey);
++
++        const Interval log_x=log_magnitude(sx,ex,52);
++        Interval q={Fixed::times(log_x.lo,sy),Fixed::times(log_x.hi,sy)};
++        Interval m=log_magnitude(midpoint,midpoint_exponent,53);
++        // Keep both intermediates in range by moving a positive length
++        // on the left to a directed right shift on the right.
++        if(ey>52) m=shift_down(m,ey-52);
++        else q=shift_down(q,52-ey);
++        if(Fixed::compare(q.hi,m.lo)<0) return negative_q?1:-1;
++        if(Fixed::compare(q.lo,m.hi)>0) return negative_q?-1:1;
++        return 0;
++    }
++};
++}
++
++extern "C" __attribute__((used,retain,externally_visible,noinline))
++int mk61_probe_pow_logcmp512(uint64_t x,uint64_t y,uint64_t lower) {
++    return pow_midpoint_probe::Probe<512>::compare(x,y,lower);
++}
++extern "C" __attribute__((used,retain,externally_visible,noinline))
++int mk61_probe_pow_logcmp1024(uint64_t x,uint64_t y,uint64_t lower) {
++    return pow_midpoint_probe::Probe<1024>::compare(x,y,lower);
++}
