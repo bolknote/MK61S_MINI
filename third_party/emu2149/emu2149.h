@@ -23,6 +23,10 @@ extern "C"
     /* Volume Table */
     PSG_volume_t *voltbl;
 
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+    /* Derived locally and kept before the serialized PSG body. */
+    uint32_t fast_triangle;
+#endif
     uint8_t reg[0x20];
     int32_t out;
 
@@ -90,6 +94,9 @@ extern "C"
    * and each outer channel gain two, matching mono for equal A/B/C levels. */
   void PSG_calcStereo (PSG *, int32_t stereo[2], unsigned layout);
   void PSG_calcStereo_reference (PSG *, int32_t stereo[2], unsigned layout);
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  void PSG_refreshTriangle(PSG*);
+#endif
   void PSG_setVolumeMode (PSG * psg, int type);
   uint32_t PSG_setMask (PSG *, uint32_t mask);
   uint32_t PSG_toggleMask (PSG *, uint32_t mask);

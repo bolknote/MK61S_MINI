@@ -1,11 +1,10 @@
 /* Native Cortex-M3 module; no peripherals, heap, Flash writes or host pointers. */
 #include "m3_audio_protocol.h"
 #include "stm3_module.h"
-#include "pcm_repeat.h"
 #include <stdbool.h>
 #include <string.h>
 #if defined(__GNUC__) && !defined(__clang__)
-#define M3_COLD __attribute__((optimize("Os")))
+#define M3_COLD __attribute__((optimize("Oz")))
 #else
 #define M3_COLD
 #endif
@@ -25,7 +24,7 @@ typedef struct {
 static sound_state synth;
 #if defined(SPECTRUM_M3_SILENT_BATCH) && SPECTRUM_M3_SILENT_BATCH
 #if defined(__GNUC__) && !defined(__clang__)
-__attribute__((noinline,optimize("Os")))
+__attribute__((noinline,optimize("Oz")))
 #endif
 static bool advance_silent_second(unsigned samples) {
     PSG* p=&synth.chips[1];
@@ -63,6 +62,9 @@ static M3_COLD bool state_valid(const uint8_t* bytes) {
            synth.chips[i].clk_div || synth.chips[i].base_incr!=(1u<<24) || synth.chips[i].realstep!=1750000 ||
            synth.chips[i].psgstep!=200000 || synth.chips[i].psgtime>=200000 || synth.chips[i].env_ptr>=32 ||
            synth.chips[i].out < -32768 || synth.chips[i].out>32767) return false;
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+        PSG_refreshTriangle(&synth.chips[i]);
+#endif
     }
     return true;
 }
@@ -178,15 +180,39 @@ M3_COLD static uint32_t render_step(stm3_job* restrict job) {
 
 #if defined(SPECTRUM_M3_REPEAT) && SPECTRUM_M3_REPEAT
 #if defined(__GNUC__) && !defined(__clang__)
-__attribute__((noinline,optimize("Os")))
+__attribute__((noinline,optimize("Oz")))
 #endif
 static void pack_repeat(stm3_job* job) {
     const unsigned n=job->input[5];
     if(!synth.pwm8 || !synth.layout || job->output_capacity<256+2*n)return;
-    const unsigned used=stm3_pcm_repeat_encode(job->output+256,job->output+8,n);
-    if(used && used<2*n) {
-        memcpy(job->output+8,job->output+256,used);
-        spectrum_m3_put32(job->output,0x334d5750u);job->output_bytes=8+used;
+    // A clamped int16 sample at gain <=1000 produces duty in [64,191],
+    // so a literal never needs the escape and the encoder can work in place.
+    uint8_t* write=job->output+8;
+    const uint8_t* read=write;
+    const uint8_t* const end=read+2*n;
+    uint16_t previous=0x8080u;
+    while(read<end) {
+        uint16_t pair;
+        __builtin_memcpy(&pair,read,sizeof(pair));
+        read+=2;
+        if(pair==previous) {
+            unsigned run=1;
+            while(run<63 && read<end) {
+                __builtin_memcpy(&pair,read,sizeof(pair));
+                if(pair!=previous)break;
+                read+=2;
+                ++run;
+            }
+            *write++=(uint8_t)(run==1?0:run);
+        } else {
+            __builtin_memcpy(write,&pair,sizeof(pair));
+            write+=2;
+            previous=pair;
+        }
+    }
+    if(write<end) {
+        spectrum_m3_put32(job->output,0x334d5750u);
+        job->output_bytes=(uint32_t)(write-job->output);
     }
 }
 #endif
@@ -325,8 +351,10 @@ M3_COLD uint32_t module_entry(uint32_t op,const stm3_api* api,stm3_job* job) {
 #endif
         return STM3_MORE;
     }
-    if(op!=STM3_STEP || command!=SPECTRUM_M3_RENDER || !synth.configured ||
+    /* The loader keeps both job arenas fixed through STEP. INIT has already
+     * checked all event offsets and the output capacity for this job. */
+    if(op!=STM3_STEP || command!=SPECTRUM_M3_RENDER || !synth.configured || job->input_bytes<11 ||
        (spectrum_m3_get32(job->input)==SPECTRUM_M3_AUDIO_V2_MAGIC)!=synth.extended ||
-       !render_events(job) || job->progress>=job->input[5])return STM3_INVALID;
+       job->progress>=job->input[5])return STM3_INVALID;
     return render_measured(api,job,false);
 }

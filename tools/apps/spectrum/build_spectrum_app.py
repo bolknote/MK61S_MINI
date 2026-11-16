@@ -121,7 +121,7 @@ def main():
         command += ["--source", str(ROOT / source)]
     subprocess.run(command, check=True)
     copy_assets(args.output_dir)
-    sound_module=build_sound_module(args.build_dir/'m3',toolchain=args.toolchain,optimization='-O2',
+    sound_module=build_sound_module(args.build_dir/'m3',toolchain=args.toolchain,optimization='-Os',
         fast_init=120,slice_samples=16,step_budget_us=1250,init_budget_us=1250,silent_batch=True,
         repeat=True)
     shutil.copy2(sound_module['package'],args.output_dir/'AY.S3M')

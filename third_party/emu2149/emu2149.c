@@ -11,6 +11,7 @@
  * - MSX-Datapack   -- 1991 ASCII Corp.
  * - AY-3-8910 data sheet
  */
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -140,6 +141,9 @@ PSG_setMask (PSG *psg, uint32_t mask)
   {
     ret = psg->mask;
     psg->mask = mask;
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+    PSG_refreshTriangle(psg);
+#endif
   }  
   return ret;
 }
@@ -152,6 +156,9 @@ PSG_toggleMask (PSG *psg, uint32_t mask)
   {
     ret = psg->mask;
     psg->mask ^= mask;
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+    PSG_refreshTriangle(psg);
+#endif
   }
   return ret;
 }
@@ -161,6 +168,9 @@ PSG_reset (PSG * psg)
 {
   int i;
 
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  psg->fast_triangle=0;
+#endif
   psg->base_count = 0;
 
   for (i = 0; i < 3; i++)
@@ -387,7 +397,14 @@ static void advance_envelope(PSG* psg,unsigned ticks)
   }
 }
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Oz")))
+#endif
+static uint32_t advance_noise(uint32_t seed,unsigned shifts)
+#else
 static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t seed,unsigned shifts)
+#endif
 {
   while(shifts) {
     /* During these shifts feedback cannot reach the consumed low bits.
@@ -400,7 +417,7 @@ static inline __attribute__((always_inline)) uint32_t advance_noise(uint32_t see
 }
 #endif
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
-__attribute__((noinline,optimize("Os")))
+__attribute__((noinline,optimize("Oz")))
 #endif
 static void advance_state(PSG* psg,unsigned ticks)
 {
@@ -466,12 +483,18 @@ static bool weighted_eligible(const PSG* psg,unsigned ticks)
 #endif
   return psg->env_ptr<32;
 }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+static uint32_t tone_edge(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
+#else
 static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
+#endif
 {
   uint16_t count=psg->count[channel];const uint16_t period=psg->freq[channel];
   unsigned edge=psg->edge[channel];uint32_t bits=0;
 #if defined(EMU2149_M3_AUDIO) && EMU2149_M3_AUDIO
-  // With no tone edge in this sample, only the counter changes.
   const unsigned total=count+ticks;
   if(total<period) {
     psg->count[channel]=(uint16_t)total;
@@ -487,13 +510,21 @@ static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
       if(edge)bits^=all;
       count=(uint16_t)(total-period);edge^=1;
     } else {
-      /* Internal tick i observes phase count+i+1. Short square waves fit
-       * in a32-bit word; M3 UDIV advances the final phase exactly. */
+      /* Internal tick i observes phase count+i+1. M3 UDIV advances the
+       * final phase exactly. */
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+      /* The fixed-rate mixer uses 8 or 9 ticks. For period 8, the only
+       * possible index beyond this word is tick 16, where the wave is low. */
+      static const uint16_t waves[8]={0xaaaa,0xcccc,0x8e38,0xf0f0,0x83e0,0x0fc0,0x3f80,0xff00};
+      bits=(waves[period-1]>>(count+1))&all;
+#else
       static const uint32_t waves[16]={0,0xaaaaaaaau,0xccccccccu,0x38e38e38u,
         0xf0f0f0f0u,0x3e0f83e0u,0xc0fc0fc0u,0x0fe03f80u,0xff00ff00u,
         0xf803fe00u,0xc00ffc00u,0x003ff800u,0x00fff000u,0x03ffe000u,
         0x0fffc000u,0x3fff8000u};
-      bits=(waves[period]>>(count+1))&all;if(edge)bits^=all;
+      bits=(waves[period]>>(count+1))&all;
+#endif
+      if(edge)bits^=all;
       const unsigned edges=total/period;
       count=(uint16_t)(total-edges*period);edge^=edges&1;
     }
@@ -508,6 +539,18 @@ static uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
   }
   psg->count[channel]=count;psg->edge[channel]=(uint8_t)edge;return bits;
 }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+/* Keep the frequent no-edge case in the generic mixer's channel loop. */
+static inline __attribute__((always_inline)) uint32_t tone_mask(PSG* psg,unsigned channel,unsigned ticks,uint32_t all)
+{
+  const unsigned next=psg->count[channel]+ticks;
+  if(next<psg->freq[channel]) {
+    psg->count[channel]=(uint16_t)next;
+    return psg->edge[channel]?all:0;
+  }
+  return tone_edge(psg,channel,ticks,all);
+}
+#endif
 static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
 {
   uint8_t count=psg->noise_count;const unsigned period=psg->noise_freq;
@@ -516,12 +559,34 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
   if(count+ticks<period) {
     psg->noise_count=(uint8_t)(count+ticks);return (seed&1)?all:0;
   }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  if(period<=1 && (!period || !count)) {
+    /* The low five LFSR bits provide the next five pairs of ticks.
+     * Expand four at once, then place the fifth and account for scaler phase. */
+    static const uint8_t duplicated[16]={
+      0x00,0x03,0x0c,0x0f,0x30,0x33,0x3c,0x3f,
+      0xc0,0xc3,0xcc,0xcf,0xf0,0xf3,0xfc,0xff
+    };
+    const unsigned low=(seed>>(scaler==0))&31u;
+    const unsigned spread=duplicated[low&15u]|((0u-(low>>4))&0x300u);
+    const unsigned feedback=seed&15;
+    seed=(seed>>4)^(feedback<<13)^(feedback<<10);
+    if((ticks&1) && !scaler)seed=(seed>>1)^((0u-(seed&1u))&0x12000u);
+    psg->noise_seed=seed;
+    psg->noise_scaler=(uint8_t)(scaler^(ticks&1));psg->noise_count=0;
+    return (spread>>(scaler!=0))&all;
+  }
+#endif
+#if !(defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE)
   if(psg->nmask[0] && psg->nmask[1] && psg->nmask[2]) {
-    // Noise disabled by all three mixers: preserve its exact state, but
-    // do not construct a bit mask which none of the channels will use.
-    uint32_t phase=count;const unsigned edges=advance_counter(&phase,period,ticks);
+    /* No mixer uses the noise mask. Advance only the oscillator state. */
+    uint32_t phase=count;
+    const unsigned edges=advance_counter(&phase,period,ticks);
     seed=advance_noise(seed,(edges+(scaler?0:1))/2);
-    psg->noise_count=(uint8_t)phase;psg->noise_scaler=(uint8_t)(scaler^(edges&1));psg->noise_seed=seed;return 0;
+    psg->noise_count=(uint8_t)phase;
+    psg->noise_scaler=(uint8_t)(scaler^(edges&1));
+    psg->noise_seed=seed;
+    return 0;
   }
   if(period<=1 && (!period || !count)) {
     /* The next eight LFSR low bits precede any feedback bit. Spread them
@@ -536,6 +601,7 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
     seed=advance_noise(seed,shifts);
     psg->noise_count=0;psg->noise_scaler=(uint8_t)(scaler^(ticks&1));psg->noise_seed=seed;return bits&all;
   }
+#endif
   if(period>1 && count<period) {
     /* Only an LFSR shift can change the noise output. Build whole spans
      * between those edges. The valid starting phase lets UDIV compute
@@ -546,7 +612,7 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
     const unsigned edges=total/period,phase=total-edges*period;
     for(unsigned at=first;at<ticks;at+=2*period) {
       const unsigned previous=seed&1;
-      seed=advance_noise(seed,1);
+      seed=(seed>>1)^((0u-(seed&1u))&0x12000u);
       if(previous!=(seed&1))bits^=all<<at;
     }
     psg->noise_count=(uint8_t)phase;psg->noise_scaler=(uint8_t)(scaler^(edges&1));psg->noise_seed=seed;return bits&all;
@@ -571,7 +637,7 @@ static uint32_t noise_mask(PSG* psg,unsigned ticks,uint32_t all)
 /* Keep changing envelopes out of the ordinary mixer to reduce register
  * spills. Tone and noise are already included in the channel masks. */
 #if defined(__GNUC__) && !defined(__clang__)
-__attribute__((noinline,optimize("Os")))
+__attribute__((noinline,optimize("Oz")))
 #endif
 static void mix_envelopes(PSG* psg,unsigned ticks,const uint32_t* envelopes,int32_t* channels)
 {
@@ -615,6 +681,101 @@ static void mix_envelopes(PSG* psg,unsigned ticks,const uint32_t* envelopes,int3
   for(unsigned i=0;i<3;++i)if(psg->volume[i]&32)
     psg->ch_out[i]=(envelopes[i]&(1U<<(ticks-1)))?(int16_t)(volumes[psg->env_ptr]<<4):0;
 }
+#endif
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+static inline uint32_t get_word(const void* bytes)
+{
+  uint32_t value;
+  __builtin_memcpy(&value,bytes,sizeof(value));
+  return value;
+}
+static inline unsigned get_half(const void* bytes)
+{
+  uint16_t value;
+  __builtin_memcpy(&value,bytes,sizeof(value));
+  return value;
+}
+
+/* Sum the active tick contributions to the one-pole filter. The 64 phases
+ * run through 0..31 then 31..0; the sign bit mirrors the second half. */
+static unsigned ramp_weight(const PSG_volume_t* volt,unsigned phase,unsigned mask)
+{
+  unsigned weight=0;
+  while(mask) {
+    const unsigned bit=31u-(unsigned)__builtin_clz(mask);
+    const uint32_t pos=(phase+bit)<<26;
+    const unsigned at=(pos^(uint32_t)((int32_t)pos>>31))>>26;
+    const unsigned top=1u<<bit;
+    const unsigned prev=top>>1;
+    if(mask&prev) {
+      /* Consecutive active ticks use adjacent phase indices and weights. */
+      const uint32_t before=pos-(1u<<26);
+      const unsigned back=(before^(uint32_t)((int32_t)before>>31))>>26;
+      weight+=((unsigned)volt[back]+2u*volt[at])<<(bit-1);
+      mask^=top|prev;
+    } else {
+      weight+=(unsigned)volt[at]<<bit;
+      mask^=top;
+    }
+  }
+  return weight;
+}
+/* Both tone and noise are enabled on the three triangle-envelope
+ * channels. Their exact tone masks are still used across every edge. */
+void PSG_refreshTriangle(PSG* psg)
+{
+  /* The little-endian envelope word contains face, continue, attack,
+   * alternate. Ignore attack, accept either face and require hold=pause=0. */
+  psg->fast_triangle=psg->env_freq<=1 && (!psg->env_freq || !psg->env_count) &&
+     (get_word((const uint8_t*)psg+offsetof(PSG,env_face))&0xff00fffeu)==0x01000100u &&
+     !get_half((const uint8_t*)psg+offsetof(PSG,env_hold)) &&
+     (get_word((const uint8_t*)psg+offsetof(PSG,volume))&0x00202020u)==0x00202020u &&
+     !(get_word((const uint8_t*)psg+offsetof(PSG,tmask))|
+       get_half((const uint8_t*)psg+offsetof(PSG,nmask)+1)|(psg->mask&7u));
+}
+
+static __attribute__((noinline)) int16_t common_triangle(PSG* restrict psg,unsigned ticks,int32_t* restrict stereo,unsigned layout)
+{
+  const unsigned all=(1u<<ticks)-1, noise=noise_mask(psg,ticks,all);
+  unsigned a,b,c;
+  const unsigned n0=psg->count[0]+ticks,n1=psg->count[1]+ticks,n2=psg->count[2]+ticks;
+  if(n0<psg->freq[0] && n1<psg->freq[1] && n2<psg->freq[2]) {
+    psg->count[0]=(uint16_t)n0;
+    psg->count[1]=(uint16_t)n1;
+    psg->count[2]=(uint16_t)n2;
+    a=psg->edge[0]?noise:0;
+    b=psg->edge[1]?noise:0;
+    c=psg->edge[2]?noise:0;
+  } else {
+    a=tone_edge(psg,0,ticks,all)&noise;
+    b=tone_edge(psg,1,ticks,all)&noise;
+    c=tone_edge(psg,2,ticks,all)&noise;
+  }
+  const unsigned ptr=psg->env_ptr, phase=psg->env_face?ptr+1:64-ptr;
+  const unsigned last=(phase+ticks-1)&63;
+  psg->env_ptr=(uint8_t)(last<32?last:63-last);
+  psg->env_face=last<32;
+  psg->env_count=0;
+  const PSG_volume_t* volt=psg->voltbl;
+  const unsigned level=(unsigned)volt[psg->env_ptr]<<4;
+  psg->ch_out[0]=(a>>(ticks-1))*level;
+  psg->ch_out[1]=(b>>(ticks-1))*level;
+  psg->ch_out[2]=(c>>(ticks-1))*level;
+  /* Channels with the same gate mask share the weighted envelope. */
+  const int32_t x=a?(int32_t)(ramp_weight(volt,phase,a)<<4):0;
+  const int32_t y=b==a?x:!b?0:(int32_t)(ramp_weight(volt,phase,b)<<4);
+  const int32_t z=c==a?x:c==b?y:!c?0:(int32_t)(ramp_weight(volt,phase,c)<<4);
+  psg->out=(psg->out+x+y+z)>>ticks;
+  if(stereo) {
+    const int32_t centre=layout==2?z:y,side=layout==2?y:z;
+    stereo[0]=(stereo[0]+2*x+centre)>>ticks;
+    stereo[1]=(stereo[1]+2*side+centre)>>ticks;
+  }
+  return (int16_t)psg->out;
+}
+#endif
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("O2")))
 #endif
 static int16_t calc_weighted(PSG* PSG_INTERNAL_RESTRICT psg,unsigned ticks,int32_t* PSG_INTERNAL_RESTRICT stereo,unsigned layout)
 {
@@ -683,7 +844,7 @@ static int16_t calc_quality(PSG* psg,unsigned ticks)
 }
 #endif
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
-__attribute__((optimize("Os")))
+__attribute__((optimize("Oz")))
 #endif
 int16_t PSG_calc(PSG* psg)
 {
@@ -694,6 +855,7 @@ int16_t PSG_calc(PSG* psg)
    * a built-in volume table and a bounded output/envelope state. */
   const unsigned ticks=output_ticks(psg);
   if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);
+  if(psg->fast_triangle)return common_triangle(psg,ticks,NULL,0);
   return calc_weighted(psg,ticks,NULL,0);
 #else
   if(psg->quality && psg->base_incr==(1U<<GETA_BITS)) {
@@ -739,7 +901,8 @@ void PSG_calcStereo(PSG* psg,int32_t stereo[2],unsigned layout)
     (void)calc_silent(psg,ticks);stereo[0]>>=ticks<31?ticks:31;stereo[1]>>=ticks<31?ticks:31;return;
   }
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
-  (void)calc_weighted(psg,ticks,stereo,layout);
+  if(psg->fast_triangle) (void)common_triangle(psg,ticks,stereo,layout);
+  else (void)calc_weighted(psg,ticks,stereo,layout);
 #else
   if(weighted_eligible(psg,ticks)){(void)calc_weighted(psg,ticks,stereo,layout);return;}
   for(unsigned i=0;i<ticks;++i)stereo_tick(psg,stereo,layout,true);
@@ -747,7 +910,7 @@ void PSG_calcStereo(PSG* psg,int32_t stereo[2],unsigned layout)
 }
 
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE && defined(__GNUC__) && !defined(__clang__)
-__attribute__((optimize("Os")))
+__attribute__((optimize("Oz")))
 #endif
 void
 PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
@@ -812,5 +975,8 @@ PSG_writeReg (PSG * psg, uint32_t reg, uint32_t val)
     break;
   }
 
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+  if(reg>=7 && reg<=13)PSG_refreshTriangle(psg);
+#endif
   return;
 }

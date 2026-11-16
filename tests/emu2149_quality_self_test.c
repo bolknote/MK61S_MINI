@@ -46,9 +46,63 @@ static void equal_sample(PSG* a,PSG* b,unsigned scenario,unsigned sample) {
     }
     ++comparisons;
 }
+#if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+static void minimum_triangles(void) {
+    unsigned checked=0;
+    for(unsigned mode=1;mode<=2;++mode)for(unsigned layout=0;layout<=2;++layout)
+    for(unsigned shape=10;shape<=14;shape+=4)for(unsigned period=0;period<=1;++period)
+    for(unsigned noise=0;noise<32;++noise)for(unsigned phase=0;phase<64;++phase) {
+        PSG actual,reference;
+        init(&actual,25000,mode);
+        PSG_writeReg(&actual,6,noise);
+        PSG_writeReg(&actual,7,0);
+        PSG_writeReg(&actual,11,period);
+        PSG_writeReg(&actual,13,shape);
+        for(unsigned ch=0;ch<3;++ch) {
+            const unsigned tone=(phase+ch)%11;
+            PSG_writeReg(&actual,2*ch,tone);
+            PSG_writeReg(&actual,8+ch,16);
+            actual.count[ch]=tone?(phase+noise)%tone:0;
+            actual.edge[ch]=(phase+ch)&1;
+        }
+        actual.env_ptr=phase<32?phase:63-phase;
+        actual.env_face=phase<32;
+        actual.psgtime=(phase&3)*50000u;
+        actual.noise_scaler=phase&1;
+        actual.noise_count=noise?phase%noise:0;
+        actual.noise_seed=(random_word()&0x1ffffu)|1u;
+        PSG_refreshTriangle(&actual);
+        assert(actual.fast_triangle);
+        reference=actual;
+        int32_t out[2]={-123,456},expected[2]={-123,456};
+        for(unsigned sample=0;sample<21;++sample) {
+            if(sample==7) {
+                PSG_setMask(&actual,2);PSG_setMask(&reference,2);
+                assert(!actual.fast_triangle);
+            }
+            if(sample==14) {
+                PSG_toggleMask(&actual,2);PSG_toggleMask(&reference,2);
+                assert(actual.fast_triangle);
+            }
+            if(layout) {
+                PSG_calcStereo(&actual,out,layout);
+                PSG_calcStereo_reference(&reference,expected,layout);
+                assert(!memcmp(out,expected,sizeof(out)));
+            } else {
+                const int16_t pcm=PSG_calc(&actual);
+                assert(pcm==PSG_calc_reference(&reference));
+            }
+            assert(!memcmp(&actual,&reference,sizeof(actual)));
+            ++checked;
+        }
+    }
+    printf("Minimum triangle: %u exact mono/stereo samples with both curves, all phases/noise periods and mute transitions PASS\n",checked);
+}
+#endif
 int main(void) {
     stereo_quality();
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
+    minimum_triangles();
     // CONFIG accepts every sub-tick phase below200000, including imported
     // phases outside the usual four positions of the fixed-rate stream.
     for(unsigned mode=1;mode<=2;++mode)for(unsigned layout=1;layout<=2;++layout)
