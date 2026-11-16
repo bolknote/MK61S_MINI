@@ -29,9 +29,10 @@ subprocess.run(['c++','-std=c++17','-O2','-Wall','-Wextra','-Werror','-fPIC','-d
 lib=ctypes.CDLL(str(library.resolve()));f=lib.mk61_m0_pow_exact_small
 f.argtypes=[ctypes.c_uint64,ctypes.c_uint64,ctypes.POINTER(ctypes.c_uint64)];f.restype=ctypes.c_int
 oracle=Oracle();rng=random.Random(0xE7AC70);pairs=set()
-exponents={Fraction(sign*p,1<<k) for sign in (-1,1) for p in range(1,130) for k in range(7)}
-exponents={y for y in exponents if 53*abs(y.numerator)+54*y.denominator <= 6912}
-assert len(exponents)==912
+exponents={Fraction(sign*p,1<<k) for sign in (-1,1) for p in range(1,131) for k in range(8)}
+exponents={y for y in exponents if max(53*y.numerator,54*y.denominator)<=6912
+           and (y>0 or 53*abs(y.numerator)+54*y.denominator<=6912)}
+assert len(exponents)==1041
 for y in exponents:
     bases=[1,0x0010000000000000,0x3FEFFFFFFFFFFFFF,0x3FF0000000000001,0x7FEFFFFFFFFFFFFF]
     if abs(y.numerator)>32 or y.denominator>32:
@@ -67,14 +68,26 @@ for index,(x,y) in enumerate(sorted(pairs)):
         assert ok and out.value==want,(index,hex(x),hex(y),hex(hint),ok,hex(out.value),hex(want))
         digest.update(struct.pack('<5Q',x,y,hint,out.value,want))
     if index%500==0:print('PASS',index+1,'/',len(pairs),flush=True)
+extra=[(1.5,4096.),(1.5,-4096.),(.75,4096.),(.75,-4096.),(1.25,130.),
+       (.75,-700.),(1.5,385/128),(2.**-1024,537/512),(2.**-1024,4301/4096)]
+for x,y in extra:
+    a,b=bits(x),bits(y)
+    want=oracle.reference('pow',a,b)
+    hint=max(0,want-1)
+    out=ctypes.c_uint64(hint)
+    assert f(a,b,ctypes.byref(out)) and out.value==want,(x,y,want,out.value)
+    digest.update(struct.pack('<5Q',a,b,hint,out.value,want))
 rejected=[]
-for y in [0.,130.,67./64,1./128,math.nextafter(.5,1.),float('inf'),float('nan')]:
+for x,y in [(1.25,0.),(1.25,6913.),(1.25,1./8192),(1.25,math.nextafter(.5,1.)),
+            (1.25,float('inf')),(1.25,float('nan')),(1.5,4362.),
+            (math.nextafter(1.,2.),133.),(1.25,1./256)]:
     out=ctypes.c_uint64(0xBAD0BAD0BAD0BAD0)
-    assert not f(bits(1.25),bits(y),ctypes.byref(out)) and out.value==0xBAD0BAD0BAD0BAD0
-    rejected.append(bits(y))
-report=dict(status='PASS',cases=len(pairs),hinted_calls=calls,exponents=len(exponents),rejected_exponents=len(rejected),
+    assert not f(bits(x),bits(y),ctypes.byref(out)) and out.value==0xBAD0BAD0BAD0BAD0,(x,y,out.value)
+    rejected.append((x,y))
+report=dict(status='PASS',cases=len(pairs)+len(extra),hinted_calls=calls+len(extra),exponents=len(exponents),
+    input_specific_cases=len(extra),rejected_cases=len(rejected),
     wrong_rounding=0,source_sha256=hashlib.sha256((source/'code/native_eabi_m0_pow_exact.inc').read_bytes()).hexdigest(),
     mpfr=oracle.version,result_sha256=digest.hexdigest(),
-    scope='Native implementation versus directed MPFR across every supported exponent and positive/negative powers, subnormal/overflow neighborhoods, exact roots, ties and random binary64 bases. Each result is also checked with near, distant and invalid input hints. Complete domain correctness rests on the exact integer argument, not this finite corpus.')
+    scope='Native implementation versus directed MPFR across the arbitrary-base exponent domain and additional cases with small odd coefficients. The corpus includes positive/negative powers, subnormal/overflow neighborhoods, exact roots, ties, nearby hints and selected distant/invalid hints.')
 (work/'host.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2),flush=True)

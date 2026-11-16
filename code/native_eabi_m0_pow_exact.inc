@@ -1,6 +1,6 @@
-// Exact last-stage midpoint comparison for y=p/q with at most 432
-// 16-bit words in the combined coefficient powers. Called only after
-// the 1024-bit enclosure could not decide rounding.
+// Exact last-stage midpoint comparison for y=p/q. Each integer
+// coefficient is limited to 432 16-bit words after removing powers of two.
+// Called only after the 1024-bit enclosure could not decide rounding.
 // No floating-point operations, tables, allocation or global RAM are used.
 #pragma once
 #include <stdint.h>
@@ -13,14 +13,16 @@
 
 namespace m0_pow_exact {
 using U=uint64_t;
-enum {N=432};
+enum {N=432, Capacity=16*N, MaxDenominatorShift=12};
 struct B {uint16_t w[N]{};unsigned used=1;};
 
 // Every multiply also checks for overflow. Copy back only the limbs in
 // use; the cost is proportional to the actual exponent.
-static M0_POW_EXACT bool multiply(B& a,U factor) {
-  uint16_t t[N+4]{};
-  for(unsigned j=0;j<4;++j) {
+static M0_POW_EXACT bool multiply(B& a,U factor,unsigned words) {
+  uint16_t t[N+4];
+  const unsigned length=a.used+words;
+  for(unsigned i=0;i<length;++i) t[i]=0;
+  for(unsigned j=0;j<words;++j) {
     const uint32_t limb=uint16_t(factor>>(16*j));uint32_t carry=0;
     for(unsigned i=0;i<a.used;++i) {
       const uint32_t v=uint32_t(a.w[i])*limb+t[i+j]+carry;
@@ -28,8 +30,8 @@ static M0_POW_EXACT bool multiply(B& a,U factor) {
     }
     t[a.used+j]=uint16_t(carry);
   }
-  for(unsigned i=N;i<N+4;++i) if(t[i]) return false;
-  unsigned used=a.used+4;
+  for(unsigned i=N;i<length;++i) if(t[i]) return false;
+  unsigned used=length;
   if(used>N) used=N;
   while(used>1 && !t[used-1]) --used;
   for(unsigned i=0;i<used;++i) a.w[i]=t[i];
@@ -41,6 +43,18 @@ static M0_POW_EXACT unsigned width(const B& a) {
   uint32_t head=a.w[a.used-1];unsigned bits=16*(a.used-1);
   while(head) {head>>=1;++bits;}
   return bits;
+}
+
+static M0_POW_EXACT bool multiply_power(B& a,U factor,unsigned exponent) {
+  if(factor==1) return true;
+  unsigned bits=0;
+  for(U n=factor;n;n>>=1) ++bits;
+  // Each multiplication gains at least floor(log2(factor)) bits. If
+  // that lower bound fits, the product still checks each actual carry.
+  if(exponent*(bits-1)>Capacity-width(a)) return false;
+  const unsigned words=(bits+15)/16;
+  for(unsigned i=0;i<exponent;++i) if(!multiply(a,factor,words)) return false;
+  return true;
 }
 
 static M0_POW_EXACT int compare(const B& a,int ae,const B& b,int be) {
@@ -70,15 +84,13 @@ static M0_POW_EXACT bool parameters(U y,unsigned& p,unsigned& q) {
   U coefficient;int exponent;decode(magnitude,coefficient,exponent);
   while(!(coefficient&1)) {coefficient>>=1;++exponent;}
   if(exponent>=0) {
-    if(exponent>=8 || coefficient>((16U*N/53)>>unsigned(exponent))) return false;
+    if(exponent>=32 || coefficient>(unsigned(Capacity)>>unsigned(exponent))) return false;
     p=unsigned(coefficient)<<unsigned(exponent);q=1;
   } else {
-    if(exponent < -7 || coefficient>16U*N/53) return false;
+    if(exponent < -MaxDenominatorShift || coefficient>Capacity) return false;
     p=unsigned(coefficient);q=1U<<unsigned(-exponent);
   }
-  // For negative y the comparison uses the product of both powers.
-  // The same admission bound gives both signs identical coverage.
-  return 53U*p+54U*q<=16U*N;
+  return true;
 }
 
 static M0_POW_EXACT bool midpoint(U lower,U upper,U& coefficient,int& exponent) {
@@ -92,14 +104,17 @@ static M0_POW_EXACT bool midpoint(U lower,U upper,U& coefficient,int& exponent) 
 }
 
 static M0_POW_EXACT int relation(const B& power,int scale,unsigned q,bool inverse,U m,int me) {
-  B other;other.w[0]=1;
   if(inverse) {
     B combined=power;
     // x^(-p/q) < midpoint iff x^p * midpoint^q >1.
-    for(unsigned i=0;i<q;++i) if(!multiply(combined,m)) return 2;
-    return -compare(combined,scale+me*int(q),other,0);
+    if(!multiply_power(combined,m,q)) return 2;
+    const int high=int(width(combined))-1+scale+me*int(q);
+    if(high) return high>0?-1:1;
+    // Both factors are odd. The product is a power of two only if it is one.
+    return combined.used==1 && combined.w[0]==1?0:-1;
   }
-  for(unsigned i=0;i<q;++i) if(!multiply(other,m)) return 2;
+  B other;other.w[0]=1;
+  if(!multiply_power(other,m,q)) return 2;
   return compare(power,scale,other,me*int(q));
 }
 
@@ -123,8 +138,9 @@ extern "C" M0_POW_EXACT int mk61_m0_pow_exact_small(uint64_t x,uint64_t y,uint64
   if(!x || x>=infinity) return 0;
   unsigned p,q;if(!parameters(y,p,q)) return 0;
   U a;int ae;decode(x,a,ae);
+  while(!(a&1)) {a>>=1;++ae;}
   B power;power.w[0]=1;
-  for(unsigned i=0;i<p;++i) if(!multiply(power,a)) return 0;
+  if(!multiply_power(power,a,p)) return 0;
   U lower=0,upper=infinity;
   const U hint=*result;
   if(hint<infinity) {
