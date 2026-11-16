@@ -2,6 +2,7 @@
 #include "audio.h"
 #include "display.h"
 #include "display_compact.h"
+#include "display_pages.h"
 #include "pacing.h"
 #include "prepared.h"
 #include <string.h>
@@ -13,6 +14,7 @@ static aw_assets assets;
 static aw_video video;
 static aw_display display;
 static aw_display_compact *compact_display;
+static aw_display_pages *pages_display;
 static aw_vm *vm;
 static aw_audio audio;
 static aw_input input;
@@ -20,7 +22,7 @@ static uint8_t keys[32], previous[32];
 static int16_t *pending;
 static unsigned pending_at, pending_count;
 static uint32_t next_keys, next_audio, last_frame;
-static bool audio_open, first_strip, pump_failed, compact_ready;
+static bool audio_open, first_strip, pump_failed, compact_ready, pages_ready;
 static void pump(void *ctx);
 
 static bool acquire_direct(mk61_service_buffer *buffer, unsigned bytes) {
@@ -148,8 +150,39 @@ static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
     pump(NULL);
     return !input.quit && !pump_failed;
 }
-static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
+static bool page_control(unsigned operation, unsigned page) {
+    const uint32_t value = page;
+    for (;;) {
+        const uint32_t result = services->call(MK61_SERVICE_COLOR_DISPLAY, operation, 0, sizeof(value), (void *)&value);
+        if (result == 1) return true;
+        if (result != 2 || input.quit || pump_failed) return false;
+        pump(NULL);
+    }
+}
+static bool page_select(void *ctx, unsigned page) { (void)ctx; return page_control(MK61_COLOR_PAGE_SELECT, page); }
+static bool page_show(void *ctx, unsigned page) { (void)ctx; return page_control(MK61_COLOR_PAGE_SHOW, page); }
+static bool page_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
+                      const uint8_t *pixels, const uint16_t *palette, bool clear) {
+    (void)clear;
+    return present_rect(ctx, x, y, width, height, pixels, palette, false);
+}
+static bool end_pages(void) {
+    for (;;) {
+        const uint32_t result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGES_END, 0, 0, NULL);
+        if (result == 1) return true;
+        if (result != 2 || input.quit || pump_failed) return false;
+        pump(NULL);
+    }
+}
+static bool present_normal(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     (void)ctx;
+    if (pages_ready) {
+        if (aw_display_pages_present(pages_display, pixels, palette, page_select, page_show, page_rect, NULL)) return true;
+        if (assets.fault || input.quit || pump_failed || !end_pages()) return false;
+        /* An optional display transaction failed: restore a complete ordinary
+         * frame, with no assumptions about either partially written page. */
+        pages_ready = false; compact_display->valid = false;
+    }
     if (compact_ready)
         return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL);
     if (previous_frame.data)
@@ -160,6 +193,10 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         first_strip = false; y += rows;
     }
     return true;
+}
+static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
+    const bool ok = present_normal(ctx, pixels, palette);
+    return ok && !input.quit && !pump_failed;
 }
 static void sound(void *ctx, unsigned id, unsigned freq, unsigned volume, unsigned channel) {
     (void)ctx; aw_audio_sound(&audio, id, freq, volume, channel);
@@ -178,8 +215,9 @@ static void message(const char *line1, const char *line2) {
 int main(void) {
     /* The firmware reserves a separate stack. Keeping long-lived state there
      * leaves a larger contiguous heap block for the video-page cache. */
-    aw_vm vm_state = {0}; vm = &vm_state;
+    aw_vm vm_state = {0}; vm = &vm_state; pages_ready = false;
     aw_display_compact compact_state; compact_display = &compact_state;
+    aw_display_pages pages_state; pages_display = &pages_state;
     int16_t pending_samples[AW_AUDIO_BLOCK]; pending = pending_samples;
     const char *error = NULL; bool graphics = false, paired_frames = false;
     bool audio_prepared = false, arena_reserved = false; uint32_t compute = 0;
@@ -220,6 +258,8 @@ int main(void) {
     mk61_api->display_clear();
     mk61_api->display_write_m8(0, 0, "Loading sounds...", 17);
     mk61_api->service();
+    if (!mk61_api->graphics_begin()) { error = "Display unavailable"; goto done; }
+    graphics = true;
     assets.progress = pump;
     next_keys = next_audio = mk61_api->millis_ms();
     aw_prepared_cache prepared = {0};
@@ -240,8 +280,6 @@ int main(void) {
     }
     if (input.quit) goto done;
     if (pump_failed) { error = "Input unavailable"; goto done; }
-    if (!mk61_api->graphics_begin()) { error = "Display unavailable"; goto done; }
-    graphics = true;
     uint32_t spi_hz = 24000000;
     (void)services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ, 0, sizeof(spi_hz), &spi_hz);
     compute = mk61_app_compute_begin(services);
@@ -277,6 +315,19 @@ int main(void) {
                 drop_background();
         }
     }
+    if (compact_ready && 6 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES + compact_display->capacity <= assets.capacity - assets.used) {
+        const uint32_t second = assets.used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
+        const uint32_t swap = second + AW_VIDEO_PAGE_BYTES;
+        mk61_service_color_pages config = {60, AW_VIDEO_HEIGHT};
+        if (aw_display_pages_init(pages_display, compact_display, second, swap)) {
+            for (;;) {
+                const uint32_t result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGES_BEGIN_V2, 0, sizeof(config), &config);
+                if (result == 1) { pages_ready = true; break; }
+                if (result != 2 || input.quit || pump_failed) break;
+                pump(NULL);
+            }
+        }
+    }
     first_strip = true; last_frame = mk61_api->millis_ms();
     next_keys = next_audio = last_frame;
     (void)services->call(MK61_SERVICE_KEYBOARD, MK61_SERVICE_KEY_BITMAP, sizeof(previous), 0, previous);
@@ -291,7 +342,12 @@ int main(void) {
 done:
     if (audio_open || audio_prepared) services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_CLOSE, 0, 0, NULL);
     if (compute) (void)mk61_app_compute_end(services, compute);
-    if (graphics) { services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, NULL); mk61_api->graphics_end(); }
+    if (graphics) {
+        services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, NULL);
+        // Discard the progress text before ending graphics restores the console.
+        mk61_api->display_clear();
+        mk61_api->graphics_end();
+    }
     drop_background();
     if (previous_frame.handle) mk61_app_buffer_release(services, previous_frame.handle);
     if (screen.handle) mk61_app_buffer_release(services, screen.handle);

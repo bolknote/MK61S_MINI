@@ -34,6 +34,8 @@ card. It is optional: the APP checks the cache against the original resources
 and falls back to them when the cache is absent or does not match. To rebuild
 it for an existing local copy on either platform, run
 `tools/games.cmd prepare-another path/to/ANOTHER`.
+The prepared game folder also receives its 32×32 `autoexec.wbmp` Explorer icon;
+an existing custom icon is preserved.
 The APP has been tested on PicoCalc. It currently mixes mono audio on the Pico;
 the experimental M3 audio backend is not connected to the APP.
 

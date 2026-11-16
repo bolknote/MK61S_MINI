@@ -281,11 +281,32 @@ enum mk61_color_operation { MK61_COLOR_AVAILABLE, MK61_COLOR_PRESENT, MK61_COLOR
    * retain ordinary full redraws. No frame descriptor or snapshot size changes. */
   MK61_COLOR_SCROLL_BEGIN, MK61_COLOR_SCROLL_END,
   /* Returns a bit for each supported mk61_color_format. */
-  MK61_COLOR_FORMATS
+  MK61_COLOR_FORMATS,
+  /* Optional whole-panel inversion relative to the normal display mode.
+   * b=0,c=4,payload=uint32_t (0 normal, 1 inverted). Returns 1 applied,
+   * 2 while a frame is in flight, or 0 if unsupported/invalid. The whole
+   * physical screen, including margins, is affected; pixel memory is not.
+   * Restore normal before PRESENT. COLOR_END and APP return also restore it. */
+  MK61_COLOR_INVERT,
+  /* Optional two-page LCD transaction. BEGIN_V2 takes mk61_service_color_pages;
+   * SELECT and SHOW take a uint32_t page (0 or 1). PRESENT writes into the
+   * selected page using screen coordinates, INDEX4 and ordinary RGB565 colors.
+   * It must preserve pixels outside the supplied rectangle and stay inside
+   * the configured vertical area. The panel handles black margins internally.
+   * SHOW waits for writes and publishes a completed page. END restores the
+   * ordinary display mapping; COLOR_END and APP return also restore it. Use
+   * the ordinary draw path if BEGIN_V2 is unsupported. BEGIN is the retired
+   * experimental operation and its slot is reserved for ABI compatibility.
+   * Return values: 1 accepted, 2 busy, 0 unsupported/invalid/failed. */
+  MK61_COLOR_PAGES_BEGIN, MK61_COLOR_PAGE_SELECT, MK61_COLOR_PAGE_SHOW, MK61_COLOR_PAGES_END,
+  MK61_COLOR_PAGES_BEGIN_V2
 };
 typedef struct mk61_service_color_scroll {
   uint16_t top, height, previous, offset;
 } mk61_service_color_scroll;
+typedef struct mk61_service_color_pages {
+  uint16_t top, height; /* Full width, 2*height <= the controller's GRAM rows. */
+} mk61_service_color_pages;
 enum mk61_color_format {
   /* Horizontal, high nibble first; each row occupies ceil(width/2) bytes. */
   MK61_COLOR_INDEX4,

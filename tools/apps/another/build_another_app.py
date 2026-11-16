@@ -12,8 +12,9 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from tools.firmware.picocalc.build_picocalc import compiler_bin
+from dev.tools.explorer_icons import copy_icon
 
-SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "vm.c", "audio.c", "text.c",
+SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "display_pages.c", "vm.c", "audio.c", "text.c",
            "rp2040_divide.S"]
 
 
@@ -34,6 +35,8 @@ def main():
     shutil.copy2(args.build_dir / "ANOTHER.APP", args.output_dir / "ANOTHER.APP")
     shutil.copy2(src / "README.md", args.output_dir / "manual.md")
     (args.output_dir / "Play.txt").write_text("ANOTHER.APP\n", encoding="ascii")
+    if not any(path.name.casefold() == "autoexec.wbmp" for path in args.output_dir.iterdir()):
+        copy_icon("another-world", args.output_dir / "autoexec.wbmp")
     shutil.copy2(ROOT / "LICENSE", args.output_dir / "COPYING.txt")
     shutil.copy2(ROOT / "third_party/rp2040-softfloat/LICENSE.TXT", args.output_dir / "RP2040-LICENSE.txt")
     report = json.loads((args.build_dir / "ANOTHER.json").read_text())

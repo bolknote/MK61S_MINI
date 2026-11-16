@@ -9,6 +9,12 @@
 #include <assert.h>
 #ifdef AW_COMPACT_DISPLAY
 #include "../examples/portable-apps/ANOTHER/display_compact.h"
+#ifdef AW_TWO_PAGE_ANALYZE
+#include "../examples/portable-apps/ANOTHER/display_pages.h"
+static aw_display_pages pages;
+static uint16_t page_pixels[2][AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT];
+static unsigned page_selected=2, page_visible=2, page_shows;
+#endif
 static aw_display_compact compact;
 static uint8_t compact_previous[12800];
 static uint64_t fallback_frames[10];
@@ -16,7 +22,8 @@ static uint64_t fallback_frames[10];
 static aw_display display;
 static uint8_t display_previous[AW_VIDEO_PAGE_BYTES];
 #endif
-static uint16_t displayed_pixels[AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT];
+#define SCREEN_MARGIN 60u
+static uint16_t displayed_pixels[AW_VIDEO_WIDTH * (AW_VIDEO_HEIGHT + 2 * SCREEN_MARGIN)];
 static uint64_t display_bytes[10], display_rects[10], display_frames[10];
 #ifdef AW_TILE_ANALYZE
 static uint64_t two_color_frames[10], two_color_tiles[10], total_tiles[10];
@@ -29,10 +36,24 @@ static bool display_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
     display_bytes[display_part] += width * height * 2; ++display_rects[display_part];
     for (unsigned row = 0; row < height; ++row) for (unsigned col = 0; col < width; ++col) {
         const uint8_t b = pixels[row * (width / 2) + col / 2];
-        displayed_pixels[(y + row) * AW_VIDEO_WIDTH + x + col] = palette[(b >> ((col & 1) ? 0 : 4)) & 15];
+        const unsigned at=(y + row) * AW_VIDEO_WIDTH + x + col;
+        const uint16_t color=palette[(b >> ((col & 1) ? 0 : 4)) & 15];
+#ifdef AW_TWO_PAGE_ANALYZE
+        assert(page_selected<2);page_pixels[page_selected][at]=color;
+        if(page_visible==page_selected) displayed_pixels[SCREEN_MARGIN*AW_VIDEO_WIDTH+at]=color;
+#else
+        displayed_pixels[SCREEN_MARGIN*AW_VIDEO_WIDTH+at]=color;
+#endif
     }
     return true;
 }
+#ifdef AW_TWO_PAGE_ANALYZE
+static bool display_select_page(void *ctx,unsigned page) { (void)ctx;assert(page<2);page_selected=page;return true; }
+static bool display_show_page(void *ctx,unsigned page) {
+    (void)ctx;assert(page==page_selected);page_visible=page;++page_shows;
+    memcpy(displayed_pixels+SCREEN_MARGIN*AW_VIDEO_WIDTH,page_pixels[page],sizeof(page_pixels[page]));return true;
+}
+#endif
 #endif
 
 typedef struct {
@@ -77,12 +98,23 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         assert(aw_display_compact_init(&compact, h->audio->assets,
                h->audio->assets->used + 4 * AW_VIDEO_PAGE_BYTES,
                compact_previous, sizeof(compact_previous), compact_previous, sizeof(compact_previous)));
+#ifdef AW_TWO_PAGE_ANALYZE
+        const uint32_t second=h->audio->assets->used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
+        assert(aw_display_pages_init(&pages,&compact,second,second+AW_VIDEO_PAGE_BYTES));
+#endif
 #else
         aw_display_init(&display, display_previous);
 #endif
     }
     display_part = h->audio->vm->part - AW_VM_FIRST_PART;
     assert(display_part < 10);
+#if defined(AW_TWO_PAGE_ANALYZE) || defined(AW_FRAME_METRICS)
+    const uint64_t before_rgb = display_bytes[display_part];
+    const uint64_t before_reads = h->store_read_bytes, before_writes = h->store_write_bytes;
+#endif
+#ifdef AW_TWO_PAGE_ANALYZE
+    const unsigned before_shows = page_shows;
+#endif
 #ifdef AW_TILE_ANALYZE
     unsigned eligible = 0;
     for (unsigned y = 0; y < AW_VIDEO_HEIGHT; y += 8)
@@ -101,16 +133,44 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     total_tiles[display_part] += tiles;
 #endif
 #ifdef AW_COMPACT_DISPLAY
+#ifdef AW_TWO_PAGE_ANALYZE
+    assert(aw_display_pages_present(&pages,pixels,palette,display_select_page,display_show_page,display_rect,NULL));
+#else
     assert(aw_display_compact_present(&compact, pixels, palette, display_rect, NULL));
+#endif
+#ifdef AW_TWO_PAGE_ANALYZE
+    fallback_frames[display_part] += pages.slot[pages.loaded]->external;
+#else
     fallback_frames[display_part] += compact.external;
+#endif
 #else
     assert(aw_display_present(&display, pixels, palette, display_rect, NULL));
 #endif
     ++display_frames[display_part];
     for (unsigned i = 0; i < AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT; ++i) {
         const uint8_t b = pixels[i / 2];
-        assert(displayed_pixels[i] == palette[(b >> ((i & 1) ? 0 : 4)) & 15]);
+        assert(displayed_pixels[SCREEN_MARGIN*AW_VIDEO_WIDTH+i] == palette[(b >> ((i & 1) ? 0 : 4)) & 15]);
     }
+    for (unsigned i = 0; i < SCREEN_MARGIN * AW_VIDEO_WIDTH; ++i) {
+        assert(displayed_pixels[i] == 0);
+        assert(displayed_pixels[(SCREEN_MARGIN + AW_VIDEO_HEIGHT)*AW_VIDEO_WIDTH+i] == 0);
+    }
+#ifdef AW_TWO_PAGE_ANALYZE
+    /* Once the first white and black frames exist, the actual intro reuses
+     * those two RGB pages. Border pixels must remain black on every flash. */
+    if (h->audio->vm->part == 0x3e81 && h->frames >= 2443 && h->frames <= 2450) {
+        assert(display_bytes[display_part] == before_rgb);
+        assert(h->store_read_bytes == before_reads && h->store_write_bytes == before_writes);
+        assert(page_shows == before_shows + 1);
+    }
+#endif
+#ifdef AW_FRAME_METRICS
+    if (h->audio->vm->part == 0x3e81 && h->frames >= 2418 && h->frames <= 2454)
+        printf("FRAME %u RGB=%llu PSRAM_R=%llu PSRAM_W=%llu\n", h->frames,
+               (unsigned long long)(display_bytes[display_part]-before_rgb),
+               (unsigned long long)(h->store_read_bytes-before_reads),
+               (unsigned long long)(h->store_write_bytes-before_writes));
+#endif
 #endif
     for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i) checksum = (checksum ^ pixels[i]) * 16777619u;
     for (unsigned i = 0; i < 16; ++i) checksum = (checksum ^ palette[i]) * 16777619u;
@@ -236,6 +296,9 @@ int main(int argc, char **argv) {
     for (unsigned i = 0; i < 10; ++i) if (display_frames[i])
         printf("compact part=%04X external_fallback_frames=%llu\n", AW_VM_FIRST_PART + i,
                (unsigned long long)fallback_frames[i]);
+#ifdef AW_TWO_PAGE_ANALYZE
+    printf("page switches=%u\n",page_shows);
+#endif
 #endif
 #endif
     free(h.remote); free(h.audio); free(vm); free(video); free(a); free(pixels); free(spare); free(background); free(h.store);

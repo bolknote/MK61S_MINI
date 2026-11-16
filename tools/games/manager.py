@@ -113,6 +113,23 @@ def extract_zip(item: dict, output_root: Path, cache_root: Path, *, dry_run: boo
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def install_folder_icon(item: dict, directory: Path, *, dry_run: bool) -> None:
+    source = ROOT / safe_relative(item["folder_icon"])
+    target = directory / "autoexec.wbmp"
+    if dry_run:
+        print("Would install folder icon: " + str(target))
+        return
+    if any(path.name.casefold() == target.name for path in directory.iterdir()):
+        print("Preserved existing folder icon: " + str(target))
+        return
+    data = source.read_bytes()
+    if len(data) != 132 or data[:4] != b"\0\0\x20\x20":
+        raise ValueError("Invalid 32x32 folder icon: " + str(source))
+    with target.open("xb") as icon:
+        icon.write(data)
+    print("Prepared folder icon: " + str(target))
+
+
 def run_command(arguments: list[str], output_root: Path, cache_root: Path, *, dry_run: bool) -> None:
     substitutions = {"{root}": str(ROOT), "{output}": str(output_root), "{cache}": str(cache_root)}
     expanded = []
@@ -152,6 +169,8 @@ def execute(catalog: dict, selected_ids: list[str], output_root: Path, cache_roo
                     from another_cache import prepare
                     count, size = prepare(directory)
                     print(f"Prepared sound cache: {count} sounds, {size} decoded bytes")
+                if item.get("folder_icon"):
+                    install_folder_icon(item, directory, dry_run=dry_run)
         elif runner == "spectrum_package":
             run_command([
                 "tools/apps/spectrum/fetch_spectrum_games.py",

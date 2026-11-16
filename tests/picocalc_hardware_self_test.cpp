@@ -262,6 +262,31 @@ int main() {
     assert(external_cache::statistics().sector_bytes==old_bytes && external_cache::sector(123,read.data()) && read==sector);
     assert(external_cache::grow_sectors() && external_cache::sector(123,read.data()) && read==sector);
     assert(shared_memory::validate_buffer_invariants());
+    // With 5 MiB retained beside a 2 MiB game, cache growth must preserve
+    // both owners and can proceed in stages as those buffers are released.
+    external_cache::suspend();
+    assert(shared_memory::configure_buffer_backend({psram::CAPACITY,psram::ready,cache_read,cache_write}));
+    assert(external_cache::init());
+    {
+        shared_memory::Buffer occupied,game;
+        assert(occupied.acquire(shared_memory::Owner::STORAGE_WORKSPACE,5U*1024*1024,shared_memory::BufferAccess::EXTERNAL_ONLY));
+        assert(game.acquire(shared_memory::Owner::APPLICATION,2U*1024*1024,shared_memory::BufferAccess::EXTERNAL_ONLY));
+        const unsigned offsets[]={0,4093,1048576,5U*1024*1024-4};
+        for(unsigned at:offsets) { const u32 marker=0x79C351A6U^at;assert(occupied.write(at,&marker,sizeof(marker))); }
+        for(unsigned i=0;i<300;++i) { sector.fill((u8)i);external_cache::store_sector(100+i,sector.data()); }
+        assert(external_cache::statistics().sector_bytes==512U*1024);
+        const auto reclaims=shared_memory::buffer_statistics().reclaims;
+        assert(!external_cache::grow_sectors() && shared_memory::buffer_statistics().reclaims==reclaims);
+        for(unsigned i=0;i<300;++i) { assert(external_cache::sector(100+i,read.data()));assert(read[0]==(u8)i); }
+        for(unsigned at:offsets) { u32 value=0;assert(occupied.read(at,&value,sizeof(value)) && value==(0x79C351A6U^at)); }
+        assert(game.reset());assert(external_cache::grow_sectors());
+        assert(external_cache::statistics().sector_bytes==2U*1024*1024);
+        for(unsigned at:offsets) { u32 value=0;assert(occupied.read(at,&value,sizeof(value)) && value==(0x79C351A6U^at)); }
+        assert(occupied.reset());assert(external_cache::grow_sectors());
+        assert(external_cache::statistics().sector_bytes==4U*1024*1024);
+        for(unsigned i=0;i<300;++i) { assert(external_cache::sector(100+i,read.data()));assert(read[0]==(u8)i); }
+        assert(shared_memory::validate_buffer_invariants());
+    }
     psram::test_memory(nullptr,0);assert(!psram::init());
     assert(!external_cache::sector(0,read.data()));
     assert(!external_cache::statistics().ready);

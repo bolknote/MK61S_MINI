@@ -194,6 +194,29 @@ function Invoke-AnotherCache {
     Write-Host (New-AnotherSoundCache ([IO.Path]::GetFullPath($Directory)))
 }
 
+function Install-FolderIcon {
+    param([object]$Item, [string]$Directory)
+    $relative = [string]$Item.folder_icon
+    if ([string]::IsNullOrWhiteSpace($relative) -or [IO.Path]::IsPathRooted($relative) -or
+        @(($relative -replace '\\', '/') -split '/') -contains '..') {
+        throw "Unsafe folder icon path: $relative"
+    }
+    $target = Join-Path $Directory 'autoexec.wbmp'
+    if ($script:DryRun) { Write-Host "Would install folder icon: $target"; return }
+    if (@(Get-ChildItem -LiteralPath $Directory -Force | Where-Object { $_.Name -ieq 'autoexec.wbmp' }).Count) {
+        Write-Host "Preserved existing folder icon: $target"
+        return
+    }
+    $source = Join-Path $script:ProjectRoot $relative
+    $bytes = [IO.File]::ReadAllBytes($source)
+    if ($bytes.Length -ne 132 -or $bytes[0] -ne 0 -or $bytes[1] -ne 0 -or
+        $bytes[2] -ne 32 -or $bytes[3] -ne 32) { throw "Invalid 32x32 folder icon: $source" }
+    $stream = [IO.File]::Open($target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+    try { $stream.Write($bytes, 0, $bytes.Length) }
+    finally { $stream.Dispose() }
+    Write-Host "Prepared folder icon: $target"
+}
+
 function Test-WindowsSupported {
     param([object]$Item)
     return -not ($Item.PSObject.Properties.Name -contains 'windows_supported') -or [bool]$Item.windows_supported
@@ -215,6 +238,7 @@ function Invoke-Selected {
                     $directory = Get-SafeTarget ([string]$item.prepared_cache)
                     if ($script:DryRun) { Write-Host "Would prepare: $(Join-Path $directory 'AWCACHE.BIN')" }
                     else { Invoke-AnotherCache $directory }
+                    if ($item.PSObject.Properties.Name -contains 'folder_icon') { Install-FolderIcon $item $directory }
                 }
             }
             'spectrum_package' { Invoke-SpectrumDownload $item }

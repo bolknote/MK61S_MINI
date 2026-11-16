@@ -48,6 +48,25 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/tests/another_world_display_compact_self_test.c" -o "$build_dir/display-compact"
 "$build_dir/display-compact"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/display_compact.c" \
+  "$root/examples/portable-apps/ANOTHER/display_pages.c" "$root/tests/another_world_display_pages_self_test.c" -o "$build_dir/display-pages"
+"$build_dir/display-pages"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=lcd_pages_probe_main \
+  -I"$root/sdk/portable/include" -I"$root/code" \
+  -c "$root/tests/picocalc_lcd_pages_probe.c" -o "$build_dir/lcd-pages-probe.o"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
+  "$root/tests/picocalc_lcd_pages_probe_self_test.c" "$build_dir/lcd-pages-probe.o" -o "$build_dir/lcd-pages-probe"
+"$build_dir/lcd-pages-probe"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  "$root/tests/picocalc_lcd_readback_self_test.c" -o "$build_dir/lcd-readback"
+"$build_dir/lcd-readback"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DPICOCALC_LCD_READBACK_HOST -Dmain=lcd_read_probe_main \
+  -I"$root/sdk/portable/include" -I"$root/code" \
+  -c "$root/tests/picocalc_lcd_read_probe.c" -o "$build_dir/lcd-read-probe.o"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
+  "$root/tests/picocalc_lcd_read_probe_self_test.c" "$build_dir/lcd-read-probe.o" -o "$build_dir/lcd-read-probe"
+"$build_dir/lcd-read-probe"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/tests/another_world_pacing_self_test.c" -o "$build_dir/pacing"
 "$build_dir/pacing"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/coproc" \
@@ -94,7 +113,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
-    "$root/examples/portable-apps/ANOTHER/display_compact.c" \
+    "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
     "$root/tests/another_world_app_host_test.c" \
     "$build_dir/main.o" -o "$build_dir/app"
   "$build_dir/app" "$ANOTHER_WORLD_DATA"
@@ -104,10 +123,15 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
   "$build_dir/app" "$ANOTHER_WORLD_DATA" pair-fallback
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split
   "$build_dir/app" "$ANOTHER_WORLD_DATA" split-tail-failure
+  "$build_dir/app" "$ANOTHER_WORLD_DATA" pages
+  "$build_dir/app" "$ANOTHER_WORLD_DATA" pages-select-fail
+  "$build_dir/app" "$ANOTHER_WORLD_DATA" pages-show-fail
+  "$build_dir/app" "$ANOTHER_WORLD_DATA" pages-legacy
+  "$build_dir/app" "$ANOTHER_WORLD_DATA" cancel-loading
   # Exercise the actual shared-buffer session and its arena, including the
   # old individual-buffer fallback and retry when the PCM reservation blocks
   # the mandatory first frame.
-  for unit in assets prepared video vm text audio display display_compact; do
+  for unit in assets prepared video vm text audio display display_compact display_pages; do
     ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/portable/include" -I"$root/code" \
       -c "$root/examples/portable-apps/ANOTHER/$unit.c" -o "$build_dir/real-$unit.o"
   done
@@ -126,7 +150,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
-    "$root/examples/portable-apps/ANOTHER/display_compact.c" \
+    "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
     "$root/tests/another_world_fragmentation_self_test.c" "$build_dir/main.o" -o "$build_dir/fragmentation"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
@@ -165,4 +189,11 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/m3_pcm.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/tests/another_world_game_probe.c" -o "$build_dir/compact-game"
   "$build_dir/compact-game" "$ANOTHER_WORLD_DATA" 5000
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -I"$root/sdk/coproc" \
+    "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
+    "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
+    "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/m3_pcm.c" \
+    "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
+    "$root/tests/another_world_game_probe.c" -o "$build_dir/pages-game"
+  "$build_dir/pages-game" "$ANOTHER_WORLD_DATA" 5000
 fi

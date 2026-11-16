@@ -45,11 +45,13 @@ void injected_crc_work();
 bool inject_crc_work=false,mask_crc_irq=false;
 audio_stream::DutyRing::Result injected_pwm_result=audio_stream::DutyRing::EARLY;
 struct Controller {
-    std::array<u16,lcd::WIDTH*lcd::HEIGHT> colors{};
+    std::array<u16,lcd::WIDTH*480> colors{};
     std::vector<Command> commands;
     lcd::Region region{0,lcd::HEIGHT};
     unsigned origin=0,x0=0,x1=319,y0=0,y1=319,cursor=0;
-    bool pending=false,fail_completion=false;
+    bool pending=false,fail_completion=false,inverted=false,gram_480=false,partial=false,display_on=true;
+    bool ignore_scroll_while_blank=false;
+    unsigned partial_first=0,partial_last=479;
     void* context=nullptr;
     void (*transfer)(void*)=nullptr;
     unsigned word(const u8* data) { return ((unsigned)data[0]<<8)|data[1]; }
@@ -58,18 +60,29 @@ struct Controller {
         if(op==0x33) {
             require(count==6,"VSCRDEF length");
             region={(u16)word(data),(u16)word(data+2)};
-            require(region.valid() && region.top+region.height+word(data+4)==lcd::HEIGHT,"VSCRDEF geometry");
+            gram_480=region.top==0 && region.height==480 && word(data+4)==0;
+            require(gram_480 || (region.valid() && region.top+region.height+word(data+4)==lcd::HEIGHT),"VSCRDEF geometry");
         } else if(op==0x37) {
-            require(count==2,"VSCSAD length");origin=word(data);
+            require(count==2,"VSCSAD length");
+            if(!ignore_scroll_while_blank || display_on) origin=word(data);
         } else if(op==0x2A) {
             require(count==4,"CASET length");x0=word(data);x1=word(data+2);
         } else if(op==0x2B) {
             require(count==4,"PASET length");y0=word(data);y1=word(data+2);
+        } else if(op==0x30) {
+            require(count==4,"PTLAR length");partial_first=word(data);partial_last=word(data+2);
+            require(partial_first<=partial_last && partial_last<480,"partial area bounds");
+        } else if(op==0x12 || op==0x13) {
+            require(count==0,"partial mode command length");partial=op==0x12;
+        } else if(op==0x20 || op==0x21) {
+            require(count==0,"inversion command length");inverted=op==0x20;
+        } else if(op==0x28 || op==0x29) {
+            require(count==0,"display on/off command length");display_on=op==0x29;
         } else require(false,"unexpected controller command");
     }
     void pixels(const u16* source,unsigned count) {
         const unsigned width=x1-x0+1;
-        require(x0<=x1 && x1<lcd::WIDTH && y0<=y1 && y1<lcd::HEIGHT,"bounded LCD window");
+        require(x0<=x1 && x1<lcd::WIDTH && y0<=y1 && y1<480,"bounded LCD window");
         require(cursor+count<=width*(y1-y0+1),"bounded pixel payload");
         for(unsigned i=0;i<count;++i,++cursor) {
             const unsigned x=x0+cursor%width,y=y0+cursor/width;
@@ -77,12 +90,12 @@ struct Controller {
         }
     }
     const u16* visible_row(unsigned y) const {
-        const unsigned physical=y<region.top || y>=region.top+region.height?y:
+        const unsigned physical=gram_480?(origin+y)%480:y<region.top || y>=region.top+region.height?y:
             region.top+(y-region.top+origin-region.top)%region.height;
         return colors.data()+physical*lcd::WIDTH;
     }
     bool visible(const Screen& expected) const {
-        if(origin<region.top || origin>=region.top+region.height) return false;
+        if(gram_480 ? origin>=480 : origin<region.top || origin>=region.top+region.height) return false;
         const auto& theme=expected.color_theme();
         std::array<u16,lcd::WIDTH> background;
         for(unsigned y=0;y<lcd::HEIGHT;++y) {
@@ -464,6 +477,143 @@ void input_response_session() {
     require(panel.responses()==3 && panel.response_us()>=3000,"retry preserves original input timestamp");
     puts("Panel response timing: actual completion, in-flight next input and failed-transfer retry PASS");
 }
+void color_inversion_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    const u32 on=1,off=0,invalid=2;
+    require(panel.color(MK61_COLOR_INVERT,&on)==0,"inversion requires an active color image");
+    std::array<u8,128> pixels{};
+    mk61_service_color_frame f{};f.pixels=pixels.data();f.pixel_bytes=pixels.size();
+    f.width=f.height=16;f.format=MK61_COLOR_INDEX4;f.palette[0]=0xffff;
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1 && controller.pending,"color frame queued");
+    require(panel.color(MK61_COLOR_INVERT,&on)==2 && !controller.count(0x20),"inversion waits for DMA");
+    controller.run();
+    require(panel.color(MK61_COLOR_INVERT,&invalid)==0,"invalid inversion rejected");
+    require(panel.color(MK61_COLOR_INVERT,&on)==1 && controller.inverted && controller.count(0x20)==1,
+            "inversion changes the whole panel with one command");
+    require(panel.color(MK61_COLOR_INVERT,&on)==1 && controller.count(0x20)==1,"repeated mode is a no-op");
+    require(panel.color(MK61_COLOR_PRESENT,&f)==0 && !controller.pending,"drawing while inverted is rejected");
+    require(panel.color(MK61_COLOR_INVERT,&off)==1 && !controller.inverted && controller.count(0x21)==1,
+            "normal mode restores without changing GRAM");
+    require(panel.color(MK61_COLOR_INVERT,&on)==1 && controller.inverted,"inversion can resume");
+    require(panel.color(MK61_COLOR_END)==1 && !controller.inverted && controller.count(0x21)==2,
+            "ending an APP restores the native mode");
+    require(panel.flush(mono) && controller.pending,"ordinary interface redraws after the APP");controller.run();
+    require(controller.visible(mono),"ordinary interface remains correct after inversion");
+    puts("Panel inversion: idle boundary, idempotence, drawing guard and APP cleanup PASS");
+}
+void color_pages_session() {
+    controller=Controller{};Panel panel;Screen mono;
+    // Reproduce the optical symptom with the unscrolled scanout at startup.
+    controller.ignore_scroll_while_blank=true;
+    mk61_service_color_pages bad{250,100},config{60,200};
+    const u32 page0=0,page1=1,invalid=2,on=1,off=0;
+    u32 first_page=page0;
+    require(panel.color(MK61_COLOR_PAGES_BEGIN,&config)==0,"legacy page request falls back");
+    require(panel.color(MK61_COLOR_PAGES_BEGIN_V2,&bad)==0,"reject pages beyond the visible screen");
+    require(panel.color(MK61_COLOR_PAGES_BEGIN_V2,&config)==1 && !controller.display_on,
+            "hide the first frame until the compensated colors and scan window are ready");
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==0,"unwritten page cannot be shown");
+    require(panel.color(MK61_COLOR_PAGE_SELECT,&invalid)==0,"invalid page rejected");
+    mk61_service_color_scroll scroll{60,200,0,1};
+    require(panel.color(MK61_COLOR_SCROLL_BEGIN,&scroll)==0,"scroll transaction cannot overlap page mode");
+    std::array<u8,12800> bytes;
+    mk61_service_color_frame f{};f.pixels=bytes.data();f.width=320;f.x=0;
+    f.format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
+    f.y=60;f.height=80;f.pixel_bytes=12800;
+    require(panel.color(MK61_COLOR_PAGE_SELECT,&page0)==1,"select page while display is blanking");
+    require(panel.color(MK61_COLOR_PRESENT,&f)==2 && !controller.pending && !controller.inverted && !controller.partial,
+            "wait for blanking before writing compensated GRAM or changing polarity");
+    clock_now+=50000;
+    auto draw=[&](u32 page,u16 color) {
+        require(panel.color(MK61_COLOR_PAGE_SELECT,&page)==1,"page selected");
+        f.palette[1]=color;
+        f.palette[2]=color^0xffff;
+        for(unsigned y=0;y<config.height;y+=80) {
+            f.y=(u16)(config.top+y);f.height=(u16)(config.height-y<80?config.height-y:80);f.pixel_bytes=160*f.height;
+            for(unsigned row=0;row<f.height;++row)
+                std::memset(bytes.data()+160*row,y+row<config.height/2U?0x11:0x22,160);
+            require(panel.color(MK61_COLOR_PRESENT,&f)==1 && controller.pending,"page strip queued");
+            require(panel.color(MK61_COLOR_PAGE_SELECT,&page)==2,"cannot switch page during DMA");
+            controller.run();
+        }
+    };
+    auto visible=[&](unsigned page,u16 color) {
+        require(controller.gram_480 && controller.partial && controller.inverted && controller.display_on,
+                "page scan, partial mode and compensated polarity are active");
+        for(unsigned y=0;y<320;++y) {
+            // The optical capture shows PTLAR gating physical rows, before
+            // VSCSAD selects their GRAM addresses. Outside is panel-driven.
+            const bool active=y>=controller.partial_first && y<=controller.partial_last;
+            require(active==(y>=config.top && y<(unsigned)config.top+config.height),
+                    "partial window must stay at the same screen rows");
+            if(!active) continue;
+            const unsigned address=(controller.origin+y)%480;
+            require(address==(y+(page==first_page?0:config.height))%480,
+                    "every visible row must come from the selected GRAM page");
+            const u16 expected=y-config.top<config.height/2U?color:color^0xffff;
+            for(unsigned x=0;x<320;++x)
+                require((controller.colors[address*320+x]^0xffffu)==expected,"GRAM complement restores exact row color");
+        }
+    };
+    draw(page0,0x1234);
+    require(!controller.display_on && controller.origin==0 &&
+            controller.colors[60*320+123]==(0x1234^0xffffu),
+            "first page is written at its screen coordinates in compensated polarity");
+    require(controller.inverted && controller.partial && controller.count(0x30)==1,
+            "configure the centered scan window before making any of the first page visible");
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==2 && !controller.display_on,
+            "first SHOW waits while the new scan configuration takes effect");
+    clock_now+=50000;
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==1,"first page published");visible(0,0x1234);
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1 && !controller.pending,"matching palettes keep the dirty check effective");
+    draw(page1,0xabcd);visible(0,0x1234);
+    const auto switches=controller.commands.size();
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page1)==1,"second page published");visible(1,0xabcd);
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==1,"first page can be shown again");visible(0,0x1234);
+    require(!controller.pending && controller.commands.size()==switches+2 && controller.commands[switches].op==0x37 &&
+            controller.commands[switches+1].op==0x37,"a page switch only writes the scroll address");
+    require(controller.count(0x30)==1 && controller.count(0x28)==1 && controller.count(0x29)==1,
+            "later page switches change only the GRAM origin without another blanking interval");
+    require(panel.color(MK61_COLOR_INVERT,&on)==0,"page mode owns the hardware polarity");
+    require(panel.color(MK61_COLOR_INVERT,&off)==1 && controller.count(0x20)==1 && controller.inverted,
+            "idempotent normal-color barrier leaves compensation intact");
+    require(panel.color(MK61_COLOR_PAGES_END)==1 && !controller.inverted && !controller.partial && controller.origin==0,
+            "page end restores inversion, partial mode and normal origin");
+    require(panel.flush(mono) && controller.pending,"shell can redraw after page end");controller.run();
+    require(controller.visible(mono),"shell pixels restored after page mode");
+
+    require(panel.color(MK61_COLOR_PAGES_BEGIN_V2,&config)==1,"restart page transaction");
+    require(panel.color(MK61_COLOR_PAGE_SELECT,&page0)==1,"select failure test page");
+    f.y=60;f.height=80;f.pixel_bytes=12800;controller.fail_completion=true;
+    clock_now+=50000;
+    require(panel.color(MK61_COLOR_PRESENT,&f)==1,"failure test strip queued");controller.run();
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==0,"failed DMA cannot publish a page");
+    require(panel.color(MK61_COLOR_END)==1 && controller.display_on,"APP exit cancels and unblanks a failed first page");
+    require(panel.flush(mono) && controller.pending,"failure is recovered by shell redraw");controller.run();
+    require(controller.visible(mono),"failure recovery restores shell pixels");
+
+    require(panel.color(MK61_COLOR_PAGES_BEGIN_V2,&config)==1 && !controller.display_on,
+            "blank a fresh session before touching the active raster");
+    require(panel.color(MK61_COLOR_END)==1 && controller.display_on && !controller.inverted && !controller.partial,
+            "early exit restores the display even before the first transfer");
+
+    config={70,240};
+    first_page=page1;
+    require(panel.color(MK61_COLOR_PAGES_BEGIN_V2,&config)==1,"begin with the other logical page first");
+    clock_now+=50000;
+    draw(page1,0xac61);
+    clock_now+=50000;
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page1)==1,"either logical page can be first");
+    visible(1,0xac61);
+    const auto writes=controller.count(0x2b);
+    draw(page0,0x9daa);
+    require(controller.count(0x2b)==writes+4,"the hidden page splits a transfer crossing GRAM row 479");
+    visible(1,0xac61);
+    require(panel.color(MK61_COLOR_PAGE_SHOW,&page0)==1,"show the wrapped GRAM page");
+    visible(0,0x9daa);
+    require(panel.color(MK61_COLOR_END)==1,"end the wrapped page session");
+    puts("Panel pages: unscrolled startup, fixed scan window, wrapped GRAM, exact RGB565 and failure cleanup PASS");
+}
 }
 void frame_deadline_session() {
     using namespace picocalc;
@@ -529,6 +679,8 @@ int main() {
     try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
     try { external_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel power clock FAIL: %s\n",error.what()); }
     try { input_response_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel input timing FAIL: %s\n",error.what()); }
+    try { color_inversion_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel inversion FAIL: %s\n",error.what()); }
+    try { color_pages_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel pages FAIL: %s\n",error.what()); }
     try {frame_deadline_session();}catch(const std::exception& error){++failed;std::fprintf(stderr,"Frame IRQ diagnostics FAIL: %s\n",error.what());}
     return failed?1:0;
 }

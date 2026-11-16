@@ -30,7 +30,7 @@ BUNDLE_FOLDERS={**PROGRAM_FOLDERS, 'apps':'applications', 'System':'system',
     'apps/SPECTRUM':'applications','apps/SPECTRUM/licenses':'license',
     'apps/SPECTRUM/games':'games','apps/SPECTRUM/games/Ianna':'games',
     'apps/SPECTRUM/games/ulaplus':'games',
-    'urq':'games','apps/URQ':'games',
+    'urq':'games','apps/URQ':'games','games/Another World':'another-world',
     'games/URQ':'games','licenses/ryu':'license','licenses/urq':'license',
     'System/VMCache':'cache', 'licenses':'license', 'licenses/ui-fonts':'font-license'}
 for _urq_game in ('house_that_jack_built', 'trapped_in_time_ru', 'jim_from_outer_space_ru',
@@ -136,6 +136,17 @@ def draw(name):
         c.rect(4,22,28,28,width=2);c.rect(14,12,17,23,True)
         c.ellipse(11,4,21,14,True);c.ellipse(22,18,27,23,True)
         c.line(8,25,11,25)
+    elif name=='another-world':
+        # A lone traveller beneath an alien moon and jagged horizon.
+        c.ellipse(19,3,29,13,width=2);c.ellipse(24,4,29,9,True,False)
+        c.line(4,4,4,8);c.line(2,6,6,6)
+        c.ellipse(9,8,14,13,True)
+        c.polygon([(9,14),(14,13),(17,18),(14,21),(10,19)])
+        c.path([(10,15),(7,20),(5,20)],2)
+        c.path([(15,15),(19,18),(21,17)],2)
+        c.path([(11,19),(9,25),(6,26)],2)
+        c.path([(15,20),(19,23),(22,23)],2)
+        c.path([(2,28),(7,27),(12,28),(17,26),(22,27),(29,25)],2)
     elif name=='library':
         for x,y in ((4,8),(12,4),(20,6)):
             c.rect(x,y,x+6,27,width=2);c.line(x+2,y+5,x+4,y+5)

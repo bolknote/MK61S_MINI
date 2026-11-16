@@ -6,9 +6,9 @@ There is no antialiasing, font dependency or runtime scaling. Explorer renders
 the black source pixels as foreground ink, so the same asset serves PicoCalc
 320×320 and Classic 192×64.
 
-The 27 drawings cover all 23 directories shipped from `programs/`, plus the
-generated `apps`/`Apps`, `System`, `System/VMCache`, `licenses` and
-`licenses/ui-fonts` directories. The applications icon is shared by `app`,
+The 28 drawings cover the directories shipped from `programs/`, plus generated
+folders including `apps`/`Apps`, `System`, `System/VMCache`, `licenses`,
+`licenses/ui-fonts` and `Games/Another World`. The applications icon is shared by `app`,
 `apps` and `Apps`. Every game has its own drawing. The previously reviewed
 Turochamp, High Noon and Runner bitmaps remain byte-for-byte unchanged.
 

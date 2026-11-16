@@ -93,6 +93,7 @@ public:
     u32 scrolled_rows() const { return scrolled_rows_.load(std::memory_order_relaxed); }
     unsigned scroll_offset() const { return scroll_.offset; }
 private:
+    static constexpr unsigned GRAM_ROWS=480;
     u8 previous_[Screen::BYTES] = {};
     lcd::ShellTheme previous_theme_{};
     bool valid_ = false;
@@ -108,7 +109,11 @@ private:
     std::atomic<u32> errors_{0};
     std::atomic<bool> failed_{false};
     bool dma_irq_ready_=false,dma_chain_configured_=false;
-    bool color_active_=false,color_clear_=false;
+    bool color_active_=false,color_clear_=false,color_inverted_=false;
+    bool pages_active_=false,pages_configured_=false,pages_selected_=false,pages_display_on_=false;
+    u8 pages_write_=0,pages_transfer_=0,pages_snapshot_=0,pages_written_=0,pages_origin_=0,pages_first_=0;
+    u16 pages_top_=0,pages_height_=0;
+    u32 pages_scan_changed_at_=0;
     mk61_service_color_frame color_frame_{};
     u16 color_palette_[64]{};
     bool palette_dirty_=false;
@@ -128,6 +133,11 @@ private:
     u32 clock_request() const;
     bool clock_pending() const;
     bool take_failure();
+    bool color_pages_settled() const;
+    unsigned color_page_offset(unsigned page) const { return page==pages_first_?0:pages_height_; }
+    void set_color_page_origin(unsigned page);
+    void prepare_color_pages();
+    void end_color_pages();
     void completed_input(u64 now);
     lcd::Stream stream_;
     bool transfer_chain(const lcd::Rect& rect,u32& pauses,bool color=false);

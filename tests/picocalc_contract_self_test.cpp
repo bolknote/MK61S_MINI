@@ -30,7 +30,7 @@ namespace {
 }
 #define CHECK(test) ((test)?(void)0:failed(#test,__LINE__))
 using namespace picocalc;
-struct ColorCalls { unsigned frames=0,ends=0,clocks=0,scrolls=0,commits=0;u32 hz=12000000; };
+struct ColorCalls { unsigned frames=0,ends=0,clocks=0,scrolls=0,commits=0,inversions=0,pages=0;u32 hz=12000000,mode=0; };
 void color_file_contract(void* context,const mk61_app_api&,const mk61_app_services& s) {
     auto& calls=*(ColorCalls*)context;
     const auto caps=s.call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr);
@@ -48,6 +48,26 @@ void color_file_contract(void* context,const mk61_app_api&,const mk61_app_servic
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),nullptr));
     CHECK(!calls.clocks);
     CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SPI_HZ,0,sizeof(hz),&hz)==24000000 && calls.clocks==1);
+    u32 mode=1;
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_INVERT,1,sizeof(mode),&mode));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_INVERT,0,sizeof(mode)-1,&mode));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_INVERT,0,sizeof(mode),nullptr));
+    CHECK(!calls.inversions);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_INVERT,0,sizeof(mode),&mode)==1 && calls.inversions==1 && calls.mode==1);
+    mk61_service_color_pages pages{60,200};
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN,0,sizeof(pages),&pages));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN_V2,1,sizeof(pages),&pages));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN_V2,0,sizeof(pages)-1,&pages));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN_V2,0,sizeof(pages),nullptr));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGE_SELECT,1,sizeof(mode),&mode));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGE_SHOW,0,sizeof(mode)-1,&mode));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGE_SHOW,0,sizeof(mode),nullptr));
+    CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_END,0,sizeof(mode),&mode));
+    CHECK(!calls.pages);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN_V2,0,sizeof(pages),&pages)==1);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGE_SELECT,0,sizeof(mode),&mode)==1);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGE_SHOW,0,sizeof(mode),&mode)==1);
+    CHECK(s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_END,0,0,nullptr)==1 && calls.pages==4);
     mk61_service_color_scroll scroll{22,250,0,18};
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,1,sizeof(scroll),&scroll));
     CHECK(!s.call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_SCROLL_BEGIN,0,sizeof(scroll)-1,&scroll));
@@ -575,7 +595,9 @@ void explorer_app_exit_contract() {
         }
         case Display::BITMAP: {
             u8 frame[canvas::BYTES]{};frame[0]=1;
+            CHECK(api.display_write_m8(0,0,"LOADING",7));
             CHECK(api.graphics_begin() && api.graphics_present(frame,sizeof(frame)));
+            CHECK(api.display_clear() && script::native_frame()[0]==1);
             api.graphics_end();break;
         }
         case Display::TEXT:
@@ -744,6 +766,9 @@ void picocalc_contract_test() {
     s.set_color_display([](void* raw,u32 operation,const void* payload) -> u32 {
         auto& c=*(ColorCalls*)raw;
         if(operation==MK61_COLOR_SPI_HZ) { std::memcpy(&c.hz,payload,sizeof(c.hz));++c.clocks;return c.hz; }
+        if(operation==MK61_COLOR_INVERT) { std::memcpy(&c.mode,payload,sizeof(c.mode));++c.inversions;return 1; }
+        if(operation==MK61_COLOR_PAGES_BEGIN_V2 || operation==MK61_COLOR_PAGE_SELECT ||
+           operation==MK61_COLOR_PAGE_SHOW || operation==MK61_COLOR_PAGES_END) {++c.pages;return 1;}
         if(operation==MK61_COLOR_SCROLL_BEGIN) {++c.scrolls;return 3;}
         if(operation==MK61_COLOR_SCROLL_END) {++c.commits;return 1;}
         if(operation==MK61_COLOR_PRESENT) { ++c.frames;return 2; }

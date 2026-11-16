@@ -308,8 +308,60 @@ u32 Panel::color_clock(u32 hz) {
     apply_clock();
     return spi_hz_;
 }
+bool Panel::color_pages_settled() const {
+    // Let scanout pick up DISPOFF or the first page configuration before
+    // changing what it can expose. Only entry to page mode waits here.
+    constexpr u32 settle_us=45000;
+    return (u32)time_us_64()-pages_scan_changed_at_>=settle_us;
+}
+#if defined(PICO_ON_DEVICE) && defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+void Panel::set_color_page_origin(unsigned page) {
+    const unsigned start=color_page_offset(page);
+    const u8 origin[]={(u8)(start>>8),(u8)start};
+    command(0x37,origin,sizeof(origin));
+    pages_origin_=page;
+    if(!pages_display_on_) pages_scan_changed_at_=(u32)time_us_64();
+}
+#if defined(PICO_ON_DEVICE) && defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,optimize("Os")))
+#endif
+void Panel::prepare_color_pages() {
+    // PTLAR gates physical rows. Put the first upload at the same GRAM rows
+    // so it displays correctly even if scanout starts without scrolling.
+    pages_first_=pages_write_;
+    const unsigned top=pages_top_,bottom=top+pages_height_-1;
+    const u8 area[]={(u8)(top>>8),(u8)top,(u8)(bottom>>8),(u8)bottom};
+    const u8 full[]={0,0,1,0xe0,0,0};
+    command(0x33,full,sizeof(full));
+    command(0x30,area,sizeof(area));
+    // Select the compensated polarity before enabling the partial window.
+    command(0x20);
+    command(0x12);
+    set_color_page_origin(pages_first_);
+    pages_configured_=true;
+    scroll_={};scroll_configured_=false;
+}
+#if defined(PICO_ON_DEVICE) && defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("Os")))
+#endif
+void Panel::end_color_pages() {
+    if(!pages_active_) return;
+    if(pages_configured_) {
+        // Restore the normal scan origin before the shell redraws. The panel
+        // has 480 GRAM rows even though only 320 rows are physically visible.
+        const u8 full[] = {0,0,1,0xe0,0,0},origin[] = {0,0};
+        command(0x13);command(0x33,full,sizeof(full));command(0x37,origin,sizeof(origin));command(0x21);
+        scroll_={};scroll_configured_=false;configured_region_={};configured_start_=0;
+    }
+    if(!pages_display_on_) command(0x29);
+    pages_active_=pages_configured_=pages_selected_=false;
+    pages_written_=0;color_active_=false;valid_=false;color_frame_={};
+}
 u32 Panel::color(u32 operation,const void* payload) {
     if(operation==MK61_COLOR_SCROLL_BEGIN) {
+        if(pages_active_ || color_inverted_) return 0;
         if(!payload || !lcd::ColorScroll::accepts(*(const mk61_service_color_scroll*)payload)) return 0;
         if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
         if(take_failure()) color_scroll_.fault();
@@ -333,9 +385,59 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)payload);
     if(operation==MK61_COLOR_AVAILABLE) return 1;
     if(operation==MK61_COLOR_FORMATS) return (2u<<MK61_COLOR_CELL565)-1;
+    if(operation==MK61_COLOR_PAGES_BEGIN_V2) {
+        if(!payload || pages_active_ || color_active_ || color_scroll_.open || color_inverted_) return 0;
+        mk61_service_color_pages r;std::memcpy(&r,payload,sizeof(r));
+        if(!r.height || r.height>240 || r.top>Screen::HEIGHT-r.height) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        if(failed_.load(std::memory_order_acquire)) return 0;
+        // The first frame uses the compensating palette. Hide scanout
+        // before changing polarity or writing anything into GRAM.
+        command(0x28);
+        pages_top_=r.top;pages_height_=r.height;pages_active_=true;pages_configured_=pages_selected_=false;
+        pages_display_on_=false;pages_scan_changed_at_=(u32)time_us_64();
+        pages_written_=0;color_active_=true;valid_=false;color_frame_={};
+        return 1;
+    }
+    if(operation==MK61_COLOR_PAGE_SELECT || operation==MK61_COLOR_PAGE_SHOW) {
+        if(!payload || !pages_active_ || color_inverted_) return 0;
+        u32 page;std::memcpy(&page,payload,sizeof(page));if(page>1) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        if(failed_.load(std::memory_order_acquire)) return 0;
+        if(operation==MK61_COLOR_PAGE_SELECT) {pages_write_=page;pages_selected_=true;return 1;}
+        if(!pages_configured_ || !(pages_written_&(1u<<page))) return 0;
+        if(pages_origin_!=page) set_color_page_origin(page);
+        if(!pages_display_on_) {
+            if(!color_pages_settled()) return 2;
+            command(0x29);
+            pages_display_on_=true;
+        }
+        return 1;
+    }
+    if(operation==MK61_COLOR_PAGES_END) {
+        if(payload || !pages_active_) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        end_color_pages();return 1;
+    }
+    if(operation==MK61_COLOR_INVERT) {
+        if(!payload) return 0;
+        u32 inverted;std::memcpy(&inverted,payload,sizeof(inverted));
+        if(inverted>1 || !color_active_ || color_scroll_.open || (pages_active_ && inverted)) return 0;
+        if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
+        if(failed_.load(std::memory_order_acquire)) return 0;
+        if((bool)inverted!=color_inverted_) {
+            // Native setup uses INVON (0x21). INVOFF reverses the displayed
+            // colors without modifying GRAM, including the unused margins.
+            command(inverted?0x20:0x21);
+            color_inverted_=inverted;
+        }
+        return 1;
+    }
     if(operation==MK61_COLOR_END) {
         if(color_active_) {
             io_worker::drain();
+            if(pages_active_) end_color_pages();
+            if(color_inverted_) {command(0x21);color_inverted_=false;}
             // An aborted transaction has not published its target origin.
             if(color_scroll_.open) scroll_=scroll_configured_?
                 lcd::Scroll{configured_region_,configured_start_-configured_region_.top}:lcd::Scroll{};
@@ -345,26 +447,42 @@ u32 Panel::color(u32 operation,const void* payload) {
         else apply_clock();
         return 1;
     }
-    if(operation!=MK61_COLOR_PRESENT || !payload) return 0;
+    if(operation!=MK61_COLOR_PRESENT || !payload || color_inverted_) return 0;
     const auto* frame=(const mk61_service_color_frame*)payload;
     if(!lcd::valid_color(*frame)) return 0;
+    if(pages_active_ && (!pages_selected_ || frame->format!=(MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE) ||
+       frame->y<pages_top_ || frame->y+frame->height>pages_top_+pages_height_)) return 0;
     if(io_worker::frames_suspended()) return 2;
     if(io_worker::frame_pending()) return 2;
+    if(pages_active_ && !pages_configured_) {
+        if(!color_pages_settled()) return 2;
+        prepare_color_pages();
+    }
     const bool failed=take_failure();
     if(failed) color_scroll_.fault();
     if(!color_scroll_.open) color_scroll_.valid=false;
     apply_clock();
-    const bool geometry=!color_active_ || failed || !lcd::same_color_view(color_frame_,*frame);
+    mk61_service_color_frame page_frame;
+    if(pages_active_) {
+        page_frame=*frame;
+        for(auto& color:page_frame.palette) color^=0xffffu;
+        // Both snapshots use the same palette representation for dirty checks.
+        frame=&page_frame;
+    }
+    const bool geometry=!color_active_ || failed || (pages_active_ && pages_snapshot_!=pages_write_) ||
+        !lcd::same_color_view(color_frame_,*frame);
     const bool force=geometry || ((frame->format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_TILE8 && palette_dirty_);
     color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || color_frame_.background!=frame->background);
     lcd::plan_color(update_,color_frame_,*frame,force);
     if(!update_.count && !color_clear_) return 1;
     lcd::copy_color(color_frame_,*frame,previous_);
+    if(pages_active_) pages_snapshot_=pages_transfer_=pages_write_;
     palette_dirty_=false;
     color_active_=true;valid_=false;
     if(!io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer_color(); })) {
         failed_.store(true,std::memory_order_release);return 2;
     }
+    if(pages_active_) pages_written_|=1u<<pages_write_;
     return 1;
 }
 void Panel::configure_dma(bool chain) {
@@ -607,6 +725,19 @@ void Panel::transfer() {
 }
 
 bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses,u32& windows) {
+    if(pages_active_) {
+        if(background || rect.y<pages_top_ || rect.y+rect.height>pages_top_+pages_height_) return false;
+        const unsigned row=rect.y+color_page_offset(pages_transfer_);
+        const unsigned start=row<GRAM_ROWS?row:row-GRAM_ROWS;
+        const unsigned rows_before_wrap=GRAM_ROWS-start;
+        ++windows;
+        if(rect.height<=rows_before_wrap) return transfer_color_window(rect,start,false,strips,pauses);
+        const lcd::Rect head{rect.x,rect.y,rect.width,(u16)rows_before_wrap};
+        if(!transfer_color_window(head,start,false,strips,pauses)) return false;
+        const lcd::Rect tail{rect.x,(u16)(rect.y+rows_before_wrap),rect.width,(u16)(rect.height-rows_before_wrap)};
+        ++windows;
+        return transfer_color_window(tail,0,false,strips,pauses);
+    }
     for(unsigned first=0;first<rect.height;) {
         const unsigned count=scroll_.run(rect.y+first,rect.height-first);
         const lcd::Rect piece{rect.x,(u16)(rect.y+first),rect.width,(u16)count};

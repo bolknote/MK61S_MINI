@@ -3,6 +3,7 @@
 #include "mk61_app.h"
 #include "../examples/portable-apps/ANOTHER/video.h"
 #include <assert.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +15,45 @@ static uint32_t now_ms, presents, audio_samples, audio_queued, releases, graphic
 static uint32_t sizes[5];
 #endif
 static bool busy_once, ended, reject_previous, reject_borrowed, reject_background, reject_pair, split_background, reject_tail;
+static bool paging, normal_started;
+static bool profile_mode;
+static bool cancel_loading, quit_sent, loading_text;
+static unsigned graphics_sessions, key_waits;
+static unsigned page_mode, page_begins, page_selects, page_shows, page_ends, legacy_page_begins;
+static char debug_output[32768];static unsigned debug_size;
 static bool saw_pair, saw_background, saw_head, saw_tail;
 static unsigned unexpected_extra_acquisitions;
+#ifdef AW_TEST_LCD_READBACK
+static uint16_t mock_gram[2][320*200];static unsigned mock_page,mock_op,mock_param,mock_x,mock_xend,mock_y;
+static uint8_t mock_params[4];static bool mock_active,mock_selected,mock_data;
+bool picocalc_lcd_test_begin(void){
+#if defined(AW_TEST_LCD_READBACK_FAIL) || defined(AW_TEST_LCD_FULL_FAIL_SPI)
+    return false;
+#else
+    assert(!mock_active);mock_active=true;return true;
+#endif
+}
+bool picocalc_lcd_test_end(void){assert(mock_active && !mock_selected);mock_active=false;return true;}
+bool picocalc_lcd_test_lines(void *ctx,bool selected,bool data){(void)ctx;assert(mock_active);mock_selected=selected;mock_data=data;return true;}
+bool picocalc_lcd_test_transfer(void *ctx,uint8_t out,uint8_t *in){
+    (void)ctx;assert(mock_active && mock_selected);*in=0;
+    if(!mock_data){mock_op=out;mock_param=0;return true;}
+    if(mock_op==0x2a || mock_op==0x2b){
+        assert(mock_param<4);mock_params[mock_param++]=out;
+        if(mock_param==4){unsigned a=(unsigned)mock_params[0]*256+mock_params[1],b=(unsigned)mock_params[2]*256+mock_params[3];
+            if(mock_op==0x2a){assert(a<=b && b<320);mock_x=a;mock_xend=b;}else{assert(a==b);mock_y=a;}}
+        return true;
+    }
+    assert(mock_op==0x2e && mock_x<320 && mock_y<400);
+    if(mock_param++){
+        const unsigned index=(mock_param-2)/2,component=(mock_param-2)%2;
+        assert(mock_x+index<=mock_xend);
+        const uint16_t c=mock_gram[mock_y/200][(mock_y%200)*320+mock_x+index];
+        *in=(uint8_t)(component ? c : c >> 8);
+    }
+    return true;
+}
+#endif
 #if defined(AW_TEST_REAL_SESSION)
 extern void aw_test_buffers_begin(void);
 extern unsigned aw_test_buffers_call(unsigned,mk61_service_buffer*);
@@ -30,14 +68,16 @@ int another_app_main(void);
 
 static uint32_t now(void) { return now_ms++; }
 static void service(void) { ++now_ms; if (audio_queued) --audio_queued; }
-static uint32_t clear(void) { return 1; }
+static uint32_t clear(void) { loading_text = false; return 1; }
 static uint32_t write_text(uint32_t x, uint32_t y, const char *s, uint32_t n) {
-    if (!x && !y && n == 17 && !memcmp(s, "Loading sounds...", n)) return 1;
+    if (!x && !y && n == 17 && !memcmp(s, "Loading sounds...", n)) {
+        loading_text = true; return 1;
+    }
     (void)x; (void)y; fprintf(stderr, "unexpected APP error: %.*s\n", (int)n, s); return 1;
 }
-static int32_t key_wait(void) { return 0; }
-static uint32_t graphics_begin(void) { ++graphics; return 1; }
-static void graphics_end(void) { assert(graphics); --graphics; }
+static int32_t key_wait(void) { ++key_waits; return 0; }
+static uint32_t graphics_begin(void) { ++graphics; ++graphics_sessions; return 1; }
+static void graphics_end(void) { assert(graphics && !loading_text); --graphics; }
 #if !defined(AW_TEST_REAL_SESSION)
 static unsigned frame_buffers(void) {
     unsigned n = 0; for (unsigned i = 2; i < 5; ++i) n += buffers[i] && sizes[i] == AW_VIDEO_PAGE_BYTES;
@@ -47,7 +87,12 @@ static unsigned frame_buffers(void) {
 static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payload) {
     (void)b; (void)c;
     if (op == MK61_SERVICE_CAPABILITIES) return MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
-        MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM;
+        MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM |
+        MK61_SERVICE_CAP_DEBUG_IO | MK61_SERVICE_CAP_FORMAT;
+    if (op == MK61_SERVICE_MICROS) return now_ms++ * 1000u;
+    if (op == MK61_SERVICE_DEBUG_WRITE) {
+        assert(debug_size+a<sizeof(debug_output));memcpy(debug_output+debug_size,payload,a);debug_size+=a;debug_output[debug_size]=0;return 1;
+    }
     if (op == MK61_SERVICE_BUFFER) {
         mk61_service_buffer *r = payload;
 #if defined(AW_TEST_REAL_SESSION)
@@ -90,6 +135,23 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
 #endif
     }
     if (op == MK61_SERVICE_FILE_BYTES) {
+#ifdef AW_TEST_LCD_FULL
+        if(a==MK61_FILE_BYTES_WRITE_SOURCE) {
+            mk61_service_write_source *source=payload;
+            assert(c==sizeof(*source) && source && source->size==128000 && !strcmp(source->name,"AWFRAME.BIN"));
+#ifdef AW_TEST_LCD_FULL_FAIL_FILE
+            return 0;
+#else
+            const char *target=getenv("AWFULL_OUTPUT");assert(target);
+            FILE *out=fopen(target,"wb");assert(out);uint8_t block[512];
+            for(uint32_t offset=0;offset<source->size;offset+=sizeof(block)) {
+                const unsigned n=source->size-offset<sizeof(block)?source->size-offset:sizeof(block);
+                assert(source->read(source->context,offset,block,n));assert(fwrite(block,1,n,out)==n);
+            }
+            assert(fclose(out)==0);return 1;
+#endif
+        }
+#endif
         mk61_service_file_bytes *r = payload; char path[1024];
         if (!r->path || snprintf(path, sizeof(path), "%s/%s", directory, r->path) >= (int)sizeof(path)) return 0;
         FILE *f = fopen(path, "rb"); if (!f) return 0;
@@ -103,7 +165,9 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
     }
     if (op == MK61_SERVICE_KEYBOARD && a == MK61_SERVICE_KEY_BITMAP) {
         uint8_t *map = payload; memset(map, 0, 32);
-        if (presents >= 30) map[0x1B / 8] |= 1u << (0x1B & 7);
+        if (!profile_mode && !quit_sent && (cancel_loading ? loading_text : presents >= 30)) {
+            map[0x1B / 8] |= 1u << (0x1B & 7); quit_sent = true;
+        }
         return 1;
     }
     if (op == MK61_SERVICE_DISPLAY && a == MK61_SERVICE_DISPLAY_FRAMEBUFFER) {
@@ -132,7 +196,35 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
         r->queued = audio_queued; return 1;
     }
     if (op == MK61_SERVICE_COLOR_DISPLAY) {
-        if (a == MK61_COLOR_END) return 1;
+        if (a == MK61_COLOR_END) { paging=false;return 1; }
+        if (a == MK61_COLOR_PAGES_BEGIN) {
+            ++legacy_page_begins;
+            return page_mode == 4;
+        }
+        if (a == MK61_COLOR_PAGES_BEGIN_V2) {
+            if(!page_mode || page_mode==4)return 0;
+            assert(c==sizeof(mk61_service_color_pages) && payload);
+            mk61_service_color_pages *config=payload;assert(config->top==60 && config->height==200);
+            if(!page_begins++)return 2;
+            paging=true;return 1;
+        }
+        if (a == MK61_COLOR_PAGE_SELECT || a == MK61_COLOR_PAGE_SHOW) {
+            assert(paging && c==sizeof(uint32_t) && payload && *(uint32_t *)payload<2);
+            if(a==MK61_COLOR_PAGE_SELECT) {++page_selects;if(page_mode==2)return 0;
+#ifdef AW_TEST_LCD_READBACK
+                mock_page=*(uint32_t *)payload;
+#endif
+            }
+            else {++page_shows;if(page_mode==3)return 0;}
+            return 1;
+        }
+        if (a == MK61_COLOR_PAGES_END) {assert(paging);paging=false;++page_ends;return 1;}
+        if (a == MK61_COLOR_INVERT) {
+            /* The timing probe uses an idempotent normal-mode request as a
+             * DMA barrier; the game itself must never invert its borders. */
+            assert(profile_mode && c==sizeof(uint32_t) && payload && *(uint32_t *)payload==0);
+            return 1;
+        }
         if (a != MK61_COLOR_PRESENT) return 0;
         mk61_service_color_frame *f = payload;
         if (!busy_once) { busy_once = true; return 2; }
@@ -140,13 +232,22 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
         assert(f->y >= 60 && f->y + f->height <= 260);
         assert(f->pixel_bytes == f->height * f->width / 2 && f->pixel_bytes <= MK61_COLOR_SNAPSHOT_BYTES);
         assert((f->format & ~MK61_COLOR_PRESERVE_OUTSIDE) == MK61_COLOR_INDEX4);
-        assert(!!(f->format & MK61_COLOR_PRESERVE_OUTSIDE) == (presents != 0));
+        if(paging) assert(f->format & MK61_COLOR_PRESERVE_OUTSIDE);
+        else {assert(!!(f->format & MK61_COLOR_PRESERVE_OUTSIDE) == normal_started);normal_started=true;}
+#ifdef AW_TEST_LCD_READBACK
+        assert(paging && mock_page<2 && !mock_active);
+        for(unsigned row=0;row<f->height;++row)for(unsigned col=0;col<f->width;++col) {
+            const uint8_t pair=f->pixels[row*(f->width/2)+col/2];
+            mock_gram[mock_page][(f->y-60+row)*320+f->x+col]=f->palette[(pair>>((col&1)?0:4))&15]^0xffffu;
+        }
+#endif
         ++presents; return 1;
     }
     return 0;
 }
+static int format(char *out,uint32_t size,const char *text,va_list args){return vsnprintf(out,size,text,args);}
 static const mk61_app_services services = {
-    MK61_APP_SERVICES_MAGIC, MK61_APP_SERVICES_VERSION, sizeof(mk61_app_services), NULL, call, NULL, NULL, NULL
+    MK61_APP_SERVICES_MAGIC, MK61_APP_SERVICES_VERSION, sizeof(mk61_app_services), NULL, call, NULL, format, NULL
 };
 static const void *query(uint32_t id, uint32_t version) {
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION ? &services : NULL;
@@ -158,29 +259,60 @@ int main(int argc, char **argv) {
     directory=argv[1];reject_reservation=strcmp(argv[2],"arena")!=0;
     retry_frames=!strcmp(argv[2],"arena-screen-retry");aw_test_buffers_begin();
 #else
-    if (argc != 2 && argc != 3) { fprintf(stderr, "usage: %s DATA_DIR [no-previous|no-framebuffer|no-background|pair-fallback|split|split-tail-failure]\n", argv[0]); return 2; }
+    if (argc != 2 && argc != 3) { fprintf(stderr, "usage: %s DATA_DIR [no-previous|no-framebuffer|no-background|pair-fallback|split|split-tail-failure|pages|pages-select-fail|pages-show-fail|pages-legacy|cancel-loading]\n", argv[0]); return 2; }
     directory = argv[1]; reject_previous = argc == 3 && !strcmp(argv[2], "no-previous");
     reject_borrowed = argc == 3 && !strcmp(argv[2], "no-framebuffer");
     reject_background = argc == 3 && !strcmp(argv[2], "no-background");
     reject_pair = argc == 3 && !strcmp(argv[2], "pair-fallback");
     split_background = argc == 3 && !strcmp(argv[2], "split");
     reject_tail = argc == 3 && !strcmp(argv[2], "split-tail-failure");
+    cancel_loading = argc == 3 && !strcmp(argv[2], "cancel-loading");
+    if(argc==3 && !strcmp(argv[2],"pages"))page_mode=1;
+    if(argc==3 && !strcmp(argv[2],"pages-select-fail"))page_mode=2;
+    if(argc==3 && !strcmp(argv[2],"pages-show-fail"))page_mode=3;
+    if(argc==3 && !strcmp(argv[2],"pages-legacy"))page_mode=4;
+    if(argc==3 && !strcmp(argv[2],"profile-pages")){profile_mode=true;page_mode=1;}
+    if(argc==3 && !strcmp(argv[2],"profile-baseline"))profile_mode=true;
     if (argc == 3 && !reject_previous && !reject_borrowed && !reject_background &&
-        !reject_pair && !split_background && !reject_tail) return 2;
+        !reject_pair && !split_background && !reject_tail && !page_mode && !profile_mode && !cancel_loading) return 2;
 #endif
     mk61_app_api api = {0}; api.magic = MK61_APP_API_MAGIC; api.version = MK61_APP_API_VERSION; api.struct_size = sizeof(api);
     api.millis_ms = now; api.service = service; api.display_clear = clear; api.display_write_m8 = write_text;
     api.key_wait = key_wait; api.graphics_begin = graphics_begin; api.graphics_end = graphics_end; api.query_service = query;
     mk61_api = &api;
     assert(another_app_main() == 0);
+    assert((profile_mode || quit_sent) && !key_waits && !loading_text && graphics_sessions == 1 && !graphics &&
+           !buffers[1] && !buffers[2] && !buffers[3] && !buffers[4]);
+    if (cancel_loading) {
+        assert(releases == 2 && !presents && !audio_samples && !ended);
+        puts("APP loading canceled with one Escape, progress text cleared");
+        return 0;
+    }
     const unsigned expected_releases = reject_previous || reject_borrowed || reject_background ? 2u :
         reject_pair || split_background ? 4u : 3u;
-    assert(presents >= 30 && audio_samples > 0 && releases == expected_releases && !unexpected_extra_acquisitions && ended && !graphics &&
-           !buffers[1] && !buffers[2] && !buffers[3] && !buffers[4]);
+    assert(presents >= 30 && audio_samples > 0 && releases == expected_releases && !unexpected_extra_acquisitions && ended);
     assert(saw_pair == !(reject_pair || reject_previous));
     if (split_background) assert(saw_head && saw_tail && !saw_background);
     if (reject_tail) assert(saw_head && !saw_tail && !saw_background);
     if (reject_background || reject_previous || reject_borrowed) assert(!saw_background && !saw_head && !saw_tail);
+    assert(!legacy_page_begins);
+    if(page_mode && page_mode!=4) {
+        assert(page_begins==2 && page_selects && !paging);
+        if(page_mode==1) assert(page_shows && !page_ends && !normal_started);
+        else assert(page_ends==1 && normal_started && (page_mode!=3 || page_shows));
+    } else if(page_mode==4) assert(!page_selects && !page_shows && !page_ends && normal_started);
+    if(profile_mode) {
+#if defined(AW_TEST_LCD_FULL_FAIL_SPI) || defined(AW_TEST_LCD_FULL_FAIL_FILE)
+        assert(strstr(debug_output,"AWFULL FAIL"));
+#elif defined(AW_TEST_LCD_FULL)
+        assert(strstr(debug_output,"AWFULL PASS"));
+#elif defined(AW_TEST_LCD_READBACK_FAIL)
+        assert(strstr(debug_output,"AWPIX FAIL"));
+#else
+        assert(strstr(debug_output,"AWSTORM DONE"));
+#endif
+        fputs(debug_output,stdout);
+    }
 #if defined(AW_TEST_REAL_SESSION)
     assert(prepare_calls == 1 && close_calls == (retry_frames ? 2u : 1u));
     assert(!prepared && !reserved && (reject_reservation || arena_frame));
