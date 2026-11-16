@@ -44,7 +44,7 @@ struct Screen {
     void cache_tapes();
     void release_tapes();
     bool select_tape(TapeView view);
-    void invalidate_tape() { tape_valid = 0; }
+    void invalidate_tape() { tape_valid = winding_valid = 0; }
     unsigned tape_top() const { return tape == TapeView::cassette ? 80 : 0; }
     unsigned tape_end() const { return tape == TapeView::cassette ? 144 : 240; }
     void tape_pose(unsigned position, unsigned duration, uint32_t played_ms, uint32_t levels);
@@ -58,7 +58,11 @@ private:
     uint8_t* raster;
     TapeView tape;
     struct CachedTape { uint32_t offset, size; } cached[2]{};
-    uint32_t tape_handle = 0, tape_shadow = 0, tape_valid = 0;
+    uint32_t tape_handle = 0, tape_shadow = 0, tape_valid = 0, winding_valid = 0;
+    struct TapeRect { unsigned left, right, first, end; };
+    TapeRect tape_rects[2];
+    unsigned tape_rect_count = 0, tape_rect_next = 0;
+    bool tape_rect_ready = false;
     unsigned phase_bits = 0;
     uint8_t ring_color[16];
     uint32_t tape_time, spool_phase[2];

@@ -18,6 +18,7 @@ fake_dma_hw dma_registers;
 bool timer_claimed=false,force_timer_failure=false;
 int channel_budget=12;
 unsigned numerator=0,denominator=0;
+unsigned sample_rate=25000;
 void(*dma_handler)()=nullptr;
 std::vector<uint32_t> wire;
 unsigned aborts=0;
@@ -30,7 +31,9 @@ void trigger(unsigned channel) {
     c.left=c.reload;c.busy=c.left!=0;
 }
 void dma_sample() {
-    assert(numerator==1 && denominator==clock_get_hz(clk_sys)/25000);
+    const int64_t error=int64_t(clock_get_hz(clk_sys))*numerator-int64_t(sample_rate)*denominator;
+    if(sample_rate==25000) assert(error==0 && numerator==1);
+    else assert(error>-int64_t(denominator) && error<int64_t(denominator));
     unsigned active=12;
     for(unsigned i=0;i<channels.size();++i) if(channels[i].busy && channels[i].config.enabled) { assert(active==12);active=i; }
     assert(active!=12);auto& c=channels[active];
@@ -167,6 +170,38 @@ int main() {
     assert(key_click() && !synth_statistics().dma);sample();stop_key_click();
     assert(!key_click_statistics().active && !enabled);
     state={};request={ramp,&state,25000,100};assert(synth(request,10) && synth_statistics().dma);close();resources_released();
+    state={};sample_rate=request.rate=44100;force_timer_failure=true;
+    assert(!synth(request,10,true) && !active() && !enabled && !state.calls);
+    resources_released();force_timer_failure=false;
+    assert(synth(request,10,true) && synth_statistics().dma && pwm_wrap==1023);
+    assert(call(MK61_AUDIO_STATUS,&status,10) && status.rate==44100);
+    wire.clear();
+    for(unsigned i=0;i<10;++i) { complete();dispatch_irq(); }
+    for(unsigned i=0;i<wire.size();++i) {
+        const int16_t left=(int16_t)(i*197),right=(int16_t)-left;
+        assert((wire[i]&65535)==unsigned(512+((left+64)>>7)));
+        assert((wire[i]>>16)==unsigned(512+((right+64)>>7)));
+    }
+    assert(wire.size()==160 && !synth_statistics().underruns);
+    trace_close();assert(call(MK61_AUDIO_SYNTH_RECONFIGURE,nullptr,10));check_fade();resources_released();
+    assert(!active() && !enabled);
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(clock_mhz==200 && boosts==restores+1);
+    const unsigned reconfigure_boosts=boosts;
+#endif
+    state={};sample_rate=request.rate=25000;
+    assert(synth(request,10,true) && synth_statistics().dma && pwm_wrap==1023);
+    complete();dispatch_irq();
+#if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
+    assert(boosts==reconfigure_boosts);
+#endif
+    close();resources_released();
+    sample_rate=request.rate=44100;
+    state={};assert(synth(request,10,true));complete(32);dispatch_irq();
+    assert(!synth_statistics().dma && synth_statistics().underruns==1);
+    assert(left_level==512 && right_level==512);
+    close();resources_released();
+    puts("10-bit PCM DMA: 44.1 kHz pacing, stereo duties, idle on missing timer, dropout bias and fade PASS");
     assert(aborts>0);
 #if MK61_PICOCALC_AUTOMATIC_AUDIO_CLOCK
     assert(clock_mhz==125 && boosts==restores);

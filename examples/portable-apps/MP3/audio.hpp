@@ -6,7 +6,7 @@
 #include "mad.h"
 
 namespace mp3 {
-constexpr unsigned output_rate = 25000;
+constexpr unsigned output_rate = 25000, full_rate = 44100;
 
 struct Decoder {
     struct mad_stream stream;
@@ -22,7 +22,7 @@ struct Decoder {
 
     void reset(File source, uint32_t begin, uint32_t stop);
     // One decoder frame or one refill step. True when there is PCM to drain.
-    bool step();
+    bool step(bool full = false);
     // Drain one source sample into the resampler.
     uint32_t source_sample() const;
 private:
@@ -34,15 +34,15 @@ struct Resampler {
     uint32_t previous;
     bool have_previous;
     void reset();
-    // Pull outputs before feeding another source sample. At valid MP3 rates
-    // this yields at most four samples per input, for each channel separately.
-    bool output(uint32_t current, uint32_t& frame);
-    void advance(uint32_t current, unsigned source_rate);
+    // Pull all output samples for this interval before advancing the source.
+    bool output(uint32_t current, uint32_t& frame, unsigned target = output_rate);
+    void advance(uint32_t current, unsigned source_rate, unsigned target = output_rate);
 };
 
 struct Loudness {
     unsigned envelope = 0, gain = 512, step = 0;
-    uint32_t process(uint32_t sample);
+    int low[2]{};
+    uint32_t process(uint32_t sample, bool speakers = false, unsigned rate = output_rate);
 };
 
 struct StereoQueue {

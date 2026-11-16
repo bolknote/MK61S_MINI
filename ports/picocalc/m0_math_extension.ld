@@ -211,5 +211,12 @@ SECTIONS {
            "AI math overlaps LCD color code")
     ASSERT(ADDR(.lcd_color_code) + SIZEOF(.lcd_color_code) <= 0x101ba000,
            "LCD color code exceeds its 8 KiB slot")
+    /* Audio stream setup is cold and shares the free space after LCD code. */
+    .audio_setup_code ALIGN(ADDR(.lcd_color_code) + SIZEOF(.lcd_color_code), 16) : {
+        *(.audio_setup_code)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.audio_setup_code) + SIZEOF(.audio_setup_code) <= 0x101ba000,
+           "LCD and audio setup code exceed their 8 KiB slot")
 }
 INSERT AFTER .flash_end;

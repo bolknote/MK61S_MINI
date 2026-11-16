@@ -172,7 +172,14 @@ enum mk61_audio_operation { MK61_AUDIO_OPEN, MK61_AUDIO_WRITE, MK61_AUDIO_STATUS
   /* Optional PCM reservation: same request as OPEN, but no playback or IRQ.
    * OPEN consumes the reservation; CLOSE and APP return release it. Old
    * residents return 0 and callers can proceed directly to OPEN. */
-  MK61_AUDIO_PREPARE
+  MK61_AUDIO_PREPARE,
+  /* Optional 10-bit PWM output for a PCM16 stereo synth. Empty request
+   * probes support. Otherwise use the SYNTH_OPEN request at 25 or 44.1 kHz.
+   * A 44.1 kHz stream needs a DMA timer and returns 0 if unavailable. */
+  MK61_AUDIO_SYNTH_HIRES_OPEN,
+  /* Stop a local synth before changing its format. A subsequent SYNTH_OPEN
+   * can reuse the audio clock. CLOSE and APP return release that clock. */
+  MK61_AUDIO_SYNTH_RECONFIGURE
 };
 typedef struct mk61_service_audio_synth {
   uint32_t (*sample)(void*);

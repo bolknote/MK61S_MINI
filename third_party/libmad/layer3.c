@@ -328,13 +328,23 @@ unsigned char const pretab[22] = {
  */
 #ifdef MK61_MAD_APP
 /* ARMv6-M APPs are loaded into SRAM. Recover the original table exactly
- * from an integer quadratic per 32 entries and signed byte residuals. */
+ * from an integer quadratic per 32 entries and packed signed residuals. */
 #include <stdint.h>
 struct rq_block {
   uint32_t base, delta;
   int16_t curve;
 };
 #include "rq_compact.h"
+
+static int mk61_rq_residual(unsigned int offset)
+{
+  if (offset < RQ_NARROW_START)
+    return rq_residuals[offset];
+  if (offset >= RQ_NARROW_END)
+    return rq_residuals[offset - (RQ_NARROW_END - RQ_NARROW_START)];
+  unsigned int nibble = offset - RQ_NARROW_START;
+  return (int)((rq_nibbles[nibble >> 1] >> ((nibble & 1) * 4)) & 15) - 8;
+}
 
 static uint32_t mk61_rq(unsigned int value, unsigned int *exponent)
 {
@@ -349,7 +359,7 @@ static uint32_t mk61_rq(unsigned int value, unsigned int *exponent)
   *exponent = block->base >> 27;
   word = (block->base & 0x7ffffff) + ((block->delta * t + 16) >> 5);
   word += ((block->curve * (int)t * (32 - (int)t) + 128) >> 8)
-          + rq_residuals[offset];
+          + mk61_rq_residual(offset);
   if (word >= (1u << 27)) {
     word >>= 1;
     ++*exponent;

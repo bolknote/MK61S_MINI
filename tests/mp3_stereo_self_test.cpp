@@ -23,7 +23,7 @@ struct Frames {
     mp3::Timing time;
 };
 
-Frames decode(const char* path, unsigned seek = 0) {
+Frames decode(const char* path, unsigned seek = 0, unsigned target = mp3::output_rate) {
     std::ifstream stream(path, std::ios::binary);
     std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(stream), {}};
     assert(!bytes.empty());
@@ -43,15 +43,17 @@ Frames decode(const char* path, unsigned seek = 0) {
     queue.play();
     for (unsigned iteration = 0; !decoder.eof; ++iteration) {
         assert(iteration < 40000);
-        if (!decoder.step()) continue;
+        if (!decoder.step(target == mp3::full_rate)) continue;
+        if (target == mp3::full_rate && result.time.rate == 44100)
+            assert(decoder.synth.pcm.samplerate == 44100);
         for (; decoder.pcm_at < decoder.synth.pcm.length; ++decoder.pcm_at) {
             const uint32_t input = decoder.source_sample();
             uint32_t frame;
-            while (resampler.output(input, frame)) {
+            while (resampler.output(input, frame, target)) {
                 assert(queue.push(frame));
                 result.audio.push_back(mp3::StereoQueue::consume(&queue));
             }
-            resampler.advance(input, decoder.synth.pcm.samplerate);
+            resampler.advance(input, decoder.synth.pcm.samplerate, target);
         }
     }
     assert(!decoder.failed && !queue.underruns);
@@ -67,6 +69,19 @@ double energy(const Frames& data, unsigned channel, unsigned begin, unsigned end
     }
     return power;
 }
+double speaker_energy(unsigned frequency, unsigned rate) {
+    mp3::Loudness sound;
+    double power = 0;
+    for (unsigned at = 0; at < rate; ++at) {
+        const int16_t input = 9000 * std::sin(6.283185307179586 * frequency * at / rate);
+        const uint32_t frame = sound.process(uint16_t(input), true, rate);
+        assert(!(frame >> 16));
+        const int16_t left = frame;
+        assert(std::abs(left) <= 27000);
+        if (at >= rate / 2) power += double(left) * left;
+    }
+    return power;
+}
 }
 
 int main(int argc, char** argv) {
@@ -77,6 +92,10 @@ int main(int argc, char** argv) {
     assert(!std::strcmp(stereo.tags.artist, M8("Линия 12")));
     assert(stereo.time.rate == 44100 && stereo.time.seconds() == 4);
     assert(stereo.audio.size() >= 100000 && stereo.audio.size() < 103000);
+    const auto full = decode(argv[1], 0, mp3::full_rate);
+    assert(full.audio.size() >= 176400 && full.audio.size() < 182000);
+    for (unsigned rate : {mp3::output_rate, mp3::full_rate})
+        assert(speaker_energy(60, rate) < speaker_energy(1200, rate) / 6);
     assert(energy(stereo, 0, 2, 8) > 1e11 && energy(stereo, 0, 2, 8) > 200 * energy(stereo, 1, 2, 8));
     assert(energy(stereo, 1, 12, 18) > 1e11 && energy(stereo, 1, 12, 18) > 200 * energy(stereo, 0, 12, 18));
     auto seek = decode(argv[1], 2);

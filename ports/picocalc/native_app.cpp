@@ -825,10 +825,14 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
       return audio_stream::psg(request,host.settings().volume,
           a==MK61_AUDIO_PSG_ONLY_OPEN || a==MK61_AUDIO_PSG_CONFIG_ONLY_OPEN,extended?&config:nullptr);
     }
-    if(a==MK61_AUDIO_SYNTH_OPEN) {
+    if(a==MK61_AUDIO_SYNTH_HIRES_OPEN && !b && !c && !payload) return 1;
+    if(a==MK61_AUDIO_SYNTH_OPEN || a==MK61_AUDIO_SYNTH_HIRES_OPEN) {
       if(b || c!=sizeof(mk61_service_audio_synth) || !payload) return 0;
-      return audio_stream::synth(*(const mk61_service_audio_synth*)payload,host.settings().volume);
+      return audio_stream::synth(*(const mk61_service_audio_synth*)payload,host.settings().volume,
+                                 a==MK61_AUDIO_SYNTH_HIRES_OPEN);
     }
+    if(a==MK61_AUDIO_SYNTH_RECONFIGURE)
+      return !b && !c && !payload ? audio_stream::call(a,nullptr,host.settings().volume) : 0;
     if(b || (a==MK61_AUDIO_CLOSE && !c && !payload ? false : c!=sizeof(mk61_service_audio) || !payload)) return 0;
     return audio_stream::call(a,(mk61_service_audio*)payload,host.settings().volume);
 #else

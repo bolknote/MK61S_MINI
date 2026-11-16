@@ -30,9 +30,7 @@ struct mad_pcm {
   unsigned short channels;		/* number of channels */
   unsigned short length;		/* number of samples per channel */
 #ifdef MK61_MAD_APP
-  /* The APP synthesizes all MPEG-1 frames at half rate. MPEG-2/2.5
-   * Layer III already produce at most 576 samples per channel. */
-  signed short samples[2][576];
+  signed short samples[2][1152];
 #else
   mad_fixed_t samples[2][1152];		/* PCM output samples [ch][sample] */
 #endif

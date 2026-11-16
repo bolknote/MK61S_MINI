@@ -860,11 +860,7 @@ void mad_synth_frame(struct mad_synth *synth, struct mad_frame const *frame)
 
   synth_frame = synth_full;
 
-  if ((frame->options & MAD_OPTION_HALFSAMPLERATE)
-#ifdef MK61_MAD_APP
-      || ns > 18
-#endif
-      ) {
+  if (frame->options & MAD_OPTION_HALFSAMPLERATE) {
     synth->pcm.samplerate /= 2;
     synth->pcm.length     /= 2;
 

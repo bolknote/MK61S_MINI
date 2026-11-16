@@ -11,6 +11,7 @@ constexpr unsigned no_index = max_entries, folder = 0x8000, entry_index = folder
 constexpr unsigned fast_lcd_hz = 24000000, turn_ms = 8000;
 enum { function1 = MK61_APP_KEY_RAW_BASE + 0x81, function2, function3, function4, function5,
        space_key = MK61_APP_KEY_RAW_BASE + ' ' };
+enum class Quality { standard, hires, full };
 
 struct Workspace {
     Decoder decoder;
@@ -43,6 +44,8 @@ struct Player {
          paused = false, output = false, playing = false, running = true, display_failed = false;
     bool deck_dirty = true, clock_running = false, have_animation_frames = false;
     bool tape_pose_pending = false;
+    bool hires_available = false, speakers = false;
+    Quality quality = Quality::standard;
     uint8_t key_state[32]{};
 
     bool call_file(unsigned operation, const char* name, uint32_t offset, void* data, unsigned size) {
@@ -117,8 +120,31 @@ struct Player {
         playing = false;
     }
     void pump_audio() { mk61_api->service(); }
+    unsigned sample_rate() const { return quality == Quality::full ? full_rate : output_rate; }
+    void change_audio(Quality mode, const char* note) {
+        unsigned position = played_seconds();
+        const unsigned total = duration.seconds();
+        if (total && position >= total) position = total - 1;
+        if (output && audio_call(MK61_AUDIO_SYNTH_RECONFIGURE)) output = false;
+        else close_audio();
+        quality = mode;
+        if (have_track) reset_decoder(position);
+        message = note;
+        refresh_deck();
+    }
     bool open_audio() {
-        mk61_service_audio_synth request{StereoQueue::consume, &work->queue, output_rate, 100};
+        mk61_service_audio_synth request{StereoQueue::consume, &work->queue, sample_rate(), 100};
+        if (quality != Quality::standard) {
+            output = audio_call(MK61_AUDIO_SYNTH_HIRES_OPEN, &request, sizeof(request));
+            if (output) return true;
+            if (quality == Quality::full) {
+                change_audio(Quality::hires, M8("25 кГц / 10 бит"));
+                return false;
+            }
+            quality = Quality::standard;
+            message = M8("25 кГц / 8 бит");
+            refresh_deck();
+        }
         if (!audio_call(MK61_AUDIO_SYNTH_OPEN, &request, sizeof(request))) {
             message = M8("Аудиовыход недоступен");
             paused = true;
@@ -132,19 +158,20 @@ struct Player {
         if (!have_track || paused || !work->queue.ready()) return;
         unsigned queued = work->queue.queued();
         if (queued < StereoQueue::capacity - 128 && !work->decoder.eof) {
-            if (work->decoder.step()) {
+            if (work->decoder.step(quality == Quality::full)) {
                 auto& decoder = work->decoder;
                 auto& resampler = work->resampler;
                 const unsigned rate = decoder.synth.pcm.samplerate;
+                const unsigned target = sample_rate();
                 if (resampler.rate != rate) resampler.reset();
                 for (; decoder.pcm_at < decoder.synth.pcm.length; ++decoder.pcm_at) {
                     const uint32_t pcm = decoder.source_sample();
                     uint32_t frame;
-                    while (resampler.output(pcm, frame)) {
+                    while (resampler.output(pcm, frame, target)) {
                         // The producer is the only writer; this snapshot
                         // gives a lower bound on the number of free slots.
                         if (queued < StereoQueue::capacity) {
-                            work->queue.push(work->loudness.process(frame));
+                            work->queue.push(work->loudness.process(frame, speakers, target));
                             ++enqueued;
                             ++queued;
                         } else {
@@ -154,7 +181,7 @@ struct Player {
                             return;
                         }
                     }
-                    resampler.advance(pcm, rate);
+                    resampler.advance(pcm, rate, target);
                 }
             }
         }
@@ -167,7 +194,7 @@ struct Player {
     }
     unsigned played_seconds() const {
         const unsigned queued = work->queue.ready() ? work->queue.queued() : 0;
-        return seek_seconds + (enqueued > queued ? enqueued - queued : 0) / output_rate;
+        return seek_seconds + (enqueued > queued ? enqueued - queued : 0) / sample_rate();
     }
     void reset_decoder(unsigned at) {
         playing = false;
@@ -360,6 +387,14 @@ struct Player {
             if (paused && work->decoder.eof && !work->queue.queued()) reset_decoder(0);
             paused = !paused;
             if (paused) mute();
+        } else if ((key == MK61_APP_KEY_RAW_BASE + 'q' || key == MK61_APP_KEY_RAW_BASE + 'Q') && hires_available) {
+            if (quality == Quality::standard) change_audio(Quality::hires, M8("25 кГц / 10 бит"));
+            else if (quality == Quality::hires) change_audio(Quality::full, M8("44,1 кГц / 10 бит"));
+            else change_audio(Quality::standard, M8("25 кГц / 8 бит"));
+        } else if (key == MK61_APP_KEY_RAW_BASE + 's' || key == MK61_APP_KEY_RAW_BASE + 'S') {
+            speakers = !speakers;
+            work->loudness = {};
+            message = speakers ? M8("Динамики") : M8("Обычный звук");
         } else return;
         refresh_deck();
     }
@@ -408,6 +443,11 @@ struct Player {
         if ((int32_t)(now - power_check) < 0) return;
         lcd_hz = screen.spi_hz();
         power_check = now + 500;
+        if (output && quality == Quality::full) {
+            mk61_service_audio state{};
+            if (!audio_call(MK61_AUDIO_STATUS, &state, sizeof(state)) || state.underruns)
+                change_audio(Quality::hires, M8("25 кГц / 10 бит"));
+        }
     }
     void animate(unsigned now) {
         const bool running_now = playing && !browsing && (screen.record || screen.tape_view() != TapeView::none);
@@ -468,7 +508,7 @@ struct Player {
                 // Finish each picture before starting another. Derive the
                 // angle from time so fast mode keeps the same rotation speed.
                 screen.angle = angle_phase * rotation_frames / turn_ms;
-                next_frame = now + (lcd_hz >= fast_lcd_hz ? 50 : 125);
+                next_frame = now + (lcd_hz >= fast_lcd_hz ? (screen.tape_view() == TapeView::reel ? 40 : 50) : 125);
             }
         }
         if (draw_y == draw_end) return;
@@ -583,6 +623,8 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     Player app{};
     app.services = s;
     app.work = new (memory.data) Workspace;
+    app.hires_available = app.audio_call(MK61_AUDIO_SYNTH_HIRES_OPEN);
+    if (app.hires_available) app.quality = Quality::hires;
     app.work->queue.reset();
     app.work->queue.volume(app.volume);
 
@@ -628,10 +670,8 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     if (!app.screen.select_tape(TapeView::cassette)) (void)app.screen.select_tape(TapeView::reel);
     app.loop();
     const unsigned finished_at = mk61_api->millis_ms();
-    // Preserve the last stereo sample for the output driver's shutdown ramp.
-    app.close_audio();
-    app.mute();
-    app.animate(finished_at);
+    // Snapshot counters while the audio clock still keeps the console online.
+    const unsigned playing_ms = app.animation_ms + (app.clock_running ? finished_at - app.animation_started : 0);
     const auto& queue = app.work->queue;
     const unsigned rendered = __atomic_load_n(&queue.rendered, __ATOMIC_RELAXED);
     if (rendered) {
@@ -647,10 +687,12 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         char line[112];
         const int length = mk61_app_snprintf(s, line, sizeof(line),
             "MP3_VIDEO_FRAMES=%u MP3_VIDEO_MS=%u MP3_LCD_HZ=%u\n",
-            app.record_frames, app.animation_ms, app.lcd_hz);
+            app.record_frames, playing_ms, app.lcd_hz);
         if (length > 0 && length < (int)sizeof(line))
             s->call(MK61_SERVICE_DEBUG_WRITE, (unsigned)length, 0, 0, line);
     }
+    // Preserve the last stereo sample for the output driver's shutdown ramp.
+    app.close_audio();
     s->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_END, 0, 0, nullptr);
     app.screen.release_tapes();
     if (art.handle) mk61_app_buffer_release(s, art.handle);

@@ -76,7 +76,9 @@ Queue* prepared_queue=nullptr; // Core 0 owns this until OPEN or CLOSE.
 repeating_timer timer{};
 alarm_pool_t* pool=nullptr;
 mk61_service_audio_synth generator{};
-bool generator_duties=false,remote=false;
+enum class SynthFormat { pcm, hires, duties };
+SynthFormat generator_format=SynthFormat::pcm;
+bool remote=false;
 bool clock_owned=false;
 bool remote_only=false;
 mk61_service_audio_psg recovery{};
@@ -90,12 +92,23 @@ unsigned gain=0;
 std::atomic<uint32_t> synth_blocks{0},synth_underruns{0};
 std::atomic<uint32_t> refill_max_us{0},refill_late_stage{0},refill_head_before{0},refill_head_after{0},refill_filled{0},refill_core{0},refill_priority{0},refill_restored{0};
 std::atomic<bool> synth_dma{false};
+unsigned pwm_period() { return generator_format==SynthFormat::hires ? 1024 : 256; }
 uint32_t pwm_sample(uint32_t samples) {
+    if(generator_format==SynthFormat::duties) return samples;
     const int32_t left=(int16_t)samples,right=(int16_t)(samples>>16);
+    if(generator_format==SynthFormat::hires) {
+        // Q22 gain keeps the same analog swing at 10 bits. Bias half-way
+        // rounding before the shift; the product fits signed 32 bits.
+        const auto duty=[](int32_t sample) {
+            return uint32_t(512+((sample*(int32_t)gain+(1<<21))>>22));
+        };
+        return duty(left)|(duty(right)<<16);
+    }
     const uint16_t l=(uint16_t)(128+(left*(int32_t)gain)/512000);
     const uint16_t r=(uint16_t)(128+(right*(int32_t)gain)/512000);
     return l|(uint32_t(r)<<16);
 }
+void prepare_pwm(uint16_t center);
 #if MK61_PICOCALC_SYNTH_DMA
 constexpr unsigned BLOCK_SAMPLES=16;
 // Ring addressing bounds every DMA read even if an IRQ is delayed beyond
@@ -133,7 +146,7 @@ void dma_release() {
 void dma_refill(unsigned index) {
     for(auto& sample:dma_samples[index]) {
         const uint32_t value=generator.sample(generator.context);
-        sample=generator_duties?value:pwm_sample(value);
+        sample=pwm_sample(value);
     }
     synth_blocks.fetch_add(1,std::memory_order_relaxed);
 }
@@ -142,7 +155,8 @@ void dma_fault() {
     dma_quiesce();
     // Keep the stream/context owned until close(). No callback may run
     // after its APP is unloaded, including after a failed hardware refill.
-    pwm_set_both_levels(pwm_gpio_to_slice_num(26),128,128);
+    const unsigned center=pwm_period()/2;
+    pwm_set_both_levels(pwm_gpio_to_slice_num(26),center,center);
 }
 void dma_irq() {
     if(!synth_dma.load(std::memory_order_acquire)) return;
@@ -183,12 +197,25 @@ void dma_irq() {
 bool start_dma() {
     synth_blocks.store(0,std::memory_order_relaxed);synth_underruns.store(0,std::memory_order_relaxed);
     const unsigned hz=clock_get_hz(clk_sys);
-    if(!hz || hz%25000 || hz/25000>65535) return false;
+    const unsigned rate=generator.rate;
+    if(!hz || hz<rate) return false;
+    unsigned numerator=1,denominator=hz/rate;
+    if(hz%rate || denominator>65535) {
+        if(rate!=44100) return false;
+        // Use the largest numerator that still gives a 16-bit denominator.
+        // Rounding this divisor sets 44.1 kHz to within one Hz at stock
+        // clocks, including clocks that cannot represent the exact ratio.
+        numerator=65535u*rate/hz;
+        if(!numerator) return false;
+        denominator=(hz*numerator+rate/2)/rate;
+    }
     synth_channels[0]=dma_claim_unused_channel(false);
     if(synth_channels[0]>=0) synth_channels[1]=dma_claim_unused_channel(false);
     if(synth_channels[1]>=0) synth_timer=dma_claim_unused_timer(false);
     if(synth_timer<0) { dma_release();return false; }
     dma_timer_set_fraction((unsigned)synth_timer,0,1);
+    prepare_pwm(pwm_period()/2);
+    playback.store(Playback::STREAM,std::memory_order_release);
 #if defined(PICO_ON_DEVICE)
     mk61_audio_dma_storage.begin_local();
 #endif
@@ -212,7 +239,7 @@ bool start_dma() {
     synth_irq_installed=true;irq_set_enabled(DMA_IRQ_1,true);
     synth_dma.store(true,std::memory_order_release);
     dma_start_channel_mask(1U<<(unsigned)synth_channels[0]);
-    dma_timer_set_fraction((unsigned)synth_timer,1,(uint16_t)(hz/25000));return true;
+    dma_timer_set_fraction((unsigned)synth_timer,(uint16_t)numerator,(uint16_t)denominator);return true;
 }
 #if defined(PICO_ON_DEVICE)
 RemotePwmStorage remote_samples_storage;
@@ -341,7 +368,8 @@ void fade_pwm_to_zero() {
     // to GPIO low then has no step and needs no live APP callback.
     const unsigned slice=pwm_gpio_to_slice_num(26);
     const uint32_t levels=pwm_hw->slice[slice].cc;
-    const auto clamp=[](unsigned value) { return value<256u?value:256u; };
+    const unsigned period=pwm_period();
+    const auto clamp=[period](unsigned value) { return value<period?value:period; };
     const unsigned left=clamp(uint16_t(levels)),right=clamp(levels>>16);
     if(!left && !right)return;
     constexpr unsigned steps=128,scale=steps*steps*steps;
@@ -355,7 +383,7 @@ void fade_pwm_to_zero() {
         const unsigned weight=remaining*remaining*(3*steps-2*remaining);
         pwm_set_both_levels(slice,(left*weight+scale/2)/scale,(right*weight+scale/2)/scale);
     }
-    busy_wait_us_32(8); // Let the double-buffered compare latch at wrap.
+    busy_wait_us_32(period==1024 ? 12 : 8); // Let the compare latch at wrap.
 }
 bool tick(repeating_timer*) {
     const auto mode=playback.load(std::memory_order_acquire);
@@ -375,7 +403,7 @@ bool tick(repeating_timer*) {
     } else { const uint16_t mono=(uint16_t)queue->pop();samples=mono|(uint32_t(mono)<<16); }
     // Match the existing conservative speaker duty range. The PCM center
     // is 50%, with at most +/-25% excursion.
-    const uint32_t levels=generator_duties?samples:pwm_sample(samples);
+    const uint32_t levels=pwm_sample(samples);
     pwm_set_both_levels(pwm_gpio_to_slice_num(26),(uint16_t)levels,(uint16_t)(levels>>16));
     return true;
 }
@@ -396,9 +424,10 @@ void stop(bool smooth_close=false) {
     if(synth_timer>=0){dma_release();dma_owned=true;}
 #endif
     if(!dma_owned && mode!=Playback::IDLE) cancel_repeating_timer(&timer);
-    generator={};generator_duties=false;
+    generator={};
     if(smooth_close && mode==Playback::STREAM) fade_pwm_to_zero();
     silence_pwm();
+    generator_format=SynthFormat::pcm;
     playback.store(Playback::IDLE,std::memory_order_release);
     auto* old=queue;queue=nullptr;delete old;
 }
@@ -411,7 +440,7 @@ void prepare_pwm(uint16_t center=128) {
 #else
     pwm_set_clkdiv_int_frac4(slice,1,0);
 #endif
-    pwm_set_wrap(slice,255);
+    pwm_set_wrap(slice,pwm_period()-1);
     pwm_set_both_levels(slice,center,center);pwm_set_enabled(slice,true);
 }
 }
@@ -471,7 +500,10 @@ void report_alarm_trace() {
 }
 bool active() { return playback.load(std::memory_order_acquire)==Playback::STREAM; }
 namespace {
-void close_impl(bool preserve_pool) {
+#if defined(PICO_ON_DEVICE)
+__attribute__((noinline,section(".audio_setup_code")))
+#endif
+void close_impl(bool preserve_pool, bool preserve_clock=false) {
     // The SDK pool owns two heap allocations. Keeping them after an APP
     // exits can split the next APP's otherwise free SRAM into two unusable
     // pieces. Create and destroy it on core 1, its IRQ owner.
@@ -483,8 +515,10 @@ void close_impl(bool preserve_pool) {
     }
     delete prepared_queue;prepared_queue=nullptr;
     m3_audio::close();remote=false;remote_only=false;recovery={};
-    cosmic_clock::audio_end();
-    clock_owned=false;
+    if(!preserve_clock) {
+        cosmic_clock::audio_end();
+        clock_owned=false;
+    }
 }
 }
 void close() { close_impl(false); }
@@ -516,31 +550,48 @@ bool key_click() {
     return ok;
 }
 namespace {
-uint32_t start_generator(const mk61_service_audio_synth& r,unsigned master,bool boost,bool duties) {
-    if(!r.sample || r.rate!=25000 || r.volume>100 || master>10) return 0;
+#if defined(PICO_ON_DEVICE)
+__attribute__((noinline,section(".audio_setup_code")))
+#endif
+void start_on_core1(void* raw) {
+    auto& started=*(bool*)raw;
+#if MK61_PICOCALC_SYNTH_DMA
+    if((MK61_PICOCALC_AUDIO_DMA || generator.rate==44100) && generator_format!=SynthFormat::duties &&
+       start_dma()) { started=true;return; }
+#endif
+    if(generator.rate!=25000) {
+        generator={};generator_format=SynthFormat::pcm;
+        return;
+    }
+    prepare_pwm(pwm_period()/2);
+    playback.store(Playback::STREAM,std::memory_order_release);
+#if defined(PICO_ON_DEVICE)
+    if(generator_format==SynthFormat::duties && start_remote_dma()) { started=true;return; }
+#endif
+    started=start_timer();
+    if(!started) stop(generator_format==SynthFormat::hires);
+}
+bool valid_synth(const mk61_service_audio_synth& r,unsigned master,bool hires) {
+    return r.sample && (r.rate==25000 || (hires && r.rate==44100)) && r.volume<=100 && master<=10;
+}
+uint32_t start_generator(const mk61_service_audio_synth& r,unsigned master,bool boost,SynthFormat format) {
+    if(!valid_synth(r,master,format==SynthFormat::hires)) return 0;
     if(boost && !clock_owned) {
         if(!cosmic_clock::audio_begin())return 0;
         clock_owned=true;
     }
-    generator=r;gain=master*r.volume;generator_duties=duties;
+    generator=r;gain=master*r.volume;generator_format=format;
+    if(format==SynthFormat::hires) gain=(gain*4096+62)/125;
     bool ok=false;
-    io_worker::invoke(&ok,[](void* raw) {
-        prepare_pwm();playback.store(Playback::STREAM,std::memory_order_release);
-#if MK61_PICOCALC_SYNTH_DMA
-#if defined(PICO_ON_DEVICE)
-        if(generator_duties && start_remote_dma()) { *(bool*)raw=true;return; }
-#endif
-        if(MK61_PICOCALC_AUDIO_DMA && !generator_duties && start_dma()) { *(bool*)raw=true;return; }
-#endif
-        *(bool*)raw=start_timer();if(!*(bool*)raw) stop();
-    });
+    io_worker::invoke(&ok,start_on_core1);
     if(!ok && boost){cosmic_clock::audio_end();clock_owned=false;}
     return ok;
 }
 }
-uint32_t synth(const mk61_service_audio_synth& r,unsigned master) {
-    if(!r.sample || r.rate!=25000 || r.volume>100 || master>10)return 0;
-    close();script::tone(0,0);return start_generator(r,master,true,false);
+uint32_t synth(const mk61_service_audio_synth& r,unsigned master,bool hires) {
+    if(!valid_synth(r,master,hires))return 0;
+    close_impl(false,clock_owned);script::tone(0,0);
+    return start_generator(r,master,true,hires ? SynthFormat::hires : SynthFormat::pcm);
 }
 uint32_t psg(const mk61_service_audio_psg& r,unsigned master,bool required,const mk61_service_audio_psg_config* config) {
     if(!psg_packets::valid(r) || !psg_packets::valid(psg_packets::options(config)) || !r.recover || master>10)return 0;
@@ -548,11 +599,11 @@ uint32_t psg(const mk61_service_audio_psg& r,unsigned master,bool required,const
     if(m3_audio::open(r,master*r.local.volume,config)) {
         recovery=r;recovery_master=master;remote=true;remote_only=required;
         const mk61_service_audio_synth output{m3_audio::duty,nullptr,25000,100};
-        if(start_generator(output,master,false,true))return 2;
+        if(start_generator(output,master,false,SynthFormat::duties))return 2;
         m3_audio::close();remote=false;remote_only=false;recovery={};
     }
     if(required)return 0;
-    return start_generator(r.local,master,true,false);
+    return start_generator(r.local,master,true,SynthFormat::pcm);
 }
 void poll() {
     if(!remote || !m3_audio::failed())return;
@@ -563,10 +614,15 @@ void poll() {
     saved.recover(saved.local.context);
     if(required)return;
     ++fallbacks;
-    (void)start_generator(saved.local,master,true,false);
+    (void)start_generator(saved.local,master,true,SynthFormat::pcm);
 }
 uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master) {
     if(operation==MK61_AUDIO_CLOSE) { close();return 1; }
+    if(operation==MK61_AUDIO_SYNTH_RECONFIGURE) {
+        if(!generator.sample || remote) return 0;
+        close_impl(false,true);
+        return 1;
+    }
     if(!request) return 0;
     auto& r=*request;
     if(operation==MK61_AUDIO_PREPARE) {
@@ -598,7 +654,10 @@ uint32_t call(uint32_t operation,mk61_service_audio* request,unsigned master) {
         if(!queue || r.count>Queue::CAPACITY || (!r.samples && r.count)) return 0;
         r.count=queue->push(r.samples,r.count);
     } else if(operation!=MK61_AUDIO_STATUS || !active()) return 0;
-    if(!queue) { r.rate=25000;r.queued=0;r.underruns=synth_underruns.load(std::memory_order_relaxed);return 1; }
+    if(!queue) {
+        r.rate=generator.rate?generator.rate:25000;
+        r.queued=0;r.underruns=synth_underruns.load(std::memory_order_relaxed);return 1;
+    }
     r.rate=25000;r.queued=queue->queued();r.underruns=queue->underruns.load(std::memory_order_relaxed);return 1;
 }
 }

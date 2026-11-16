@@ -19,6 +19,7 @@ std::array<std::vector<uint8_t>, 2> assets;
 std::array<uint16_t, 320 * 320> pixels;
 std::vector<uint8_t> psram;
 unsigned sd_reads = 0, lcd_pixels = 0;
+bool emulate_busy = false, busy = false;
 
 uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) {
     if (operation == MK61_SERVICE_KEYBOARD) {
@@ -68,6 +69,7 @@ uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) 
         return 1;
     }
     if (operation == MK61_SERVICE_COLOR_DISPLAY && a == MK61_COLOR_PRESENT) {
+        if (emulate_busy && busy) { busy = false; return 2; }
         const auto& frame = *static_cast<mk61_service_color_frame*>(data);
         using namespace picocalc::lcd;
         assert(valid_color(frame));
@@ -76,6 +78,7 @@ uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) 
         for (unsigned row = 0; row < frame.height; ++row)
             color_scanline(frame, area, row, pixels.data() + (frame.y + row) * mp3::screen_width + frame.x);
         lcd_pixels += frame.width * frame.height;
+        busy = true;
         return 1;
     }
     return 0;
@@ -94,7 +97,12 @@ const auto& render(mp3::Screen& screen, unsigned position, unsigned time, bool p
     for (unsigned y = 0; y < 320; y += mp3::strip_height) {
         for (unsigned layer = 0; layer < 3; ++layer) assert(screen.read_tape_band(y, layer));
         screen.paint_tape(y, "Title", "Artist", position, duration, 100, playing, false, 0, nullptr);
-        assert((full ? screen.present(y, mp3::strip_height) : screen.present_tape(y)) == 1);
+        unsigned result, attempts = 0;
+        do {
+            assert(++attempts <= 3);
+            result = full ? screen.present(y, mp3::strip_height) : screen.present_tape(y);
+        } while (result == 2);
+        assert(result == 1);
     }
     return pixels;
 }
@@ -141,8 +149,9 @@ int main(int argc, char** argv) {
     assert(work.queue.queued() == 1);
     const auto reel = render(player.screen, 26, 550, true);
     lcd_pixels = 0;
+    emulate_busy = true;
     const auto rotated = render(player.screen, 26, 650, true);
-    assert(rotated != reel && lcd_pixels && lcd_pixels < 320 * 192);
+    assert(rotated != reel && lcd_pixels && lcd_pixels < 46118);
     const unsigned reel_pixels = lcd_pixels;
     lcd_pixels = 0;
     assert(render(player.screen, 26, 650, true) == rotated && lcd_pixels == 0);
@@ -169,6 +178,20 @@ int main(int argc, char** argv) {
     player.screen.release_tapes();
     assert(psram.empty());
     assert(render(player.screen, 26, 650, false) == cached_frame && sd_reads > 0);
+    mp3::Player tuning{};
+    tuning.services = &services;
+    tuning.work = &work;
+    press(tuning, 'q');
+    assert(tuning.quality == mp3::Quality::standard);
+    tuning.hires_available = true;
+    press(tuning, 'q');
+    assert(tuning.quality == mp3::Quality::hires && tuning.sample_rate() == mp3::output_rate);
+    press(tuning, 'q');
+    assert(tuning.quality == mp3::Quality::full && tuning.sample_rate() == mp3::full_rate);
+    press(tuning, 's');
+    assert(tuning.speakers && tuning.quality == mp3::Quality::full);
+    press(tuning, 'Q');
+    assert(tuning.speakers && tuning.quality == mp3::Quality::standard);
     std::printf("MP3 tape views: rotation, winding, pause, V, identical cached/SD raster. "
                 "Reel step submitted %u pixels; zero SD reads with warm PSRAM.\n", reel_pixels);
 }

@@ -35,14 +35,27 @@ def pack(source: Path, output: Path) -> None:
             if (exact >> shift, exp + shift) != expected:
                 raise ValueError("libmad packed value differs from source")
             residuals.append(error)
+    narrow_end = len(residuals) // STRIDE * STRIDE
+    narrow_start = max(((at // STRIDE + 1) * STRIDE
+                        for at, error in enumerate(residuals[:narrow_end])
+                        if not -8 <= error <= 7), default=0)
+    narrow = residuals[narrow_start:narrow_end]
+    if not narrow:
+        raise ValueError("no libmad residual blocks fit in four bits")
+    packed = [(lo + 8) | ((hi + 8) << 4) for lo, hi in zip(narrow[::2], narrow[1::2])]
+    wide = residuals[:narrow_start] + residuals[narrow_end:]
     text = ["/* Generated from libmad rq_table.dat. See its GPL license. */",
             "static const uint32_t rq_small[] = {"]
     for at in range(0, FIRST, 8):
         text.append("  " + ", ".join(f"0x{(e << 27) | m:08x}u" for m, e in values[at:at + 8]) + ",")
-    text.extend(["};", "static const struct rq_block rq_blocks[] = {", *blocks,
-                 "};", "static const int8_t rq_residuals[] = {"])
-    for at in range(0, len(residuals), 20):
-        text.append("  " + ", ".join(map(str, residuals[at:at + 20])) + ",")
+    text.extend(["};", "static const struct rq_block rq_blocks[] = {", *blocks, "};",
+                 f"enum {{ RQ_NARROW_START = {narrow_start}, RQ_NARROW_END = {narrow_end} }};",
+                 "static const int8_t rq_residuals[] = {"])
+    for at in range(0, len(wide), 20):
+        text.append("  " + ", ".join(map(str, wide[at:at + 20])) + ",")
+    text.extend(["};", "static const uint8_t rq_nibbles[] = {"])
+    for at in range(0, len(packed), 20):
+        text.append("  " + ", ".join(f"0x{value:02x}" for value in packed[at:at + 20]) + ",")
     output.write_text("\n".join([*text, "};", ""]))
 
 

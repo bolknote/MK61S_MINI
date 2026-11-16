@@ -49,7 +49,7 @@ Statistics statistics(){return {};}
 }
 static std::mutex executor;
 static repeating_timer* alarm;
-static unsigned pools,pool_destroys,cancels,left_level,right_level,disabled;
+static unsigned pools,pool_destroys,cancels,left_level,right_level,disabled,pwm_wrap;
 static bool pool_live;
 static bool enabled;
 static bool timer_failure;
@@ -100,7 +100,7 @@ void pwm_set_clkdiv_int_frac4(unsigned slice,unsigned whole,unsigned fraction) {
     assert(whole==1 && fraction==0);
 #endif
 }
-void pwm_set_wrap(unsigned,unsigned n) { assert(core1 && n==255); }
+void pwm_set_wrap(unsigned,unsigned n) { assert(core1 && (n==255 || n==1023));pwm_wrap=n; }
 static picocalc::audio::Plan existing_tone;
 namespace picocalc::script {
 void tone(unsigned f,unsigned ms,unsigned) { assert(!audio_stream::active() && !f && !ms);existing_tone={}; }
@@ -125,7 +125,7 @@ static void check_fade() {
     for(unsigned i=1;i<fade_levels.size();++i) for(unsigned shift:{0u,16u}) {
         const unsigned before=uint16_t(fade_levels[i-1]>>shift);
         const unsigned after=uint16_t(fade_levels[i]>>shift);
-        assert(after<=before && before-after<=4);
+        assert(after<=before && before-after<=4*(pwm_wrap+1)/256);
     }
 }
 static bool sample() {
@@ -247,6 +247,12 @@ int main() {
     assert(call(MK61_AUDIO_PREPARE,&r,10));timer_failure=true;
     assert(!call(MK61_AUDIO_OPEN,&r,10) && !prepared_queue && !queue && !active() && !pool_live);
     timer_failure=false;
+    request={[](void*) -> uint32_t { return 0x80000080u; },nullptr,25000,100};
+    assert(synth(request,10,true) && pwm_wrap==1023 && left_level==512 && right_level==512);
+    sample();assert(left_level==513 && right_level==256);
+    assert(call(MK61_AUDIO_STATUS,&r,10) && r.rate==25000);
+    trace_close();close();check_fade();
+    assert(key_click() && pwm_wrap==255);stop_key_click();close();
     puts("Core-1 PCM/synth ownership, stereo shutdown ramp, remote recovery, finite clicks and APP unload: PASS");
     return 0;
 }

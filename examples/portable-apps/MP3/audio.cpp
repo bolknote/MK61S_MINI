@@ -52,7 +52,7 @@ bool Decoder::refill() {
     return true;
 }
 
-bool Decoder::step() {
+bool Decoder::step(bool full) {
     if (pcm_at < synth.pcm.length) return true;
     if (eof) return false;
     pcm_at = synth.pcm.length = 0;
@@ -66,7 +66,7 @@ bool Decoder::step() {
 
     // Use libmad's low-pass half-rate synthesis for 32/44.1/48 kHz streams.
     // It preserves both channels and reduces the cost before upsampling to PWM.
-    if (!(frame.header.flags & MAD_FLAG_LSF_EXT)) frame.options |= MAD_OPTION_HALFSAMPLERATE;
+    if (!full && !(frame.header.flags & MAD_FLAG_LSF_EXT)) frame.options |= MAD_OPTION_HALFSAMPLERATE;
     mad_synth_frame(&synth, &frame);
     return synth.pcm.length != 0;
 }
@@ -79,35 +79,47 @@ uint32_t Decoder::source_sample() const {
 
 void Resampler::reset() { rate = phase = previous = 0; have_previous = false; }
 
-bool Resampler::output(uint32_t current, uint32_t& frame) {
-    if (!have_previous || phase >= output_rate) return false;
-    // 25 kHz denominator is constant. Q12 blend fits signed 32-bit products.
-    const unsigned blend = (phase << 12) / output_rate;
-    frame = lerp(previous, current, blend);
+bool Resampler::output(uint32_t current, uint32_t& frame, unsigned target) {
+    if (!have_previous || phase >= target) return false;
+    // A 44.1 kHz source in full-rate mode needs no interpolation.
+    frame = phase ? lerp(previous, current, (phase << 12) / target) : previous;
     phase += rate;
     return true;
 }
 
-void Resampler::advance(uint32_t current, unsigned source_rate) {
-    if (have_previous && rate == source_rate) phase -= output_rate;
+void Resampler::advance(uint32_t current, unsigned source_rate, unsigned target) {
+    if (have_previous && rate == source_rate) phase -= target;
     else phase = 0;
     rate = source_rate;
     previous = current;
     have_previous = true;
 }
 
-uint32_t Loudness::process(uint32_t sample) {
-    const int left = (int16_t)sample, right = (int16_t)(sample >> 16);
+uint32_t Loudness::process(uint32_t sample, bool speakers, unsigned rate) {
+    int left = (int16_t)sample, right = (int16_t)(sample >> 16);
+    if (speakers) {
+        // One-pole high pass around 180 Hz, with the low-pass state in Q5.
+        const int coefficient = rate == full_rate ? 415 : 725;
+        const auto high_pass = [coefficient](int value, int& state) {
+            value *= 32;
+            state += ((value - state) * coefficient) >> 14;
+            return (value - state) / 32;
+        };
+        left = high_pass(left, low[0]);
+        right = high_pass(right, low[1]);
+    }
     const unsigned left_peak = left < 0 ? -left : left;
     const unsigned right_peak = right < 0 ? -right : right;
     const unsigned peak = left_peak > right_peak ? left_peak : right_peak;
     // Allow up to +6 dB. A shared envelope preserves the stereo balance.
     // A louder sample can reduce gain immediately; recovery takes hundreds of ms.
-    envelope -= (envelope + 8191) >> 13;
+    const unsigned decay = rate == full_rate ? 14 : 13;
+    envelope -= (envelope + (1u << decay) - 1) >> decay;
     if (peak > envelope) envelope = peak;
-    constexpr unsigned unity = 256, limit = 32767 * unity;
+    constexpr unsigned unity = 256;
+    const unsigned limit = (speakers ? 27000 : 32767) * unity;
     if (!step || peak * gain > limit)
-        gain = envelope < 16384 ? 2 * unity : limit / envelope;
+        gain = envelope < limit / (2 * unity) ? 2 * unity : limit / envelope;
     step = (step + 1) & 31;
     return stereo(left * (int)gain / (int)unity, right * (int)gain / (int)unity);
 }
