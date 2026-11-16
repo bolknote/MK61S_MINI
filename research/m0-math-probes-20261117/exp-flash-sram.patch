@@ -1,0 +1,124 @@
+--- a/code/native_eabi_m0_exp_center.inc
++++ b/code/native_eabi_m0_exp_center.inc
+@@ -7,9 +7,14 @@
+ #include "native_eabi_m0_exp_center_table.inc"
+ #undef MK61_M0_EXP_CENTER_TABLE
+
++extern "C" {
++const uint32_t (* volatile mk61_exp_probe_table)[2] = exp_center;
++}
++
++
+ __attribute__((always_inline)) inline U exp_center_nonlinear(U h, bool negative) {
+   const unsigned idx=(uint32_t(h>>32)+32768U)>>16;
+-  const uint32_t* row=exp_center[idx];
++  const uint32_t* row=mk61_exp_probe_table[idx];
+   const uint32_t packed=row[1];
+   const U even=(U(idx*idx)<<26)+((packed&0x3FFFFFU)<<1);
+   const U odd=(U(packed>>22)<<32)|row[0];
+--- a/tests/fixtures/m0_math_compare_benchmark.c
++++ b/tests/fixtures/m0_math_compare_benchmark.c
+@@ -1,3 +1,7 @@
++#define MK61_MATH_COMPARE_ROOT "/MK61S-M0-TIMING-SRAM"
++#define MK61_PROBE_EXP 0x10176e99U
++#define MK61_PROBE_SELECTOR 0x20006438U
++#define MK61_PROBE_FLASH 0x10191280U
+ /* Private HIL APP. Calls typed soft-float entries in one identified diagnostic
+  * firmware. Reference entries are either in flash or, in the v3 ROM
+  * benchmark, restricted to the verified factory math table.
+@@ -53,6 +57,30 @@
+ } output;
+ _Static_assert(offsetof(__typeof__(output),results)==RESULTS_OFFSET,"Timing report wire layout");
+ static volatile uint64_t sink;
++typedef const uint32_t (*Table)[2];
++static Table volatile * const selector=(Table volatile *)(uintptr_t)MK61_PROBE_SELECTOR;
++static const Table table_flash=(Table)(uintptr_t)MK61_PROBE_FLASH;
++static _Alignas(8) uint32_t table_sram[1470][2];
++
++static int install_sram_copy(void) {
++    uintptr_t address=(uintptr_t)table_sram;
++    __asm__ volatile("" : "+r"(address));
++    if(*selector!=table_flash || address<0x20000000U ||
++       address>0x20042000U-sizeof(table_sram)) return 0;
++    for(unsigned i=0;i<1470U;++i) {
++        table_sram[i][0]=table_flash[i][0];
++        table_sram[i][1]=table_flash[i][1];
++    }
++    const volatile uint32_t (*checked)[2]=table_sram;
++    for(unsigned i=0;i<1470U;++i)
++        if(checked[i][0]!=table_flash[i][0] || checked[i][1]!=table_flash[i][1]) return 0;
++    return 1;
++}
++
++static inline void select_table(unsigned which) {
++    *selector=which?table_sram:table_flash;
++    __asm__ volatile("":::"memory");
++}
+ #define LEAF __attribute__((noipa))
+ #define NO_TABLES __attribute__((optimize("no-jump-tables")))
+ static LEAF double control_binary(double a,double b) { (void)b;return a; }
+@@ -93,6 +121,13 @@
+     default:return (uint32_t)((int(*)(double,double))address)(a.number,b.number);
+     }
+ }
++static inline uint64_t compare_invoke(uintptr_t address,Vector input,unsigned which) {
++    select_table(which);
++    const uint64_t result=invoke(address,UNARY,input);
++    select_table(0);
++    return result;
++}
++
+ static uint32_t micros(void) {
+     __asm__ volatile("":::"memory");return *(volatile uint32_t*)UINT32_C(0x40054028);
+ }
+@@ -156,6 +191,9 @@
+ #else
+     if(!flash_entry(h[7])) return MK61_APP_INVALID_FILE;
+ #endif
++    if(h[3]!=UNARY || h[6]!=MK61_PROBE_EXP || h[7]!=MK61_PROBE_EXP)
++        return MK61_APP_INVALID_FILE;
++    if(!install_sram_copy()) return MK61_APP_RUNTIME_ERROR;
+     Vector inputs[CASES];
+     if(mk61_api->file_read(file.id,sizeof(h),(uint8_t*)inputs,h[4]*sizeof(Vector))!=h[4]*sizeof(Vector)) return MK61_APP_IO_ERROR;
+     output.magic=UINT32_C(0x4D305250);output.version=REPORT_VERSION;output.group=h[2];output.kind=h[3];
+@@ -164,9 +202,10 @@
+     output.warmup_pairs=0;output.warmup_reserved=0;
+ #endif
+     for(unsigned i=0;i<h[4];++i) {
+-        output.results[i][0]=invoke(h[6],h[3],inputs[i]);
+-        output.results[i][1]=invoke(h[7],h[3],inputs[i]);
+-        if(!same(output.results[i][0],inputs[i].expected,h[3])) {
++        output.results[i][0]=compare_invoke(h[6],inputs[i],0);
++        output.results[i][1]=compare_invoke(h[7],inputs[i],1);
++        if(!same(output.results[i][0],inputs[i].expected,h[3]) ||
++           !same(output.results[i][1],inputs[i].expected,h[3])) {
+             if(!output.failures) output.first=i;
+             ++output.failures;
+         }
+@@ -181,8 +220,8 @@
+ #ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+             if(output.warmup_pairs>=MK61_M0_TIMING_WARMUP_PAIRS_CAP) break;
+ #endif
+-            sink=invoke(h[6],h[3],inputs[i]);
+-            sink=invoke(h[7],h[3],inputs[i]);
++            sink=compare_invoke(h[6],inputs[i],0);
++            sink=compare_invoke(h[7],inputs[i],1);
+ #ifdef MK61_M0_TIMING_BOUNDED_WARMUP
+             ++output.warmup_pairs;
+ #endif
+@@ -203,12 +242,15 @@
+             output.control_hits[which][round]=last_hits;output.control_accesses[which][round]=last_accesses;
+ #endif
+             mk61_api->service();
++            select_table(which);
+             output.raw[which][round]=measure(h[6+which],h[3],inputs,h[4],h[5]);
++            select_table(0);
+ #ifdef MK61_M0_TIMING_CACHE
+             output.hits[which][round]=last_hits;output.accesses[which][round]=last_accesses;
+ #endif
+         }
+     }
++    if(*selector!=table_flash) return MK61_APP_RUNTIME_ERROR;
+     mk61_service_write out={"RESULT",(const uint8_t*)&output,
+         (uint32_t)(offsetof(__typeof__(output),results)+h[4]*sizeof(output.results[0])),MK61_SERVICE_INVALID_ID};
+     return s->call(MK61_SERVICE_FILE_WRITE,file.parent,MK61_SERVICE_INVALID_ID,
