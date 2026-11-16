@@ -150,6 +150,7 @@ def main():
     report["sources"] = SOURCES
     report["app_sha256"] = hashlib.sha256((args.output_dir / "SPECTRUM.APP").read_bytes()).hexdigest()
     report["sinclair_app"] = json.loads((profiles[1][2] / "SINCLAIR.json").read_text())
+    report["sinclair_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "SINCLAIR.APP").read_bytes()).hexdigest()
     inputs = sorted(set(SOURCES) | {
         str(p.relative_to(ROOT)) for folder in ("examples/portable-apps/SPECTRUM", "third_party/z80", "third_party/emu2149")
         for p in (ROOT / folder).glob("*.h")})

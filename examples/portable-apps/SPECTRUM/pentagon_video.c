@@ -22,6 +22,18 @@ static bool video_read(const spectrum* s,const spectrum_video_snapshot* saved,un
     memcpy(out,s->ram+offset,size);return true;
 }
 
+static bool capture_range(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,
+                          unsigned offset,unsigned bytes,uint8_t* work) {
+    const uint32_t base=saved->address+(bank&1)*SPECTRUM_BANK_BYTES;
+    while(bytes) {
+        const unsigned count=bytes<4096?bytes:4096;
+        if(!video_read(s,NULL,bank,offset,work,count) ||
+           !saved->io->write(saved->io->context,base+offset,work,count)) return false;
+        offset+=count;bytes-=count;
+    }
+    return true;
+}
+
 bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectrum_video_snapshot* saved) {
     const unsigned bank=s->memory && (s->memory->paging&8)?7:5;
     saved->frames=s->frames;saved->border=mode==SPECTRUM_VIDEO_HICOLOR?spectrum_border(s):0;
@@ -29,15 +41,20 @@ bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectr
     if(mode==SPECTRUM_VIDEO_HICOLOR)
         for(unsigned i=0;i<(saved->ulaplus?64u:16u);++i) saved->palette[i]=spectrum_palette(s,i);
     if(!saved->io) return true;
+    if(SPECTRUM_HAS_PENTAGON && mode==SPECTRUM_VIDEO_WIDE) {
+        // The middle uses a standard display file in each plane. The
+        // upper and lower bands use their own pixel and attribute ranges.
+        for(unsigned plane=0;plane<16384;plane+=8192)
+            if(!capture_range(s,saved,bank,plane,6912,work) ||
+               !capture_range(s,saved,bank-1,plane,2048,work) ||
+               !capture_range(s,saved,bank-1,plane+0x1000,256,work) ||
+               !capture_range(s,saved,bank-1,plane+0x1300,192,work) ||
+               !capture_range(s,saved,bank-1,plane+0x1800,2048,work)) return false;
+        return true;
+    }
     for(unsigned n=mode==SPECTRUM_VIDEO_HICOLOR?1:0;n<2;++n) {
         const unsigned page=bank-1+n;
-        const unsigned end=mode==SPECTRUM_VIDEO_WIDE?16384:14336;
-        for(unsigned offset=0;offset<end;) {
-            const unsigned count=end-offset<4096?end-offset:4096;
-            if(!video_read(s,NULL,page,offset,work,count) ||
-               !saved->io->write(saved->io->context,saved->address+n*SPECTRUM_BANK_BYTES+offset,work,count)) return false;
-            offset+=count;
-        }
+        if(!capture_range(s,saved,page,0,14336,work)) return false;
     }
     return true;
 }

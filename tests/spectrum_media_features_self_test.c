@@ -302,6 +302,9 @@ static uint8_t wide_byte(unsigned bank,unsigned offset) {
 }
 
 static void wide_scanlines(void) {
+    static uint8_t captured[2*SPECTRUM_BANK_BYTES];
+    bytes copy={captured,sizeof(captured)};
+    const spectrum_memory_io capture_io={&copy,read_bytes,write_bytes,clear_bytes};
     for(unsigned bank=4;bank<=7;++bank) {
         for(unsigned offset=0;offset<sizeof(workspace);++offset) workspace[offset]=wide_byte(bank,offset);
         assert(spectrum_bank_write(&memory,bank,0,workspace,sizeof(workspace)));
@@ -311,9 +314,12 @@ static void wide_scanlines(void) {
         const unsigned bank=screen?7:5;
         assert(spectrum_memory_page(&memory,screen?8:0));
         machine.frames=screen?16:0;
+        uint8_t lcd[SPECTRUM_VIDEO_WORK_BYTES],frozen[SPECTRUM_VIDEO_WORK_BYTES];
+        spectrum_video_snapshot snapshot={.io=&capture_io};
+        memset(captured,0xcd,sizeof(captured));
+        assert(spectrum_video_capture(&machine,SPECTRUM_VIDEO_WIDE,lcd,&snapshot));
         for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
-            uint8_t lcd[SPECTRUM_VIDEO_WORK_BYTES];
-            mk61_service_color_frame frame;
+            mk61_service_color_frame frame, saved;
             const unsigned first=strip*SPECTRUM_WIDE_STRIP_ROWS;
             const unsigned rows=strip+1==SPECTRUM_WIDE_STRIPS?304-first:SPECTRUM_WIDE_STRIP_ROWS;
             wide_reads=0;
@@ -321,6 +327,8 @@ static void wide_scanlines(void) {
             assert(frame.width==320 && frame.height==rows && frame.y==8+first);
             assert((frame.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_INDEX4);
             assert(wide_reads<=54); // three areas, two planes, eight phases and attributes
+            assert(spectrum_video_snapshot_strip(&machine,&snapshot,SPECTRUM_VIDEO_WIDE,strip,frozen,&saved));
+            assert(frame.pixel_bytes==saved.pixel_bytes && !memcmp(lcd,frozen,frame.pixel_bytes));
             for(unsigned line=0;line<rows;++line) {
                 const unsigned y=first+line;
                 const unsigned row=y<64?y:y<256?y-64:y-256;
