@@ -38,28 +38,28 @@ struct z80 {
   union { struct { uint8_t c_, b_; }; uint16_t bc_; };
   union { struct { uint8_t e_, d_; }; uint16_t de_; };
   union { struct { uint8_t l_, h_; }; uint16_t hl_; };
+  uint16_t contention_mask; /* A masked address of 0x4000 is on contended RAM. */
+  uint16_t m1_start,m1_limit; /* Local: notify if (uint16_t)(PC-start)<=limit. */
+  /* Keep bus state and callbacks within Thumb-1's word load range.
+   * BUS starts at each instruction, cyc includes any inserted wait states. */
+  uint32_t bus,io_at;
+  unsigned (*wait)(void*,uint32_t); /* Pure query of the delay at a bus timestamp. */
+  void (*before_store)(void*,uint16_t,uint32_t);
   uint8_t (*read_byte)(void*, uint16_t);
   void (*write_byte)(void*, uint16_t, uint8_t);
   uint8_t (*port_in)(z80*, uint16_t);
   void (*port_out)(z80*, uint16_t, uint8_t);
   void* userdata;
   void (*m1)(void*,uint16_t,bool); /* Local: opcode-fetch paging, before/after. */
-  uint16_t m1_start,m1_limit; /* Local: notify if (uint16_t)(PC-start)<=limit. */
-  uint16_t contention_mask; /* A masked address of 0x4000 is on contended RAM. */
+  /* Optional LDIR batching deadline in virtual cycles; zero disables it.
+   * A batch touching a contended address also ends before ULA contention. */
+  uint32_t ldir_until,ldir_contended_until;
   const uint8_t* read_map[4]; /* Local: contiguous windows for LDIR batching. */
   uint8_t* write_map[4];
   /* Authoritative 1K CPU views of all 64K. NULL entries use callbacks.
    * A clean cache page keeps its write view NULL until its first store. */
   const uint8_t* read_pages[64];
   uint8_t* write_pages[64];
-  /* Optional LDIR batching deadline in virtual cycles; zero disables it.
-   * A batch touching a contended address also ends before ULA contention. */
-  uint32_t ldir_until,ldir_contended_until;
-  /* Optional bus timing. BUS starts at the beginning of the instruction;
-   * cyc retains the instruction total, including inserted wait states. */
-  uint32_t bus,io_at;
-  unsigned (*wait)(void*,uint32_t); /* Pure query of the delay at a bus timestamp. */
-  void (*before_store)(void*,uint16_t,uint32_t);
   /* Stable, side-effect-free input matching the masked value for this many
    * T-states after cyc. Zero disables port polling optimization. */
   uint32_t (*port_span)(const z80*,uint16_t,uint8_t,uint8_t);

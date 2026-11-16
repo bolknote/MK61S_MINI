@@ -117,6 +117,40 @@ static void test_delay_loops(void) {
     }
     puts("48K tape delay loops: exact scalar state and timing, wrapping counters, IRQ and buses PASS");
 }
+static void test_bit_poll(void) {
+    static const uint16_t locations[]={0x0170,0x33a0,0x3ffe,0x4780};
+    static const uint16_t operands[]={0x2100,0x5c3b,0x8400,0xc101};
+    static const unsigned phases[]={12,32,14328,14351,14459,57333,69875};
+    for(unsigned test=0;test<1024;++test) {
+        const unsigned pc=locations[(test/8)%4],hl=operands[(test/32)%4],bit=test&7;
+        const uint8_t loop[]={0xcb,(uint8_t)(0x46+8*bit),0x28,0xfc,0x76};
+        spectrum a,b;
+        spectrum_init(&a,left,rom_l);spectrum_init(&b,right,rom_r);
+        memset(rom_l,0,sizeof(rom_l));
+        rom_l[0x38]=rom_l[0x66]=0xc9;
+        for(unsigned i=0;i<sizeof(loop);++i) {
+            const unsigned address=pc+i;
+            if(address<0x4000) rom_l[address]=loop[i];else left[address-0x4000]=loop[i];
+        }
+        const uint8_t value=test%7==0?(uint8_t)(1u<<bit):0;
+        if(hl<0x4000) rom_l[hl]=value;else left[hl-0x4000]=value;
+        memcpy(rom_r,rom_l,sizeof(rom_l));memcpy(right,left,sizeof(left));
+        a.cpu.pc=b.cpu.pc=pc+(test%11==0?2:0);a.cpu.hl=b.cpu.hl=hl;
+        a.cpu.sp=b.cpu.sp=0xff00;
+        a.cpu.mem_ptr=b.cpu.mem_ptr=(uint16_t)random_value();
+        a.cpu.f=b.cpu.f=(uint8_t)(0x40|random_value());a.cpu.r=b.cpu.r=(uint8_t)random_value();
+        a.cpu.iff1=b.cpu.iff1=test%13==0;a.cpu.iff_delay=b.cpu.iff_delay=test%17==0;
+        a.cpu.nmi_pending=b.cpu.nmi_pending=test%19==0;
+        if(test&1) a.cpu.contention_mask=b.cpu.contention_mask=0x4000;
+        if(test&2) a.cpu.cyc=b.cpu.cyc=UINT32_MAX-94;
+        if(test%23==0) a.cpu.read_pages[hl>>10]=b.cpu.read_pages[hl>>10]=NULL;
+        a.frame_tstates=b.frame_tstates=phases[(test/2)%7];
+        const unsigned budget=128+test*29%3300;
+        assert(spectrum_run(&a,budget)==reference_run(&b,budget));
+        equal(&a,&b,8000+test);
+    }
+    puts("BIT/JR polling: exact scalar state and timing, both bit levels, IRQ, bus waits, mapped access and wrap PASS");
+}
 typedef struct {
     spectrum machine;
     uint32_t edge;
@@ -229,5 +263,5 @@ int main(void) {
         }
     }
     puts("6000 LDIR differential cases: flags, BC=0, overlap, self-modification, aliases, page/wrap edges, INT/NMI/EI and slice/frame boundaries PASS");
-    test_memory_loop(false);test_memory_loop(true);test_delay_loops();test_edge_poll();
+    test_memory_loop(false);test_memory_loop(true);test_delay_loops();test_bit_poll();test_edge_poll();
 }

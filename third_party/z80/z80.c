@@ -5,6 +5,9 @@
 #if defined(MK61_TARGET_PICOCALC) && defined(__arm__)
 _Static_assert(offsetof(z80,a)<32 && offsetof(z80,f)<32 && offsetof(z80,r)<32 &&
                offsetof(z80,iff_delay)<32,"Keep live Z80 byte registers in Thumb-1's short load range");
+_Static_assert(offsetof(z80,contention_mask)<64 && offsetof(z80,bus)<128 &&
+               offsetof(z80,wait)<128 && offsetof(z80,m1)<128,
+               "Keep Z80 bus state in Thumb-1's short load range");
 #endif
 
 /* Local port: embedded builds have no stderr; undocumented opcodes remain NOPs. */
@@ -228,12 +231,15 @@ static uint8_t opcode_notify(z80* const z, uint16_t address) {
   if(z->m1) z->m1(z->userdata,address,false);
   return value;
 }
-static inline Z80_HOT_INLINE uint8_t opcode_byte(z80* const z) {
-  const uint16_t address=z->pc;
-  if(bus_timed(z)) bus_cycle(z,address,4);
+static inline Z80_HOT_INLINE uint8_t mapped_opcode(z80* const z,uint16_t address) {
   if(z->m1 && (uint16_t)(address-z->m1_start)<=z->m1_limit)
     return opcode_notify(z,address);
   return read_mapped(z,z->pc++);
+}
+static inline Z80_HOT_INLINE uint8_t opcode_byte(z80* const z) {
+  const uint16_t address=z->pc;
+  if(bus_timed(z)) bus_cycle(z,address,4);
+  return mapped_opcode(z,address);
 }
 
 static inline uint16_t nextw(z80* const z) {
@@ -546,6 +552,32 @@ static void repeat_djnz(z80* z,unsigned budget) {
   z->b=(uint8_t)(z->b-count);
   z->r=(z->r&128)|((z->r+count)&127);
   z->cyc+=count*13;z->bus=(uint32_t)z->cyc;
+}
+
+/* BIT n,(HL) / JR Z holds a read-only mapped byte until the next IRQ or
+ * scheduler turn. The contended read and its internal cycle still wait. */
+static void repeat_bit_poll(z80* z,unsigned budget) {
+  const uint8_t* code=repeat_code(z,4);
+  if(!code || code[0]!=0xcb || (code[1]&0xc7)!=0x46 || code[2]!=0x28 || code[3]!=0xfc) return;
+  const unsigned hl=z->hl;
+  const uint8_t* data=z->read_pages[hl>>10];
+  if(!data || (data[hl&1023]&(1u<<((code[1]>>3)&7)))) return;
+  unsigned count=budget/24,elapsed=count*24;
+  if((hl&z->contention_mask)==0x4000) {
+    const uint32_t first=(uint32_t)z->cyc+8;
+    count=elapsed=0;
+    while(budget-elapsed>=24) {
+      const uint32_t read=first+elapsed;
+      const unsigned wait=z->wait(z->userdata,read);
+      const unsigned duration=24+wait+z->wait(z->userdata,read+3+wait);
+      if(duration>budget-elapsed) break;
+      elapsed+=duration;++count;
+    }
+  }
+  if(!count) return;
+  z->f=(z->f&1u)|0x54u|((z->pc>>8)&0x28u);
+  z->r=(z->r&128)|((z->r+3*count)&127);
+  z->cyc+=elapsed;z->bus=(uint32_t)z->cyc;
 }
 
 /* Read loops in the 48K ROM until the next EAR edge or CPU slice. At the
@@ -1050,11 +1082,15 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   for(;;) {
     if(cycles) {
       if((uint32_t)(z->cyc-before)>=cycles || (stop && *stop))break;
-      if(bus_timed(z)) z->bus=(uint32_t)z->cyc;
-      if(z->halted) {
-        if(bus_timed(z)) bus_cycle(z,(uint16_t)(z->pc-1),4);
-        opcode=0;
-      } else opcode=opcode_byte(z);
+      const bool halted=z->halted;
+      const uint16_t address=z->pc-halted;
+      if(bus_timed(z)) {
+        const uint32_t start=(uint32_t)z->cyc;
+        if((address&z->contention_mask)==0x4000) {
+          z->bus=start;contend_bus(z,4);
+        } else z->bus=start+4;
+      }
+      opcode=halted?0:mapped_opcode(z,address);
     }
   z->cyc += cyc_00[opcode];
   inc_r(z);
@@ -1274,10 +1310,12 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
     cond_jr(z, z->zf==verify);
 #if defined(MK61_TARGET_PICOCALC)
     const unsigned back=(uint16_t)(after-z->pc);
-    if(bus_timed(z) && back==(verify?13:6) && (!stop || !*stop)) {
+    const bool bit_poll=verify && back==4;
+    if(bus_timed(z) && (bit_poll || back==(verify?13:6)) && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
       if(budget>=4*32) {
-        if(verify && z->pc==0x05ed && z->port_span) repeat_edge_poll(z,(unsigned)budget);
+        if(bit_poll) repeat_bit_poll(z,(unsigned)budget);
+        else if(verify && z->pc==0x05ed && z->port_span) repeat_edge_poll(z,(unsigned)budget);
         else repeat_memory_loop(z,(unsigned)budget,verify);
       }
     }
