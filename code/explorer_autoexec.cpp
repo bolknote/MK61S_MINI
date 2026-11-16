@@ -59,7 +59,8 @@ bool find_game(u16 directory_id, program_store::Entry& out) {
   leaf[length] = 0;
   const char* ext = nullptr;
   for(u16 i = 0; i < length; ++i) {
-    if((u8)leaf[i] < 32 || strchr("/\\:\"'", leaf[i])) return false;
+    const u8 c = (u8)leaf[i];
+    if(c < 32 || c == '/' || c == '\\' || c == ':' || c == '"' || c == '\'') return false;
     if(leaf[i] == '.') ext = leaf + i;
   }
   if(!ext) return false;

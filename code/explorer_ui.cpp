@@ -100,8 +100,8 @@ static void copy_text(char* output, usize capacity, const char* input) {
   output[length] = 0;
 }
 
-static bool entry_at(Location location, int index, program_store::Entry& output) {
-  if(index < 0 || index >= location.count()) return false;
+static bool entry_at(const Location& location, int index, program_store::Entry& output) {
+  if(index < 0) return false;
   if(location.page == Page::HOME && index == location.children) {
     output = {};
     output.id = program_store::INVALID_ID;
@@ -122,7 +122,7 @@ static int folder_index(u16 parent, u16 id) {
   return index;
 }
 
-static void row_name(Location location, const program_store::Entry& entry,
+static void row_name(const Location& location, const program_store::Entry& entry,
                      char (&out)[explorer_label::SIZE], bool icons) {
   if(location.page == Page::HOME) {
     const bool russian = library_mk61::language_is_ru();
@@ -280,17 +280,17 @@ static bool contains_ci(const char* text, const char* needle) {
   return false;
 }
 
-static bool filtering(Location location, const char* search) {
+static bool filtering(const Location& location, const char* search) {
   return location.page == Page::HOME || location.page == Page::GAMES || search_active(search);
 }
 
-static bool matches(Location location, int index, const char* search) {
+static bool matches(const Location& location, int index, const char* search) {
   if(!filtering(location, search)) return true;
   program_store::Entry entry = {};
   return entry_at(location, index, entry) && contains_ci(entry.name, search);
 }
 
-static int match_at(Location location, int rank, const char* search) {
+static int match_at(const Location& location, int rank, const char* search) {
   const int count = location.count();
   if(!filtering(location, search)) return rank >= 0 && rank < count ? rank : -1;
   int current = 0;
@@ -301,7 +301,7 @@ static int match_at(Location location, int rank, const char* search) {
   return -1;
 }
 
-static int match_position(Location location, int active, const char* search) {
+static int match_position(const Location& location, int active, const char* search) {
   if(!filtering(location, search)) return active;
   int rank = 0;
   for(int index = 0; index < active; ++index)
@@ -309,11 +309,11 @@ static int match_position(Location location, int active, const char* search) {
   return rank;
 }
 
-static int first_match(Location location, const char* search) {
+static int first_match(const Location& location, const char* search) {
   return match_at(location, 0, search);
 }
 
-static int move_match(Location location, int active, const char* search, int step) {
+static int move_match(const Location& location, int active, const char* search, int step) {
   const int count = location.count();
   int index = active;
   for(int i = 0; i < count; ++i) {
@@ -325,7 +325,7 @@ static int move_match(Location location, int active, const char* search, int ste
   return active;
 }
 
-static void reset_scroll(Scroll& scroll) {
+[[gnu::noinline]] static void reset_scroll(Scroll& scroll) {
   scroll.active = -1;
   scroll.name[0] = 0;
   scroll.offset = 0;
@@ -556,7 +556,7 @@ class GraphicalBrowser {
     mode_=next;
   }
   bool list() const {return mode_==explorer_view::Mode::LIST;}
-  bool draw(Location location,int active,const Search& search,Scroll& scroll,u16& timeout) {
+  [[gnu::noinline]] bool draw(const Location& location,int active,const Search& search,Scroll& scroll,u16& timeout) {
     const auto directory = location.directory;
     if(display_ && display_revision_!=main_lcd().displayModeRevision()) suspend();
     if(!main_lcd().supportsFullscreenBitmap() || main_lcd().fullscreenBitmapWidth()!=192 ||
@@ -642,7 +642,7 @@ class GraphicalBrowser {
 };
 #endif
 
-static u16 draw_browser(Location location, int active, const Search& search,
+[[gnu::noinline]] static u16 draw_browser(const Location& location, int active, const Search& search,
                         Scroll& scroll) {
   Line lines[MAX_LINES];
   clear_lines(lines);
@@ -768,7 +768,7 @@ static void draw_action_menu(const ExplorerAction* actions, int count, int activ
   render(lines);
 }
 
-static ExplorerAction choose_action(const program_store::Entry& entry, bool games) {
+[[gnu::noinline]] static ExplorerAction choose_action(const program_store::Entry& entry, bool games) {
   ExplorerAction actions[10];
   const int count = make_actions(entry, actions, games);
   int active = 0;

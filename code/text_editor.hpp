@@ -626,12 +626,17 @@ inline bool sms_tap(char* source, u16& len, u16& cursor, u16 capacity, SmsState&
     return false;
   }
 
-  if(sms.active && sms.key_code == key_code && cursor > 0 && strchr(letters, source[cursor - 1]) != NULL) {
-    const usize count = bounded_length(letters, 8);
-    sms.index = (u8) ((sms.index + 1) % count);
-    source[cursor - 1] = letters[sms.index];
-    sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
-    return true;
+  if(sms.active && sms.key_code == key_code && cursor > 0) {
+    const char previous = source[cursor - 1];
+    const char* letter = letters;
+    while(*letter && *letter != previous) ++letter;
+    if(*letter == previous) {
+      const usize count = bounded_length(letters, 8);
+      sms.index = (u8) ((sms.index + 1) % count);
+      source[cursor - 1] = letters[sms.index];
+      sms.deadline_ms = now + SMS_INPUT_TIMEOUT_MS;
+      return true;
+    }
   }
 
   char text[2] = {letters[0], 0};

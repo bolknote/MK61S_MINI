@@ -116,10 +116,11 @@ static void per_scanline_colors() {
     const uint8_t rows[]={0x80,1,0x80,1};
     uint8_t colors[16]={0x00,0x00,0x00,0xf8, 0xff,0xff,0xe0,0x07,
                         0x00,0x00,0x1f,0x00, 0xff,0xff,0xff,0x07};
-    const mk61_service_color_frame frame{
-        .pixels=rows,.tiles=colors,.pixel_bytes=4,.tile_bytes=16,
-        .x=8,.y=32,.width=16,.height=2,.format=MK61_COLOR_CELL565|MK61_COLOR_PRESERVE_OUTSIDE
-    };
+    mk61_service_color_frame frame{};
+    frame.pixels=rows;frame.tiles=colors;
+    frame.pixel_bytes=sizeof(rows);frame.tile_bytes=sizeof(colors);
+    frame.x=8;frame.y=32;frame.width=16;frame.height=2;
+    frame.format=MK61_COLOR_CELL565|MK61_COLOR_PRESERVE_OUTSIDE;
     assert(valid_color(frame));
     uint16_t scanline[14];
     const Rect r{9,32,14,2};
