@@ -82,10 +82,41 @@ double speaker_energy(unsigned frequency, unsigned rate) {
     }
     return power;
 }
+
+uint32_t synthesis_digest(bool half_rate) {
+    mad_frame frame{};
+    frame.header.layer = MAD_LAYER_III;
+    frame.header.mode = MAD_MODE_STEREO;
+    frame.header.samplerate = 44100;
+    frame.options = half_rate ? MAD_OPTION_HALFSAMPLERATE : 0;
+    mad_synth synth{};
+    mad_synth_init(&synth);
+
+    uint32_t random = 0xcdf71632u;
+    uint32_t digest = 2166136261u;
+    // Exercise all window phases and both clipping limits with fixed subband input.
+    for (unsigned block = 0; block < 4; ++block) {
+        for (auto& channel : frame.sbsample)
+            for (auto& slot : channel)
+                for (auto& sample : slot) {
+                    random = random * 1664525u + 1013904223u;
+                    sample = static_cast<mad_fixed_t>(random >> 3) - (1 << 28);
+                }
+        mad_synth_frame(&synth, &frame);
+        assert(synth.pcm.channels == 2 && synth.pcm.length == (half_rate ? 576 : 1152));
+        for (const auto& channel : synth.pcm.samples)
+            for (unsigned i = 0; i < synth.pcm.length; ++i)
+                digest = (digest ^ static_cast<uint16_t>(channel[i])) * 16777619u;
+    }
+    return digest;
+}
 }
 
 int main(int argc, char** argv) {
     assert(argc == 3);
+    // These digests were generated with the original libmad synthesis window.
+    assert(synthesis_digest(false) == 0xe5dbb325u);
+    assert(synthesis_digest(true) == 0x6756b758u);
     assert(mp3::ends_in_mp3("Music.Mp3") && !mp3::ends_in_mp3("mp3") && !mp3::ends_in_mp3("Music.mp3.bak"));
     auto stereo = decode(argv[1]);
     assert(!std::strcmp(stereo.tags.title, M8("Ночной сигнал")));

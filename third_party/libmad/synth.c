@@ -547,16 +547,52 @@ mad_fixed_t const D[17][32] = {
 typedef signed short mad_pcm_sample_t;
 static inline mad_pcm_sample_t pcm_sample(mad_fixed_t sample)
 {
-  if (sample >= MAD_F_ONE)
-    return 32767;
-  if (sample <= -MAD_F_ONE)
-    return -32768;
-  return sample >> (MAD_F_FRACBITS + 1 - 16);
+  sample >>= MAD_F_FRACBITS + 1 - 16;
+  if ((mad_pcm_sample_t) sample == sample)
+    return sample;
+  return sample < 0 ? -32768 : 32767;
 }
 #else
 typedef mad_fixed_t mad_pcm_sample_t;
 #define pcm_sample(sample) (sample)
 #endif
+
+# if defined(MK61_MAD_APP) && defined(OPT_SSO)
+/* Share the eight filter loads between the forward and mirrored dot products.
+ * Keeping this out of line limits register spills in the Thumb-1 callers.
+ * Both sums wrap at 32 bits, matching the SSO path, and return in r0/r1 on ARM. */
+static __attribute__((noinline))
+unsigned long long window_dot_pair(mad_fixed_t const samples[8],
+                                   mad_fixed_t const *direct,
+                                   mad_fixed_t const *mirrored)
+{
+  mad_fixed64lo_t forward = 0, reverse = 0;
+
+#  pragma GCC unroll 8
+  for (unsigned int tap = 0; tap < 8; ++tap) {
+    mad_fixed64lo_t sample = samples[tap];
+    forward += sample * (mad_fixed64lo_t) direct[(16 - 2 * tap) & 15];
+    reverse += sample * (mad_fixed64lo_t) mirrored[2 * tap];
+  }
+
+  return ((unsigned long long) reverse << 32) | forward;
+}
+
+static inline __attribute__((always_inline))
+void synth_window_pair(mad_fixed_t const even[8], mad_fixed_t const odd[8],
+		       mad_fixed_t const row[32], unsigned int pe, unsigned int po,
+		       mad_pcm_sample_t *forward, mad_pcm_sample_t *reverse)
+{
+  unsigned long long even_pair = window_dot_pair(even, row + pe, row + (15 - pe));
+  unsigned long long odd_pair = window_dot_pair(odd, row + po, row + (15 - po));
+  mad_fixed64lo_t direct = (mad_fixed64lo_t) even_pair - (mad_fixed64lo_t) odd_pair;
+  mad_fixed64lo_t mirror = (mad_fixed64lo_t) (even_pair >> 32) +
+                         (mad_fixed64lo_t) (odd_pair >> 32);
+
+  *forward = pcm_sample(SHIFT((mad_fixed_t) direct));
+  *reverse = pcm_sample(SHIFT((mad_fixed_t) mirror));
+}
+# endif
 
 # if defined(ASO_SYNTH)
 void synth_full(struct mad_synth *, struct mad_frame const *,
@@ -631,6 +667,9 @@ void synth_full(struct mad_synth *synth, struct mad_frame const *frame,
 
 	/* D[32 - sb][i] == -D[sb][31 - i] */
 
+# if defined(MK61_MAD_APP) && defined(OPT_SSO)
+	synth_window_pair(*fe, *fo, *Dptr, pe, po, pcm1++, pcm2--);
+# else
 	ptr = *Dptr + po;
 	ML0(hi, lo, (*fo)[0], ptr[ 0]);
 	MLA(hi, lo, (*fo)[1], ptr[14]);
@@ -676,6 +715,7 @@ void synth_full(struct mad_synth *synth, struct mad_frame const *frame,
 	MLA(hi, lo, (*fo)[0], ptr[16 - 16]);
 
 	*pcm2-- = pcm_sample(SHIFT(MLZ(hi, lo)));
+# endif
 
 	++fo;
       }
@@ -771,6 +811,9 @@ void synth_half(struct mad_synth *synth, struct mad_frame const *frame,
 	/* D[32 - sb][i] == -D[sb][31 - i] */
 
 	if (!(sb & 1)) {
+# if defined(MK61_MAD_APP) && defined(OPT_SSO)
+	  synth_window_pair(*fe, *fo, *Dptr, pe, po, pcm1++, pcm2--);
+# else
 	  ptr = *Dptr + po;
 	  ML0(hi, lo, (*fo)[0], ptr[ 0]);
 	  MLA(hi, lo, (*fo)[1], ptr[14]);
@@ -816,6 +859,7 @@ void synth_half(struct mad_synth *synth, struct mad_frame const *frame,
 	  MLA(hi, lo, (*fe)[7], ptr[16 -  2]);
 
 	  *pcm2-- = pcm_sample(SHIFT(MLZ(hi, lo)));
+# endif
 	}
 
 	++fo;
