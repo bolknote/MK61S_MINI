@@ -439,16 +439,16 @@ static void advance_state(PSG* psg,unsigned ticks)
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
 static inline __attribute__((always_inline)) unsigned fixed_output_ticks(PSG* psg)
 {
-  // CONFIG validates this fixed rate; stereo never batches silent samples.
-  if(psg->psgtime<150000u){psg->psgtime+=50000u;return 9;}
-  psg->psgtime-=150000u;return 8;
+  // CONFIG bounds the clock so that each 25 kHz sample takes 8 or 9 ticks.
+  const int32_t phase=(int32_t)(psg->psgtime+1600000u-psg->clk);
+  const bool ninth=phase<0;
+  psg->psgtime=(uint32_t)(phase+(ninth?200000:0));return 8+ninth;
 }
 #endif
 static unsigned output_ticks(PSG* psg)
 {
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
-  if(psg->realstep==1750000u) {
-    // Validated fixed rate: the exact8/9-tick phase has four positions.
+  if(psg->realstep==psg->clk) {
     return fixed_output_ticks(psg);
   }
 #endif
@@ -850,8 +850,8 @@ int16_t PSG_calc(PSG* psg)
 {
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE
   /* Only the native module uses this entry: CONFIG validates quality=1,
-   * base_incr=1<<24, realstep=1750000, psgstep=200000 and psgtime<200000.
-   * No module command changes the rate/clock. Every call has8 or9 ticks,
+   * base_incr=1<<24, 1600000<clk<=1800000, psgstep=200000 and psgtime<200000.
+   * No module command changes the rate/clock. Each sample has 8 or 9 ticks,
    * a built-in volume table and a bounded output/envelope state. */
   const unsigned ticks=output_ticks(psg);
   if(!(psg->volume[0]|psg->volume[1]|psg->volume[2]))return calc_silent(psg,ticks);

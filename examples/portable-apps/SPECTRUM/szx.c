@@ -32,7 +32,8 @@ static uint8_t* save_z80(uint8_t* p,const spectrum* s) {
     for(unsigned i=0;i<12;++i) put16(p+2*i,words[i]);
     p[24]=z->i;p[25]=z->r;p[26]=z->iff1;p[27]=z->iff2;p[28]=z->interrupt_mode;
     put32(p+29,s->frame_tstates);
-    p[33]=s->frame_tstates<32?32-s->frame_tstates:0;
+    const unsigned irq=spectrum_is_128(s)?36:32;
+    p[33]=s->frame_tstates<irq?irq-s->frame_tstates:0;
     p[34]=(z->iff_delay?1:0)|(z->halted?2:0);put16(p+35,z->mem_ptr);
     return p+Z80_BYTES;
 }
@@ -42,12 +43,14 @@ uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
     memset(writer,0,sizeof(*writer));
     const bool div=s->disk.mode==SPECTRUM_DISK_DIVMMC && s->disk.spi.io.bytes;
     if(div && (!spectrum_disk_cache_end(s) || !spectrum_memory_sync(s->memory))) return 0;
-    writer->machine=s;writer->banks=s->pentagon?s->memory->banks:3;
+    const unsigned model=spectrum_model(s);
+    writer->machine=s;writer->banks=model?s->memory->banks:3;
     memcpy(p,"ZXST\x01\x05",6);
-    p[6]=s->pentagon?(s->memory->extended?14:13):1;
+    static const uint8_t machine_ids[]={1,13,14,2};
+    p[6]=machine_ids[model];
     p=save_z80(p+8,s);
     p=header(p,ID('S','P','C','R'),ULA_BYTES);
-    p[0]=s->border;p[1]=s->pentagon?s->memory->paging:0;
+    p[0]=s->border;p[1]=model?s->memory->paging:0;
     p[2]=s->pentagon&&s->memory->extended?s->memory->control:0;
     p[3]=s->border|(s->beeper<<4);
     p=header(p+ULA_BYTES,ID('A','Y',0,0),AY_BYTES);
@@ -59,6 +62,9 @@ uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
         p[0]=s->ulaplus_mode;p[1]=s->ulaplus_select;
         memcpy(p+2,s->ulaplus_palette,64);
         p+=PALETTE_BYTES;
+    }
+    if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)) {
+        p=header(p,ID('S','C','L','D'),2);p[1]=s->timex_mode;p+=2;
     }
     writer->prefix=(unsigned)(p-writer->header);
     const unsigned div_bytes=div?SPI_BYTES+DIV_RAM_BYTES:0;
@@ -90,7 +96,7 @@ int spectrum_szx_read(void* context,uint32_t offset,uint8_t* out,uint32_t bytes)
             memcpy(out,writer->header+offset,take);
         } else if(offset<base) {
             const uint32_t at=offset-writer->prefix,index=at/PAGE_BLOCK,part=at%PAGE_BLOCK;
-            const unsigned bank=s->pentagon?index:flat_bank(index);
+            const unsigned bank=writer->banks>3?index:flat_bank(index);
             if(part<11) {
                 uint8_t block[11];
                 put32(block,ID('R','A','M','P'));put32(block+4,PAGE+3);
@@ -130,25 +136,29 @@ enum spectrum_error spectrum_szx_model(const spectrum_source* source,unsigned* m
     if(memcmp(h,"ZXST",4)) return SPECTRUM_FORMAT;
     if(h[4]!=1 || h[7]) return SPECTRUM_UNSUPPORTED;
     switch(h[6]) {
-    case 1: *model=0;return SPECTRUM_OK;
-    case 13: *model=1;return SPECTRUM_OK;
-    case 14: *model=2;return SPECTRUM_OK;
+    case 1: *model=SPECTRUM_48;return SPECTRUM_OK;
+    case 2: *model=SPECTRUM_128;return SPECTRUM_OK;
+    case 8: *model=SPECTRUM_TC2048;return SPECTRUM_OK;
+    case 13: *model=SPECTRUM_P512;return SPECTRUM_OK;
+    case 14: *model=SPECTRUM_P1024;return SPECTRUM_OK;
     default: return SPECTRUM_UNSUPPORTED;
     }
 }
 
+enum { SZX_MAX_BANKS=SPECTRUM_HAS_PENTAGON?64:8 };
 typedef struct {
-    uint32_t ram[64];
-    uint32_t compressed[64];
+    uint32_t ram[SZX_MAX_BANKS];
+    uint32_t compressed[SZX_MAX_BANKS];
     uint8_t cpu[Z80_BYTES],ula[ULA_BYTES],ay[AY_BYTES],palette[PALETTE_BYTES];
-    uint8_t extension[STATE_BYTES];
+    uint8_t extension[STATE_BYTES],scld[2];
     uint32_t spi;
-    bool has_ay,has_palette;
+    bool has_ay,has_palette,has_scld;
 } snapshot;
 
 static enum spectrum_error inspect(const spectrum_source* source,snapshot* state,unsigned model) {
     bool has_cpu=false,has_ula=false;
-    const unsigned banks=model==2?64:model==1?32:8;
+    const bool flat=model==SPECTRUM_48 || model==SPECTRUM_TC2048;
+    const unsigned banks=model==SPECTRUM_P1024?64:model==SPECTRUM_P512?32:8;
     for(uint32_t at=8;at<source->size;) {
         uint8_t h[8];
         if(source->size-at<sizeof(h)) return SPECTRUM_FORMAT;
@@ -167,6 +177,8 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
             out=state->ay;length=AY_BYTES;state->has_ay=true;break;
         case ID('P','L','T','T'): if(state->has_palette) return SPECTRUM_FORMAT;
             out=state->palette;length=size==66?66:PALETTE_BYTES;state->has_palette=true;break;
+        case ID('S','C','L','D'): if(state->has_scld) return SPECTRUM_FORMAT;
+            out=state->scld;length=2;state->has_scld=true;break;
         case ID('M','K','6','1'):
             if(state->extension[0] || size<STATE_BYTES) return SPECTRUM_FORMAT;
             if(!source->read(source->context,at,state->extension,STATE_BYTES))return SPECTRUM_IO;
@@ -183,7 +195,7 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
             if(word(page)>1) return SPECTRUM_UNSUPPORTED;
             const unsigned bank=page[2];
             if((word(page)==0 && size!=PAGE+sizeof(page)) || bank>=banks ||
-               (!model && bank!=0 && bank!=2 && bank!=5) ||
+               (flat && bank!=0 && bank!=2 && bank!=5) ||
                state->ram[bank]) return SPECTRUM_FORMAT;
             state->ram[bank]=at+sizeof(page);
             if(word(page)) {
@@ -200,10 +212,12 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
         at+=size;
     }
     const uint8_t* z=state->cpu;
+    const unsigned frame=flat?SPECTRUM_FRAME_TSTATES:model==SPECTRUM_128?SPECTRUM_128_FRAME_TSTATES:71680;
     if(!has_cpu || !has_ula || z[26]>1 || z[27]>1 || z[28]>2 ||
-       dword(z+29)>=(model?71680:SPECTRUM_FRAME_TSTATES) || state->ula[0]>7 ||
+       dword(z+29)>=frame || state->ula[0]>7 ||
        (state->has_ay && state->ay[1]>15)) return SPECTRUM_FORMAT;
-    if(!model) return state->ram[0] && state->ram[2] && state->ram[5]?SPECTRUM_OK:SPECTRUM_FORMAT;
+    if(state->has_scld && (state->scld[0] || (state->scld[1]&7)>2)) return SPECTRUM_UNSUPPORTED;
+    if(flat) return state->ram[0] && state->ram[2] && state->ram[5]?SPECTRUM_OK:SPECTRUM_FORMAT;
     for(unsigned i=0;i<banks;++i) if(!state->ram[i]) return SPECTRUM_FORMAT;
     return SPECTRUM_OK;
 }
@@ -233,7 +247,9 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     unsigned model;
     enum spectrum_error result=spectrum_szx_model(source,&model);
     if(result) return result;
-    if(model!=(s->pentagon?(s->memory->extended?2u:1u):0u)) return SPECTRUM_UNSUPPORTED;
+    const unsigned current=spectrum_model(s);
+    if((!SPECTRUM_HAS_PENTAGON && (model==SPECTRUM_P512 || model==SPECTRUM_P1024)) ||
+       (model==SPECTRUM_TC2048?SPECTRUM_48:model)!=current) return SPECTRUM_UNSUPPORTED;
     snapshot state={0};
     result=inspect(source,&state,model);
     if(result) return result;
@@ -247,7 +263,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     } else if(s->disk.mode==SPECTRUM_DISK_DIVMMC && !s->disk.spi.reads)return SPECTRUM_MEDIA;
     const spectrum_inflate_output output={.first=low,.second=high,.split=12288,.limit=PAGE};
     bool packed=false;
-    for(unsigned bank=0;bank<64;++bank) packed|=state.compressed[bank]!=0;
+    for(unsigned bank=0;bank<SZX_MAX_BANKS;++bank) packed|=state.compressed[bank]!=0;
     if(packed && (!low || !high)) return SPECTRUM_UNSUPPORTED;
     // These areas can borrow clean cache slots. Flush and invalidate before
     // validating data so a malformed compressed block cannot destroy RAM.
@@ -255,7 +271,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
         if(!spectrum_memory_flush_pages(s->memory)) return SPECTRUM_IO;
         spectrum_refresh_map(s);
     }
-    for(unsigned bank=0;bank<64 && packed;++bank) if(state.compressed[bank]) {
+    for(unsigned bank=0;bank<SZX_MAX_BANKS && packed;++bank) if(state.compressed[bank]) {
         unsigned used;
         result=spectrum_inflate(source,state.ram[bank],state.compressed[bank],&output,&used);
         if(result || used!=PAGE) return result?result:SPECTRUM_FORMAT;
@@ -264,7 +280,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(!spectrum_disk_snapshot(s)) return SPECTRUM_IO;
     spectrum_reset_cpu(s);
     if(s->memory && !spectrum_memory_reset(s->memory)) return SPECTRUM_IO;
-    for(unsigned bank=0;bank<64;++bank) if(state.ram[bank]) {
+    for(unsigned bank=0;bank<SZX_MAX_BANKS;++bank) if(state.ram[bank]) {
         if(state.compressed[bank]) {
             unsigned used;
             result=spectrum_inflate(source,state.ram[bank],state.compressed[bank],&output,&used);
@@ -283,7 +299,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
                (s->memory && !spectrum_bank_write(s->memory,bank,at,buffer,512))) return SPECTRUM_IO;
         }
     }
-    if(model && (!spectrum_memory_control(s->memory,state.ula[2]) ||
+    if(current && (!spectrum_memory_control(s->memory,state.ula[2]) ||
                  !spectrum_memory_page(s->memory,state.ula[1]))) return SPECTRUM_IO;
     restore_cpu(s,state.cpu);
     s->border=state.ula[0];s->beeper=(state.ula[3]>>4)&1;
@@ -312,6 +328,9 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(state.has_palette) {
         s->ulaplus_mode=state.palette[0]&1;s->ulaplus_select=state.palette[1];
         memcpy(s->ulaplus_palette,state.palette+2,64);
+    }
+    if(SPECTRUM_HAS_SINCLAIR && (state.has_scld || model==SPECTRUM_TC2048)) {
+        s->extensions|=SPECTRUM_TIMEX;s->timex_mode=state.scld[1];
     }
     spectrum_refresh_map(s);
     return SPECTRUM_OK;

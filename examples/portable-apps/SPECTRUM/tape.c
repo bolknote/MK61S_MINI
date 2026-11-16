@@ -375,7 +375,7 @@ static bool begin_symbol(spectrum_tape* tape) {
     return true;
 }
 
-static uint32_t next_pulse(spectrum_tape* tape,bool model48) {
+static uint32_t next_pulse(spectrum_tape* tape,unsigned model) {
     spectrum_tape_block* b=&tape->block;
     // Bound metadata and empty loop traversal in a single port read.
     for(unsigned steps=0;steps<256;++steps) {
@@ -408,7 +408,7 @@ static uint32_t next_pulse(spectrum_tape* tape,bool model48) {
             case SILENCE:
                 if(!b->pause) return 0;
                 tape->phase=PAUSE;break;
-            case STOP48: if(model48) return 0;break;
+            case STOP48: if(model==SPECTRUM_48) return 0;break;
             case LEVEL: tape->level=b->count!=0;break;
             case JUMP:
                 if(!seek_block(tape,index,(int16_t)b->count)) {tape->fault=true;return 0;}
@@ -469,7 +469,8 @@ static uint32_t next_pulse(spectrum_tape* tape,bool model48) {
                        !tape_read(tape,kind,b->data+tape->byte,count,4)) goto broken;
                     samples=dword(count);tape->byte+=4;
                 }
-                const uint64_t ticks=(uint64_t)samples*3500000+tape->fraction;
+                const uint32_t clock=model==SPECTRUM_128?SPECTRUM_128_CPU_HZ:3500000;
+                const uint64_t ticks=(uint64_t)samples*clock+tape->fraction;
                 const uint64_t duration=ticks/b->rate;
                 if(!samples || duration>=INT32_MAX) goto broken;
                 tape->fraction=(uint32_t)(ticks-duration*b->rate);
@@ -513,10 +514,13 @@ static uint32_t next_pulse(spectrum_tape* tape,bool model48) {
             if(!b->pause) break;
             tape->phase=PAUSE_END;
             tape->level=!tape->level;
-            return 3500;
+            return model==SPECTRUM_128?3547:3500;
         case PAUSE_END:
             tape->phase=NEXT;tape->level=false;
-            if(b->pause>1) return ((uint32_t)b->pause-1)*3500;
+            if(b->pause>1) {
+                const uint32_t ms=b->pause-1u;
+                return model==SPECTRUM_128?ms*35469u/10:ms*3500;
+            }
             break;
         }
     }
@@ -549,7 +553,7 @@ bool spectrum_tape_ear(void* context,const z80* cpu) {
         tape->deadline=now;tape->timed=true;
     }
     while((int32_t)(now-tape->deadline)>=0) {
-        const uint32_t duration=next_pulse(tape,!machine->pentagon);
+        const uint32_t duration=next_pulse(tape,spectrum_model(machine));
         if(!duration) {
             tape->playing=tape->timed=false;
             if(!tape->choices) tape->level=false;

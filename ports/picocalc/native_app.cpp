@@ -597,7 +597,7 @@ static __attribute__((noinline)) bool app_file_info(u32 operation,const char* pa
   info.name[count]=0;*(mk61_service_file_info*)request.data=info;return true;
 }
 __attribute__((noinline)) u32 NativeHost::file_bytes(u32 a,u32 b,u32 c,void* payload) {
-  if(b || !payload || a>MK61_FILE_BYTES_WRITE_SOURCE) return 0;
+  if(b || !payload || a>MK61_FILE_BYTES_ID) return 0;
   const bool stream=a==MK61_FILE_BYTES_WRITE_SOURCE;
   if(c!=(stream?sizeof(mk61_service_write_source):sizeof(mk61_service_file_bytes))) return 0;
   const auto* r=stream?nullptr:(const mk61_service_file_bytes*)payload;
@@ -611,6 +611,12 @@ __attribute__((noinline)) u32 NativeHost::file_bytes(u32 a,u32 b,u32 c,void* pay
   const auto* source=stream?(const mk61_service_write_source*)payload:nullptr;
   const char* requested=stream?source->name:r->path;
   if(!requested || strnlen(requested,files::PATH_SIZE)>=files::PATH_SIZE) return 0;
+  if(a==MK61_FILE_BYTES_ID) {
+    if(r->data || r->offset || r->size) return 0;
+    char path[files::PATH_SIZE];program_store::Entry entry;
+    return app_file_path(s.path_,requested,path) && script::register_file(path,entry) &&
+           entry.kind==program_store::NodeKind::FILE ? (u32)entry.id+1 : 0;
+  }
   if(stream ? (!source->read || !source->size) :
      (!r->data || (a==MK61_FILE_BYTES_READ || a==MK61_FILE_BYTES_WRITE ?
                   !r->size || r->size>4096 : r->size!=sizeof(mk61_service_file_info)))) return 0;

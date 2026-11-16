@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 struct spectrum;
-enum { SPECTRUM_TURBOSOUND=1, SPECTRUM_COVOX=2, SPECTRUM_SPECDRUM=4, SPECTRUM_ULAPLUS=8 };
+enum { SPECTRUM_TURBOSOUND=1, SPECTRUM_COVOX=2, SPECTRUM_SPECDRUM=4, SPECTRUM_ULAPLUS=8, SPECTRUM_TIMEX=16 };
 enum { SPECTRUM_MONO, SPECTRUM_ABC, SPECTRUM_ACB };
 enum { SPECTRUM_AY, SPECTRUM_YM };
 #define SPECTRUM_SOUND_QUEUE_EVENTS 256U
@@ -16,6 +16,7 @@ typedef struct {
     _Atomic bool clock_running;
     uint32_t startup_samples;
     uint32_t time;
+    uint32_t guest_cursor,producer_time,clock_remainder;
     uint8_t regs[2][16],selected,selected_reg[2],beeper,covox,specdrum;
     uint8_t latest_dac[3];
     bool asynchronous;

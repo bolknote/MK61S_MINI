@@ -145,7 +145,7 @@ bool spectrum_div_restore(spectrum* s,uint8_t control,bool automap,uint8_t spi_d
 void spectrum_disk_m1(void* raw,uint16_t pc,bool before) {
     spectrum* s=raw;spectrum_disk* d=&s->disk;
     if(!d->mode || !s->memory) return;
-    const bool rom48=!s->pentagon || (s->memory->paging&16);
+    const bool rom48=(!s->pentagon && !spectrum_is_128(s)) || (s->memory->paging&16);
     if(d->mode==SPECTRUM_DISK_BETA) {
         if(before && d->mapped && pc>=0x4000) (void)mapping(s,false);
         else if(before && !d->mapped && rom48 && (pc&0xFF00)==0x3D00) (void)mapping(s,true);

@@ -248,7 +248,11 @@ enum mk61_file_bytes_operation { MK61_FILE_BYTES_STAT, MK61_FILE_BYTES_READ, MK6
   /* Atomically create a binary file from a synchronous write_source.
    * b=0, c=sizeof(mk61_service_write_source), name is an M8 path relative
    * to the APP or absolute. Existing files are rejected. No ID is assigned. */
-  MK61_FILE_BYTES_WRITE_SOURCE
+  MK61_FILE_BYTES_WRITE_SOURCE,
+  /* Resolve a physical APP-relative or absolute path to a file ID that can
+   * be passed in an APP Flow context. data=NULL, offset=size=0. Returns
+   * file ID + 1 or zero. Directory paths are rejected. */
+  MK61_FILE_BYTES_ID
 };
 typedef struct mk61_service_file_bytes {
   const char* path;

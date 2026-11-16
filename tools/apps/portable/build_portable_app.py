@@ -242,6 +242,10 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system or getattr(args, "optimize_size", False) else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    for definition in getattr(args, "define", ()):
+        if not re.fullmatch(r"[a-zA-Z_]\w*(?:=[a-zA-Z_0-9]+)?", definition):
+            raise ValueError(f"invalid preprocessor definition: {definition}")
+        flags.append("-D" + definition)
     if m0_libc_candidate:
         flags.append("-DMK61_M0_LIBC_UNROLL="+str(m0_libc_candidate))
     if args.system in ("terminal", "terminal-clock"): flags.append("-DMK61_BUILD_TERMINAL_MODULE=1")
@@ -506,6 +510,7 @@ def main() -> None:
     parser.add_argument("--local-float-math-mask", type=lambda value: int(value, 0),
                         help=argparse.SUPPRESS)
     parser.add_argument("--include", type=Path, action="append", default=[])
+    parser.add_argument("--define", action="append", default=[], help="Define an identifier, optionally with =value")
     parser.add_argument("--library", type=Path, action="append", default=[])
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--arm-toolchain-bin", type=Path)

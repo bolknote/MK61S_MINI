@@ -37,7 +37,7 @@ static bool advance_silent_second(unsigned samples) {
        (p->env_freq && p->env_count>=p->env_freq))return false;
     // CONFIG guarantees this clock/rate and quality=1. With zero output and
     // volumes, merging samples preserves every counter/LFSR/envelope phase.
-    p->realstep=1750000u*samples;(void)PSG_calc(p);p->realstep=1750000u;return true;
+    p->realstep=p->clk*samples;(void)PSG_calc(p);p->realstep=p->clk;return true;
 }
 #endif
 
@@ -58,8 +58,9 @@ static M3_COLD bool state_valid(const uint8_t* bytes) {
     for(unsigned i=0;i<2;++i) {
         memset(&synth.chips[i],0,sizeof(synth.chips[i]));PSG_setVolumeMode(&synth.chips[i],synth.chip_mode?1:2);
         memcpy((uint8_t*)&synth.chips[i]+offsetof(PSG,reg),bytes+i*SPECTRUM_M3_PSG_BYTES,SPECTRUM_M3_PSG_BYTES);
-        if(synth.chips[i].clk!=1750000 || synth.chips[i].rate!=25000 || synth.chips[i].quality!=1 ||
-           synth.chips[i].clk_div || synth.chips[i].base_incr!=(1u<<24) || synth.chips[i].realstep!=1750000 ||
+        const uint32_t clock=synth.chips[i].clk;
+        if(clock-1600001u>=200000u || synth.chips[i].rate!=25000 || synth.chips[i].quality!=1 ||
+           synth.chips[i].clk_div || synth.chips[i].base_incr!=(1u<<24) || synth.chips[i].realstep!=clock ||
            synth.chips[i].psgstep!=200000 || synth.chips[i].psgtime>=200000 || synth.chips[i].env_ptr>=32 ||
            synth.chips[i].out < -32768 || synth.chips[i].out>32767) return false;
 #if defined(EMU2149_M3_FIXED_RATE) && EMU2149_M3_FIXED_RATE

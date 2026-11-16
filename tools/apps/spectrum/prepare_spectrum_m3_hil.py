@@ -132,7 +132,7 @@ def prepare(args):
     if sha(out / 'SPECTRUM/AY.S3M') != module['sha256']:
         raise ValueError('APP and DSP probe contain different M3 modules')
     apps = {key: json.loads((out / path).read_text()) for key, path in (
-        ('ordinary', 'app/SPECTRUM.json'), ('remote', 'remote/app/S3GAME.json'),
+        ('ordinary', 'app/SPECTRUM.json'), ('sinclair', 'app/sinclair/SINCLAIR.json'), ('remote', 'remote/app/S3GAME.json'),
         ('local', 'local/app/S3GAME.json'), ('dsp', 'probe/app/S3SOUND.json'))}
     budget = metadata['foreground_memory_budget']
     if budget['heap_capacity_bytes'] < 108544 or module['memory_bytes'] > 6144:
@@ -154,7 +154,7 @@ def prepare(args):
                 raise ValueError('Changed resident source in firmware archive: '+path)
     artifacts = [fw / (TARGET + suffix) for suffix in ('.bin', '.uf2', '.elf')]
     artifacts += [southbridge_image, southbridge_out / 'manifest.json']
-    artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
+    artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/SINCLAIR.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
                                    'SPECTRUM/48.rom', 'SPECTRUM/128-0.rom', 'SPECTRUM/128-1.rom',
                                    'remote/app/S3GAME.APP', 'remote/app/AY.S3M', 'remote/app/48.rom',
                                    'remote/app/128-0.rom', 'remote/app/128-1.rom',

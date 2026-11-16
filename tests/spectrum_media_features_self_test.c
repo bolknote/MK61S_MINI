@@ -344,6 +344,100 @@ static void wide_scanlines(void) {
     memory.io.read=read_bytes;
 }
 
+static void sinclair128(const char* rom0,const char* rom1) {
+    spectrum_init(&machine,ram,rom);
+    bytes backing={psram,sizeof(psram)};
+    const spectrum_memory_io io={&backing,read_bytes,write_bytes,clear_bytes};
+    uint8_t* tails[]={fixed+15360,fixed+31744};
+    uint8_t* runs[]={pages,pages+8192,pages+10240,pages+14336};
+    FILE* file=fopen(rom0,"rb");assert(file);
+    assert(fread(psram+SPECTRUM_ROM_BASE,1,16384,file)==16384);fclose(file);
+    file=fopen(rom1,"rb");assert(file);
+    assert(fread(psram+SPECTRUM_ROM_BASE+16384,1,16384,file)==16384);fclose(file);
+    assert(spectrum_memory_init_fragmented(&memory,fixed,fixed+16384,tails,runs,8,io));
+    spectrum_attach_memory(&machine,&memory);
+    assert(spectrum_model(&machine)==SPECTRUM_128 && spectrum_frame_cycles(&machine)==70908);
+    assert(machine.ay.clk==1773400 && machine.ay2.clk==1773400 && !memory.paging);
+    spectrum_run(&machine,200*70908u);
+    assert(machine.frames==200 && !memory.fault);
+    uint8_t pixels[6144],attrs[768];spectrum_video(&machine,pixels,attrs);
+    unsigned drawn=0;for(unsigned i=0;i<sizeof(pixels);++i) drawn+=pixels[i]!=0;
+    assert(drawn>100); // The original ROM drew its start menu.
+
+    machine.cpu.port_out(&machine.cpu,0x3ffd,0xc1); // Partial address decode, high bits unused.
+    machine.cpu.write_byte(&machine,0xc000,0);     // NOP in contended bank 1.
+    machine.cpu.iff1=machine.cpu.halted=false;
+    for(unsigned y=0;y<192;++y) for(unsigned x=0;x<228;++x) {
+        machine.cpu.pc=0xc000;machine.cpu.cyc=UINT32_MAX-8;machine.frame_tstates=14361+y*228+x;
+        unsigned delay=x<128 && (x&7)<6?6-(x&7):0;
+        assert(spectrum_run(&machine,1)==4+delay);
+    }
+    machine.cpu.port_out(&machine.cpu,0x7ffd,0x0a);
+    machine.cpu.write_byte(&machine,0xc000,0);
+    machine.cpu.pc=0xc000;machine.frame_tstates=14361;
+    assert(spectrum_run(&machine,1)==4); // Fixed and switched views of bank 2 are uncontended.
+    const uint8_t display[]={0x42,0x81};
+    assert(spectrum_bank_write(&memory,7,0,display,2));
+    machine.cpu.io_at=machine.frame_origin+14364;
+    assert(spectrum_port_in(&machine,0x00ff)==display[0]);
+    machine.cpu.io_at+=2;assert(spectrum_port_in(&machine,0x00ff)==display[1]);
+    machine.cpu.port_out(&machine.cpu,0x7ffd,0xfb);
+    assert(memory.locked);
+    machine.cpu.port_out(&machine.cpu,0x7ffd,0);
+    assert(memory.paging==0xfb);
+    assert(machine.cpu.read_byte(&machine,0)==psram[SPECTRUM_ROM_BASE+16384]);
+
+    machine.frame_tstates=70000;
+    spectrum_szx_writer writer;
+    const uint32_t count=spectrum_szx_save(&writer,&machine);
+    assert(writer.banks==8 && writer.header[6]==2 && spectrum_szx_read(&writer,0,packed,count));
+    bytes snapshot={packed,count};const spectrum_source source={&snapshot,count,read_bytes};
+    assert(spectrum_load_szx(&machine,&source,NULL,NULL)==SPECTRUM_OK);
+    assert(memory.paging==0xfb && memory.locked && machine.frame_tstates==70000);
+    uint8_t restored[2];assert(spectrum_bank_read(&memory,7,0,restored,2));
+    assert(!memcmp(restored,display,sizeof(restored)));
+
+    // A resumed audio producer crosses 32-bit guest and audio-counter wrap.
+    machine.cpu.cyc=UINT32_MAX-4;
+    spectrum_sound_begin(&machine,NULL,NULL);
+    const uint32_t start=machine.sound.time;
+    for(unsigned i=0;i<100;++i) {
+        machine.cpu.cyc+=3547;spectrum_sound_publish(&machine);
+    }
+    assert(atomic_load(&machine.sound.produced)-start==(354700u*35000ull+35468)/35469);
+    spectrum_sound_end(&machine);
+    puts("Sinclair 128K ROM boot, exact ULA contention, shadow bus, paging/lock, SZX and audio timeline PASS");
+}
+
+static void timex_hicolor(void) {
+    spectrum_init(&machine,ram,rom);machine.extensions|=SPECTRUM_TIMEX;
+    machine.cpu.port_out(&machine.cpu,0x31ff,2);
+    assert(spectrum_port_in(&machine,0x50ff)==2 && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_HICOLOR);
+    for(unsigned i=0;i<6144;++i) {ram[i]=(uint8_t)(i*17);ram[8192+i]=(uint8_t)(i*19);}
+    uint8_t lcd[SPECTRUM_VIDEO_WORK_BYTES];
+    machine.frames=16;
+    bytes backing={packed,32768};const spectrum_memory_io io={&backing,read_bytes,write_bytes,clear_bytes};
+    spectrum_video_snapshot saved={.io=&io};
+    assert(spectrum_video_capture(&machine,SPECTRUM_VIDEO_HICOLOR,lcd,&saved));
+    memset(ram,0,sizeof(ram));machine.frames=0;machine.cpu.port_out(&machine.cpu,0xff,0);
+    for(unsigned strip=0;strip<3;++strip) {
+        mk61_service_color_frame frame;
+        assert(spectrum_video_snapshot_strip(&machine,&saved,SPECTRUM_VIDEO_HICOLOR,strip,lcd,&frame));
+        assert(frame.width==256 && frame.height==64 && frame.y==64+64*strip);
+        assert((frame.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_CELL565);
+        for(unsigned y=0;y<64;++y) for(unsigned x=0;x<32;++x) {
+            const unsigned offset=strip*2048+(y&7)*256+(y&56)*4+x,at=y*32+x;
+            const unsigned color=(uint8_t)(offset*19),bright=(color&64)>>3;
+            unsigned paper=((color>>3)&7)|bright,ink=(color&7)|bright;
+            if(color&128) {const unsigned t=paper;paper=ink;ink=t;}
+            assert(frame.pixels[at]==(uint8_t)(offset*17));
+            const uint8_t* pair=frame.tiles+4*at;
+            assert((pair[0]|pair[1]<<8)==spectrum_color(paper) && (pair[2]|pair[3]<<8)==spectrum_color(ink));
+        }
+    }
+    puts("Timex 8x1 attributes, exact native 256x192 pixels and immutable PSRAM capture PASS");
+}
+
 static void snapshot_test(unsigned model) {
     spectrum_init(&machine,ram,rom);
     bytes backing={psram,sizeof(psram)};
@@ -439,7 +533,7 @@ static void snapshot_test(unsigned model) {
         fill=0x2e;assert(spectrum_bank_write(&memory,7,0,&fill,1));
         uint8_t lcd[10240];
         mk61_service_color_frame frame;
-        assert(spectrum_video_mode(&machine)==0x41);
+        assert(spectrum_video_mode(&machine)==SPECTRUM_VIDEO_16C);
         assert(spectrum_video_strip(&machine,1,0,lcd,&frame));
         assert(frame.width==256 && frame.height==64 && lcd[0]==0x92 && lcd[1]==0x65);
         assert(!spectrum_video_strip(&machine,64,SPECTRUM_WIDE_STRIPS,lcd,&frame));
@@ -448,12 +542,13 @@ static void snapshot_test(unsigned model) {
 }
 
 int main(int argc,char** argv) {
-    assert(argc==2);
+    assert(argc==4);
     FILE* file=fopen(argv[1],"rb");assert(file);
     assert(fread(rom,1,sizeof(rom),file)==sizeof(rom));fclose(file);
     tape_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
     contention_test();raster_test();
     for(unsigned model=0;model<3;++model) snapshot_test(model);
+    sinclair128(argv[2],argv[3]);timex_hicolor();
     puts("ROM TAP load, TZX Generalized/Select/CSW, ULA bus timing and scanlines, zlib, SZX and EFF7 PASS");
     return 0;
 }

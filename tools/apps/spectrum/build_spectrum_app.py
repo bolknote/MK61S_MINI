@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Spectrum/Pentagon as an ordinary PicoCalc APP and prepare its SD folder."""
+"""Build the Sinclair and Pentagon PicoCalc APPs and prepare their shared SD folder."""
 
 import sys as _repo_sys
 from pathlib import Path as _RepoPath
@@ -112,14 +112,18 @@ def main():
     parser.add_argument("--with-games", action="store_true", help="include locally downloaded Spectrum library")
     parser.add_argument("--games-output", type=Path, help="Write the collection to its own folder in Games")
     args = parser.parse_args()
-    command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
+    base_command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
                "--target", "picocalc-pico-h", "--shared-runtime", "--optimize-size",
-               "--name", "SPECTRUM", "--handled-magic", "Z1",
-               "--arm-toolchain-bin", str(compiler_bin(args.toolchain)),
-               "--output-dir", str(args.build_dir)]
+               "--arm-toolchain-bin", str(compiler_bin(args.toolchain))]
     for source in SOURCES:
-        command += ["--source", str(ROOT / source)]
-    subprocess.run(command, check=True)
+        base_command += ["--source", str(ROOT / source)]
+    profiles = (("SPECTRUM", 1, args.build_dir), ("SINCLAIR", 2, args.build_dir / "sinclair"))
+    for name, profile, directory in profiles:
+        command = base_command + ["--name", name, "--define", f"SPECTRUM_APP_PROFILE={profile}",
+                                  "--output-dir", str(directory)]
+        if name == "SPECTRUM":
+            command += ["--handled-magic", "Z1", "--define", "Z80_NO_WAIT_STATES"]
+        subprocess.run(command, check=True)
     copy_assets(args.output_dir)
     sound_module=build_sound_module(args.build_dir/'m3',toolchain=args.toolchain,optimization='-Os',
         fast_init=120,slice_samples=16,step_budget_us=1250,init_budget_us=1250,silent_batch=True,
@@ -140,16 +144,18 @@ def main():
         if args.games_output:
             (games / "Play.txt").write_bytes(LAUNCHER)
             copy_icon("games", games / "autoexec.wbmp")
-    shutil.copy2(args.build_dir / "SPECTRUM.APP", args.output_dir / "SPECTRUM.APP")
+    for name, _, directory in profiles:
+        shutil.copy2(directory / f"{name}.APP", args.output_dir / f"{name}.APP")
     report = json.loads((args.build_dir / "SPECTRUM.json").read_text())
     report["sources"] = SOURCES
     report["app_sha256"] = hashlib.sha256((args.output_dir / "SPECTRUM.APP").read_bytes()).hexdigest()
+    report["sinclair_app"] = json.loads((profiles[1][2] / "SINCLAIR.json").read_text())
     inputs = sorted(set(SOURCES) | {
         str(p.relative_to(ROOT)) for folder in ("examples/portable-apps/SPECTRUM", "third_party/z80", "third_party/emu2149")
         for p in (ROOT / folder).glob("*.h")})
     report["source_sha256"] = {source: hashlib.sha256((ROOT / source).read_bytes()).hexdigest() for source in inputs}
     report["hardware_verified"] = False
-    report["rom_storage"] = "SD files -> PSRAM with a shared16KiB SRAM ROM/RAM cache; no Flash assets"
+    report["rom_storage"] = "SD files -> PSRAM with a shared 16 KiB SRAM ROM/RAM cache; no Flash assets"
     report["m3_sound_module"] = sound_module
     report["files"] = {str(p.relative_to(args.output_dir)): hashlib.sha256(p.read_bytes()).hexdigest()
                        for p in sorted(args.output_dir.rglob("*")) if p.is_file() and p.name != "manifest.json"}

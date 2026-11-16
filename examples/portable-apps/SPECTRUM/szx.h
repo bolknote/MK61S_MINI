@@ -4,7 +4,7 @@
 #include "spectrum.h"
 
 typedef struct {
-    uint8_t header[170];
+    uint8_t header[180];
     uint8_t extension[34];
     const spectrum* machine;
     unsigned banks, prefix, bytes;

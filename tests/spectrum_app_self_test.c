@@ -21,6 +21,9 @@ static uint32_t lcd_clock=12000000;
 static bool legacy_lcd;
 static const char* opened_name;
 static bool open_error, save_opened_game;
+static bool test_flow;
+static unsigned video_calls,video_shows,video_origin;
+static bool video_test,video_pages,video_scroll,video_fail_once;
 static unsigned open_keys,open_path_calls,selected_reads;
 static unsigned snapshots_written;
 static uint8_t canvas[12800],*psram;
@@ -148,6 +151,10 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             assert(!fclose(f));++snapshots_written;return 1;
         }
         mk61_service_file_bytes* r=payload;
+        if(a==MK61_FILE_BYTES_ID) {
+            assert(test_flow && !r->data && !r->offset && !r->size);
+            assert(!strcmp(r->path,"SINCLAIR.APP"));return 8;
+        }
         if(a==MK61_FILE_BYTES_PATH) {
             assert(opened_name && !r->path && r->offset==42 && r->size==256);++open_path_calls;
             if(open_error && !strcmp(opened_name,"missing"))return 0;
@@ -185,11 +192,36 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             return lcd_clock=24000000;
         }
         if(a==MK61_COLOR_END) { lcd_clock=12000000;return 1; }
+        if(video_test) {
+            if(a==MK61_COLOR_PAGES_BEGIN_V2) {
+                const mk61_service_color_pages* pages=payload;
+                assert(c==sizeof(*pages) && pages->top==64 && pages->height==192);
+                video_pages=true;video_origin=2;return 1;
+            }
+            if(a==MK61_COLOR_PAGE_SELECT || a==MK61_COLOR_PAGE_SHOW) {
+                const unsigned page=*(unsigned*)payload;
+                assert(video_pages && page<2 && page!=video_origin);
+                if(a==MK61_COLOR_PAGE_SHOW) {video_origin=page;++video_shows;}
+                return 1;
+            }
+            if(a==MK61_COLOR_SCROLL_BEGIN) {
+                const mk61_service_color_scroll* scroll=payload;
+                assert(c==sizeof(*scroll) && scroll->height==320 && !scroll->offset);
+                return video_scroll?1:3;
+            }
+            if(a==MK61_COLOR_SCROLL_END) {
+                if(video_fail_once) {video_fail_once=false;return 0;}
+                video_scroll=true;return 1;
+            }
+            assert(a==MK61_COLOR_PRESENT);++video_calls;return 1;
+        }
         if(a==MK61_COLOR_PALETTE64) { assert(c==128 && payload);return ++palette_calls%5?1:2; }
+        if(a==MK61_COLOR_FORMATS) return 0;
         assert(a==MK61_COLOR_PRESENT);mk61_service_color_frame* f=payload;
         assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
         assert(lcd_clock==(legacy_lcd?12000000:24000000));
         assert(f->pixels==canvas && f->tiles==canvas+6144);++frames_shown;++session_frames;
+        if(test_flow) assert(spectrum_is_128(&machine) && machine.ay.clk==SPECTRUM_128_AY_HZ);
         assert(machine.memory->paged_rom && !machine.rom && !machine.memory->window && machine.memory->page_count==16);
         assert(workspace && machine.memory->page_data[0]==workspace &&
                machine.memory->page_data[8]==page_runs[1] &&
@@ -265,6 +297,32 @@ static const void* query(uint32_t id,uint32_t version) { assert(id==MK61_APP_SER
 static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_VERSION,.struct_size=sizeof(mk61_app_api),
     .service=pump,.delay_ms=delay,.display_clear=clear_screen,.graphics_begin=graphics_begin,.graphics_end=graphics_end,.query_service=query};
 const mk61_app_api* mk61_api=&api;
+static void extended_frames(void) {
+    static uint8_t fixed[32768],slots[16384],rom[16384];
+    spectrum state;active_machine=&state;services=&common;
+    const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
+    uint8_t* tails[]={fixed+15360,fixed+31744};
+    uint8_t* runs[]={slots,slots+8192,slots+10240,slots+14336};
+    external.handle=1;psram_bytes=VIDEO_HISTORY+SPECTRUM_WIDE_STRIPS*VIDEO_HISTORY_STRIDE;
+    psram=calloc(1,psram_bytes);assert(psram);
+    memset(&state,0,sizeof(state));state.ram=fixed;state.rom=rom;
+    assert(spectrum_memory_init_fragmented(&bank_memory,fixed,fixed+16384,tails,runs,64,io));
+    spectrum_attach_memory(&state,&bank_memory);
+    video_test=true;video_output out={0};
+    const unsigned expected[]={3,6,6,7,14,14,21};
+    for(unsigned turn=0;turn<sizeof(expected)/sizeof(*expected);++turn) {
+        const unsigned mode=turn<4?SPECTRUM_VIDEO_16C:SPECTRUM_VIDEO_WIDE;
+        if(turn==3) {const uint8_t pixel=0x29;assert(spectrum_bank_write(&bank_memory,5,0,&pixel,1));}
+        if(turn==6) video_fail_once=true;
+        assert(video_begin(&out,mode,canvas));
+        for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
+        assert(!out.active && video_calls==expected[turn]);
+    }
+    assert(video_shows==4);
+    video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
+    puts("Actual LCD strip renderer: two hidden pages, identical strips suppressed, scroll fault repaints complete frame PASS");
+}
+
 static void bounded_audio_prefill(void) {
     static uint8_t ram[SPECTRUM_RAM_BYTES],rom[SPECTRUM_ROM_BYTES];
     spectrum state;
@@ -295,6 +353,26 @@ int main(int argc,char** argv) {
     remote_audio=getenv("SPECTRUM_REMOTE_AUDIO")!=NULL;
     opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
     save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
+    test_flow=getenv("SPECTRUM_TEST_FLOW")!=NULL;
+#if SPECTRUM_APP_PROFILE
+    if(test_flow) {
+        uint32_t context[2]={42,0};
+        mk61_app_flow step={.size=sizeof(step),.version=MK61_APP_FLOW_VERSION,.context=context,
+            .context_size=sizeof(context),.current=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,5,MK61_APP_FLOW_FILE_PHASE)};
+        if(SPECTRUM_HAS_SINCLAIR) context[1]=SPECTRUM_128+1;
+        assert(mk61_app_file_flow()==MK61_APP_FLOW_MAGIC && mk61_app_flow_step(&step));
+        assert(!psram && !workspace && !generator.sample && open_path_calls==1 && graphics_ends==1);
+        if(SPECTRUM_HAS_SINCLAIR) {
+            assert(step.action==MK61_FLOW_RETURN && !step.result && audio_opens==1 && frames_shown>=12);
+            puts("SINCLAIR.APP native APP Flow loads and plays 128K snapshot at its own clock PASS");
+        } else {
+            assert(step.action==MK61_FLOW_NEXT && step.next.file_id==7 && step.next.phase==MK61_APP_FLOW_FILE_PHASE);
+            assert(context[0]==42 && context[1]==SPECTRUM_128+1 && !audio_opens);
+            puts("SPECTRUM.APP hands a native 128K FILE_OPEN to SINCLAIR.APP and releases all leases PASS");
+        }
+        return 0;
+    }
+#endif
     assert(mk61_app_open_file(MK61_SERVICE_INVALID_ID)==MK61_APP_INVALID_FILE);
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
@@ -323,6 +401,7 @@ int main(int argc,char** argv) {
         puts("Actual M3 APP startup: first frame produced before first keyboard pump, release and exit PASS");
     }
     if(remote_audio && !opened_name) bounded_audio_prefill();
+    if(!SPECTRUM_APP_PROFILE && !opened_name && !remote_audio && !legacy_lcd) extended_frames();
     if(opened_name) printf("Actual FILE_OPEN %s: external path, %s, held Enter blocked, readonly media, complete cleanup PASS\n",opened_name,open_error?"error handled":"started and F10 exited");
     else puts("Actual APP menus, SD ROM->PSRAM/shared16KiB cache, Beta/DivMMC, snapshots, key handoff and exit: PASS");
     return 0;

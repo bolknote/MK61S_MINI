@@ -45,6 +45,7 @@ struct z80 {
   void* userdata;
   void (*m1)(void*,uint16_t,bool); /* Local: opcode-fetch paging, before/after. */
   uint16_t m1_start,m1_limit; /* Local: notify if (uint16_t)(PC-start)<=limit. */
+  uint16_t contention_mask; /* A masked address of 0x4000 is on contended RAM. */
   const uint8_t* read_map[4]; /* Local: contiguous windows for LDIR batching. */
   uint8_t* write_map[4];
   /* Authoritative 1K CPU views of all 64K. NULL entries use callbacks.

@@ -63,6 +63,14 @@ static unsigned ddfd_cycles(unsigned opcode) {
 
 // MARK: helpers
 
+static inline bool bus_timed(const z80* z) {
+#ifdef Z80_NO_WAIT_STATES
+    (void)z;return false;
+#else
+    return z->wait!=NULL;
+#endif
+}
+
 /* Combine LDIR repeats only within the caller's interrupt/time slice.
  * Read/write views must already be hot; a clean cached page traps its first
  * store before it becomes writable here. Keep forward-overlap semantics and
@@ -110,7 +118,7 @@ static unsigned block_copy(z80* z,unsigned budget) {
     z->mem_ptr=(uint16_t)(pc+1);
     const unsigned cycles=21*count-(z->bc?0:5);
     z->cyc+=cycles;if(!z->bc) z->pc+=2;
-    if(z->wait) z->bus=(uint32_t)z->cyc;
+    if(bus_timed(z)) z->bus=(uint32_t)z->cyc;
     return cycles;
 }
 
@@ -129,15 +137,15 @@ static void contend_bus(z80* z,unsigned duration) {
   z->bus+=duration+delay;z->cyc+=delay;
 }
 static inline Z80_HOT_INLINE void bus_cycle(z80* z,uint16_t address,unsigned duration) {
-  if((address&0xc000)==0x4000) contend_bus(z,duration);
+  if((address&z->contention_mask)==0x4000) contend_bus(z,duration);
   else z->bus+=duration;
 }
 
 /* Internal cycles may keep a contended address on the bus for several
  * individual T-states. Opcode refresh is part of its single 4T access. */
 static void idle_bus(z80* z,uint16_t address,unsigned count) {
-  if(!z->wait) return;
-  if((address&0xc000)!=0x4000) z->bus+=count;
+  if(!bus_timed(z)) return;
+  if((address&z->contention_mask)!=0x4000) z->bus+=count;
   else while(count--) contend_bus(z,1);
 }
 static uint16_t ir(const z80* z) { return (uint16_t)((z->i<<8)|z->r); }
@@ -149,12 +157,12 @@ static inline Z80_HOT_INLINE uint8_t read_mapped(z80* const z, uint16_t addr) {
 }
 
 static inline uint8_t rb(z80* const z, uint16_t addr) {
-  if(z->wait) bus_cycle(z,addr,3);
+  if(bus_timed(z)) bus_cycle(z,addr,3);
   return read_mapped(z,addr);
 }
 
 static inline void wb(z80* const z, uint16_t addr, uint8_t val) {
-  if(z->wait) {
+  if(bus_timed(z)) {
     bus_cycle(z,addr,3);
     if(z->before_store) z->before_store(z->userdata,addr,z->bus);
   }
@@ -218,7 +226,7 @@ static uint8_t opcode_notify(z80* const z, uint16_t address) {
 }
 static inline Z80_HOT_INLINE uint8_t opcode_byte(z80* const z) {
   const uint16_t address=z->pc;
-  if(z->wait) bus_cycle(z,address,4);
+  if(bus_timed(z)) bus_cycle(z,address,4);
   if(z->m1 && (uint16_t)(address-z->m1_start)<=z->m1_limit)
     return opcode_notify(z,address);
   return read_mapped(z,z->pc++);
@@ -230,7 +238,7 @@ static inline uint16_t nextw(z80* const z) {
 }
 
 static void io_cycle(z80* z,uint16_t port) {
-  if(!z->wait) {z->io_at=(uint32_t)z->cyc;return;}
+  if(!bus_timed(z)) {z->io_at=(uint32_t)z->cyc;return;}
   bus_cycle(z,port,1);
   if(!(port&1)) contend_bus(z,3);
   else idle_bus(z,port,3);
@@ -518,7 +526,7 @@ static uint32_t dec_memory_end(z80* z,uint32_t time) {
 static const uint8_t* repeat_code(const z80* z,unsigned length) {
   const unsigned pc=z->pc,offset=pc&1023;
   if(z->m1 || z->nmi_pending || z->iff_delay || (z->int_pending && z->iff1) ||
-     (pc&0xc000)==0x4000 || (z->i&0xc0)==0x40 || offset>1024-length) return NULL;
+     (pc&z->contention_mask)==0x4000 || ((z->i<<8)&z->contention_mask)==0x4000 || offset>1024-length) return NULL;
   const uint8_t* page=z->read_pages[pc>>10];
   return page?page+offset:NULL;
 }
@@ -594,7 +602,7 @@ static void repeat_memory_loop(z80* z,unsigned budget,bool verify) {
   if(count<4) return;
   uint8_t* first=dst+(verify?offset:available-count);
   if((uintptr_t)first<(uintptr_t)code+length && (uintptr_t)first+count>(uintptr_t)code) return;
-  const bool contended=(address&0xc000)==0x4000;
+  const bool contended=(address&z->contention_mask)==0x4000;
   unsigned elapsed;
   if(verify) {
     // From AND A to the first read of DEC (HL) is 47T. There are 11T
@@ -882,7 +890,7 @@ static inline void process_interrupts(z80* const z) {
     z->iff1 = 0;
     inc_r(z);
 
-    if(z->wait) z->bus=(uint32_t)z->cyc+5;
+    if(bus_timed(z)) z->bus=(uint32_t)z->cyc+5;
     z->cyc += 11;
     call(z, 0x66);
     return;
@@ -895,11 +903,11 @@ static inline void process_interrupts(z80* const z) {
     z->iff2 = 0;
     inc_r(z);
 
-    if(z->wait) z->bus=(uint32_t)z->cyc+7;
+    if(bus_timed(z)) z->bus=(uint32_t)z->cyc+7;
     switch (z->interrupt_mode) {
     case 0:
       /* An IM0 acknowledge replaces the normal opcode fetch. */
-      if(z->wait) --z->bus;
+      if(bus_timed(z)) --z->bus;
       z->cyc += 2;
       exec_opcode(z, z->int_data);
       break;
@@ -938,7 +946,7 @@ void z80_init(z80* const z) {
   for(unsigned i=0;i<4;++i) { z->read_map[i]=NULL;z->write_map[i]=NULL; }
   for(unsigned i=0;i<64;++i) { z->read_pages[i]=NULL;z->write_pages[i]=NULL; }
   z->ldir_until=0;
-  z->wait=NULL;z->before_store=NULL;z->port_span=NULL;z->bus=z->io_at=0;
+  z->wait=NULL;z->before_store=NULL;z->port_span=NULL;z->bus=z->io_at=0;z->contention_mask=0xc000;
 
   z->cyc = 0;
 
@@ -1038,9 +1046,9 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   for(;;) {
     if(cycles) {
       if((uint32_t)(z->cyc-before)>=cycles || (stop && *stop))break;
-      if(z->wait) z->bus=(uint32_t)z->cyc;
+      if(bus_timed(z)) z->bus=(uint32_t)z->cyc;
       if(z->halted) {
-        if(z->wait) bus_cycle(z,(uint16_t)(z->pc-1),4);
+        if(bus_timed(z)) bus_cycle(z,(uint16_t)(z->pc-1),4);
         opcode=0;
       } else opcode=opcode_byte(z);
     }
@@ -1247,7 +1255,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
 #endif
     idle_bus(z,ir(z),1);cond_jr(z,--z->b!=0);
 #if defined(MK61_TARGET_PICOCALC)
-    if(z->wait && z->pc==pc && (!stop || !*stop)) {
+    if(bus_timed(z) && z->pc==pc && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
       if(budget>=52) repeat_djnz(z,(unsigned)budget);
     }
@@ -1262,7 +1270,7 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
     cond_jr(z, z->zf==verify);
 #if defined(MK61_TARGET_PICOCALC)
     const unsigned back=(uint16_t)(after-z->pc);
-    if(z->wait && back==(verify?13:6) && (!stop || !*stop)) {
+    if(bus_timed(z) && back==(verify?13:6) && (!stop || !*stop)) {
       const int32_t budget=(int32_t)(cycles-(uint32_t)(z->cyc-before));
       if(budget>=4*32) {
         if(verify && z->pc==0x05ed && z->port_span) repeat_edge_poll(z,(unsigned)budget);

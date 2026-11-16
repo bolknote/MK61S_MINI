@@ -20,7 +20,7 @@ static uint8_t* slot_bytes(spectrum_memory* m,unsigned slot) {
 }
 static unsigned bank_value(const spectrum_memory* m,uint8_t paging) {
     unsigned bank=paging&7;
-    if(!m->extended) bank|=(paging>>3)&24;
+    if(!m->extended) bank|=((paging>>3)&24)&(m->banks-1u);
     else if(!(m->control&4)) bank|=((paging>>3)&24)|(paging&32);
     return bank;
 }
@@ -184,7 +184,7 @@ bool spectrum_memory_init_external_rom(spectrum_memory* m,uint8_t* fixed5,uint8_
 bool spectrum_memory_init_fragmented(spectrum_memory* m,uint8_t* fixed5,uint8_t* fixed2,
         uint8_t* const tails[2],uint8_t* const runs[4],unsigned banks,spectrum_memory_io io) {
     if(!m || !fixed5 || !fixed2 || !tails || !tails[0] || !tails[1] ||
-       !runs || !io.read || !io.write || !io.clear || (banks!=32 && banks!=64)) return false;
+       !runs || !io.read || !io.write || !io.clear || (banks!=8 && banks!=32 && banks!=64)) return false;
     for(unsigned n=0;n<4;++n) if(!runs[n]) return false;
     memset(m,0,sizeof(*m));m->cache=fixed5;m->fixed2=fixed2;m->fixed_tail[0]=tails[0];m->fixed_tail[1]=tails[1];
     const unsigned lengths[]={8,2,4,2};
@@ -198,17 +198,27 @@ bool spectrum_bank_read(spectrum_memory* m,unsigned bank,unsigned offset,uint8_t
     if(m->fault || bank>=m->banks || offset>16384 || bytes>16384-offset || (!out && bytes)) return false;
     if(fixed(m,bank)) {
         while(bytes) {
-            const unsigned left=1024-offset%1024,n=bytes<left?bytes:left;
+            const unsigned end=offset<SPECTRUM_BANK_HEAP_BYTES?SPECTRUM_BANK_HEAP_BYTES:SPECTRUM_BANK_BYTES;
+            const unsigned left=end-offset,n=bytes<left?bytes:left;
             memcpy(out,fixed_byte(m,bank,offset),n);offset+=n;out+=n;bytes-=n;
         }
         return true;
     }
     while(bytes) {
         const unsigned left=SPECTRUM_CACHE_PAGE_BYTES-offset%SPECTRUM_CACHE_PAGE_BYTES;
-        const unsigned n=bytes<left?bytes:left,tag=bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES;
+        unsigned n=bytes<left?bytes:left;
+        const unsigned tag=bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES;
         const int active=cached(m,tag);
         if(active>=0) memcpy(out,slot_bytes(m,(unsigned)active)+offset%SPECTRUM_CACHE_PAGE_BYTES,n);
-        else if(!m->io.read(m->io.context,bank*16384U+offset,out,n)) { m->fault=true;return false; }
+        else {
+            // Read contiguous missing pages in a single transfer. Cached
+            // pages may be dirty and must still come from their SRAM slot.
+            for(unsigned next=tag+1;n<bytes && cached(m,next)<0;++next) {
+                const unsigned remaining=bytes-n;
+                n+=remaining<1024?remaining:1024;
+            }
+            if(!m->io.read(m->io.context,bank*16384U+offset,out,n)) { m->fault=true;return false; }
+        }
         offset+=n;out+=n;bytes-=n;
     }
     return true;

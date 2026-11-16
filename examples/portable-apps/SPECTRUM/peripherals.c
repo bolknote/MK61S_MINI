@@ -25,6 +25,22 @@ void spectrum_sound_reset(spectrum* s) {
     s->sound.covox=s->sound.specdrum=128;
     s->sound.latest_dac[1]=s->sound.latest_dac[2]=128;
 }
+static uint32_t audio_time(spectrum* s) {
+    const uint32_t now=(uint32_t)s->cpu.cyc;
+    if(!spectrum_is_128(s)) return now;
+    // Convert 3.5469 MHz guest cycles to the shared 3.5 MHz audio timeline.
+    // Keep the fraction and use modular deltas so guest cycle wrap is harmless.
+    spectrum_sound* q=&s->sound;
+    uint32_t delta=now-q->guest_cursor;
+    q->guest_cursor=now;
+    if(delta>=35469) {
+        const uint32_t whole=delta/35469;
+        q->producer_time+=whole*35000;delta-=whole*35469;
+    }
+    const uint32_t scaled=delta*469+q->clock_remainder,loss=scaled/35469;
+    q->clock_remainder=scaled-loss*35469;q->producer_time+=delta-loss;
+    return q->producer_time;
+}
 void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned value) {
     spectrum_sound* q=&s->sound;
     if(device<2) {
@@ -32,24 +48,25 @@ void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned valu
         q->regs[device][reg&15]=(uint8_t)(value&masks[reg&15]);
     } else if(device<=4)q->latest_dac[device-2]=(uint8_t)value;
     if(!q->asynchronous) { apply(s,device,reg,value);return; }
+    const uint32_t now=audio_time(s);
     uint32_t w;
     for(;;) {
         w=atomic_load_explicit(&q->write,memory_order_relaxed);
         if(w-atomic_load_explicit(&q->read,memory_order_acquire)<SPECTRUM_SOUND_QUEUE_EVENTS)break;
-        atomic_store_explicit(&q->produced,(uint32_t)s->cpu.cyc,memory_order_release);
+        atomic_store_explicit(&q->produced,now,memory_order_release);
         if(q->yield) q->yield(q->yield_context);
     }
-    q->events[w&(SPECTRUM_SOUND_QUEUE_EVENTS-1)]=(spectrum_sound_event){(uint32_t)s->cpu.cyc,(uint8_t)device,(uint8_t)reg,(uint8_t)value,0};
+    q->events[w&(SPECTRUM_SOUND_QUEUE_EVENTS-1)]=(spectrum_sound_event){now,(uint8_t)device,(uint8_t)reg,(uint8_t)value,0};
     atomic_store_explicit(&q->write,w+1,memory_order_release);
 }
 void spectrum_sound_publish(spectrum* s) {
-    if(s->sound.asynchronous) atomic_store_explicit(&s->sound.produced,(uint32_t)s->cpu.cyc,memory_order_release);
+    if(s->sound.asynchronous) atomic_store_explicit(&s->sound.produced,audio_time(s),memory_order_release);
 }
 void spectrum_sound_publish_before_io(spectrum* s) {
     if(!s->sound.asynchronous) return;
     // A synchronous SD or PSRAM operation can block inside an opcode.
     // Leave its timestamp available for any sound write that still follows.
-    const uint32_t until=(uint32_t)s->cpu.cyc-1;
+    const uint32_t until=audio_time(s)-1;
     if((int32_t)(until-atomic_load_explicit(&s->sound.produced,memory_order_relaxed))>0)
         atomic_store_explicit(&s->sound.produced,until,memory_order_release);
 }
@@ -57,7 +74,8 @@ void spectrum_sound_begin(spectrum* s,void (*yield)(void*),void* context) {
     spectrum_sound* q=&s->sound;
     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
     atomic_store_explicit(&q->starved,0,memory_order_relaxed);
-    q->time=(uint32_t)s->cpu.cyc;atomic_store_explicit(&q->produced,q->time,memory_order_release);
+    q->guest_cursor=q->producer_time=q->time=(uint32_t)s->cpu.cyc;q->clock_remainder=0;
+    atomic_store_explicit(&q->produced,q->time,memory_order_release);
     q->latest_dac[0]=q->beeper;q->latest_dac[1]=q->covox;q->latest_dac[2]=q->specdrum;
     for(unsigned chip=0;chip<2;++chip) memcpy(q->regs[chip],chip?s->ay2.reg:s->ay.reg,16);
     q->yield=yield;q->yield_context=context;q->asynchronous=true;
@@ -76,12 +94,13 @@ void spectrum_sound_recover(void* context) {
      * producer registers, discard its stale queue, then resume locally. */
     for(unsigned i=0;i<2;++i) {
         PSG* p=i?&s->ay2:&s->ay;memset(p,0,sizeof(*p));p->quality=1;p->rate=25000;
-        PSG_setVolumeMode(p,s->sound_chip==SPECTRUM_YM?1:2);PSG_setClock(p,1750000);PSG_reset(p);
+        PSG_setVolumeMode(p,s->sound_chip==SPECTRUM_YM?1:2);
+        PSG_setClock(p,spectrum_is_128(s)?SPECTRUM_128_AY_HZ:1750000);PSG_reset(p);
         for(unsigned reg=0;reg<16;++reg)PSG_writeReg(p,reg,q->regs[i][reg]);
     }
     q->beeper=q->latest_dac[0];q->covox=q->latest_dac[1];q->specdrum=q->latest_dac[2];
     q->input=q->output=0;memset(q->stereo,0,sizeof(q->stereo));
-    q->time=(uint32_t)s->cpu.cyc;q->startup_samples=SPECTRUM_SOUND_START_SAMPLES;
+    q->time=audio_time(s);q->startup_samples=SPECTRUM_SOUND_START_SAMPLES;
     atomic_store_explicit(&q->read,0,memory_order_relaxed);atomic_store_explicit(&q->write,0,memory_order_relaxed);
     atomic_store_explicit(&q->produced,q->time,memory_order_release);
 }

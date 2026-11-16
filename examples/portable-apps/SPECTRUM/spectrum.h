@@ -8,9 +8,18 @@
 #include "peripherals.h"
 #include "disk.h"
 
+#ifndef SPECTRUM_APP_PROFILE
+#define SPECTRUM_APP_PROFILE 0
+#endif
+#define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1)
+#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE!=2)
+
 #define SPECTRUM_RAM_BYTES 49152U
 #define SPECTRUM_ROM_BYTES 16384U
 #define SPECTRUM_FRAME_TSTATES 69888U
+#define SPECTRUM_128_FRAME_TSTATES 70908U
+#define SPECTRUM_128_CPU_HZ 3546900U
+#define SPECTRUM_128_AY_HZ 1773400U
 #define SPECTRUM_BITMAP_BYTES 6144U
 #define SPECTRUM_ATTRIBUTE_BYTES 768U
 #define SPECTRUM_RASTER_STRIP_ROWS 32U
@@ -40,12 +49,24 @@ typedef struct spectrum {
     bool (*video_store)(void*,unsigned,const uint8_t*);
     uint16_t video_cell;
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
-    uint8_t ulaplus_select,ulaplus_mode,ulaplus_palette[64];
+    uint8_t ulaplus_select,ulaplus_mode,timex_mode,ulaplus_palette[64];
     uint32_t sample_rate,sample_phase;
     int32_t audio_input,audio_output;
     void* audio_context;
     void (*audio_sample)(void*,int16_t);
 } spectrum;
+enum { SPECTRUM_48, SPECTRUM_P512, SPECTRUM_P1024, SPECTRUM_128, SPECTRUM_TC2048 };
+static inline bool spectrum_is_128(const spectrum* s) { return SPECTRUM_HAS_SINCLAIR && s->memory && s->memory->banks==8; }
+static inline bool spectrum_is_pentagon(const spectrum* s) {
+    return SPECTRUM_APP_PROFILE==1 || (SPECTRUM_HAS_PENTAGON && s->pentagon);
+}
+static inline unsigned spectrum_model(const spectrum* s) {
+    return spectrum_is_pentagon(s)?(s->memory && s->memory->extended?SPECTRUM_P1024:SPECTRUM_P512):
+        spectrum_is_128(s)?SPECTRUM_128:SPECTRUM_48;
+}
+static inline unsigned spectrum_timex_mode(const spectrum* s) {
+    return SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
+}
 typedef struct {
     void* context;
     uint32_t size;
@@ -78,4 +99,5 @@ uint16_t spectrum_border(const spectrum*);
  * error during the commit pass requires a reset before resuming execution. */
 enum spectrum_error spectrum_load_sna(spectrum*,const spectrum_source*);
 enum spectrum_error spectrum_load_z80(spectrum*,const spectrum_source*);
+enum spectrum_error spectrum_z80_model(const spectrum_source*,unsigned*);
 #endif

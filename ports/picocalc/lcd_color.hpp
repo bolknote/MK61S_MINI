@@ -76,6 +76,9 @@ inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigne
     }
     return f.palette[index];
 }
+#if defined(PICO_ON_DEVICE) && defined(__GNUC__)
+__attribute__((always_inline))
+#endif
 inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,
                            const uint16_t* palette64=nullptr,void (*progress)()=nullptr) {
     const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
@@ -108,10 +111,19 @@ inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsig
         }
         return;
     }
-    for(unsigned x=0;x<r.width;++x) {
-        out[x]=color_pixel(f,r.x-f.x+x,r.y-f.y+row,palette64);
-        if(progress && !((x+1)&63))progress();
+    unsigned x=r.x-f.x;
+    const unsigned end=x+r.width;
+    const uint8_t* pixels=f.pixels+(r.y-f.y+row)*((f.width+1U)/2)+x/2;
+    if(x&1U) {
+        *out++=f.palette[*pixels++&15];++x;
+        if(progress && !(x&63))progress();
     }
+    for(;x+1<end;x+=2) {
+        const unsigned pair=*pixels++;
+        *out++=f.palette[pair>>4];*out++=f.palette[pair&15];
+        if(progress && !((x+2)&63))progress();
+    }
+    if(x<end)*out=f.palette[*pixels>>4];
 }
 inline void append_color_rect(Update& u,const Rect& next) {
     // Search all live windows: two distant sprites can each continue down

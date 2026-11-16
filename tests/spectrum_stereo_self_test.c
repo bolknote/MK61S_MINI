@@ -18,9 +18,9 @@ static void vector(const uint8_t* in,unsigned n,const uint8_t* out,unsigned used
     const uint32_t sizes[2]={n,used};assert(fwrite(sizes,sizeof(sizes),1,vectors)==1);
     assert(fwrite(in,1,n,vectors)==n && fwrite(out,1,used,vectors)==used);++vector_count;
 }
-static void init(spectrum* s,unsigned chip,unsigned layout) {
+static void init(spectrum* s,unsigned chip,unsigned layout,unsigned clock) {
     memset(s,0,sizeof(*s));s->ay.quality=1;s->ay.rate=25000;
-    PSG_setVolumeMode(&s->ay,2);PSG_setClock(&s->ay,1750000);PSG_reset(&s->ay);
+    PSG_setVolumeMode(&s->ay,2);PSG_setClock(&s->ay,clock);PSG_reset(&s->ay);
     s->ay2=s->ay;spectrum_sound_reset(s);spectrum_sound_configure(s,chip,layout);
     spectrum_sound_begin(s,NULL,NULL);
 }
@@ -58,9 +58,10 @@ int main(void) {
     const char* filename=getenv("SPECTRUM_M3_VECTORS");
     if(filename){vectors=fopen(filename,"wb");assert(vectors);const uint32_t h[2]={0x31564153,0};assert(fwrite(h,sizeof(h),1,vectors)==1);}
     uint8_t input[512],output[512];unsigned samples=0,states=0;
-    for(unsigned chip=0;chip<2;++chip)for(unsigned layout=0;layout<3;++layout)for(unsigned pwm=0;pwm<2;++pwm) {
-        spectrum s;init(&s,chip,layout);unsigned gain=layout==2?731:1000;
-        recording=layout!=0;
+    for(unsigned clock=0;clock<2;++clock)for(unsigned chip=0;chip<2;++chip)
+    for(unsigned layout=0;layout<3;++layout)for(unsigned pwm=0;pwm<2;++pwm) {
+        spectrum s;init(&s,chip,layout,clock?SPECTRUM_128_AY_HZ:1750000);unsigned gain=layout==2?731:1000;
+        recording=layout!=0 && clock==pwm;
         // Cover all CONFIG variants in relocated ARM vectors, not just the first stream.
         const unsigned n=config(&s,input,pwm,gain);
         assert(run(input,n,output)==8 && (output[7]&32));
@@ -100,7 +101,7 @@ int main(void) {
         spectrum_sound_end(&s);
     }
     // Reject invalid chip/layout flags and filter values before rendering.
-    spectrum s;init(&s,0,1);config(&s,input,true,1000);input[5]=7;
+    spectrum s;init(&s,0,1,1750000);config(&s,input,true,1000);input[5]=7;
     stm3_job bad={input,SPECTRUM_M3_STATE_V2_BYTES,output,512,0,0};assert(module_entry(STM3_INIT,&api,&bad)==STM3_INVALID);
     config(&s,input,true,1000);spectrum_m3_put32(input+SPECTRUM_M3_STATE_BYTES,32768);
     assert(module_entry(STM3_INIT,&api,&bad)==STM3_INVALID);

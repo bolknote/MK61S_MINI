@@ -61,7 +61,8 @@ clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     "$root/tests/spectrum_media_features_self_test.c" "${media[@]}" \
     "$app/spectrum.c" "$app/memory.c" "$app/mapper.c" "$app/peripherals.c" "$app/spi.c" "$app/fdc.c" \
     "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -lz -o "$build/media-features"
-"$build/media-features" "$root/third_party/spectrum-rom/48.rom"
+"$build/media-features" "$root/third_party/spectrum-rom/48.rom" \
+    "$root/third_party/spectrum-rom/128-0.rom" "$root/third_party/spectrum-rom/128-1.rom"
 if [[ -n "${SPECTRUM_DEVICE_ASSETS:-}" ]]; then
     python3 - "$root" "$SPECTRUM_DEVICE_ASSETS" "$build/app-assets" <<'PY'
 import sys, shutil
@@ -77,6 +78,14 @@ import struct
 snapshot=(target/'DEMO.sna').read_bytes();header=bytearray(30)
 struct.pack_into('<HH',header,6,0x8000,0xFFFE);header[27]=header[28]=header[29]=1
 (target/'OPEN.Z80').write_bytes(header+snapshot[27:])
+banked=(target/'DEMO128.sna').read_bytes()
+header[6:8]=bytes(2)
+extended=struct.pack('<HBBBBB',0x8000,3,16,0,0,0)+bytes(16)
+pages=[bytes(16384) for _ in range(8)]
+for index,bank in enumerate((5,2,0)):
+    pages[bank]=banked[27+index*16384:27+(index+1)*16384]
+(target/'OPEN128.Z80').write_bytes(header+struct.pack('<H',len(extended))+extended+b''.join(
+    struct.pack('<HB',0xffff,bank+3)+page for bank,page in enumerate(pages)))
 empty_scl=b'SINCLAIR\x00';(target/'OPEN.SCL').write_bytes(empty_scl+struct.pack('<I',sum(empty_scl)))
 (target/'BROKEN.z80').write_bytes(b'\xFF\x00\x80')
 shutil.copy2(target/'ESXDOS.img', target/'GAMES.img')
@@ -99,6 +108,14 @@ PY
     done
     SPECTRUM_REMOTE_AUDIO=1 "$build/app" "$build/app-assets"
     SPECTRUM_REMOTE_AUDIO=1 SPECTRUM_OPEN_FILE=DEMO128.sna "$build/app" "$build/app-assets"
+    for profile in 1 2; do
+        clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE="$profile" \
+            -I"$root/sdk/portable/include" -I"$root/code" \
+            "$root/tests/spectrum_app_self_test.c" "$app/spectrum.c" "$app/memory.c" \
+            "$app/peripherals.c" "$app/fdc.c" "$app/spi.c" "$app/mapper.c" "$app/media.c" "${media[@]}" \
+            "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/app-profile"
+        SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE=OPEN128.Z80 "$build/app-profile" "$build/app-assets"
+    done
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \
