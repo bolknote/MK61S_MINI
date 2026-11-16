@@ -269,17 +269,26 @@ bool SpecProtocol::accept(std::uint16_t token, const char *piece) {
   }
   return true;
 }
-bool SpecProtocol::expression(unsigned &at, unsigned depth, unsigned &nodes,
-                              Program &p) const {
-  if (depth > 12 || nodes++ >= 31 || at >= size_)
+namespace {
+struct SpecCompiler {
+  const std::uint8_t *body;
+  unsigned size;
+  const char (*constants)[24];
+  unsigned count;
+  unsigned at = 1, nodes = 0;
+  bool expression(unsigned depth, Program &p);
+};
+
+bool SpecCompiler::expression(unsigned depth, Program &p) {
+  if (depth > 12 || nodes++ >= 31 || at >= size)
     return false;
-  const unsigned op = body_[at++];
+  const unsigned op = body[at++];
   if (op <= 14)
     return emit(p, 0x60 + op);
   if (op == 0x10) {
-    if (at >= size_ || body_[at] >= count_)
+    if (at >= size || body[at] >= count)
       return false;
-    return literal(p, pool_[body_[at++]]);
+    return literal(p, constants[body[at++]]);
   }
   if (op == 0x11)
     return emit(p, 0x20);
@@ -287,15 +296,15 @@ bool SpecProtocol::expression(unsigned &at, unsigned depth, unsigned &nodes,
                                            0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x21,
                                            0x22, 0x23, 0x31, 0x32, 0x34, 0x35};
   if (op >= 0x20 && op <= 0x31)
-    return expression(at, depth + 1, nodes, p) && emit(p, unary[op - 0x20]);
+    return expression(depth + 1, p) && emit(p, unary[op - 0x20]);
   if (op < 0x40 || op > 0x44)
     return false;
   // Record the first subtree's emitted range; x^y needs exponent before base.
   const unsigned begin = p.size;
-  if (!expression(at, depth + 1, nodes, p))
+  if (!expression(depth + 1, p))
     return false;
   const unsigned middle = p.size;
-  if (!expression(at, depth + 1, nodes, p))
+  if (!expression(depth + 1, p))
     return false;
   if (op == 0x44) {
     std::uint8_t left[PROGRAM_SIZE];
@@ -307,15 +316,24 @@ bool SpecProtocol::expression(unsigned &at, unsigned depth, unsigned &nodes,
   }
   return emit(p, 0x10 + op - 0x40);
 }
+} // namespace
+
+bool compile_spec_tree(const std::uint8_t *body, unsigned size,
+                       const char (*constants)[24], unsigned count, Program &p) {
+  if (!body || size < 2 || (body[0] != 0xff && body[0] > 14))
+    return false;
+  Program candidate;
+  SpecCompiler compiler{body, size, constants, count};
+  if (!compiler.expression(0, candidate) || compiler.at != size)
+    return false;
+  if ((body[0] != 0xff && !emit(candidate, 0x40 + body[0])) || !emit(candidate, 0x50))
+    return false;
+  p = candidate;
+  return true;
+}
+
 bool SpecProtocol::compile(Program &p) const {
   p = {};
-  if (!ended_ || size_ < 2 || (body_[0] != 0xff && body_[0] > 14))
-    return false;
-  unsigned at = 1, nodes = 0;
-  if (!expression(at, 0, nodes, p) || at != size_)
-    return false;
-  if (body_[0] != 0xff && !emit(p, 0x40 + body_[0]))
-    return false;
-  return emit(p, 0x50);
+  return ended_ && compile_spec_tree(body_, size_, pool_, count_, p);
 }
 } // namespace mk61ai

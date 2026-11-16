@@ -113,13 +113,14 @@ target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" "${MK61_ROOT}/code/mk61_ai_tokenizer.cpp"
     "${MK61_ROOT}/code/mk61_ai_kernels.c" "${MK61_ROOT}/code/mk61_ai_harness.cpp"
     "${MK61_ROOT}/code/mk61_ai_tools.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp"
-    "${MK61_ROOT}/code/mk61_ai_grammar.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp")
+    "${MK61_ROOT}/code/mk61_ai_grammar.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp"
+    "${MK61_ROOT}/code/mk61_ai_direct.cpp")
 set_source_files_properties("${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" PROPERTIES COMPILE_OPTIONS "-O3;-ffp-contract=off")
 # Keep shell layout and menu code within the main flash region.
 set_source_files_properties(screen.cpp ui.cpp PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
 # The chat and SD journal are cold UI paths. Keep them inside the main flash
 # region without changing inference kernels or the emulator's optimization.
-set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
+set_source_files_properties(ai_chat.cpp ai_harness.cpp "${MK61_ROOT}/code/mk61_ai_harness.cpp" "${MK61_ROOT}/code/mk61_ai_spec.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp" "${MK61_ROOT}/code/mk61_ai_direct.cpp" PROPERTIES COMPILE_OPTIONS "-Os;-fno-jump-tables")
 if(DEFINED MK61_PICOCALC_BUILD_ID)
     target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_BUILD_ID=${MK61_PICOCALC_BUILD_ID})
 endif()
@@ -227,10 +228,13 @@ file(READ "${PICO_SDK_PATH}/src/rp2_common/pico_crt0/rp2040/memmap_default.ld" M
 # Keep inference at a qualified XIP-cache index independently of UI growth.
 # Exclude it from both SDK catch-alls; the fixed flash section owns it.
 string(REPLACE "*(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)"
-    "*(EXCLUDE_FILE(*mk61_ai_model.cpp.o *libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)"
+    "*(EXCLUDE_FILE(*mk61_ai_model.cpp.o *mk61_ai_direct.cpp.o *libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)"
     MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "        *(.text*)"
-    "        *(EXCLUDE_FILE(*mk61_ai_model.cpp.o) .text*)" MK61_MEMMAP "${MK61_MEMMAP}")
+    "        *(EXCLUDE_FILE(*mk61_ai_model.cpp.o *mk61_ai_direct.cpp.o) .text*)" MK61_MEMMAP "${MK61_MEMMAP}")
+string(REPLACE "*(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata*)"
+    "*(EXCLUDE_FILE(*mk61_ai_direct.cpp.o *libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .rodata*)"
+    MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 256k"
     "RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 224k" MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k"

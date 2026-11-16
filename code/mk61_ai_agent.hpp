@@ -4,6 +4,7 @@
 #include "mk61_ai_harness.hpp"
 #include "mk61_ai_model.hpp"
 #include "mk61_ai_spec.hpp"
+#include <memory>
 namespace mk61ai {
 struct Executor {
   void *context = nullptr;
@@ -60,20 +61,21 @@ public:
     ADVANCE,
     TESTS,
     TRACE,
-    HEADER
+    HEADER,
+    DIRECT
   };
   Agent(Session &session, Store store, Model &model,
         Executor executor = local_executor());
   Agent(Session &session, Store store, Inference model,
         Executor executor = local_executor());
+  ~Agent();
+  bool start_direct();
+  bool take_direct_fallback();
+  bool direct_pending() const { return bool(direct_); }
   bool start(const char *prefix = nullptr);
   bool run_tests(bool trace = false, unsigned index = ~0U);
   void request_pause() { pause_ = true; }
-  void reset() {
-    phase_ = resume_ = Phase::IDLE;
-    pause_ = false;
-    last_result_ = {};
-  }
+  void reset();
   bool active() const { return phase_ != Phase::IDLE; }
   Phase phase() const { return phase_; }
   unsigned prompt_size() const { return prompt_count_; }
@@ -110,6 +112,7 @@ public:
   void tick(bool (*service)(void *) = nullptr, void *context = nullptr);
 
 private:
+  struct DirectRun;
   Session &s_;
   Store store_;
   Inference model_;
@@ -138,6 +141,9 @@ private:
   Intent generation_intent_ = Intent::WRITE;
   Trace traces_[16]{};
   unsigned trace_count_ = 0;
+  std::unique_ptr<DirectRun> direct_;
+  bool direct_fallback_ = false;
+  void tick_direct(bool (*service)(void *), void *context);
   bool begin_turn();
   void process_reply();
   void finish_tests();

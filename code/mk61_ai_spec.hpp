@@ -3,6 +3,10 @@
 #include "mk61_ai_harness.hpp"
 
 namespace mk61ai {
+// The compact tree layout is shared by model output and the independent parser.
+bool compile_spec_tree(const std::uint8_t *body, unsigned size,
+                       const char (*constants)[24], unsigned count, Program &);
+
 // Frozen SPEC wire format used by the validated 3M Q4 profiles. The neural
 // model chooses every operation, argument and destination. This compiler only
 // translates that tree into calculator instructions; it never evaluates it.
@@ -30,8 +34,6 @@ private:
   bool action_ = false, ended_ = false;
   bool add(const char *value);
   bool collect(const char *task);
-  bool expression(unsigned &at, unsigned depth, unsigned &nodes,
-                  Program &p) const;
 };
 } // namespace mk61ai
 #endif

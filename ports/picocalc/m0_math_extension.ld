@@ -139,6 +139,7 @@ SECTIONS {
      * rather than growing the main image into their fixed load addresses. */
     .ai_diagnostic_extension 0x10180000 : {
         *(.ai_diagnostic_extension)
+        *mk61_ai_direct.cpp.o(.text* .rodata*)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
     ASSERT(SIZEOF(.ai_diagnostic_extension) <= 0x10000,

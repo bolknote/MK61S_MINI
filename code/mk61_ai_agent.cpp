@@ -1,8 +1,15 @@
 #include "mk61_ai_agent.hpp"
+#include "mk61_ai_direct.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <new>
+#if defined(PICO_ON_DEVICE)
+#define AI_DIRECT_CODE __attribute__((section(".ai_diagnostic_extension"), noinline))
+#else
+#define AI_DIRECT_CODE
+#endif
 namespace mk61ai {
 namespace {
 std::uint32_t text_hash(const char *s) {
@@ -34,7 +41,26 @@ std::uint32_t case_stamp(const Session &s) {
     h = h * 16777619U ^ s.tests[i].revision;
   return h;
 }
+bool matches_user(const Result &r, const Example &input) {
+  const auto mask = expectation_mask(input);
+  for (unsigned i = 0; i < INPUT_COUNT; ++i) {
+    if (!(mask & (1U << i))) continue;
+    const double expected = expected_value(input, i), actual = r.actual[i];
+    if (!std::isfinite(actual) ||
+        std::fabs(actual - expected) > std::max(input.absolute, std::fabs(expected) * input.relative))
+      return false;
+  }
+  return true;
+}
 } // namespace
+
+struct Agent::DirectRun {
+  DirectTask spec;
+  Program candidate;
+  Result results[TEST_COUNT]{}, last{};
+  unsigned user = 0, bank = 0, passed = 0, angle = 1;
+  bool current = false, observed = false, identical = false;
+};
 Executor local_executor() {
   return {nullptr, [](void *, const Program &p, const Example &e,
                       std::uint32_t revision, bool (*service)(void *),
@@ -68,10 +94,20 @@ Agent::Agent(Session &s, Store store, Model &m, Executor executor)
     : Agent(s, store, local_inference(m), executor) {}
 Agent::Agent(Session &session, Store store, Inference model, Executor executor)
     : s_(session), store_(store), model_(model), executor_(executor) {}
+Agent::~Agent() = default;
+void Agent::reset() {
+  phase_ = resume_ = Phase::IDLE;
+  pause_ = false;
+  last_result_ = {};
+  direct_.reset();
+  direct_fallback_ = false;
+}
 void Agent::fail(const char *message) {
   std::snprintf(s_.feedback, sizeof(s_.feedback), "%s", message);
   s_.state = RunState::ERROR;
   phase_ = resume_ = Phase::IDLE;
+  direct_.reset();
+  direct_fallback_ = false;
   save_session(store_, s_);
 }
 void Agent::halt(const char *message) {
@@ -92,6 +128,43 @@ bool Agent::checkpoint() {
     return true;
   fail("Не удалось сохранить задачу на SD.");
   return false;
+}
+AI_DIRECT_CODE bool Agent::start_direct() {
+  if (active() || paused() || s_.intent == Intent::EXPLAIN || !executor_.run)
+    return false;
+  DirectTask spec;
+  Program candidate;
+  if (!parse_direct_task(s_.task, default_angle_, spec) || !spec.compile(candidate))
+    return false;
+  for (unsigned i = 0; i < s_.test_count; ++i)
+    if (s_.tests[i].scenario_count || (spec.explicit_angle && s_.tests[i].angle != spec.angle))
+      return false;
+  std::unique_ptr<DirectRun> run(new (std::nothrow) DirectRun);
+  if (!run) return false;
+  run->spec = spec;
+  run->candidate = candidate;
+  run->current = valid_program(s_.program);
+  const unsigned length = program_text_size(candidate);
+  run->identical = run->current && length == program_text_size(s_.program) &&
+                   !std::memcmp(candidate.bytes, s_.program.bytes, length);
+  direct_ = std::move(run);
+  direct_fallback_ = false;
+  pause_ = false;
+  last_result_ = {};
+  trace_count_ = 0;
+  prompt_count_ = generated_ = reused_prefix_ = test_ = 0;
+  generation_task_ = s_.task_revision;
+  generation_program_ = s_.program.version;
+  generation_cases_ = case_stamp(s_);
+  generation_intent_ = s_.intent;
+  s_.state = RunState::RUNNING;
+  phase_ = Phase::DIRECT;
+  return true;
+}
+bool Agent::take_direct_fallback() {
+  const bool needed = direct_fallback_;
+  direct_fallback_ = false;
+  return needed;
 }
 bool Agent::start(const char *prefix) {
   if (active())
@@ -215,6 +288,8 @@ bool Agent::run_tests(bool trace, unsigned index) {
     return false;
   pause_ = false;
   resume_ = Phase::IDLE;
+  direct_.reset();
+  direct_fallback_ = false;
   auto_continue_ = false;
   test_ = 0;
   trace_count_ = 0;
@@ -233,6 +308,127 @@ bool Agent::run_tests(bool trace, unsigned index) {
   s_.state = RunState::RUNNING;
   phase_ = trace ? Phase::TRACE : Phase::TESTS;
   return checkpoint();
+}
+
+AI_DIRECT_CODE void Agent::tick_direct(bool (*service)(void *), void *context) {
+  auto &run = *direct_;
+  auto stale = [&] {
+    return s_.task_revision != generation_task_ || s_.program.version != generation_program_ ||
+           s_.intent != generation_intent_ || case_stamp(s_) != generation_cases_;
+  };
+  auto abandon = [&](bool use_model) {
+    direct_.reset();
+    direct_fallback_ = use_model;
+    phase_ = resume_ = Phase::IDLE;
+    s_.state = RunState::DRAFT;
+  };
+  auto reject = [&] {
+    if (run.current && !run.identical) {
+      run.current = false;
+      run.user = run.bank = run.passed = 0;
+      run.observed = false;
+      run.last = {};
+      test_ = 0;
+    } else abandon(true);
+  };
+  if (stale()) { abandon(false); return; }
+
+  const bool user_case = run.user < s_.test_count;
+  const unsigned bank_target = run.spec.registers ? 4 : 1;
+  const bool synthetic = !user_case && run.passed < bank_target;
+  const bool observe = !user_case && !synthetic && !s_.test_count && !run.observed;
+  if (user_case || synthetic || observe) {
+    Example input{};
+    if (user_case) {
+      input = s_.tests[run.user];
+      test_ = run.user;
+    } else {
+      input.angle = run.spec.angle;
+      input.max_commands = 128;
+      input.max_frames = 1024;
+      if (synthetic) {
+        // Vary all registers. Invalid inputs of the formula are skipped; a
+        // program failure on a defined input always counts against it.
+        constexpr double values[] = {0.004399, 0.1375, 0.267, 0.4675, 0.8125, 1.165,
+                                     1.5625, 2.18, 7.2, 21.725, 0.3525, 0.7375, 2.21};
+        constexpr unsigned n = sizeof(values) / sizeof(*values);
+        if (run.bank >= 2 * n) { abandon(true); return; }
+        input.inputs = 0x7fffU;
+        const unsigned pair = run.bank / 2;
+        for (unsigned i = 0; i < 15; ++i) {
+          const bool negative = bool(run.bank & 1) != bool(pair && ((i + pair) & 1));
+          const double magnitude = values[(pair + 3 * i) % n];
+          input.values[i] = negative ? -magnitude : magnitude;
+        }
+      }
+    }
+    Example checked;
+    if (!run.spec.expectation(input, checked)) {
+      if (synthetic) ++run.bank;
+      else if (observe) run.observed = true;
+      else abandon(true);
+      return;
+    }
+    const auto before = micros_ ? micros_(clock_context_) : 0;
+    const Program program = run.current ? s_.program : run.candidate;
+    const auto result = executor_.run(executor_.context, program, checked, generation_task_,
+                                     service, context, nullptr, nullptr);
+    if (micros_) metrics_.tool_us += micros_(clock_context_) - before;
+    if (result.status == Execution::CANCELLED) {
+      resume_ = phase_;
+      phase_ = Phase::IDLE;
+      s_.state = RunState::PAUSED;
+      checkpoint();
+      return;
+    }
+    if (stale()) { abandon(false); return; }
+    if (result.status != Execution::STOPPED || !result.passed || !matches_user(result, input)) {
+      reject();
+      return;
+    }
+    if (synthetic) {
+      ++run.bank;
+      ++run.passed;
+    } else {
+      run.angle = input.angle;
+      run.last = result;
+      if (user_case) run.results[run.user++] = result;
+      else run.observed = true;
+    }
+    return;
+  }
+
+  const bool unresolved = run.current && !run.identical;
+  if (!run.current && !accept_program(store_, s_, run.candidate.bytes, run.candidate.size)) {
+    fail("Не удалось сохранить проверенную программу.");
+    return;
+  }
+  for (unsigned i = 0; i < s_.test_count; ++i) {
+    s_.results[i] = run.results[i];
+    s_.results[i].version = s_.program.version;
+  }
+  last_result_ = run.last;
+  last_result_.version = s_.program.version;
+  last_angle_ = run.angle;
+  if (!unresolved) {
+    s_.best_version = s_.program.version;
+    s_.best_score = std::uint8_t(s_.test_count);
+  }
+  s_.reply[0] = s_.plan[0] = 0;
+  s_.model[0] = 0;
+  const char *feedback = unresolved
+      ? "Текущий код сохранён. Добавь контрольный вход, чтобы различить программы."
+      : last_result_.status == Execution::STOPPED ? "Формула разобрана. Программа проверена эмулятором."
+      : "Программа проверена. Добавь входные значения для показа результата.";
+  std::snprintf(s_.feedback, sizeof(s_.feedback), "%s", feedback);
+  if (!append_event(store_, s_, "TOOL", s_.feedback)) {
+    fail("Не удалось записать проверку программы.");
+    return;
+  }
+  s_.state = unresolved ? RunState::NEEDS_INPUT : RunState::FINISHED;
+  phase_ = Phase::IDLE;
+  direct_.reset();
+  checkpoint();
 }
 void Agent::process_reply() {
   if (generation_task_ != s_.task_revision ||
@@ -430,6 +626,10 @@ void Agent::tick(bool (*service)(void *), void *context) {
       return false;
     return !a.self->pause_;
   };
+  if (phase_ == Phase::DIRECT) {
+    tick_direct(callback, &pump);
+    return;
+  }
   auto forwarded = [&](std::uint16_t token, bool output) {
     std::uint16_t candidate = 0;
     auto allowed = [](void *raw, std::uint16_t id) {

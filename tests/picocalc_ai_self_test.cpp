@@ -244,12 +244,12 @@ struct SpecInput {
       const auto &t=history[history.count()-1];
       if(!t.has_result)return false;
       assert(t.result.status==Execution::STOPPED&&t.result.x==0.3746066&&
-             t.program.size==6&&t.telemetry.output==12&&t.telemetry.input==493);
+             t.program.size==6&&t.telemetry.output==12&&t.telemetry.input==499);
       char profile[768];unsigned size=0;
       assert(files::read_text("/AI/SESSIONS/00000250.PRF",profile,sizeof(profile),size));
       assert(size>128&&std::strstr(profile,"AI_CHAT_RESULT task=250 ")&&
              std::strstr(profile,"tokens=12 ")&&
-             std::strstr(profile,"AI_CHAT_PROFILE input=493 reused=0 ")&&
+             std::strstr(profile,"AI_CHAT_PROFILE input=499 reused=0 ")&&
              std::strstr(profile,"attention_us=")&&std::strstr(profile,"workers="));
       if(++p.ready<2)return false;
       snapshot("spec-real-model-sine");p.keys="\x1b\x1b";p.at=0;++p.stage;
@@ -550,7 +550,8 @@ void picocalc_ai_test() {
     assert(warm_cache.acquire_cache(shared_memory::Owner::USB_CACHE,4U*1024*1024,
       [] { return shared_memory::EvictionDecision::RELEASE; }));
     const auto before_reclaims=shared_memory::buffer_statistics().reclaims;
-    Session task;task.id=250;assert(set_task(task,"Синус 22",false)&&
+    // This wording routes through Q4 while shorter explicit formulas use SPEC directly.
+    Session task;task.id=250;assert(set_task(task,"Запрограммируй синус 22",false)&&
       append_event(store(),task,"USER",task.task)&&save_session(store(),task));
     const auto previous=MK61Emu_GetAngleUnit();MK61Emu_SetAngleUnit(DEGREE);
     ai_clock::test_clock(125000000);

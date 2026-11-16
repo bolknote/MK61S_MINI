@@ -329,6 +329,7 @@ struct UI {
     request_ms = 0;
     profile_attention_us=profile_attention_io_us=profile_attention_jobs=0;
     profile_read_us=profile_matmul_us=profile_wait_us=0;profile_steps=0;profile_prompt_us=0;
+    model_load_us = 0;
     request_measured = true;
     request_running = false;
     time_request(true);
@@ -368,6 +369,7 @@ struct UI {
     case Agent::Phase::HEADER:
       return M8("Пишу ответ");
     case Agent::Phase::TESTS:
+    case Agent::Phase::DIRECT:
       return M8("Проверяю");
     case Agent::Phase::TRACE:
       return M8("Трассирую");
@@ -586,6 +588,7 @@ struct UI {
   void draw();
   bool ensure_model();
   void start();
+  void start_model();
   bool new_session(Intent intent = Intent::WRITE);
   void scan_sessions();
   u32 unused_id();
@@ -610,6 +613,7 @@ struct UI {
   static unsigned fastest_burst(const BurstResult *results,unsigned count);
 #endif
   unsigned long_perf(const char *directory);
+  unsigned request_bench(const char *directory);
 #if defined(PICO_ON_DEVICE)
   unsigned parameter_perf(const char *directory, bool overlap_only);
   unsigned request_perf(const char *directory);
@@ -910,7 +914,7 @@ AI_COLD_CODE bool UI::ensure_model() {
   if(spec_model) { arithmetic=Arithmetic::INT8; filter_head=true; }
   return true;
 }
-void UI::start() {
+AI_COLD_CODE void UI::start() {
   if (agent.active() || loading) {
     cancel = true;
     agent.request_pause();
@@ -923,7 +927,7 @@ void UI::start() {
   }
   if (agent.paused()) {
     cancel = false;
-    if(!enter_fast_clock()) return;
+    if(!agent.direct_pending() && !enter_fast_clock()) return;
     started = host.api->millis_ms();
     agent.start();
     if(!agent.active()) leave_fast_clock();
@@ -944,6 +948,23 @@ void UI::start() {
   }
   begin_request();
   angle_for_run();
+  cancel = false;
+  const auto before = call(MK61_SERVICE_MICROS);
+  if (agent.start_direct()) {
+    profile_prompt_us = call(MK61_SERVICE_MICROS) - before;
+    sample_memory();
+    profile_stage("direct-ready");
+    started = host.api->millis_ms();
+    screen = Screen::SESSION;
+    s.view = 0;
+    latest_chat();
+    typing = false;
+    changed();
+    return;
+  }
+  start_model();
+}
+AI_COLD_CODE void UI::start_model() {
   if (!ensure_model()) {
     time_request(false);
     sync_chat(true);
@@ -1458,7 +1479,7 @@ void UI::open_binary() {
   checkpoint();
   dirty = true;
 }
-void UI::act(Action action) {
+AI_COLD_CODE void UI::act(Action action) {
   if ((loading || agent.active()) && action != TOGGLE_METRICS && action != TOGGLE_CODE) {
     deferred = int(action);
     cancel = true;
@@ -2168,6 +2189,7 @@ void UI::tick() {
         }
       }
     }
+    if (agent.take_direct_fallback()) start_model();
     if(!agent.active()) leave_fast_clock();
     time_request(agent.active());
     dirty = true;
@@ -2244,6 +2266,12 @@ AI_COLD_CODE unsigned UI::bench() {
           : !files::mkdir(directory))
     return 3;
   char config_path[128],config_text[513];unsigned config_size=0;
+  std::snprintf(config_path, sizeof(config_path), "%s/DIRECT.CFG", directory);
+  if (files::exists(config_path)) {
+    if (!files::read_text(config_path, config_text, sizeof(config_text) - 1, config_size)) return 3;
+    if (config_size == 10 && !std::memcmp(config_text, "AIDIRECT1\n", 10)) return request_bench(directory);
+    return 3;
+  }
 #if defined(PICO_ON_DEVICE)
   std::snprintf(config_path, sizeof(config_path), "%s/REQUEST.CFG", directory);
   if (files::exists(config_path)) {
@@ -2678,6 +2706,51 @@ AI_COLD_CODE unsigned UI::fastest_burst(const BurstResult *results,unsigned coun
   return winner;
 }
 #endif
+
+AI_COLD_CODE unsigned UI::request_bench(const char *directory) {
+  if (!host.diagnostic_directory) return 3;
+  char path[128], text[1025];
+  unsigned n = 0;
+  std::snprintf(path, sizeof(path), "%s/TASK.TXT", directory);
+  // The terminal text reader converts to M8. Session tasks and the model
+  // tokenizer take UTF-8, just as they do when the real UI submits a task.
+  if (!store_read(nullptr, path, text, sizeof(text) - 1, n) || std::memchr(text, 0, n)) return 3;
+  text[n] = 0;
+  s.id = 1;
+  s.attempt_limit = 1;
+  if (!set_task(s, text, false)) return 3;
+  std::snprintf(path, sizeof(path), "%s/CHECK.TXT", directory);
+  Example example;
+  if (!store_read(nullptr, path, text, sizeof(text) - 1, n) || std::memchr(text, 0, n)) return 3;
+  text[n] = 0;
+  if (!parse_example(text, example) || !set_example(s, 0, example)) return 3;
+  agent.default_angle(example.angle);
+  cancel = false;
+  const auto start = call(MK61_SERVICE_MICROS);
+  const bool began = agent.start_direct();
+  sample_memory();
+  for (unsigned tick = 0; agent.active() && tick < 2200; ++tick)
+    agent.tick(service, this);
+  const auto elapsed = call(MK61_SERVICE_MICROS) - start;
+  sample_memory();
+  const bool passed = began && !agent.active() && s.state == RunState::FINISHED && all_passed(s);
+  std::snprintf(path, sizeof(path), "%s/FEEDBACK.TXT", directory);
+  if (s.feedback[0] && !files::write(path, reinterpret_cast<const u8 *>(s.feedback),
+                                    unsigned(std::strlen(s.feedback)))) return 3;
+  std::snprintf(path, sizeof(path), "%s/METRICS.JSON", directory);
+  if (!write_metrics(path)) return 3;
+  const int size = std::snprintf(text, sizeof(text),
+     "{\"direct\":true,\"began\":%s,\"state\":%u,\"passed\":%s,\"elapsed_us\":%lu,\"hz\":%lu,\"model_loaded\":%s,"
+     "\"commands\":%u,\"program_crc\":%lu,\"x\":%.12g,\"model\":\"%s\",\"weights_psram\":%lu,\"kv_psram\":%lu}\n",
+     began ? "true" : "false", unsigned(s.state), passed ? "true" : "false", (unsigned long)elapsed,
+     (unsigned long)ai_clock::hz(), model_ready ? "true" : "false", unsigned(s.program.size),
+     (unsigned long)program_fingerprint(s.program), agent.last_result().x, model_tag,
+     (unsigned long)package.size(), (unsigned long)cache.size());
+  std::snprintf(path, sizeof(path), "%s/REQUEST.JSON", directory);
+  if (size < 0 || unsigned(size) >= sizeof(text) ||
+      !files::write(path, reinterpret_cast<const u8 *>(text), unsigned(size))) return 3;
+  return passed ? 0 : 3;
+}
 
 AI_COLD_CODE unsigned UI::perf(const char *directory,const PerfConfig &config,ReadBenchmark read_benchmark) {
   const bool measure_bursts=read_benchmark!=ReadBenchmark::NONE;

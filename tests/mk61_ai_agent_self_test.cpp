@@ -2,6 +2,7 @@
 #include "mk61_ai_worker_fixture.hpp"
 #include "mk61emu_core.h"
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <fstream>
@@ -56,6 +57,73 @@ struct Pump {
     return !pump.cancel && (pump.cancel_after<0 || pump.cancel_after-->0);
   }
 };
+void direct_cases() {
+  using namespace mk61ai;
+  core_61::enable();
+  core_61::set_expanded_program_mode(false);
+  Disk disk;
+  Session s;
+  s.id = 30;
+  Agent agent(s, disk.store(), Inference{});
+  const auto finish = [&] {
+    for (unsigned i = 0; i < 40 && agent.active(); ++i) agent.tick();
+    assert(!agent.active());
+  };
+  assert(set_task(s, "Вычисли синус от (22). В градусах.", false));
+  assert(agent.start_direct() && agent.phase() == Agent::Phase::DIRECT);
+  Pump pump;
+  pump.cancel = true;
+  agent.tick(Pump::tick, &pump);
+  assert(agent.paused() && !valid_program(s.program));
+  assert(agent.start());
+  finish();
+  assert(s.state == RunState::FINISHED && s.program.version == 1);
+  assert(agent.last_result().passed && std::fabs(agent.last_result().x - 0.3746066) < 1e-7);
+  assert(agent.last_angle() == 0 && !agent.metrics().prefill_tokens && !agent.metrics().output_tokens);
+  assert(agent.start_direct());
+  finish();
+  assert(s.program.version == 1 && agent.last_result().version == 1);
+
+  assert(set_task(s, "Вычти 1,75 из значения (квадрат от R1). Итог сохрани в RA.", false));
+  Example e;
+  assert(parse_example("R1=2.5 => X=4.5 RA=4.5 ANGLE=RAD", e));
+  assert(set_example(s, 0, e));
+  assert(agent.start_direct());
+  finish();
+  assert(s.state == RunState::FINISHED && s.program.version == 2 && all_passed(s));
+  assert(agent.last_result().x == 4.5 && agent.last_result().actual[10] == 4.5);
+
+  e.expected_values[10] = 7;
+  assert(set_example(s, 0, e));
+  assert(agent.start_direct());
+  finish();
+  assert(agent.take_direct_fallback() && s.program.version == 2 && s.state == RunState::DRAFT);
+  assert(!all_passed(s) && !agent.take_direct_fallback());
+  assert(set_task(s, "Вычисли квадрат от (R1). Затем прибавь.", false));
+  assert(!agent.start_direct());
+
+  // Wrong order agrees for positive R6. The direct test bank has to
+  // distinguish it on negative input before replacing the program.
+  assert(set_task(s, "Вычисли: обратная величина (модуль (экспонента (R6))).", false));
+  const std::uint8_t old[] = {0x66, 0x31, 0x16, 0x23, 0x50};
+  const std::uint8_t repaired[] = {0x66, 0x16, 0x31, 0x23, 0x50};
+  assert(accept_program(disk.store(), s, old, sizeof(old)));
+  assert(parse_example("R6=1 => X=0.3678794411714 ANGLE=RAD", e) && set_example(s, 0, e));
+  assert(agent.start_direct());
+  finish();
+  assert(s.state == RunState::FINISHED && !std::memcmp(s.program.bytes, repaired, sizeof(repaired)));
+
+  assert(set_task(s, "Синус 22 градуса", false));
+  s.test_count = 0;
+  const std::uint8_t alternate[] = {0x62, 0x0e, 0x0d, 2, 2, 0x1c, 0x50};
+  assert(accept_program(disk.store(), s, alternate, sizeof(alternate)));
+  const auto version = s.program.version;
+  assert(agent.start_direct());
+  finish();
+  assert(s.state == RunState::NEEDS_INPUT && s.program.version == version && !agent.take_direct_fallback());
+
+  std::puts("Direct SPEC: real ROM, pause, checked replacement, preservation and fallback PASS");
+}
 // A valid Qwen layout can have a Q width larger than both hidden and FFN.
 // Its O projection must still fit the activation and LUT work areas.
 void wide_head_layout(std::vector<std::uint8_t> package) {
@@ -156,6 +224,7 @@ void wide_head_layout(std::vector<std::uint8_t> package) {
 int main(int argc, char **argv) {
   using namespace mk61ai;
   assert(argc == 2);
+  direct_cases();
   std::ifstream file(argv[1], std::ios::binary);
   assert(file);
   std::vector<std::uint8_t> package((std::istreambuf_iterator<char>(file)), {}),
