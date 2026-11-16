@@ -84,7 +84,84 @@ struct Producer {
         request.dc_input=&dc_in;request.dc_output=&dc_out;
     }
 };
+
+struct RequestBoundary {
+    unsigned samples, underruns, late, jobs;
+    int error;
+    uint32_t first_ticks, final_ticks, first_events, final_events;
+};
+static RequestBoundary replay_request_boundary(unsigned layout) {
+    Server server;
+    AudioEngine engine;
+    Producer producer;
+    int32_t filters[6]{};
+    server.stereo=server.repeat=layout!=0;
+    engine.options={layout,0,filters,true};
+    engine.repeat=server.repeat;engine.inline_input=true;
+    engine.module=server.load();engine.request=producer.request;
+    engine.primed=true;engine.blocks=266;
+    const unsigned full=layout?AudioEngine::STEREO_BLOCK:AudioEngine::BLOCK;
+    constexpr unsigned buffered=64,published=15536,short_block=published/140;
+    constexpr uint32_t origin=UINT32_MAX-1000, maximum_reply_us=2197;
+    const uint32_t start_events=producer.write;
+    const unsigned total=buffered+short_block+full;
+    producer.time=origin;producer.produced=origin+published;
+    engine.read.store(UINT32_MAX-24);engine.write.store(engine.read.load()+buffered);
+    server.generated=buffered;
+    for(unsigned i=0;i<buffered;++i) {
+        const unsigned value=layout?64+i/16:i;
+        engine.duties[(engine.read.load()+i)&(AudioEngine::CAPACITY-1)]=uint16_t(value|((layout?value^0xa5:value)<<8));
+    }
+    for(unsigned i=0;i<2;++i) {
+        uint8_t* event=producer.events+8*(producer.write++&(producer.request.event_capacity-1));
+        Wire::put32(event,origin+short_block*140+i);event[4]=0;event[5]=0;event[6]=uint8_t(i+1);
+    }
+    unsigned consumed=0;
+    uint32_t first_ticks=0,first_events=0;
+    for(uint32_t now=0;now<16000 && consumed<total && !engine.error.load();now+=40) {
+        if(now==3520)producer.produced=origin+(short_block+full)*140;
+        if(engine.wire.pending && now-engine.wire.started>=maximum_reply_us) {
+            server.now=now;server.exchange(engine.wire);
+            for(unsigned turn=0;engine.wire.pending && turn<16;++turn) {
+                stm3_tick(&server.runtime);server.exchange(engine.wire);
+            }
+            assert(!engine.wire.pending);
+        }
+        engine.step(now);
+        if(engine.stage!=AudioEngine::IDLE && !first_ticks) {
+            first_ticks=producer.time-origin;first_events=producer.read-start_events;
+        }
+        const uint32_t before=engine.read.load(),actual=engine.sample(now);
+        if(engine.read.load()!=before) {
+            const unsigned value=layout?64+(consumed/16)%128:uint8_t(consumed);
+            assert(actual==(value|((layout?value^0xa5:value)<<16)));++consumed;
+        }
+    }
+    return {consumed,engine.underruns,engine.late_blocks,server.invocations,engine.error.load(),
+            first_ticks,producer.time-origin,first_events,producer.read-start_events};
+}
+
 int main() {
+    for(unsigned layout:{0u,1u,2u}) {
+        const unsigned full=layout?AudioEngine::STEREO_BLOCK:AudioEngine::BLOCK;
+        const auto r=replay_request_boundary(layout);
+        assert(r.samples==64+110+full && !r.error && !r.underruns && !r.late && r.jobs==2);
+        assert(r.first_ticks==110*140 && r.final_ticks==(110+full)*140 && r.first_events==1 && r.final_events==2);
+        AudioEngine normal;
+        Producer producer;
+        normal.request=producer.request;normal.options.layout=layout;
+        normal.module=1;normal.inline_input=true;producer.produced=15536;
+        normal.step(0);
+        assert(normal.stage==AudioEngine::IDLE && !producer.time); // Startup still needs full blocks.
+        normal.blocks=AudioEngine::PRIME_BLOCKS;normal.write.store(full+1);
+        normal.step(40);
+        assert(normal.stage==AudioEngine::IDLE && !producer.time); // Enough buffered PCM to wait.
+        normal.read.store(1);producer.produced=(full/2)*140-1;normal.step(80);
+        assert(normal.stage==AudioEngine::IDLE && !producer.time);
+        producer.produced=15536;normal.step(120);
+        assert(normal.stage==AudioEngine::RESULT && normal.count==110 && producer.time==110*140);
+    }
+    std::puts("PCM dispatch: cold 15536T boundary, partial 110-sample request, exact PCM/events/ring clock wrap and full-block steady path PASS");
     for(unsigned layout:{0u,1u,2u}) {
         AudioEngine engine;
         Producer producer;

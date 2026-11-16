@@ -112,10 +112,15 @@ struct AudioEngine {
         }
         if(stopping.load(std::memory_order_acquire) && !prepared_bytes){stopped.store(true,std::memory_order_release);return;}
         const unsigned block=options.layout?STEREO_BLOCK:BLOCK;
-        if(queued()>CAPACITY-block)return;
+        const unsigned available=queued();
+        if(available>CAPACITY-block)return;
         if(prepared_bytes){bytes=prepared_bytes;count=prepared_count;prepared_bytes=0;}
         else {
-            const int n=psg_packets::prepare(request,packet,block,block);
+            // After the startup blocks, give M3 time to return the
+            // next result before the last queued block drains. The packet
+            // encoder still takes a full block whenever one is published.
+            const unsigned minimum=blocks>=PRIME_BLOCKS && available<=block?block/2:block;
+            const int n=psg_packets::prepare(request,packet,minimum,block);
             if(n<0){fail(-28);return;}
             if(!n)return;
             bytes=unsigned(n);count=packet[5];psg_packets::put32(packet,options.magic());
