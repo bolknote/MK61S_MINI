@@ -55,15 +55,17 @@ struct aw_assets {
     uint16_t count;
     bool fault;
     aw_asset_cache *recent;
-    aw_asset_entry entries[AW_ASSET_LIMIT];
+    aw_asset_entry *entries;
     aw_asset_cache cache[AW_ASSET_CACHE_SLOTS];
     uint8_t input[AW_PREFETCH_INPUT_BYTES];
     aw_asset_prefetch prefetch;
     uint16_t prefetch_next;
 };
 
-/* Parse the complete MEMLIST file. The terminator must be present. */
-bool aw_assets_init(aw_assets *assets, const uint8_t *memlist, size_t bytes,
+/* Parse the complete MEMLIST file. The caller owns the resource table for
+ * the lifetime of assets, so the APP can place it on its reserved stack. */
+bool aw_assets_init(aw_assets *assets, aw_asset_entry entries[AW_ASSET_LIMIT],
+                    const uint8_t *memlist, size_t bytes,
                     uint32_t capacity, void *ctx, aw_asset_bank_read bank_read,
                     aw_asset_store_read store_read, aw_asset_store_write store_write);
 /* Decode a resource at most once. Failure never marks it as decoded. */
@@ -73,6 +75,9 @@ bool aw_assets_load(aw_assets *assets, unsigned id);
 bool aw_assets_prefetch_step(aw_assets *assets);
 bool aw_assets_read(aw_assets *assets, uint32_t offset, void *out, uint32_t size);
 bool aw_assets_write(aw_assets *assets, uint32_t offset, const void *in, uint32_t size);
+/* Single-use data can bypass the asset cache even when smaller than a page. */
+bool aw_assets_read_direct(aw_assets *assets, uint32_t offset, void *out, uint32_t size);
+bool aw_assets_write_direct(aw_assets *assets, uint32_t offset, const void *in, uint32_t size);
 bool aw_assets_flush(aw_assets *assets);
 /* Called only between complete cache operations; callbacks must not start a
  * nested resource load or use the shared compressed-input scratch buffer. */

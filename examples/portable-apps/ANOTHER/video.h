@@ -9,6 +9,14 @@
 #define AW_VIDEO_PAGE_BYTES (AW_VIDEO_STRIDE * AW_VIDEO_HEIGHT)
 #define AW_VIDEO_INTERP_SLOTS 32u
 #define AW_VIDEO_PAGE3_PACKED_BYTES 8192u
+#define AW_VIDEO_BAND_ROWS 8u
+#define AW_VIDEO_BANDS (AW_VIDEO_HEIGHT / AW_VIDEO_BAND_ROWS)
+
+/* Nonzero identities describe exact index bytes. Full copies retain the
+ * source identities and drawing invalidates the affected bands. */
+typedef struct {
+    uint32_t page[4][AW_VIDEO_BANDS], last_identity;
+} aw_video_bands;
 
 typedef bool (*aw_video_present_fn)(void *ctx, const uint8_t *pixels, const uint16_t *palette);
 
@@ -28,6 +36,7 @@ typedef struct {
     uint32_t page3_packed_base;
     uint16_t page3_packed_size, page3_packed_capacity;
     bool page3_packed_valid, page3_packed_attempted, page3_seen_copy;
+    aw_video_bands *bands;
     void *present_ctx;
     aw_video_present_fn present;
 } aw_video;
@@ -40,6 +49,8 @@ bool aw_video_use_background(aw_video *v, uint8_t *buffer, uint16_t capacity);
 bool aw_video_use_background_split(aw_video *v, uint8_t *first, uint16_t first_size,
                                    uint8_t *second, uint16_t second_size);
 bool aw_video_use_packed_page3(aw_video *v, uint32_t base, uint16_t capacity);
+void aw_video_track_bands(aw_video *v, aw_video_bands *bands);
+const uint32_t *aw_video_band_identities(const aw_video *v);
 bool aw_video_flush(aw_video *v);
 bool aw_video_select(aw_video *v, uint8_t page);
 bool aw_video_fill(aw_video *v, uint8_t page, uint8_t color);

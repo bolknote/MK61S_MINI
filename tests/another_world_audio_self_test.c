@@ -56,6 +56,7 @@ static void scalar(aw_audio *a, int16_t *out, unsigned count) {
     for (unsigned i = 0; i < count; ++i) out[i] = (int16_t)((int)mixed[i] * 256);
 }
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     memory m = {0}; aw_assets assets; aw_vm vm = {0}; aw_audio audio; uint8_t list[61];
     entry(list, 0, 12); entry(list + 20, 32, 16); entry(list + 40, 128, 0xC0 + 1024); list[60] = 0xFF;
     be16(m.bank, 2); m.bank[8] = 0; m.bank[9] = 64; m.bank[10] = 192; m.bank[11] = 127;
@@ -65,7 +66,7 @@ int main(void) {
     be16(music, 5); be16(music + 2, 1); be16(music + 4, 63); be16(music + 0x3E, 1);
     be16(music + 0xC0, 0xFFFD); be16(music + 0xC2, 0x1234);
     be16(music + 0xC4, 200); be16(music + 0xC6, 0x1000);
-    assert(aw_assets_init(&assets, list, sizeof(list), sizeof(m.ram), &m, from_bank, read_ram, write_ram));
+    assert(aw_assets_init(&assets, entries, list, sizeof(list), sizeof(m.ram), &m, from_bank, read_ram, write_ram));
     vm.assets = &assets;
     for (unsigned i = 0; i < 3; ++i) { assert(aw_assets_load(&assets, i)); vm.loaded[i] = 1; }
     aw_audio_init(&audio, &assets, &vm);

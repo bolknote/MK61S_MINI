@@ -12,9 +12,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 from tools.firmware.picocalc.build_picocalc import compiler_bin
+from tools.apps.another.prepare_storm import prepare
 from dev.tools.explorer_icons import copy_icon
 
-SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "display_pages.c", "vm.c", "audio.c", "text.c"]
+SOURCES = ["main.c", "assets.c", "prepared.c", "video.c", "display.c", "display_compact.c", "display_pages.c", "vm.c", "audio.c", "text.c",
+           "display_storm.cpp"]
 
 
 def main():
@@ -26,7 +28,8 @@ def main():
     src = ROOT / "examples/portable-apps/ANOTHER"
     command = [sys.executable, str(ROOT / "tools/apps/portable/build_portable_app.py"),
                "--target", "picocalc-pico-h", "--shared-runtime", "--name", "ANOTHER",
-               "--arm-toolchain-bin", str(compiler_bin(args.toolchain)), "--output-dir", str(args.build_dir)]
+               "--arm-toolchain-bin", str(compiler_bin(args.toolchain)), "--output-dir", str(args.build_dir),
+               "--source", str(ROOT / "code/zx0.cpp")]
     for name in SOURCES:
         command += ["--source", str(src / name)]
     command += ["--source", str(ROOT / "sdk/portable/rp2040_divide.S")]
@@ -39,7 +42,10 @@ def main():
         copy_icon("another-world", args.output_dir / "autoexec.wbmp")
     shutil.copy2(ROOT / "LICENSE", args.output_dir / "COPYING.txt")
     shutil.copy2(ROOT / "third_party/rp2040-softfloat/LICENSE.TXT", args.output_dir / "RP2040-LICENSE.txt")
+    shutil.copy2(ROOT / "tools/apps/packer/third_party/zx0/LICENSE", args.output_dir / "ZX0-LICENSE.txt")
     report = json.loads((args.build_dir / "ANOTHER.json").read_text())
+    if cache := prepare(args.output_dir):
+        report["storm_cache_sha256"] = hashlib.sha256(cache.read_bytes()).hexdigest()
     report["app_sha256"] = hashlib.sha256((args.output_dir / "ANOTHER.APP").read_bytes()).hexdigest()
     report["game_data_included"] = False
     report["hardware_verified"] = False

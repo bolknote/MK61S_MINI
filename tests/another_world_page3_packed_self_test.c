@@ -38,12 +38,13 @@ static void reuse3(aw_video *v) {
     assert(v->page3_packed_attempted);
 }
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     memory m = {calloc(1, CAPACITY), 0, 0, false};
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *spare = malloc(AW_VIDEO_PAGE_BYTES);
     uint8_t *snapshot = malloc(AW_VIDEO_PAGE_BYTES); aw_assets a; aw_video v;
     assert(m.bytes && frame && spare && snapshot);
     uint8_t list[21] = {0}; list[7] = 1; list[14] = 0x20; list[18] = 0x20; list[20] = 0xFF;
-    assert(aw_assets_init(&a, list, sizeof(list), CAPACITY, &m, bank, rd, wr));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), CAPACITY, &m, bank, rd, wr));
     assert(aw_video_init(&v, &a, BASE, frame, present, &m));
     assert(aw_video_use_spare(&v, spare));
     assert(!aw_video_use_packed_page3(&v, BASE + 4 * AW_VIDEO_PAGE_BYTES, 8192));

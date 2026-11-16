@@ -25,17 +25,21 @@ static unsigned pixel(const uint8_t *p, unsigned x, unsigned y) {
     const uint8_t b = p[y * AW_VIDEO_STRIDE + x / 2]; return x & 1 ? b & 15 : b >> 4;
 }
 static void run(bool two_pages) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     memory m = {calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), 8192 + 4 * AW_VIDEO_PAGE_BYTES, 0, 0};
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *spare = two_pages ? malloc(AW_VIDEO_PAGE_BYTES) : NULL;
     aw_assets a; aw_video v;
+    aw_video_bands bands;
     assert(m.bytes && frame && (!two_pages || spare));
     uint8_t list[21] = {0}; list[7] = 1; list[14] = 0x20; list[18] = 0x20; list[20] = 0xFF;
-    assert(aw_assets_init(&a, list, sizeof(list), m.size, &m, bank, read_store, write_store));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), m.size, &m, bank, read_store, write_store));
     assert(aw_video_init(&v, &a, 8192, frame, present, &m));
+    aw_video_track_bands(&v, &bands);
     if (two_pages) assert(aw_video_use_spare(&v, spare));
     assert(aw_video_fill(&v, 0, 1));
     assert(aw_video_fill(&v, 2, 2));
     assert(aw_video_copy(&v, 0, 2, 0));
+    assert(!memcmp(bands.page[0], bands.page[2], sizeof(bands.page[0])));
     assert(aw_video_select(&v, 2) && pixel(v.pixels, 10, 10) == 1);
     assert(aw_video_fill(&v, 1, 3));
     assert(aw_video_show(&v, 0xFF));
@@ -44,6 +48,7 @@ static void run(bool two_pages) {
     assert(aw_video_select(&v, 3) && pixel(v.pixels, 20, 20) == 3);
     assert(aw_video_fill(&v, 3, 0));
     assert(aw_video_copy(&v, 0x81, 3, 4));
+    for (unsigned i = 0; i < AW_VIDEO_BANDS; ++i) assert(!bands.page[3][i]);
     assert(aw_video_select(&v, 3) && pixel(v.pixels, 20, 3) == 0 && pixel(v.pixels, 20, 4) == 3);
     const uint8_t square[] = {0xC5, 8, 8, 4, 8, 0, 8, 8, 0, 8, 0, 0};
     assert(aw_assets_write(&a, 100, square, sizeof(square)));
@@ -61,6 +66,9 @@ static void run(bool two_pages) {
     const uint8_t glyph[8] = {0x81,0,0,0,0,0,0,0};
     assert(aw_video_char(&v, 0, 0, 7, glyph));
     assert(pixel(v.pixels, 0, 0) == 7 && pixel(v.pixels, 7, 0) == 7 && pixel(v.pixels, 1, 0) == 0);
+    assert(!bands.page[2][0] && bands.page[2][1] == 1);
+    assert(aw_video_char(&v, 1, 7, 7, glyph));
+    assert(!bands.page[2][0] && !bands.page[2][1] && bands.page[2][2] == 1);
     /* Page zero may be dirty in the second slot when a polygon uses it as
      * its source; the copied pixels and a later explicit flush must agree. */
     const uint8_t from_page_zero[] = {0xD1, 8, 8, 4, 8, 0, 8, 8, 0, 8, 0, 0};
@@ -73,6 +81,8 @@ static void run(bool two_pages) {
     assert(aw_assets_read(&a, 8192, &value, 1) && value == 0x44);
     assert(aw_assets_read(&a, 8192 + 2 * AW_VIDEO_PAGE_BYTES + 100 * AW_VIDEO_STRIDE + 80, &value, 1));
     assert((value >> 4) == 4);
+    bands.last_identity = UINT32_MAX - AW_VIDEO_BANDS + 1;
+    assert(aw_video_show(&v, 2) && !aw_video_band_identities(&v));
     assert(!aw_video_polygon(&v, 100, 2, 0, 64, 0, 0) && v.fault);
     free(spare); free(frame); free(m.bytes);
 }

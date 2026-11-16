@@ -14,10 +14,22 @@
 static aw_display_pages pages;
 static uint16_t page_pixels[2][AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT];
 static unsigned page_selected=2, page_visible=2, page_shows;
+#ifdef AW_TEST_STORM
+#include "../examples/portable-apps/ANOTHER/display_storm.h"
+static aw_display_storm storm;
+static unsigned replayed, intro_frames;
+static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
+    FILE *file = ctx;
+    return fseek(file, (long)offset, SEEK_SET) == 0 && fread(out, 1, size, file) == size;
+}
+static bool storm_wait(void *ctx) { (void)ctx; return true; }
+#endif
 #endif
 static aw_display_compact compact;
 static uint8_t compact_previous[12800];
+#ifndef AW_TWO_PAGE_ANALYZE
 static uint64_t fallback_frames[10];
+#endif
 #else
 static aw_display display;
 static uint8_t display_previous[AW_VIDEO_PAGE_BYTES];
@@ -100,7 +112,16 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
                compact_previous, sizeof(compact_previous), compact_previous, sizeof(compact_previous)));
 #ifdef AW_TWO_PAGE_ANALYZE
         const uint32_t second=h->audio->assets->used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
-        assert(aw_display_pages_init(&pages,&compact,second,second+AW_VIDEO_PAGE_BYTES));
+        assert(aw_display_pages_init(&pages,&compact,second));
+#ifdef AW_TEST_STORM
+        FILE *file = fopen(getenv("AW_STORM_CACHE"), "rb");
+        assert(file && fseek(file, 0, SEEK_END) == 0);
+        const long size = ftell(file);
+        assert(size > 0 && size <= AW_STORM_MAX_FILE &&
+               aw_storm_load(&storm, h->audio->assets, second + AW_VIDEO_PAGE_BYTES,
+                             compact.scratch, (uint32_t)size, storm_read, file));
+        fclose(file);
+#endif
 #endif
 #else
         aw_display_init(&display, display_previous);
@@ -134,13 +155,27 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
 #endif
 #ifdef AW_COMPACT_DISPLAY
 #ifdef AW_TWO_PAGE_ANALYZE
-    assert(aw_display_pages_present(&pages,pixels,palette,display_select_page,display_show_page,display_rect,NULL));
+#ifdef AW_TEST_STORM
+    const unsigned intro_frame = h->audio->vm->part == AW_STORM_PART ? intro_frames++ : UINT32_MAX;
+    const unsigned step = storm.ready ? intro_frame : UINT32_MAX;
+    const unsigned offset = step - storm.first;
+    const bool cached = step >= storm.first && offset >= AW_STORM_WARM_FRAMES &&
+        offset < AW_STORM_WARM_FRAMES + AW_STORM_FRAMES &&
+        aw_storm_present(&storm,&pages,offset-AW_STORM_WARM_FRAMES,pixels,palette,
+                         display_select_page,display_show_page,display_rect,storm_wait,NULL);
+    replayed += cached;
+    if (!cached)
+#endif
+        assert(aw_display_pages_present(&pages,pixels,palette,aw_video_band_identities(h->audio->vm->video),
+                                        display_select_page,display_show_page,display_rect,NULL,NULL));
+#ifdef AW_TEST_STORM
+    if (step >= storm.first && offset < AW_STORM_WARM_FRAMES)
+        assert(aw_storm_warm(&storm,&pages,offset,pixels,palette,display_select_page,display_rect,NULL));
+#endif
 #else
     assert(aw_display_compact_present(&compact, pixels, palette, display_rect, NULL));
 #endif
-#ifdef AW_TWO_PAGE_ANALYZE
-    fallback_frames[display_part] += pages.slot[pages.loaded]->external;
-#else
+#ifndef AW_TWO_PAGE_ANALYZE
     fallback_frames[display_part] += compact.external;
 #endif
 #else
@@ -158,7 +193,12 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
 #ifdef AW_TWO_PAGE_ANALYZE
     /* Once the first white and black frames exist, the actual intro reuses
      * those two RGB pages. Border pixels must remain black on every flash. */
-    if (h->audio->vm->part == 0x3e81 && h->frames >= 2443 && h->frames <= 2450) {
+#ifdef AW_TEST_STORM
+    const unsigned frame = intro_frame;
+#else
+    const unsigned frame = h->frames;
+#endif
+    if (h->audio->vm->part == 0x3e81 && frame >= 2443 && frame <= 2450) {
         assert(display_bytes[display_part] == before_rgb);
         assert(h->store_read_bytes == before_reads && h->store_write_bytes == before_writes);
         assert(page_shows == before_shows + 1);
@@ -210,6 +250,7 @@ static void music(void *ctx, unsigned id, unsigned delay, unsigned pos) {
 }
 static void stop_audio(void *ctx) { host *h = ctx; aw_audio_stop(h->audio); aw_audio_stop(h->remote); }
 int main(int argc, char **argv) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s DATA_DIR [WALK_STEPS]\n", argv[0]); return 2; }
     const unsigned limit = argc == 3 ? (unsigned)strtoul(argv[2], NULL, 10) : 5000;
     if (!limit || limit > 100000) return 2;
@@ -230,7 +271,7 @@ int main(int argc, char **argv) {
     h.audio = calloc(1, sizeof(*h.audio)); h.remote = calloc(1, sizeof(*h.remote));
     aw_vm_host callbacks = {&h, frame_wait, NULL, sound, music, stop_audio};
     if (!h.store || !pixels || !a || !video || !vm || !h.audio || !h.remote ||
-        !aw_assets_init(a, list, len, h.capacity, &h, bank_read, store_read, store_write) ||
+        !aw_assets_init(a, entries, list, len, h.capacity, &h, bank_read, store_read, store_write) ||
         !aw_video_init(video, a, a->used, pixels, present, &h) ||
         (spare && !aw_video_use_spare(video, spare)) ||
         (background && !aw_video_use_background(video, background, 6144)) ||
@@ -240,10 +281,16 @@ int main(int argc, char **argv) {
         !aw_vm_init(vm, a, video, callbacks, 1)) {
         fprintf(stderr, "initialization failed\n"); return 1;
     }
+#ifdef AW_TWO_PAGE_ANALYZE
+    aw_video_bands identities;
+    aw_video_track_bands(video, &identities);
+#endif
     aw_audio_init(h.audio, a, vm); aw_audio_init(h.remote, a, vm);
     /* The probe starts after the protection part; seed the same variables
      * that Raw's BYPASS_PROTECTION test build initializes. */
+#ifndef AW_TEST_STORM
     vm->vars[0xBC] = 0x10; vm->vars[0xC6] = 0x80; vm->vars[0xF2] = 4000; vm->vars[0xDC] = 33;
+#endif
 #ifdef AW_PROBE_FIRST_PART
     if (!aw_vm_set_part(vm, AW_VM_FIRST_PART)) { fprintf(stderr, "part load failed\n"); return 1; }
 #else
@@ -293,11 +340,16 @@ int main(int argc, char **argv) {
                (unsigned long long)two_color_tiles[i], (unsigned long long)total_tiles[i]);
 #endif
 #ifdef AW_COMPACT_DISPLAY
+#ifdef AW_TWO_PAGE_ANALYZE
+    printf("page switches=%u\n",page_shows);
+#ifdef AW_TEST_STORM
+    assert(replayed == AW_STORM_FRAMES && storm.warmed == AW_STORM_WARM_FRAMES && !storm.ready);
+    puts("DOS intro: all warm steps and cached frames used, RGB565 matches each live frame");
+#endif
+#else
     for (unsigned i = 0; i < 10; ++i) if (display_frames[i])
         printf("compact part=%04X external_fallback_frames=%llu\n", AW_VM_FIRST_PART + i,
                (unsigned long long)fallback_frames[i]);
-#ifdef AW_TWO_PAGE_ANALYZE
-    printf("page switches=%u\n",page_shows);
 #endif
 #endif
 #endif

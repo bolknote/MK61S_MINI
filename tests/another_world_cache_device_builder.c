@@ -67,6 +67,7 @@ static int source(void *ctx, uint32_t at, uint8_t *out, uint32_t n) {
 }
 
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     int result = 1; unsigned sounds = 0;
     services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
                                     MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_FILE_WRITE_SOURCE);
@@ -75,7 +76,7 @@ int main(void) {
     mk61_service_file_bytes stat = {"MEMLIST.BIN", &info, 0, sizeof(info)};
     if (!services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(stat), &stat) ||
         info.directory || !info.size || info.size > sizeof(list) || !file_read("MEMLIST.BIN", 0, list, info.size) ||
-        !aw_assets_init(&assets, list, info.size, STORE_BYTES, NULL, bank_read, store_read, store_write)) goto done;
+        !aw_assets_init(&assets, entries, list, info.size, STORE_BYTES, NULL, bank_read, store_read, store_write)) goto done;
     assets.progress = progress;
     meta_size = 24 + assets.count * 12; output_size = meta_size;
     memcpy(metadata, "AWC1", 4); put32(metadata + 4, 1); put32(metadata + 8, assets.count);

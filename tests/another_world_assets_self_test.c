@@ -52,12 +52,13 @@ static void make_compressed(uint8_t *out) {
 }
 
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     test_memory m = {0}; aw_assets a; uint8_t list[61] = {0};
     entry(list, 0, 24, 24); entry(list + 20, 32, 16, 24);
     entry(list + 40, 64, 16, 24); list[60] = 0xFF;
     for (unsigned i = 0; i < 24; ++i) m.bank[i] = (uint8_t)(i + 1);
     make_compressed(m.bank + 32); memcpy(m.bank + 64, m.bank + 32, 16); m.bank[72] ^= 1;
-    assert(aw_assets_init(&a, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
     assert(a.count == 3 && a.used == 72);
     assert(aw_assets_load(&a, 0));
     uint8_t out[24];
@@ -83,7 +84,7 @@ int main(void) {
      * outside its range, even when the endpoints cut through cache pages. */
     uint8_t expected[sizeof(m.store)], bulk[sizeof(m.store)];
     for (unsigned i = 0; i < sizeof(expected); ++i) expected[i] = m.store[i] = (uint8_t)(i * 19u);
-    assert(aw_assets_init(&a, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
     uint8_t marker = 0xD3; expected[5] = marker;
     assert(aw_assets_write(&a, 5, &marker, 1));
     marker = 0x39; expected[1500] = marker;
@@ -103,9 +104,25 @@ int main(void) {
     assert(aw_assets_read(&a, 1000, &marker, 1) && marker == expected[1000]);
     assert(aw_assets_read(&a, 0, bulk, sizeof(bulk)) && !memcmp(bulk, expected, sizeof(bulk)));
     assert(aw_assets_flush(&a) && !memcmp(m.store, expected, sizeof(expected)));
-    assert(!aw_assets_init(&a, list, 60, sizeof(m.store), &m, bank_read, store_read, store_write));
-    assert(!aw_assets_init(&a, list, sizeof(list), 32, &m, bank_read, store_read, store_write));
-    assert(aw_assets_init(&a, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
+    /* Packed display bands use short direct I/O. A write across two cached
+     * pages must preserve adjacent dirty bytes and invalidate both copies. */
+    const uint32_t boundary = AW_ASSET_PAGE;
+    marker = expected[boundary - 3] = 0x4a;
+    assert(aw_assets_write(&a, boundary - 3, &marker, 1));
+    marker = expected[boundary + 2] = 0xb4;
+    assert(aw_assets_write(&a, boundary + 2, &marker, 1));
+    store_reads = m.store_reads;
+    assert(aw_assets_read_direct(&a, boundary - 3, bulk, 6));
+    assert(m.store_reads == store_reads + 1 && !memcmp(bulk, expected + boundary - 3, 6));
+    marker = expected[boundary + 3] = 0x51;
+    assert(aw_assets_write(&a, boundary + 3, &marker, 1));
+    memset(bulk, 0x6b, 3); memset(expected + boundary - 1, 0x6b, 3);
+    assert(aw_assets_write_direct(&a, boundary - 1, bulk, 3));
+    assert(aw_assets_read(&a, boundary - 3, bulk, 7) && !memcmp(bulk, expected + boundary - 3, 7));
+    assert(aw_assets_flush(&a) && !memcmp(m.store, expected, sizeof(expected)));
+    assert(!aw_assets_init(&a, entries, list, 60, sizeof(m.store), &m, bank_read, store_read, store_write));
+    assert(!aw_assets_init(&a, entries, list, sizeof(list), 32, &m, bank_read, store_read, store_write));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), sizeof(m.store), &m, bank_read, store_read, store_write));
     m.fail_bank = true; assert(!aw_assets_load(&a, 0) && !a.entries[0].decoded); m.fail_bank = false;
     m.fail_store = true; assert(!aw_assets_load(&a, 0) && a.fault && !a.entries[0].decoded);
     puts("Another World asset tests passed");

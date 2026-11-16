@@ -26,6 +26,7 @@ static void evict_zero(aw_video *v) {
 static uint32_t random32(uint32_t *s) { *s = *s * 1664525u + 1013904223u; return *s; }
 
 static void test(unsigned capacity, unsigned split) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     memory m = {calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), 8192 + 4 * AW_VIDEO_PAGE_BYTES, 0};
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *spare = malloc(AW_VIDEO_PAGE_BYTES);
     uint8_t *cache = malloc(split ? split : capacity), *tail = split ? malloc(capacity - split) : NULL;
@@ -33,7 +34,7 @@ static void test(unsigned capacity, unsigned split) {
     aw_assets a; aw_video v;
     assert(m.bytes && frame && spare && cache && snapshot && (!split || tail));
     uint8_t list[21] = {0}; list[7] = 1; list[14] = 0x20; list[18] = 0x20; list[20] = 0xFF;
-    assert(aw_assets_init(&a, list, sizeof(list), m.size, &m, bank, rd, wr));
+    assert(aw_assets_init(&a, entries, list, sizeof(list), m.size, &m, bank, rd, wr));
     assert(aw_video_init(&v, &a, 8192, frame, present, &m));
     assert(aw_video_use_spare(&v, spare));
     if (split) assert(aw_video_use_background_split(&v, cache, split, tail, capacity - split));

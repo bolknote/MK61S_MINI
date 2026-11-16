@@ -288,9 +288,35 @@ bool aw_video_fill(aw_video *v, uint8_t page, uint8_t color) {
     if (!v || !resident(v, page_id(v, page))) return false;
     color &= 15u;
     memset(v->pixels, (color << 4) | color, AW_VIDEO_PAGE_BYTES);
+    if (v->bands)
+        for (unsigned band = 0; band < AW_VIDEO_BANDS; ++band)
+            v->bands->page[v->resident_page][band] = color + 1u;
     mark_dirty(v);
     return true;
 }
+
+void aw_video_track_bands(aw_video *v, aw_video_bands *bands) {
+    if (bands) {
+        memset(bands, 0, sizeof(*bands));
+        bands->last_identity = 16; /* The first 16 identities describe fills. */
+    }
+    v->bands = bands;
+}
+const uint32_t *aw_video_band_identities(const aw_video *v) {
+    return v->bands ? v->bands->page[v->resident_page] : NULL;
+}
+static void identify_bands(aw_video *v, unsigned page) {
+    if (!v->bands) return;
+    if (v->bands->last_identity > UINT32_MAX - AW_VIDEO_BANDS) {
+        /* Never reuse an identity while a display snapshot might retain it. */
+        v->bands = NULL;
+        return;
+    }
+    for (unsigned band = 0; band < AW_VIDEO_BANDS; ++band)
+        if (!v->bands->page[page][band])
+            v->bands->page[page][band] = ++v->bands->last_identity;
+}
+
 bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
     if (!v || v->fault) return false;
     if (src == dst) return true;
@@ -327,6 +353,14 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
         if (v->page3_seen_copy) { if (!cache_page3(v, v->pixels)) return false; }
         else v->page3_seen_copy = true;
     }
+    if (v->bands) {
+        if (size != AW_VIDEO_PAGE_BYTES)
+            memset(v->bands->page[dst], 0, sizeof(v->bands->page[dst]));
+        else if (src != dst) {
+            identify_bands(v, src);
+            if (v->bands) memcpy(v->bands->page[dst], v->bands->page[src], sizeof(v->bands->page[dst]));
+        }
+    }
     mark_dirty(v);
     return true;
 }
@@ -350,6 +384,7 @@ bool aw_video_bitmap(aw_video *v, uint32_t source, uint32_t size) {
         }
         if ((y & 7u) == 7u) aw_assets_progress(v->assets);
     }
+    if (v->bands) memset(v->bands->page[0], 0, sizeof(v->bands->page[0]));
     mark_dirty(v);
     return true;
 }
@@ -368,7 +403,9 @@ bool aw_video_show(aw_video *v, uint8_t page) {
     if (!v || v->fault) return false;
     if (page == 0xFF) { uint8_t t = v->front_page; v->front_page = v->back_page; v->back_page = t; }
     else if (page != 0xFE) v->front_page = page_id(v, page);
-    if (!resident(v, v->front_page) || !v->present(v->present_ctx, v->pixels, v->palette))
+    if (!resident(v, v->front_page)) return !(v->fault = true);
+    identify_bands(v, v->front_page);
+    if (!v->present(v->present_ctx, v->pixels, v->palette))
         return !(v->fault = true);
     return true;
 }
@@ -382,6 +419,11 @@ bool aw_video_char(aw_video *v, uint16_t x, uint16_t y, uint8_t color, const uin
             if (i & 1) *p = (uint8_t)((*p & 0xF0) | (color & 15));
             else *p = (uint8_t)((*p & 0x0F) | ((color & 15) << 4));
         }
+    }
+    if (v->bands) {
+        uint32_t *bands = v->bands->page[v->resident_page];
+        bands[y / AW_VIDEO_BAND_ROWS] = 0;
+        bands[(y + 7u) / AW_VIDEO_BAND_ROWS] = 0;
     }
     mark_dirty(v);
     return true;
@@ -445,6 +487,7 @@ static bool line(aw_video *v, int x1, int x2, int y, uint8_t color) {
             else memcpy(row + begin, source + begin - from, end - begin);
         }
     }
+    if (v->bands) v->bands->page[v->resident_page][(unsigned)y / AW_VIDEO_BAND_ROWS] = 0;
     mark_dirty(v);
     return true;
 }

@@ -51,6 +51,13 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/display_compact.c" \
   "$root/examples/portable-apps/ANOTHER/display_pages.c" "$root/tests/another_world_display_pages_self_test.c" -o "$build_dir/display-pages"
 "$build_dir/display-pages"
+${CXX:-c++} -std=c++17 -O2 -fno-exceptions -Wall -Wextra -Werror -I"$root/code" \
+  -c "$root/examples/portable-apps/ANOTHER/display_storm.cpp" -o "$build_dir/storm.o"
+${CXX:-c++} -std=c++17 -O2 -fno-exceptions -Wall -Wextra -Werror -I"$root/code" \
+  -c "$root/code/zx0.cpp" -o "$build_dir/zx0.o"
+${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror \
+  "$root/tests/another_world_storm_self_test.cpp" "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm"
+"$build_dir/storm"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=lcd_pages_probe_main \
   -I"$root/sdk/portable/include" -I"$root/code" \
   -c "$root/tests/picocalc_lcd_pages_probe.c" -o "$build_dir/lcd-pages-probe.o"
@@ -115,7 +122,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
     "$root/tests/another_world_app_host_test.c" \
-    "$build_dir/main.o" -o "$build_dir/app"
+    "$build_dir/main.o" "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/app"
   "$build_dir/app" "$ANOTHER_WORLD_DATA"
   "$build_dir/app" "$ANOTHER_WORLD_DATA" no-previous
   "$build_dir/app" "$ANOTHER_WORLD_DATA" no-framebuffer
@@ -142,7 +149,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     -c "$root/tests/another_world_buffer_session_fixture.cpp" -o "$build_dir/real-session.o"
   ${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror -I"$root/code" \
     -c "$root/code/shared_memory_buffer.cpp" -o "$build_dir/real-buffer.o"
-  ${CXX:-c++} "$build_dir"/real-*.o "$build_dir/main.o" -o "$build_dir/real-app"
+  ${CXX:-c++} "$build_dir"/real-*.o "$build_dir/main.o" "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/real-app"
   "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena
   "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena-no-reserve
   "$build_dir/real-app" "$ANOTHER_WORLD_DATA" arena-screen-retry
@@ -151,7 +158,8 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/display.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
-    "$root/tests/another_world_fragmentation_self_test.c" "$build_dir/main.o" -o "$build_dir/fragmentation"
+    "$root/tests/another_world_fragmentation_self_test.c" "$build_dir/main.o" \
+    "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/fragmentation"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation.state"
   # Exercise an earlier fragmented layout even with 856 fewer bytes.
@@ -196,4 +204,21 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
     "$root/tests/another_world_game_probe.c" -o "$build_dir/pages-game"
   "$build_dir/pages-game" "$ANOTHER_WORLD_DATA" 5000
+  app="$root/examples/portable-apps/ANOTHER"
+  zx0="$root/tools/apps/packer/third_party/zx0"
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$app" -I"$zx0" \
+    "$root/tools/apps/another/prepare_storm.c" "$app/assets.c" "$app/video.c" "$app/vm.c" \
+    "$app/text.c" "$app/audio.c" "$app/display_compact.c" "$app/display_pages.c" \
+    "$zx0/optimize.c" "$zx0/compress.c" "$zx0/memory.c" -o "$build_dir/prepare-storm"
+  if "$build_dir/prepare-storm" "$ANOTHER_WORLD_DATA" "$build_dir/AWSTORM.BIN" >/dev/null; then
+    ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/coproc" \
+      -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_PROBE_FIRST_PART \
+      -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_TEST_STORM \
+      "$app/assets.c" "$app/video.c" "$app/vm.c" "$app/text.c" "$app/audio.c" "$app/m3_pcm.c" \
+      "$app/display_compact.c" "$app/display_pages.c" "$root/tests/another_world_game_probe.c" \
+      "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm-game"
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+  elif [ "$?" -ne 2 ]; then
+    exit 1
+  fi
 fi

@@ -34,6 +34,10 @@ card. It is optional: the APP checks the cache against the original resources
 and falls back to them when the cache is absent or does not match. To rebuild
 it for an existing local copy on either platform, run
 `tools/games.cmd prepare-another path/to/ANOTHER`.
+This command also prepares the optional `AWSTORM.BIN` intro cache for the
+supported DOS sequence when native Clang or GCC is available. The
+`Build ANOTHER.APP` item prepares it automatically from the local game files.
+Keep it in the same directory as the APP and the BANK files.
 The prepared game folder also receives its 32×32 `autoexec.wbmp` Explorer icon;
 an existing custom icon is preserved.
 The APP has been tested on PicoCalc. It currently mixes mono audio on the Pico;

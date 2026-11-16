@@ -25,6 +25,7 @@ static void entry(uint8_t *p, unsigned offset, unsigned size) {
     p[15] = p[19] = (uint8_t)size;
 }
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     uint8_t list[128 * 20 + 1] = {0};
     entry(list + 0x7D * 20, 0, 32); entry(list + 0x7E * 20, 32, 27); entry(list + 0x7F * 20, 96, 1);
     list[128 * 20] = 0xFF;
@@ -42,7 +43,7 @@ int main(void) {
     memcpy(m.bank + 32, program, sizeof(program));
     /* The declared code length must include both threads. */
     entry(list + 0x7E * 20, 32, sizeof(program));
-    assert(aw_assets_init(a, list, sizeof(list), m.size, &m, bank, read_store, write_store));
+    assert(aw_assets_init(a, entries, list, sizeof(list), m.size, &m, bank, read_store, write_store));
     assert(aw_video_init(video, a, 4096, frame, present, &m));
     aw_vm_host hooks = {0};
     assert(aw_vm_init(vm, a, video, hooks, 123)); assert(aw_vm_set_part(vm, AW_VM_LAST_PART));

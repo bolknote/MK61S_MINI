@@ -61,6 +61,7 @@ static void progress(void *opaque) {
 }
 
 int main(int argc, char **argv) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc != 2) { fprintf(stderr, "usage: %s DATA_DIR\n", argv[0]); return 2; }
     char path[1024];
     snprintf(path, sizeof(path), "%s/MEMLIST.BIN", argv[1]);
@@ -74,7 +75,7 @@ int main(int argc, char **argv) {
     uint8_t *expected = (uint8_t *)malloc(65536);
     uint8_t *actual = (uint8_t *)malloc(65536);
     if (!ctx.store || !assets || !expected || !actual ||
-        !aw_assets_init(assets, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write)) {
+        !aw_assets_init(assets, entries, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write)) {
         fprintf(stderr, "cannot initialize assets\n"); return 1;
     }
     ctx.assets = assets; assets->progress = progress; assets->progress_ctx = &ctx;
@@ -108,7 +109,7 @@ int main(int argc, char **argv) {
         const long cache_size = ftell(ctx.prepared);
         uint8_t table[AW_ASSET_LIMIT * 12]; aw_prepared_cache prepared = {};
         ctx.armed = false;
-        if (cache_size < 0 || !aw_assets_init(assets, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write) ||
+        if (cache_size < 0 || !aw_assets_init(assets, entries, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write) ||
             !aw_prepared_open(&prepared, list, bytes, assets->count, (uint32_t)cache_size,
                               table, sizeof(table), &ctx, prepared_read)) return 1;
         assets->progress = progress; assets->progress_ctx = &ctx;
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
         fclose(ctx.prepared);
     }
     ctx.armed = false;
-    if (!aw_assets_init(assets, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write)) return 1;
+    if (!aw_assets_init(assets, entries, list, bytes, ctx.size, &ctx, bank_read, store_read, store_write)) return 1;
     unsigned steps = 0;
     while (assets->prefetch.active || assets->prefetch_next < assets->count) {
         if (++steps > 2000000 || !aw_assets_prefetch_step(assets)) return 1;

@@ -31,6 +31,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
 static bool wait_frame(void *ctx, unsigned slices) { (void)ctx; (void)slices; return true; }
 
 int main(int argc, char **argv) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc != 2) { fprintf(stderr, "usage: %s DATA_DIR\n", argv[0]); return 2; }
     char path[1024]; snprintf(path, sizeof(path), "%s/MEMLIST.BIN", argv[1]);
     FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 2; }
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
     uint8_t *pixels = malloc(AW_VIDEO_PAGE_BYTES); assert(h && assets && video && vm && pixels);
     h->directory = argv[1]; h->store = calloc(1, STORE_SIZE); assert(h->store);
     aw_vm_host hooks = {h, wait_frame, NULL, NULL, NULL, NULL};
-    assert(aw_assets_init(assets, list, size, STORE_SIZE, h, bank_read, store_read, store_write));
+    assert(aw_assets_init(assets, entries, list, size, STORE_SIZE, h, bank_read, store_read, store_write));
     assert(aw_video_init(video, assets, assets->used, pixels, present, h));
     assert(aw_vm_init(vm, assets, video, hooks, 1)); assert(aw_vm_set_part(vm, AW_VM_FIRST_PART));
     aw_input input = {0};

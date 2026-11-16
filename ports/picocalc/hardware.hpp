@@ -6,6 +6,7 @@
 #include "lcd_update.hpp"
 #include "lcd_chain.hpp"
 #include "lcd_color.hpp"
+#include "lcd_index4_pairs.hpp"
 #include <atomic>
 
 namespace picocalc {
@@ -115,6 +116,7 @@ private:
     u16 pages_top_=0,pages_height_=0;
     u32 pages_scan_changed_at_=0;
     mk61_service_color_frame color_frame_{};
+    lcd::Index4Pairs index4_pairs_;
     u16 color_palette_[64]{};
     bool palette_dirty_=false;
     lcd::Update update_;

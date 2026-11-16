@@ -194,6 +194,39 @@ function Invoke-AnotherCache {
     Write-Host (New-AnotherSoundCache ([IO.Path]::GetFullPath($Directory)))
 }
 
+function Invoke-AnotherStorm {
+    param([string]$Directory)
+    $compiler = Get-Command clang, gcc, cc -CommandType Application -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if (-not $compiler) {
+        Write-Host 'AWSTORM.BIN is optional. Install a native Clang or GCC to prepare it.'
+        return
+    }
+    $app = Join-Path $script:ProjectRoot 'examples/portable-apps/ANOTHER'
+    $zx0 = Join-Path $script:ProjectRoot 'tools/apps/packer/third_party/zx0'
+    $source = Join-Path $script:ProjectRoot 'tools/apps/another/prepare_storm.c'
+    $work = Join-Path ([IO.Path]::GetTempPath()) ("mk61-storm-" + [Guid]::NewGuid())
+    [void][IO.Directory]::CreateDirectory($work)
+    $temporary = Join-Path $Directory ('.awstorm-' + [Guid]::NewGuid())
+    try {
+        $helper = Join-Path $work 'prepare-storm.exe'
+        $arguments = @('-std=c11', '-O2', '-I', $app, '-I', $zx0, $source)
+        $arguments += @('assets', 'video', 'vm', 'text', 'audio', 'display_compact', 'display_pages') |
+            ForEach-Object { Join-Path $app "$_.c" }
+        $arguments += @('compress', 'optimize', 'memory') | ForEach-Object { Join-Path $zx0 "$_.c" }
+        & $compiler.Source @arguments -o $helper
+        if ($LASTEXITCODE -ne 0) { Write-Host 'The optional storm builder could not be compiled.'; return }
+        & $helper $Directory $temporary | Out-Null
+        if ($LASTEXITCODE -ne 0) { return }
+        $target = Join-Path $Directory 'AWSTORM.BIN'
+        Move-Item -LiteralPath $temporary -Destination $target -Force
+        Write-Host "Prepared AWSTORM.BIN: $((Get-Item -LiteralPath $target).Length) bytes"
+    } finally {
+        [IO.File]::Delete($temporary)
+        Remove-Item -LiteralPath $work -Force -Recurse
+    }
+}
+
 function Install-FolderIcon {
     param([object]$Item, [string]$Directory)
     $relative = [string]$Item.folder_icon
@@ -271,7 +304,10 @@ function Invoke-Arguments {
     }
     if ($command -eq 'prepare-another') {
         if ($Arguments.Count -ne 2) { throw 'prepare-another needs one directory path' }
-        Invoke-AnotherCache ([string]$Arguments[1]); return $true
+        $directory = [IO.Path]::GetFullPath([string]$Arguments[1])
+        Invoke-AnotherCache $directory
+        Invoke-AnotherStorm $directory
+        return $true
     }
     if ($command -ne 'run') { throw "Unknown command: $command" }
     $ids = New-Object 'Collections.Generic.List[string]'

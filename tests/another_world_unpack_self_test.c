@@ -58,6 +58,7 @@ static unsigned make_stream(uint8_t *out, uint8_t *expected, uint32_t seed, bool
     return (words + 2) * 4;
 }
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     static memory m; static aw_assets assets; static uint8_t expected[OUTPUT], actual[OUTPUT]; uint8_t list[41];
     for (uint32_t test = 0; test < 64; ++test) {
         memset(&m, 0, sizeof(m)); memset(list, 0, sizeof(list));
@@ -66,7 +67,7 @@ int main(void) {
         if (test & 1) assert(packed_size > 2048);
         list[7] = 1; put16(list + 14, PREFIX); put16(list + 18, PREFIX);
         list[27] = 1; put16(list + 34, (uint16_t)packed_size); put16(list + 38, OUTPUT); list[40] = 0xFF;
-        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        assert(aw_assets_init(&assets, entries, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         if (test & 1) assets.clock = UINT32_MAX - 3;
         assert(aw_assets_load(&assets, 1));
         assert(aw_assets_read(&assets, PREFIX, actual, OUTPUT));
@@ -74,7 +75,7 @@ int main(void) {
         /* Let background decoding span many calls, interleave a foreground
          * raw load, and sometimes demand the partially decoded resource
          * before speculation has completed. */
-        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        assert(aw_assets_init(&assets, entries, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         if (test & 1) assets.clock = UINT32_MAX - 3;
         assets.entries[0].decoded = 1;
         bool interleaved = false;
@@ -92,9 +93,9 @@ int main(void) {
         assert(aw_assets_read(&assets, PREFIX, actual, OUTPUT));
         assert(!memcmp(actual, expected, OUTPUT));
         m.bank[packed_size - 5] ^= 1;
-        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        assert(aw_assets_init(&assets, entries, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         assert(!aw_assets_load(&assets, 1) && !assets.entries[1].decoded);
-        assert(aw_assets_init(&assets, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
+        assert(aw_assets_init(&assets, entries, list, sizeof(list), STORE_CAP, &m, bank_read, store_read, store_write));
         assets.entries[0].decoded = 1;
         for (unsigned step = 0; step < OUTPUT * 2u &&
              (assets.prefetch.active || assets.prefetch_next < assets.count); ++step)

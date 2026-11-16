@@ -1,4 +1,5 @@
 #include "lcd_color.hpp"
+#include "lcd_index4_pairs.hpp"
 #include "pcm_queue.hpp"
 #include <algorithm>
 #include <cassert>
@@ -37,6 +38,39 @@ static void bounded_expansion() {
         }
     }
     puts("LCD expansion: unchanged pixels and at most 64 pixels between transport service points PASS");
+}
+
+static void indexed_pairs() {
+    Index4Pairs lookup;
+    for (unsigned width : {319u, 320u}) {
+        mk61_service_color_frame frame{};
+        frame.x=13;frame.y=16;frame.width=uint16_t(width);frame.height=4;
+        frame.format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
+        uint8_t pixels[640];
+        for (unsigned i=0;i<sizeof(pixels);++i) pixels[i]=uint8_t(i*173);
+        frame.pixels=pixels;
+        for (unsigned phase=0;phase<2;++phase) {
+            for (unsigned i=0;i<16;++i) frame.palette[i]=uint16_t(i*4083+37+phase*137);
+            lookup.refresh(frame.palette);
+            lookup.refresh(frame.palette);
+            for (unsigned x : {0u,1u,63u,64u,127u})
+                for (unsigned count : {1u,2u,63u,64u,65u,191u,319u}) {
+                    if (x+count>width) continue;
+                    const Rect r{uint16_t(frame.x+x),uint16_t(frame.y+1),uint16_t(count),3};
+                    for (unsigned align : {0u,1u}) {
+                        alignas(4) uint16_t line[324];
+                        std::fill(std::begin(line),std::end(line),uint16_t(0xDEAD));
+                        progressive_line=line+2+align;
+                        progressive_width=count;progressive_seen=progressive_max=0;
+                        lookup.line(frame,r,1,progressive_line,observe_expansion);
+                        assert(progressive_seen==count && progressive_max<=64);
+                        for (unsigned i=0;i<count;++i)
+                            assert(progressive_line[i]==color_pixel(frame,x+i,2));
+                        assert(progressive_line[-1]==0xDEAD && progressive_line[count]==0xDEAD);
+                    }
+                }
+        }
+    }
 }
 static void aligned_and_unaligned_tiles() {
     for(unsigned format:{MK61_COLOR_TILE1,MK61_COLOR_TILE8})for(unsigned width:{8U,24U,32U,256U,320U})
@@ -142,6 +176,7 @@ static void per_scanline_colors() {
 int main() {
     per_scanline_colors();
     bounded_expansion();
+    indexed_pairs();
     aligned_and_unaligned_tiles();
     randomized_color_plans();
     std::vector<uint8_t> storage(MK61_COLOR_SNAPSHOT_BYTES),bits(6144),tiles(768);

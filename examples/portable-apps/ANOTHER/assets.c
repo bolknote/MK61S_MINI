@@ -11,11 +11,12 @@ static uint32_t be32(const uint8_t *p) {
            ((uint32_t)p[2] << 8) | p[3];
 }
 
-bool aw_assets_init(aw_assets *a, const uint8_t *list, size_t bytes,
+bool aw_assets_init(aw_assets *a, aw_asset_entry entries[AW_ASSET_LIMIT], const uint8_t *list, size_t bytes,
                     uint32_t capacity, void *ctx, aw_asset_bank_read bank_read,
                     aw_asset_store_read store_read, aw_asset_store_write store_write) {
-    if (!a || !list || !bank_read || !store_read || !store_write || !capacity) return false;
+    if (!a || !entries || !list || !bank_read || !store_read || !store_write || !capacity) return false;
     memset(a, 0, sizeof(*a));
+    a->entries = entries;
     a->ctx = ctx; a->bank_read = bank_read; a->store_read = store_read;
     a->store_write = store_write; a->capacity = capacity;
     size_t at = 0;
@@ -24,6 +25,7 @@ bool aw_assets_init(aw_assets *a, const uint8_t *list, size_t bytes,
         if (bytes - at < 20 || a->count == AW_ASSET_LIMIT) return false;
         const uint8_t *p = list + at;
         aw_asset_entry *e = &a->entries[a->count++];
+        e->decoded = 0;
         e->type = p[1]; e->rank = p[6]; e->bank = p[7];
         e->bank_offset = be32(p + 8); e->packed_size = be16(p + 14); e->size = be16(p + 18);
         if (e->packed_size > e->size || e->bank_offset > UINT32_MAX - e->packed_size ||
@@ -90,6 +92,15 @@ static bool transfer_direct(aw_assets *a, uint32_t offset, uint8_t *bytes,
         offset += n; bytes += n; size -= n;
     }
     return true;
+}
+
+bool aw_assets_read_direct(aw_assets *a, uint32_t offset, void *out, uint32_t size) {
+    if (!a || (!out && size) || offset > a->capacity || size > a->capacity - offset) return false;
+    return transfer_direct(a, offset, out, size, false);
+}
+bool aw_assets_write_direct(aw_assets *a, uint32_t offset, const void *in, uint32_t size) {
+    if (!a || (!in && size) || offset > a->capacity || size > a->capacity - offset) return false;
+    return transfer_direct(a, offset, (uint8_t *)in, size, true);
 }
 
 bool aw_assets_read(aw_assets *a, uint32_t offset, void *out, uint32_t size) {

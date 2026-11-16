@@ -21,9 +21,10 @@ static bool wr(void *, uint32_t offset, const void *in, uint32_t size) {
 static bool present(void *, const uint8_t *, const uint16_t *) { return true; }
 
 int main() {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     uint8_t list[21] = {}; list[7] = 1; list[14] = 0x20; list[18] = 0x20; list[20] = 0xFF;
     aw_assets a; aw_video v;
-    if (!aw_assets_init(&a, list, sizeof(list), sizeof(storage), nullptr, bank, rd, wr) ||
+    if (!aw_assets_init(&a, entries, list, sizeof(list), sizeof(storage), nullptr, bank, rd, wr) ||
         !aw_video_init(&v, &a, 8192, framebuffer, present, nullptr)) return 1;
     Video reference(nullptr, nullptr); reference.init();
     reference.fillPage(0, 3); reference.fillPage(2, 1); reference.changePagePtr1(2);

@@ -51,25 +51,27 @@ static void setup(memory *m, uint8_t *list) {
     le32(m->cache + 36, 72); le32(m->cache + 40, fnv(m->bank + 32, 16));
     memset(m->cache + 72, 'A', 24); le32(m->cache + 44, fnv(m->cache + 72, 24));
 }
-static void init(memory *m, aw_assets *a, aw_prepared_cache *c, uint8_t *list, uint8_t *scratch) {
-    assert(aw_assets_init(a, list, 41, sizeof(m->store), m, bank_read, store_read, store_write));
+static void init(memory *m, aw_assets *a, aw_asset_entry *entries, aw_prepared_cache *c,
+                 uint8_t *list, uint8_t *scratch) {
+    assert(aw_assets_init(a, entries, list, 41, sizeof(m->store), m, bank_read, store_read, store_write));
     assert(aw_prepared_open(c, list, 41, 2, 96, scratch, 24, m, cache_read));
 }
 int main(void) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     memory m; aw_assets assets; aw_prepared_cache c; uint8_t list[41], table[24], out[24];
-    setup(&m, list); init(&m, &assets, &c, list, table);
+    setup(&m, list); init(&m, &assets, entries, &c, list, table);
     assert(aw_prepared_load(&c, &assets, 0) && aw_prepared_load(&c, &assets, 1));
     assert(aw_assets_read(&assets, assets.entries[0].store_offset, out, sizeof(out)) && !memcmp(out, m.bank, sizeof(out)));
     assert(aw_assets_read(&assets, assets.entries[1].store_offset, out, sizeof(out)));
     for (unsigned i = 0; i < sizeof(out); ++i) assert(out[i] == 'A');
     unsigned reads = m.bank_reads; assert(aw_assets_load(&assets, 1) && reads == m.bank_reads);
 
-    setup(&m, list); m.cache[72] ^= 1; init(&m, &assets, &c, list, table);
+    setup(&m, list); m.cache[72] ^= 1; init(&m, &assets, entries, &c, list, table);
     assert(!aw_prepared_load(&c, &assets, 1) && !assets.entries[1].decoded && !assets.fault);
     assert(aw_assets_load(&assets, 1) && aw_assets_read(&assets, 24, out, sizeof(out)));
     for (unsigned i = 0; i < sizeof(out); ++i) assert(out[i] == 'A');
 
-    setup(&m, list); m.bank[0] ^= 0x80; init(&m, &assets, &c, list, table);
+    setup(&m, list); m.bank[0] ^= 0x80; init(&m, &assets, entries, &c, list, table);
     assert(!aw_prepared_load(&c, &assets, 0) && !assets.entries[0].decoded);
     assert(aw_assets_load(&assets, 0) && aw_assets_read(&assets, 0, out, sizeof(out)) && !memcmp(out, m.bank, sizeof(out)));
 

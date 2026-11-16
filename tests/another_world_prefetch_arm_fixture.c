@@ -23,7 +23,8 @@ static bool wr(void *ctx, uint32_t at, const void *in, uint32_t n) {
     memcpy(fixture_store + at, in, n); return true;
 }
 int fixture_run(uint32_t demand_midway) {
-    if (!aw_assets_init(&fixture_assets, fixture_list, sizeof(fixture_list), 65536, 0, bank, rd, wr)) return 2;
+    aw_asset_entry entries[AW_ASSET_LIMIT];
+    if (!aw_assets_init(&fixture_assets, entries, fixture_list, sizeof(fixture_list), 65536, 0, bank, rd, wr)) return 2;
     for (unsigned step = 0; step < 1000000 && !fixture_assets.entries[0].decoded; ++step) {
         if (demand_midway && fixture_assets.prefetch.active &&
             fixture_assets.prefetch.output < fixture_assets.entries[0].size / 2)

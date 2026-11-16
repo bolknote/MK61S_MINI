@@ -195,7 +195,7 @@ def main() -> int:
     list_parser = subparsers.add_parser("list", help="show catalog items")
     list_parser.add_argument("--json", action="store_true", help="machine-readable item list")
     list_parser.add_argument("--tsv", action="store_true", help="tab-separated item list")
-    prepare_parser = subparsers.add_parser("prepare-another", help="prepare a sound cache from local DOS files")
+    prepare_parser = subparsers.add_parser("prepare-another", help="prepare caches from local DOS files")
     prepare_parser.add_argument("directory", type=Path)
     run_parser = subparsers.add_parser("run", help="download/build selected catalog items")
     run_parser.add_argument("--select", action="append", default=[], metavar="ID")
@@ -220,8 +220,10 @@ def main() -> int:
             return 0
         if args.command == "prepare-another":
             from another_cache import prepare
-            count, size = prepare(args.directory.resolve())
+            directory = args.directory.resolve()
+            count, size = prepare(directory)
             print(f"Prepared sound cache: {count} sounds, {size} decoded bytes")
+            subprocess.run([sys.executable, ROOT / "tools/apps/another/prepare_storm.py", directory], check=True)
             return 0
         output_root = args.output_root.resolve()
         cache_root = (args.cache_root or output_root / "cache").resolve()

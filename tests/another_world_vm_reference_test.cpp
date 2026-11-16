@@ -91,6 +91,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
 static bool frame_wait(void *, unsigned) { return true; }
 
 int main(int argc, char **argv) {
+    aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc != 2) { fprintf(stderr, "usage: %s DATA_DIR\n", argv[0]); return 2; }
     char path[1024]; snprintf(path, sizeof(path), "%s/MEMLIST.BIN", argv[1]);
     FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 1; }
@@ -119,7 +120,7 @@ int main(int argc, char **argv) {
     aw_vm *vm = (aw_vm *)calloc(1, sizeof(aw_vm));
     aw_vm_host hooks = {}; hooks.frame_wait = frame_wait;
     if (!host.memory || !pixels || !assets || !video || !vm ||
-        !aw_assets_init(assets, list, bytes, 2097152, &host, bank_read, rd, wr) ||
+        !aw_assets_init(assets, entries, list, bytes, 2097152, &host, bank_read, rd, wr) ||
         !aw_video_init(video, assets, assets->used, pixels, present, &host) ||
         (spare && !aw_video_use_spare(video, spare)) ||
         (background && !(background_tail ? aw_video_use_background_split(video, background, 4096, background_tail, 2048) :
