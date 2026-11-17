@@ -8,6 +8,10 @@ from math import ceil
 from pathlib import Path
 import struct
 
+from certify_m0_pow_close_one import (SUFFICIENT_PRECISION as CLOSE_ONE_PRECISION,
+                                     certify as close_one_certificate,
+                                     close_one_boundary, close_one_input)
+
 ROOT = Path(__file__).resolve().parents[2]
 ONE = 0x3FF0000000000000
 INFINITY = 0x7FF0000000000000
@@ -85,6 +89,8 @@ def unresolved_candidate(x, y, lower, precision):
     # Every midpoint has |ln(m)|>2^-54. At P>=128 the overlap gap is
     # <2^-62, so the true logarithm and midpoint have the same sign.
     if (lower < ONE) != decreasing:
+        return False
+    if precision >= CLOSE_ONE_PRECISION and (close_one_boundary(x, lower) or close_one_input(x, y)):
         return False
 
     numerator, scale = odd_dyadic(magnitude)
@@ -487,6 +493,7 @@ def certify():
         exact_midpoint_products_significand_bits_upper_bound=54*32,
         last_stage_domain=last_stage_domain(hi, 8192),
         power_of_two_tail=power_of_two_tail_certificate(),
+        close_one=close_one_certificate(),
         uniform_precision_bound=uniform_precision_bound(lo, hi, max_k),
         scope='For a valid adjacent midpoint, only multiplicatively independent bases with a nonzero cancelling log gap can remain undecided.')
 

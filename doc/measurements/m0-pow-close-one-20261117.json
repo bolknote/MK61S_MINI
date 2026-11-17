@@ -1,0 +1,138 @@
+{
+  "status": "PASS_SCOPED_CLOSE_ONE_CERTIFICATE",
+  "practical_uniform_latency_established": false,
+  "scope": "A fixed-precision proof for the stated neighbourhood of one. The full binary64 practical uniform latency requirement remains unresolved. Firmware unchanged.",
+  "theorem_pdf_sha256": "c51d52f643ceef39ffa2413ca1ab59edba48f9664a87a2d2c55a41dbafb9cdc1",
+  "tools_sha256": {
+    "dev/tools/certify_m0_pow_close_one.py": "dc3d955ce050757d3cc59c1e0479e9fcb3e03529c1367ab99b9d3e76115568e0",
+    "dev/tools/certify_m0_pow_power_bounds.py": "b78135930c147fde23c9ad85fea02fcbb88aecc70309acf27efd495688f2c616",
+    "dev/tools/certify_m0_pow_interval.py": "6c3ba7665c2a5949609c430eda0cc9c3ce17f1e61d8b528f851935db00434e8c",
+    "tests/m0_pow_power_bounds_host_self_test.py": "6a7f0a3aa5e9c8bf47968fb513e91549c19d5a5eb466e33684ac49803efc13c7"
+  },
+  "separation_certificate": {
+    "status": "PASS_CLOSE_ONE_SEPARATION",
+    "source": "https://www.impan.pl/shop/en/publication/transaction/download/product/82485",
+    "theorem": "Theorem 2, page 327",
+    "arithmetic": "Exact Fractions, outward 192-bit rational square-root bounds",
+    "domain": {
+      "base_and_midpoint_interval": "[1-2^-37,1+2^-37]",
+      "maximum_denominator_shift": 71,
+      "numerator_strict_upper_bound": 9007199254740992,
+      "coefficient_bound_prerequisite": "Gap <2^-62, from a PowerBounds overlap at P>=128 or the midpoint hint from a failed production 1024-bit interval"
+    },
+    "exhaustive_encoding_check": {
+      "base_encodings_including_one": 98305,
+      "midpoint_encodings": 98304,
+      "maximum_rational_height_log": "54*ln(2)"
+    },
+    "sufficient_input_domain": {
+      "base_interval": "[1-2^-37,1+2^-37]",
+      "exponent_interval": "[-1/2,1/2]",
+      "midpoint_outside_interval_log_gap_strict_lower_bound": "2^-39"
+    },
+    "parameters": {
+      "D": 1,
+      "mu": "1/3",
+      "sigma": "7/9",
+      "rho": "2^39",
+      "a1": "79",
+      "a2": "79",
+      "h": "50",
+      "h_requirement_upper": "78090528096496811359243526439854407981324463913922818298063/1569275433846670190958947355801916604025588861116008628224",
+      "lambda_lower": "8248686222237100136613713358551172271836570533281840683361/392318858461667547739736838950479151006397215279002157056",
+      "lambda_upper": "131978979555793602185819413736818756349385128532509450933777/6277101735386680763835789423207666416102355444464034512896",
+      "H_lower": "5749484710878907237448678801956500581839844438005254421785/1569275433846670190958947355801916604025588861116008628224",
+      "omega_upper": "1576548400008683880523440198028147970203319137959016272477/392318858461667547739736838950479151006397215279002157056",
+      "theta_upper": "3595963792594845309097002496298628729389148931940775537849/3138550867693340381917894711603833208051177722232017256448",
+      "C_upper": "448320094069082661007016587792309359876292832326663521/3138550867693340381917894711603833208051177722232017256448",
+      "C_prime_upper": "2550561556454585669425441040260438627188235135999642227/6277101735386680763835789423207666416102355444464034512896",
+      "loss_nats_upper": "34304967460807591648030785525667120031759947747451392999928985/6277101735386680763835789423207666416102355444464034512896"
+    },
+    "logarithmic_form_loss_nats": 5466,
+    "nonzero_abs_log_gap_strict_lower_bound": "2^-7957",
+    "sufficient_power_product_precision_bits": 8032,
+    "production_8192_stage_decides": true,
+    "production_stage_work": {
+      "prerequisite": "One boundary hint from the failed 1024-bit interval; then p<2^53 and q<=2^71.",
+      "maximum_full_products": 124,
+      "maximum_limb_multiply_accumulates": {
+        "4096": 1473752,
+        "8192": 4433544
+      }
+    },
+    "stream_comparison_reachable_in_domain": false,
+    "source_sha256": {
+      "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+      "code/native_eabi_m0_pow_interval.inc": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753",
+      "dev/tools/certify_m0_pow_close_one.py": "dc3d955ce050757d3cc59c1e0479e9fcb3e03529c1367ab99b9d3e76115568e0",
+      "dev/tools/certify_m0_pow_interval.py": "6c3ba7665c2a5949609c430eda0cc9c3ce17f1e61d8b528f851935db00434e8c",
+      "dev/tools/certify_m0_pow_power_bounds.py": "b78135930c147fde23c9ad85fea02fcbb88aecc70309acf27efd495688f2c616"
+    },
+    "practical_uniform_latency_established": false,
+    "scope": "A whole-domain separation certificate for the stated base/midpoint interval, conditional on the published theorem and existing enclosure/dependent/tie arguments. It bounds the final arithmetic stage for this domain only. Other inputs still lack a practical uniform latency proof. No compiler proof."
+  },
+  "power_enclosure_prerequisite": {
+    "source_sha256": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+    "maximum_denominator_shift": 116,
+    "undecided_8192_abs_log_gap_strict_upper_bound": "2^-8126",
+    "dependent_nonzero_abs_log_gap_lower_bound": "2^-170",
+    "exact_midpoint_products_significand_bits_upper_bound": 1728,
+    "status": "PASS_POWER_PRODUCT_ENCLOSURE",
+    "public_rescue_hint_contract": {
+      "prerequisite": "The 1024-bit interval certificate proves that every undecided valid input publishes one adjacent pair.",
+      "exact_small_preserves_hint_on_failure": true,
+      "power_bounds_preserves_hint_on_failure": true,
+      "maximum_exact_small_boundary_comparisons": 2,
+      "maximum_4096_boundary_comparisons": 1,
+      "maximum_8192_boundary_comparisons": 1,
+      "maximum_stream_boundary_comparisons": 1,
+      "unhinted_binary_search_reachable_under_interval_invariant": false
+    },
+    "interval_status": "PASS",
+    "interval_source_sha256": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753"
+  },
+  "host_test": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "arithmetic": {
+      "products": 3000,
+      "raised_bounds": 1000,
+      "upper_renormalizations": 500,
+      "squares": {
+        "128": 120,
+        "4096": 120,
+        "8192": 120
+      }
+    },
+    "precisions": {
+      "128": {
+        "checked": 2491,
+        "undecided": 16,
+        "wrong": 0,
+        "excluded_by_domain": 111,
+        "in_close_one_domain": 168
+      },
+      "256": {
+        "checked": 2491,
+        "undecided": 1,
+        "wrong": 0,
+        "excluded_by_domain": 111,
+        "in_close_one_domain": 168
+      },
+      "4096": {
+        "checked": 475,
+        "undecided": 0,
+        "wrong": 0,
+        "excluded_by_domain": 118,
+        "in_close_one_domain": 75
+      },
+      "8192": {
+        "checked": 259,
+        "undecided": 0,
+        "wrong": 0,
+        "excluded_by_domain": 154,
+        "in_close_one_domain": 61
+      }
+    }
+  }
+}

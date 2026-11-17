@@ -15,6 +15,7 @@ from m0_mpfr_oracle import Oracle, bits, real
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'dev/tools'))
 from certify_m0_pow_power_bounds import unresolved_candidate
+from certify_m0_pow_close_one import close_one_boundary
 
 ONE = bits(1.)
 INF = bits(math.inf)
@@ -113,6 +114,14 @@ def oracle_cases(rng):
             for lower in range(ONE-2, ONE+2):
                 yield 'maximum-denominator-domain', x, 0x3BFFFFFFFFFFFFFF|sign, lower
 
+    # Both edges of the close-one certificate, their outside neighbours,
+    # both midpoint signs, and the largest numerator/denominator workload.
+    for x in (ONE-65537, ONE-65536, ONE-1, ONE+1, ONE+32768, ONE+32769):
+        for lower in (ONE-65537, ONE-65536, ONE-1, ONE, ONE+32767, ONE+32768):
+            for sign in (0, 1 << 63):
+                y = bits(math.ldexp(float((1 << 53)-1), -71))|sign
+                yield 'close-one-domain', x, y, lower
+
     d = decimal.Context(prec=120)
     decimals = decimal.Decimal.from_float
     extreme = (0, 1, 0x000fffffffffffff, 0x0010000000000000, ONE-1, ONE, INF-1)
@@ -147,7 +156,8 @@ def main():
     arithmetic = arithmetic_checks(lib,rng)
     oracle = Oracle()
     functions = {p:getattr(lib,f'side{p}') for p in (128,256,4096,8192)}
-    counts = {p:dict(checked=0,undecided=0,wrong=0,excluded_by_domain=0) for p in functions}
+    counts = {p:dict(checked=0,undecided=0,wrong=0,excluded_by_domain=0,
+                    in_close_one_domain=0) for p in functions}
     for f in functions.values():
         f.argtypes = [ctypes.c_uint64]*3
         f.restype = ctypes.c_int
@@ -171,6 +181,7 @@ def main():
             counts[precision]['checked'] += 1
             counts[precision]['undecided'] += order==0
             counts[precision]['excluded_by_domain'] += not possible
+            counts[precision]['in_close_one_domain'] += close_one_boundary(x,lower)
     assert counts[128]['undecided']>0
     assert counts[256]['undecided']==1  # The added exact tie exceeds this precision.
     assert all(counts[p]['undecided']==0 for p in (4096,8192))
