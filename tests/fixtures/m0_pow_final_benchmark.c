@@ -96,7 +96,8 @@ static int evaluate(const Case *input, Sample *out) {
     return out->returned == want && (!a || lower512 == want) && (!b || lower1024 == want) &&
            (!c || exact == want) && (!input->full || side == (want > lower ? 1 : -1)) &&
            out->announced_hz == 125000000U && out->finish_hz == out->announced_hz &&
-           out->entry_reloads == out->prior_reloads && out->last_feed_age_us < 8000000U &&
+           out->entry_reloads >= out->prior_reloads &&
+           (input->full || out->entry_reloads == out->prior_reloads) && out->last_feed_age_us < 8000000U &&
            out->max_gap_ms < 8000U && out->caller_stack_bytes <= (32768U - 20480U) &&
            (out->tail_us < 30000U || out->after_reloads > out->entry_reloads);
 }

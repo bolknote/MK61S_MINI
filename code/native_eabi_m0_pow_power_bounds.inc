@@ -18,11 +18,100 @@ namespace m0_pow_power_bounds {
 namespace {
 using U = uint64_t;
 using Scale = mk61_u128;
+using Word = uint16_t;
+constexpr unsigned SquareLeafWords=16;
+
+// The caller leaves the outgoing carry word beyond the earlier rows.
+static __attribute__((always_inline)) inline void multiply_row(Word* product,const Word* first,
+                                                               const Word* end,uint32_t digit) {
+  uint32_t carry=0;
+  while(first!=end) {
+    const uint32_t sum=uint32_t(*first++)*digit+*product+carry;
+    *product++=Word(sum);
+    carry=sum>>16;
+  }
+  *product=Word(carry);
+}
+
+static M0_POW_BOUNDS void square_leaf(const Word* input,Word* product,unsigned words) {
+  for(unsigned i=0;i<2*words;++i) product[i]=0;
+  unsigned first=0;
+  while(first<words && !input[first]) ++first;
+  // First accumulate one copy of each off-diagonal term. Double that
+  // integer and insert the diagonal squares in a single carry pass.
+  for(unsigned j=first+1;j<words;++j)
+    multiply_row(product+j+first,input+first,input+j,input[j]);
+  uint32_t carry=0;
+  for(unsigned i=first;i<words;++i) {
+    const uint32_t diagonal=uint32_t(input[i])*input[i];
+    const uint32_t low=2U*product[2*i]+Word(diagonal)+carry;
+    product[2*i]=Word(low);
+    const uint32_t high=2U*product[2*i+1]+(diagonal>>16)+(low>>16);
+    product[2*i+1]=Word(high);
+    carry=high>>16;
+  }
+}
+
+// Square the halves and their absolute difference. The cross term is
+// low^2+high^2-(high-low)^2. Scratch needs fewer than 3*words limbs
+// because the three recursive calls reuse the same suffix in sequence.
+static M0_POW_BOUNDS void square_words(const Word* input,Word* product,Word* scratch,unsigned words) {
+  if(words<=SquareLeafWords || (words&1U)) {
+    square_leaf(input,product,words);
+    return;
+  }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  if(words>=128 && mk61_m0_pow_progress) mk61_m0_pow_progress();
+#endif
+  const unsigned half=words/2;
+  Word* difference=scratch;
+  Word* middle=difference+half;
+  Word* remaining=middle+words;
+  uint32_t borrow=0;
+  for(unsigned i=0;i<half;++i) {
+    const uint32_t digit=uint32_t(input[i+half])-input[i]-borrow;
+    difference[i]=Word(digit);
+    borrow=digit>>31;
+  }
+  if(borrow) {
+    uint32_t carry=1;
+    for(unsigned i=0;i<half;++i) {
+      const uint32_t digit=Word(~difference[i])+carry;
+      difference[i]=Word(digit);
+      carry=digit>>16;
+    }
+  }
+
+  square_words(input,product,remaining,half);
+  square_words(input+half,product+words,remaining,half);
+  square_words(difference,middle,remaining,half);
+
+  // Bias the signed carry by one to represent a borrow without signed
+  // shifts. The nonnegative cross term has at most one extra limb.
+  uint32_t biased_carry=1;
+  for(unsigned i=0;i<words;++i) {
+    const uint32_t sum=uint32_t(product[i])+product[i+words]+0xFFFFU-middle[i]+biased_carry;
+    middle[i]=Word(sum);
+    biased_carry=sum>>16;
+  }
+  uint32_t carry=0;
+  for(unsigned i=0;i<words;++i) {
+    const uint32_t sum=uint32_t(product[i+half])+middle[i]+carry;
+    product[i+half]=Word(sum);
+    carry=sum>>16;
+  }
+  carry+=biased_carry-1;
+  for(unsigned i=words+half;carry && i<2*words;++i) {
+    const uint32_t sum=uint32_t(product[i])+carry;
+    product[i]=Word(sum);
+    carry=sum>>16;
+  }
+}
 
 template<unsigned Words> struct PowerBounds {
   static_assert(Words >= 8, "The comparison guard requires 128 significand bits");
   struct Number {
-    uint16_t word[Words];
+    Word word[Words];
     Scale scale;
     bool exact;
   };
@@ -37,25 +126,7 @@ template<unsigned Words> struct PowerBounds {
     value.exact=true;
   }
 
-  // a and b are normalized positive lower bounds. The product can alias
-  // either input, including a square. b_start skips known zero low words.
-  static M0_POW_BOUNDS void multiply(Number& a,const Number& b,unsigned b_start) {
-    uint16_t product[2*Words]{};
-    for(unsigned j=b_start;j<Words;++j) {
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-      // The 8192-bit refinement may span more than one watchdog period.
-      if constexpr(Words>256)
-        if(!(j&15U) && mk61_m0_pow_progress) mk61_m0_pow_progress();
-#endif
-      const uint32_t digit=b.word[j];
-      uint32_t carry=0;
-      for(unsigned i=0;i<Words;++i) {
-        const uint32_t sum=uint32_t(a.word[i])*digit+product[i+j]+carry;
-        product[i+j]=uint16_t(sum);
-        carry=sum>>16;
-      }
-      product[j+Words]=uint16_t(carry);
-    }
+  static M0_POW_BOUNDS void normalize_product(Number& a,const Number& b,const Word* product) {
     bool lost=false;
     for(unsigned i=0;i<Words-1;++i) lost|=product[i]!=0;
     const bool upper_binade=bool(product[2*Words-1]&0x8000U);
@@ -71,12 +142,44 @@ template<unsigned Words> struct PowerBounds {
     a.exact=a.exact && b.exact && !lost;
   }
 
+  // a and b are normalized positive lower bounds. The product can alias
+  // either input. b_start skips known zero low words.
+  static M0_POW_BOUNDS void multiply(Number& a,const Number& b,unsigned b_start) {
+    Word product[2*Words]{};
+    for(unsigned j=b_start;j<Words;++j) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      if constexpr(Words>256)
+        if(!(j&15U) && mk61_m0_pow_progress) mk61_m0_pow_progress();
+#endif
+      multiply_row(product+j,a.word,a.word+Words,b.word[j]);
+    }
+    normalize_product(a,b,product);
+  }
+
+  static M0_POW_BOUNDS void square(Number& a) {
+    Word product[2*Words];
+    if constexpr(Words<=SquareLeafWords) {
+      square_leaf(a.word,product,Words);
+    } else {
+      unsigned first=0;
+      while(!a.word[first]) ++first; // The most significant word is nonzero.
+      unsigned words=Words;
+      while(words>SquareLeafWords && !(words&1U) && first>=Words-words/2)
+        words/=2;
+      const unsigned skip=Words-words;
+      for(unsigned i=0;i<2*skip;++i) product[i]=0;
+      Word scratch[3*Words];
+      square_words(a.word+skip,product+2*skip,scratch,words);
+    }
+    normalize_product(a,a,product);
+  }
+
   static inline void power(Number& result,const Number& base,U exponent) {
     result=base;
     U bit=UINT64_C(1)<<62;
     while(!(exponent&bit)) bit>>=1;
     while(bit>>=1) {
-      multiply(result,result,0);
+      square(result);
       if(exponent&bit) multiply(result,base,Words-4);
     }
   }
@@ -147,7 +250,7 @@ template<unsigned Words> struct PowerBounds {
       power(left,factor,numerator);
     }
     from_dyadic(right,m,me);
-    for(unsigned i=0;i<squarings;++i) multiply(right,right,0);
+    for(unsigned i=0;i<squarings;++i) square(right);
     Scale left_terms=numerator,right_terms=Scale(1)<<squarings;
     const bool inverse=bool(y>>63);
     if(inverse) {

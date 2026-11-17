@@ -20,6 +20,34 @@ MASK64 = (1 << 64) - 1
 def pair(value):
     return value & MASK64, value >> 64
 
+def square_checks(lib, rng):
+    tested = {}
+    for precision in (128,4096,8192):
+        square = getattr(lib,f'square{precision}')
+        square.argtypes = (ctypes.POINTER(ctypes.c_uint16),ctypes.c_bool)
+        square.restype = ctypes.c_uint
+        words = precision//16
+        coefficient = ctypes.c_uint16 * words
+        minimum = 1 << (precision-1)
+        half = 1 << (precision//2)
+        binade = math.isqrt(1 << (2*precision-1))
+        cases = [minimum, 2*minimum-1, minimum+(half-1),
+                 (half-1)*half+1, (half-1)*(half+1), binade-1, binade, binade+1]
+        for start in (0,1,words//4,words//2-1,words//2,words//2+1,words-1):
+            for _ in range(16):
+                cases.append(minimum | (rng.getrandbits(precision-16*start-1) << (16*start)))
+        for index, a in enumerate(cases):
+            exact = index%3!=0 or index==0
+            result = coefficient(*(a>>(16*i)&65535 for i in range(words)))
+            status = square(result,exact)
+            squared = a*a
+            shift = squared.bit_length()-precision
+            truncated, remainder = divmod(squared,1<<shift)
+            assert sum(word<<(16*i) for i,word in enumerate(result)) == truncated, (precision,index)
+            assert status == 2*(shift-precision+1)+int(exact and remainder==0), (precision,index,status)
+        tested[precision] = len(cases)
+    return tested
+
 def arithmetic_checks(lib, rng):
     out = (ctypes.c_uint64 * 4)()
     counts = dict(products=0, raised_bounds=0, upper_renormalizations=0)
@@ -103,7 +131,7 @@ def main():
     rng = random.Random(0x47266D)
     arithmetic = arithmetic_checks(lib,rng)
     oracle = Oracle()
-    functions = {p:getattr(lib,f'side{p}') for p in (128,256,4096)}
+    functions = {p:getattr(lib,f'side{p}') for p in (128,256,4096,8192)}
     counts = {p:dict(checked=0,undecided=0,wrong=0) for p in functions}
     for f in functions.values():
         f.argtypes = [ctypes.c_uint64]*3
@@ -114,14 +142,17 @@ def main():
         want = oracle.reference('pow',x,y)
         expected = -1 if want<=lower else 1
         for precision,f in functions.items():
-            if precision==4096 and category=='generated-midpoint' and counts[128]['checked']%8:
-                continue
+            if category=='generated-midpoint' and precision>=4096:
+                stride = 8 if precision==4096 else 32
+                if counts[128]['checked']%stride:
+                    continue
             order = f(x,y,lower)
             assert order in (0,expected),(precision,category,hex(x),hex(y),hex(lower),order,expected)
             counts[precision]['checked'] += 1
             counts[precision]['undecided'] += order==0
     assert counts[128]['undecided']>0
-    assert counts[4096]['undecided']==counts[256]['undecided']==0
+    assert all(counts[p]['undecided']==0 for p in (256,4096,8192))
+    arithmetic['squares'] = square_checks(lib, random.Random(0x8118192))
     result = dict(status='PASS',mpfr=oracle.version,arithmetic=arithmetic,precisions=counts)
     (a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))

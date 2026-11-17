@@ -33,6 +33,26 @@ extern "C" int side4096(uint64_t x,uint64_t y,uint64_t lower) {
     if(!m0_pow_power_bounds::resolve(x,y,rounded)) return 0;
     return rounded==lower?-1:1;
 }
+extern "C" int side8192(uint64_t x,uint64_t y,uint64_t lower) {
+    return PowerBounds<512>::side(x,y,lower);
+}
+
+template<unsigned Words>
+static unsigned square_words(uint16_t* words,bool exact) {
+    using Square=PowerBounds<Words>;
+    typename Square::Number a;
+    for(unsigned i=0;i<Words;++i) a.word[i]=words[i];
+    a.scale=0;
+    a.exact=exact;
+    Square::square(a);
+    for(unsigned i=0;i<Words;++i) words[i]=a.word[i];
+    return unsigned(2*a.scale.low+a.exact);
+}
+
+extern "C" unsigned square128(uint16_t* words,bool exact) { return square_words<8>(words,exact); }
+extern "C" unsigned square4096(uint16_t* words,bool exact) { return square_words<256>(words,exact); }
+extern "C" unsigned square8192(uint16_t* words,bool exact) { return square_words<512>(words,exact); }
+
 extern "C" void product128(uint64_t alo,uint64_t ahi,uint64_t blo,uint64_t bhi,uint64_t* out) {
     Kernel::Number a,b;
     set_number(a,alo,ahi);

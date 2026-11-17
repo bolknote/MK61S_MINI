@@ -30,7 +30,16 @@ def certify():
     terms = (1 << max_k)+max_fraction_p
     assert terms > max_integer_p+1
     assert 1075*terms+3 < 1 << 127
-    assert 65535**2+2*65535 < 1 << 32
+    radix = 1 << 16
+    assert (radix-1)**2+2*(radix-1) < 1 << 32
+    # Doubling each off-diagonal digit, adding a diagonal digit and
+    # propagating the carry needs at most two carry units per word.
+    assert (3*(radix-1)+2)//radix == 2
+    # The biased half-square sum minus the difference square is at most
+    # two carry units. The reconstructed cross term needs at most one
+    # digit beyond the two half-squares, hence the final carry is 0 or 1.
+    assert 2*(radix-1)+radix-1+2 < 3*radix
+    assert 2 < radix
 
     # Truncating one normalized multiplication loses strictly less than
     # delta=2^(1-P) relative. The exact expression, with each square
@@ -48,10 +57,17 @@ def certify():
         assert addition < 1 << (precision-2)
 
     words = 4096//16
-    largest_work = max(
-        (62+1)*words**2+62*4*words,
-        (52+max_k+1)*words**2+52*4*words)
-    assert largest_work == 11128832
+    leaf_words = 16
+    largest_work = {}
+    for length in (words,2*words):
+        # The dense case splits down to 16-word squares. Each leaf uses
+        # one multiply for each diagonal or unordered off-diagonal pair.
+        leaf_count = 3**((length//leaf_words).bit_length()-1)
+        square_work = leaf_count*leaf_words*(leaf_words+1)//2
+        largest_work[16*length] = max(
+            62*square_work+length**2+62*4*length,
+            (52+max_k)*square_work+length**2+52*4*length)
+    assert largest_work == {4096:1969472,8192:5920704}
     delta = F(1,1 << (16*words-1))
     assert (addition+1)*delta < F(1,1 << 3976)
 
@@ -89,14 +105,16 @@ def certify():
     assert 3**64 > (1 << 53) and 3**35 > (1 << 54)
     assert 54*32 < 16*words
     source = ROOT/'code/native_eabi_m0_pow_power_bounds.inc'
-    assert 'PowerBounds<256>::side' in source.read_text()
+    contents = source.read_text()
+    assert 'PowerBounds<256>::side' in contents and f'SquareLeafWords={leaf_words}' in contents
     return dict(status='PASS_POWER_PRODUCT_ENCLOSURE',
         source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
         active_domain='positive finite binary64 x, 2^-64 <= |y| < 2^63, one adjacent rounding boundary',
         maximum_denominator_shift=max_k,maximum_product_leaves=terms,
         significand_bits=16*words,minimum_signed_scale_bits=128,
         maximum_full_products=52+max_k+1,
-        maximum_limb_multiply_accumulates=largest_work,
+        maximum_limb_multiply_accumulates=largest_work[4096],
+        maximum_8192_limb_multiply_accumulates=largest_work[8192],
         relative_width_bound='2^-3976',
         undecided_abs_log_gap_strict_upper_bound='2^-4030',
         undecided_8192_abs_log_gap_strict_upper_bound='2^-8126',
