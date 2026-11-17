@@ -225,15 +225,21 @@ static bool wide_strip(const spectrum* s,const spectrum_video_snapshot* saved,un
     return true;
 }
 
-bool spectrum_pentagon_flash(const spectrum* s,uint8_t* work,bool* flashes) {
+bool spectrum_pentagon_flash(const spectrum* s,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS]) {
     const unsigned bank=(s->memory->paging&8)?7:5;
-    *flashes=false;
     for(unsigned area=0;area<sizeof(wide_areas)/sizeof(*wide_areas);++area) {
         const wide_area* a=&wide_areas[area];
         const unsigned bytes=a->rows*4;
-        for(unsigned plane=0;plane<2;++plane) {
-            if(!video_read(s,NULL,bank-a->outer,a->attribute+8192*plane,work,bytes)) return false;
-            for(unsigned i=0;i<bytes;++i) if(work[i]&128) {*flashes=true;return true;}
+        if(!video_read(s,NULL,bank-a->outer,a->attribute,work,bytes) ||
+           !video_read(s,NULL,bank-a->outer,a->attribute+8192,work+bytes,bytes)) return false;
+        for(unsigned row=0;row<a->rows;row+=8) {
+            uint8_t attrs[WIDE_COLUMNS];
+            const unsigned offset=row*4,y=a->first+row;
+            wide_row(attrs,work+offset,work+bytes+offset);
+            spectrum_video_damage* d=&strips[y/SPECTRUM_WIDE_STRIP_ROWS];
+            for(unsigned x=0;x<WIDE_COLUMNS;x+=3)
+                if((attrs[x]|attrs[x+1]|attrs[x+2])&128)
+                    spectrum_video_include_cell(d,x/3,y%SPECTRUM_WIDE_STRIP_ROWS,8);
         }
     }
     return true;

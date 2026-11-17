@@ -357,6 +357,28 @@ static void wide_scanlines(void) {
         }
     }
     memory.io.read=read_bytes;
+
+    static const uint8_t attrs[768];
+    for(unsigned bank=6;bank<=7;++bank) {
+        for(unsigned plane=0;plane<16384;plane+=8192) {
+            assert(spectrum_bank_write(&memory,bank,plane+0x1000,attrs,256));
+            assert(spectrum_bank_write(&memory,bank,plane+0x1300,attrs,192));
+            assert(spectrum_bank_write(&memory,bank,plane+0x1800,attrs,768));
+        }
+    }
+    const uint8_t flash=0xc7;
+    // The lower plane's unscanned columns must not dirty the LCD.
+    assert(spectrum_bank_write(&memory,6,0x1000,&flash,1));
+    assert(spectrum_bank_write(&memory,6,0x1000+224+24,&flash,1));
+    assert(spectrum_bank_write(&memory,7,0x3800+31,&flash,1));
+    spectrum_video_damage dirty[SPECTRUM_WIDE_STRIPS]={0};
+    uint8_t strip_work[2*sizeof(attrs)];
+    assert(spectrum_pentagon_flash(&machine,strip_work,dirty));
+    for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
+        if(strip==1) assert(dirty[strip].left==0 && dirty[strip].right==14 &&
+                            dirty[strip].top==8 && dirty[strip].bottom==24);
+        else assert(!dirty[strip].bottom);
+    }
 }
 
 static void sinclair128(const char* rom0,const char* rom1) {

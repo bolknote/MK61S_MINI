@@ -23,7 +23,7 @@ static const char* opened_name;
 static bool open_error, save_opened_game;
 static bool test_flow;
 static unsigned video_calls,video_shows,video_origin,video_psram_ops;
-static uint32_t video_submit_us;
+static uint32_t video_submit_us,video_capture_delay_us;
 static bool video_test,video_pages,video_scroll,video_fail_once,video_busy_once,video_page_failed;
 static mk61_service_color_frame last_strip;
 static uint8_t last_attrs[4];
@@ -78,6 +78,9 @@ void spectrum_ui_window(spectrum_ui* u,unsigned x,unsigned y,unsigned width,cons
 void spectrum_ui_footer(spectrum_ui* u,const char* text) { (void)u;(void)text; }
 bool spectrum_ui_present(spectrum_ui* u) { (void)u;return true; }
 static void pump(void) {
+#if SPECTRUM_HAS_PENTAGON
+    assert(!pacing_video_io);
+#endif
     if(generator.sample) for(unsigned i=0;i<64 && (int32_t)(atomic_load(&machine.sound.produced)-(machine.sound.time+140))>=0;++i)
         (void)generator.sample(generator.context);
 }
@@ -128,7 +131,10 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(r->handle==1 && psram);
         if(a==MK61_BUFFER_RELEASE) { free(psram);psram=NULL;return 1; }
         assert(r->offset<=psram_bytes && r->size<=psram_bytes-r->offset);
-        if(video_test && r->offset>=RASTER_BASE) ++video_psram_ops;
+        if(video_test && r->offset>=RASTER_BASE) {
+            ++video_psram_ops;
+            if(a==MK61_BUFFER_WRITE) {micros_now+=video_capture_delay_us;video_capture_delay_us=0;}
+        }
         if(a==MK61_BUFFER_READ) memcpy(r->data,psram+r->offset,r->size);
         else if(a==MK61_BUFFER_WRITE) memcpy(psram+r->offset,r->data,r->size);
         else if(a==MK61_BUFFER_FILL) memset(psram+r->offset,0,r->size);
@@ -413,6 +419,40 @@ static void extended_frames(void) {
         }
     }
     assert(video_shows==4);
+#if SPECTRUM_HAS_PENTAGON
+    {
+        video_output queued={.guard_us=VIDEO_INITIAL_GUARD_US,.ready_guard_us=VIDEO_READY_GUARD_US,.clear=true};
+        video_begin(&queued,SPECTRUM_VIDEO_16C);
+        assert(video_present(&queued,canvas));
+        assert(video_present(&queued,canvas) && queued.next==1);
+        queued.pending=SPECTRUM_VIDEO_16C;
+        uint8_t blocked[32]={0};
+        uint32_t deadline=micros_now,keyboard_deadline=micros_now+100000;
+        const char* error=NULL;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&queued,canvas,&error) && !error);
+        assert(!queued.active && !queued.pending && video_shows==6);
+    }
+#endif
+#if SPECTRUM_HAS_PENTAGON
+    for(unsigned i=0;i<2;++i) {
+        const unsigned mode=i?SPECTRUM_VIDEO_WIDE:SPECTRUM_VIDEO_16C;
+        state.cpu.port_out(&state.cpu,0xeff7,mode|4);
+        color(MK61_COLOR_END,NULL);
+        video_output restarting={.guard_us=VIDEO_INITIAL_GUARD_US,.pending=mode,.clear=true};
+        restarting.ready_guard_us=VIDEO_READY_GUARD_US;
+        uint8_t blocked[32]={0};
+        uint32_t deadline=micros_now,keyboard_deadline=micros_now+100000;
+        const char* error=NULL;
+        const unsigned calls=video_calls;
+        video_capture_delay_us=i?20080:18813;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(restarting.active && restarting.selected && !restarting.next && video_calls==calls);
+        assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(!restarting.active && video_calls==calls+(i?SPECTRUM_WIDE_STRIPS:3));
+    }
+    puts("First image survives 18.813/20.080 ms cold capture at 20.480 ms guest cadence: PASS");
+#endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
     puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");

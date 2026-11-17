@@ -19,7 +19,7 @@ void spectrum_hicolor_flash(const spectrum*,spectrum_hicolor_changes*);
 void spectrum_hicolor_patch(const spectrum*,const spectrum_video_snapshot*,unsigned strip,
                             const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_hicolor_frame(const spectrum_video_damage*,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
-bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,bool* flashes);
+bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS]);
 bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage*,const uint8_t*,
                              mk61_service_color_frame*);

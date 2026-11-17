@@ -34,7 +34,7 @@ enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
        2*SPECTRUM_TAPE_SLOT_BYTES, VIDEO_CAPTURE_END=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
-       VIDEO_INITIAL_GUARD_US=5500 };
+       VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
 typedef struct { unsigned next;bool clear,ready; } raster_output;
 typedef struct {
     uint32_t guard_us;
@@ -42,6 +42,7 @@ typedef struct {
     uint8_t mode,next,page,valid[2],pending;
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
+    uint32_t ready_guard_us;
     bool clipped;
 #endif
     spectrum_video_damage patches[SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_STRIPS:3];
@@ -50,6 +51,9 @@ typedef struct {
 } video_output;
 static bool exact_raster;
 static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
+#endif
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+static bool pacing_video_io;
 #endif
 static bool banked_buffers;
 static spectrum_memory bank_memory;
@@ -84,7 +88,13 @@ static bool external_transfer(bool write,uint32_t offset,uint8_t* bytes,uint32_t
         const uint32_t ok=write?mk61_app_buffer_write(services,external.handle,offset,bytes,n):
             mk61_app_buffer_read(services,external.handle,offset,bytes,n);
         if(!ok) return false;
-        offset+=n;bytes+=n;length-=n;mk61_api->service();
+        offset+=n;bytes+=n;length-=n;
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        // The pacing loop services input between video steps. Avoid re-running
+        // the foreground service for each individual read and write of a strip.
+        if(!pacing_video_io)
+#endif
+            mk61_api->service();
     }
     return true;
 }
@@ -165,11 +175,8 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
     const bool tracked=changes && changes->mode==mode;
     out->clipped=tracked && (out->pages || out->transaction) && !out->clear &&
         out->valid[page] && !(changes->repaint&mask);
-    if(out->clipped && mode==SPECTRUM_VIDEO_WIDE && ((out->saved.frames^machine.frames)&16)) {
-        bool flashes;
-        if(!spectrum_pentagon_flash(&machine,work,&flashes)) return false;
-        if(flashes) out->clipped=false;
-    }
+    if(out->clipped && mode==SPECTRUM_VIDEO_WIDE && ((out->saved.frames^machine.frames)&16) &&
+       !spectrum_pentagon_flash(&machine,work,changes->strips[page])) return false;
     out->packed=false;
     if(out->clipped) {
         memcpy(out->patches,changes->strips[page],strips*sizeof(*out->patches));
@@ -177,7 +184,7 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         for(unsigned i=0;i<strips;++i) rows+=out->patches[i].bottom-out->patches[i].top;
         // Small updates fit in SRAM with a bounded number of scattered reads.
         // Larger ones use the batched native snapshot and keep their clipping.
-        out->packed=rows<=16;
+        out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?24u:16u);
     }
     out->saved.io=external.handle && !out->packed?&bank_memory.io:NULL;
     out->saved.address=RASTER_BASE;
@@ -195,6 +202,7 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         memset(changes->strips[page],0,sizeof(changes->strips[page]));
         changes->repaint&=(uint8_t)~mask;
     }
+    if(out->pending==mode) out->pending=0; // This capture already includes that guest frame.
     out->background=out->saved.border;
     return true;
 }
@@ -220,7 +228,7 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
     const bool pages=SPECTRUM_HAS_PENTAGON && out->pages;
     const bool hicolor=SPECTRUM_HAS_SINCLAIR && (!SPECTRUM_HAS_PENTAGON || out->mode==SPECTRUM_VIDEO_HICOLOR);
     if(!out->selected) {
-        if(!pages && external.handle) {
+        if(!pages && external.handle && (!SPECTRUM_HAS_PENTAGON || !out->repainted)) {
             // Keep the origin fixed and validate reuse after any LCD error.
             mk61_service_color_scroll scroll={0,320,0,0};
             const unsigned status=services->call(MK61_SERVICE_COLOR_DISPLAY,
@@ -290,9 +298,11 @@ next_strip:
             if(out->repainted) return false;
             out->clear=out->repainted=true;out->next=0;
             if(SPECTRUM_HAS_PENTAGON) out->valid[0]=0;
-            if(hicolor) return hicolor_capture(out,work);
 #if SPECTRUM_HAS_PENTAGON
-            return pentagon_capture(out,work);
+            out->selected=false;
+            return true;
+#else
+            return hicolor_capture(out,work);
 #endif
         }
         if(SPECTRUM_HAS_PENTAGON && !hicolor) out->valid[0]=1;
@@ -945,17 +955,35 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // Z80 has produced this frame's sound events. Fit capture and strip
         // work here, using the longest observed step plus the service guard.
-        if((video->active || video->pending) && (int32_t)(target-now)>(int32_t)video->guard_us) {
-            const uint32_t start=now;
-            const unsigned mode=video->pending;
-            if(mode) video_begin(video,mode);
-            else if(!video_present(video,work)) {
-                *error="Color output failed";return false;
+        if(video->active || video->pending) {
+            const unsigned mode=video->active?0:video->pending;
+            uint32_t* guard=&video->guard_us;
+#if SPECTRUM_HAS_PENTAGON
+            // A full conversion can raise its guard without delaying
+            // the submission of strips that are already packed.
+            if(machine.pentagon && (mode?mode==video->mode:video->selected && (video->packed || video->ready)))
+                guard=&video->ready_guard_us;
+#endif
+            if((int32_t)(target-now)>(int32_t)*guard) {
+                const uint32_t start=now;
+                const bool cold=SPECTRUM_HAS_PENTAGON && machine.pentagon &&
+                    (mode?mode!=video->mode:!video->selected && !video->valid[video->page]);
+                if(mode) {video->pending=0;video_begin(video,mode);}
+                else {
+#if SPECTRUM_HAS_PENTAGON
+                    pacing_video_io=machine.pentagon;
+#endif
+                    const bool ok=video_present(video,work);
+#if SPECTRUM_HAS_PENTAGON
+                    pacing_video_io=false;
+#endif
+                    if(!ok) {*error="Color output failed";return false;}
+                }
+                now=pacing_clock_us();
+                const uint32_t duration=now-start+2000;
+                // A first full capture must not increase the guard for subsequent strips.
+                if(!cold && duration>*guard) *guard=duration;
             }
-            video->pending=0;
-            now=pacing_clock_us();
-            const uint32_t guard=now-start+2000;
-            if(guard>video->guard_us) video->guard_us=guard;
         }
 #endif
         if((int32_t)(target-now)>2000) {
@@ -1072,6 +1100,9 @@ static __attribute__((noinline)) void emulate_session(void) {
     bool after_pace=false;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     video_output video={.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
+#if SPECTRUM_HAS_PENTAGON
+    video.ready_guard_us=VIDEO_READY_GUARD_US;
+#endif
     const unsigned present_budget=3;
     unsigned present_attempts=0;
     raster_output output={.next=SPECTRUM_RASTER_STRIPS,.clear=true};
@@ -1121,9 +1152,9 @@ static __attribute__((noinline)) void emulate_session(void) {
                 }
                 goto paced;
             }
-            if(video.active) goto paced;
+            if(!SPECTRUM_HAS_PENTAGON && video.active) goto paced;
             video.pending=spectrum_video_mode(&machine);
-            if(video.pending) goto paced;
+            if(video.active || video.pending) goto paced;
             if(SPECTRUM_HAS_PENTAGON && video.pages) video_begin(&video,0);
             if(SPECTRUM_HAS_PENTAGON) video.mode=0;
             else video.clear=true;

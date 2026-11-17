@@ -42,6 +42,13 @@ typedef struct {
     spectrum_video_damage strips[2][SPECTRUM_WIDE_STRIPS];
     uint8_t mode,bank,upper,windows,repaint;
 } spectrum_pentagon_changes;
+static inline void spectrum_video_include_cell(spectrum_video_damage* d,unsigned x,unsigned y,unsigned rows) {
+    if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+rows};return;}
+    if(x<d->left) d->left=(uint8_t)x;
+    if(x>=d->right) d->right=(uint8_t)(x+1);
+    if(y<d->top) d->top=(uint8_t)y;
+    if(y+rows>d->bottom) d->bottom=(uint8_t)(y+rows);
+}
 
 typedef struct spectrum {
     z80 cpu;

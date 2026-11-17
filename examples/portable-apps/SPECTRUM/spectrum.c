@@ -65,14 +65,8 @@ static void pentagon_dirty(spectrum_pentagon_changes* changes,unsigned bank,unsi
         strip=y/SPECTRUM_WIDE_STRIP_ROWS;y%=SPECTRUM_WIDE_STRIP_ROWS;
         x/=3; // The scaler emits a group of 20 LCD pixels per three cells.
     }
-    for(unsigned page=0;page<2;++page) {
-        spectrum_video_damage* d=&changes->strips[page][strip];
-        if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+rows};continue;}
-        if(x<d->left) d->left=(uint8_t)x;
-        if(x>=d->right) d->right=(uint8_t)(x+1);
-        if(y<d->top) d->top=(uint8_t)y;
-        if(y+rows>d->bottom) d->bottom=(uint8_t)(y+rows);
-    }
+    for(unsigned page=0;page<2;++page)
+        spectrum_video_include_cell(&changes->strips[page][strip],x,y,rows);
 }
 #endif
 void spectrum_refresh_map(spectrum* s) {
