@@ -182,6 +182,10 @@ static inline void wb(z80* const z, uint16_t addr, uint8_t val) {
  * once instead of retaining a separate operand-fetch body per register. */
 static const uint8_t register_offsets[8]={offsetof(z80,b),offsetof(z80,c),offsetof(z80,d),offsetof(z80,e),
     offsetof(z80,h),offsetof(z80,l),0,offsetof(z80,a)};
+static const uint8_t pair_offsets[4]={offsetof(z80,bc),offsetof(z80,de),offsetof(z80,hl),offsetof(z80,sp)};
+static inline uint16_t* register_pair(z80* z,unsigned opcode) {
+  return (uint16_t*)((uint8_t*)z+pair_offsets[(opcode>>4)&3]);
+}
 _Static_assert(offsetof(z80,a)<256 && offsetof(z80,l)<256,"Byte register offsets must fit");
 static inline Z80_HOT_INLINE uint8_t reg_byte(z80* z,unsigned reg) {
   return reg==6?rb(z,z->hl):*((uint8_t*)z+register_offsets[reg]);
@@ -310,8 +314,6 @@ static const uint8_t szp_flags[256] = {
   0xa0, 0xa4, 0xa4, 0xa0, 0xa4, 0xa0, 0xa0, 0xa4, 0xac, 0xa8, 0xa8, 0xac, 0xa8, 0xac, 0xac, 0xa8,
   0xa4, 0xa0, 0xa0, 0xa4, 0xa0, 0xa4, 0xa4, 0xa0, 0xa8, 0xac, 0xac, 0xa8, 0xac, 0xa8, 0xa8, 0xac,
 };
-static inline bool parity(uint8_t val) { return (szp_flags[val] & 4) != 0; }
-
 static void exec_opcode(z80* const z, uint8_t opcode);
 static void exec_opcode_cb(z80* const z, uint8_t opcode);
 static void exec_opcode_dcb(
@@ -405,40 +407,7 @@ static inline uint8_t subb(z80* const z, uint8_t a, uint8_t b, bool cy) {
   return result;
 }
 
-// ADD Word: adds two words together
-static inline uint16_t addw(z80* const z, uint16_t a, uint16_t b, bool cy) {
-  uint8_t lsb = addb(z, a, b, cy);
-  uint8_t msb = addb(z, a >> 8, b >> 8, z->cf);
-
-  uint16_t result = (msb << 8) | lsb;
-  z->zf = result == 0;
-  z->mem_ptr = a + 1;
-  return result;
-}
-
-// SUBstract Word: substracts two words (with optional carry)
-static inline uint16_t subw(z80* const z, uint16_t a, uint16_t b, bool cy) {
-  uint8_t lsb = subb(z, a, b, cy);
-  uint8_t msb = subb(z, a >> 8, b >> 8, z->cf);
-
-  uint16_t result = (msb << 8) | lsb;
-  z->zf = result == 0;
-  z->mem_ptr = a + 1;
-  return result;
-}
-
-// adds a word to HL
-static inline void addhl(z80* const z, uint16_t val) {
-  idle_bus(z,ir(z),7);
-  const uint16_t before=z->hl;
-  const uint32_t wide=(uint32_t)before+val;
-  const uint16_t result=(uint16_t)wide;
-  z->f=(z->f&0xC4)|((result>>8)&0x28)|(((before^val^result)>>8)&0x10)|(wide>>16);
-  z->mem_ptr=(uint16_t)(before+1);z->hl=result;
-}
-
-// adds a word to IX or IY
-static inline void addiz(z80* const z, uint16_t* reg, uint16_t val) {
+static __attribute__((noinline)) void add_pair(z80* z,uint16_t* reg,uint16_t val) {
   idle_bus(z,ir(z),7);
   const uint16_t before=*reg;
   const uint32_t wide=(uint32_t)before+val;
@@ -447,22 +416,16 @@ static inline void addiz(z80* const z, uint16_t* reg, uint16_t val) {
   z->mem_ptr=(uint16_t)(before+1);*reg=result;
 }
 
-// adds a word (+ carry) to HL
-static inline void adchl(z80* const z, uint16_t val) {
+static inline void adc_sbc_hl(z80* z,uint16_t value,bool subtract) {
   idle_bus(z,ir(z),7);
-  uint16_t result = addw(z, get_hl(z), val, z->cf);
-  z->sf = result >> 15;
-  z->zf = result == 0;
-  set_hl(z, result);
-}
-
-// substracts a word (+ carry) to HL
-static inline void sbchl(z80* const z, uint16_t val) {
-  idle_bus(z,ir(z),7);
-  const uint16_t result = subw(z, get_hl(z), val, z->cf);
-  z->sf = result >> 15;
-  z->zf = result == 0;
-  set_hl(z, result);
+  const uint32_t before=z->hl,operand=(uint32_t)value+z->cf;
+  const uint32_t wide=subtract?before-operand:before+operand;
+  const uint16_t result=(uint16_t)wide;
+  const unsigned differing_signs=before^value;
+  const unsigned overflow=(before^result)&(subtract?differing_signs:~differing_signs);
+  z->f=((result>>8)&0xa8)|(result?0:0x40)|(((before^value^result)>>8)&0x10)|
+       ((overflow>>13)&4)|((wide>>16)&1)|(subtract?2:0);
+  z->mem_ptr=(uint16_t)(before+1);z->hl=result;
 }
 
 /* Carry is preserved; the other INC/DEC flags depend only on the result.
@@ -515,10 +478,8 @@ static inline void cp(z80* const z, const uint8_t val) {
 
 static __attribute__((noinline)) void byte_alu(z80* z, unsigned operation, uint8_t value) {
   switch(operation) {
-  case 0: z->a=addb(z,z->a,value,0);break;
-  case 1: z->a=addb(z,z->a,value,z->cf);break;
-  case 2: z->a=subb(z,z->a,value,0);break;
-  case 3: z->a=subb(z,z->a,value,z->cf);break;
+  case 0: case 1: z->a=addb(z,z->a,value,(operation&1) && z->cf);break;
+  case 2: case 3: z->a=subb(z,z->a,value,(operation&1) && z->cf);break;
   case 4: land(z,value);break;
   case 5: lxor(z,value);break;
   case 6: lor(z,value);break;
@@ -759,19 +720,12 @@ static __attribute__((noinline)) uint8_t cb_rotate(z80* z, unsigned operation, u
 }
 
 // tests bit "n" from a byte
-static inline uint8_t cb_bit(z80* const z, uint8_t val, uint8_t n) {
+static inline void cb_bit(z80* const z, uint8_t val, uint8_t n) {
   const uint8_t result = val & (1 << n);
-  z->sf = result >> 7;
-  z->zf = result == 0;
-  z->yf = GET_BIT(5, val);
-  z->hf = 1;
-  z->xf = GET_BIT(3, val);
-  z->pf = z->zf;
-  z->nf = 0;
-  return result;
+  z->f=(z->f&1)|(val&0x28)|0x10|(result?(result&0x80):0x44);
 }
 
-static inline void ldi(z80* const z) {
+static inline void ldx(z80* const z,int step) {
   const uint16_t de = get_de(z);
   const uint16_t hl = get_hl(z);
   const uint8_t val = rb(z, hl);
@@ -779,89 +733,58 @@ static inline void ldi(z80* const z) {
   wb(z, de, val);
   idle_bus(z,de,2);
 
-  set_hl(z, get_hl(z) + 1);
-  set_de(z, get_de(z) + 1);
+  set_hl(z, get_hl(z) + step);
+  set_de(z, get_de(z) + step);
   set_bc(z, get_bc(z) - 1);
 
   // see https://wikiti.brandonw.net/index.php?title=Z80_Instruction_Set
   // for the calculation of xf/yf on LDI
   const uint8_t result = val + z->a;
-  z->xf = GET_BIT(3, result);
-  z->yf = GET_BIT(1, result);
-
-  z->nf = 0;
-  z->hf = 0;
-  z->pf = get_bc(z) > 0;
+  z->f=(z->f&0xc1)|(result&8)|((result&2)<<4)|(z->bc?4:0);
 }
 
-static inline void ldd(z80* const z) {
-  ldi(z);
-  // same as ldi but HL and DE are decremented instead of incremented
-  set_hl(z, get_hl(z) - 2);
-  set_de(z, get_de(z) - 2);
-}
-
-static inline void cpi(z80* const z) {
+static inline void cpx(z80* const z,int step) {
   bool cf = z->cf;
   const uint8_t result = subb(z, z->a, rb(z, get_hl(z)), 0);
   idle_bus(z,z->hl,5);
-  set_hl(z, get_hl(z) + 1);
+  set_hl(z, get_hl(z) + step);
   set_bc(z, get_bc(z) - 1);
-  z->xf = GET_BIT(3, result - z->hf);
-  z->yf = GET_BIT(1, result - z->hf);
-  z->pf = get_bc(z) != 0;
-  z->cf = cf;
-  z->mem_ptr += 1;
-}
-
-static inline void cpd(z80* const z) {
-  cpi(z);
-  // same as cpi but HL is decremented instead of incremented
-  set_hl(z, get_hl(z) - 2);
-  z->mem_ptr -= 2;
+  const uint8_t adjusted=(uint8_t)(result-z->hf);
+  z->f=(z->f&0xd2)|cf|(adjusted&8)|((adjusted&2)<<4)|(z->bc?4:0);
+  z->mem_ptr += step;
 }
 
 static void in_r_c(z80* const z, uint8_t* r) {
   *r = input(z, get_bc(z));
-  z->zf = *r == 0;
-  z->sf = *r >> 7;
-  z->pf = parity(*r);
-  z->nf = 0;
-  z->hf = 0;
+  z->f=(z->f&0x29)|(szp_flags[*r]&0xc4);
 }
 
-static void ini(z80* const z) {
+static void inx(z80* const z,int step) {
   idle_bus(z,ir(z),1);
   uint8_t val = input(z, get_bc(z));
   wb(z, get_hl(z), val);
-  set_hl(z, get_hl(z) + 1);
+  set_hl(z, get_hl(z) + step);
   z->b -= 1;
   z->zf = z->b == 0;
   z->nf = 1;
-  z->mem_ptr = get_bc(z) + 1;
+  z->mem_ptr = get_bc(z) + (step>0?1:-2);
 }
 
-static void ind(z80* const z) {
-  ini(z);
-  set_hl(z, get_hl(z) - 2);
-  z->mem_ptr = get_bc(z) - 2;
-}
-
-static void outi(z80* const z) {
+static void outx(z80* const z,int step) {
   idle_bus(z,ir(z),1);
   const uint8_t value=rb(z,z->hl);
   --z->b;
   output(z,z->bc,value);
-  set_hl(z, get_hl(z) + 1);
+  set_hl(z, get_hl(z) + step);
   z->zf = z->b == 0;
   z->nf = 1;
-  z->mem_ptr = get_bc(z) + 1;
+  z->mem_ptr = get_bc(z) + (step>0?1:-2);
 }
 
-static void outd(z80* const z) {
-  outi(z);
-  set_hl(z, get_hl(z) - 2);
-  z->mem_ptr = get_bc(z) - 2;
+static void repeat_ed(z80* z,uint16_t address) {
+  idle_bus(z,address,5);
+  z->pc-=2;
+  z->cyc+=5;
 }
 
 static void daa(z80* const z) {
@@ -893,11 +816,7 @@ static void daa(z80* const z) {
     z->a += correction;
   }
 
-  z->sf = z->a >> 7;
-  z->zf = z->a == 0;
-  z->pf = parity(z->a);
-  z->xf = GET_BIT(3, z->a);
-  z->yf = GET_BIT(5, z->a);
+  z->f=(z->f&0x13)|szp_flags[z->a];
 }
 
 static uint16_t index_address(z80* z,uint16_t base_addr,unsigned internal) {
@@ -1014,14 +933,7 @@ void z80_init(z80* const z) {
   z->i = 0;
   z->r = 0;
 
-  z->sf = 1;
-  z->zf = 1;
-  z->yf = 1;
-  z->hf = 1;
-  z->xf = 1;
-  z->pf = 1;
-  z->nf = 1;
-  z->cf = 1;
+  z->f = 0xff;
 
   z->iff_delay = 0;
   z->interrupt_mode = 0;
@@ -1188,10 +1100,8 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xC6: case 0xCE: case 0xD6: case 0xDE: case 0xE6: case 0xEE: case 0xF6: case 0xFE:
     byte_alu(z,(opcode>>3)&7,nextb(z));break;
 
-  case 0x09: addhl(z, get_bc(z)); break; // add hl,bc
-  case 0x19: addhl(z, get_de(z)); break; // add hl,de
-  case 0x29: addhl(z, get_hl(z)); break; // add hl,hl
-  case 0x39: addhl(z, z->sp); break; // add hl,sp
+  case 0x09: case 0x19: case 0x29: case 0x39:
+    add_pair(z,&z->hl,*register_pair(z,opcode));break;
 
   case 0xF3:
     z->iff1 = 0;
@@ -1210,15 +1120,9 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
     set_reg_byte(z,reg,result);
   } break;
 
-  case 0x03: idle_bus(z,ir(z),2);set_bc(z, get_bc(z) + 1); break; // inc bc
-  case 0x13: idle_bus(z,ir(z),2);set_de(z, get_de(z) + 1); break; // inc de
-  case 0x23: idle_bus(z,ir(z),2);set_hl(z, get_hl(z) + 1); break; // inc hl
-  case 0x33: idle_bus(z,ir(z),2);z->sp = z->sp + 1; break; // inc sp
-
-  case 0x0B: idle_bus(z,ir(z),2);set_bc(z, get_bc(z) - 1); break; // dec bc
-  case 0x1B: idle_bus(z,ir(z),2);set_de(z, get_de(z) - 1); break; // dec de
-  case 0x2B: idle_bus(z,ir(z),2);set_hl(z, get_hl(z) - 1); break; // dec hl
-  case 0x3B: idle_bus(z,ir(z),2);z->sp = z->sp - 1; break; // dec sp
+  case 0x03: case 0x13: case 0x23: case 0x33:
+  case 0x0B: case 0x1B: case 0x2B: case 0x3B:
+    idle_bus(z,ir(z),2);*register_pair(z,opcode)+=(opcode&8)?-1:1;break;
 
   case 0x27: daa(z); break; // daa
 
@@ -1436,10 +1340,8 @@ void exec_opcode_ddfd(z80* const z, uint8_t opcode, uint16_t* const iz) {
 
   case 0xE9: jump(z, *iz); break; // jp iz
 
-  case 0x09: addiz(z, iz, get_bc(z)); break; // add iz,bc
-  case 0x19: addiz(z, iz, get_de(z)); break; // add iz,de
-  case 0x29: addiz(z, iz, *iz); break; // add iz,iz
-  case 0x39: addiz(z, iz, z->sp); break; // add iz,sp
+  case 0x09: case 0x19: case 0x29: case 0x39:
+    add_pair(z,iz,opcode==0x29?*iz:*register_pair(z,opcode));break;
 
   case 0x23: idle_bus(z,ir(z),2);*iz += 1; break; // inc iz
   case 0x2B: idle_bus(z,ir(z),2);*iz -= 1; break; // dec iz
@@ -1515,8 +1417,7 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
   case 1:
     cb_bit(z,value,bit);
     if(reg==6) {
-      z->yf=GET_BIT(5,z->mem_ptr>>8);
-      z->xf=GET_BIT(3,z->mem_ptr>>8);
+      z->f=(z->f&~0x28)|((z->mem_ptr>>8)&0x28);
       z->cyc+=4;
     }
     return;
@@ -1541,9 +1442,8 @@ void exec_opcode_dcb(z80* const z, uint8_t opcode, uint16_t addr) {
   switch (x_) {
   case 0: result=cb_rotate(z,y_,val);break;
   case 1: {
-    result = cb_bit(z, val, y_);
-    z->yf = GET_BIT(5, addr >> 8);
-    z->xf = GET_BIT(3, addr >> 8);
+    cb_bit(z,val,y_);
+    z->f=(z->f&~0x28)|((addr>>8)&0x28);
   } break; // bit y,(iz+d)
   case 2: result = val & ~(1 << y_); break; // res y, (iz+d)
   case 3: result = val | (1 << y_); break; // set y, (iz+d)
@@ -1569,8 +1469,6 @@ void exec_opcode_dcb(z80* const z, uint8_t opcode, uint16_t addr) {
 void exec_opcode_ed(z80* const z, uint8_t opcode) {
   z->cyc += ed_cycles(opcode);
   inc_r(z);
-  static const uint8_t pairs[]={offsetof(z80,bc),offsetof(z80,de),offsetof(z80,hl),offsetof(z80,sp)};
-  const unsigned operand=(opcode>>4)&3;
   if((opcode&0xc7)==0x40) {
     const unsigned reg=(opcode>>3)&7;
     uint8_t value;
@@ -1582,24 +1480,11 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0x47: idle_bus(z,ir(z),1);z->i = z->a; break; // ld i,a
   case 0x4F: idle_bus(z,ir(z),1);z->r = z->a; break; // ld r,a
 
-  case 0x57:
-    idle_bus(z,ir(z),1);
-    z->a = z->i;
-    z->sf = z->a >> 7;
-    z->zf = z->a == 0;
-    z->hf = 0;
-    z->nf = 0;
-    z->pf = z->iff2;
-    break; // ld a,i
-
+  case 0x57: // ld a,i
   case 0x5F:
     idle_bus(z,ir(z),1);
-    z->a = z->r;
-    z->sf = z->a >> 7;
-    z->zf = z->a == 0;
-    z->hf = 0;
-    z->nf = 0;
-    z->pf = z->iff2;
+    z->a=opcode&8?z->r:z->i;
+    z->f=(z->f&0x29)|(szp_flags[z->a]&0xc0)|(z->iff2?4:0);
     break; // ld a,r
 
   case 0x45:
@@ -1614,73 +1499,34 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     break; // retn
   case 0x4D: ret(z); break; // reti
 
-  case 0xA0: ldi(z); break; // ldi
+  case 0xA0: case 0xA8: case 0xB8:
   case 0xB0: {
-    ldi(z);
-
-    if (get_bc(z) != 0) {
-      idle_bus(z,(uint16_t)(z->de-1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-      z->mem_ptr = z->pc + 1;
-      if(z->ldir_until) block_copy(z);
+    const int step=opcode&8?-1:1;
+    ldx(z,step);
+    if((opcode&16) && z->bc) {
+      repeat_ed(z,(uint16_t)(z->de-step));
+      z->mem_ptr=z->pc+1;
+      if(step>0 && z->ldir_until) block_copy(z);
     }
-  } break; // ldir
+  } break; // ldi/ldd/ldir/lddr
 
-  case 0xA8: ldd(z); break; // ldd
-  case 0xB8: {
-    ldd(z);
-
-    if (get_bc(z) != 0) {
-      idle_bus(z,(uint16_t)(z->de+1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-      z->mem_ptr = z->pc + 1;
-    }
-  } break; // lddr
-
-  case 0xA1: cpi(z); break; // cpi
-  case 0xA9: cpd(z); break; // cpd
-  case 0xB1: {
-    cpi(z);
-    if (get_bc(z) != 0 && !z->zf) {
-      idle_bus(z,(uint16_t)(z->hl-1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-      z->mem_ptr = z->pc + 1;
-    } else {
-      z->mem_ptr += 1;
-    }
-  } break; // cpir
+  case 0xA1: case 0xA9: case 0xB1:
   case 0xB9: {
-    cpd(z);
-    if (get_bc(z) != 0 && !z->zf) {
-      idle_bus(z,(uint16_t)(z->hl+1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-    } else {
-      z->mem_ptr += 1;
+    const int step=opcode&8?-1:1;
+    cpx(z,step);
+    if(opcode&16) {
+      if(z->bc && !z->zf) {
+        repeat_ed(z,(uint16_t)(z->hl-step));
+        if(step>0) z->mem_ptr=z->pc+1;
+      } else ++z->mem_ptr;
     }
-  } break; // cpdr
+  } break; // cpi/cpd/cpir/cpdr
 
-  case 0xA2: ini(z); break; // ini
-  case 0xB2:
-    ini(z);
-    if (z->b > 0) {
-      idle_bus(z,(uint16_t)(z->hl-1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-    }
-    break; // inir
-  case 0xAA: ind(z); break; // ind
-  case 0xBA:
-    ind(z);
-    if (z->b > 0) {
-      idle_bus(z,(uint16_t)(z->hl+1),5);
-      z->pc -= 2;
-      z->cyc += 5;
-    }
-    break; // indr
+  case 0xA2: case 0xAA: case 0xB2: case 0xBA: {
+    const int step=opcode&8?-1:1;
+    inx(z,step);
+    if((opcode&16) && z->b) repeat_ed(z,(uint16_t)(z->hl-step));
+  } break; // ini/ind/inir/indr
 
   case 0x41: case 0x49: case 0x51: case 0x59: case 0x61: case 0x69:
     output(z,z->bc,reg_byte(z,(opcode>>3)&7));break;
@@ -1690,37 +1536,22 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     z->mem_ptr = get_bc(z) + 1;
     break; // out (c), a
 
-  case 0xA3: outi(z); break; // outi
-  case 0xB3: {
-    outi(z);
-    if (z->b > 0) {
-      idle_bus(z,z->bc,5);
-      z->pc -= 2;
-      z->cyc += 5;
-    }
-  } break; // otir
-  case 0xAB: outd(z); break; // outd
-  case 0xBB: {
-    outd(z);
-    if (z->b > 0) {
-      idle_bus(z,z->bc,5);
-      z->pc -= 2;
-      z->cyc += 5;
-    }
-  } break; // otdr
+  case 0xA3: case 0xAB: case 0xB3: case 0xBB:
+    outx(z,opcode&8?-1:1);
+    if((opcode&16) && z->b) repeat_ed(z,z->bc);
+    break; // outi/outd/otir/otdr
 
   case 0x42: case 0x52: case 0x62: case 0x72:
-    sbchl(z,*(uint16_t*)((uint8_t*)z+pairs[operand]));break;
   case 0x4A: case 0x5A: case 0x6A: case 0x7A:
-    adchl(z,*(uint16_t*)((uint8_t*)z+pairs[operand]));break;
+    adc_sbc_hl(z,*register_pair(z,opcode),!(opcode&8));break;
   case 0x43: case 0x53: case 0x63: case 0x73: {
     const uint16_t addr=nextw(z);
-    ww(z,addr,*(uint16_t*)((uint8_t*)z+pairs[operand]));
+    ww(z,addr,*register_pair(z,opcode));
     z->mem_ptr=addr+1;
   } break;
   case 0x4B: case 0x5B: case 0x6B: case 0x7B: {
     const uint16_t addr=nextw(z);
-    *(uint16_t*)((uint8_t*)z+pairs[operand])=rw(z,addr);
+    *register_pair(z,opcode)=rw(z,addr);
     z->mem_ptr=addr+1;
   } break;
 
@@ -1740,38 +1571,19 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
   case 0x5E:
   case 0x7E: z->interrupt_mode = 2; break; // im 2
 
-  case 0x67: {
-    uint8_t a = z->a;
-    uint8_t val = rb(z, get_hl(z));
-    idle_bus(z,z->hl,4);
-    z->a = (a & 0xF0) | (val & 0xF);
-    wb(z, get_hl(z), (val >> 4) | (a << 4));
-
-    z->nf = 0;
-    z->hf = 0;
-    z->xf = GET_BIT(3, z->a);
-    z->yf = GET_BIT(5, z->a);
-    z->zf = z->a == 0;
-    z->sf = z->a >> 7;
-    z->pf = parity(z->a);
-    z->mem_ptr = get_hl(z) + 1;
-  } break; // rrd
-
+  case 0x67: // rrd
   case 0x6F: {
-    uint8_t a = z->a;
-    uint8_t val = rb(z, get_hl(z));
+    const uint8_t a=z->a,val=rb(z,z->hl);
     idle_bus(z,z->hl,4);
-    z->a = (a & 0xF0) | (val >> 4);
-    wb(z, get_hl(z), (val << 4) | (a & 0xF));
-
-    z->nf = 0;
-    z->hf = 0;
-    z->xf = GET_BIT(3, z->a);
-    z->yf = GET_BIT(5, z->a);
-    z->zf = z->a == 0;
-    z->sf = z->a >> 7;
-    z->pf = parity(z->a);
-    z->mem_ptr = get_hl(z) + 1;
+    if(opcode&8) {
+      z->a=(a&0xf0)|(val>>4);
+      wb(z,z->hl,(val<<4)|(a&15));
+    } else {
+      z->a=(a&0xf0)|(val&15);
+      wb(z,z->hl,(val>>4)|(a<<4));
+    }
+    z->f=(z->f&1)|szp_flags[z->a];
+    z->mem_ptr=z->hl+1;
   } break; // rld
 
   default: Z80_DIAGNOSTIC("unknown ED opcode: %02X\n", opcode); break;

@@ -216,7 +216,7 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
     if(!has_cpu || !has_ula || z[26]>1 || z[27]>1 || z[28]>2 ||
        dword(z+29)>=frame || state->ula[0]>7 ||
        (state->has_ay && state->ay[1]>15)) return SPECTRUM_FORMAT;
-    if(state->has_scld && (state->scld[0] || (state->scld[1]&7)>2)) return SPECTRUM_UNSUPPORTED;
+    if(state->has_scld && (state->scld[0] || !spectrum_timex_supported(state->scld[1]))) return SPECTRUM_UNSUPPORTED;
     if(flat) return state->ram[0] && state->ram[2] && state->ram[5]?SPECTRUM_OK:SPECTRUM_FORMAT;
     for(unsigned i=0;i<banks;++i) if(!state->ram[i]) return SPECTRUM_FORMAT;
     return SPECTRUM_OK;

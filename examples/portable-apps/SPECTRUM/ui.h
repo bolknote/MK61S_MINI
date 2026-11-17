@@ -16,14 +16,17 @@ bool spectrum_video_capture(const spectrum*,unsigned mode,uint8_t* work,spectrum
 bool spectrum_video_snapshot_strip(const spectrum*,const spectrum_video_snapshot*,unsigned mode,unsigned strip,
                                    uint8_t* pixels,mk61_service_color_frame*);
 void spectrum_hicolor_flash(const spectrum*,spectrum_hicolor_changes*);
-void spectrum_hicolor_patch(const spectrum*,const spectrum_video_snapshot*,unsigned strip,
-                            const spectrum_video_damage*,uint8_t* pixels);
-void spectrum_hicolor_frame(const spectrum_video_damage*,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
+void spectrum_timex_patch(const spectrum*,const spectrum_video_snapshot*,unsigned mode,unsigned strip,
+                          const spectrum_video_damage*,uint8_t* pixels);
+void spectrum_timex_frame(const spectrum_video_snapshot*,unsigned mode,unsigned strip,
+                          const spectrum_video_damage*,uint8_t* pixels,mk61_service_color_frame*);
 bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS]);
 bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage*,const uint8_t*,
                              mk61_service_color_frame*);
 void spectrum_pentagon_clip(unsigned mode,const spectrum_video_damage*,uint8_t*,mk61_service_color_frame*);
+int spectrum_pentagon_wide_update(const spectrum_memory_io*,uint32_t reference,uint8_t* work,
+                                  mk61_service_color_frame*,bool compare);
 typedef struct {
     const mk61_app_services* api;
     const uint8_t* font;

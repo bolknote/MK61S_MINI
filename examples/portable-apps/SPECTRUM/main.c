@@ -33,7 +33,8 @@ static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
 enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
-       2*SPECTRUM_TAPE_SLOT_BYTES, VIDEO_CAPTURE_END=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
+       2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
+       VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:0),
        VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
 typedef struct { unsigned next;bool clear,ready; } raster_output;
 typedef struct {
@@ -43,7 +44,7 @@ typedef struct {
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
     uint32_t ready_guard_us;
-    bool clipped;
+    bool clipped,compare_wide;
 #endif
     spectrum_video_damage patches[SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_STRIPS:3];
     mk61_service_color_frame part;
@@ -137,21 +138,22 @@ static uint32_t video_page(unsigned operation,unsigned page) {
 static unsigned damage_cells(const spectrum_video_damage* d) {
     return (unsigned)(d->right-d->left)*(unsigned)(d->bottom-d->top);
 }
-static bool hicolor_capture(video_output* out,uint8_t* work) {
+static bool timex_capture(video_output* out,uint8_t* work) {
     spectrum_hicolor_changes* changes=machine.hicolor;
+    const bool hires=out->mode==SPECTRUM_VIDEO_HIRES;
     if(out->background!=spectrum_border(&machine)) out->clear=true;
     // A programmable palette can recolor the whole screen without RAM writes.
-    out->packed=out->transaction && !out->clear && !machine.ulaplus_mode && !out->saved.ulaplus &&
+    out->packed=out->transaction && !out->clear && (hires || (!machine.ulaplus_mode && !out->saved.ulaplus)) &&
         changes && changes->windows && !changes->repaint;
     if(out->packed) {
-        if((out->saved.frames^machine.frames)&16) spectrum_hicolor_flash(&machine,changes);
+        if(!hires && ((out->saved.frames^machine.frames)&16)) spectrum_hicolor_flash(&machine,changes);
         unsigned cells=0;
         for(unsigned i=0;i<3;++i) cells+=damage_cells(&changes->strips[i]);
         out->packed=cells<=SPECTRUM_VIDEO_WORK_BYTES/5;
     }
     out->saved.io=external.handle && !out->packed?&bank_memory.io:NULL;
     out->saved.address=RASTER_BASE;
-    if(!spectrum_video_capture(&machine,SPECTRUM_VIDEO_HICOLOR,work,&out->saved)) return false;
+    if(!spectrum_video_capture(&machine,out->mode,work,&out->saved)) return false;
     if(out->packed) {
         // Freeze all dirty rectangles before advancing Z80, even if the
         // LCD has to finish them in the next pacing interval.
@@ -159,7 +161,7 @@ static bool hicolor_capture(video_output* out,uint8_t* work) {
         memcpy(out->patches,changes->strips,sizeof(changes->strips));
         for(unsigned i=0;i<3;++i) {
             const unsigned cells=damage_cells(&out->patches[i]);
-            if(cells) spectrum_hicolor_patch(&machine,&out->saved,i,&out->patches[i],work);
+            if(cells) spectrum_timex_patch(&machine,&out->saved,out->mode,i,&out->patches[i],work);
             work+=5*cells;
         }
     }
@@ -175,6 +177,7 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
     const bool tracked=changes && changes->mode==mode;
     out->clipped=tracked && (out->pages || out->transaction) && !out->clear &&
         out->valid[page] && !(changes->repaint&mask);
+    out->compare_wide=mode==SPECTRUM_VIDEO_WIDE && out->transaction && out->valid[0] && !out->clear && !out->clipped;
     if(out->clipped && mode==SPECTRUM_VIDEO_WIDE && ((out->saved.frames^machine.frames)&16) &&
        !spectrum_pentagon_flash(&machine,work,changes->strips[page])) return false;
     out->packed=false;
@@ -208,8 +211,8 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
 }
 #endif
 static __attribute__((noinline)) void video_begin(video_output* out,unsigned mode) {
-    if(SPECTRUM_HAS_PENTAGON && mode!=out->mode) {
-        if(out->pages || mode==SPECTRUM_VIDEO_16C) {
+    if(mode!=out->mode) {
+        if(SPECTRUM_HAS_PENTAGON && (out->pages || mode==SPECTRUM_VIDEO_16C)) {
             color(MK61_COLOR_END,NULL);spectrum_display_fast(services);
             out->pages=false;out->page=0;
             if(mode==SPECTRUM_VIDEO_16C) {
@@ -217,16 +220,17 @@ static __attribute__((noinline)) void video_begin(video_output* out,unsigned mod
                 out->pages=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PAGES_BEGIN_V2,0,sizeof(pages),&pages)==1;
             }
         }
-        out->clear=!out->pages;out->mode=mode;
-        out->valid[0]=out->valid[1]=0;
+        out->clear=!SPECTRUM_HAS_PENTAGON || !out->pages;out->mode=mode;
+        if(SPECTRUM_HAS_PENTAGON) out->valid[0]=out->valid[1]=0;
     }
-    if(SPECTRUM_HAS_PENTAGON && !mode) return;
+    if(!mode) return;
     out->next=0;out->ready=out->selected=out->repainted=false;out->active=true;
 }
 
 static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* work) {
     const bool pages=SPECTRUM_HAS_PENTAGON && out->pages;
-    const bool hicolor=SPECTRUM_HAS_SINCLAIR && (!SPECTRUM_HAS_PENTAGON || out->mode==SPECTRUM_VIDEO_HICOLOR);
+    const bool timex=SPECTRUM_HAS_SINCLAIR && (!SPECTRUM_HAS_PENTAGON ||
+        out->mode==SPECTRUM_VIDEO_HICOLOR || out->mode==SPECTRUM_VIDEO_HIRES);
     if(!out->selected) {
         if(!pages && external.handle && (!SPECTRUM_HAS_PENTAGON || !out->repainted)) {
             // Keep the origin fixed and validate reuse after any LCD error.
@@ -241,7 +245,7 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
             }
         }
         out->selected=true;
-        if(hicolor) return hicolor_capture(out,work);
+        if(timex) return timex_capture(out,work);
 #if SPECTRUM_HAS_PENTAGON
         return pentagon_capture(out,work);
 #endif
@@ -251,23 +255,29 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
         if(!out->ready) {
             const spectrum_video_damage* d=&out->patches[out->next];
 #if SPECTRUM_HAS_PENTAGON
-            const bool clipped=!hicolor && out->clipped;
+            const bool clipped=!timex && out->clipped;
 #else
             const bool clipped=false;
 #endif
             if((out->packed || clipped) && !d->bottom) goto next_strip;
             if(out->packed) {
-                if(hicolor) spectrum_hicolor_frame(d,out->next,work+out->patch_offset,&out->part);
+                if(timex) spectrum_timex_frame(&out->saved,out->mode,out->next,d,work+out->patch_offset,&out->part);
 #if SPECTRUM_HAS_PENTAGON
                 else spectrum_pentagon_frame(out->mode,out->next,d,work+out->patch_offset,&out->part);
 #endif
             } else {
-                if(!spectrum_video_snapshot_strip(&machine,&out->saved,hicolor?SPECTRUM_VIDEO_HICOLOR:out->mode,
-                             out->next,work,&out->part)) return false;
+                if(!spectrum_video_snapshot_strip(&machine,&out->saved,out->mode,out->next,work,&out->part)) return false;
 #if SPECTRUM_HAS_PENTAGON
                 if(clipped) spectrum_pentagon_clip(out->mode,d,work,&out->part);
 #endif
             }
+#if SPECTRUM_HAS_PENTAGON
+            if(out->mode==SPECTRUM_VIDEO_WIDE && out->transaction) {
+                const int result=spectrum_pentagon_wide_update(&bank_memory.io,WIDE_REFERENCE,work,&out->part,out->compare_wide);
+                if(!result) goto next_strip;
+                if(result<0) return false;
+            }
+#endif
             if(out->clear) {out->part.format&=~MK61_COLOR_PRESERVE_OUTSIDE;out->part.background=out->background;}
             out->ready=true;
         }
@@ -280,7 +290,7 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
         }
         const uint32_t status=color(MK61_COLOR_PRESENT,&out->part);
         if(status!=1) return status==2;
-        if(out->packed) out->patch_offset+=(hicolor?5:1)*out->part.pixel_bytes;
+        if(out->packed) out->patch_offset+=out->part.pixel_bytes+out->part.tile_bytes;
 next_strip:
         out->ready=out->clear=false;
         if(++out->next<strips) return true;
@@ -302,10 +312,10 @@ next_strip:
             out->selected=false;
             return true;
 #else
-            return hicolor_capture(out,work);
+            return timex_capture(out,work);
 #endif
         }
-        if(SPECTRUM_HAS_PENTAGON && !hicolor) out->valid[0]=1;
+        if(SPECTRUM_HAS_PENTAGON && !timex) out->valid[0]=1;
     }
     out->active=out->transaction=false;return true;
 fallback:
@@ -1159,8 +1169,8 @@ static __attribute__((noinline)) void emulate_session(void) {
             video.pending=spectrum_video_mode(&machine);
             if(video.active || video.pending) goto paced;
             if(SPECTRUM_HAS_PENTAGON && video.pages) video_begin(&video,0);
-            if(SPECTRUM_HAS_PENTAGON) video.mode=0;
-            else video.clear=true;
+            video.mode=0;
+            if(!SPECTRUM_HAS_PENTAGON) video.clear=true;
 #endif
             uint16_t palette[64];for(unsigned i=0;i<64;++i) palette[i]=spectrum_palette(&machine,i);
             const uint32_t ready=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PALETTE64,0,sizeof(palette),palette);

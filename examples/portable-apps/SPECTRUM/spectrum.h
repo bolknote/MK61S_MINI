@@ -30,8 +30,9 @@
 #define SPECTRUM_RASTER_PACKED_STRIP_BYTES (3U*SPECTRUM_RASTER_CELLS+SPECTRUM_RASTER_CELLS/8U)
 #define SPECTRUM_RASTER_PACKED_BYTES (SPECTRUM_RASTER_PACKED_STRIP_BYTES*SPECTRUM_RASTER_STRIPS)
 
-enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_WIDE=64 };
-enum { SPECTRUM_WIDE_STRIP_ROWS=48, SPECTRUM_WIDE_STRIPS=7 };
+enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_HIRES=6, SPECTRUM_VIDEO_WIDE=64 };
+enum { SPECTRUM_WIDE_WIDTH=320, SPECTRUM_WIDE_HEIGHT=304,
+       SPECTRUM_WIDE_STRIP_ROWS=48, SPECTRUM_WIDE_STRIPS=7 };
 typedef struct { uint8_t left,right,top,bottom; } spectrum_video_damage;
 typedef struct {
     spectrum_video_damage strips[3];
@@ -90,6 +91,10 @@ static inline unsigned spectrum_model(const spectrum* s) {
 }
 static inline unsigned spectrum_timex_mode(const spectrum* s) {
     return SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
+}
+static inline bool spectrum_timex_supported(unsigned port) {
+    const unsigned mode=port&7;
+    return mode<=SPECTRUM_VIDEO_HICOLOR || mode==SPECTRUM_VIDEO_HIRES;
 }
 static inline unsigned spectrum_pentagon_video_mode(const spectrum* s) {
     const unsigned mode=SPECTRUM_HAS_PENTAGON && s->memory && s->memory->extended?s->memory->control&0x41:0;

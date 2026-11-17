@@ -97,7 +97,8 @@ void spectrum_refresh_map(spectrum* s) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     if(SPECTRUM_HAS_SINCLAIR && s->hicolor) {
         unsigned windows=0;
-        if(spectrum_timex_mode(s)==2 && !spectrum_is_pentagon(s)) {
+        const unsigned mode=spectrum_timex_mode(s);
+        if((mode==SPECTRUM_VIDEO_HICOLOR || mode==SPECTRUM_VIDEO_HIRES) && !spectrum_is_pentagon(s)) {
             const unsigned paging=s->memory?s->memory->paging:0;
             // Only the fixed bank has native video bytes in SRAM.
             // Watch its two CPU aliases, leaving the shadow screen's
@@ -123,11 +124,7 @@ void spectrum_hicolor_watch(spectrum* s,spectrum_hicolor_changes* changes) {
 void spectrum_hicolor_dirty(spectrum_hicolor_changes* changes,unsigned offset) {
     spectrum_video_damage* d=&changes->strips[offset>>11];
     const unsigned x=offset&31,y=((offset>>8)&7)|((offset>>2)&56);
-    if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+1};return;}
-    if(x<d->left) d->left=(uint8_t)x;
-    if(x>=d->right) d->right=(uint8_t)(x+1);
-    if(y<d->top) d->top=(uint8_t)y;
-    if(y>=d->bottom) d->bottom=(uint8_t)(y+1);
+    spectrum_video_include_cell(d,x,y,1);
 }
 #endif
 
@@ -646,6 +643,7 @@ uint16_t spectrum_palette(const spectrum* s,unsigned index) {
     return ulaplus_color(s->ulaplus_palette[index&63]);
 }
 uint16_t spectrum_border(const spectrum* s) {
+    if(spectrum_timex_mode(s)==SPECTRUM_VIDEO_HIRES) return spectrum_color(7^((s->timex_mode>>3)&7));
     return spectrum_palette(s,((s->extensions&SPECTRUM_ULAPLUS) && s->ulaplus_mode)?8+s->border:s->border);
 }
 
@@ -668,10 +666,6 @@ static bool byte_at(reader* r,uint32_t at,uint8_t* value) {
 }
 static bool get(reader* r,uint8_t* value) { if(!byte_at(r,r->at,value)) return false;++r->at;return true; }
 static uint16_t word(const uint8_t* p) { return (uint16_t)(p[0]|((unsigned)p[1]<<8)); }
-static void flags(z80* z,uint8_t f) {
-    z->sf=(f>>7)&1;z->zf=(f>>6)&1;z->yf=(f>>5)&1;z->hf=(f>>4)&1;
-    z->xf=(f>>3)&1;z->pf=(f>>2)&1;z->nf=(f>>1)&1;z->cf=f&1;
-}
 static bool source_read(const spectrum_source* source,uint32_t at,uint8_t* out,uint32_t n) {
     return source && source->read && at<=source->size && n<=source->size-at &&
            source->read(source->context,at,out,n);
@@ -767,7 +761,7 @@ enum spectrum_error spectrum_load_sna(spectrum* s,const spectrum_source* source)
     z->c_=h[5];z->b_=h[6];z->f_=h[7];z->a_=h[8];
     z->l=h[9];z->h=h[10];z->e=h[11];z->d=h[12];z->c=h[13];z->b=h[14];
     z->iy=word(h+15);z->ix=word(h+17);z->iff1=z->iff2=(h[19]&4)!=0;
-    z->r=h[20];flags(z,h[21]);z->a=h[22];z->sp=(uint16_t)(sp+(banked?0:2));
+    z->r=h[20];z->f=h[21];z->a=h[22];z->sp=(uint16_t)(sp+(banked?0:2));
     z->pc=banked?word(footer):(uint16_t)(read_byte(s,(uint16_t)sp)|((unsigned)read_byte(s,(uint16_t)(sp+1))<<8));
     z->interrupt_mode=h[25];s->border=h[26];
     if(s->memory) {
@@ -861,7 +855,7 @@ enum spectrum_error spectrum_load_z80(spectrum* s,const spectrum_source* source)
         if(!source_read(source,32,extended,extra)) return SPECTRUM_IO;
         model=z80_model(extra,extended[2]);banked=model==SPECTRUM_128 || model==SPECTRUM_P512;
         if(model==UINT32_MAX || (banked && (!s->memory || (!spectrum_is_pentagon(s) && !spectrum_is_128(s)))) ||
-           (extended[5]&128) || (model==SPECTRUM_TC2048?(extended[3] || (extended[4]&7)>2):extended[4]) ||
+           (extended[5]&128) || (model==SPECTRUM_TC2048?(extended[3] || !spectrum_timex_supported(extended[4])):extended[4]) ||
            (banked && (extended[3]&192) && !spectrum_is_128(s)) ||
            (model==SPECTRUM_P512 && !spectrum_is_pentagon(s)) ||
            (model==SPECTRUM_TC2048 && !SPECTRUM_HAS_SINCLAIR)) return SPECTRUM_UNSUPPORTED;
@@ -873,7 +867,7 @@ enum spectrum_error spectrum_load_z80(spectrum* s,const spectrum_source* source)
     if(!error) error=z80_pages(s,source,h,extra,banked,true);
     if(error) return error;
     spectrum_reset_cpu(s);z80* z=&s->cpu;
-    z->a=h[0];flags(z,h[1]);z->c=h[2];z->b=h[3];z->l=h[4];z->h=h[5];
+    z->a=h[0];z->f=h[1];z->c=h[2];z->b=h[3];z->l=h[4];z->h=h[5];
     z->pc=pc;z->sp=word(h+8);z->i=h[10];z->r=(h[11]&127)|((h[12]&1)<<7);
     z->e=h[13];z->d=h[14];z->c_=h[15];z->b_=h[16];z->e_=h[17];z->d_=h[18];
     z->l_=h[19];z->h_=h[20];z->a_=h[21];z->f_=h[22];z->iy=word(h+23);z->ix=word(h+25);

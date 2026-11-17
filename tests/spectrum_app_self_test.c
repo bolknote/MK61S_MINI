@@ -400,8 +400,9 @@ static void extended_frames(void) {
             for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
         }
         assert(!out.active && video_calls==expected[turn]);
-        if(turn==2 || turn==3 || turn==5 || turn==7 || turn==9 || turn==10 || turn==12 || turn==13)
+        if(turn==2 || turn==3 || turn==5 || turn==9 || turn==10 || turn==12 || turn==13)
             assert(video_psram_ops==io_before);
+        if(turn==7) assert(video_psram_ops==io_before+1); // Keep the sent Wide row in PSRAM.
         if(turn==3) assert(pentagon.strips[0][0].bottom==1 && !pentagon.strips[1][0].bottom);
         if(turn==14 || turn==15) assert(!out.packed && video_psram_ops>io_before);
         if(turn==13) {
@@ -465,9 +466,33 @@ static void extended_frames(void) {
         assert(restarting.active && restarting.selected && !restarting.next && video_calls==prior);
         assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
-        assert(!restarting.active && video_calls==prior+strips);
+        assert(!restarting.active && (i?video_calls<=prior+strips:video_calls==prior+strips));
     }
     puts("Cold capture and live display-bank change at 20.480 ms guest cadence: PASS");
+    color(MK61_COLOR_END,NULL);
+    spectrum_reset(&state);
+    state.cpu.port_out(&state.cpu,0xeff7,0x44);
+    spectrum_pentagon_watch(&state,&pentagon);
+    memset(canvas,7,4096);
+    for(unsigned bank=4;bank<=7;++bank)
+        for(unsigned offset=0;offset<SPECTRUM_BANK_BYTES;offset+=4096)
+            assert(spectrum_bank_write(&bank_memory,bank,offset,canvas,4096));
+    const unsigned wide_pixel=8192+1; // The second cell of the central image.
+    const uint8_t value=255;
+    assert(spectrum_bank_write(&bank_memory,7,wide_pixel,&value,1));
+    video_output diff={.clear=true};
+    const unsigned updates[]={7,1,1,1,0,7,0};
+    for(unsigned i=0;i<sizeof(updates)/sizeof(*updates);++i) {
+        if(i==3) guest_store(&state,0x4000+wide_pixel,value);
+        else state.cpu.port_out(&state.cpu,0x7ffd,(i==1 || i==4 || i==6)?0x18:0x10);
+        if(i==5) video_fail_once=true;
+        const unsigned before=video_calls;
+        video_begin(&diff,SPECTRUM_VIDEO_WIDE);
+        for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
+        assert(!diff.active && diff.valid[0] && video_calls==before+updates[i]);
+        if(updates[i]==1) assert(last_strip.x==60 && last_strip.y==72 && last_strip.width==20 && last_strip.height==1);
+    }
+    puts("Wide bank changes: one clipped rectangle, no traffic for equal banks, reference recovery after LCD fault PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;

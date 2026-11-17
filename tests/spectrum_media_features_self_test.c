@@ -475,6 +475,61 @@ static void timex_hicolor(void) {
     puts("Timex 8x1 attributes, exact native 256x192 pixels and immutable PSRAM capture PASS");
 }
 
+static void timex_hires(void) {
+    spectrum_init(&machine,ram,rom);machine.extensions|=SPECTRUM_TIMEX;
+    machine.cpu.port_out(&machine.cpu,0x31ff,22); // Red ink, cyan paper.
+    assert(spectrum_port_in(&machine,0x50ff)==22 && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_HIRES);
+    for(unsigned i=0;i<6144;++i) {ram[i]=(uint8_t)(i*17);ram[8192+i]=(uint8_t)(i*19+1);}
+    uint8_t lcd[SPECTRUM_VIDEO_WORK_BYTES];
+    bytes backing={packed,32768};const spectrum_memory_io io={&backing,read_bytes,write_bytes,clear_bytes};
+    spectrum_video_snapshot saved={.io=&io};
+    assert(spectrum_video_capture(&machine,SPECTRUM_VIDEO_HIRES,lcd,&saved));
+    assert(saved.border==spectrum_color(5));
+    memset(ram,0,sizeof(ram));machine.cpu.port_out(&machine.cpu,0xff,6);
+    for(unsigned strip=0;strip<3;++strip) {
+        mk61_service_color_frame frame;
+        assert(spectrum_video_snapshot_strip(&machine,&saved,SPECTRUM_VIDEO_HIRES,strip,lcd,&frame));
+        assert(frame.x==0 && frame.width==320 && frame.height==64 && frame.y==64+64*strip);
+        assert(frame.format==(MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE) && !frame.tile_bytes);
+        assert(frame.palette[0]==spectrum_color(5) && frame.palette[8]==spectrum_color(2));
+        for(unsigned y=0;y<64;++y) for(unsigned x=0;x<320;++x) {
+            const unsigned offset=strip*2048+(y&7)*256+(y&56)*4;
+            unsigned expected=0;
+            for(unsigned step=0;step<8;++step) {
+                const unsigned source=(8*x+step)/5,i=offset+(source>>4);
+                const uint8_t byte=(source&8)?(uint8_t)(i*19+1):(uint8_t)(i*17);
+                expected+=(byte>>(7-(source&7)))&1;
+            }
+            const uint8_t pair=frame.pixels[y*160+x/2];
+            assert(((pair>>((x&1)?0:4))&15)==expected);
+        }
+    }
+    machine.cpu.port_out(&machine.cpu,0xff,22);machine.cpu.pc=0x8000;
+    spectrum_szx_writer writer;
+    const unsigned size=spectrum_szx_save(&writer,&machine);
+    assert(size && size<=sizeof(packed) && spectrum_szx_read(&writer,0,packed,size));
+    bytes file={packed,size};const spectrum_source source={&file,size,read_bytes};
+    spectrum_reset(&machine);
+    assert(spectrum_load_szx(&machine,&source,workspace,workspace+12288)==SPECTRUM_OK);
+    assert(spectrum_video_mode(&machine)==SPECTRUM_VIDEO_HIRES && machine.timex_mode==22);
+
+    memset(packed,0,32+54+3*(16384+3));
+    packed[30]=54;packed[33]=0x80;packed[34]=14;packed[36]=22;
+    const unsigned pages[]={8,4,5};
+    for(unsigned i=0;i<3;++i) {
+        uint8_t* block=packed+32+54+i*(16384+3);
+        block[0]=block[1]=255;block[2]=(uint8_t)pages[i];
+    }
+    file.size=32+54+3*(16384+3);
+    const spectrum_source z80={&file,file.size,read_bytes};
+    unsigned model;
+    assert(spectrum_z80_model(&z80,&model)==SPECTRUM_OK && model==SPECTRUM_TC2048);
+    assert(spectrum_load_z80(&machine,&z80)==SPECTRUM_OK && machine.timex_mode==22);
+    packed[36]=7;
+    assert(spectrum_load_z80(&machine,&z80)==SPECTRUM_UNSUPPORTED);
+    puts("Timex HiRes: interleaved columns, exact 8-to-5 coverage, frozen palette and SZX/Z80 restore PASS");
+}
+
 static void snapshot_test(unsigned model) {
     spectrum_init(&machine,ram,rom);
     bytes backing={psram,sizeof(psram)};
@@ -604,7 +659,7 @@ int main(int argc,char** argv) {
     tape_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
     contention_test();raster_test();
     for(unsigned model=0;model<3;++model) snapshot_test(model);
-    sinclair128(argv[2],argv[3]);timex_hicolor();
+    sinclair128(argv[2],argv[3]);timex_hicolor();timex_hires();
     puts("ROM TAP load, TZX Generalized/Select/CSW, ULA bus timing and scanlines, zlib, SZX and EFF7 PASS");
     return 0;
 }
