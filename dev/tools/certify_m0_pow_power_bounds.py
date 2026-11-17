@@ -9,6 +9,67 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[2]
 
+def uniform_precision_bound(ln2_lower, ln2_upper, max_k):
+    """Specialize Laurent's real two-logarithm bound using exact rationals.
+
+    This is a sufficient precision for the enclosure argument. It does not
+    assert that any binary64 pair needs that precision, or that the firmware
+    supports the corresponding allocation.
+    """
+    # A reduced binary64 base has numerator and denominator at most 2^1074.
+    # A rounding midpoint can also be 2^-1075. Inverting a rational leaves
+    # its logarithmic height unchanged. Thus log(A_i)=746 is admissible
+    # in Laurent's Corollary 2, with D=1, for either inverted base.
+    log_height = 746
+    assert 1075*ln2_upper < log_height
+
+    # After the exponent cutoffs, p+q <= 2^116+2^53-1. For q=1 the
+    # separate p<2^63 bound is smaller. Laurent's b' is (p+q)/746.
+    terms = (1 << max_k)+(1 << 53)-1
+    assert (1 << 63)+1 < terms
+    log_terms_upper = max_k*ln2_upper+F((1 << 53)-1, 1 << max_k)
+    # 746=2^9*(373/256); ln(373/256)>2*(117/629).
+    log_height_lower = 9*ln2_lower+F(234, 629)
+    assert 512*373 == 746*256
+    normalized_coefficient_log_upper = log_terms_upper-log_height_lower+F(19, 50)
+    h = 75
+    assert max(F(30), F(1), normalized_coefficient_log_upper) < h
+
+    # Laurent, Corollary 2, Table 1, m=30 and C2=17.9, gives
+    # ln|Lambda| >= -17.9*h^2*746^2 for independent bases. Dividing
+    # Lambda by q<=2^116 gives the log gap used by PowerBounds::side.
+    loss_nats = F(179, 10)*h*h*log_height*log_height
+    gap_bits = int(loss_nats/ln2_lower)+max_k+1
+    assert gap_bits*ln2_lower > loss_nats+max_k*ln2_upper
+
+    # An undecided comparison at precision P has gap <2^(66-P).
+    # At P>=gap_bits+66 that contradicts the nonzero gap above. Round
+    # upward to whole 16-bit limbs. This also covers the dependent
+    # gap and exact-tie precision established by the main certificate.
+    assert 4*((1 << 63)-(1 << 10)+1) < 1 << 65
+    precision = ((gap_bits+66+15)//16)*16
+    assert precision-66 >= gap_bits > 170
+    significand_bytes = (precision+7)//8
+    assert significand_bytes > 264*1024
+    return dict(
+        source='https://www.impan.pl/shop/en/publication/transaction/download/product/82485',
+        theorem='Corollary 2, D=1, m=30, C2=17.9',
+        rational_height_log_upper=log_height,
+        normalized_coefficient_log_plus_038_upper=str(normalized_coefficient_log_upper),
+        rounded_coefficient_log_upper=h,
+        logarithmic_form_loss_nats=str(loss_nats),
+        nonzero_abs_log_gap_strict_lower_bound=f'2^-{gap_bits}',
+        enclosure_error_overhead_bits=66,
+        sufficient_enclosure_precision_bits=precision,
+        one_significand_bytes_at_sufficient_precision=significand_bytes,
+        supported_firmware_precision_bits=8192,
+        practical_uniform_latency_established=False,
+        scope='A sufficient mathematical precision derived from a cited theorem; '
+              'the firmware does not allocate it and no input is proved to need it. '
+              'A practical uniform bound still requires a stronger whole-domain '
+              'separation proof or another bounded exact comparison algorithm.')
+
+
 def certify():
     # For finite nonzero x, abs(log(x)) < 745. The rational series verifies
     # both log(2) cutoffs used by the existing fixed-point pow interval.
@@ -120,6 +181,7 @@ def certify():
         undecided_8192_abs_log_gap_strict_upper_bound='2^-8126',
         dependent_nonzero_abs_log_gap_lower_bound='2^-170',
         exact_midpoint_products_significand_bits_upper_bound=54*32,
+        uniform_precision_bound=uniform_precision_bound(lo, hi, max_k),
         scope='For a valid adjacent midpoint, only multiplicatively independent bases with a nonzero cancelling log gap can remain undecided.')
 
 def main():
