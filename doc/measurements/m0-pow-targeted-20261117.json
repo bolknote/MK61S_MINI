@@ -1,0 +1,82 @@
+{
+  "status": "PASS",
+  "mpfr": "4.2.2",
+  "precision": 320,
+  "seed_count": 32768,
+  "elf_sha256": "550206a13c6fa326acf0bef6aaed84e4dc76c943564f9a22039aa0eb64825338",
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "archive_sha256": "67166bef959b610f43c43c21bbc8f633fdf297510399a2d7085742c6bfd391a3",
+  "search_families": {
+    "near_one_grid": {
+      "proposed": 65536,
+      "checked_targets": 65536,
+      "separated": 65536
+    },
+    "invert_exponent": {
+      "proposed": 65536,
+      "checked_targets": 65536,
+      "separated": 65536
+    },
+    "invert_base": {
+      "proposed": 65536,
+      "checked_targets": 58053,
+      "separated": 58053,
+      "outside_positive_finite_search": 7483
+    },
+    "archived_neighbours": {
+      "proposed": 1539,
+      "checked_targets": 1539,
+      "separated": 3078
+    }
+  },
+  "closest_nonzero_midpoints": {
+    "near_one_grid": {
+      "x": "3feffffffffffffd",
+      "y": "bfd5555555555554",
+      "lower": "3ff0000000000000",
+      "rounded": "3ff0000000000000",
+      "gap_lower": "0x1.5555555555553p-161",
+      "gap_upper": "0x1.5555555555554p-161",
+      "certified_bits": 160.58496250072116
+    },
+    "invert_exponent": {
+      "x": "2d9000000000000b",
+      "y": "bc24197e9a453c13",
+      "lower": "3ff0000000000000",
+      "rounded": "3ff0000000000001",
+      "gap_lower": "0x1.03d5cc7ab1e27p-112",
+      "gap_upper": "0x1.03d5cc7ab1e28p-112",
+      "certified_bits": 111.97854719369369
+    },
+    "invert_base": {
+      "x": "378fffffffffffff",
+      "y": "3fe0000000000000",
+      "lower": "3bbfffffffffffff",
+      "rounded": "3bbfffffffffffff",
+      "gap_lower": "0x1.0000000000000p-109",
+      "gap_upper": "0x1.0000000000001p-109",
+      "certified_bits": 109.0
+    },
+    "archived_neighbours": {
+      "x": "0f1234687b59d4f7",
+      "y": "3c3101a6c819d38d",
+      "lower": "3feffffffffffffb",
+      "rounded": "3feffffffffffffb",
+      "gap_lower": "0x1.28ad43737b2d6p-172",
+      "gap_upper": "0x1.28ad43737b2d7p-172",
+      "certified_bits": 171.78725164621264
+    }
+  },
+  "unresolved_gap_probes": [],
+  "arm": {
+    "checked": 185335,
+    "wrong_rounding": 0,
+    "stage_entries": {
+      "mk61_m0_cr_pow": 112492,
+      "mk61_m0_pow_rescue": 0,
+      "mk61_m0_pow_round_final": 0
+    },
+    "late_inputs": [],
+    "corpus_sha256": "fd804db3f51434f9c31f99546e756d2ce9ebff69befea51548427e42427851e8"
+  }
+}

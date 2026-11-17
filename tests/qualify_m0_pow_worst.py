@@ -9,6 +9,7 @@ import struct
 
 from native_eabi_m0_arm_self_test import Machine, ROOT, SP, bits, nan
 from m0_mpfr_oracle import Oracle
+from qualify_m0_rounding import pow_limitation
 
 
 def parse_token(token):
@@ -123,11 +124,7 @@ def main():
         oracle='Directed MPFR bounds must round to the same binary64; signaling NaNs separately require a quiet NaN result.',
         abi='Every ARM call verifies R4-R11, SP and bounded stack writes.',
         scope='Saved worst-case corpus; not a totality proof over all binary64 pairs.',
-        known_limitations=[
-            'The owned 512/1024-bit fallback preserves a final undecided-interval trap; totality is unproved.'
-            if 'mk61_m0_pow_rescue' in m.elf.symbols else
-            'The upstream final 256-bit pow guard remains.'
-        ])
+        known_limitations=[pow_limitation(m.elf.symbols)])
     a.json.parent.mkdir(parents=True,exist_ok=True)
     a.json.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2),flush=True)
     progress.update(status='PASS_COMPLETE_CORPUS' if complete else 'PASS_PARTIAL',

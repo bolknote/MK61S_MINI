@@ -17,6 +17,14 @@ INF=0x7FF0000000000000
 OPERATIONS=('sqrt','sin','cos','tan','atan','asin','acos','ln','log10','exp','pow','fma')
 
 
+def pow_limitation(symbols):
+    if 'mk61_m0_pow_round_final' in symbols:
+        return 'The exact RP2040 pow fallback has no practical uniform latency bound.'
+    if 'mk61_m0_pow_rescue' in symbols:
+        return 'The legacy owned pow rescue can still trap on an undecided final interval.'
+    return 'The upstream pow path can still trap on an undecided final 256-bit interval.'
+
+
 def corpus(name,samples):
     rng=random.Random(0xC0128000+sum(map(ord,name)))
     special=[0,SIGN,1,2,3,SIGN|1,0xFFFFFFFFFFFFF,0x10000000000000,
@@ -112,11 +120,7 @@ def main():
                 operations=report,abi='Every call verifies R4-R11, SP, bounded stack writes.',
                 semantics='RNE return values; errno and floating exception flags are not implemented.',
                 nan_result_policy='NaN results must be quiet; payload and sign are unspecified.',
-                known_limitations=[
-                    'An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved.'
-                    if 'mk61_m0_pow_rescue' in machine.elf.symbols else
-                    'The upstream pow guard after its 256-bit pass traps on an unknown worst case.'
-                ] if 'pow' in args.operations else [],
+                known_limitations=[pow_limitation(machine.elf.symbols)] if 'pow' in args.operations else [],
                 scope='Finite corpus, not an exhaustive proof over every binary64 input.')
     if machine.bootrom_sha256:
         result['actual_bootrom']=dict(sha256=machine.bootrom_sha256,initializers=machine.rom_initializers,
