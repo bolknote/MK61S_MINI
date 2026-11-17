@@ -2,6 +2,7 @@
 #include "spectrum.h"
 #include "media.h"
 #include "ui.h"
+#include "preferences.h"
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 #include "szx.h"
 #include "tape.h"
@@ -34,9 +35,10 @@ enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
        2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
-       VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:0),
+       VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:0),
        VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
 typedef struct { unsigned next;bool clear,ready; } raster_output;
+#if SPECTRUM_HAS_EXTENDED_VIDEO
 typedef struct {
     uint32_t guard_us;
     uint16_t background,patch_offset;
@@ -50,7 +52,7 @@ typedef struct {
     mk61_service_color_frame part;
     spectrum_video_snapshot saved;
 } video_output;
-static bool exact_raster;
+#endif
 static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
 #endif
 #if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -64,9 +66,20 @@ static mounted_media floppy,sd_card;
 static spectrum_ui osd;
 static unsigned root_selected;
 static mk61_app_flow* app_flow;
+static spectrum_preferences preferences;
+static bool preferences_dirty;
+static bool exact_raster;
+enum { DEFAULT_MODEL=SPECTRUM_APP_PROFILE==3?SPECTRUM_P1024:SPECTRUM_APP_PROFILE==4?SPECTRUM_48:
+       SPECTRUM_HAS_PENTAGON?SPECTRUM_P512:SPECTRUM_128 };
 
 static bool model_available(unsigned model) {
+    if(model==SPECTRUM_TC2048) return SPECTRUM_HAS_TIMEX;
     return model==SPECTRUM_P512 || model==SPECTRUM_P1024?SPECTRUM_HAS_PENTAGON:SPECTRUM_HAS_SINCLAIR;
+}
+static bool needs_extended_video(void) {
+    return !SPECTRUM_HAS_EXTENDED_VIDEO &&
+        ((SPECTRUM_HAS_SINCLAIR && (machine.extensions&SPECTRUM_TIMEX)) ||
+         (SPECTRUM_HAS_PENTAGON && machine.memory && machine.memory->extended && (machine.memory->control&0x41)));
 }
 
 static bool switching_app(void) { return app_flow && app_flow->action==MK61_FLOW_NEXT; }
@@ -132,6 +145,7 @@ static bool raster_present(uint8_t* buffer,raster_output* raster) {
     return result!=0;
 }
 
+#if SPECTRUM_HAS_EXTENDED_VIDEO
 static uint32_t video_page(unsigned operation,unsigned page) {
     return services->call(MK61_SERVICE_COLOR_DISPLAY,operation,0,sizeof(page),&page);
 }
@@ -327,6 +341,7 @@ fallback:
     return true;
 }
 #endif
+#endif
 static bool external_clear(void* context,uint32_t at,uint32_t length) {
     (void)context;
     while(length) {
@@ -375,7 +390,7 @@ static const char* const root_items[]={"Start machine","Snapshot...","Beta Disk.
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         "Tape...","Save snapshot",
 #endif
-        "Exit"
+        SPECTRUM_HAS_EXTENDED_VIDEO?"Standard video...":"Video extensions...","Exit"
 };
 enum { ROOT_COUNT=sizeof(root_items)/sizeof(*root_items) };
 
@@ -436,9 +451,8 @@ static __attribute__((noinline)) uint32_t file_call(unsigned op,const char* path
     mk61_service_file_bytes r={path,out,offset,bytes};
     return services->call(MK61_SERVICE_FILE_BYTES,op,0,sizeof(r),&r);
 }
-static bool switch_app(unsigned model,uint32_t file_id,const char* path) {
-    if(!SPECTRUM_HAS_PENTAGON || !app_flow) return false;
-    const char* name="SINCLAIR.APP";
+static bool switch_to_app(const char* name,unsigned model,uint32_t file_id,const char* path) {
+    if(!app_flow) return false;
     uint32_t partner=file_call(MK61_FILE_BYTES_ID,name,NULL,0,0);
     if(!partner) {
         // Existing residents can resolve the sibling APP by its name and
@@ -460,6 +474,13 @@ static bool switch_app(unsigned model,uint32_t file_id,const char* path) {
         file_id==MK61_SERVICE_INVALID_ID?0:MK61_APP_FLOW_FILE_PHASE));
     return true;
 }
+static bool switch_app(unsigned model,uint32_t file_id,const char* path) {
+    const char* name=model==SPECTRUM_TC2048?"TIMEX.APP":
+        model==SPECTRUM_P512 || model==SPECTRUM_P1024?
+            (SPECTRUM_HAS_EXTENDED_VIDEO?"ZXVIDEO.APP":"SPECTRUM.APP"):
+            (SPECTRUM_HAS_EXTENDED_VIDEO?"TIMEX.APP":"SINCLAIR.APP");
+    return switch_to_app(name,model,file_id,path);
+}
 static __attribute__((noinline)) bool file_size(const char* path,uint32_t* size) {
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,path,&info,0,sizeof(info)) || info.directory) return false;
@@ -469,6 +490,19 @@ static bool read_source(void* path,uint32_t at,uint8_t* out,uint32_t bytes) {
     spectrum_sound_publish_before_io(&machine);
     const bool ok=file_call(MK61_FILE_BYTES_READ,path,out,at,bytes)!=0;
     mk61_api->service();return ok;
+}
+static const char* preferences_name(void) {
+    return SPECTRUM_APP_PROFILE==2?"SINCLAIR.CFG":"SPECTRUM.CFG";
+}
+static void load_preferences(void) {
+    preferences=(spectrum_preferences){DEFAULT_MODEL,15,0,SPECTRUM_AY,SPECTRUM_ABC,0,3};
+    preferences_dirty=false;
+    if(!SPECTRUM_HAS_PREFERENCES) return;
+    uint8_t bytes[SPECTRUM_PREFERENCES_BYTES];uint32_t size;
+    spectrum_preferences saved;
+    if(file_size(preferences_name(),&size) && size>=sizeof(bytes) &&
+       file_call(MK61_FILE_BYTES_READ,preferences_name(),bytes,0,sizeof(bytes)) &&
+       spectrum_preferences_decode(&saved,bytes) && model_available(saved.model)) preferences=saved;
 }
 static bool suffix(const char* name,const char* extension) {
     const unsigned n=(unsigned)strlen(name),k=(unsigned)strlen(extension);
@@ -582,7 +616,66 @@ static bool select_model(unsigned model) {
     stop_tape();
     spectrum_attach_memory(&machine,&bank_memory);
     if(model==SPECTRUM_48) machine.pentagon=false;
+    if(SPECTRUM_HAS_TIMEX && SPECTRUM_APP_PROFILE==4) machine.extensions|=SPECTRUM_TIMEX;
     spectrum_disk_reset(&machine);started=false;return true;
+}
+/* SD publication borrows the cache lease while the guest is paused. */
+static bool cache_workspace(mk61_service_lease* workspace,bool release) {
+    if(!banked_buffers) return true;
+    if(release) {
+        if(!spectrum_memory_flush_pages(&bank_memory) ||
+           !services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,workspace)) return false;
+        memset(bank_memory.page_data,0,WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES*sizeof(bank_memory.page_data[0]));
+    } else {
+        if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,WORK_CACHE_BYTES,workspace)) {
+            started=false;return false;
+        }
+        page_runs[0]=workspace->data;
+        for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
+            bank_memory.page_data[i]=page_runs[0]+i*SPECTRUM_CACHE_PAGE_BYTES;
+    }
+    spectrum_refresh_map(&machine);return true;
+}
+static int preferences_read(void* context,uint32_t offset,uint8_t* output,uint32_t size) {
+    if(offset>SPECTRUM_PREFERENCES_BYTES || size>SPECTRUM_PREFERENCES_BYTES-offset) return 0;
+    memcpy(output,(const uint8_t*)context+offset,size);return 1;
+}
+static bool replace_preferences(const uint8_t* bytes) {
+    uint32_t id;
+    if(app_flow) id=app_flow->current.file_id;
+    else {
+        id=file_call(MK61_FILE_BYTES_ID,SPECTRUM_APP_PROFILE==2?"SINCLAIR.APP":"SPECTRUM.APP",NULL,0,0);
+        if(!id) return false;
+        --id;
+    }
+    mk61_service_file file;
+    if(!services->call(MK61_SERVICE_FILE_ENTRY,0,id,0,&file)) return false;
+    mk61_service_write request={preferences_name(),bytes,SPECTRUM_PREFERENCES_BYTES,0};
+    (void)services->call(MK61_SERVICE_FILE_WRITE,file.parent,MK61_SERVICE_INVALID_ID,MK61_SERVICE_FILE_MK61_BINARY,&request);
+    // Publication precedes registry refresh, which classifies CFG as text.
+    // Verify the raw file even if that later registration rejected its bytes.
+    uint8_t saved[SPECTRUM_PREFERENCES_BYTES];uint32_t size;
+    return file_size(preferences_name(),&size) && size==sizeof(saved) &&
+        file_call(MK61_FILE_BYTES_READ,preferences_name(),saved,0,sizeof(saved)) && !memcmp(saved,bytes,sizeof(saved));
+}
+static bool save_preferences(mk61_service_lease* workspace) {
+    if(!SPECTRUM_HAS_PREFERENCES || !preferences_dirty) return true;
+    uint8_t bytes[SPECTRUM_PREFERENCES_BYTES];
+    spectrum_preferences_encode(&preferences,bytes);
+    if(!cache_workspace(workspace,true)) { message("Cannot save settings");return true; }
+    uint32_t size;
+    bool saved;
+    if(file_size(preferences_name(),&size))
+        saved=size>=sizeof(bytes)?file_call(MK61_FILE_BYTES_WRITE,preferences_name(),bytes,0,sizeof(bytes))!=0:
+            replace_preferences(bytes);
+    else {
+        mk61_service_write_source source={preferences_name(),bytes,preferences_read,sizeof(bytes),0};
+        saved=services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(source),&source)!=0;
+    }
+    if(!cache_workspace(workspace,false)) { message("Cannot restore cache");return false; }
+    if(saved) preferences_dirty=false;
+    else message("Cannot save settings");
+    return true;
 }
 #ifdef SPECTRUM_HIL_SNAPSHOT_ONLY
 /* A fixed-checkpoint timing probe needs no image mounting or SCL unpacker.
@@ -642,7 +735,10 @@ static bool mount_selected_media(unsigned mode) {
 }
 static void mount_media(unsigned mode) {
     if(!machine.memory) { message("PSRAM required");return; }
-    if(choose_file(mode==SPECTRUM_DISK_BETA?1:2)) (void)mount_selected_media(mode);
+    if(choose_file(mode==SPECTRUM_DISK_BETA?1:2) && mount_selected_media(mode)) {
+        if(mode==SPECTRUM_DISK_BETA) machine.disk.fdc.io.readonly=floppy.scl || (preferences.write_protect&mode);
+        else machine.disk.spi.io.readonly=(preferences.write_protect&mode)!=0;
+    }
 }
 
 static bool tape_index_read(void* context,uint32_t offset,uint8_t* out,uint32_t n) {
@@ -764,28 +860,15 @@ static __attribute__((noinline)) bool save_snapshot(mk61_service_lease* workspac
         mk61_service_file_info info;
         mk61_app_snprintf(services,name+prefix,256-prefix,"ZX%04u.SZX",n);
         if(file_call(MK61_FILE_BYTES_STAT,name,&info,0,sizeof(info))) continue;
-        // The CPU is paused. Spill the cache to PSRAM and let the SD journal
-        // use this contiguous lease until the snapshot is published.
-        if(banked_buffers) {
-            if(!spectrum_memory_flush_pages(&bank_memory) ||
-               !services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,workspace)) {
-                message("Cannot save snapshot");return true;
-            }
-            memset(bank_memory.page_data,0,WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES*sizeof(bank_memory.page_data[0]));
-            spectrum_refresh_map(&machine);
+        if(!cache_workspace(workspace,true)) {
+            message("Cannot save snapshot");return true;
         }
         spectrum_szx_writer writer;
         mk61_service_write_source request={name,&writer,spectrum_szx_read,spectrum_szx_save(&writer,&machine),0};
         const bool saved=request.size &&
             services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(request),&request)!=0;
-        if(banked_buffers) {
-            if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,WORK_CACHE_BYTES,workspace)) {
-                started=false;
-                message("Cannot restore cache");return false;
-            }
-            page_runs[0]=workspace->data;
-            for(unsigned i=0;i<WORK_CACHE_BYTES/SPECTRUM_CACHE_PAGE_BYTES;++i)
-                bank_memory.page_data[i]=page_runs[0]+i*SPECTRUM_CACHE_PAGE_BYTES;
+        if(!cache_workspace(workspace,false)) {
+            message("Cannot restore cache");return false;
         }
         if(saved) { status_event("SP STATE=SAVED\n");message(name); }
         else message("Cannot save snapshot");
@@ -815,11 +898,18 @@ static bool load_szx(const spectrum_source* source,uint32_t file_id) {
             error==SPECTRUM_MEDIA?"Mount original DivMMC image\nStart esxDOS for old SZX":"Cannot read snapshot");
         return false;
     }
+    if(needs_extended_video()) {
+        const char* name=spectrum_is_pentagon(&machine)?"ZXVIDEO.APP":"TIMEX.APP";
+        if(!switch_to_app(name,spectrum_model(&machine),file_id,snapshot_path)) {
+            started=false;message("Video extension APP missing");
+        }
+        return false;
+    }
     started=true;
     return true;
 }
 #endif
-static void settings(void) {
+static bool settings(mk61_service_lease* workspace) {
     unsigned selected=0;
     for(;;) {
         static const char* const joysticks[]={"Joystick: Kempston","Joystick: Sinclair 1","Joystick: Sinclair 2"};
@@ -839,10 +929,10 @@ static void settings(void) {
         char actions[15]="1234jwcsu";
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565)) {
-            if(SPECTRUM_HAS_SINCLAIR) {
+            if(SPECTRUM_HAS_TIMEX) {
                 actions[back]='v';labels[back++]=machine.extensions&SPECTRUM_TIMEX?"Timex video: On":"Timex video: Off";
             }
-            if(SPECTRUM_HAS_SINCLAIR && !(enabled&SPECTRUM_TIMEX) &&
+            if(SPECTRUM_HAS_RASTER && !(enabled&SPECTRUM_TIMEX) &&
                spectrum_model(&machine)==SPECTRUM_48 && external.handle) {
                 actions[back]='r';labels[back++]=exact_raster?"Raster: On":"Raster: Off";
             }
@@ -851,7 +941,15 @@ static void settings(void) {
         labels[back]="Back";
         memcpy(actions+back," di",4);
         const int choice=menu_pick("Options",labels,back+1,&selected,true,actions);
-        if(choice<0 || (unsigned)choice==back) return;
+        if(choice<0 || (unsigned)choice==back) {
+            if(SPECTRUM_HAS_PREFERENCES) {
+                const spectrum_preferences changed={preferences.model,(uint8_t)(machine.extensions&15),
+                    machine.joystick_mode,machine.sound_chip,machine.sound_layout,exact_raster,preferences.write_protect};
+                preferences_dirty|=memcmp(&preferences,&changed,sizeof(changed))!=0;
+                preferences=changed;
+            }
+            return save_preferences(workspace);
+        }
         const int c=actions[choice];
         if(c>='1' && c<='4') machine.extensions^=1U<<(c-'1');
         else if(c=='j' || c=='J') machine.joystick_mode=machine.joystick_mode==2?0:machine.joystick_mode+1;
@@ -859,7 +957,7 @@ static void settings(void) {
         else if(c=='s') spectrum_sound_configure(&machine,machine.sound_chip,
             machine.sound_layout==SPECTRUM_ACB?SPECTRUM_MONO:machine.sound_layout+1);
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        else if(SPECTRUM_HAS_SINCLAIR && c=='v') { machine.extensions^=SPECTRUM_TIMEX;machine.timex_mode=0; }
+        else if(SPECTRUM_HAS_TIMEX && c=='v') { machine.extensions^=SPECTRUM_TIMEX;machine.timex_mode=0; }
         else if(c=='r') exact_raster=!exact_raster;
 #endif
         else if(c=='d' || c=='D') mount_media(SPECTRUM_DISK_BETA);
@@ -868,6 +966,12 @@ static void settings(void) {
         else if(c=='w' || c=='W') {
             if(machine.disk.mode==1 && !floppy.scl) machine.disk.fdc.io.readonly=!machine.disk.fdc.io.readonly;
             else if(machine.disk.mode==2) machine.disk.spi.io.readonly=!machine.disk.spi.io.readonly;
+            if(SPECTRUM_HAS_PREFERENCES && (machine.disk.mode==2 || (machine.disk.mode==1 && !floppy.scl))) {
+                const unsigned mask=machine.disk.mode;
+                const bool protect=machine.disk.mode==1?machine.disk.fdc.io.readonly:machine.disk.spi.io.readonly;
+                preferences.write_protect=(uint8_t)((preferences.write_protect&~mask)|(protect?mask:0));
+                preferences_dirty=true;
+            }
         }
     }
 }
@@ -925,7 +1029,7 @@ static uint32_t guest_time_us(uint32_t cycles) {
     return spectrum_is_128(&machine)?cycles*10000u/35469u:cycles*2/7;
 }
 static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t* deadline
-#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
                        ,video_output* video,uint8_t* work,const char** error
 #endif
                        ) {
@@ -962,7 +1066,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
         // The resident millisecond delay already busy-pumps services.
         // Pump directly so it cannot carry us to the next millisecond.
         now=pacing_clock_us();
-#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // Z80 has produced this frame's sound events. Fit capture and strip
         // work here, using the longest observed step plus the service guard.
         if(video->active || video->pending) {
@@ -1085,16 +1189,16 @@ static __attribute__((noinline)) void emulate_session(void) {
         message("No audio stream");return;
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    const bool raster=SPECTRUM_HAS_SINCLAIR && exact_raster && spectrum_model(&machine)==SPECTRUM_48 &&
+    const bool raster=SPECTRUM_HAS_RASTER && exact_raster && spectrum_model(&machine)==SPECTRUM_48 &&
         !(machine.extensions&SPECTRUM_TIMEX) && external.handle &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
     if(audio_mode==2 && (spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
        (!machine.pentagon && (raster || tape->playing)))) prime_audio();
     spectrum_hicolor_changes changes;
-    if(SPECTRUM_HAS_SINCLAIR && (machine.extensions&SPECTRUM_TIMEX)) spectrum_hicolor_watch(&machine,&changes);
+    if(SPECTRUM_HAS_TIMEX && (machine.extensions&SPECTRUM_TIMEX)) spectrum_hicolor_watch(&machine,&changes);
 #if SPECTRUM_HAS_PENTAGON
     spectrum_pentagon_changes pentagon_changes;
-    if(spectrum_is_pentagon(&machine) && machine.memory && machine.memory->extended)
+    if(SPECTRUM_HAS_PENTAGON_VIDEO && spectrum_is_pentagon(&machine) && machine.memory && machine.memory->extended)
         spectrum_pentagon_watch(&machine,&pentagon_changes);
 #endif
 #endif
@@ -1112,9 +1216,11 @@ static __attribute__((noinline)) void emulate_session(void) {
     bool first_remote_frame=audio_mode==2;
     bool after_pace=false;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_EXTENDED_VIDEO
     video_output video={.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
 #if SPECTRUM_HAS_PENTAGON
     video.ready_guard_us=VIDEO_READY_GUARD_US;
+#endif
 #endif
     const unsigned present_budget=3;
     unsigned present_attempts=0;
@@ -1132,6 +1238,7 @@ static __attribute__((noinline)) void emulate_session(void) {
         }
         spectrum_run(&machine,2048);
         if(machine.memory && machine.memory->fault) goto memory_error;
+        if(needs_extended_video()) {error="Open this game in\nZXVIDEO.APP";break;}
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(tape && tape->fault) {tape->fault=false;error="Tape read failed";break;}
         if(tape->choices) break;
@@ -1165,12 +1272,14 @@ static __attribute__((noinline)) void emulate_session(void) {
                 }
                 goto paced;
             }
+#if SPECTRUM_HAS_EXTENDED_VIDEO
             if(!SPECTRUM_HAS_PENTAGON && video.active) goto paced;
             video.pending=spectrum_video_mode(&machine);
             if(video.active || video.pending) goto paced;
             if(SPECTRUM_HAS_PENTAGON && video.pages) video_begin(&video,0);
             video.mode=0;
             if(!SPECTRUM_HAS_PENTAGON) video.clear=true;
+#endif
 #endif
             uint16_t palette[64];for(unsigned i=0;i<64;++i) palette[i]=spectrum_palette(&machine,i);
             const uint32_t ready=services->call(MK61_SERVICE_COLOR_DISPLAY,MK61_COLOR_PALETTE64,0,sizeof(palette),palette);
@@ -1184,7 +1293,7 @@ static __attribute__((noinline)) void emulate_session(void) {
         }
 paced:
         if(!pace_frame(blocked,&keyboard_deadline,&deadline
-#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
                        ,&video,scratch.pixels,&error
 #endif
                        )) goto done;
@@ -1195,8 +1304,8 @@ memory_error:
     started=false;error="PSRAM I/O error";
 done:
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    if(SPECTRUM_HAS_SINCLAIR) spectrum_hicolor_watch(&machine,NULL);
-#if SPECTRUM_HAS_PENTAGON
+    if(SPECTRUM_HAS_TIMEX) spectrum_hicolor_watch(&machine,NULL);
+#if SPECTRUM_HAS_PENTAGON_VIDEO
     spectrum_pentagon_watch(&machine,NULL);
 #endif
     spectrum_raster_end(&machine);
@@ -1288,9 +1397,19 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
     if(!banked_buffers) spectrum_init(&machine,ram.data,rom.data);
     else { memset(&machine,0,sizeof(machine));machine.ram=guest_blocks[0];machine.rom=NULL;
         machine.extensions=SPECTRUM_TURBOSOUND|SPECTRUM_COVOX|SPECTRUM_SPECDRUM|SPECTRUM_ULAPLUS; }
-    spectrum_sound_configure(&machine,SPECTRUM_AY,SPECTRUM_ABC);
+    load_preferences();
+    machine.extensions=preferences.extensions;
+    machine.joystick_mode=preferences.joystick;
+    exact_raster=preferences.raster;
+    spectrum_sound_configure(&machine,preferences.chip,preferences.layout);
+    const bool remember_model=SPECTRUM_HAS_PREFERENCES && initial_model!=UINT32_MAX && file_id==MK61_SERVICE_INVALID_ID;
+    if(initial_model==UINT32_MAX) initial_model=preferences.model;
     if(!select_model(banked_buffers?initial_model:SPECTRUM_48)) {
         if(!select_model(SPECTRUM_48)) return 0;
+    }
+    if(remember_model && preferences.model!=spectrum_model(&machine)) {
+        preferences.model=(uint8_t)spectrum_model(&machine);preferences_dirty=true;
+        if(!save_preferences(&ram)) goto done;
     }
     if(file_id!=MK61_SERVICE_INVALID_ID) {
         if(!file_call(MK61_FILE_BYTES_PATH,NULL,snapshot_path,file_id,256)) {
@@ -1327,13 +1446,20 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             "ls"
 #endif
-            "q";
+            "vq";
         if(machine.disk.mode==SPECTRUM_DISK_DIVMMC) hotkeys[ROOT_DISK_OR_NMI]='n';
         const int choice=menu_pick("Spectrum",labels,ROOT_COUNT,&root_selected,false,hotkeys);
         const int c=choice<0?'q':choice==0?13:hotkeys[choice];
         if(escape(c) || c=='q' || c=='Q' || c==0x90) break;
         if(c=='h' || c=='H') { help();continue; }
-        if(c=='p' || c=='P') { settings();continue; }
+        if(c=='v') {
+            const bool pentagon=spectrum_is_pentagon(&machine);
+            const char* name=SPECTRUM_HAS_EXTENDED_VIDEO?(pentagon?"SPECTRUM.APP":"SINCLAIR.APP"):
+                pentagon?"ZXVIDEO.APP":"TIMEX.APP";
+            if(switch_to_app(name,spectrum_model(&machine),MK61_SERVICE_INVALID_ID,NULL)) goto done;
+            message("Companion APP missing");continue;
+        }
+        if(c=='p' || c=='P') { if(!settings(&ram)) break;continue; }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(c=='l') { tape_menu();continue; }
         if(c=='s') { if(!save_snapshot(&ram)) break;continue; }
@@ -1359,6 +1485,9 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
             }
             if(!select_model((unsigned)picked)) {
                 message("ROM or PSRAM not ready");(void)select_model(false);
+            } else if(SPECTRUM_HAS_PREFERENCES && preferences.model!=(unsigned)picked) {
+                preferences.model=(uint8_t)picked;preferences_dirty=true;
+                if(!save_preferences(&ram)) goto done;
             }
             continue;
         }
@@ -1401,10 +1530,9 @@ static int run_app(uint32_t file_id,unsigned initial_model) {
     for(unsigned i=0;i<2;++i)bank_tails[i]=tails[i];
     const int result=app_run(file_id,initial_model);active_machine=NULL;return result;
 }
-enum { DEFAULT_MODEL=SPECTRUM_HAS_PENTAGON?SPECTRUM_P512:SPECTRUM_128 };
-int main(void) { return run_app(MK61_SERVICE_INVALID_ID,DEFAULT_MODEL); }
+int main(void) { return run_app(MK61_SERVICE_INVALID_ID,UINT32_MAX); }
 uint32_t mk61_app_open_file(uint32_t file_id) {
-    return file_id>=MK61_SERVICE_INVALID_ID?MK61_APP_INVALID_FILE:(uint32_t)run_app(file_id,DEFAULT_MODEL);
+    return file_id>=MK61_SERVICE_INVALID_ID?MK61_APP_INVALID_FILE:(uint32_t)run_app(file_id,UINT32_MAX);
 }
 #if SPECTRUM_APP_PROFILE
 uint32_t mk61_app_file_flow(void) { return MK61_APP_FLOW_MAGIC; }
@@ -1412,7 +1540,7 @@ uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
     if(!mk61_app_flow_compatible(flow) || flow->context_size<2*sizeof(uint32_t)) return 0;
     const uint32_t* context=flow->context;
     const uint32_t file=flow->current.phase==MK61_APP_FLOW_FILE_PHASE?context[0]:MK61_SERVICE_INVALID_ID;
-    const unsigned model=context[1] && context[1]<=SPECTRUM_128+1?context[1]-1:DEFAULT_MODEL;
+    const unsigned model=context[1] && context[1]<=SPECTRUM_128+1?context[1]-1:UINT32_MAX;
     app_flow=flow;
     const int result=run_app(file,model);
     if(!switching_app()) mk61_app_flow_return(flow,(uint32_t)result,MK61_FLOW_OK);

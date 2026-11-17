@@ -11,8 +11,13 @@
 #ifndef SPECTRUM_APP_PROFILE
 #define SPECTRUM_APP_PROFILE 0
 #endif
-#define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1)
-#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE!=2)
+#define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1 && SPECTRUM_APP_PROFILE!=3)
+#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE!=2 && SPECTRUM_APP_PROFILE!=4)
+#define SPECTRUM_HAS_EXTENDED_VIDEO (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE>=3)
+#define SPECTRUM_HAS_PREFERENCES (SPECTRUM_APP_PROFILE<3)
+#define SPECTRUM_HAS_TIMEX (SPECTRUM_HAS_SINCLAIR && SPECTRUM_HAS_EXTENDED_VIDEO)
+#define SPECTRUM_HAS_PENTAGON_VIDEO (SPECTRUM_HAS_PENTAGON && SPECTRUM_HAS_EXTENDED_VIDEO)
+#define SPECTRUM_HAS_RASTER (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==2)
 
 #define SPECTRUM_RAM_BYTES 49152U
 #define SPECTRUM_ROM_BYTES 16384U
@@ -90,14 +95,14 @@ static inline unsigned spectrum_model(const spectrum* s) {
         spectrum_is_128(s)?SPECTRUM_128:SPECTRUM_48;
 }
 static inline unsigned spectrum_timex_mode(const spectrum* s) {
-    return SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
+    return SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
 }
 static inline bool spectrum_timex_supported(unsigned port) {
     const unsigned mode=port&7;
     return mode<=SPECTRUM_VIDEO_HICOLOR || mode==SPECTRUM_VIDEO_HIRES;
 }
 static inline unsigned spectrum_pentagon_video_mode(const spectrum* s) {
-    const unsigned mode=SPECTRUM_HAS_PENTAGON && s->memory && s->memory->extended?s->memory->control&0x41:0;
+    const unsigned mode=SPECTRUM_HAS_PENTAGON_VIDEO && s->memory && s->memory->extended?s->memory->control&0x41:0;
     return mode&1?SPECTRUM_VIDEO_16C:mode;
 }
 typedef struct {

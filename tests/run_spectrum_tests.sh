@@ -6,7 +6,7 @@ trap 'rm -rf "$build"' EXIT
 flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 app="$root/examples/portable-apps/SPECTRUM"
-media=("$app/tape.c" "$app/szx.c" "$app/pentagon_video.c" "$app/inflate.c")
+media=("$app/tape.c" "$app/szx.c" "$app/pentagon_video.c" "$app/inflate.c" "$app/preferences.c")
 python3 "$root/tests/spectrum_rom_storage_self_test.py"
 python3 "$root/tests/spectrum_m3_observer_self_test.py"
 clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
@@ -89,6 +89,28 @@ for index,bank in enumerate((5,2,0)):
 empty_scl=b'SINCLAIR\x00';(target/'OPEN.SCL').write_bytes(empty_scl+struct.pack('<I',sum(empty_scl)))
 (target/'BROKEN.z80').write_bytes(b'\xFF\x00\x80')
 shutil.copy2(target/'ESXDOS.img', target/'GAMES.img')
+# The normal file handler must route Timex and extended Pentagon snapshots.
+timex_header=bytearray(header);timex_header[6:8]=bytes(2)
+timex_extended=bytearray(54);struct.pack_into('<H',timex_extended,0,0x8000)
+timex_extended[2]=14;timex_extended[4]=6
+(target/'TIMEX.Z80').write_bytes(timex_header+struct.pack('<H',54)+timex_extended+b''.join(
+    struct.pack('<HB',0xffff,page)+snapshot[27+i*16384:27+(i+1)*16384] for i,page in enumerate((8,4,5))))
+def screen_snapshot(name,model,mode,banks):
+    cpu=bytearray(37);struct.pack_into('<HH',cpu,20,0xfffe,0x8001);cpu[28]=1;cpu[34]=2
+    ula=bytearray(8);ula[2]=mode if model==14 else 0
+    chunks=[(b'Z80R',cpu),(b'SPCR',ula)]
+    if model!=14:chunks.append((b'SCLD',bytes([0,mode])))
+    for bank in banks:
+        memory=bytearray(16384)
+        if bank==2:memory[0]=0x76
+        if bank==5:memory[:6144]=bytes([0x55])*6144
+        chunks.append((b'RAMP',bytes([0,0,bank])+memory))
+    (target/name).write_bytes(b'ZXST'+bytes([1,5,model,0])+b''.join(
+        tag+struct.pack('<I',len(body))+body for tag,body in chunks))
+screen_snapshot('HIRES.SZX',8,6,(5,2,0))
+screen_snapshot('HICOLOR.SZX',1,2,(5,2,0))
+screen_snapshot('WIDE.SZX',14,64,range(64))
+screen_snapshot('COLOR16.SZX',14,1,range(64))
 PY
     clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
         -I"$root/sdk/portable/include" -I"$root/code" \
@@ -108,13 +130,44 @@ PY
     done
     SPECTRUM_REMOTE_AUDIO=1 "$build/app" "$build/app-assets"
     SPECTRUM_REMOTE_AUDIO=1 SPECTRUM_OPEN_FILE=DEMO128.sna "$build/app" "$build/app-assets"
-    for profile in 1 2; do
+    for profile in 1 2 3 4; do
         clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE="$profile" \
             -I"$root/sdk/portable/include" -I"$root/code" \
             "$root/tests/spectrum_app_self_test.c" "$app/spectrum.c" "$app/memory.c" \
             "$app/peripherals.c" "$app/fdc.c" "$app/spi.c" "$app/mapper.c" "$app/media.c" "${media[@]}" \
             "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/app-profile"
-        SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE=OPEN128.Z80 "$build/app-profile" "$build/app-assets"
+        if [[ "$profile" == 1 || "$profile" == 3 ]]; then
+            target=SINCLAIR.APP
+            if [[ "$profile" == 3 ]]; then target=TIMEX.APP; fi
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET="$target" SPECTRUM_FLOW_MODEL=3 \
+                SPECTRUM_OPEN_FILE=OPEN128.Z80 "$build/app-profile" "$build/app-assets"
+        else
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE=OPEN128.Z80 "$build/app-profile" "$build/app-assets"
+        fi
+        if [[ "$profile" == 1 || "$profile" == 2 ]]; then
+            for phase in save restore fail bad save foreign save short handoff; do
+                SPECTRUM_PREFERENCES_PHASE="$phase" "$build/app-profile" "$build/app-assets"
+            done
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET=TIMEX.APP SPECTRUM_FLOW_MODEL=0 \
+                SPECTRUM_OPEN_FILE=TIMEX.Z80 "$build/app-profile" "$build/app-assets"
+        fi
+        if [[ "$profile" == 1 ]]; then
+            for selected in WIDE.SZX COLOR16.SZX; do
+                SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET=ZXVIDEO.APP SPECTRUM_FLOW_MODEL=2 \
+                    SPECTRUM_OPEN_FILE="$selected" "$build/app-profile" "$build/app-assets"
+            done
+        elif [[ "$profile" == 2 ]]; then
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET=TIMEX.APP SPECTRUM_FLOW_MODEL=0 \
+                SPECTRUM_OPEN_FILE=HICOLOR.SZX "$build/app-profile" "$build/app-assets"
+        elif [[ "$profile" == 3 ]]; then
+            for selected in WIDE.SZX COLOR16.SZX; do
+                SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE="$selected" "$build/app-profile" "$build/app-assets"
+            done
+        else
+            for selected in TIMEX.Z80 HIRES.SZX HICOLOR.SZX; do
+                SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE="$selected" "$build/app-profile" "$build/app-assets"
+            done
+        fi
     done
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \

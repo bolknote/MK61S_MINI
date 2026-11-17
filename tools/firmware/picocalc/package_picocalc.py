@@ -86,7 +86,7 @@ def package(directory, output, disk):
                   if record['package']==folder} for name,folder in PICO_APP_FOLDERS.items()}
     if assets['MP3']!=set(MP3_SD_FILES):
         raise ValueError('incomplete MP3 asset manifest')
-    if not {'48.rom','128-0.rom','128-1.rom','AY.S3M','SINCLAIR.APP'}<=assets['SPECTRUM']:
+    if not {'48.rom','128-0.rom','128-1.rom','AY.S3M','SINCLAIR.APP','ZXVIDEO.APP','TIMEX.APP'}<=assets['SPECTRUM']:
         raise ValueError('incomplete Spectrum asset manifest')
     (directory/'README.txt').write_text(README)
     shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')

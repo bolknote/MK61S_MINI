@@ -154,7 +154,8 @@ def prepare(args):
                 raise ValueError('Changed resident source in firmware archive: '+path)
     artifacts = [fw / (TARGET + suffix) for suffix in ('.bin', '.uf2', '.elf')]
     artifacts += [southbridge_image, southbridge_out / 'manifest.json']
-    artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/SINCLAIR.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
+    artifacts += [out / p for p in ('SPECTRUM/SPECTRUM.APP', 'SPECTRUM/SINCLAIR.APP', 'SPECTRUM/ZXVIDEO.APP',
+                                  'SPECTRUM/TIMEX.APP', 'SPECTRUM/AY.S3M', 'probe/app/S3SOUND.APP',
                                    'SPECTRUM/48.rom', 'SPECTRUM/128-0.rom', 'SPECTRUM/128-1.rom',
                                    'remote/app/S3GAME.APP', 'remote/app/AY.S3M', 'remote/app/48.rom',
                                    'remote/app/128-0.rom', 'remote/app/128-1.rom',

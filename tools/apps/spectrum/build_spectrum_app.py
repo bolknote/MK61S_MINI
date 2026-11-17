@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the Sinclair and Pentagon PicoCalc APPs and prepare their shared SD folder."""
+"""Build the Sinclair, Pentagon and extended-video APPs with their shared SD folder."""
 
 import sys as _repo_sys
 from pathlib import Path as _RepoPath
@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SOURCES = ["examples/portable-apps/SPECTRUM/main.c",
            "examples/portable-apps/SPECTRUM/spectrum.c", "examples/portable-apps/SPECTRUM/memory.c",
            "examples/portable-apps/SPECTRUM/peripherals.c",
+           "examples/portable-apps/SPECTRUM/preferences.c",
            "examples/portable-apps/SPECTRUM/fdc.c", "examples/portable-apps/SPECTRUM/spi.c",
            "examples/portable-apps/SPECTRUM/mapper.c",
            "examples/portable-apps/SPECTRUM/media.c",
@@ -119,13 +120,16 @@ def main():
                "--arm-toolchain-bin", str(compiler_bin(args.toolchain))]
     for source in SOURCES:
         base_command += ["--source", str(ROOT / source)]
-    profiles = (("SPECTRUM", 1, args.build_dir), ("SINCLAIR", 2, args.build_dir / "sinclair"))
+    profiles = (("SPECTRUM", 1, args.build_dir), ("SINCLAIR", 2, args.build_dir / "sinclair"),
+                ("ZXVIDEO", 3, args.build_dir / "zxvideo"), ("TIMEX", 4, args.build_dir / "timex"))
     for name, profile, directory in profiles:
         command = base_command + ["--name", name, "--define", f"SPECTRUM_APP_PROFILE={profile}",
                                   "--output-dir", str(directory)]
         if name == "SPECTRUM":
-            command += ["--handled-magic", "Z1", "--define", "Z80_NO_WAIT_STATES"]
-        else:
+            command += ["--handled-magic", "Z1"]
+        if profile in (1,3):
+            command += ["--define", "Z80_NO_WAIT_STATES"]
+        if profile in (2,4):
             # Keeping parameters intact produces a smaller Thumb-1 image.
             command.append("--no-ipa-sra")
         subprocess.run(command, check=True)
@@ -156,6 +160,10 @@ def main():
     report["app_sha256"] = hashlib.sha256((args.output_dir / "SPECTRUM.APP").read_bytes()).hexdigest()
     report["sinclair_app"] = json.loads((profiles[1][2] / "SINCLAIR.json").read_text())
     report["sinclair_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "SINCLAIR.APP").read_bytes()).hexdigest()
+    report["video_app"] = json.loads((profiles[2][2] / "ZXVIDEO.json").read_text())
+    report["video_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "ZXVIDEO.APP").read_bytes()).hexdigest()
+    report["timex_app"] = json.loads((profiles[3][2] / "TIMEX.json").read_text())
+    report["timex_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "TIMEX.APP").read_bytes()).hexdigest()
     inputs = sorted(set(SOURCES) | {
         str(p.relative_to(ROOT)) for folder in ("examples/portable-apps/SPECTRUM", "third_party/z80", "third_party/emu2149")
         for p in (ROOT / folder).glob("*.h")})

@@ -72,7 +72,8 @@ class PackageTests(unittest.TestCase):
                 for name in APPS:
                     relative=f'{devices.get(name,"Programs/Examples")}/{name}.APP'
                     self.assertEqual(reader.read(disk+relative),(target/'apps'/(name+'.APP')).read_bytes())
-                expected=['Disk/Programs/Spectrum/SPECTRUM.APP','Disk/Programs/Spectrum/SINCLAIR.APP','Disk/Programs/Spectrum/48.rom',
+                expected=['Disk/Programs/Spectrum/SPECTRUM.APP','Disk/Programs/Spectrum/SINCLAIR.APP',
+                    'Disk/Programs/Spectrum/ZXVIDEO.APP','Disk/Programs/Spectrum/TIMEX.APP','Disk/Programs/Spectrum/48.rom',
                     'Disk/Programs/MP3/MP3.APP','Disk/Programs/MP3/RECORD.LP',
                     'Disk/Programs/MP3/CASSETTE.TV','Disk/Programs/MP3/REEL.TV',
                     'Disk/Programs/Examples/PATTERN.wbmp','Disk/Programs/Examples/Sheets/BUDGET.mks',

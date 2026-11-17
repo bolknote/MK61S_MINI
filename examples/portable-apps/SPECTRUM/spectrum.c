@@ -15,7 +15,7 @@ static __attribute__((noinline)) void watch_write_window(z80* z,unsigned window)
     for(unsigned i=0;i<6;++i)pages[i]=pages[i+8]=NULL;
 }
 #endif
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_PENTAGON_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static void pentagon_watch_map(spectrum* s,spectrum_pentagon_changes* changes) {
     const unsigned mode=spectrum_pentagon_video_mode(s);
     changes->windows=0;
@@ -95,7 +95,7 @@ void spectrum_refresh_map(spectrum* s) {
         }
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    if(SPECTRUM_HAS_SINCLAIR && s->hicolor) {
+    if(SPECTRUM_HAS_TIMEX && s->hicolor) {
         unsigned windows=0;
         const unsigned mode=spectrum_timex_mode(s);
         if((mode==SPECTRUM_VIDEO_HICOLOR || mode==SPECTRUM_VIDEO_HIRES) && !spectrum_is_pentagon(s)) {
@@ -111,7 +111,7 @@ void spectrum_refresh_map(spectrum* s) {
         s->hicolor->windows=(uint8_t)windows;
     }
 #endif
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_PENTAGON_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     if(s->pentagon_video) pentagon_watch_map(s,s->pentagon_video);
 #endif
 }
@@ -128,7 +128,7 @@ void spectrum_hicolor_dirty(spectrum_hicolor_changes* changes,unsigned offset) {
 }
 #endif
 
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_PENTAGON_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 void spectrum_pentagon_watch(spectrum* s,spectrum_pentagon_changes* changes) {
     if(changes) *changes=(spectrum_pentagon_changes){0};
     if(changes || s->pentagon_video) {s->pentagon_video=changes;spectrum_refresh_map(s);}
@@ -154,7 +154,7 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     const unsigned offset=address&8191u;
-    if(SPECTRUM_HAS_SINCLAIR && s->hicolor && (s->hicolor->windows&(1u<<(address>>14))) &&
+    if(SPECTRUM_HAS_TIMEX && s->hicolor && (s->hicolor->windows&(1u<<(address>>14))) &&
        offset<SPECTRUM_BITMAP_BYTES) {
         uint8_t* const cell=(s->memory?s->memory->cache:s->ram)+(address&16383u);
         if(*cell!=value) {*cell=value;spectrum_hicolor_dirty(s->hicolor,offset);}
@@ -163,7 +163,7 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
 #endif
     if(!s->memory) {s->ram[address-0x4000]=value;return;}
     uint8_t* const cell=spectrum_memory_byte(s->memory,address,true);
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_PENTAGON_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     spectrum_pentagon_changes* changes=s->pentagon_video;
     if(changes && (changes->windows&(1u<<(address>>14)))) {
         if(*cell!=value) pentagon_dirty(changes,address>=0xc000?changes->upper:5,address&16383u);
@@ -210,7 +210,7 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     }
     if((s->extensions&SPECTRUM_ULAPLUS) && port==0xFF3B)
         return (s->ulaplus_select&64)?s->ulaplus_mode:s->ulaplus_palette[s->ulaplus_select&63];
-    if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) return s->timex_mode;
+    if(SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) return s->timex_mode;
     if((port&0xC002)==0xC000) {
         PSG* ay=s->sound.selected?&s->ay2:&s->ay;
         const uint8_t* regs=s->sound.asynchronous?s->sound.regs[s->sound.selected]:ay->reg;
@@ -247,7 +247,7 @@ static uint16_t ulaplus_color(unsigned grb) {
     const unsigned blue=grb&3,b=(blue<<1)|(blue?1:0);
     return (uint16_t)((((r<<2)|(r>>1))<<11)|(((g<<3)|g)<<5)|((b<<2)|(b>>1)));
 }
-#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { RASTER_START=14336-32*224-16, RASTER_COLUMNS=40, RASTER_ROWS=256,
        RASTER_CELLS=SPECTRUM_RASTER_CELLS };
 
@@ -335,6 +335,7 @@ void spectrum_raster_begin(spectrum* s,uint8_t* b,void* c,bool (*store)(void*,un
     (void)s;(void)b;(void)c;(void)store;
 }
 void spectrum_raster_end(spectrum* s) { (void)s; }
+static inline void raster_until(spectrum* s,uint32_t cycles) { (void)s;(void)cycles; }
 #endif
 static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     spectrum* s=cpu->userdata;
@@ -358,11 +359,11 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
 #endif
         (void)spectrum_memory_page(s->memory,value);
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        if(SPECTRUM_HAS_SINCLAIR && s->hicolor && ((s->memory->paging^previous)&8)) s->hicolor->repaint=true;
+        if(SPECTRUM_HAS_TIMEX && s->hicolor && ((s->memory->paging^previous)&8)) s->hicolor->repaint=true;
 #endif
         spectrum_refresh_map(s);
     }
-    if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) {
+    if(SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) {
         const unsigned previous=s->timex_mode;
         s->timex_mode=value;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
