@@ -9,6 +9,11 @@
 #define AW_VIDEO_PAGE_BYTES (AW_VIDEO_STRIDE * AW_VIDEO_HEIGHT)
 #define AW_VIDEO_INTERP_SLOTS 32u
 #define AW_VIDEO_PAGE3_PACKED_BYTES 8192u
+/* The shipping image retains five resource-cache pages within its SRAM
+ * budget by omitting this optional codec. Comparison builds can enable it. */
+#ifndef AW_VIDEO_PACKED_CACHE
+#define AW_VIDEO_PACKED_CACHE 0
+#endif
 #define AW_VIDEO_BAND_ROWS 8u
 #define AW_VIDEO_BANDS (AW_VIDEO_HEIGHT / AW_VIDEO_BAND_ROWS)
 
@@ -26,6 +31,7 @@ typedef struct {
     uint32_t page_base, shape_base, shape_size;
     uint16_t palette[16], interp[AW_VIDEO_INTERP_SLOTS];
     uint8_t draw_page, front_page, back_page, resident_page;
+    uint8_t page_scroll[4]; /* Circular row displacement carried by page copies. */
     bool resident_valid, dirty, fault;
     uint8_t *spare;
     uint8_t spare_page;
@@ -53,6 +59,9 @@ void aw_video_track_bands(aw_video *v, aw_video_bands *bands);
 const uint32_t *aw_video_band_identities(const aw_video *v);
 bool aw_video_flush(aw_video *v);
 bool aw_video_select(aw_video *v, uint8_t page);
+/* Select a drawing target without loading bytes that the next operation may
+ * replace completely. Drawing and presentation make the page resident. */
+bool aw_video_set_draw_page(aw_video *v, uint8_t page);
 bool aw_video_fill(aw_video *v, uint8_t page, uint8_t color);
 bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll);
 bool aw_video_bitmap(aw_video *v, uint32_t source, uint32_t size);

@@ -169,7 +169,7 @@ static bool run_thread(aw_vm *v) {
             }
             break;
         }
-        case 0x0D: if (!aw_video_select(v->video, byte(v))) return !(v->fault = true); break;
+        case 0x0D: if (!aw_video_set_draw_page(v->video, byte(v))) return !(v->fault = true); break;
         case 0x0E: a = byte(v); b = byte(v); if (!aw_video_fill(v->video, a, b)) return !(v->fault = true); break;
         case 0x0F: a = byte(v); b = byte(v); if (!aw_video_copy(v->video, a, b, v->vars[0xF9])) return !(v->fault = true); break;
         case 0x10: {

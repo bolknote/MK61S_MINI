@@ -27,6 +27,9 @@ static int16_t *pending;
 static unsigned pending_at, pending_count;
 static uint32_t next_keys, next_audio, last_frame;
 static bool audio_open, first_strip, pump_failed, compact_ready, pages_ready;
+static bool scroll_ready, scroll_disabled, pages_available;
+static unsigned scroll_offset;
+static int16_t previous_shake;
 static void pump(void *ctx);
 
 static bool acquire_direct(mk61_service_buffer *buffer, unsigned bytes) {
@@ -170,7 +173,7 @@ static bool wait_before_storm(void *ctx) { return wait_for_frame_lead(ctx, AW_ST
 static bool frame_wait(void *ctx, unsigned slices) {
     last_frame = aw_frame_deadline(last_frame, mk61_api->millis_ms(), slices);
     /* Two-page output can prepare the image before its display deadline. */
-    return pages_ready ? !input.quit && !pump_failed : wait_for_frame(ctx);
+    return pages_ready || scroll_ready ? !input.quit && !pump_failed : wait_for_frame(ctx);
 }
 static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
                          const uint8_t *pixels, const uint16_t *palette, bool clear) {
@@ -239,6 +242,28 @@ static bool end_pages(void) {
         pump(NULL);
     }
 }
+static unsigned scroll_control(unsigned operation, unsigned bytes, void *request) {
+    for (;;) {
+        const unsigned result = services->call(MK61_SERVICE_COLOR_DISPLAY, operation, 0, bytes, request);
+        if (result != 2 || input.quit || pump_failed) return result == 2 ? 0 : result;
+        pump(NULL);
+    }
+}
+static bool restore_pages(void) {
+    compact_display->valid = false;
+    if (!pages_available || !aw_display_pages_init(pages_display, compact_display, pages_display->second.external_base))
+        return false;
+    mk61_service_color_pages config = {60, AW_VIDEO_HEIGHT};
+    return scroll_control(MK61_COLOR_PAGES_BEGIN_V2, sizeof(config), &config) == 1;
+}
+static bool end_scroll(void) {
+    if (scroll_control(MK61_COLOR_END, 0, NULL) != 1) return false;
+    uint32_t spi_hz = 24000000;
+    (void)services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ, 0, sizeof(spi_hz), &spi_hz);
+    scroll_ready = false;
+    compact_display->valid = false;
+    return true;
+}
 static bool present_pages(void *ctx, const uint8_t *pixels, const uint16_t *palette,
                           const uint32_t *identities, unsigned lead_ms) {
     const aw_display_wait_fn wait = lead_ms ? wait_before_storm : wait_for_frame;
@@ -248,10 +273,40 @@ static bool present_pages(void *ctx, const uint8_t *pixels, const uint16_t *pale
     return !lead_ms || page_select(ctx, pages_display->visible);
 }
 static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
+    const bool intro = vm->part == AW_STORM_PART;
+    /* Other parts can overwrite either LCD page while the intro is paused. */
+    if (!intro && storm->at) storm->ready = false;
+    const bool gameplay = vm->part >= AW_VM_FIRST_PART + 2;
+    if (scroll_ready && !gameplay) {
+        if (!end_scroll()) return false;
+        pages_ready = restore_pages();
+    }
+    if (gameplay && compact_ready && !scroll_ready && !scroll_disabled) {
+        if (pages_ready && !end_pages()) return false;
+        pages_ready = false;
+        compact_display->valid = false;
+        scroll_ready = true; scroll_offset = 0; previous_shake = 0;
+    }
+    if (scroll_ready) {
+        const int shake = video->page_scroll[video->front_page];
+        unsigned shift = previous_shake + AW_VIDEO_HEIGHT - shake;
+        if (shift >= AW_VIDEO_HEIGHT) shift -= AW_VIDEO_HEIGHT;
+        const unsigned offset = (scroll_offset + shift) % AW_VIDEO_HEIGHT;
+        mk61_service_color_scroll request = {60, AW_VIDEO_HEIGHT, scroll_offset, offset};
+        const unsigned result = scroll_control(MK61_COLOR_SCROLL_BEGIN, sizeof(request), &request);
+        if (result == 1 || result == 3) {
+            if (result == 3) compact_display->valid = false;
+            if (!aw_display_compact_present_scrolled(compact_display, pixels, palette, (unsigned)shift, present_rect, NULL) ||
+                !wait_for_frame(NULL) || scroll_control(MK61_COLOR_SCROLL_END, 0, NULL) != 1) return false;
+            previous_shake = (int16_t)shake;
+            scroll_offset = offset;
+            return !input.quit && !pump_failed;
+        }
+        if (!end_scroll()) return false;
+        scroll_disabled = true;
+        pages_ready = restore_pages();
+    }
     if (pages_ready) {
-        const bool intro = vm->part == AW_STORM_PART;
-        /* Other parts can overwrite either LCD page while the intro is paused. */
-        if (!intro && storm->at) storm->ready = false;
         const uint32_t *identities = aw_video_band_identities(video);
         const bool shown = storm->ready && intro
             ? aw_storm_present_intro(storm, pages_display, pixels, palette, identities,
@@ -266,6 +321,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     }
     if (input.quit || pump_failed) return false;
     if (compact_ready) {
+        if (!wait_for_frame(ctx)) return false;
         return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL) &&
             !input.quit && !pump_failed;
     }
@@ -301,6 +357,7 @@ int main(void) {
     aw_video video_state; video = &video_state;
     aw_audio audio_state; audio = &audio_state;
     aw_vm vm_state = {0}; vm = &vm_state; pages_ready = false;
+    scroll_ready = scroll_disabled = pages_available = false;
     aw_display_compact compact_state; compact_display = &compact_state;
     aw_display_pages pages_state; pages_display = &pages_state;
     aw_display_storm storm_state = {0}; storm = &storm_state;
@@ -414,6 +471,7 @@ int main(void) {
                 if (result == 1) {
                     aw_video_track_bands(video, &band_state);
                     pages_ready = true;
+                    pages_available = true;
                     break;
                 }
                 if (result != 2 || input.quit || pump_failed) break;

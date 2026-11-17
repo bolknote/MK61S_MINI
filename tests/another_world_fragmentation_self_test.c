@@ -15,7 +15,7 @@ static unsigned unexpected_extra_acquisitions;
 typedef struct { unsigned at, size; bool used; } arena_block;
 typedef struct { unsigned count; bool resident_allocated; arena_block blocks[32]; } arena_state;
 static arena_state arena;
-static _Alignas(8) uint8_t arena_bytes[75000];
+static _Alignas(8) uint8_t arena_bytes[109480];
 static bool pair_granted, background_single_granted, background_head_granted, background_tail_granted, cold_audio;
 static void *audio_allocation;
 
@@ -149,15 +149,17 @@ static const void *query(uint32_t id, uint32_t version) {
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION ? &services : NULL;
 }
 int main(int argc, char **argv) {
-    if (argc < 3 || argc > 5 || (argc == 5 && strcmp(argv[4], "cold") && strcmp(argv[4], "warm"))) {
-        fprintf(stderr, "usage: %s DATA_DIR STATE_FILE [IMAGE_GROWTH [cold|warm]]\n", argv[0]); return 2;
+    if (argc < 3 || argc > 5 || (argc == 5 && strcmp(argv[4], "cold") && strcmp(argv[4], "warm") && strcmp(argv[4], "tight"))) {
+        fprintf(stderr, "usage: %s DATA_DIR STATE_FILE [IMAGE_GROWTH [cold|warm|tight]]\n", argv[0]); return 2;
     }
-    const unsigned growth = argc >= 4 ? (unsigned)strtoul(argv[3], NULL, 10) : 0;
+    const long growth = argc >= 4 ? strtol(argv[3], NULL, 10) : 0;
     const bool warm = argc == 5 && !strcmp(argv[4], "warm");
+    const bool tight = argc == 5 && !strcmp(argv[4], "tight");
     cold_audio = argc == 5;
-    if (growth > 2600 || (warm && growth < 1600)) return 2;
-    if ((!cold_audio && growth > 1000) ||
-        (cold_audio && 73344 + growth - (warm ? 1600 : 0) > sizeof(arena_bytes))) return 2;
+    if (tight) {
+        if (growth <= -41124 || growth >= 66596) return 2;
+    } else if (growth < 0 || growth > 2600 || (warm && growth < 1600) ||
+               (!cold_audio && growth > 1000)) return 2;
     directory = argv[1];
     FILE *state = fopen(argv[2], "rb");
     if (state) {
@@ -167,7 +169,16 @@ int main(int argc, char **argv) {
         /* Model observed free blocks after the APP image is loaded: there is
          * enough total RAM, but a resident allocation separates two holes. */
         arena.count = 3; arena.resident_allocated = true;
-        if (cold_audio) {
+        if (tight) {
+            /* Resident 5CD0685C has 109480 bytes. The installed 41124-byte
+             * image leaves 408 bytes after two frames, PCM and the resident
+             * pool/cache. Reserve those measured overheads before starting. */
+            arena.count = 1;
+            const unsigned available = (unsigned)(109480 - 41124 - growth - 736 - 1024);
+            /* Keep exercising the tight layout when a smaller APP leaves
+             * extra memory for other resident allocations. */
+            arena.blocks[0] = (arena_block){0, available < 66568 ? available : 66568, false};
+        } else if (cold_audio) {
             /* Cold Pico: before audio, the 64 KB frame leaves free holes of
              * 3544 and 5768 bytes. growth is bytes reclaimed from the image. */
             arena.blocks[0] = (arena_block){0, 3544, false};
@@ -184,7 +195,9 @@ int main(int argc, char **argv) {
     arena_state saved = arena;
     assert(arena_allocate(2 * AW_VIDEO_PAGE_BYTES));
     assert(arena_allocate(cold_audio ? 2144 : 1064)); /* Audio starts before the cache reservation. */
-    if (cold_audio) {
+    if (tight) {
+        assert(!arena_allocate(6144) && !arena_allocate(4096) && !arena_allocate(2048));
+    } else if (cold_audio) {
         assert(arena_allocate(6144));
     } else {
         assert(!arena_allocate(6144)); /* A single cache block does not fit. */
@@ -199,10 +212,11 @@ int main(int argc, char **argv) {
     assert(presents >= 30 && audio_samples > 0 && pair_granted &&
            !unexpected_extra_acquisitions && ended && !graphics &&
            !buffers[1] && !buffers[2] && !buffers[3] && !buffers[4]);
-    if (cold_audio) assert(releases == 3 && background_single_granted);
+    if (tight) assert(releases == 2 && !background_single_granted && !background_head_granted && !background_tail_granted);
+    else if (cold_audio) assert(releases == 3 && background_single_granted);
     else assert(releases == 4 && background_head_granted && background_tail_granted);
     state = fopen(argv[2], "wb"); assert(state && fwrite(&arena, sizeof(arena), 1, state) == 1); fclose(state);
-    printf("Fragmented-heap launch passed: %u display strips, %u image bytes, %s background cache active\n",
-           presents, growth, cold_audio ? "contiguous" : "split");
+    printf("Fragmented-heap launch passed: %u display strips, %ld image bytes, background %s\n",
+           presents, growth, tight ? "unavailable" : cold_audio ? "contiguous" : "split");
     return 0;
 }

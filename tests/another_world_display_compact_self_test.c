@@ -77,7 +77,43 @@ static void run(unsigned capacity, bool shared_scratch) {
     if (capacity==400) assert(d.external);
     free(store); if (!shared_scratch) free(scratch); free(p); free(previous); free(frame);
 }
+static void scrolled(unsigned capacity) {
+    uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *previous = malloc(capacity);
+    uint8_t *store = calloc(1, AW_VIDEO_PAGE_BYTES), *old_frame = malloc(AW_VIDEO_PAGE_BYTES);
+    panel *p = calloc(1, sizeof(*p));
+    uint16_t *rotated = malloc(sizeof(p->pixels));
+    assert(frame && previous && store && old_frame && p && rotated);
+    aw_assets a = {0}; a.capacity = AW_VIDEO_PAGE_BYTES; a.ctx = store; a.store_read = rd; a.store_write = wr;
+    aw_display_compact d;
+    assert(aw_display_compact_init(&d, &a, 0, previous, capacity, previous, capacity));
+    uint16_t palette[16];
+    for (unsigned n = 0; n < 16; ++n) palette[n] = (uint16_t)(n * 0x1111);
+    uint32_t random = 17;
+    for (unsigned step = 0; step < 150; ++step) {
+        const unsigned shifts[] = {0, 1, 199, 2, 198, 17, 183, 99, 101};
+        const unsigned shift = shifts[step % 9];
+        const bool only_scroll = step % 10 == 1 && step % 31 != 0;
+        if (only_scroll) memcpy(old_frame, frame, AW_VIDEO_PAGE_BYTES);
+        const unsigned calls = p->calls;
+        for (unsigned y = 0; y < AW_VIDEO_HEIGHT; ++y) {
+            memcpy(rotated + y * 320, p->pixels + ((y + shift) % AW_VIDEO_HEIGHT) * 320, 640);
+            for (unsigned x = 0; x < AW_VIDEO_STRIDE; ++x)
+                frame[y * AW_VIDEO_STRIDE + x] = only_scroll ? old_frame[((y + shift) % AW_VIDEO_HEIGHT) * AW_VIDEO_STRIDE + x]
+                    : step < 75 ? (uint8_t)((y / 4 + x / 8 + step) * 17u)
+                    : (uint8_t)(random32(&random) >> 24);
+        }
+        memcpy(p->pixels, rotated, sizeof(p->pixels));
+        if (step % 31 == 0) palette[step % 16] ^= 0x421;
+        assert(aw_display_compact_present_scrolled(&d, frame, palette, shift, send_rect, p));
+        equal(p, frame, palette);
+        if (only_scroll) assert(p->calls == calls);
+    }
+    assert(d.external);
+    assert(!aw_display_compact_present_scrolled(&d, frame, palette, AW_VIDEO_HEIGHT, send_rect, p));
+    free(rotated); free(p); free(old_frame); free(store); free(previous); free(frame);
+}
 int main(void) {
     run(12800, false); run(400, false); run(12800, true); run(3200, true);
+    scrolled(12800); scrolled(3200);
     puts("Another World compact display tests passed"); return 0;
 }

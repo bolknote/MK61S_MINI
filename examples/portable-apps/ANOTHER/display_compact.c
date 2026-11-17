@@ -198,7 +198,7 @@ static bool read_band(aw_display_compact *d, unsigned band) {
 
 static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                     aw_display_rect_fn present, aw_display_wait_fn wait, void *ctx,
-                    bool banded, uint32_t known, uint32_t *dirty) {
+                    bool banded, unsigned shift, uint32_t known, uint32_t *dirty) {
     if (!d || !pixels || !palette || !present || pixels == d->previous || pixels == d->scratch)
         return false;
     const bool full = !d->valid || memcmp(d->palette, palette, sizeof(d->palette));
@@ -222,9 +222,18 @@ static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t
             unsigned left = AW_VIDEO_STRIDE, right = 0, top = AW_VIDEO_HEIGHT, bottom = 0;
             uint8_t row_previous[AW_VIDEO_STRIDE];
             if (banded || d->external) {
-                const bool ok = banded ? read_band(d, band) :
-                    aw_assets_read(d->assets, d->external_base + y * AW_VIDEO_STRIDE, d->scratch,
-                                   band_rows * AW_VIDEO_STRIDE);
+                bool ok;
+                if (banded) ok = read_band(d, band);
+                else {
+                    const unsigned old_y = (y + shift) % AW_VIDEO_HEIGHT;
+                    const unsigned first = old_y + band_rows <= AW_VIDEO_HEIGHT ? band_rows : AW_VIDEO_HEIGHT - old_y;
+                    ok = aw_assets_read_direct(d->assets, d->external_base + old_y * AW_VIDEO_STRIDE,
+                                              d->scratch, first * AW_VIDEO_STRIDE);
+                    if (ok && first < band_rows)
+                        ok = aw_assets_read_direct(d->assets, d->external_base,
+                                                   d->scratch + first * AW_VIDEO_STRIDE,
+                                                   (band_rows - first) * AW_VIDEO_STRIDE);
+                }
                 if (!ok) {
                     d->valid = false;
                     return false;
@@ -236,7 +245,7 @@ static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t
                 const uint8_t *old;
                 if (banded || d->external) old = d->scratch + (row - y) * AW_VIDEO_STRIDE;
                 else {
-                    if (!decode(d, row, row_previous)) {
+                    if (!decode(d, (row + shift) % AW_VIDEO_HEIGHT, row_previous)) {
                         d->valid = false;
                         return false;
                     }
@@ -310,9 +319,15 @@ static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t
 
 bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                                 aw_display_rect_fn present, void *ctx) {
+    return aw_display_compact_present_scrolled(d, pixels, palette, 0, present, ctx);
+}
+
+bool aw_display_compact_present_scrolled(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
+                                         unsigned shift, aw_display_rect_fn present, void *ctx) {
+    if (shift >= AW_VIDEO_HEIGHT) return false;
     uint32_t dirty;
-    if (!prepare(d, pixels, palette, present, NULL, ctx, false, 0, &dirty)) return false;
-    if (dirty) {
+    if (!prepare(d, pixels, palette, present, NULL, ctx, false, shift, 0, &dirty)) return false;
+    if (dirty || shift) {
         /* Some frames do not fit in the borrowed framebuffer. Keep those
          * exactly in PSRAM and try the compact form again on the next frame. */
         d->external = !compress(d, pixels);
@@ -337,7 +352,7 @@ bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, co
 bool aw_display_bands_prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                               aw_display_rect_fn present, aw_display_wait_fn wait, void *ctx,
                               uint32_t known, uint32_t *dirty) {
-    return prepare(d, pixels, palette, present, wait, ctx, true, known, dirty);
+    return prepare(d, pixels, palette, present, wait, ctx, true, 0, known, dirty);
 }
 
 bool aw_display_band_store(aw_display_compact *d, unsigned band, const uint8_t *source) {

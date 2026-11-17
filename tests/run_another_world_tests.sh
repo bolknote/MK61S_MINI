@@ -34,7 +34,7 @@ ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
   "$root/examples/portable-apps/ANOTHER/video.c" \
   "$root/tests/another_world_background_self_test.c" -o "$build_dir/background"
 "$build_dir/background"
-${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_VIDEO_PACKED_CACHE=1 \
   "$root/examples/portable-apps/ANOTHER/assets.c" \
   "$root/examples/portable-apps/ANOTHER/video.c" \
   "$root/tests/another_world_page3_packed_self_test.c" -o "$build_dir/page3-packed"
@@ -63,6 +63,16 @@ ${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror \
   "$root/tests/another_world_storm_self_test.cpp" "$build_dir/storm.o" "$build_dir/zx0.o" \
   "$build_dir"/storm-*.o -o "$build_dir/storm"
 "$build_dir/storm"
+${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+  -I"$root/sdk/portable/include" -I"$root/code" \
+  "$root/tests/another_world_intro_resume_self_test.c" \
+  "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/prepared.c" \
+  "$root/examples/portable-apps/ANOTHER/video.c" "$root/examples/portable-apps/ANOTHER/vm.c" \
+  "$root/examples/portable-apps/ANOTHER/text.c" "$root/examples/portable-apps/ANOTHER/audio.c" \
+  "$root/examples/portable-apps/ANOTHER/display.c" "$root/examples/portable-apps/ANOTHER/display_compact.c" \
+  "$root/examples/portable-apps/ANOTHER/display_pages.c" "$build_dir/storm.o" "$build_dir/zx0.o" \
+  -o "$build_dir/intro-resume"
+"$build_dir/intro-resume"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=lcd_pages_probe_main \
   -I"$root/sdk/portable/include" -I"$root/code" \
   -c "$root/tests/picocalc_lcd_pages_probe.c" -o "$build_dir/lcd-pages-probe.o"
@@ -178,6 +188,13 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
   # fits even if another 1600 bytes of the large hole are unavailable.
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-warm.state" 2160 warm
   "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-warm.state" 2160 warm
+  # Exercise the measured resident SRAM budget with the current ARM image.
+  image_growth=28
+  if [ -n "${ANOTHER_WORLD_APP_META:-}" ]; then
+    image_growth=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["memory_bytes"] - 41124)' "$ANOTHER_WORLD_APP_META")
+  fi
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-tight.state" "$image_growth" tight
+  "$build_dir/fragmentation" "$ANOTHER_WORLD_DATA" "$build_dir/fragmentation-tight.state" "$image_growth" tight
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
@@ -196,13 +213,13 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/m3_pcm.c" \
     "$root/examples/portable-apps/ANOTHER/display.c" "$root/tests/another_world_game_probe.c" -o "$build_dir/display-game"
   "$build_dir/display-game" "$ANOTHER_WORLD_DATA" 5000
-  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -I"$root/sdk/coproc" \
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_VIDEO_PACKED_CACHE=1 -I"$root/sdk/coproc" \
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/m3_pcm.c" \
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/tests/another_world_game_probe.c" -o "$build_dir/compact-game"
   "$build_dir/compact-game" "$ANOTHER_WORLD_DATA" 5000
-  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -I"$root/sdk/coproc" \
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_VIDEO_PACKED_CACHE=1 -I"$root/sdk/coproc" \
     "$root/examples/portable-apps/ANOTHER/assets.c" "$root/examples/portable-apps/ANOTHER/video.c" \
     "$root/examples/portable-apps/ANOTHER/vm.c" "$root/examples/portable-apps/ANOTHER/text.c" \
     "$root/examples/portable-apps/ANOTHER/audio.c" "$root/examples/portable-apps/ANOTHER/m3_pcm.c" \
@@ -218,7 +235,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
   if "$build_dir/prepare-storm" "$ANOTHER_WORLD_DATA" "$build_dir/AWSTORM.BIN" >/dev/null; then
     ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/coproc" \
       -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_PROBE_FIRST_PART \
-      -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_TEST_STORM \
+      -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_VIDEO_PACKED_CACHE=1 -DAW_TEST_STORM \
       "$app/assets.c" "$app/video.c" "$app/vm.c" "$app/text.c" "$app/audio.c" "$app/m3_pcm.c" \
       "$app/display_compact.c" "$app/display_pages.c" "$root/tests/another_world_game_probe.c" \
       "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm-game"

@@ -4,13 +4,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct { uint8_t *bytes; uint32_t size; unsigned presents; uint8_t first; } memory;
+typedef struct { uint8_t *bytes; uint32_t size; unsigned presents; uint8_t first; uint32_t read_bytes; } memory;
 static bool bank(void *ctx, uint8_t id, uint32_t offset, void *out, uint32_t size) {
     (void)ctx; (void)id; (void)offset; (void)out; (void)size; return false;
 }
 static bool read_store(void *ctx, uint32_t at, void *out, uint32_t size) {
     memory *m = ctx;
     if (at > m->size || size > m->size - at) return false;
+    m->read_bytes += size;
     memcpy(out, m->bytes + at, size); return true;
 }
 static bool write_store(void *ctx, uint32_t at, const void *in, uint32_t size) {
@@ -26,7 +27,7 @@ static unsigned pixel(const uint8_t *p, unsigned x, unsigned y) {
 }
 static void run(bool two_pages) {
     aw_asset_entry entries[AW_ASSET_LIMIT];
-    memory m = {calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), 8192 + 4 * AW_VIDEO_PAGE_BYTES, 0, 0};
+    memory m = {calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), 8192 + 4 * AW_VIDEO_PAGE_BYTES, 0, 0, 0};
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *spare = two_pages ? malloc(AW_VIDEO_PAGE_BYTES) : NULL;
     aw_assets a; aw_video v;
     aw_video_bands bands;
@@ -36,8 +37,15 @@ static void run(bool two_pages) {
     assert(aw_video_init(&v, &a, 8192, frame, present, &m));
     aw_video_track_bands(&v, &bands);
     if (two_pages) assert(aw_video_use_spare(&v, spare));
+    const uint32_t before_fill = m.read_bytes;
     assert(aw_video_fill(&v, 0, 1));
     assert(aw_video_fill(&v, 2, 2));
+    assert(m.read_bytes == before_fill);
+    const unsigned resident_page = v.resident_page;
+    assert(aw_video_set_draw_page(&v, 3) && v.draw_page == 3 && v.resident_page == resident_page);
+    assert(m.read_bytes == before_fill);
+    assert(aw_video_copy(&v, 2, 1, 0));
+    assert(m.read_bytes - before_fill == (two_pages ? 0 : AW_VIDEO_PAGE_BYTES));
     assert(aw_video_copy(&v, 0, 2, 0));
     assert(!memcmp(bands.page[0], bands.page[2], sizeof(bands.page[0])));
     assert(aw_video_select(&v, 2) && pixel(v.pixels, 10, 10) == 1);
@@ -48,8 +56,12 @@ static void run(bool two_pages) {
     assert(aw_video_select(&v, 3) && pixel(v.pixels, 20, 20) == 3);
     assert(aw_video_fill(&v, 3, 0));
     assert(aw_video_copy(&v, 0x81, 3, 4));
+    assert(v.page_scroll[3] == 4 && v.page_scroll[1] == 0);
     for (unsigned i = 0; i < AW_VIDEO_BANDS; ++i) assert(!bands.page[3][i]);
     assert(aw_video_select(&v, 3) && pixel(v.pixels, 20, 3) == 0 && pixel(v.pixels, 20, 4) == 3);
+    assert(aw_video_copy(&v, 0x83, 3, -7) && v.page_scroll[3] == 197);
+    assert(aw_video_copy(&v, 3, 1, 0) && v.page_scroll[1] == 197);
+    assert(aw_video_fill(&v, 1, 3) && v.page_scroll[1] == 0);
     const uint8_t square[] = {0xC5, 8, 8, 4, 8, 0, 8, 8, 0, 8, 0, 0};
     assert(aw_assets_write(&a, 100, square, sizeof(square)));
     assert(aw_video_fill(&v, 2, 0)); assert(aw_video_select(&v, 2));

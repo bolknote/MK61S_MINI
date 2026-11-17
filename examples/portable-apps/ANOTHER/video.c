@@ -101,6 +101,7 @@ static bool background_read(aw_video *v, unsigned y, unsigned from, unsigned siz
     return x >= wanted_end;
 }
 
+#if AW_VIDEO_PACKED_CACHE
 /* Page 3 is often copied repeatedly without being modified. Keep a second,
  * compressed copy in unused PSRAM and stream it through a small stack buffer
  * instead of rereading a whole 32 KiB page on every full-page restore. */
@@ -188,6 +189,7 @@ static bool unpack_page3(aw_video *v, uint8_t *pixels) {
     }
     return r.consumed == v->page3_packed_size;
 }
+#endif
 static bool transfer(aw_video *v, bool write, uint32_t offset, uint8_t *bytes, uint32_t count) {
     while (count) {
         const uint32_t n = count < 4096 ? count : 4096;
@@ -219,7 +221,7 @@ static void swap_resident(aw_video *v) {
     v->resident_valid = v->spare_valid; v->dirty = v->spare_dirty;
     v->spare_valid = valid; v->spare_dirty = dirty;
 }
-static bool resident(aw_video *v, uint8_t page) {
+static bool resident(aw_video *v, uint8_t page, bool overwrite) {
     if (v->fault || page > 3) return false;
     if (v->resident_valid && v->resident_page == page) return true;
     if (v->spare) {
@@ -229,14 +231,14 @@ static bool resident(aw_video *v, uint8_t page) {
                 (!transfer(v, true, page_at(v, v->spare_page), v->spare, AW_VIDEO_PAGE_BYTES) ||
                  !aw_assets_flush(v->assets))) return !(v->fault = true);
             v->spare_valid = false; v->spare_dirty = false;
-            if (!transfer(v, false, page_at(v, page), v->spare, AW_VIDEO_PAGE_BYTES))
+            if (!overwrite && !transfer(v, false, page_at(v, page), v->spare, AW_VIDEO_PAGE_BYTES))
                 return !(v->fault = true);
             v->spare_page = page; v->spare_valid = true;
         }
         swap_resident(v);
         return true;
     }
-    if (!aw_video_flush(v) || !transfer(v, false, page_at(v, page), v->pixels, AW_VIDEO_PAGE_BYTES))
+    if (!aw_video_flush(v) || (!overwrite && !transfer(v, false, page_at(v, page), v->pixels, AW_VIDEO_PAGE_BYTES)))
         return !(v->fault = true);
     v->resident_valid = true; v->resident_page = page;
     return true;
@@ -274,20 +276,29 @@ bool aw_video_use_background_split(aw_video *v, uint8_t *first, uint16_t first_s
     v->background_capacity = first_size + second_size; return true;
 }
 bool aw_video_use_packed_page3(aw_video *v, uint32_t base, uint16_t capacity) {
+#if AW_VIDEO_PACKED_CACHE
     if (!v || v->fault || !capacity || v->page3_packed_capacity ||
         base < v->page_base || base - v->page_base < 5 * AW_VIDEO_PAGE_BYTES || base > v->assets->capacity ||
         capacity > v->assets->capacity - base) return false;
     v->page3_packed_base = base; v->page3_packed_capacity = capacity; return true;
+#else
+    (void)v; (void)base; (void)capacity;
+    return false;
+#endif
 }
-bool aw_video_select(aw_video *v, uint8_t page) {
+bool aw_video_set_draw_page(aw_video *v, uint8_t page) {
     if (!v || v->fault) return false;
     v->draw_page = page_id(v, page);
-    return resident(v, v->draw_page);
+    return true;
+}
+bool aw_video_select(aw_video *v, uint8_t page) {
+    return aw_video_set_draw_page(v, page) && resident(v, v->draw_page, false);
 }
 bool aw_video_fill(aw_video *v, uint8_t page, uint8_t color) {
-    if (!v || !resident(v, page_id(v, page))) return false;
+    if (!v || !resident(v, page_id(v, page), true)) return false;
     color &= 15u;
     memset(v->pixels, (color << 4) | color, AW_VIDEO_PAGE_BYTES);
+    v->page_scroll[v->resident_page] = 0;
     if (v->bands)
         for (unsigned band = 0; band < AW_VIDEO_BANDS; ++band)
             v->bands->page[v->resident_page][band] = color + 1u;
@@ -333,7 +344,8 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
      * the source in SRAM instead of evicting and rereading it. */
     if (src != dst && v->spare_valid && v->spare_page == src && v->resident_page != dst)
         swap_resident(v);
-    if (!resident(v, dst)) return false;
+    /* A complete replacement needs none of the destination's old bytes. */
+    if (!resident(v, dst, size == AW_VIDEO_PAGE_BYTES && src != dst)) return false;
     if (src == dst) memmove(v->pixels + to, v->pixels + from, size);
     else if (v->spare_valid && v->spare_page == src) memcpy(v->pixels + to, v->spare + from, size);
     else if (src == 0 && v->background_valid) {
@@ -342,17 +354,27 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
                                  v->pixels + to + row * AW_VIDEO_STRIDE)) return !(v->fault = true);
             if ((row & 31u) == 31u) aw_assets_progress(v->assets);
         }
-    } else if (src == 3 && from == 0 && to == 0 && size == AW_VIDEO_PAGE_BYTES && v->page3_packed_valid) {
+    }
+#if AW_VIDEO_PACKED_CACHE
+    else if (src == 3 && from == 0 && to == 0 && size == AW_VIDEO_PAGE_BYTES && v->page3_packed_valid) {
         if (!unpack_page3(v, v->pixels)) {
             v->page3_packed_valid = false;
-            if (v->fault || !transfer(v, false, page_at(v, src), v->pixels, size)) return !(v->fault = true);
+            if (v->fault || !transfer(v, false, page_at(v, src) + from, v->pixels + to, size)) return !(v->fault = true);
         }
-    } else if (!transfer(v, false, page_at(v, src) + from, v->pixels + to, size))
+    }
+#endif
+    else if (!transfer(v, false, page_at(v, src) + from, v->pixels + to, size))
         return !(v->fault = true);
+#if AW_VIDEO_PACKED_CACHE
     if (src == 3 && dst != 3 && from == 0 && to == 0 && size == AW_VIDEO_PAGE_BYTES) {
         if (v->page3_seen_copy) { if (!cache_page3(v, v->pixels)) return false; }
         else v->page3_seen_copy = true;
     }
+#endif
+    int displacement = v->page_scroll[src] + (scrolled ? scroll : 0);
+    if (displacement < 0) displacement += AW_VIDEO_HEIGHT;
+    if (displacement >= (int)AW_VIDEO_HEIGHT) displacement -= AW_VIDEO_HEIGHT;
+    v->page_scroll[dst] = (uint8_t)displacement;
     if (v->bands) {
         if (size != AW_VIDEO_PAGE_BYTES)
             memset(v->bands->page[dst], 0, sizeof(v->bands->page[dst]));
@@ -365,7 +387,8 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
     return true;
 }
 bool aw_video_bitmap(aw_video *v, uint32_t source, uint32_t size) {
-    if (!v || size < AW_VIDEO_PAGE_BYTES || !resident(v, 0)) return false;
+    if (!v || size < AW_VIDEO_PAGE_BYTES || !resident(v, 0, true)) return false;
+    v->page_scroll[0] = 0;
     uint8_t plane[4][40];
     for (unsigned y = 0; y < AW_VIDEO_HEIGHT; ++y) {
         for (unsigned p = 0; p < 4; ++p)
@@ -403,14 +426,14 @@ bool aw_video_show(aw_video *v, uint8_t page) {
     if (!v || v->fault) return false;
     if (page == 0xFF) { uint8_t t = v->front_page; v->front_page = v->back_page; v->back_page = t; }
     else if (page != 0xFE) v->front_page = page_id(v, page);
-    if (!resident(v, v->front_page)) return !(v->fault = true);
+    if (!resident(v, v->front_page, false)) return !(v->fault = true);
     identify_bands(v, v->front_page);
     if (!v->present(v->present_ctx, v->pixels, v->palette))
         return !(v->fault = true);
     return true;
 }
 bool aw_video_char(aw_video *v, uint16_t x, uint16_t y, uint8_t color, const uint8_t glyph[8]) {
-    if (!v || !glyph || !resident(v, v->draw_page)) return false;
+    if (!v || !glyph || !resident(v, v->draw_page, false)) return false;
     if (x > 39 || y > 192) return true;
     for (unsigned row = 0; row < 8; ++row) {
         uint8_t bits = glyph[row];
@@ -557,7 +580,7 @@ static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigne
 bool aw_video_polygon(aw_video *v, uint32_t base, uint32_t size, uint16_t offset,
                       uint16_t zoom, int16_t x, int16_t y) {
     if (!v || base > v->assets->capacity || size > v->assets->capacity - base || offset >= size ||
-        !resident(v, v->draw_page)) return false;
+        !resident(v, v->draw_page, false)) return false;
     v->shape_base = base; v->shape_size = size;
     shape s = {0}; s.v = v; s.cursor = offset;
     const point at = {x, y};

@@ -25,6 +25,10 @@ bool aw_display_compact_init(aw_display_compact *d, aw_assets *a, uint32_t exter
                              uint8_t *previous, uint32_t capacity, uint8_t *scratch, uint32_t scratch_bytes);
 bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                                 aw_display_rect_fn present, void *ctx);
+/* Compare against a circularly shifted previous image. The caller applies
+ * the same row mapping to GRAM and publishes it after the rectangles finish. */
+bool aw_display_compact_present_scrolled(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
+                                         unsigned shift, aw_display_rect_fn present, void *ctx);
 /* Two-page output keeps independent bands in PSRAM. Prepare fills the dirty
  * mask before submitting rectangles. A wait callback gates writes to the
  * visible page. The caller can save one dirty band per busy LCD poll. */
