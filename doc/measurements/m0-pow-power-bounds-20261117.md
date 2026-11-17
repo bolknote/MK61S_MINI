@@ -43,13 +43,39 @@ a 1,805,072-byte Flash image.
 The input with the largest exercised workload uses the largest subnormal
 base and a negative exponent with 53 numerator bits and denominator
 `2^116`. It exercises 169 full-width products and 52 four-word products.
-The benchmark reports guest instructions and stack usage. PicoCalc elapsed
-time for this new stage remains unmeasured.
+The benchmark reports guest instructions and stack usage. The follow-up on
+[physical PicoCalc](m0-pow-watchdog-20261117.md) measured 1.620 s in the
+4,096-bit stage and a 2.294 s watchdog gap across the forced chain.
 
-The final trap remains for an undecided enclosure. The explicit separation
-estimate available for independent logarithms is much weaker than the
-working precision, and the published exhaustive searches cover selected
-exponents. Removing the trap still needs a stronger uniform bound or
-a total exact method that fits the device.
+If the last stage is still undecided, the two directed enclosures overlap.
+For a product with `n` leaves at precision `P`, its upper endpoint is at
+most `1 + (4*(n-1)+1)*2^(1-P)` times its lower endpoint, including the
+possible upward renormalization. Let `A = abs(x)^p` and `B = m^q` for
+the positive exponent case. Overlap bounds both `A/B` and `B/A` by the
+product of the two endpoint ratios. For a negative exponent the same
+argument bounds `A*B` and its reciprocal using the combined enclosure.
+Taking logarithms, applying `ln(1+t) <= t`, and dividing by `q` bounds
+`abs(y*ln(abs(x)) - ln(m))` strictly below `4*(abs(y)+1)*2^-4095`.
+The largest active `abs(y)` is `2^63 - 1024`, so the gap must be
+strictly below `2^-4030`.
+
+Two multiplicatively dependent dyadic bases are integer powers of a
+common dyadic `g` with odd coefficient below `2^54`, up to inversion.
+The nonzero distance of `ln(g)` from zero is at least `2^-54`. For
+`g` between one half and two this follows from
+`abs(ln(g)) >= abs(g-1)/max(1,g)` and the numerator and denominator
+bounded by `2^54` near one. Outside that range use `ln(2)`. A nonzero
+dependent gap is at least `2^-54/q >= 2^-170`, so it separates. At a
+positive exact tie with nontrivial odd coefficients, the odd parts of
+the two bases are `C^q` and `C^p` for an odd `C >= 3`. Then `q <= 32`
+and both powers are exact at 4,096 bits. At other ties all odd parts
+are one and the comparison uses the exact binary scales.
+
+The remaining case for the final trap is a nonzero cancelling gap
+below `2^-4030` between independent bases. The explicit separation
+estimate in the prior analysis and the published searches for selected
+exponents do not exclude that case across binary64. Removing the trap
+with a rounding guarantee still requires a stronger separation bound or
+an exact method bounded by the device's resources.
 [Prior separation analysis](m0-math-followup-20261114.md#host-results),
 [CORE-MATH coverage](https://core-math.gitlabpages.inria.fr/worst.html)
