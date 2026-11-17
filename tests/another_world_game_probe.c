@@ -17,12 +17,14 @@ static unsigned page_selected=2, page_visible=2, page_shows;
 #ifdef AW_TEST_STORM
 #include "../examples/portable-apps/ANOTHER/display_storm.h"
 static aw_display_storm storm;
-static unsigned replayed, intro_frames;
+static unsigned replayed, intro_frames, anchor_calls, blocking_wire;
+static unsigned worker_busy, busy_polls;
+static bool normal_used, tight_psram;
 static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     FILE *file = ctx;
     return fseek(file, (long)offset, SEEK_SET) == 0 && fread(out, 1, size, file) == size;
 }
-static bool storm_wait(void *ctx) { (void)ctx; return true; }
+static bool storm_wait(void *ctx, unsigned lead_ms) { (void)ctx; (void)lead_ms; return true; }
 #endif
 #endif
 static aw_display_compact compact;
@@ -65,6 +67,54 @@ static bool display_show_page(void *ctx,unsigned page) {
     (void)ctx;assert(page==page_selected);page_visible=page;++page_shows;
     memcpy(displayed_pixels+SCREEN_MARGIN*AW_VIDEO_WIDTH,page_pixels[page],sizeof(page_pixels[page]));return true;
 }
+#ifdef AW_TEST_STORM
+static bool storm_blocking_select(void *ctx, unsigned page) {
+    worker_busy = 0;
+    return display_select_page(ctx, page);
+}
+static bool storm_blocking_show(void *ctx, unsigned page) {
+    while (worker_busy) {
+        --worker_busy;
+        if (!aw_display_pages_write_one(&pages)) return false;
+    }
+    return display_show_page(ctx, page);
+}
+static bool storm_blocking_draw(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
+                                const uint8_t *pixels, const uint16_t *palette, bool clear) {
+    while (worker_busy) {
+        --worker_busy;
+        if (!aw_display_pages_write_one(&pages)) return false;
+    }
+    blocking_wire += width * height * 2;
+    worker_busy = 2;
+    return display_rect(ctx, x, y, width, height, pixels, palette, clear);
+}
+static unsigned storm_select(void *ctx, unsigned page) {
+    if (worker_busy) { --worker_busy; ++busy_polls; return 2; }
+    return display_select_page(ctx, page);
+}
+static unsigned storm_draw(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
+                           const uint8_t *pixels, const uint16_t *palette, bool clear) {
+    if (worker_busy) { --worker_busy; ++busy_polls; return 2; }
+    assert(page_selected != page_visible);
+    worker_busy = 2;
+    return display_rect(ctx, x, y, width, height, pixels, palette, clear);
+}
+static const aw_storm_output storm_lcd = {
+    storm_blocking_select, storm_blocking_show, storm_blocking_draw, storm_wait, storm_select, storm_draw, 24000000
+};
+static bool storm_normal(void *ctx, const uint8_t *pixels, const uint16_t *palette,
+                          const uint32_t *identities, unsigned lead) {
+    normal_used = true;
+    if (lead) {
+        assert(lead == AW_STORM_ANCHOR_LEAD_MS && intro_frames == storm.first + AW_STORM_WARM_FRAMES);
+        ++anchor_calls;
+    }
+    return aw_display_pages_present(&pages, pixels, palette, identities, storm_blocking_select, storm_blocking_show,
+                                    storm_blocking_draw, NULL, ctx) &&
+        (!lead || storm_blocking_select(ctx, pages.visible));
+}
+#endif
 #endif
 #endif
 
@@ -115,11 +165,13 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         assert(aw_display_pages_init(&pages,&compact,second));
 #ifdef AW_TEST_STORM
         FILE *file = fopen(getenv("AW_STORM_CACHE"), "rb");
-        assert(file && fseek(file, 0, SEEK_END) == 0);
+        char magic[4];
+        assert(file && fread(magic, 1, sizeof(magic), file) == sizeof(magic) && fseek(file, 0, SEEK_END) == 0);
         const long size = ftell(file);
         assert(size > 0 && size <= AW_STORM_MAX_FILE &&
                aw_storm_load(&storm, h->audio->assets, second + AW_VIDEO_PAGE_BYTES,
                              compact.scratch, (uint32_t)size, storm_read, file));
+        assert(storm.prelude.available == (!tight_psram && !memcmp(magic, "AWS3", sizeof(magic))));
         fclose(file);
 #endif
 #endif
@@ -155,22 +207,26 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
 #endif
 #ifdef AW_COMPACT_DISPLAY
 #ifdef AW_TWO_PAGE_ANALYZE
+    const uint32_t *identities = aw_video_band_identities(h->audio->vm->video);
 #ifdef AW_TEST_STORM
     const unsigned intro_frame = h->audio->vm->part == AW_STORM_PART ? intro_frames++ : UINT32_MAX;
-    const unsigned step = storm.ready ? intro_frame : UINT32_MAX;
-    const unsigned offset = step - storm.first;
-    const bool cached = step >= storm.first && offset >= AW_STORM_WARM_FRAMES &&
-        offset < AW_STORM_WARM_FRAMES + AW_STORM_FRAMES &&
-        aw_storm_present(&storm,&pages,offset-AW_STORM_WARM_FRAMES,pixels,palette,
-                         display_select_page,display_show_page,display_rect,storm_wait,NULL);
-    replayed += cached;
-    if (!cached)
-#endif
-        assert(aw_display_pages_present(&pages,pixels,palette,aw_video_band_identities(h->audio->vm->video),
-                                        display_select_page,display_show_page,display_rect,NULL,NULL));
-#ifdef AW_TEST_STORM
-    if (step >= storm.first && offset < AW_STORM_WARM_FRAMES)
-        assert(aw_storm_warm(&storm,&pages,offset,pixels,palette,display_select_page,display_rect,NULL));
+    blocking_wire = 0;
+    normal_used = false;
+    if (intro_frame != UINT32_MAX && storm.ready) {
+        assert(aw_storm_present_intro(&storm, &pages, pixels, palette, identities, &storm_lcd, storm_normal, NULL));
+        if (intro_frame >= storm.first + AW_STORM_WARM_FRAMES && !normal_used) ++replayed;
+        if (storm.prelude.available) {
+            if (intro_frame == storm.first - AW_STORM_FIRST_PRELOAD_LEAD || intro_frame == storm.first - 1u)
+                assert(normal_used && blocking_wire == 0 && page_shows == before_shows + 1);
+            if (intro_frame == storm.first + 1u)
+                assert(!normal_used && blocking_wire == 5984 && storm.pending == 0);
+        }
+    } else {
+        assert(storm_normal(NULL, pixels, palette, identities, 0));
+    }
+#else
+    assert(aw_display_pages_present(&pages, pixels, palette, identities, display_select_page,
+                                    display_show_page, display_rect, NULL, NULL));
 #endif
 #else
     assert(aw_display_compact_present(&compact, pixels, palette, display_rect, NULL));
@@ -220,6 +276,10 @@ static bool frame_wait(void *ctx, unsigned slices) {
     host *h = ctx; int16_t samples[64]; uint8_t packet[512], output[72];
     unsigned remaining = slices * 500;
     while (remaining) {
+#ifdef AW_TEST_STORM
+        if (h->audio->vm->part == AW_STORM_PART)
+            aw_storm_pump(&storm, &pages, &storm_lcd, NULL);
+#endif
         unsigned n = remaining < 64 ? remaining : 64, frames, bytes;
         if (!aw_audio_prepare_m3(h->remote, packet, sizeof(packet), n, 1000, 0, &frames, &bytes) ||
             !aw_audio_render(h->audio, samples, frames)) return false;
@@ -257,7 +317,12 @@ int main(int argc, char **argv) {
     char path[1024]; snprintf(path, sizeof(path), "%s/MEMLIST.BIN", argv[1]);
     FILE *f = fopen(path, "rb"); if (!f) { perror(path); return 1; }
     uint8_t list[4096]; size_t len = fread(list, 1, sizeof(list), f); fclose(f);
-    host h = {0}; h.path = argv[1]; h.capacity = 2u * 1024u * 1024u; h.store = calloc(1, h.capacity);
+    host h = {0}; h.path = argv[1]; h.capacity = 2u * 1024u * 1024u;
+#ifdef AW_TEST_STORM
+    tight_psram = getenv("AW_STORM_TIGHT_PSRAM") != NULL;
+    if (!tight_psram) h.capacity += AW_VIDEO_PAGE_BYTES;
+#endif
+    h.store = calloc(1, h.capacity);
     uint8_t *pixels = malloc(AW_VIDEO_PAGE_BYTES), *spare = NULL, *background = NULL; aw_assets *a = calloc(1, sizeof(*a));
 #ifdef AW_COMPACT_DISPLAY
     spare = malloc(AW_VIDEO_PAGE_BYTES);
@@ -344,6 +409,9 @@ int main(int argc, char **argv) {
     printf("page switches=%u\n",page_shows);
 #ifdef AW_TEST_STORM
     assert(replayed == AW_STORM_FRAMES && storm.warmed == AW_STORM_WARM_FRAMES && !storm.ready);
+    assert(anchor_calls == (unsigned)storm.prelude.available && busy_polls);
+    if (storm.prelude.available)
+        puts("DOS intro: both preloaded frames latched, restored the saved page with 5984 LCD bytes");
     puts("DOS intro: all warm steps and cached frames used, RGB565 matches each live frame");
 #endif
 #else

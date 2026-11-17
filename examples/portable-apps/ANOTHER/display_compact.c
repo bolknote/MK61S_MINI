@@ -340,20 +340,23 @@ bool aw_display_bands_prepare(aw_display_compact *d, const uint8_t *pixels, cons
     return prepare(d, pixels, palette, present, wait, ctx, true, known, dirty);
 }
 
-bool aw_display_bands_write_one(aw_display_compact *d, const uint8_t *pixels, uint32_t *dirty) {
-    if (!*dirty) return true;
-    const unsigned band = (unsigned)__builtin_ctz(*dirty);
-    const unsigned offset = band * BAND_BYTES;
-    const uint8_t *source = pixels + offset;
+bool aw_display_band_store(aw_display_compact *d, unsigned band, const uint8_t *source) {
     uint8_t *packed = band_buffer(d);
     unsigned size = pack_band(source, packed, BAND_BYTES - 1);
     if (size) source = packed;
     else size = BAND_BYTES;
-    if (!aw_assets_write_direct(d->assets, d->external_base + offset, source, size)) {
+    if (!aw_assets_write_direct(d->assets, d->external_base + band * BAND_BYTES, source, size)) return false;
+    d->band_sizes[band] = (uint16_t)size;
+    return true;
+}
+
+bool aw_display_bands_write_one(aw_display_compact *d, const uint8_t *pixels, uint32_t *dirty) {
+    if (!*dirty) return true;
+    const unsigned band = (unsigned)__builtin_ctz(*dirty);
+    if (!aw_display_band_store(d, band, pixels + band * BAND_BYTES)) {
         d->valid = false;
         return false;
     }
-    d->band_sizes[band] = (uint16_t)size;
     *dirty &= *dirty - 1;
     return true;
 }

@@ -18,6 +18,9 @@ typedef struct {
     bool valid, external;
 } aw_display_compact;
 typedef bool (*aw_display_wait_fn)(void *ctx);
+#ifdef __cplusplus
+extern "C" {
+#endif
 bool aw_display_compact_init(aw_display_compact *d, aw_assets *a, uint32_t external_base,
                              uint8_t *previous, uint32_t capacity, uint8_t *scratch, uint32_t scratch_bytes);
 bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
@@ -29,4 +32,9 @@ bool aw_display_bands_prepare(aw_display_compact *d, const uint8_t *pixels, cons
                               aw_display_rect_fn present, aw_display_wait_fn wait, void *ctx,
                               uint32_t known, uint32_t *dirty);
 bool aw_display_bands_write_one(aw_display_compact *d, const uint8_t *pixels, uint32_t *dirty);
+/* Store one packed-index band, without changing the slot's validity. */
+bool aw_display_band_store(aw_display_compact *d, unsigned band, const uint8_t *source);
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -22,6 +22,26 @@ bool aw_display_pages_write_one(aw_display_pages *p) {
            aw_display_bands_write_one(p->slot[p->selected], p->pending_pixels, &p->pending_bands);
 }
 
+bool aw_display_pages_finish(aw_display_pages *p, const uint16_t *palette,
+                              const uint32_t *identities, int solid, bool ok) {
+    const unsigned page = p->selected;
+    aw_display_compact *target = p->slot[page];
+    while (ok && p->pending_bands) {
+        ok = aw_display_pages_write_one(p);
+        if (ok) aw_assets_progress(target->assets);
+    }
+    p->pending_pixels = NULL;
+    p->pending_bands = 0;
+    /* A failed transfer may have modified part of GRAM or the snapshot. */
+    target->valid = ok;
+    if (!ok) return false;
+    memcpy(target->palette, palette, sizeof(target->palette));
+    if (identities) memcpy(p->identities[page], identities, sizeof(p->identities[page]));
+    else memset(p->identities[page], 0, sizeof(p->identities[page]));
+    p->solid[page] = (int8_t)solid;
+    return true;
+}
+
 /* Full black/white game frames often alternate with the same palette. Keep
  * one of each in GRAM so later flashes need only switch pages. */
 static int solid_color(const uint8_t *pixels, const uint16_t *palette) {
@@ -80,21 +100,5 @@ bool aw_display_pages_present(aw_display_pages *p, const uint8_t *pixels, const 
         ok = (!wait || wait(ctx)) && show(ctx, next);
         if (ok) p->visible = next;
     }
-    while (ok && p->pending_bands) {
-        ok = aw_display_pages_write_one(p);
-        if (ok) aw_assets_progress(target->assets);
-    }
-    p->pending_pixels = NULL;
-    p->pending_bands = 0;
-    if (!ok) {
-        /* Either GRAM or the snapshot may be partially updated. */
-        target->valid = false;
-        return false;
-    }
-    memcpy(target->palette, palette, sizeof(target->palette));
-    target->valid = true;
-    if (identities) memcpy(p->identities[next], identities, sizeof(p->identities[next]));
-    else memset(p->identities[next], 0, sizeof(p->identities[next]));
-    p->solid[next] = (int8_t)solid;
-    return true;
+    return aw_display_pages_finish(p, palette, identities, solid, ok);
 }

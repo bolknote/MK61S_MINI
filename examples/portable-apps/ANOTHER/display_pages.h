@@ -15,6 +15,9 @@ typedef struct {
     uint32_t pending_bands;
 } aw_display_pages;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 bool aw_display_pages_init(aw_display_pages *p, aw_display_compact *first, uint32_t second_external);
 /* wait is called once before modifying a visible page or showing a new one. */
 bool aw_display_pages_present(aw_display_pages *p, const uint8_t *pixels, const uint16_t *palette,
@@ -23,4 +26,10 @@ bool aw_display_pages_present(aw_display_pages *p, const uint8_t *pixels, const 
                               aw_display_rect_fn present, aw_display_wait_fn wait, void *ctx);
 /* Save at most one pending band while the LCD worker owns its copied pixels. */
 bool aw_display_pages_write_one(aw_display_pages *p);
+/* Finish the selected page's snapshot, or invalidate it on failure. */
+bool aw_display_pages_finish(aw_display_pages *p, const uint16_t *palette,
+                             const uint32_t *identities, int solid, bool ok);
+#ifdef __cplusplus
+}
+#endif
 #endif

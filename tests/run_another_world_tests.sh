@@ -55,8 +55,13 @@ ${CXX:-c++} -std=c++17 -O2 -fno-exceptions -Wall -Wextra -Werror -I"$root/code" 
   -c "$root/examples/portable-apps/ANOTHER/display_storm.cpp" -o "$build_dir/storm.o"
 ${CXX:-c++} -std=c++17 -O2 -fno-exceptions -Wall -Wextra -Werror -I"$root/code" \
   -c "$root/code/zx0.cpp" -o "$build_dir/zx0.o"
+for unit in assets display_compact display_pages; do
+  ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror \
+    -c "$root/examples/portable-apps/ANOTHER/$unit.c" -o "$build_dir/storm-$unit.o"
+done
 ${CXX:-c++} -std=c++17 -O2 -Wall -Wextra -Werror \
-  "$root/tests/another_world_storm_self_test.cpp" "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm"
+  "$root/tests/another_world_storm_self_test.cpp" "$build_dir/storm.o" "$build_dir/zx0.o" \
+  "$build_dir"/storm-*.o -o "$build_dir/storm"
 "$build_dir/storm"
 ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -Dmain=lcd_pages_probe_main \
   -I"$root/sdk/portable/include" -I"$root/code" \
@@ -218,6 +223,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
       "$app/display_compact.c" "$app/display_pages.c" "$root/tests/another_world_game_probe.c" \
       "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm-game"
     AW_STORM_CACHE="$build_dir/AWSTORM.BIN" "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_TIGHT_PSRAM=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
   elif [ "$?" -ne 2 ]; then
     exit 1
   fi

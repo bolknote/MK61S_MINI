@@ -9,6 +9,7 @@
 #include <string.h>
 
 #define EXTERNAL_BYTES (2u * 1024u * 1024u)
+static const char storm_cache[] = "AWSTORM.BIN";
 static const mk61_app_services *services;
 static mk61_service_buffer external, screen, previous_frame, background_cache, background_tail;
 static aw_assets assets;
@@ -17,6 +18,7 @@ static aw_display display;
 static aw_display_compact *compact_display;
 static aw_display_pages *pages_display;
 static aw_display_storm *storm;
+static aw_storm_output storm_lcd;
 static aw_vm *vm;
 static aw_audio *audio;
 static aw_input input;
@@ -121,16 +123,19 @@ static void audio_pump(void) {
 }
 static void pump(void *ctx) {
     (void)ctx; mk61_api->service(); audio_pump(); poll_keys();
+    if (pages_ready && storm->ready && (storm->pending < AW_STORM_FRAMES || storm->prelude.uploading) &&
+        vm->part == AW_STORM_PART && !input.quit && !pump_failed)
+        aw_storm_pump(storm, pages_display, &storm_lcd, NULL);
 }
 static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     (void)ctx;
-    const bool ok = file_read("AWSTORM.BIN", offset, out, size);
+    const bool ok = file_read(storm_cache, offset, out, size);
     pump(NULL);
     return ok && !input.quit && !pump_failed;
 }
-static bool wait_for_frame(void *ctx) {
+static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
     (void)ctx;
-    const uint32_t deadline = last_frame;
+    const uint32_t deadline = last_frame - lead_ms;
     while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
         pump(NULL);
         /* Leave room for a storage operation and the audio/input pump. */
@@ -139,12 +144,14 @@ static bool wait_for_frame(void *ctx) {
     }
     return !input.quit && !pump_failed;
 }
+static bool wait_for_frame(void *ctx) { return wait_for_frame_lead(ctx, 0); }
+static bool wait_before_storm(void *ctx) { return wait_for_frame_lead(ctx, AW_STORM_ANCHOR_LEAD_MS); }
 static bool frame_wait(void *ctx, unsigned slices) {
     last_frame = aw_frame_deadline(last_frame, mk61_api->millis_ms(), slices);
     /* Two-page output can prepare the image before its display deadline. */
     return pages_ready ? !input.quit && !pump_failed : wait_for_frame(ctx);
 }
-static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
+static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
                          const uint8_t *pixels, const uint16_t *palette, bool clear) {
     (void)ctx;
     mk61_service_color_frame frame = {0};
@@ -153,8 +160,12 @@ static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
     frame.pixels = pixels; frame.pixel_bytes = width * height / 2;
     frame.format = MK61_COLOR_INDEX4 | (clear ? 0 : MK61_COLOR_PRESERVE_OUTSIDE);
     memcpy(frame.palette, palette, sizeof(frame.palette));
+    return services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT, 0, sizeof(frame), &frame);
+}
+static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
+                         const uint8_t *pixels, const uint16_t *palette, bool clear) {
     for (;;) {
-        const uint32_t result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT, 0, sizeof(frame), &frame);
+        const unsigned result = try_rect(ctx, x, y, width, height, pixels, palette, clear);
         if (result == 1) break;
         if (result != 2 || input.quit || pump_failed) return false;
         if (pages_ready && !aw_display_pages_write_one(pages_display)) return false;
@@ -174,6 +185,11 @@ static bool page_control(unsigned operation, unsigned page) {
     }
 }
 static bool page_select(void *ctx, unsigned page) { (void)ctx; return page_control(MK61_COLOR_PAGE_SELECT, page); }
+static unsigned try_select(void *ctx, unsigned page) {
+    (void)ctx;
+    const uint32_t value = page;
+    return services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGE_SELECT, 0, sizeof(value), (void *)&value);
+}
 static bool page_show(void *ctx, unsigned page) { (void)ctx; return page_control(MK61_COLOR_PAGE_SHOW, page); }
 static bool page_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
                       const uint8_t *pixels, const uint16_t *palette, bool clear) {
@@ -188,46 +204,46 @@ static bool end_pages(void) {
         pump(NULL);
     }
 }
-static bool present_normal(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
+static bool present_pages(void *ctx, const uint8_t *pixels, const uint16_t *palette,
+                          const uint32_t *identities, unsigned lead_ms) {
+    const aw_display_wait_fn wait = lead_ms ? wait_before_storm : wait_for_frame;
+    if (!aw_display_pages_present(pages_display, pixels, palette, identities,
+                                  page_select, page_show, page_rect, wait, ctx)) return false;
+    /* Fence the last visible write before the next scheduled flash. */
+    return !lead_ms || page_select(ctx, pages_display->visible);
+}
+static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     if (pages_ready) {
-        if (aw_display_pages_present(pages_display, pixels, palette, aw_video_band_identities(video),
-                                     page_select, page_show, page_rect, wait_for_frame, ctx)) return true;
+        const bool intro = vm->part == AW_STORM_PART;
+        /* Other parts can overwrite either LCD page while the intro is paused. */
+        if (!intro && storm->at) storm->ready = false;
+        const uint32_t *identities = aw_video_band_identities(video);
+        const bool shown = storm->ready && intro
+            ? aw_storm_present_intro(storm, pages_display, pixels, palette, identities,
+                                    &storm_lcd, present_pages, ctx)
+            : present_pages(ctx, pixels, palette, identities, 0);
+        if (shown) return !input.quit && !pump_failed;
         if (assets.fault || !wait_for_frame(ctx) || !end_pages()) return false;
         /* An optional display transaction failed: restore a complete ordinary
          * frame, with no assumptions about either partially written page. */
         pages_ready = false; compact_display->valid = false;
         aw_video_track_bands(video, NULL);
     }
-    if (compact_ready)
-        return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL);
-    if (previous_frame.data)
-        return aw_display_present(&display, pixels, palette, present_rect, NULL);
+    if (input.quit || pump_failed) return false;
+    if (compact_ready) {
+        return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL) &&
+            !input.quit && !pump_failed;
+    }
+    if (previous_frame.data) {
+        return aw_display_present(&display, pixels, palette, present_rect, NULL) &&
+            !input.quit && !pump_failed;
+    }
     for (unsigned y = 0; y < 200;) {
         const unsigned rows = 200 - y < 80 ? 200 - y : 80;
         if (!present_rect(NULL, 0, y, 320, rows, pixels + y * 160, palette, first_strip)) return false;
         first_strip = false; y += rows;
     }
     return true;
-}
-static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
-    if (pages_ready && storm->ready && vm->part == AW_STORM_PART) {
-        const unsigned frame = storm->at++;
-        if (frame >= storm->first) {
-            const unsigned offset = frame - storm->first;
-            if (offset < AW_STORM_WARM_FRAMES) {
-                if (!present_normal(ctx, pixels, palette)) return false;
-                if (pages_ready)
-                    aw_storm_warm(storm, pages_display, offset, pixels, palette, page_select, page_rect, ctx);
-                return !input.quit && !pump_failed;
-            }
-            if (aw_storm_present(storm, pages_display, offset - AW_STORM_WARM_FRAMES, pixels, palette,
-                                 page_select, page_show, page_rect, wait_for_frame, ctx))
-                return !input.quit && !pump_failed;
-            if (input.quit || pump_failed) return false;
-        }
-    }
-    const bool ok = present_normal(ctx, pixels, palette);
-    return ok && !input.quit && !pump_failed;
 }
 static void sound(void *ctx, unsigned id, unsigned freq, unsigned volume, unsigned channel) {
     (void)ctx; aw_audio_sound(audio, id, freq, volume, channel);
@@ -260,7 +276,12 @@ int main(void) {
     services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM);
     if (!services) { message("Update PicoCalc", "firmware / PSRAM"); return 0; }
-    if (!mk61_app_buffer_acquire(services, EXTERNAL_BYTES, MK61_BUFFER_EXTERNAL, &external)) {
+    char storm_magic[4];
+    const bool extended_storm = file_read(storm_cache, 0, storm_magic, sizeof(storm_magic)) &&
+        !memcmp(storm_magic, "AWS3", sizeof(storm_magic));
+    if (!(extended_storm && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES,
+                                                    MK61_BUFFER_EXTERNAL, &external)) &&
+        !mk61_app_buffer_acquire(services, EXTERNAL_BYTES, MK61_BUFFER_EXTERNAL, &external)) {
         error = "Not enough memory"; goto done;
     }
     /* Reserve required PCM first, then place both video pages and the
@@ -288,7 +309,7 @@ int main(void) {
         !file_read("MEMLIST.BIN", 0, screen.data, info.size)) {
         error = "Missing MEMLIST.BIN"; goto done;
     }
-    if (!aw_assets_init(&assets, entries, screen.data, info.size, EXTERNAL_BYTES, NULL, bank_read, store_read, store_write)) {
+    if (!aw_assets_init(&assets, entries, screen.data, info.size, external.size, NULL, bank_read, store_read, store_write)) {
         error = "Invalid game data"; goto done;
     }
     mk61_api->display_clear();
@@ -317,7 +338,10 @@ int main(void) {
     if (input.quit) goto done;
     if (pump_failed) { error = "Input unavailable"; goto done; }
     uint32_t spi_hz = 24000000;
-    (void)services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ, 0, sizeof(spi_hz), &spi_hz);
+    const uint32_t actual_spi_hz = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ,
+                                               0, sizeof(spi_hz), &spi_hz);
+    storm_lcd = (aw_storm_output){page_select, page_show, page_rect, wait_for_frame_lead,
+                                 try_select, try_rect, actual_spi_hz};
     compute = mk61_app_compute_begin(services);
     if (!aw_video_init(video, &assets, assets.used, screen.data, present, NULL)) { error = "Video init failed"; goto done; }
     /* The native monochrome framebuffer is borrowed until graphics_end.
@@ -368,7 +392,7 @@ int main(void) {
         }
         if (pages_ready) {
             mk61_service_file_info storm_info;
-            mk61_service_file_bytes request = {"AWSTORM.BIN", &storm_info, 0, sizeof(storm_info)};
+            mk61_service_file_bytes request = {storm_cache, &storm_info, 0, sizeof(storm_info)};
             if (services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(request), &request) &&
                 !storm_info.directory)
                 aw_storm_load(storm, &assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
