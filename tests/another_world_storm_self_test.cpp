@@ -133,7 +133,7 @@ unsigned try_draw(void *ctx,unsigned x,unsigned y,unsigned w,unsigned h,
     assert(selected!=visible);
     return draw(ctx,x,y,w,h,data,colors,clear);
 }
-const aw_storm_output lcd{select,show,draw,wait,try_select,try_draw,24000000};
+const aw_storm_output lcd{select,show,draw,wait,try_select,try_draw,24000000,nullptr,nullptr};
 
 void init_pages(aw_assets &assets, unsigned front) {
     pages={};
@@ -246,7 +246,27 @@ int main() {
     assert(load(data.size()) && storm.prelude.available && !storm.prelude.idle_return.available);
     assets.capacity = sizeof(ram);
     assert(!load(data.size() - 1));
-    put32(data.data() + prelude_end + 4, 1u << AW_VIDEO_BANDS);
+    auto invalid = data;
+    put32(invalid.data() + prelude_end + 4, 1u << AW_VIDEO_BANDS);
+    seal(invalid);
+    assert(!aw_storm_load(&storm, &assets, storage_base - 1, scratch, invalid.size(), read_file, &invalid));
+
+    const auto tail_start = data.size();
+    data[3] = '5';
+    uint8_t black[AW_STORM_BLACK_HEADER] = {};
+    put32(black, 0xaad13b0au);
+    black[4] = 0x33; // The first black entry in the synthetic palette.
+    data.insert(data.end(), black, black + sizeof(black));
+    const uint8_t tail_frame[] = {0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0x22};
+    for (unsigned i = 0; i < AW_STORM_TAIL_FRAMES; ++i)
+        data.insert(data.end(), tail_frame, tail_frame + sizeof(tail_frame));
+    seal(data);
+    assert(load(data.size()) && storm.tail.available && storm.tail.black_pair == 0x33);
+    assets.capacity = storm.rects[storm.tail.frames[0].first].offset;
+    assert(load(data.size()) && storm.prelude.idle_return.available && !storm.tail.available);
+    assets.capacity = sizeof(ram);
+    assert(!load(data.size() - 1));
+    data[tail_start + 4] = 0x34;
     seal(data);
     assert(!load(data.size()));
 }

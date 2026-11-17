@@ -54,6 +54,24 @@ static bool file_read(const char *path, uint32_t offset, void *out, uint32_t siz
     mk61_service_file_bytes r = {path, out, offset, size};
     return services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_READ, 0, sizeof(r), &r) != 0;
 }
+static bool acquire_external(void) {
+    static const uint32_t reserve[] = {
+        0,
+        AW_VIDEO_PAGE_BYTES,
+        AW_VIDEO_PAGE_BYTES + AW_STORM_IDLE_RETURN_RESERVE,
+        AW_VIDEO_PAGE_BYTES + AW_STORM_IDLE_RETURN_RESERVE + AW_STORM_TAIL_RESERVE,
+    };
+    char magic[4];
+    unsigned tier = 0;
+    if (file_read(storm_cache, 0, magic, sizeof(magic)) && !memcmp(magic, "AWS", 3) &&
+        magic[3] >= '3' && magic[3] <= '5') tier = (unsigned)(magic[3] - '2');
+    for (;;) {
+        if (mk61_app_buffer_acquire(services, EXTERNAL_BYTES + reserve[tier], MK61_BUFFER_EXTERNAL, &external))
+            return true;
+        if (!tier) return false;
+        --tier;
+    }
+}
 static bool bank_read(void *ctx, uint8_t bank, uint32_t offset, void *out, uint32_t size) {
     (void)ctx; static const char hex[] = "0123456789ABCDEF";
     char path[] = "BANK00"; path[4] = hex[bank >> 4]; path[5] = hex[bank & 15];
@@ -124,7 +142,9 @@ static void audio_pump(void) {
 static void pump(void *ctx) {
     (void)ctx; mk61_api->service(); audio_pump(); poll_keys();
     if (pages_ready && storm->ready && (storm->pending < AW_STORM_FRAMES || storm->prelude.uploading ||
-                                       storm->prelude.idle_return.active) &&
+                                       storm->prelude.idle_return.active ||
+                                       (storm->tail.active && (storm->tail.latch_pending || storm->tail.visible_pending ||
+                                        storm->tail.black_rows < storm->tail.row_limit))) &&
         vm->part == AW_STORM_PART && !input.quit && !pump_failed)
         aw_storm_pump(storm, pages_display, &storm_lcd, NULL);
 }
@@ -192,6 +212,20 @@ static unsigned try_select(void *ctx, unsigned page) {
     return services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGE_SELECT, 0, sizeof(value), (void *)&value);
 }
 static bool page_show(void *ctx, unsigned page) { (void)ctx; return page_control(MK61_COLOR_PAGE_SHOW, page); }
+static uint32_t display_deadline(void *ctx) { (void)ctx; return last_frame; }
+static unsigned page_latch_at(void *ctx, unsigned page, uint32_t deadline, bool block) {
+    uint32_t value = page;
+    do {
+        if ((int32_t)(mk61_api->millis_ms() - deadline) >= 0) {
+            const unsigned result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGE_SHOW,
+                                                    0, sizeof(value), &value);
+            if (result != 2) return result;
+        }
+        if (!block) return 2;
+        if (input.quit || pump_failed) return 0;
+        pump(ctx);
+    } while (true);
+}
 static bool page_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
                       const uint8_t *pixels, const uint16_t *palette, bool clear) {
     (void)clear;
@@ -277,15 +311,7 @@ int main(void) {
     services = mk61_app_get_services(mk61_api, MK61_SERVICE_CAP_BUFFERS | MK61_SERVICE_CAP_EXTERNAL_BUFFERS |
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM);
     if (!services) { message("Update PicoCalc", "firmware / PSRAM"); return 0; }
-    char storm_magic[4];
-    const bool storm_header = file_read(storm_cache, 0, storm_magic, sizeof(storm_magic));
-    const bool idle_return = storm_header && !memcmp(storm_magic, "AWS4", sizeof(storm_magic));
-    const bool extended_storm = idle_return || (storm_header && !memcmp(storm_magic, "AWS3", sizeof(storm_magic)));
-    if (!(idle_return && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES +
-                                                AW_STORM_IDLE_RETURN_RESERVE, MK61_BUFFER_EXTERNAL, &external)) &&
-        !(extended_storm && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES,
-                                                    MK61_BUFFER_EXTERNAL, &external)) &&
-        !mk61_app_buffer_acquire(services, EXTERNAL_BYTES, MK61_BUFFER_EXTERNAL, &external)) {
+    if (!acquire_external()) {
         error = "Not enough memory"; goto done;
     }
     /* Reserve required PCM first, then place both video pages and the
@@ -345,7 +371,7 @@ int main(void) {
     const uint32_t actual_spi_hz = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ,
                                                0, sizeof(spi_hz), &spi_hz);
     storm_lcd = (aw_storm_output){page_select, page_show, page_rect, wait_for_frame_lead,
-                                 try_select, try_rect, actual_spi_hz};
+                                 try_select, try_rect, actual_spi_hz, display_deadline, page_latch_at};
     compute = mk61_app_compute_begin(services);
     if (!aw_video_init(video, &assets, assets.used, screen.data, present, NULL)) { error = "Video init failed"; goto done; }
     /* The native monochrome framebuffer is borrowed until graphics_end.
@@ -398,9 +424,13 @@ int main(void) {
             mk61_service_file_info storm_info;
             mk61_service_file_bytes request = {storm_cache, &storm_info, 0, sizeof(storm_info)};
             if (services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(request), &request) &&
-                !storm_info.directory)
+                !storm_info.directory) {
                 aw_storm_load(storm, &assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
                               storm_info.size, storm_read, NULL);
+                // The color-update lead times were measured at these clocks.
+                storm->tail.overlap = storm->tail.available && actual_spi_hz == 24000000u &&
+                    mk61_app_compute_hz(services) == 200000000u;
+            }
         }
     }
     first_strip = true; last_frame = mk61_api->millis_ms();

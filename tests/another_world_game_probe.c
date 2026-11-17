@@ -19,14 +19,18 @@ static unsigned page_selected=2, page_visible=2, page_shows;
 static aw_display_storm storm;
 static unsigned replayed, intro_frames, anchor_calls, blocking_wire;
 static unsigned worker_busy, busy_polls;
-static unsigned idle_returns;
+static unsigned idle_returns, tail_replayed;
+static unsigned deferred_latches, visible_overlaps, draw_lead;
+static uint32_t lcd_time;
 static uint64_t wire_at_flash, wire_at_return;
-static bool normal_used, tight_psram, base_prelude_only, return_mismatch;
+static bool normal_used, tight_psram, base_prelude_only, return_mismatch, limited_tail, incomplete_black;
+static bool overlap;
+static unsigned tail_mismatch;
 static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     FILE *file = ctx;
     return fseek(file, (long)offset, SEEK_SET) == 0 && fread(out, 1, size, file) == size;
 }
-static bool storm_wait(void *ctx, unsigned lead_ms) { (void)ctx; (void)lead_ms; return true; }
+static bool storm_wait(void *ctx, unsigned lead_ms) { (void)ctx; if (lead_ms) draw_lead = lead_ms; return true; }
 #endif
 #endif
 static aw_display_compact compact;
@@ -105,8 +109,15 @@ static unsigned storm_draw(void *ctx, unsigned x, unsigned y, unsigned width, un
     worker_busy = 2;
     return display_rect(ctx, x, y, width, height, pixels, palette, clear);
 }
+static uint32_t storm_deadline(void *ctx) { (void)ctx; return intro_frames; }
+static unsigned storm_latch_at(void *ctx, unsigned page, uint32_t deadline, bool block) {
+    if (!block && lcd_time < deadline) return 2;
+    if (!block && worker_busy) { --worker_busy; ++busy_polls; return 2; }
+    return storm_blocking_show(ctx, page);
+}
 static const aw_storm_output storm_lcd = {
-    storm_blocking_select, storm_blocking_show, storm_blocking_draw, storm_wait, storm_select, storm_draw, 24000000
+    storm_blocking_select, storm_blocking_show, storm_blocking_draw, storm_wait, storm_select, storm_draw, 24000000,
+    storm_deadline, storm_latch_at
 };
 static bool storm_normal(void *ctx, const uint8_t *pixels, const uint16_t *palette,
                           const uint32_t *identities, unsigned lead) {
@@ -177,8 +188,12 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
                aw_storm_load(&storm, h->audio->assets, second + AW_VIDEO_PAGE_BYTES,
                              compact.scratch, (uint32_t)size, storm_read, file));
         assert(storm.prelude.available == (!tight_psram && magic[3] >= '3'));
-        assert(storm.prelude.idle_return.available == (magic[3] == '4' && !tight_psram && !base_prelude_only));
+        assert(storm.prelude.idle_return.available == (magic[3] >= '4' && !tight_psram && !base_prelude_only));
+        assert(storm.tail.available == (magic[3] == '5' && !tight_psram && !base_prelude_only && !limited_tail));
+        storm.tail.overlap = overlap && storm.tail.available;
         if (return_mismatch) storm.prelude.idle_return.hash ^= 1u;
+        if (tail_mismatch == 1) storm.tail.frames[1].hash ^= 1u;
+        if (tail_mismatch == 2) storm.tail.black_hash ^= 1u;
         fclose(file);
 #endif
 #endif
@@ -217,11 +232,15 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     const uint32_t *identities = aw_video_band_identities(h->audio->vm->video);
 #ifdef AW_TEST_STORM
     const unsigned intro_frame = h->audio->vm->part == AW_STORM_PART ? intro_frames++ : UINT32_MAX;
-    blocking_wire = 0;
+    const unsigned clip_start = storm.first + AW_STORM_WARM_FRAMES;
+    const unsigned tail_start = clip_start + AW_STORM_FRAMES;
+    const unsigned before_page = pages.visible;
+    lcd_time = intro_frame;
+    blocking_wire = draw_lead = 0;
     normal_used = false;
     if (intro_frame != UINT32_MAX && storm.ready) {
         assert(aw_storm_present_intro(&storm, &pages, pixels, palette, identities, &storm_lcd, storm_normal, NULL));
-        if (intro_frame >= storm.first + AW_STORM_WARM_FRAMES && !normal_used) ++replayed;
+        if (intro_frame >= clip_start && intro_frame < tail_start && !normal_used) ++replayed;
         if (storm.prelude.available) {
             if (intro_frame == storm.first - AW_STORM_FIRST_PRELOAD_LEAD || intro_frame == storm.first - 1u)
                 assert(normal_used && blocking_wire == 0 && page_shows == before_shows + 1);
@@ -239,6 +258,48 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         }
     } else {
         assert(storm_normal(NULL, pixels, palette, identities, 0));
+    }
+    if (storm.tail.latch_pending) {
+        assert(overlap && intro_frame + 1 == tail_start && pages.visible == before_page && page_shows == before_shows);
+        assert(storm.tail.latch_deadline == intro_frames && lcd_time < storm.tail.latch_deadline);
+        aw_storm_pump(&storm, &pages, &storm_lcd, NULL);
+        assert(storm.tail.latch_pending && page_shows == before_shows);
+        lcd_time = storm.tail.latch_deadline;
+        for (unsigned i = 0; i < 3 && storm.tail.latch_pending; ++i)
+            aw_storm_pump(&storm, &pages, &storm_lcd, NULL);
+        assert(!storm.tail.latch_pending && pages.visible == storm.tail.visible && page_shows == before_shows + 1);
+        ++deferred_latches;
+    }
+    if (storm.tail.visible_pending) {
+        const uint64_t visible_end = display_bytes[display_part];
+        assert(overlap && worker_busy && pages.selected == pages.visible);
+        aw_storm_pump(&storm, &pages, &storm_lcd, NULL);
+        assert(storm.tail.visible_pending && display_bytes[display_part] == visible_end && pages.selected == pages.visible);
+        ++visible_overlaps;
+    }
+    if (intro_frame >= tail_start && intro_frame <= tail_start + AW_STORM_TAIL_FRAMES) {
+        static const unsigned wire[] = {45856, 57440, 48908, 0};
+        const unsigned index = intro_frame - tail_start;
+        const bool expected = storm.tail.available && (tail_mismatch != 1 || index == 0) &&
+                              (tail_mismatch != 2 || index < AW_STORM_TAIL_FRAMES);
+        assert(normal_used != expected);
+        if (expected) {
+            if (index == AW_STORM_TAIL_FRAMES) {
+                assert(page_shows == before_shows + 1);
+                if (incomplete_black)
+                    assert(storm.tail.black_rows < AW_VIDEO_HEIGHT &&
+                           blocking_wire == (AW_VIDEO_HEIGHT - storm.tail.black_rows) * AW_VIDEO_WIDTH * 2u);
+                else
+                    assert(storm.tail.black_rows == AW_VIDEO_HEIGHT && blocking_wire == 0);
+            } else {
+                assert(blocking_wire == wire[index]);
+                if (overlap) {
+                    static const unsigned expected_lead[] = {28, 31, 25};
+                    assert(draw_lead == expected_lead[index]);
+                }
+            }
+            ++tail_replayed;
+        }
     }
 #else
     assert(aw_display_pages_present(&pages, pixels, palette, identities, display_select_page,
@@ -293,7 +354,8 @@ static bool frame_wait(void *ctx, unsigned slices) {
     unsigned remaining = slices * 500;
     while (remaining) {
 #ifdef AW_TEST_STORM
-        if (h->audio->vm->part == AW_STORM_PART)
+        if (h->audio->vm->part == AW_STORM_PART &&
+            !(incomplete_black && storm.tail.active && storm.tail.row_limit == AW_VIDEO_HEIGHT))
             aw_storm_pump(&storm, &pages, &storm_lcd, NULL);
 #endif
         unsigned n = remaining < 64 ? remaining : 64, frames, bytes;
@@ -338,9 +400,20 @@ int main(int argc, char **argv) {
     tight_psram = getenv("AW_STORM_TIGHT_PSRAM") != NULL;
     base_prelude_only = getenv("AW_STORM_BASE_PRELUDE") != NULL;
     return_mismatch = getenv("AW_STORM_RETURN_MISMATCH") != NULL;
+    limited_tail = getenv("AW_STORM_LIMITED_TAIL") != NULL;
+    incomplete_black = getenv("AW_STORM_INCOMPLETE_BLACK") != NULL;
+    overlap = getenv("AW_STORM_OVERLAP") != NULL;
+    const char *mismatch = getenv("AW_STORM_TAIL_MISMATCH");
+    if (mismatch) {
+        assert(!strcmp(mismatch, "visible") || !strcmp(mismatch, "black"));
+        tail_mismatch = !strcmp(mismatch, "visible") ? 1 : 2;
+    }
     if (!tight_psram) {
         h.capacity += AW_VIDEO_PAGE_BYTES;
-        if (!base_prelude_only) h.capacity += AW_STORM_IDLE_RETURN_RESERVE;
+        if (!base_prelude_only) {
+            h.capacity += AW_STORM_IDLE_RETURN_RESERVE;
+            if (!limited_tail) h.capacity += AW_STORM_TAIL_RESERVE;
+        }
     }
 #endif
     h.store = calloc(1, h.capacity);
@@ -432,6 +505,15 @@ int main(int argc, char **argv) {
     assert(replayed == AW_STORM_FRAMES && storm.warmed == AW_STORM_WARM_FRAMES && !storm.ready);
     assert(anchor_calls == (unsigned)storm.prelude.available && busy_polls);
     assert(idle_returns == (unsigned)(storm.prelude.idle_return.available && !return_mismatch));
+    assert(tail_replayed == (storm.tail.available
+        ? (tail_mismatch == 1 ? 1u : tail_mismatch == 2 ? AW_STORM_TAIL_FRAMES : AW_STORM_TAIL_FRAMES + 1u)
+        : 0u));
+    if (overlap) {
+        assert(deferred_latches == 1 && visible_overlaps == AW_STORM_TAIL_FRAMES);
+        puts("DOS intro: deferred latch honored its deadline and DMA preceded hidden uploads");
+    }
+    if (tail_replayed == AW_STORM_TAIL_FRAMES + 1u && !incomplete_black)
+        puts("DOS intro: frames 2439–2441 used 45856/57440/48908 LCD bytes; frame 2442 latched a preloaded page");
     if (idle_returns)
         puts("DOS intro: frame 2406 reused the hidden page with 62836 LCD bytes");
     if (storm.prelude.available)

@@ -109,7 +109,7 @@ bool load_prelude(aw_display_storm &s, Source &source, aw_assets &assets, uint32
 
 // AWS4 appends the return from the first flash over the earlier idle page.
 bool load_idle_return(aw_display_storm &s, Source &source, aw_assets &assets,
-                       uint32_t at, uint8_t *scratch, bool &fits) {
+                       uint32_t &at, uint8_t *scratch, bool &fits) {
     uint8_t header[AW_STORM_IDLE_RETURN_HEADER];
     if (!source.take(header, sizeof(header))) return false;
     auto &ret = s.prelude.idle_return;
@@ -123,6 +123,32 @@ bool load_idle_return(aw_display_storm &s, Source &source, aw_assets &assets,
     ret.page = 2;
     return load_rects(source, assets, at, scratch, s.rects + ret.first, count,
                       AW_VIDEO_PAGE_BYTES, false, fits);
+}
+
+// AWS5 stores exact visible-page windows for 2439–2441 and the solid black
+// frame's fingerprint and index. The black upload needs no PSRAM payload.
+bool load_tail(aw_display_storm &s, Source &source, aw_assets &assets, uint32_t at,
+                uint8_t *scratch, bool &fits) {
+    uint8_t header[AW_STORM_BLACK_HEADER];
+    if (!source.take(header, sizeof(header))) return false;
+    auto &tail = s.tail;
+    tail.black_hash = le32(header);
+    tail.black_pair = header[4];
+    if (tail.black_pair >> 4 != (tail.black_pair & 15) || s.palette[0][tail.black_pair & 15]) return false;
+    const unsigned end = s.prelude.idle_return.end + AW_STORM_TAIL_RECTS;
+    unsigned rects = s.prelude.idle_return.end;
+    for (unsigned i = 0; i < AW_STORM_TAIL_FRAMES; ++i) {
+        if (!source.take(header, sizeof(header))) return false;
+        const unsigned count = header[4];
+        if (!count || count > end - rects) return false;
+        auto &frame = tail.frames[i];
+        const unsigned palette = i + 1 == AW_STORM_TAIL_FRAMES ? 0 : 1;
+        frame = {le32(header), uint8_t(palette), uint8_t(rects), uint8_t(rects + count)};
+        if (!load_rects(source, assets, at, scratch, s.rects + rects, count, AW_VIDEO_PAGE_BYTES,
+                        false, fits)) return false;
+        rects = frame.end;
+    }
+    return true;
 }
 
 bool select_page(aw_display_pages &p, unsigned page, aw_display_page_fn select, void *ctx) {
@@ -285,12 +311,132 @@ unsigned lead_ms(const aw_display_storm &s, const aw_storm_frame &f, uint32_t sp
     return (us + 500u) / 1000u;
 }
 
+// Send a short strip in the time before each visible update. Once the
+// white frame is on screen, the worker can finish the rest in one interval.
+constexpr unsigned black_rows_per_frame = 32;
+
+unsigned finish_tail_latch(aw_storm_tail &tail, aw_display_pages &p, const aw_storm_output &lcd,
+                           void *ctx, bool block) {
+    if (!tail.latch_pending) return 1;
+    const unsigned result = lcd.latch_at(ctx, tail.visible, tail.latch_deadline, block);
+    if (result == 1) {
+        p.visible = tail.visible;
+        tail.latch_pending = false;
+    }
+    return result;
+}
+
+unsigned finish_tail_visible(aw_storm_tail &tail, const aw_storm_output &lcd, void *ctx, bool block) {
+    if (!tail.visible_pending) return 1;
+    // PAGE_SELECT acknowledges only after the previous transfer drains.
+    const unsigned result = block ? unsigned(lcd.select(ctx, tail.visible)) : lcd.try_select(ctx, tail.visible);
+    if (result == 1) tail.visible_pending = false;
+    return result;
+}
+
+bool pump_black(aw_display_storm &s, aw_display_pages &p, const aw_storm_output &lcd, void *ctx) {
+    auto &tail = s.tail;
+    if (p.visible != tail.visible) return false;
+    const unsigned completed = finish_tail_visible(tail, lcd, ctx, false);
+    if (completed != 1) return completed == 2;
+    if (tail.black_rows >= tail.row_limit) return true;
+    const unsigned page = tail.visible ^ 1u;
+    const unsigned selected = lcd.try_select(ctx, page);
+    if (selected != 1) return selected == 2;
+    p.selected = page;
+    auto &slot = *p.slot[page];
+    slot.valid = false;
+    const unsigned y = tail.black_rows;
+    const unsigned rows = tail.row_limit - y < AW_STORM_STRIP_ROWS ? tail.row_limit - y : AW_STORM_STRIP_ROWS;
+    memset(slot.scratch, tail.black_pair, rows * AW_VIDEO_STRIDE);
+    const unsigned result = lcd.try_draw(ctx, 0, y, AW_VIDEO_WIDTH, rows, slot.scratch, s.palette[0], false);
+    if (result == 1) tail.black_rows += rows;
+    return result == 1 || result == 2;
+}
+
+bool draw_tail_frame(aw_display_storm &s, aw_display_pages &p, unsigned index, const uint8_t *pixels,
+                      const uint16_t *palette, const uint32_t *identities, const aw_storm_output &lcd, void *ctx) {
+    auto &tail = s.tail;
+    const auto &frame = tail.frames[index];
+    const unsigned page = tail.visible;
+    if (memcmp(palette, s.palette[frame.page], AW_STORM_PALETTE_BYTES) ||
+        aw_storm_frame_hash(pixels, palette) != frame.hash) return false;
+    // Reserve the next LCD slot for the visible frame, even while waiting
+    // for its start time. A late hidden strip would eat into its budget.
+    s.rendering = true;
+    constexpr unsigned overlap_lead_ms[] = {28, 31, 25};
+    const unsigned lead = tail.overlap ? overlap_lead_ms[index] : lead_ms(s, frame, lcd.spi_hz);
+    bool ok = finish_tail_visible(tail, lcd, ctx, true) == 1 &&
+        lcd.wait(ctx, lead) && select_page(p, page, lcd.select, ctx);
+    auto &slot = *p.slot[page];
+    const bool white = index + 1 == AW_STORM_TAIL_FRAMES;
+    if (ok) {
+        slot.valid = false;
+        if (white) {
+            p.pending_pixels = pixels;
+            p.pending_bands = (1u << AW_VIDEO_BANDS) - 1;
+        }
+        unsigned last = frame.end - 1;
+        if (tail.overlap) {
+            for (unsigned i = frame.first; i < frame.end; ++i)
+                if (unsigned(s.rects[i].width) * s.rects[i].height >
+                    unsigned(s.rects[last].width) * s.rects[last].height) last = i;
+        }
+        for (unsigned i = frame.first; ok && i <= frame.end; ++i) {
+            if (i == last) continue;
+            const auto &r = s.rects[i == frame.end ? last : i];
+            ok = read_rect(slot, r) &&
+                lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+        }
+        if (white) ok = aw_display_pages_finish(&p, palette, identities, 1, ok);
+        if (ok && tail.overlap) {
+            // The worker owns the last window. Resume the VM during DMA and
+            // defer hidden writes until the visible transfer completes.
+            tail.visible_pending = true;
+        } else if (ok) {
+            ok = lcd.select(ctx, page) && lcd.wait(ctx, 0);
+        }
+        if (!ok) slot.valid = false;
+    }
+    s.rendering = false;
+    if (ok) {
+        constexpr unsigned overlap_black_limits[] = {32, 72, AW_VIDEO_HEIGHT};
+        tail.row_limit = tail.overlap ? overlap_black_limits[index]
+            : white ? AW_VIDEO_HEIGHT : black_rows_per_frame * (index + 2);
+    }
+    return ok;
+}
+
+bool show_tail_black(aw_display_storm &s, aw_display_pages &p, const uint8_t *pixels,
+                      const uint16_t *palette, const uint32_t *identities, const aw_storm_output &lcd, void *ctx) {
+    auto &tail = s.tail;
+    if (memcmp(palette, s.palette[0], AW_STORM_PALETTE_BYTES) ||
+        aw_storm_frame_hash(pixels, palette) != tail.black_hash) return false;
+    const unsigned page = tail.visible ^ 1u;
+    if (!select_page(p, page, lcd.select, ctx)) return false;
+    auto &slot = *p.slot[page];
+    slot.valid = false;
+    p.pending_pixels = pixels;
+    p.pending_bands = (1u << AW_VIDEO_BANDS) - 1;
+    bool ok = true;
+    for (unsigned y = tail.black_rows; ok && y < AW_VIDEO_HEIGHT;) {
+        const unsigned rows = AW_VIDEO_HEIGHT - y < AW_STORM_STRIP_ROWS ? AW_VIDEO_HEIGHT - y : AW_STORM_STRIP_ROWS;
+        ok = lcd.draw(ctx, 0, y, AW_VIDEO_WIDTH, rows, pixels + y * AW_VIDEO_STRIDE, palette, false);
+        y += rows;
+    }
+    ok = aw_display_pages_finish(&p, palette, identities, 0, ok);
+    if (!ok || !lcd.wait(ctx, 0) || !lcd.show(ctx, page)) return slot.valid = false;
+    p.visible = page;
+    return true;
+}
+
 } // namespace
 
 bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
                    uint8_t *scratch, uint32_t bytes, aw_storm_read_fn read, void *ctx) {
     s->ready = false;
     s->prelude = {};
+    s->tail = {};
     if (bytes < AW_STORM_HEADER || bytes > AW_STORM_MAX_FILE || base > assets->capacity ||
         base > UINT32_MAX - (AW_ASSET_PAGE - 1u)) return false;
     uint32_t at = (base + AW_ASSET_PAGE - 1u) & ~(AW_ASSET_PAGE - 1u);
@@ -298,12 +444,13 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
     Source source{read, ctx, bytes};
     uint8_t header[AW_STORM_HEADER];
     if (!source.take(header, sizeof(header)) ||
-        memcmp(header, "AWS", 3) || header[3] < '1' || header[3] > '4' || le16(header + 10)) return false;
+        memcmp(header, "AWS", 3) || header[3] < '1' || header[3] > '5' || le16(header + 10)) return false;
     const uint32_t hash = le32(header + 4);
-    const bool has_prelude = header[3] >= '3', has_idle_return = header[3] == '4';
+    const bool has_prelude = header[3] >= '3', has_idle_return = header[3] >= '4', has_tail = header[3] == '5';
     s->ahead = header[3] >= '2';
     s->first = le16(header + 8);
-    if (s->first > UINT16_MAX - AW_STORM_WARM_FRAMES - AW_STORM_FRAMES) return false;
+    const unsigned tail_frames = has_tail ? AW_STORM_TAIL_FRAMES + 1 : 0;
+    if (s->first > UINT16_MAX - AW_STORM_WARM_FRAMES - AW_STORM_FRAMES - tail_frames) return false;
     for (unsigned i = 0; i < AW_STORM_WARM_FRAMES; ++i) s->warm_hash[i] = le32(header + 12 + 4 * i);
     for (unsigned i = 0; i < 16; ++i) s->palette[0][i] = le16(header + 32 + 2 * i);
     if (s->ahead) {
@@ -326,6 +473,8 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
     if (has_prelude && !load_prelude(*s, source, *assets, at, scratch, rects, fits)) return false;
     bool return_fits = fits;
     if (has_idle_return && !load_idle_return(*s, source, *assets, at, scratch, return_fits)) return false;
+    bool tail_fits = return_fits;
+    if (has_tail && !load_tail(*s, source, *assets, at, scratch, tail_fits)) return false;
     s->at = 0;
     s->warmed = 0;
     s->pending = AW_STORM_FRAMES;
@@ -334,6 +483,7 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
     s->ready = source.at == bytes && source.hash == hash;
     s->prelude.available = s->ready && has_prelude && fits;
     s->prelude.idle_return.available = s->ready && has_idle_return && return_fits;
+    s->tail.available = s->ready && has_tail && tail_fits;
     return s->ready;
 }
 
@@ -357,6 +507,13 @@ bool aw_storm_warm(aw_display_storm *s, aw_display_pages *p, unsigned index,
 
 void aw_storm_pump(aw_display_storm *s, aw_display_pages *p, const aw_storm_output *lcd, void *ctx) {
     if (!s->ready || s->rendering || p->pending_bands) return;
+    if (s->tail.active) {
+        const unsigned latched = finish_tail_latch(s->tail, *p, *lcd, ctx, false);
+        if (latched == 2) return;
+        if (!latched || !pump_black(*s, *p, *lcd, ctx))
+            s->ready = s->tail.active = s->tail.latch_pending = s->tail.visible_pending = false;
+        return;
+    }
     auto &ret = s->prelude.idle_return;
     if (ret.active) {
         if (ret.cursor < ret.end && !pump_rect(*s, *p, ret.page, ret.cursor, ret.palette, *lcd, ctx)) {
@@ -407,15 +564,25 @@ bool aw_storm_present(aw_display_storm *s, aw_display_pages *p, unsigned index,
             return s->ready = false;
         staged = false;
     }
-    if (hidden && (!lcd->wait(ctx, 0) || !lcd->show(ctx, page))) return s->ready = false;
+    const unsigned following = index + 1;
+    const bool defer_latch = hidden && following == AW_STORM_FRAMES && s->tail.available && s->tail.overlap &&
+        lcd->deadline && lcd->latch_at && lcd->try_select && lcd->try_draw;
+    if (hidden && !defer_latch && (!lcd->wait(ctx, 0) || !lcd->show(ctx, page))) return s->ready = false;
     if (!hidden && s->ahead && start < frame.end && !lcd->select(ctx, page)) return s->ready = false;
-    p->visible = page;
+    if (defer_latch) {
+        // Keep the current page on screen until the clock reaches the
+        // captured deadline. The VM can now prepare the next frame.
+        s->tail.visible = uint8_t(page);
+        s->tail.latch_deadline = lcd->deadline(ctx);
+        s->tail.latch_pending = true;
+    } else {
+        p->visible = page;
+    }
     s->warmed = AW_STORM_WARM_FRAMES;
     // Retain palette choice for normal page selection after the clip. The
     // first normal draw into each modified page rebuilds its band snapshot.
     memcpy(slot.palette, palette, AW_STORM_PALETTE_BYTES);
-    const unsigned following = index + 1;
-    if (following == AW_STORM_FRAMES) s->ready = false;
+    if (following == AW_STORM_FRAMES) s->ready = defer_latch;
     else if (s->ahead && lcd->try_select && lcd->try_draw && s->frames[following].page != frame.page) {
         s->pending = uint8_t(following);
         s->cursor = s->frames[following].first;
@@ -485,7 +652,36 @@ bool aw_storm_present_intro(aw_display_storm *s, aw_display_pages *p, const uint
 
     const unsigned offset = n - s->first;
     if (offset >= AW_STORM_WARM_FRAMES) {
-        if (aw_storm_present(s, p, offset - AW_STORM_WARM_FRAMES, pixels, palette, lcd, ctx)) return true;
+        const unsigned index = offset - AW_STORM_WARM_FRAMES;
+        if (index < AW_STORM_FRAMES && aw_storm_present(s, p, index, pixels, palette, lcd, ctx)) {
+            if (index + 1 == AW_STORM_FRAMES && s->tail.available && lcd->try_select && lcd->try_draw) {
+                if (!s->tail.latch_pending) s->tail.visible = uint8_t(p->visible);
+                s->tail.row_limit = s->tail.overlap ? 0 : black_rows_per_frame;
+                s->ready = s->tail.active = true;
+            }
+            return true;
+        }
+        auto &tail = s->tail;
+        if (tail.active && index >= AW_STORM_FRAMES) {
+            if (tail.latch_pending) {
+                s->rendering = true;
+                const bool latched = finish_tail_latch(tail, *p, *lcd, ctx, true) == 1;
+                s->rendering = false;
+                if (!latched) return s->ready = tail.active = tail.latch_pending = false;
+            }
+            const unsigned step = index - AW_STORM_FRAMES;
+            const bool same_page = p->visible == tail.visible;
+            if (same_page && step < AW_STORM_TAIL_FRAMES &&
+                draw_tail_frame(*s, *p, step, pixels, palette, identities, *lcd, ctx))
+                return true;
+            // Stop speculative writes before latching or handing the pages
+            // back to the ordinary renderer.
+            s->ready = tail.active = false;
+            if (finish_tail_visible(tail, *lcd, ctx, true) != 1) return false;
+            if (same_page && step == AW_STORM_TAIL_FRAMES &&
+                show_tail_black(*s, *p, pixels, palette, identities, *lcd, ctx))
+                return true;
+        }
         return render_normal(*s, pixels, palette, identities, 0, normal, ctx);
     }
 

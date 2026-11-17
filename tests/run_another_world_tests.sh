@@ -223,6 +223,11 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
       "$app/display_compact.c" "$app/display_pages.c" "$root/tests/another_world_game_probe.c" \
       "$build_dir/storm.o" "$build_dir/zx0.o" -o "$build_dir/storm-game"
     AW_STORM_CACHE="$build_dir/AWSTORM.BIN" "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_OVERLAP=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_TAIL_MISMATCH=visible "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_TAIL_MISMATCH=black "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_INCOMPLETE_BLACK=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
+    AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_LIMITED_TAIL=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
     AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_RETURN_MISMATCH=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
     AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_BASE_PRELUDE=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
     AW_STORM_CACHE="$build_dir/AWSTORM.BIN" AW_STORM_TIGHT_PSRAM=1 "$build_dir/storm-game" "$ANOTHER_WORLD_DATA" 3000
