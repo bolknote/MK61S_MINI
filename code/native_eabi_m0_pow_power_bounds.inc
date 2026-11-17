@@ -7,6 +7,9 @@
 
 #if defined(__arm__) || defined(__thumb__)
 #define M0_POW_BOUNDS __attribute__((noinline,cold,section(".m0_pow_exact_extension")))
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+extern "C" void mk61_m0_pow_progress() __attribute__((weak));
+#endif
 #else
 #define M0_POW_BOUNDS
 #endif
@@ -39,6 +42,11 @@ template<unsigned Words> struct PowerBounds {
   static M0_POW_BOUNDS void multiply(Number& a,const Number& b,unsigned b_start) {
     uint16_t product[2*Words]{};
     for(unsigned j=b_start;j<Words;++j) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      // The 8192-bit refinement may span more than one watchdog period.
+      if constexpr(Words>256)
+        if(!(j&15U) && mk61_m0_pow_progress) mk61_m0_pow_progress();
+#endif
       const uint32_t digit=b.word[j];
       uint32_t carry=0;
       for(unsigned i=0;i<Words;++i) {

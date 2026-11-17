@@ -46,6 +46,13 @@
 extern "C" { extern u32 __StackBottom[], __StackTop[]; }
 extern "C" { extern char __end__,__HeapLimit; }
 
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+extern "C" __attribute__((noinline,cold,section(".m0_pow_stream_extension")))
+void mk61_m0_pow_progress() {
+    if(get_core_num()==0) picocalc::diagnostics::feed_watchdog();
+}
+#endif
+
 namespace {
 picocalc::Calculator calculator;
 picocalc::Keyboard keyboard;

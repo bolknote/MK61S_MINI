@@ -90,6 +90,36 @@ extern "C" double mk61_m0_cr_exp(double x) { return core_exp::cr_exp(x); }
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 #include "native_eabi_m0_pow_exact.inc"
 #include "native_eabi_m0_pow_power_bounds.inc"
+#include "native_eabi_m0_pow_stream.inc"
+
+#define M0_POW_FINAL __attribute__((noinline,cold,section(".m0_pow_stream_extension")))
+static M0_POW_FINAL int pow_final_side(uint64_t x,uint64_t y,uint64_t lower) {
+  const int side=m0_pow_power_bounds::PowerBounds<512>::side(x,y,lower);
+  return side?side:m0_pow_stream::side(x,y,lower,mk61_m0_pow_progress);
+}
+
+extern "C" M0_POW_FINAL uint64_t mk61_m0_pow_round_final(uint64_t x,uint64_t y,uint64_t hint) {
+  constexpr uint64_t infinity=UINT64_C(0x7ff0000000000000);
+  constexpr uint64_t one=UINT64_C(0x3ff0000000000000);
+  const uint64_t magnitude=y&UINT64_C(0x7fffffffffffffff);
+  // CORE-MATH has already handled nonfinite inputs and zero/negative bases.
+  // Repeat the cutoffs before an unhinted search or integer exponent decode.
+  if(x==one || magnitude<UINT64_C(0x3bf0000000000000)) return one;
+  if(magnitude>=UINT64_C(0x43e0000000000000))
+    return (x<one)^bool(y>>63)?0:infinity;
+  if(hint<infinity) return hint+unsigned(pow_final_side(x,y,hint)>0);
+
+  // The 1024-bit stage normally publishes the only undecided midpoint.
+  // With no hint, the same comparator can search all ordered encodings.
+  uint64_t low=0,high=infinity;
+  while(low<high) {
+    const uint64_t cell=low+((high-low)>>1);
+    if(pow_final_side(x,y,cell)>0) low=cell+1;
+    else high=cell;
+  }
+  return low;
+}
+#undef M0_POW_FINAL
 #endif
 // Reached only after CORE-MATH's final 256-bit rounding test failed. The
 // directed integer passes do not change any successful earlier result.
@@ -100,19 +130,21 @@ double mk61_m0_pow_rescue(double x,double y,double sign) {
   result=UINT64_C(0x7FF0000000000000); // Unknown initial rounding hint.
 #endif
   __builtin_memcpy(&a,&x,8);__builtin_memcpy(&b,&y,8);__builtin_memcpy(&s,&sign,8);
-  if(m0_pow_interval::Fixed<512>::evaluate(a,b,result) ||
-     m0_pow_interval::Fixed<1024>::evaluate(a,b,result)
+  if(!m0_pow_interval::Fixed<512>::evaluate(a,b,result) &&
+     !m0_pow_interval::Fixed<1024>::evaluate(a,b,result)
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-     || mk61_m0_pow_exact_small(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,&result)
-     || m0_pow_power_bounds::resolve(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,result)
+     && !mk61_m0_pow_exact_small(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,&result)
+     && !m0_pow_power_bounds::resolve(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,result)
 #endif
      ) {
-    result|=s&UINT64_C(0x8000000000000000);
-    double rounded;__builtin_memcpy(&rounded,&result,8);return rounded;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+    result=mk61_m0_pow_round_final(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,result);
+#else
+    __builtin_trap();
+#endif
   }
-  // Do not return an approximation if the final enclosure is undecided.
-  // A universal precision bound for binary64 pow is still not established.
-  __builtin_trap();
+  result|=s&UINT64_C(0x8000000000000000);
+  double rounded;__builtin_memcpy(&rounded,&result,8);return rounded;
 }
 #undef exit
 #define exit(n) return mk61_m0_pow_rescue(x,y,s)

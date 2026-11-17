@@ -51,6 +51,14 @@ SECTIONS {
         *(.m0_asin_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
+    .m0_pow_stream_extension 0x10153000 : {
+        *(.m0_pow_stream_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.m0_asin_extension) + SIZEOF(.m0_asin_extension) <= ADDR(.m0_pow_stream_extension),
+           "Asin overlaps the exact pow stream")
+    ASSERT(SIZEOF(.m0_pow_stream_extension) <= 0x3000,
+           "Exact pow stream exceeds its 12KiB flash slot")
     .m0_asin_refine_extension 0x10156000 : {
         *(.m0_asin_refine_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
