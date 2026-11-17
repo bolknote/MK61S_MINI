@@ -4,10 +4,314 @@ import argparse
 from fractions import Fraction as F
 import hashlib
 import json
+from math import ceil
 from pathlib import Path
 import struct
 
 ROOT = Path(__file__).resolve().parents[2]
+ONE = 0x3FF0000000000000
+INFINITY = 0x7FF0000000000000
+ABS_MASK = (1 << 63)-1
+POWER_OF_TWO_TAIL_MINIMUM_SHIFT = 100
+
+
+def odd_dyadic(encoding):
+    """Decode a finite positive binary64 as an odd coefficient times 2^e."""
+    field = encoding >> 52
+    coefficient = encoding & ((1 << 52)-1)
+    exponent = -1074
+    if field:
+        coefficient += 1 << 52
+        exponent = field-1075
+    trailing = (coefficient & -coefficient).bit_length()-1
+    return coefficient >> trailing, exponent+trailing
+
+
+def midpoint_coefficient(lower):
+    """Return the odd coefficient of the exact positive RNE midpoint."""
+    if lower == INFINITY-1:
+        return (1 << 54)-1
+    # Adjacent values in one binade share their scale. Crossing a binade
+    # increases the upper scale by one. Zero uses the subnormal scale.
+    field = lower >> 52
+    a = lower & ((1 << 52)-1)
+    ae = field-1075 if field else -1074
+    if field:
+        a += 1 << 52
+    upper = lower+1
+    field = upper >> 52
+    b = upper & ((1 << 52)-1)
+    be = field-1075 if field else -1074
+    if field:
+        b += 1 << 52
+    coefficient = a+(b << (be-ae))
+    return coefficient >> ((coefficient & -coefficient).bit_length()-1)
+
+
+def near_one_midpoint_counts(exponent, precision):
+    """Bound midpoint counts for an undecided call in one small-y binade."""
+    assert -64 <= exponent <= -12 and precision >= 128
+    maximum_y = F((1 << 53)-1)*F(2)**(exponent-52)
+    epsilon = 4*(maximum_y+1)*F(2)**(1-precision)
+    logarithm = 745*maximum_y+epsilon
+    assert logarithm < F(1, 2)
+
+    # An overlap gives |ln(m)| < 745*maximum_y+epsilon. For m<1 use
+    # 1-exp(-t)<=t. For m>1 use exp(t)-1<=t/(1-t). Both bounds keep
+    # m inside (1/2,2), where all midpoints have one of these forms:
+    # m=1-(2j+1)*2^-54, or m=1+(2j+1)*2^-53.
+    # The count of positive odd integers strictly below d is ceil(d)//2.
+    below_bound = logarithm*(1 << 54)
+    above_bound = logarithm/(1-logarithm)*(1 << 53)
+    below = ceil(below_bound)//2
+    above = ceil(above_bound)//2
+    return below, above
+
+
+def unresolved_candidate(x, y, lower, precision):
+    """Necessary conditions for PowerBounds::side to return undecided.
+
+    True is an overapproximation and does not assert that the firmware
+    reaches this stage. The predicate also applies to narrow test builds.
+    """
+    if not (0 < x < INFINITY and (y & ABS_MASK) < INFINITY and 0 <= lower < INFINITY):
+        raise ValueError('Expected finite positive base, finite exponent and a valid midpoint')
+    assert precision >= 128
+    magnitude = y & ABS_MASK
+    if x == ONE or magnitude < 0x3BF0000000000000 or magnitude >= 0x43E0000000000000:
+        return False
+
+    decreasing = (x < ONE) != bool(y >> 63)
+    # Every midpoint has |ln(m)|>2^-54. At P>=128 the overlap gap is
+    # <2^-62, so the true logarithm and midpoint have the same sign.
+    if (lower < ONE) != decreasing:
+        return False
+
+    numerator, scale = odd_dyadic(magnitude)
+    if scale >= 0:
+        numerator <<= scale
+        denominator = 1
+    else:
+        denominator = 1 << -scale
+    if denominator == 1 << 116 and ((1023-738) << 52) <= x <= ((1023+738) << 52):
+        return False
+    base, _ = odd_dyadic(x)
+    if base == 1 and denominator >= 1 << POWER_OF_TWO_TAIL_MINIMUM_SHIFT:
+        # power_of_two_tail_certificate checks every possible midpoint
+        # against the exponent grid and proves separation already at P=128.
+        return False
+    midpoint = midpoint_coefficient(lower)
+    base_bits = (base.bit_length()*numerator) if base != 1 else 0
+    midpoint_bits = (midpoint.bit_length()*denominator) if midpoint != 1 else 0
+    if y >> 63:
+        exact = base_bits+midpoint_bits <= precision
+    else:
+        exact = max(base_bits, midpoint_bits) <= precision
+    if exact:
+        return False
+
+    exponent = (magnitude >> 52)-1023
+    if exponent <= -12:
+        below, above = near_one_midpoint_counts(exponent, precision)
+        if decreasing:
+            return ONE-below <= lower < ONE
+        return ONE <= lower < ONE+above
+    return True
+
+
+def power_of_two_tail_certificate():
+    """Exclude every power-of-two base with q>=2^100 by a finite proof."""
+    precision = 128
+    grid_bits = 256
+    grid_scale = 1 << grid_bits
+    ln2_lower = sum((F(2, (2*i+1)*3**(2*i+1)) for i in range(90)), F(0))
+    ln2_upper = ln2_lower+F(9, 4*181*3**181)
+    ranges = [(k, *near_one_midpoint_counts(52-k, precision))
+              for k in range(POWER_OF_TWO_TAIL_MINIMUM_SHIFT, 117)]
+    maximum_below, maximum_above = ranges[0][1:]
+    assert all(below <= maximum_below and above <= maximum_above for _, below, above in ranges)
+    minimum_distance = grid_scale
+    closest = None
+    checked = 0
+
+    # For x=2^e and y=sign*p/2^k, log2(x^y)=sign*e*p/2^k.
+    # Thus only multiples of 2^(grid_bits-k) can equal its scaled log.
+    # The near-one ranges contain every midpoint of an undecided P=128
+    # comparison. They also contain those of every finer comparison.
+    for lower in range(ONE-maximum_below, ONE+maximum_above):
+        if lower < ONE:
+            displacement = F(2*(ONE-lower)-1, 1 << 54)
+            t = displacement/(2-displacement)
+        else:
+            displacement = F(2*(lower-ONE)+1, 1 << 53)
+            t = displacement/(2+displacement)
+        square = t*t
+        # |ln(m)|=2*atanh(t). Three positive terms and the geometric
+        # bound on the remaining denominators give rational endpoints.
+        log_lower = 2*t*(1+square/3+square*square/5)
+        log_upper = log_lower+2*t*square**3/(7*(1-square))
+        lower_bound = log_lower*grid_scale/ln2_upper
+        upper_bound = log_upper*grid_scale/ln2_lower
+        low = lower_bound.numerator//lower_bound.denominator
+        high = ceil(upper_bound)
+        for shift, below, above in ranges:
+            if not ONE-below <= lower < ONE+above:
+                continue
+            grid = 1 << (grid_bits-shift)
+            remainder = low % grid
+            distance = min(remainder, grid-remainder-(high-low))
+            assert distance > 0, (hex(lower), shift)
+            checked += 1
+            if distance < minimum_distance:
+                minimum_distance = distance
+                closest = dict(lower=f'{lower:016x}', denominator_shift=shift)
+
+    gap_lower = F(minimum_distance, grid_scale)*ln2_lower
+    maximum_y = F((1 << 53)-1, 1 << POWER_OF_TWO_TAIL_MINIMUM_SHIFT)
+    overlap_gap_upper = 4*(maximum_y+1)*F(2)**(1-precision)
+    assert overlap_gap_upper < gap_lower
+    assert maximum_below+maximum_above == 71520 and checked == 143039
+    assert gap_lower > F(1, 1 << 121)
+    # An omitted midpoint has |ln(m)| at least the logarithm bound
+    # used by its range. The slack in 745 versus the actual maximum
+    # 1074*ln(2) makes its distance larger than the grid minimum too.
+    outside_gap = (745-1074*ln2_upper)*F((1 << 53)-1, 1 << 116)
+    assert outside_gap > F(1, 1 << 65) > gap_lower
+
+    # The existing 512-bit interval certificate gives a relative width
+    # below this looser bound. At these y, both the true value and every
+    # potentially ambiguous midpoint lie in (1/2,2). Such an interval
+    # cannot cross a boundary with the log separation just established.
+    unit = F(1, 1 << 512)
+    logarithm_units = 12*(512+16)+4+1074
+    q_width = (logarithm_units*(1 << 64)+2)*unit
+    endpoint_width = (4*(512+16)+2)*unit
+    relative_width = 4*(q_width+1155*unit)+4*endpoint_width
+    assert relative_width < F(1, 1 << 400) < gap_lower
+    # A power-of-two base has zero normalized log mantissa, so its
+    # atanh loop stops after one iteration. The reduction index is zero.
+    # Each exponential upper term contracts by at least 37 bits, even
+    # when its integer division by n is omitted from this upper bound.
+    assert 745*maximum_y+q_width < F(1, 1 << 37) < F(1, 1 << 20)
+    # In units of 2^-512, the upward product/division gives
+    # T_n=ceil(T_(n-1)*r/n). Dropping n and replacing r by 2^-37
+    # preserves an upper bound, including both rounding operations.
+    term_units = 1 << 512
+    endpoint_terms = 0
+    while term_units > 1:
+        term_units = ceil(F(term_units, 1 << 37))
+        endpoint_terms += 1
+    full_products = 4+4*endpoint_terms
+    words = 512//16+4
+    assert endpoint_terms == 14 and full_products*words*words == 77760
+    return dict(
+        status='PASS_POWER_OF_TWO_TAIL',
+        base_domain='x=2^e, integer -1074<=e<=1023',
+        exponent_domain='abs(y)=p/2^k, p odd, 100<=k<=116, 2^-64<=abs(y)',
+        unique_midpoints=maximum_below+maximum_above,
+        checked_midpoint_denominator_pairs=checked,
+        rational_log2_grid_bits=grid_bits,
+        minimum_grid_distance_units=minimum_distance,
+        closest=closest,
+        strict_abs_log_gap_lower_bound='2^-121',
+        omitted_midpoints_abs_log_gap_strict_lower_bound='2^-65',
+        sufficient_power_product_precision_bits=precision,
+        first_512_bit_interval_decides_under_interval_certificate=True,
+        first_512_bit_work=dict(
+            log_series_iterations=1,
+            reduction_index=0,
+            maximum_terms_per_exp_endpoint=endpoint_terms,
+            maximum_full_fixed_point_products=full_products,
+            maximum_full_product_limb_multiply_accumulates=full_products*words*words,
+            maximum_limb_divisions=(2+4*endpoint_terms)*words,
+            scope='Bounds on these arithmetic loops; scalar scaling, packing and call overhead are additional.'),
+        scope='Complete finite enumeration of the necessary midpoint ranges with rational '
+              'atanh bounds, covering every numerator and every power-of-two base in '
+              'the stated domain. Other bases and denominator ranges remain separate.')
+
+
+def last_stage_domain(ln2_upper, precision):
+    """Certify necessary restrictions on a remaining last-stage input."""
+    assert precision >= 8192
+    # The closest midpoint above one is 1+2^-53, the closest below is
+    # 1-2^-54. Elementary integral bounds on ln give this minimum.
+    assert F(1, 1 << 53)/(1+F(1, 1 << 53)) > F(1, 1 << 54)
+    assert 4*((1 << 63)-(1 << 10)+1)*F(2)**(1-precision) < F(1, 1 << 54)
+    rows = []
+    for exponent in range(-64, -11):
+        below, above = near_one_midpoint_counts(exponent, precision)
+        rows.append(dict(y_binade_exponent=exponent,
+                         maximum_denominator_shift=52-exponent,
+                         midpoints_below_one=below, midpoints_above_one=above))
+    assert (rows[0]['midpoints_below_one'], rows[0]['midpoints_above_one']) == (1, 0)
+    assert (rows[10]['midpoints_below_one'], rows[10]['midpoints_above_one']) == (745, 373)
+
+    q = 1 << 116
+    maximum_y = F((1 << 53)-1, q)
+    epsilon = 4*(maximum_y+1)*F(2)**(1-precision)
+    minimum_midpoint_log = F(1, 1 << 54)
+    assert (minimum_midpoint_log-epsilon)/maximum_y > 512
+    test_epsilon = 4*(maximum_y+1)*F(2)**(1-128)
+    assert (minimum_midpoint_log-test_epsilon)/maximum_y > 512
+    assert 738*ln2_upper < 512
+    minimum_numerators = {}
+    for name, log_limit in (('base_below_one', 1074*ln2_upper),
+                            ('base_above_one', 1024*ln2_upper)):
+        threshold = q*(minimum_midpoint_log-epsilon)/log_limit
+        minimum = threshold.numerator//threshold.denominator+1
+        if minimum % 2 == 0:
+            minimum += 1
+        minimum_numerators[name] = minimum
+
+    # All coefficients fit whenever these inequalities hold. Squaring
+    # and multiplying visit only powers with no more factors, so every
+    # intermediate is exact as well, including exact midpoint ties.
+    exact_rows = []
+    for shift in range(8):
+        denominator = 1 << shift
+        positive = precision//53
+        inverse = max(0, (precision-54*denominator)//53)
+        assert 53*positive <= precision and 54*denominator <= precision
+        if inverse:
+            assert 53*inverse+54*denominator <= precision
+        exact_rows.append(dict(denominator=denominator,
+                               positive_numerator_maximum=positive,
+                               negative_numerator_maximum=inverse))
+    sources = ('code/native_eabi_m0_cr.cpp', 'code/native_eabi_m0_pow_interval.inc',
+               'code/native_eabi_m0_pow_exact.inc', 'code/native_eabi_m0_pow_power_bounds.inc')
+    source_text = {name: (ROOT/name).read_text() for name in sources}
+    assert 'if(upper==lower+1) result=lower;' in source_text[sources[1]]
+    assert source_text[sources[2]].count('*result=') == 1
+    assert '*result=lower;\n  return 1;' in source_text[sources[2]]
+    assert 'if(!side) return false;\n  lower+=unsigned(side>0);' in source_text[sources[3]]
+    assert 'if(hint<infinity) return hint+unsigned(pow_final_side(x,y,hint)>0);' in source_text[sources[0]]
+    return dict(
+        precision_bits=precision,
+        source_sha256={name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in sources},
+        log_gap_strict_upper_bound='4*(abs(y)+1)*2^(1-P)',
+        public_rescue_hint_contract=dict(
+            prerequisite='The 1024-bit interval certificate proves that every undecided valid input publishes one adjacent pair.',
+            exact_small_preserves_hint_on_failure=True,
+            power_bounds_preserves_hint_on_failure=True,
+            maximum_exact_small_boundary_comparisons=2,
+            maximum_4096_boundary_comparisons=1,
+            maximum_8192_boundary_comparisons=1,
+            maximum_stream_boundary_comparisons=1,
+            unhinted_binary_search_reachable_under_interval_invariant=False),
+        midpoint_log_has_same_sign_as_y_log_x=True,
+        exact_coefficient_exclusions=exact_rows,
+        small_exponent_midpoint_limits=rows,
+        denominator_2_to_116=dict(
+            only_lower_encoding=f'{ONE-1:016x}',
+            midpoint='1-2^-54',
+            y_log_x_negative=True,
+            abs_log_x_strict_lower_bound=512,
+            excluded_base_interval=['2^-738', '2^738'],
+            minimum_odd_numerator=minimum_numerators),
+        practical_uniform_latency_established=False,
+        scope='Necessary input restrictions from exact rational inequalities and source-bound '
+              'enclosure arguments. They do not prove that an undecided production call exists '
+              'or exclude every remaining input. These are not machine-checked compiler proofs.')
 
 def uniform_precision_bound(ln2_lower, ln2_upper, max_k):
     """Specialize Laurent's real two-logarithm bound using exact rationals.
@@ -181,6 +485,8 @@ def certify():
         undecided_8192_abs_log_gap_strict_upper_bound='2^-8126',
         dependent_nonzero_abs_log_gap_lower_bound='2^-170',
         exact_midpoint_products_significand_bits_upper_bound=54*32,
+        last_stage_domain=last_stage_domain(hi, 8192),
+        power_of_two_tail=power_of_two_tail_certificate(),
         uniform_precision_bound=uniform_precision_bound(lo, hi, max_k),
         scope='For a valid adjacent midpoint, only multiplicatively independent bases with a nonzero cancelling log gap can remain undecided.')
 

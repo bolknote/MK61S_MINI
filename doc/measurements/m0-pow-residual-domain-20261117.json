@@ -1,0 +1,839 @@
+{
+  "status": "PASS_SCOPED_DOMAIN_CERTIFICATES",
+  "practical_uniform_latency_established": false,
+  "scope": "Source-bound rational domain certificates and finite implementation checks. The full binary64 practical uniform latency requirement remains unresolved.",
+  "tools_sha256": {
+    "dev/tools/certify_m0_pow_power_bounds.py": "a6a09107be237e04de6efc53a9921657ebfb6e97e29cc028117d3cb0d4417f55",
+    "dev/tools/certify_m0_pow_interval.py": "6c3ba7665c2a5949609c430eda0cc9c3ce17f1e61d8b528f851935db00434e8c",
+    "tests/m0_pow_power_bounds_host_self_test.py": "cda1c5b791ed624dfe2079446f245d45094054848a14d8730ae7f749fec6d8ad",
+    "tests/m0_pow_power_of_two_tail_arm_self_test.py": "de2bbc7cc986c6a16b25a3350e2116690938960fb20f79d41c13796bbf284206"
+  },
+  "power_product_certificate": {
+    "status": "PASS_POWER_PRODUCT_ENCLOSURE",
+    "source_sha256": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+    "active_domain": "positive finite binary64 x, 2^-64 <= |y| < 2^63, one adjacent rounding boundary",
+    "maximum_denominator_shift": 116,
+    "maximum_product_leaves": 83076749736557242065495140522262527,
+    "significand_bits": 4096,
+    "minimum_signed_scale_bits": 128,
+    "maximum_full_products": 169,
+    "maximum_limb_multiply_accumulates": 1969472,
+    "maximum_8192_limb_multiply_accumulates": 5920704,
+    "relative_width_bound": "2^-3976",
+    "undecided_abs_log_gap_strict_upper_bound": "2^-4030",
+    "undecided_8192_abs_log_gap_strict_upper_bound": "2^-8126",
+    "dependent_nonzero_abs_log_gap_lower_bound": "2^-170",
+    "exact_midpoint_products_significand_bits_upper_bound": 1728,
+    "last_stage_domain": {
+      "precision_bits": 8192,
+      "source_sha256": {
+        "code/native_eabi_m0_cr.cpp": "d62f37ff08e619554879bd2769ab316542c8b914c3781bb040b5919d131f2893",
+        "code/native_eabi_m0_pow_interval.inc": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753",
+        "code/native_eabi_m0_pow_exact.inc": "6696a03a2b7e59bf278e9b9bb5d287d8388c748e1399eb34c96677c22468ca25",
+        "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8"
+      },
+      "log_gap_strict_upper_bound": "4*(abs(y)+1)*2^(1-P)",
+      "public_rescue_hint_contract": {
+        "prerequisite": "The 1024-bit interval certificate proves that every undecided valid input publishes one adjacent pair.",
+        "exact_small_preserves_hint_on_failure": true,
+        "power_bounds_preserves_hint_on_failure": true,
+        "maximum_exact_small_boundary_comparisons": 2,
+        "maximum_4096_boundary_comparisons": 1,
+        "maximum_8192_boundary_comparisons": 1,
+        "maximum_stream_boundary_comparisons": 1,
+        "unhinted_binary_search_reachable_under_interval_invariant": false
+      },
+      "midpoint_log_has_same_sign_as_y_log_x": true,
+      "exact_coefficient_exclusions": [
+        {
+          "denominator": 1,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 153
+        },
+        {
+          "denominator": 2,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 152
+        },
+        {
+          "denominator": 4,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 150
+        },
+        {
+          "denominator": 8,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 146
+        },
+        {
+          "denominator": 16,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 138
+        },
+        {
+          "denominator": 32,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 121
+        },
+        {
+          "denominator": 64,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 89
+        },
+        {
+          "denominator": 128,
+          "positive_numerator_maximum": 154,
+          "negative_numerator_maximum": 24
+        }
+      ],
+      "small_exponent_midpoint_limits": [
+        {
+          "y_binade_exponent": -64,
+          "maximum_denominator_shift": 116,
+          "midpoints_below_one": 1,
+          "midpoints_above_one": 0
+        },
+        {
+          "y_binade_exponent": -63,
+          "maximum_denominator_shift": 115,
+          "midpoints_below_one": 1,
+          "midpoints_above_one": 1
+        },
+        {
+          "y_binade_exponent": -62,
+          "maximum_denominator_shift": 114,
+          "midpoints_below_one": 3,
+          "midpoints_above_one": 1
+        },
+        {
+          "y_binade_exponent": -61,
+          "maximum_denominator_shift": 113,
+          "midpoints_below_one": 6,
+          "midpoints_above_one": 3
+        },
+        {
+          "y_binade_exponent": -60,
+          "maximum_denominator_shift": 112,
+          "midpoints_below_one": 12,
+          "midpoints_above_one": 6
+        },
+        {
+          "y_binade_exponent": -59,
+          "maximum_denominator_shift": 111,
+          "midpoints_below_one": 23,
+          "midpoints_above_one": 12
+        },
+        {
+          "y_binade_exponent": -58,
+          "maximum_denominator_shift": 110,
+          "midpoints_below_one": 47,
+          "midpoints_above_one": 23
+        },
+        {
+          "y_binade_exponent": -57,
+          "maximum_denominator_shift": 109,
+          "midpoints_below_one": 93,
+          "midpoints_above_one": 47
+        },
+        {
+          "y_binade_exponent": -56,
+          "maximum_denominator_shift": 108,
+          "midpoints_below_one": 186,
+          "midpoints_above_one": 93
+        },
+        {
+          "y_binade_exponent": -55,
+          "maximum_denominator_shift": 107,
+          "midpoints_below_one": 372,
+          "midpoints_above_one": 186
+        },
+        {
+          "y_binade_exponent": -54,
+          "maximum_denominator_shift": 106,
+          "midpoints_below_one": 745,
+          "midpoints_above_one": 373
+        },
+        {
+          "y_binade_exponent": -53,
+          "maximum_denominator_shift": 105,
+          "midpoints_below_one": 1490,
+          "midpoints_above_one": 745
+        },
+        {
+          "y_binade_exponent": -52,
+          "maximum_denominator_shift": 104,
+          "midpoints_below_one": 2980,
+          "midpoints_above_one": 1490
+        },
+        {
+          "y_binade_exponent": -51,
+          "maximum_denominator_shift": 103,
+          "midpoints_below_one": 5960,
+          "midpoints_above_one": 2980
+        },
+        {
+          "y_binade_exponent": -50,
+          "maximum_denominator_shift": 102,
+          "midpoints_below_one": 11920,
+          "midpoints_above_one": 5960
+        },
+        {
+          "y_binade_exponent": -49,
+          "maximum_denominator_shift": 101,
+          "midpoints_below_one": 23840,
+          "midpoints_above_one": 11920
+        },
+        {
+          "y_binade_exponent": -48,
+          "maximum_denominator_shift": 100,
+          "midpoints_below_one": 47680,
+          "midpoints_above_one": 23840
+        },
+        {
+          "y_binade_exponent": -47,
+          "maximum_denominator_shift": 99,
+          "midpoints_below_one": 95360,
+          "midpoints_above_one": 47680
+        },
+        {
+          "y_binade_exponent": -46,
+          "maximum_denominator_shift": 98,
+          "midpoints_below_one": 190720,
+          "midpoints_above_one": 95360
+        },
+        {
+          "y_binade_exponent": -45,
+          "maximum_denominator_shift": 97,
+          "midpoints_below_one": 381440,
+          "midpoints_above_one": 190720
+        },
+        {
+          "y_binade_exponent": -44,
+          "maximum_denominator_shift": 96,
+          "midpoints_below_one": 762880,
+          "midpoints_above_one": 381440
+        },
+        {
+          "y_binade_exponent": -43,
+          "maximum_denominator_shift": 95,
+          "midpoints_below_one": 1525760,
+          "midpoints_above_one": 762880
+        },
+        {
+          "y_binade_exponent": -42,
+          "maximum_denominator_shift": 94,
+          "midpoints_below_one": 3051520,
+          "midpoints_above_one": 1525760
+        },
+        {
+          "y_binade_exponent": -41,
+          "maximum_denominator_shift": 93,
+          "midpoints_below_one": 6103040,
+          "midpoints_above_one": 3051520
+        },
+        {
+          "y_binade_exponent": -40,
+          "maximum_denominator_shift": 92,
+          "midpoints_below_one": 12206080,
+          "midpoints_above_one": 6103040
+        },
+        {
+          "y_binade_exponent": -39,
+          "maximum_denominator_shift": 91,
+          "midpoints_below_one": 24412160,
+          "midpoints_above_one": 12206080
+        },
+        {
+          "y_binade_exponent": -38,
+          "maximum_denominator_shift": 90,
+          "midpoints_below_one": 48824320,
+          "midpoints_above_one": 24412160
+        },
+        {
+          "y_binade_exponent": -37,
+          "maximum_denominator_shift": 89,
+          "midpoints_below_one": 97648640,
+          "midpoints_above_one": 48824321
+        },
+        {
+          "y_binade_exponent": -36,
+          "maximum_denominator_shift": 88,
+          "midpoints_below_one": 195297280,
+          "midpoints_above_one": 97648642
+        },
+        {
+          "y_binade_exponent": -35,
+          "maximum_denominator_shift": 87,
+          "midpoints_below_one": 390594560,
+          "midpoints_above_one": 195297288
+        },
+        {
+          "y_binade_exponent": -34,
+          "maximum_denominator_shift": 86,
+          "midpoints_below_one": 781189120,
+          "midpoints_above_one": 390594594
+        },
+        {
+          "y_binade_exponent": -33,
+          "maximum_denominator_shift": 85,
+          "midpoints_below_one": 1562378240,
+          "midpoints_above_one": 781189256
+        },
+        {
+          "y_binade_exponent": -32,
+          "maximum_denominator_shift": 84,
+          "midpoints_below_one": 3124756480,
+          "midpoints_above_one": 1562378782
+        },
+        {
+          "y_binade_exponent": -31,
+          "maximum_denominator_shift": 83,
+          "midpoints_below_one": 6249512960,
+          "midpoints_above_one": 3124758648
+        },
+        {
+          "y_binade_exponent": -30,
+          "maximum_denominator_shift": 82,
+          "midpoints_below_one": 12499025920,
+          "midpoints_above_one": 6249521632
+        },
+        {
+          "y_binade_exponent": -29,
+          "maximum_denominator_shift": 81,
+          "midpoints_below_one": 24998051840,
+          "midpoints_above_one": 12499060609
+        },
+        {
+          "y_binade_exponent": -28,
+          "maximum_denominator_shift": 80,
+          "midpoints_below_one": 49996103680,
+          "midpoints_above_one": 24998190597
+        },
+        {
+          "y_binade_exponent": -27,
+          "maximum_denominator_shift": 79,
+          "midpoints_below_one": 99992207360,
+          "midpoints_above_one": 49996658711
+        },
+        {
+          "y_binade_exponent": -26,
+          "maximum_denominator_shift": 78,
+          "midpoints_below_one": 199984414720,
+          "midpoints_above_one": 99994427509
+        },
+        {
+          "y_binade_exponent": -25,
+          "maximum_denominator_shift": 77,
+          "midpoints_below_one": 399968829440,
+          "midpoints_above_one": 199993295514
+        },
+        {
+          "y_binade_exponent": -24,
+          "maximum_denominator_shift": 76,
+          "midpoints_below_one": 799937658880,
+          "midpoints_above_one": 400004354195
+        },
+        {
+          "y_binade_exponent": -23,
+          "maximum_denominator_shift": 75,
+          "midpoints_below_one": 1599875317760,
+          "midpoints_above_one": 800079770522
+        },
+        {
+          "y_binade_exponent": -22,
+          "maximum_denominator_shift": 74,
+          "midpoints_below_one": 3199750635520,
+          "midpoints_above_one": 1600443865333
+        },
+        {
+          "y_binade_exponent": -21,
+          "maximum_denominator_shift": 73,
+          "midpoints_below_one": 6399501271040,
+          "midpoints_above_one": 3202025634278
+        },
+        {
+          "y_binade_exponent": -20,
+          "maximum_denominator_shift": 72,
+          "midpoints_below_one": 12799002542080,
+          "midpoints_above_one": 6408607740703
+        },
+        {
+          "y_binade_exponent": -19,
+          "maximum_denominator_shift": 71,
+          "midpoints_below_one": 25598005084160,
+          "midpoints_above_one": 12835480328506
+        },
+        {
+          "y_binade_exponent": -18,
+          "maximum_denominator_shift": 70,
+          "midpoints_below_one": 51196010168320,
+          "midpoints_above_one": 25744333272392
+        },
+        {
+          "y_binade_exponent": -17,
+          "maximum_denominator_shift": 69,
+          "midpoints_below_one": 102392020336640,
+          "midpoints_above_one": 51784688033693
+        },
+        {
+          "y_binade_exponent": -16,
+          "maximum_denominator_shift": 68,
+          "midpoints_below_one": 204784040673280,
+          "midpoints_above_one": 104774122424227
+        },
+        {
+          "y_binade_exponent": -15,
+          "maximum_denominator_shift": 67,
+          "midpoints_below_one": 409568081346560,
+          "midpoints_above_one": 214539402928002
+        },
+        {
+          "y_binade_exponent": -14,
+          "maximum_denominator_shift": 66,
+          "midpoints_below_one": 819136162693120,
+          "midpoints_above_one": 450541388799653
+        },
+        {
+          "y_binade_exponent": -13,
+          "maximum_denominator_shift": 65,
+          "midpoints_below_one": 1638272325386240,
+          "midpoints_above_one": 1001247902832295
+        },
+        {
+          "y_binade_exponent": -12,
+          "maximum_denominator_shift": 64,
+          "midpoints_below_one": 3276544650772480,
+          "midpoints_above_one": 2574966786178833
+        }
+      ],
+      "denominator_2_to_116": {
+        "only_lower_encoding": "3fefffffffffffff",
+        "midpoint": "1-2^-54",
+        "y_log_x_negative": true,
+        "abs_log_x_strict_lower_bound": 512,
+        "excluded_base_interval": [
+          "2^-738",
+          "2^738"
+        ],
+        "minimum_odd_numerator": {
+          "base_below_one": 6194838499927525,
+          "base_above_one": 6497320848556799
+        }
+      },
+      "practical_uniform_latency_established": false,
+      "scope": "Necessary input restrictions from exact rational inequalities and source-bound enclosure arguments. They do not prove that an undecided production call exists or exclude every remaining input. These are not machine-checked compiler proofs."
+    },
+    "power_of_two_tail": {
+      "status": "PASS_POWER_OF_TWO_TAIL",
+      "base_domain": "x=2^e, integer -1074<=e<=1023",
+      "exponent_domain": "abs(y)=p/2^k, p odd, 100<=k<=116, 2^-64<=abs(y)",
+      "unique_midpoints": 71520,
+      "checked_midpoint_denominator_pairs": 143039,
+      "rational_log2_grid_bits": 256,
+      "minimum_grid_distance_units": 87881160243273093583047111011685153480330,
+      "closest": {
+        "lower": "3fefffffffffffa7",
+        "denominator_shift": 100
+      },
+      "strict_abs_log_gap_lower_bound": "2^-121",
+      "omitted_midpoints_abs_log_gap_strict_lower_bound": "2^-65",
+      "sufficient_power_product_precision_bits": 128,
+      "first_512_bit_interval_decides_under_interval_certificate": true,
+      "first_512_bit_work": {
+        "log_series_iterations": 1,
+        "reduction_index": 0,
+        "maximum_terms_per_exp_endpoint": 14,
+        "maximum_full_fixed_point_products": 60,
+        "maximum_full_product_limb_multiply_accumulates": 77760,
+        "maximum_limb_divisions": 2088,
+        "scope": "Bounds on these arithmetic loops; scalar scaling, packing and call overhead are additional."
+      },
+      "scope": "Complete finite enumeration of the necessary midpoint ranges with rational atanh bounds, covering every numerator and every power-of-two base in the stated domain. Other bases and denominator ranges remain separate."
+    },
+    "uniform_precision_bound": {
+      "source": "https://www.impan.pl/shop/en/publication/transaction/download/product/82485",
+      "theorem": "Corollary 2, D=1, m=30, C2=17.9",
+      "rational_height_log_upper": 746,
+      "normalized_coefficient_log_plus_038_upper": "461587987497344175301858952200514433885069292426285775788708411372935082063723845876511942648343227542967021/6222981765006562394871346445791326134096536618805592635637958767023208428892333200968743114472443976089600",
+      "rounded_coefficient_log_upper": 75,
+      "logarithmic_form_loss_nats": "56034204750",
+      "nonzero_abs_log_gap_strict_lower_bound": "2^-80840269429",
+      "enclosure_error_overhead_bits": 66,
+      "sufficient_enclosure_precision_bits": 80840269504,
+      "one_significand_bytes_at_sufficient_precision": 10105033688,
+      "supported_firmware_precision_bits": 8192,
+      "practical_uniform_latency_established": false,
+      "scope": "A sufficient mathematical precision derived from a cited theorem; the firmware does not allocate it and no input is proved to need it. A practical uniform bound still requires a stronger whole-domain separation proof or another bounded exact comparison algorithm."
+    },
+    "scope": "For a valid adjacent midpoint, only multiplicatively independent bases with a nonzero cancelling log gap can remain undecided."
+  },
+  "interval_certificate": {
+    "status": "PASS",
+    "header_sha256": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753",
+    "rows": [
+      {
+        "bits": 512,
+        "log_width_units": 7414,
+        "q_width": "68382080281241307840513/6703903964971298549787012499102923063739682910296196688861780721860882015036773488400937149083451713845015929093243025426876941405973284973216824503042048",
+        "residual_bound": "332898623824139454300207288222068312129414282118377949972792815988781683663740650650469886596264351525864567485703253556146285931406918760800220891182430449379337060911452398828357065508473502785669793434493012997077821683451204186950028402087725255292061231860560073613218205683817038655063872069477184322015060617425248965120224970054660686515417910796211270740377918537642114522273268945424512429572906716177721765119118702126734052428102291212776353376334879414998930108505413882959118396212492209591857314225993614140270062774786518352033404914456258074011345758104289582142013362146185848309627640492941497582839576343646539713147022849794038596242166090239221514548487485327260435407005833289305785439173300426420663332139331208604643445974152232937419388342640217797716644264544870446787266055148480634883880378983378122175435893043908625573417165603407363632342989619903309683317973237496331203398511406466096005983889541377110300390912054526636946608095124226208714410807123321763159575703175998157464535549918299721718363721937315359127059382279271093523197532918173939741303408767344262784396089773080265008658888084232312047499018714387042664462601410319308360839657158630943421515995108177960472639612599112793206261592617455508990099253391928185320467622740896295166150181384498228582962736621249775055610007990430420917482494228465146269840340265436888367149096703049982049299235148971514435942243085843480169818641018080603949925176919045300269755924753742376256462041337809863229104755214199502136837261372284593782081911960743720428280003463696365185304264289716141024887865528494104831466832703408575655743798584336742702721353247601889545172443108283047997644508090671388511764791620046838188605655292738837673772399048695898130976937141924246713864509653466730972151221974372629846183135780723172547730311822075692776937490324443857748344210477291248141517608284913847144130953986939945979309198493564571159262437720976073197906220191921706211/959960870272754333023245420930849889356825814555961230028546814821615685923100409158678848625607941575908202995335338158488601331678644221427144876365955657043320841779779226716377379674985595257863379293828179421880558655927158865486289055893763719212401782570930469091473680288765511785939205580413680041952710952159541921516956493780528695700005107053300356917797616762099470333038608383638680142728255071511993562866262927179898616334344394038876259292604342242033600171844161109154319427656664642059795817400683572112575606070554892834115133538457609336078069100996385255664139441234487648479747836211053350713072972134340656910056309110416417640607392096209783021348586946842029515433889718667640471184287450441016848402366883542983688846973450631032319249331978046178552082645366126007892418815599961322235757897311828461654071576790191842697990214323536871259703467182262478159418038738630121344029461458448776201255914371392536454053704441057124554801130829067243360928137864600611394778563589572157355907827451828942517954325812396952779692138893887174894691401504330224917048797838877897352999507088886277571603311965592611024456848137615185826638368582312368821189130690206111092326307166835649798532830907983119537829558126893374272430863677460968971126452772250778559728885013583070871833661237052519894874902699018977463667492981818865630341947765722289102381461565538212340393361920663994437777283234116543578296619025016013062069291742039435790451606756354237099063752411323099780293415967545416351965439842857360785820338204732109201738665408453732082967368111286643365924944499196435819943174700582242081807405635598786411135429392083143300383846315627787844498588074901226691488996907954502764512299986906678895974835695457151839551707653600623514973361324793046762499992883351608246795124197999390664490578505755384488601684744852584402071827827358537075363319116437762704573851986916958457301827965665583780738398726301898867153881142394880000",
+        "residual_bound_float": 0.34678353475965407,
+        "relative_final_width_bound": "136764160562482615684295/3351951982485649274893506249551461531869841455148098344430890360930441007518386744200468574541725856922507964546621512713438470702986642486608412251521024",
+        "conservative_relative_bits": 433
+      },
+      {
+        "bits": 1024,
+        "log_width_units": 13558,
+        "q_width": "125050478075677050404865/89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068608",
+        "residual_bound": "4463440808376274554236870693105634588288992982486029646673241996941554921738423178594227040636867775021919351753907456714235684056170707919091992886020034638770499442573202336589818755340937861540470082185691980377656244722844482370399759207330499309078187778375701892633191561691872238395970381073003276607104513524860903402629722158184495924012834039533786009311017805856062910345252083586819917170219296640471568073750643050877266518799258369105622831744896301817299021721038622177140677640833360774622720364273471687085820351130175310112716405109483334007462087305824519868977800746616726458754211705893784146158144016310975353552876457207160360906581262506511473893635858817225489274496443879454979466563316219488177180563902524911966049418045954197191422390381262392708117118540572200088909836446747139899375693112202361150760724531771555299710519543233647248276969484263924240960142536020973849387841462193629288652717464729586270403029697308866917212973617036437715120962801610569509116362345143015487480294619671046559832445591390877629046458806430823279203662066915187500337756524788048660132486781027772812999033398616597949019456761921237686251611401791594803495847728228834108313699179303754491044653919582495211608046195974939523155951515846595598748570495871895744498030920130620610704655392924870273591704522258255283279246612941587488376123480114511732199275192487298019923525433079069724820600524187604286857996413207373268150284575069005016011157558268517035541057124493785810341340075220150613837845911100720019299441915810439066072280535456685674474285191815298223361640397866812892542656722700744847546920633132457423552729571482582275404784040211135621978577131926585581960777614416360386046104408176898919980391237793621361215559738403089444431438652058995926168966639780683056346433511234893327795308984803031034238288390235337713698077774692061900685383767567358785989523061880006074675459896552601860655184791729147115788940061024509233721869570043964985353883092791127488624415086382167284100661145321418601642075134331992521835670738877002371957354733427484912720997418827623835550084732131/12870970968877632271001831605952983033707202982081046086519123896631388710183474791908602710822040489256465380049883851511672799101828529071377385558315267798852300635976180221140610584331843265022648700448495553348581606067415911408030979220003899438665533304029146018677903462260032946058575276265745418832752026443462244339478390787023242629720312516891853807242485012037589771407804053550358586414050988060677387651890503891604974879791684818194841245614461952208151188223933720481330001711793947913850190095517671132759547564341913507125839666313105306134998841449952859647912788029056933067681538077719246544032644834197684675500475475263090600941913373289446012454600665931520672525338806885566972784381773251203996083442396782629202188838674072029200223274554944515022730983659106243887644983591042447459528623956733732565495695318302868158830233761618705466220268007231855538213229549114909933163215932763424849850346183926319927717116150475846658098432622696904262424760914975780502269907846239430005708594743326409666823646442111892902203862537463661019972599132705500668215695898155735812979683534619826969396606814732884984272805858976815398488656254594246575402404915959515537736067119622730489586224215809462180925246043054976621536070936959825166916655363487908206565266429464052626837312460766412094753710400026566030507097881060418210154189484337816421402074777132653110247338371890236481272975199038308025079674670774555096573277054326704714329540651554828710559154017041923677536848369751039953689509585900871441530721505655057267744087074282503279730646210472817365960115209933586696341374749140250991078872440596130072016576047061241159117270591880832218173310007291113222517152559262416983060753839770067616599082972413181060251047100675321068018712958706758542161423270209361242585915548297848776572544458430702672723793765869488267689091744904359933905867613977472746324942801018211042679830575361987761945230356592195855429394346262662575886222848985097272024342246844172887991098772834065580102390328819619503134708987031889819009480717840318626608049717954731995710965850336960040119828480000",
+        "residual_bound_float": 0.34678353475965407,
+        "relative_final_width_bound": "250100956151354100815047/44942328371557897693232629769725618340449424473557664318357520289433168951375240783177119330601884005280028469967848339414697442203604155623211857659868531094441973356216371319075554900311523529863270738021251442209537670585615720368478277635206809290837627671146574559986811484619929076208839082406056034304",
+        "conservative_relative_bits": 944
+      }
+    ],
+    "tiny_exponent_rounds_to_one": {
+      "maximum_abs_exponent_exclusive": "2^-64",
+      "log_abs_bound": 745,
+      "negative_displacement_bound": "745/18446744073709551616",
+      "positive_displacement_bound": "745/18446744073709550871"
+    },
+    "saturation_width_bound": "At most one log unit; if the upper bound reaches 800, the true log magnitude exceeds both binary64 cutoffs.",
+    "max_rne_midpoints_in_undecided_interval": 1,
+    "conditional_rounding": "Directed integer endpoints enclose the positive magnitude. A result is returned only when both endpoints round to the same binary64; a false return is preserved when undecided.",
+    "boundary_argument": "For x=a*2^e with a odd and y=b/2^k with b odd, a dyadic result requires a perfect 2^k-th root and e divisible by 2^k. Nontrivial a has k<=5; an exact/midpoint odd significand has <=54 bits. Negative y requires a=1. The prototype tests these conditions with exact integer roots and capped products.",
+    "scope": "Elementary rational bounds for the experimental fixed-point algorithm, not a machine-checked proof of the C++ implementation and not an all-input totality proof. A fixed maximum precision still does not establish all-input totality."
+  },
+  "host_test": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "arithmetic": {
+      "products": 3000,
+      "raised_bounds": 1000,
+      "upper_renormalizations": 500,
+      "squares": {
+        "128": 120,
+        "4096": 120,
+        "8192": 120
+      }
+    },
+    "precisions": {
+      "128": {
+        "checked": 2419,
+        "undecided": 16,
+        "wrong": 0,
+        "excluded_by_domain": 75
+      },
+      "256": {
+        "checked": 2419,
+        "undecided": 1,
+        "wrong": 0,
+        "excluded_by_domain": 75
+      },
+      "4096": {
+        "checked": 403,
+        "undecided": 0,
+        "wrong": 0,
+        "excluded_by_domain": 82
+      },
+      "8192": {
+        "checked": 187,
+        "undecided": 0,
+        "wrong": 0,
+        "excluded_by_domain": 82
+      }
+    }
+  },
+  "arm_test": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "cases": 28,
+    "rows": [
+      {
+        "base_exponent": -1074,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3ff0000000005d0e",
+        "instructions": 1211351,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": -1074,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3fefffffffff45e4",
+        "instructions": 1211518,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": -1074,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 960255,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": -1074,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3fefffffffffffff",
+        "instructions": 959460,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": -738,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3ff0000000003ff1",
+        "instructions": 1212316,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": -738,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3fefffffffff801d",
+        "instructions": 1212441,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": -738,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 958774,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": -738,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 958021,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": -1,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3ff0000000000016",
+        "instructions": 1040656,
+        "stack_bytes": 2712,
+        "full_products": 48,
+        "limb_divisions": 1656
+      },
+      {
+        "base_exponent": -1,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3fefffffffffffd4",
+        "instructions": 1040361,
+        "stack_bytes": 2712,
+        "full_products": 48,
+        "limb_divisions": 1656
+      },
+      {
+        "base_exponent": -1,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 791712,
+        "stack_bytes": 2712,
+        "full_products": 36,
+        "limb_divisions": 1224
+      },
+      {
+        "base_exponent": -1,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 790497,
+        "stack_bytes": 2712,
+        "full_products": 36,
+        "limb_divisions": 1224
+      },
+      {
+        "base_exponent": 0,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 70,
+        "stack_bytes": 1564,
+        "full_products": 0,
+        "limb_divisions": 0
+      },
+      {
+        "base_exponent": 0,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 70,
+        "stack_bytes": 1564,
+        "full_products": 0,
+        "limb_divisions": 0
+      },
+      {
+        "base_exponent": 0,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 70,
+        "stack_bytes": 1564,
+        "full_products": 0,
+        "limb_divisions": 0
+      },
+      {
+        "base_exponent": 0,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 70,
+        "stack_bytes": 1564,
+        "full_products": 0,
+        "limb_divisions": 0
+      },
+      {
+        "base_exponent": 1,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3fefffffffffffd4",
+        "instructions": 1040133,
+        "stack_bytes": 2712,
+        "full_products": 48,
+        "limb_divisions": 1656
+      },
+      {
+        "base_exponent": 1,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3ff0000000000016",
+        "instructions": 1040428,
+        "stack_bytes": 2712,
+        "full_products": 48,
+        "limb_divisions": 1656
+      },
+      {
+        "base_exponent": 1,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 790269,
+        "stack_bytes": 2712,
+        "full_products": 36,
+        "limb_divisions": 1224
+      },
+      {
+        "base_exponent": 1,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 791484,
+        "stack_bytes": 2712,
+        "full_products": 36,
+        "limb_divisions": 1224
+      },
+      {
+        "base_exponent": 738,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3fefffffffff801d",
+        "instructions": 1212227,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": 738,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3ff0000000003ff1",
+        "instructions": 1212102,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": 738,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3ff0000000000000",
+        "instructions": 957807,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": 738,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 958560,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": 1023,
+        "denominator_shift": 100,
+        "negative": true,
+        "rounded": "3fefffffffff4eba",
+        "instructions": 1211393,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": 1023,
+        "denominator_shift": 100,
+        "negative": false,
+        "rounded": "3ff00000000058a3",
+        "instructions": 1211310,
+        "stack_bytes": 2712,
+        "full_products": 56,
+        "limb_divisions": 1944
+      },
+      {
+        "base_exponent": 1023,
+        "denominator_shift": 116,
+        "negative": true,
+        "rounded": "3fefffffffffffff",
+        "instructions": 959377,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      },
+      {
+        "base_exponent": 1023,
+        "denominator_shift": 116,
+        "negative": false,
+        "rounded": "3ff0000000000000",
+        "instructions": 960172,
+        "stack_bytes": 2712,
+        "full_products": 44,
+        "limb_divisions": 1512
+      }
+    ],
+    "elf_sha256": "519a4a4d1867ca45bb89ea45160bcc63f8c5006c03d9094690732bf9610e846f",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "maximum_instructions": 1212441,
+    "maximum_stack_bytes": 2712,
+    "maximum_full_products": 56,
+    "maximum_limb_divisions": 1944,
+    "scope": "Forced production rescue calls with real linked memory and BootROM. All selected cases finish in the actual 512-bit interval and respect the separately certified arithmetic loop bounds. Saved registers, SP, bounded writes and the RP2040 divider model remain checked. Observed instruction and stack maxima are finite test results, not uniform timing bounds."
+  }
+}
