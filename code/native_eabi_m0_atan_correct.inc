@@ -13,30 +13,34 @@ static int32_t atan_ratio_adjust(U numerator,U denominator,U estimate) {
   return mk61_m0_math_sdiv32(residual,int32_t(denominator>>40));
 }
 
-// atan's Q70 magnitude is in [atan(1/64),atan(64)]. Its binary64
-// right shift is11..17. The exact scan avoids the general128-bit packer.
-__attribute__((always_inline)) inline U atan_pack70(Refine96 q,U sign,unsigned error) {
-  unsigned shift=q.high?12:11;uint32_t high=q.high;
-  if(high>=16) {high>>=4;shift+=4;}
-  if(high>=4) {high>>=2;shift+=2;}
-  if(high>=2) ++shift;
-  const uint32_t half=1U<<(shift-1),lo=uint32_t(q.low),hi=uint32_t(q.low>>32),tail=lo&((half<<1)-1);
-  if(tail>=half?tail-half<=error:half-tail<=error) return 0;
-  const U retained=(U((hi>>shift)|(q.high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
-  return sign+(U(shift+1004)<<52)+retained+U(tail>half || (tail==half && (retained&1)));
-}
-
 __attribute__((optimize("Os"),noinline,cold))
-static U atan_round_correct(U sign,Refine96 q,U numerator,U denominator,U estimate,U z,uint32_t seventh,bool subtract) {
+static int32_t atan_round_correct(U numerator,U denominator,U estimate,U z,uint32_t seventh) {
   const int32_t change=atan_ratio_adjust(numerator,denominator,estimate);
   // Reuse the seventh-degree polynomial; changing its linear term
   // perturbs the nonlinear part by <35/16384 Q70 units.
   const uint32_t ninth=uint32_t((wide32(seventh,uint32_t(z>>24))+(U(1)<<45))>>46);
   const uint32_t term=((ninth+4U)*7282U)>>16;
-  const int32_t delta=change+int32_t(term);
-  const int32_t signed_delta=subtract?-delta:delta;
-  q=signed_delta<0?r96_sub_low(q,U(0)-U(int64_t(signed_delta))):r96_add_low(q,U(signed_delta));
-  // The rational certificate includes the residual quotient quantization
-  // and proves error<11 Q70: integer midpoint distances>=11 are safe.
-  return atan_pack70(q,sign,10);
+  return change+int32_t(term);
+}
+
+// atan's Q70 magnitude is in [atan(1/64),atan(64)]. Its binary64
+// right shift is 11..17. The full enclosure is <54 Q70.
+__attribute__((always_inline)) inline U atan_pack70(Refine96 q,U sign,U numerator,U denominator,
+                                                  U estimate,U z,uint32_t seventh,bool subtract) {
+  unsigned shift=q.high?12:11;uint32_t high=q.high;
+  if(high>=16) {high>>=4;shift+=4;}
+  if(high>=4) {high>>=2;shift+=2;}
+  if(high>=2) ++shift;
+  const uint32_t half=1U<<(shift-1),lo=uint32_t(q.low),hi=uint32_t(q.low>>32),tail=lo&((half<<1)-1);
+  int32_t distance=int32_t(tail)-int32_t(half);
+  if(uint32_t(distance+53)<=106) {
+    const int32_t delta=atan_round_correct(numerator,denominator,estimate,z,seventh);
+    distance+=subtract?-delta:delta;
+    // The corrected value can reuse the lower endpoint while it stays
+    // in this cell. Its certified error is <11 Q70.
+    if(uint32_t(distance+int32_t(half))>=(half<<1) || uint32_t(distance+10)<=20)
+      return 0;
+  }
+  const U retained=(U((hi>>shift)|(q.high<<(32-shift)))<<32)|uint32_t((lo>>shift)|(hi<<(32-shift)));
+  return sign+(U(shift+1004)<<52)+retained+U(distance>0);
 }

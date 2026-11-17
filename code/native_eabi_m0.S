@@ -1161,8 +1161,13 @@ mk61_m0_pow_fast:
  ldr r3,=0x7ff
  cmp r2,r3
  bhs .Lpow_restore_negative_half
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ ldr r3,=mk61_m0_pow_rsqrt_normal
+ bx r3
+#else
  ldr r2,=pow_rsqrt
  bx r2
+#endif
 .Lpow_restore_negative_half:
  ldr r3,=0xbfe00000
  b .Lpow_restore_low

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check public pow zero/square shortcuts against exact rational rounding."""
+"""Check public pow shortcuts against exact rational rounding."""
 import argparse
 from fractions import Fraction
 import hashlib
@@ -15,6 +15,16 @@ INF=0x7ff0000000000000
 QUIET=1<<51
 ONE=0x3ff0000000000000
 POW='_ZN12compact_math3powEdd'
+
+
+def inverse_root_in_cell(x, result):
+    assert 0x0010000000000000 <= result < INF
+    x=Fraction(*real(x).as_integer_ratio())
+    center=Fraction(*real(result).as_integer_ratio())
+    lower=(center+Fraction(*real(result-1).as_integer_ratio()))/2
+    upper=(center+Fraction(*real(result+1).as_integer_ratio()))/2
+    lo,hi=x*lower*lower,x*upper*upper
+    return lo<1<hi or (not result&1 and lo<=1<=hi)
 
 
 def main():
@@ -42,7 +52,7 @@ def main():
         for payload in (0,1,2,1<<31,1<<32,1<<50,QUIET,QUIET+1,(1<<52)-1):
             values.add(s|INF|payload)
     pending=struct.pack('<7I',17,3,0,0,5,2,3)
-    counts={'zero':0,'square':0,'reciprocal':0,'dirty_checks':0,
+    counts={'zero':0,'square':0,'reciprocal':0,'inverse_root':0,'dirty_checks':0,
             'inverse_root_enclosures':0,'tight_inverse_root_enclosures':0}
     for x in sorted(values):
         magnitude=x&~SIGN
@@ -72,10 +82,14 @@ def main():
         got=m.call(POW,x,bits(-1.))[0]
         assert got==expected,('reciprocal',hex(x),hex(got),hex(expected))
         digest.update(struct.pack('<4Q',x,bits(-1.),got,expected));counts['reciprocal']+=1
+        if 0<x<INF:
+            got=m.call(POW,x,bits(-.5))[0]
+            assert inverse_root_in_cell(x,got),('inverse root',hex(x),hex(got))
+            digest.update(struct.pack('<3Q',x,bits(-.5),got));counts['inverse_root']+=1
     for e in (0,484,485,511,512,1023,1534,1535,2046,2047):
         for s in (0,SIGN):
             x=(e<<52)|s|1
-            for y in (0,SIGN,bits(2.),bits(-1.)):
+            for y in (0,SIGN,bits(2.),bits(-1.),bits(-.5)):
                 m.uc.mem_write(0xD0000060,pending)
                 m.call(POW,x,y)
                 assert bytes(m.uc.mem_read(0xD0000060,len(pending)))==pending

@@ -124,19 +124,27 @@ regular_func mk61_m0_pow_rsqrt_approx
  adcs r1,r2
  mov lr,r1                    // high32(P), for the a-posteriori enclosure
  // F = 3*2^62-P; q = FH*seed + high32(FL*seed).
+ // FH is within six of 2^31. Multiply that signed difference by
+ // the two 16-bit halves of seed and add the exact seed<<31 term.
  rsbs r0,r0,#0
- ldr r2,=0xc0000000
+ ldr r2,=0x40000000
  sbcs r2,r1
  mov r12,r2
  mov r1,r7
  mul32_32_64 r0,r1,r5,r6,r2,r3,r4,r5,r6
- push {r6}
- mov r0,r12
- mov r1,r7
- mul32_32_64 r0,r1,r0,r1,r2,r3,r4,r0,r1
- pop {r2}
- adds r0,r2
+ mov r2,r12
+ adds r0,r2,#1
+ cmp r0,#1
+ bhi .Lpow_rsqrt_signed_factor
+ ands r2,r7                  // d is zero or -1
+ lsls r0,r7,#31
+ lsrs r1,r7,#1
+ movs r3,#0
+ subs r0,r2
+ sbcs r1,r3
+.Lpow_rsqrt_final_sum:
  movs r2,#0
+ adds r0,r6
  adcs r1,r2
  // The certified seed bounds put high32(P) within5 of2^30. Only
  // 0x3fffffff/0x40000000 satisfy this test, hence |P-2^62|<=2^32.
@@ -150,5 +158,74 @@ regular_func mk61_m0_pow_rsqrt_approx
  adcs r0,r0                   // carry0 = tight, carry1 = ordinary enclosure
  add sp,#16
  pop {r4-r7,pc}
+.Lpow_rsqrt_signed_factor:
+ mov r0,r12
+ uxth r2,r7
+ lsrs r3,r7,#16
+ muls r2,r0
+ muls r3,r0
+ asrs r1,r2,#16
+ adds r3,r1
+ lsls r0,r3,#16
+ uxth r2,r2
+ orrs r0,r2
+ asrs r1,r3,#16
+ lsls r2,r7,#31
+ lsrs r3,r7,#1
+ adds r0,r2
+ adcs r1,r3
+ b .Lpow_rsqrt_final_sum
 .ltorg
 .size mk61_m0_pow_rsqrt_approx,.-mk61_m0_pow_rsqrt_approx
+
+// Positive normal x. R2 already holds its biased exponent E.
+// E+1 gives both the parity and 1533-(E+1)/2 for the packed exponent.
+regular_func mk61_m0_pow_rsqrt_normal
+ push {r4-r6,lr}
+ mov r4,r0
+ mov r5,r1
+ adds r2,#1
+ lsrs r6,r2,#1
+ movs r2,#0
+ adcs r2,r2
+ lsls r1,#12
+ lsrs r1,#12
+ ldr r3,=0x00100000
+ orrs r1,r3
+ ldr r3,=pow_rsqrt_seeds
+ bl mk61_m0_pow_rsqrt_approx
+ // The same 24- and six-unit guards as the subnormal C path.
+ ldr r3,=536
+ adds r2,r0,r3
+ lsls r2,#22
+ lsrs r2,#22
+ cmp r2,#48
+ bhi .Lpow_rsqrt_pack_normal
+ lsrs r3,r0,#1
+ bcs .Lpow_rsqrt_normal_ambiguous
+ subs r2,#18
+ cmp r2,#12
+ bls .Lpow_rsqrt_normal_ambiguous
+.Lpow_rsqrt_pack_normal:
+ ldr r3,=512
+ movs r2,#0
+ adds r0,r3
+ adcs r1,r2
+ lsrs r0,#10
+ lsls r2,r1,#22
+ orrs r0,r2
+ lsrs r1,#10
+ ldr r2,=1533
+ subs r2,r6
+ lsls r2,#20
+ adds r1,r2
+ pop {r4-r6,pc}
+.Lpow_rsqrt_normal_ambiguous:
+ mov r2,r0
+ mov r3,r1
+ mov r0,r4
+ mov r1,r5
+ bl mk61_m0_pow_rsqrt_ambiguous
+ pop {r4-r6,pc}
+.ltorg
+.size mk61_m0_pow_rsqrt_normal,.-mk61_m0_pow_rsqrt_normal

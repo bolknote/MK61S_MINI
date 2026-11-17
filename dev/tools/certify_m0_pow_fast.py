@@ -208,7 +208,13 @@ assert 24*2<512
 # also confines high32(P) to the small region used by the tag predicate.
 assert newton_ideal+newton_rounding+1<24
 product_residual=(1<<34)+19
-assert (1<<62)-product_residual>0
+assert (initial_delta+initial_delta**2)*(1<<64)+3 < product_residual < 1<<62
+# F.high - 2^31 is the signed high half of 2^62 - P. Decomposing the
+# seed into 16-bit limbs keeps both limb products and their carry signed.
+for high in range(-6,7):
+    limit=abs(high)*((1<<16)-1)
+    assert limit+(limit>>16)+1 < 1<<31
+assert -6 <= -product_residual//(1<<32) <= product_residual//(1<<32) <= 6
 for high_delta in range(-5,5):
     high=(1<<30)+high_delta
     tight=(((high+1)<<2)&0xffffffff)<8
@@ -251,6 +257,15 @@ for radius in (24,6):
                 rsqrt_round_cells+=1
 for e in range(-1074,1024):
     assert -(e>>1)==-(e-(e&1))//2
+for field in range(1,2047):
+    e=field-1023
+    assert ((field+1)&1) == (e&1)
+    assert 1533-((field+1)>>1)==1021-(e>>1)
+for tag in (0,1):
+    radius=24 if tag else 6
+    for tail in range(1024):
+        offset=(tail+536)&1023
+        assert (offset<=48 and (tag or 18<=offset<=30)) == (512-radius<=tail<=512+radius)
 result=dict(status='PASS_ARITHMETIC_BOUNDS',log70=a,log94=b,
     relative_q94_rounding=str(relative_rounding),pow_log_tail_extra_error=2,pow_linear_coefficient_error=str(F(2,3)),exp62=d,pow_exp_q62_error=str(main),pow_exp_q62_enclosure='3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise',
     pow_exp_product_error=str(product_error),pow_exp_generic_error=str(main_generic),

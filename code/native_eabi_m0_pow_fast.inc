@@ -74,15 +74,50 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static int
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 MK61_SOFT_PCS U mk61_m0_pow_rsqrt_approx(U m,unsigned parity,const uint32_t* table);
 #endif
+struct PowRootArgument { U significand; int exponent; };
+
+__attribute__((always_inline)) inline PowRootArgument pow_root_argument(double x) {
+  const U b=bits(x);U m=b&D::Fraction;
+  const unsigned field=unsigned(b>>52);
+  if(field) return {m|D::Hidden,int(field)-1023};
+  const unsigned shift=clz64(m)-11;
+  return {m<<shift,-1022-int(shift)};
+}
+
+__attribute__((always_inline)) inline double pow_rsqrt_round_boundary(double x,U q,U m,unsigned parity,int scale) {
+  U lower=(U(1021)<<52)+(q>>10);
+  const int compare=pow_rsqrt_boundary(m,parity,lower);
+  if(compare==2) return mk61_m0_cr_pow(x,-0.5);
+  lower+=compare<0 || (!compare && (lower&1));
+  return real((lower&D::Fraction)|(U(int(lower>>52)+scale)<<52));
+}
+
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_dispatch_extension")))
+MK61_SOFT_PCS double mk61_m0_pow_rsqrt_ambiguous(double x,U q) {
+  const auto [m,e]=pow_root_argument(x);
+  return pow_rsqrt_round_boundary(x,q,m,unsigned(e)&1U,-(e>>1));
+}
+#endif
+
 // One integer Newton step encloses 1/sqrt(M) in q+-24 Q63 units.
 // Only an ambiguous binary64 rounding cell needs an exact midpoint test.
 __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) double pow_rsqrt(double x) {
-  const U b=bits(x);U m=b&D::Fraction;int e=int(b>>52)-1023;
-  if(b>>52) m|=D::Hidden;
-  else {const unsigned shift=clz64(m)-11;m<<=shift;e=-1022-int(shift);}
+  const auto [m,e]=pow_root_argument(x);
   const unsigned parity=unsigned(e)&1U;
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
   const U q=mk61_m0_pow_rsqrt_approx(m,parity,pow_rsqrt_seeds);
+  // Adding 536 modulo 1024 maps the 24-unit midpoint guard to [0,48]
+  // and the narrower six-unit guard to [18,30].
+  const unsigned near=(unsigned(q)+536U)&1023U;
+  if(near<=48U && ((q&1U) || near-18U<=12U))
+    return mk61_m0_pow_rsqrt_ambiguous(x,q);
+  // Round the fixed-point significand before packing the two binary64
+  // words. The exponent addend touches only the high word.
+  const U rounded=q+512;
+  const uint32_t low=uint32_t(rounded>>10);
+  const uint32_t high=uint32_t(rounded>>42)+(uint32_t(1021-(e>>1))<<20);
+  return real((U(high)<<32)|low);
 #else
   const unsigned index=unsigned((m&D::Fraction)>>44);
   const uint32_t center=513+2*index;
@@ -109,35 +144,14 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) d
   const U p0=wide32(uint32_t(factor),seed);
   const U p1=wide32(uint32_t(factor>>32),seed)+(p0>>32);
   const U q=p1;
-#endif
   const unsigned tail=unsigned(q)&1023U;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  // GCC's arithmetic right shift is floor(e/2), including negative e.
-  const int scale=-(e>>1);
-#else
   const int scale=-(e-int(parity))/2;
-#endif
-  if(uint32_t(tail-(512U-24U))>48U
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-     // A small seed residual proves the narrower enclosure. The tag is
-     // already part of the bounded q; no midpoint decision is guessed.
-     || (!(q&1U) && uint32_t(tail-(512U-6U))>12U)
-#endif
-  ) {
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-    // The unchanged guard excludes the midpoint: no tie-even adjustment
-    // is needed on this path. The exact midpoint still uses the comparator.
-    const U rounded=(q+512)>>10;
-#else
+  if(uint32_t(tail-(512U-24U))>48U) {
     const U rounded=(q+511+((q>>10)&1))>>10;
-#endif
     return real((U(1021+scale)<<52)+rounded);
   }
-  U lower=(U(1021)<<52)+(q>>10);
-  const int compare=pow_rsqrt_boundary(m,parity,lower);
-  if(compare==2) return mk61_m0_cr_pow(x,-0.5);
-  lower+=compare<0 || (!compare && (lower&1));
-  return real((lower&D::Fraction)|(U(int(lower>>52)+scale)<<52));
+  return pow_rsqrt_round_boundary(x,q,m,parity,scale);
+#endif
 }
 // For small integer y and |y*(x-1)|<=2^-28, the nonlinear remainder
 // has magnitude <2^-55. The exact linear term is on the 2^-53 grid.
