@@ -29,6 +29,7 @@ typedef struct {
 } spectrum_memory;
 bool spectrum_memory_init(spectrum_memory*,uint8_t cache[SPECTRUM_CACHE_BYTES],uint8_t rom[16384],spectrum_memory_io);
 uint8_t* spectrum_memory_byte(spectrum_memory*,uint16_t address,bool writing);
+unsigned spectrum_memory_upper_bank(const spectrum_memory*);
 bool spectrum_memory_init_pages(spectrum_memory*,uint8_t fixed[SPECTRUM_FIXED_BYTES],uint8_t pages[2*SPECTRUM_CACHE_PAGE_BYTES],uint8_t rom[16384],spectrum_memory_io);
 bool spectrum_memory_init_mapped(spectrum_memory*,uint8_t fixed[SPECTRUM_FIXED_BYTES],uint8_t pages[2*SPECTRUM_CACHE_PAGE_BYTES],uint8_t window[16384],const uint8_t* rom0,const uint8_t* rom1,spectrum_memory_io);
 /* Fixed banks keep their final 1K in tails[0..1]. The cache consists of

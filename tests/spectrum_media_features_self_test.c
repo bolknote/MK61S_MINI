@@ -329,6 +329,13 @@ static void wide_scanlines(void) {
             assert(wide_reads<=54); // three areas, two planes, eight phases and attributes
             assert(spectrum_video_snapshot_strip(&machine,&snapshot,SPECTRUM_VIDEO_WIDE,strip,frozen,&saved));
             assert(frame.pixel_bytes==saved.pixel_bytes && !memcmp(lcd,frozen,frame.pixel_bytes));
+            const spectrum_video_damage damage={2,14,13,rows<21?rows:21};
+            spectrum_pentagon_clip(SPECTRUM_VIDEO_WIDE,&damage,frozen,&saved);
+            assert(saved.x==40 && saved.width==240 && saved.y==21+first);
+            uint8_t patch[120*8];
+            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_WIDE,strip,&damage,patch));
+            assert(saved.pixel_bytes==120*(damage.bottom-13u));
+            assert(!memcmp(patch,frozen,saved.pixel_bytes));
             for(unsigned line=0;line<rows;++line) {
                 const unsigned y=first+line;
                 const unsigned row=y<64?y:y<256?y-64:y-256;
@@ -557,6 +564,11 @@ static void snapshot_test(unsigned model) {
             memcpy(expected,lcd,sizeof(expected));
             assert(spectrum_video_snapshot_strip(&machine,&captured,1,strip,lcd,&frame));
             assert(!memcmp(expected,lcd,sizeof(expected)));
+            const spectrum_video_damage damage={0,5,0,13};
+            spectrum_pentagon_clip(SPECTRUM_VIDEO_16C,&damage,lcd,&frame);
+            uint8_t patch[20*13];
+            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_16C,strip,&damage,patch));
+            assert(frame.pixel_bytes==sizeof(patch) && !memcmp(patch,lcd,sizeof(patch)));
         }
         assert(!spectrum_video_strip(&machine,64,SPECTRUM_WIDE_STRIPS,lcd,&frame));
         wide_scanlines();

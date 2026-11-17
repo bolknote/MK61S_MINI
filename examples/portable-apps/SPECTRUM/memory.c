@@ -18,7 +18,8 @@ uint8_t* spectrum_memory_fixed(spectrum_memory* m,unsigned bank) {
 static uint8_t* slot_bytes(spectrum_memory* m,unsigned slot) {
     return m->page_data[slot];
 }
-static unsigned bank_value(const spectrum_memory* m,uint8_t paging) {
+unsigned spectrum_memory_upper_bank(const spectrum_memory* m) {
+    const uint8_t paging=m->paging;
     unsigned bank=paging&7;
     if(!m->extended) bank|=((paging>>3)&24)&(m->banks-1u);
     else if(!(m->control&4)) bank|=((paging>>3)&24)|(paging&32);
@@ -55,7 +56,7 @@ uint8_t* spectrum_memory_cached_byte(spectrum_memory* m,uint32_t address,bool wr
     return slot_bytes(m,(unsigned)slot)+(address&1023);
 }
 uint8_t* spectrum_memory_mapped(spectrum_memory* m,bool writing) {
-    const unsigned bank=bank_value(m,m->paging);uint8_t* direct=spectrum_memory_fixed(m,bank);
+    const unsigned bank=spectrum_memory_upper_bank(m);uint8_t* direct=spectrum_memory_fixed(m,bank);
     if(direct) return direct;
     /* Reads may use any contiguous bank; stores may bypass traps only
      * after every page has been marked dirty. */
@@ -66,7 +67,7 @@ uint8_t* spectrum_memory_mapped(spectrum_memory* m,bool writing) {
 void spectrum_memory_map_pages(spectrum_memory* m,const uint8_t* read[64],uint8_t* write[64]) {
     memset(read,0,64*sizeof(*read));memset(write,0,64*sizeof(*write));
     if(!m) return;
-    const unsigned upper=bank_value(m,m->paging);
+    const unsigned upper=spectrum_memory_upper_bank(m);
     const bool ram0=m->extended && (m->control&8) && !m->overlay;
     /* Walk the cache once. Repeated tag searches for every guest page make
      * rebuilding the CPU view needlessly expensive at every 7FFD OUT. */
@@ -122,7 +123,7 @@ uint8_t* spectrum_memory_byte(spectrum_memory* m,uint16_t address,bool writing) 
         return (uint8_t*)m->rom+address;
     }
     if(!low && address<0xC000) return fixed_byte(m,address<0x8000?5:2,address&16383);
-    const unsigned bank=low?0:bank_value(m,m->paging),offset=address&16383;
+    const unsigned bank=low?0:spectrum_memory_upper_bank(m),offset=address&16383;
     if(fixed(m,bank)) return fixed_byte(m,bank,offset);
     uint8_t* bytes=page(m,bank*16+offset/SPECTRUM_CACHE_PAGE_BYTES);
     if(m->fault) return &m->dummy;

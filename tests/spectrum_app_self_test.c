@@ -319,24 +319,32 @@ static void extended_frames(void) {
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
     uint8_t* tails[]={fixed+15360,fixed+31744};
     uint8_t* runs[]={slots,slots+8192,slots+10240,slots+14336};
-    external.handle=1;psram_bytes=VIDEO_HISTORY+SPECTRUM_WIDE_STRIPS*VIDEO_HISTORY_STRIDE;
+    external.handle=1;psram_bytes=VIDEO_CAPTURE_END;
     psram=calloc(1,psram_bytes);assert(psram);
     memset(&state,0,sizeof(state));state.ram=fixed;state.rom=rom;
     assert(spectrum_memory_init_fragmented(&bank_memory,fixed,fixed+16384,tails,runs,64,io));
     spectrum_attach_memory(&state,&bank_memory);
     spectrum_hicolor_changes changes;
+    spectrum_pentagon_changes pentagon;
+    if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,&pentagon);
+    state.cpu.port_out(&state.cpu,0xeff7,SPECTRUM_VIDEO_16C|4);
+    state.cpu.port_out(&state.cpu,0x7ffd,4);
     video_test=true;video_output out={.guard_us=VIDEO_INITIAL_GUARD_US};
     const unsigned expected[]={3,6,6,7,14,14,21,22,25,25,26,29,30,31,34,37,41};
     for(unsigned turn=0;turn<sizeof(expected)/sizeof(*expected);++turn) {
         const unsigned mode=turn<4 || turn==16?SPECTRUM_VIDEO_16C:
             turn<8?SPECTRUM_VIDEO_WIDE:SPECTRUM_VIDEO_HICOLOR;
         if(turn==3) {
-            const uint8_t pixel=0x29;assert(spectrum_bank_write(&bank_memory,5,0,&pixel,1));video_busy_once=true;
+            guest_store(&state,0x4000,0x29);video_busy_once=true;
         }
-        if(turn==4) {const uint8_t attr=0x47;assert(spectrum_bank_write(&bank_memory,4,0x1018,&attr,1));}
+        if(turn==4) {
+            state.cpu.port_out(&state.cpu,0xeff7,SPECTRUM_VIDEO_WIDE|4);
+            guest_store(&state,0xd018,0x47);
+        }
         if(turn==6) video_fail_once=true;
-        if(turn==7) {const uint8_t pixel=0xff;assert(spectrum_bank_write(&bank_memory,4,24,&pixel,1));}
+        if(turn==7) guest_store(&state,0xc018,0xff);
         if(turn==8) {
+            if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
             state.memory->banks=8;state.memory->extended=false;state.pentagon=false;
             state.extensions|=SPECTRUM_TIMEX;
             spectrum_hicolor_watch(&state,&changes);
@@ -361,6 +369,8 @@ static void extended_frames(void) {
         if(turn==16) {
             spectrum_hicolor_watch(&state,NULL);
             state.memory->banks=64;state.memory->extended=state.pentagon=true;
+            if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,&pentagon);
+            state.cpu.port_out(&state.cpu,0xeff7,SPECTRUM_VIDEO_16C|4);
         }
         const unsigned io_before=video_psram_ops;
         if(turn==10) {
@@ -375,15 +385,18 @@ static void extended_frames(void) {
             assert(pace_frame(blocked,&keyboard_deadline,&deadline,&out,canvas,&error) && !error);
             assert(!out.pending && out.guard_us>=6000);
         } else {
-            assert(video_begin(&out,mode,canvas));
+            video_begin(&out,mode);
             if(turn==16) {
+                assert(video_present(&out,canvas) && !out.next);
                 assert(video_present(&out,canvas) && out.next==1);
                 video_page_failed=true;
             }
             for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
         }
         assert(!out.active && video_calls==expected[turn]);
-        if(turn==9 || turn==10 || turn==12 || turn==13) assert(video_psram_ops==io_before);
+        if(turn==2 || turn==3 || turn==5 || turn==7 || turn==9 || turn==10 || turn==12 || turn==13)
+            assert(video_psram_ops==io_before);
+        if(turn==3) assert(pentagon.strips[0][0].bottom==1 && !pentagon.strips[1][0].bottom);
         if(turn==14 || turn==15) assert(!out.packed && video_psram_ops>io_before);
         if(turn==13) {
             assert(last_strip.width==8 && last_strip.height==1 && last_strip.x==32 && last_strip.y==64);
@@ -391,17 +404,18 @@ static void extended_frames(void) {
         }
         if(turn==3 || turn==7 || turn==10) {
             const unsigned x=turn==3?32:turn==7?0:32+17*8,y=turn==3?64:turn==7?8:192;
-            assert(last_strip.x==x && last_strip.y==y && last_strip.width==8 && last_strip.height==1);
+            assert(last_strip.x==x && last_strip.y==y && last_strip.width==(turn==7?20:8) && last_strip.height==1);
             assert(last_strip.format&MK61_COLOR_PRESERVE_OUTSIDE);
             if(turn==10) {
                 assert(last_strip.pixel_bytes==1 && last_strip.tile_bytes==4);
                 assert(last_attrs[0]==0 && last_attrs[1]==0 && last_attrs[2]==255 && last_attrs[3]==255);
-            } else assert(last_strip.pixel_bytes==4 && !last_strip.tile_bytes);
+            } else assert(last_strip.pixel_bytes==(turn==7?10:4) && !last_strip.tile_bytes);
         }
     }
     assert(video_shows==4);
+    if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
-    puts("Actual LCD strip renderer: HiColor watched writes, no sparse PSRAM I/O, FLASH, bank flip, 16C/wide and fault recovery PASS");
+    puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");
 }
 
 static void bounded_audio_prefill(void) {

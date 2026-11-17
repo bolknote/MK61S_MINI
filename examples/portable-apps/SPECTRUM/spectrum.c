@@ -15,6 +15,66 @@ static __attribute__((noinline)) void watch_write_window(z80* z,unsigned window)
     for(unsigned i=0;i<6;++i)pages[i]=pages[i+8]=NULL;
 }
 #endif
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+static void pentagon_watch_map(spectrum* s,spectrum_pentagon_changes* changes) {
+    const unsigned mode=spectrum_pentagon_video_mode(s);
+    changes->windows=0;
+    if(mode!=changes->mode) {changes->mode=mode;changes->repaint=3;}
+    if(!mode) return;
+    const unsigned bank=(s->memory->paging&8)?7:5;
+    if(bank!=changes->bank) {changes->bank=bank;changes->repaint=3;}
+    changes->upper=spectrum_memory_upper_bank(s->memory);
+    if(bank==5) changes->windows|=2;
+    if(changes->upper==bank || changes->upper==bank-1) changes->windows|=8;
+    for(unsigned window=1;window<4;window+=2) if(changes->windows&(1u<<window)) {
+        if(mode==SPECTRUM_VIDEO_16C) watch_write_window(&s->cpu,window);
+        else {
+            s->cpu.write_map[window]=NULL;
+            memset(s->cpu.write_pages+window*16,0,16*sizeof(*s->cpu.write_pages));
+        }
+    }
+}
+
+static unsigned bitmap_row(unsigned offset) {
+    return ((offset>>5)&192)|((offset>>2)&56)|((offset>>8)&7);
+}
+
+static void pentagon_dirty(spectrum_pentagon_changes* changes,unsigned bank,unsigned address) {
+    unsigned x=address&31,at=address&8191,strip,y,rows=1;
+    if(changes->mode==SPECTRUM_VIDEO_16C) {
+        if(at>=SPECTRUM_BITMAP_BYTES) return;
+        y=bitmap_row(at);strip=y/64;y%=64;
+    } else {
+        // The central 32 cells are stored in the upper half of each bank.
+        // The two wings occupy columns 24..31 and 8..15 of the lower half.
+        if(address&8192) x+=8;
+        else if(x>=24) x-=24;
+        else if(x>=8 && x<16) x+=32;
+        else return;
+        if(bank&1) {
+            if(at<6144) y=64+bitmap_row(at);
+            else if(at<6912) {y=64+((at-6144)/32)*8;rows=8;}
+            else return;
+        } else if(at<2048) y=bitmap_row(at);
+        else if(at>=0x1800) {
+            y=256+bitmap_row(at-0x1800);
+            if(y>=304) return;
+        } else if(at>=0x1000 && at<0x1100) {y=((at-0x1000)/32)*8;rows=8;}
+        else if(at>=0x1300 && at<0x13c0) {y=256+((at-0x1300)/32)*8;rows=8;}
+        else return;
+        strip=y/SPECTRUM_WIDE_STRIP_ROWS;y%=SPECTRUM_WIDE_STRIP_ROWS;
+        x/=3; // The scaler emits a group of 20 LCD pixels per three cells.
+    }
+    for(unsigned page=0;page<2;++page) {
+        spectrum_video_damage* d=&changes->strips[page][strip];
+        if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+rows};continue;}
+        if(x<d->left) d->left=(uint8_t)x;
+        if(x>=d->right) d->right=(uint8_t)(x+1);
+        if(y<d->top) d->top=(uint8_t)y;
+        if(y+rows>d->bottom) d->bottom=(uint8_t)(y+rows);
+    }
+}
+#endif
 void spectrum_refresh_map(spectrum* s) {
     z80* z=&s->cpu;
     z->contention_mask=spectrum_is_128(s) && (s->memory->paging&1)?0x4000:0xc000;
@@ -56,6 +116,9 @@ void spectrum_refresh_map(spectrum* s) {
         s->hicolor->windows=(uint8_t)windows;
     }
 #endif
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    if(s->pentagon_video) pentagon_watch_map(s,s->pentagon_video);
+#endif
 }
 
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -71,6 +134,13 @@ void spectrum_hicolor_dirty(spectrum_hicolor_changes* changes,unsigned offset) {
     if(x>=d->right) d->right=(uint8_t)(x+1);
     if(y<d->top) d->top=(uint8_t)y;
     if(y>=d->bottom) d->bottom=(uint8_t)(y+1);
+}
+#endif
+
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+void spectrum_pentagon_watch(spectrum* s,spectrum_pentagon_changes* changes) {
+    if(changes) *changes=(spectrum_pentagon_changes){0};
+    if(changes || s->pentagon_video) {s->pentagon_video=changes;spectrum_refresh_map(s);}
 }
 #endif
 
@@ -101,7 +171,19 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
     }
 #endif
     if(!s->memory) {s->ram[address-0x4000]=value;return;}
-    *spectrum_memory_byte(s->memory,address,true)=value;
+    uint8_t* const cell=spectrum_memory_byte(s->memory,address,true);
+#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    spectrum_pentagon_changes* changes=s->pentagon_video;
+    if(changes && (changes->windows&(1u<<(address>>14)))) {
+        if(*cell!=value) pentagon_dirty(changes,address>=0xc000?changes->upper:5,address&16383u);
+        *cell=value;
+        // A cached write leaves the read map intact. A cache miss can evict
+        // another mapped page, so retain the mapper's normal refresh then.
+        if(address<0xc000 || (!s->memory->fault &&
+           (uintptr_t)cell==(uintptr_t)s->cpu.read_pages[address>>10]+(address&1023u))) return;
+    }
+#endif
+    *cell=value;
     if(address<0x4000 || address>=0xc000) {
         if(s->memory->fault) s->cpu.ldir_until=0;
         spectrum_refresh_map(s);
@@ -332,7 +414,11 @@ static void reset_ay(spectrum* s) {
 void spectrum_reset_cpu(spectrum* s) {
     z80_init(&s->cpu);s->cpu.read_byte=read_byte;s->cpu.write_byte=write_byte;
     s->cpu.port_in=port_in;s->cpu.port_out=port_out;s->cpu.userdata=s;
-    s->hicolor=NULL;spectrum_disk_filter(s);spectrum_refresh_map(s);
+    s->hicolor=NULL;
+#if SPECTRUM_HAS_PENTAGON
+    s->pentagon_video=NULL;
+#endif
+    spectrum_disk_filter(s);spectrum_refresh_map(s);
     s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=s->key_rows=0;
     s->video_bytes=NULL;
     memset(s->keys,0x1F,sizeof(s->keys));

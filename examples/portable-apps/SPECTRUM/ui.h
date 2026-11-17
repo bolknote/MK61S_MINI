@@ -2,8 +2,7 @@
 #define MK61_SPECTRUM_UI_H
 #include "mk61_app.h"
 #include "spectrum.h"
-enum { SPECTRUM_VIDEO_WORK_BYTES=10240, SPECTRUM_WIDE_STRIP_ROWS=48, SPECTRUM_WIDE_STRIPS=7 };
-enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_WIDE=64 };
+enum { SPECTRUM_VIDEO_WORK_BYTES=10240 };
 typedef struct {
     const spectrum_memory_io* io;
     uint32_t address,frames;
@@ -20,6 +19,11 @@ void spectrum_hicolor_flash(const spectrum*,spectrum_hicolor_changes*);
 void spectrum_hicolor_patch(const spectrum*,const spectrum_video_snapshot*,unsigned strip,
                             const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_hicolor_frame(const spectrum_video_damage*,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
+bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,bool* flashes);
+bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,uint8_t* pixels);
+void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage*,const uint8_t*,
+                             mk61_service_color_frame*);
+void spectrum_pentagon_clip(unsigned mode,const spectrum_video_damage*,uint8_t*,mk61_service_color_frame*);
 typedef struct {
     const mk61_app_services* api;
     const uint8_t* font;

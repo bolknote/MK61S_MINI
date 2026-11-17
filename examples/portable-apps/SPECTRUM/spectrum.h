@@ -30,12 +30,18 @@
 #define SPECTRUM_RASTER_PACKED_STRIP_BYTES (3U*SPECTRUM_RASTER_CELLS+SPECTRUM_RASTER_CELLS/8U)
 #define SPECTRUM_RASTER_PACKED_BYTES (SPECTRUM_RASTER_PACKED_STRIP_BYTES*SPECTRUM_RASTER_STRIPS)
 
+enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_WIDE=64 };
+enum { SPECTRUM_WIDE_STRIP_ROWS=48, SPECTRUM_WIDE_STRIPS=7 };
 typedef struct { uint8_t left,right,top,bottom; } spectrum_video_damage;
 typedef struct {
     spectrum_video_damage strips[3];
     uint8_t windows;
     bool repaint;
 } spectrum_hicolor_changes;
+typedef struct {
+    spectrum_video_damage strips[2][SPECTRUM_WIDE_STRIPS];
+    uint8_t mode,bank,upper,windows,repaint;
+} spectrum_pentagon_changes;
 
 typedef struct spectrum {
     z80 cpu;
@@ -55,6 +61,9 @@ typedef struct spectrum {
     uint8_t* video_bytes;
     bool (*video_store)(void*,unsigned,const uint8_t*);
     spectrum_hicolor_changes* hicolor;
+#if SPECTRUM_HAS_PENTAGON
+    spectrum_pentagon_changes* pentagon_video;
+#endif
     uint16_t video_cell;
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,timex_mode,ulaplus_palette[64];
@@ -75,6 +84,10 @@ static inline unsigned spectrum_model(const spectrum* s) {
 static inline unsigned spectrum_timex_mode(const spectrum* s) {
     return SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
 }
+static inline unsigned spectrum_pentagon_video_mode(const spectrum* s) {
+    const unsigned mode=SPECTRUM_HAS_PENTAGON && s->memory && s->memory->extended?s->memory->control&0x41:0;
+    return mode&1?SPECTRUM_VIDEO_16C:mode;
+}
 typedef struct {
     void* context;
     uint32_t size;
@@ -91,6 +104,7 @@ void spectrum_attach_memory(spectrum*,spectrum_memory*);
 void spectrum_refresh_map(spectrum*);
 void spectrum_hicolor_watch(spectrum*,spectrum_hicolor_changes*);
 void spectrum_hicolor_dirty(spectrum_hicolor_changes*,unsigned offset);
+void spectrum_pentagon_watch(spectrum*,spectrum_pentagon_changes*);
 uint32_t spectrum_frame_cycles(const spectrum*);
 uint32_t spectrum_run(spectrum*,uint32_t tstates);
 void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
