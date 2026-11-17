@@ -4,6 +4,13 @@
 #include <stddef.h>
 #include <stdint.h>
 #define DIR "/MK61S-POW-EXACT"
+#ifdef POW_BENCH_DETAILED
+#define CASES 5U
+#define REPORT_TAG UINT32_C(0x544f5732)
+#else
+#define CASES 4U
+#define REPORT_TAG UINT32_C(0x544f5731)
+#endif
 
 typedef _Bool (*interval_fn)(uint64_t, uint64_t, uint64_t *);
 typedef int (*exact_fn)(uint64_t, uint64_t, uint64_t *);
@@ -20,7 +27,7 @@ typedef struct {
 typedef struct {
     uint32_t prefix_us, tail_us, elapsed_us, prior_reloads, entry_reloads, after_reloads;
     uint32_t max_gap_ms, last_feed_age_us, announced_hz, finish_hz;
-    uint32_t caller_stack_bytes, reserved;
+    uint32_t caller_stack_bytes, stage4096_us;
     uint64_t returned;
 } Sample;
 
@@ -28,7 +35,7 @@ _Static_assert(sizeof(Case) == 40 && sizeof(Sample) == 56, "Benchmark wire layou
 
 static struct {
     uint32_t tag, build, count, timeout_ms, fail, pad;
-    Sample samples[4];
+    Sample samples[CASES];
 } report;
 
 static uint32_t word(uintptr_t address) { return *(const volatile uint32_t *)address; }
@@ -65,13 +72,22 @@ static int evaluate(const Case *input, Sample *out) {
     const uint32_t begin = micros();
     uint64_t lower512 = UINT64_C(0x7ff0000000000000), lower1024 = lower512, exact = lower;
     int a = 0, b = 0, c = 0, side = 0;
+#ifdef POW_BENCH_DETAILED
+    uint32_t stage4096_begin = 0;
+#endif
     if (input->full) {
         a = ((interval_fn)(uintptr_t)POW_512)(x, y, &lower512);
         b = ((interval_fn)(uintptr_t)POW_1024)(x, y, &lower1024);
         c = ((exact_fn)(uintptr_t)POW_EXACT)(x, y, &exact);
+#ifdef POW_BENCH_DETAILED
+        stage4096_begin = micros();
+#endif
         side = ((side_fn)(uintptr_t)POW_4096)(x, y, lower);
     }
     const uint32_t tail_begin = micros();
+#ifdef POW_BENCH_DETAILED
+    out->stage4096_us = input->full ? tail_begin - stage4096_begin : 0;
+#endif
     out->entry_reloads = word(POW_WATCHDOG + 8U);
     uint32_t stack;
     __asm__ volatile("mrs %0, msp" : "=r"(stack));
@@ -111,15 +127,15 @@ int main(void) {
         files->call(MK61_SERVICE_FILE_RESOLVE, MK61_SERVICE_ROOT_ID, MK61_SERVICE_FILE_MK61_BINARY,
                     (uint32_t)(uintptr_t)(DIR "/INPUT.bin"), &input))
         return MK61_APP_IO_ERROR;
-    Case entries[4];
+    Case entries[CASES];
     if (mk61_api->file_size(input.id) != sizeof(entries) ||
         mk61_api->file_read(input.id, 0, (uint8_t *)entries, sizeof(entries)) != sizeof(entries))
         return MK61_APP_INVALID_FILE;
-    report.tag = UINT32_C(0x544f5731);
+    report.tag = REPORT_TAG;
     report.build = POW_BUILD_ID;
-    report.count = 4;
+    report.count = CASES;
     report.timeout_ms = 8000;
-    for (unsigned i = 0; i < 4; ++i) {
+    for (unsigned i = 0; i < CASES; ++i) {
         if (!evaluate(&entries[i], &report.samples[i])) {
             report.fail = i + 1;
             break;

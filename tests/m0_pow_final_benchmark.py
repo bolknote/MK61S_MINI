@@ -34,20 +34,30 @@ CASES=(
     ('exact_even_lower_tie',bits(3.),bits(34.),0x434d9fe779881944,0),
     ('exact_zero_subnormal_tie',bits(2.),bits(-1075.),0,0),
 )
+STREAMING_INVERSE=('exact_streaming_inverse',bits(1.0)-1,bits(-1023/128),bits(1.0)+3,0)
 
 def decode(raw,metadata):
+    version=metadata.get('wire_version',1)
+    assert version in (1,2)
+    cases=CASES+(STREAMING_INVERSE,) if version==2 else CASES
     head=HEADER.unpack_from(raw)
-    assert head==(0x544f5731,int(metadata['firmware']['build_id'],16),len(CASES),8000,0,0),head
-    assert len(raw)==HEADER.size+len(CASES)*SAMPLE.size
+    assert head==(0x544f5730+version,int(metadata['firmware']['build_id'],16),len(cases),8000,0,0),head
+    assert len(raw)==HEADER.size+len(cases)*SAMPLE.size and len(metadata['rows'])==len(cases)
     out=[]
     for row,packet in zip(metadata['rows'],SAMPLE.iter_unpack(raw[HEADER.size:])):
-        prefix,tail,total,early,entry,after,max_gap,age,hz_before,hz_after,caller,reserved,result=packet
+        prefix,tail,total,early,entry,after,max_gap,age,hz_before,hz_after,caller,stage4096,result=packet
         assert prefix+tail==total and hz_before==hz_after==125000000
-        assert early==entry and result==row['expected'] and max_gap<8000 and age<8000000
-        assert 0<caller<=32768-20480 and reserved==0
+        assert early<=entry<=after and (row['full'] or early==entry)
+        assert result==row['expected'] and max_gap<8000 and age<8000000
+        assert 0<caller<=32768-20480
+        if version==2 and row['full']:
+            assert 0<stage4096<=prefix
+        else:
+            assert stage4096==0
         if row['full'] or tail>=30000:
             assert after>entry
         out.append(dict(name=row['name'],prefix_us=prefix,final_us=tail,chain_us=total,
+                        stage4096_us=stage4096,reloads_prefix=entry-early,
                         entry_reloads=entry,after_reloads=after,reloads_inside=after-entry,
                         max_watchdog_gap_ms=max_gap,last_feed_age_us=age,caller_stack_bytes=caller,rounded=f'{result:016x}'))
     return out
@@ -95,6 +105,8 @@ def build(args):
     constants.append(f'#define POW_STACK_TOP 0x{top:08x}U')
     constants.append('#define POW_FOOTER_WORDS '+','.join(f'0x{x:08x}U' for x in struct.unpack_from('<10I',raw,off)))
     constants.append('#define POW_BUILD_ID 0x'+f['build_id']+'U')
+    if args.detailed:
+        constants.append('#define POW_BENCH_DETAILED 1')
     work.mkdir(parents=True)
     source=work/'POWEXACT.c'
     shutil.copy2(ROOT/'tests/fixtures/m0_pow_final_benchmark.c',source)
@@ -102,7 +114,8 @@ def build(args):
     oracle=Oracle()
     rows=[]
     inp=bytearray()
-    for name,x,y,lower,full in CASES:
+    cases=CASES+(STREAMING_INVERSE,) if args.detailed else CASES
+    for name,x,y,lower,full in cases:
         want=oracle.reference('pow',x,y)
         assert want in (lower,lower+1),(name,hex(want),hex(lower))
         rows.append(dict(name=name,x=x,y=y,lower=lower,expected=want,full=full))
@@ -114,7 +127,7 @@ def build(args):
     with (work/'build-app.log').open('w') as log:
         subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,check=True)
     app=work/'app'/APP
-    out=dict(firmware=f,elf_sha256=sha(elf_path),
+    out=dict(firmware=f,elf_sha256=sha(elf_path),wire_version=2 if args.detailed else 1,
         app=str(app),app_sha256=sha(app),input=str(work/'INPUT.bin'),input_sha256=sha(work/'INPUT.bin'),
         rows=rows,bindings=bindings,mpfr=oracle.version,erase_end=hex(BASE+((len(raw)+4095)&~4095)))
     (work/'benchmark.json').write_text(json.dumps(out,indent=2)+'\n')
@@ -128,6 +141,7 @@ def main():
     prepare.add_argument('--production', type=Path, required=True)
     prepare.add_argument('--output', type=Path, required=True)
     prepare.add_argument('--toolchain', type=Path)
+    prepare.add_argument('--detailed', action='store_true', help='Time the 4096-bit stage separately and include a longer exact inverse')
     replay=modes.add_parser('verify')
     replay.add_argument('--benchmark', type=Path, required=True)
     replay.add_argument('--result', type=Path, required=True)
