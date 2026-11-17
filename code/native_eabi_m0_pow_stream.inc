@@ -19,7 +19,7 @@ constexpr unsigned RadixBits = 16;
 constexpr unsigned NodeCount = 224;
 constexpr unsigned MaximumDepth = 125;
 constexpr unsigned MaterializedWords = 1792;
-constexpr unsigned CacheSize = 64;
+constexpr unsigned CacheSize = 8;
 constexpr U AbsMask = UINT64_C(0x7fffffffffffffff);
 
 using Progress = void (*)();
@@ -30,13 +30,13 @@ struct Accumulator {
     Index low;
     uint32_t high;
 
-    void add(uint32_t value) {
+    static void add(Index& low, uint32_t& high, uint32_t value) {
         const auto before = low.low;
         low.low += value;
         if (low.low < before && ++low.high == 0)
             ++high;
     }
-    Word take() {
+    static Word take(Index& low, uint32_t& high) {
         const Word digit = Word(low.low);
         const auto high_word = low.high;
         low.low = (low.low >> RadixBits) | (high_word << (64 - RadixBits));
@@ -47,7 +47,6 @@ struct Accumulator {
 };
 
 struct Node {
-    Index bits;
     NodeId left, right;
 };
 
@@ -64,13 +63,13 @@ struct Diagonal {
 enum class State : uint8_t { begin, left, right, accumulate };
 
 struct Frame {
-    Index current, first, end;
-    Accumulator carry;
+    Index current, first, carry_low;
+    uint32_t carry_high;
     Word left_word;
     NodeId node;
     State state;
 };
-static_assert(sizeof(Frame) <= 80, "Bound the explicit multiplication stack");
+static_assert(sizeof(Frame) <= 56, "Bound the explicit multiplication stack");
 
 struct Operand {
     Word word[MaterializedWords];
@@ -98,8 +97,8 @@ class Products {
 public:
     Products(U a, U b, Progress progress)
         : coefficients{a, b}, progress(progress) {
-        nodes[0] = {word_bits(a), 0, 0};
-        nodes[1] = {word_bits(b), 1, 1};
+        bit_limits[0] = word_bits(a);
+        bit_limits[1] = word_bits(b);
         for (unsigned j = 0; j < 2; ++j)
             for (unsigned i = 0; i < 4; ++i)
                 literals[j][i] = Word(coefficients[j] >> (i*RadixBits));
@@ -116,8 +115,8 @@ public:
         if (right < 2 && coefficients[right] == 1)
             return left;
         const NodeId id = NodeId(next_node++);
-        Node& node = nodes[id];
-        node = {nodes[left].bits + nodes[right].bits, left, right};
+        bit_limits[id] = bit_limits[left] + bit_limits[right];
+        nodes[id] = {left, right};
         if (store)
             materialize(id, *store);
         return id;
@@ -140,7 +139,7 @@ public:
         return factor;
     }
 
-    Index bit_limit(NodeId node) const { return nodes[node].bits; }
+    Index bit_limit(NodeId node) const { return bit_limits[node]; }
 
     Word next(NodeId node, Index at, Accumulator& carry) {
         Word value;
@@ -150,6 +149,7 @@ public:
 private:
     U coefficients[2];
     Word literals[2][4];
+    Index bit_limits[NodeCount];
     Node nodes[NodeCount];
     Operand operands[2];
     CacheEntry cache[CacheSize];
@@ -158,10 +158,10 @@ private:
 
     Retained retained(NodeId node) const {
         if (node < 2)
-            return {literals[node], unsigned(words(nodes[node].bits))};
+            return {literals[node], unsigned(words(bit_limits[node]))};
         for (const auto& operand : operands) {
             if (operand.node == node)
-                return {operand.word + operand.start, unsigned(words(nodes[node].bits))};
+                return {operand.word + operand.start, unsigned(words(bit_limits[node]))};
         }
         return {nullptr, 0};
     }
@@ -178,8 +178,8 @@ private:
     MK61_POW_STREAM void materialize(NodeId id, Operand& storage) {
         const Node& product = nodes[id];
         const NodeId previous = product.left; // The right factors are the base or the left factor.
-        const Index left = words(nodes[previous].bits);
-        const Index right = words(nodes[product.right].bits);
+        const Index left = words(bit_limits[previous]);
+        const Index right = words(bit_limits[product.right]);
         if (left+right > MaterializedWords || (previous >= 2 && storage.node != previous))
             return;
 
@@ -193,22 +193,26 @@ private:
             storage.start = start;
         }
         Accumulator carry{};
-        const unsigned length = unsigned(words(product.bits));
+        const unsigned length = unsigned(words(bit_limits[id]));
         for (unsigned i = 0; i < length; ++i)
             storage.word[i] = column(id, i, carry);
         storage.node = id;
         storage.start = 0;
     }
 
-    Diagonal diagonal(const Node& node, Index at) const {
-        const Index left_length = words(nodes[node.left].bits);
-        const Index right_length = words(nodes[node.right].bits);
+    Index first_term(const Node& node, Index at) const {
+        const Index right_length = words(bit_limits[node.right]);
         const Index after = at + 1;
-        Index first = after > right_length ? after - right_length : Index(0);
+        return after > right_length ? after - right_length : Index(0);
+    }
+
+    Diagonal diagonal(const Node& node, Index at) const {
+        const Index left_length = words(bit_limits[node.left]);
+        const Index after = at + 1;
         Index end = left_length < after ? left_length : after;
         if (node.left == node.right && end > (at >> 1) + 1)
             end = (at >> 1) + 1;
-        return {first, end};
+        return {first_term(node, at), end};
     }
 
     // Its remaining high bits are the incoming carry for the next diagonal.
@@ -224,9 +228,9 @@ private:
             tick();
             const uint32_t product = uint32_t(digit(node.left, first)) *
                                      digit(node.right, reverse);
-            accumulate(carry, product, node.left == node.right && first != reverse);
+            accumulate(carry.low, carry.high, product, node.left == node.right && first != reverse);
         }
-        return carry.take();
+        return Accumulator::take(carry.low, carry.high);
     }
 
     MK61_POW_STREAM Word retained_column(Retained a, Retained b, unsigned at, Accumulator& carry) {
@@ -250,10 +254,10 @@ private:
         return Word(sum);
     }
 
-    static void accumulate(Accumulator& carry, uint32_t product, bool twice) {
-        carry.add(product);
+    static void accumulate(Index& low, uint32_t& high, uint32_t product, bool twice) {
+        Accumulator::add(low, high, product);
         if (twice)
-            carry.add(product);
+            Accumulator::add(low, high, product);
     }
 
     static unsigned cache_slot(NodeId id, Index at) {
@@ -288,16 +292,14 @@ private:
             auto& f = *frame;
             const Node& node = nodes[f.node];
             switch (f.state) {
-            case State::begin: {
-                const auto [first, end] = diagonal(node, f.current);
-                f.first = first;
-                f.end = end;
+            case State::begin:
+                f.first = first_term(node, f.current);
                 f.state = State::left;
                 break;
-            }
             case State::left:
-                if (f.first >= f.end) {
-                    value = f.carry.take();
+                if (f.first > f.current || f.first >= words(bit_limits[node.left]) ||
+                    (node.left == node.right && f.first > (f.current >> 1))) {
+                    value = Accumulator::take(f.carry_low, f.carry_high);
                     Index requested = at;
                     if (frame != frames) {
                         const auto& parent = frame[-1];
@@ -328,7 +330,7 @@ private:
                 break;
             }
             case State::accumulate:
-                accumulate(f.carry, uint32_t(f.left_word)*value,
+                accumulate(f.carry_low, f.carry_high, uint32_t(f.left_word)*value,
                            node.left == node.right && f.first != f.current-f.first);
                 ++f.first;
                 f.state = State::left;

@@ -71,11 +71,11 @@ the two bases are `C^q` and `C^p` for an odd `C >= 3`. Then `q <= 32`
 and both powers are exact at 4,096 bits. At other ties all odd parts
 are one and the comparison uses the exact binary scales.
 
-The remaining case for the final trap is a nonzero cancelling gap
+The 4,096-bit stage can still decline for a nonzero cancelling gap
 below `2^-4030` between independent bases. The explicit separation
 estimate in the prior analysis and the published searches for selected
-exponents do not exclude that case across binary64. Removing the trap
-with a rounding guarantee still requires a stronger separation bound or
-an exact method bounded by the device's resources.
+exponents do not exclude that case across binary64. The RP2040 code now
+handles further overlap with an exact comparison of integer powers.
+[Final rounding decision](m0-pow-final-20261117.md)
 [Prior separation analysis](m0-math-followup-20261114.md#host-results),
 [CORE-MATH coverage](https://core-math.gitlabpages.inria.fr/worst.html)

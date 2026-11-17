@@ -40,7 +40,7 @@ def certify():
     # The renormalizing ceil can add at most one unit of the old scale.
     addition = 4*(terms-1)
     assert addition+1 < 1 << 119
-    for precision in (128,256,4096):
+    for precision in (128,256,4096,8192):
         delta = F(1,1 << (precision-1))
         loss = (terms-1)*delta
         assert 0 < loss < F(1,2)
@@ -67,6 +67,8 @@ def certify():
     assert last_y == (1 << 63)-(1 << 10)
     failure_log_gap = F(1,1 << 4030)
     assert 4*(last_y+1)*delta < failure_log_gap
+    final_failure_log_gap = F(1,1 << 8126)
+    assert 4*(last_y+1)*F(1,1 << 8191) < final_failure_log_gap
 
     # For dependent dyadic bases, the primitive integer valuation vector
     # represents a dyadic g with odd coefficient below 2^54, up to inversion.
@@ -97,6 +99,7 @@ def certify():
         maximum_limb_multiply_accumulates=largest_work,
         relative_width_bound='2^-3976',
         undecided_abs_log_gap_strict_upper_bound='2^-4030',
+        undecided_8192_abs_log_gap_strict_upper_bound='2^-8126',
         dependent_nonzero_abs_log_gap_lower_bound='2^-170',
         exact_midpoint_products_significand_bits_upper_bound=54*32,
         scope='For a valid adjacent midpoint, only multiplicatively independent bases with a nonzero cancelling log gap can remain undecided.')
