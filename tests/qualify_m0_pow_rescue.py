@@ -20,7 +20,7 @@ import native_eabi_m0_arm_self_test as arm
 from m0_mpfr_oracle import Oracle
 
 
-def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False):
+def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False,force_power_bounds=False):
     stage=output/'source';stage.mkdir(parents=True,exist_ok=True)
     for directory in ('code','third_party/core_math'):
         shutil.copytree(snapshot/directory,stage/directory,dirs_exist_ok=True)
@@ -45,22 +45,27 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False)
         sources[path]=source.replace(old,new)
         patch_locations[old]=str(path.relative_to(stage))
     for path,source in sources.items():path.write_text(source)
-    if force1024 or force_exact_small:
+    if force1024 or force_exact_small or force_power_bounds:
         path=stage/'code/native_eabi_m0_cr.cpp';source=path.read_text()
         old='m0_pow_interval::Fixed<512>::evaluate(a,b,result)';assert source.count(old)==1
         source=source.replace(old,'(false && '+old+')')
         if force_exact_small and not interval_hint:
             old='m0_pow_interval::Fixed<1024>::evaluate(a,b,result)';assert source.count(old)==1
             source=source.replace(old,'(false && '+old+')')
+        if force_power_bounds:
+            old='mk61_m0_pow_exact_small(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,&result)'
+            assert source.count(old)==1
+            source=source.replace(old,'(false && '+old+')')
         path.write_text(source)
     interval_patches={}
-    if interval_hint:
-        assert force_exact_small
+    if interval_hint or force_power_bounds:
         path=stage/'code/native_eabi_m0_pow_interval.inc';source=path.read_text()
         for old,new in [
             ('if(exact_boundary(x,y,result)) return true;',
              'if(P!=1024 && exact_boundary(x,y,result)) return true;'),
             ('if(lower!=upper) {','if(lower!=upper || P==1024) {'),
+            ('if(upper==lower+1) result=lower;',
+             'if(upper==lower+1 || upper==lower) result=lower;'),
         ]:
             assert source.count(old)==1,old
             source=source.replace(old,new)
@@ -70,7 +75,7 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False)
     elf=arm.build(compiler_bin(None),(output/'arm').resolve(),True)
     return elf,dict(patches=patches,patch_locations=patch_locations,
                     force1024=force1024,force_exact_small=force_exact_small,
-                    interval_hint=interval_hint,interval_patches=interval_patches)
+                    interval_hint=interval_hint,force_power_bounds=force_power_bounds,interval_patches=interval_patches)
 
 
 def main():
@@ -83,12 +88,14 @@ def main():
     p.add_argument('--force-1024',action='store_true')
     p.add_argument('--force-exact-small',action='store_true',
                    help='Disable both interval stages and qualify the bounded exact integer stage')
+    p.add_argument('--force-power-bounds',action='store_true',
+                   help='Use the real final interval to exercise the RP2040 power-product stage')
     p.add_argument('--interval-hint',action='store_true',
                    help='With --force-exact-small, compute the final interval but force its undecided branch')
     a=p.parse_args();assert a.samples>=0;a.output.mkdir(parents=True,exist_ok=True)
-    assert not (a.force_1024 and a.force_exact_small)
+    assert sum((a.force_1024,a.force_exact_small,a.force_power_bounds))<=1
     assert not a.interval_hint or a.force_exact_small
-    elf,patch=build(a.snapshot.resolve(),a.output.resolve(),a.force_1024,a.force_exact_small,a.interval_hint) if a.snapshot else (a.elf,{})
+    elf,patch=build(a.snapshot.resolve(),a.output.resolve(),a.force_1024,a.force_exact_small,a.interval_hint,a.force_power_bounds) if a.snapshot else (a.elf,{})
     sha=hashlib.sha256(elf.read_bytes()).hexdigest()
     machine=arm.Machine(elf,True,stack_bytes=16384,instruction_budget=200000000);oracle=Oracle()
     address=machine.elf.symbols['mk61_m0_pow_rescue']&~1;hits=[0]
@@ -113,6 +120,15 @@ def main():
             def compared(*unused):comparisons[0]+=1
             for address in addresses:
                 machine.uc.hook_add(arm.UC_HOOK_CODE,compared,begin=address,end=address)
+    power_bounds_hits=[0]
+    if a.force_power_bounds:
+        address,=(
+            v&~1 for n,v in machine.elf.symbols.items()
+            if 'm0_pow_power_bounds' in n and 'resolve' in n
+        )
+        def power_bounds_entered(*unused):
+            power_bounds_hits[0]+=1
+        machine.uc.hook_add(arm.UC_HOOK_CODE,power_bounds_entered,begin=address,end=address)
     rng=random.Random(0xF0512)
     if a.force_exact_small:
         pairs=[(rng.uniform(.5,2),rng.choice((-31./32,31./32,-3.,3.,17.))) for _ in range(a.samples)]
@@ -131,6 +147,7 @@ def main():
         expected_magnitude[0]=expected&0x7FFFFFFFFFFFFFFF
         before_comparisons,before_hits=comparisons[0],exact_hits[0]
         before_rescue=hits[0]
+        before_power_bounds=power_bounds_hits[0]
         # This test forces CORE-MATH's guards, not the independent public
         # fast tiers. Enter the forced fallback directly so a successful
         # fast result cannot silently bypass the path under qualification.
@@ -147,6 +164,8 @@ def main():
             assert rescued==expected,(i,'Direct underflow rescue',hex(rescued),hex(expected))
             direct_underflow_rescues+=1
         assert hits[0]==before_rescue+1,(i,'Forced fallback did not enter rescue',x,y)
+        if a.force_power_bounds:
+            assert power_bounds_hits[0]==before_power_bounds+1,(i,x,y)
         if a.interval_hint:
             used=comparisons[0]-before_comparisons;entered=exact_hits[0]-before_hits
             assert entered<=used<=2*entered,(i,entered,used)
@@ -158,7 +177,7 @@ def main():
     assert sha==hashlib.sha256(elf.read_bytes()).hexdigest()
     report=dict(status='PASS_TEST_ONLY',cases=len(pairs),wrong_rounding=0,rescue_calls=hits[0],
         force1024=a.force_1024,force_exact_small=a.force_exact_small,exact_stage_calls=exact_hits[0],
-        interval_hint=a.interval_hint,checked_hint_calls=len(hint_distances),
+        interval_hint=a.interval_hint,checked_hint_calls=len(hint_distances),power_bounds_calls=power_bounds_hits[0],
         maximum_hint_distance=max(hint_distances,default=None),
         maximum_hint_comparisons=maximum_hint_comparisons,
         maximum_stack_bytes=arm.SP-machine.stack_lowest,entry_symbol=entry,
@@ -169,7 +188,9 @@ def main():
                + ('Hint mode computes the real1024-bit endpoints and forces their undecided branch; '
                   'the test-only exact-boundary shortcut is bypassed. '
                   if a.interval_hint else
-                  'Exact-small mode disables both interval passes. ' if a.force_exact_small else '') +
+                  'Exact-small mode disables both interval passes. ' if a.force_exact_small else
+                  'Power-bounds mode keeps the final interval and forces its adjacent boundary. '
+                  if a.force_power_bounds else '') +
                'Every case enters the CORE-MATH wrapper directly. Known exact half-minimum underflow shortcuts are checked and followed by a direct normalized magnitude/sign rescue call; every case must test the rescue once. '
                'Checks real ARM call/return, result sign, exact midpoints, subnormals and bounded caller stack. '
                'Not an all-input totality proof.'))

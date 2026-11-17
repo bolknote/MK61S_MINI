@@ -89,6 +89,7 @@ extern "C" double mk61_m0_cr_exp(double x) { return core_exp::cr_exp(x); }
 #include "native_eabi_m0_pow_interval.inc"
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 #include "native_eabi_m0_pow_exact.inc"
+#include "native_eabi_m0_pow_power_bounds.inc"
 #endif
 // Reached only after CORE-MATH's final 256-bit rounding test failed. The
 // directed integer passes do not change any successful earlier result.
@@ -103,6 +104,7 @@ double mk61_m0_pow_rescue(double x,double y,double sign) {
      m0_pow_interval::Fixed<1024>::evaluate(a,b,result)
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
      || mk61_m0_pow_exact_small(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,&result)
+     || m0_pow_power_bounds::resolve(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,result)
 #endif
      ) {
     result|=s&UINT64_C(0x8000000000000000);

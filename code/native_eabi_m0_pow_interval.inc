@@ -284,9 +284,9 @@ template<unsigned P> struct Fixed {
     const U lower=rounded(lo.lo,scale),upper=rounded(hi.hi,scale);
     if(lower!=upper) {
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-      // A failed final pass may still provide a cheap search hint. The
-      // exact stage independently checks the surrounding rounding cells.
-      if constexpr(P==1024) result=lower;
+      // Publish a certified adjacent pair for the midpoint stages.
+      if constexpr(P==1024)
+        if(upper==lower+1) result=lower;
 #endif
       return false;
     }
