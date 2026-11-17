@@ -495,6 +495,25 @@ static void bounded_audio_prefill(void) {
     const unsigned events=atomic_load(&state.sound.write);
     assert(events>SPECTRUM_SOUND_QUEUE_EVENTS/2 && events<SPECTRUM_SOUND_QUEUE_EVENTS);
     assert(state.cpu.cyc<SPECTRUM_FRAME_TSTATES && !atomic_load(&state.sound.clock_running));
+#if SPECTRUM_HAS_SINCLAIR
+    spectrum_memory banks;
+    const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
+    uint8_t* tails[]={ram+15360,ram+31744};
+    uint8_t* runs[]={ram+32768,ram+40960,ram+43008,ram+47104};
+    external.handle=1;psram_bytes=SPECTRUM_ROM_BASE+2*SPECTRUM_ROM_BYTES;
+    psram=calloc(1,psram_bytes);assert(psram);
+    psram[SPECTRUM_ROM_BASE]=0x76;
+    assert(spectrum_memory_init_fragmented(&banks,ram,ram+16384,tails,runs,8,io));
+    spectrum_attach_memory(&state,&banks);
+    for(unsigned expected=4;expected<=5;++expected) {
+        spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
+        prime_audio();
+        assert(state.frames==expected && state.cpu.cyc==expected*SPECTRUM_128_FRAME_TSTATES);
+        assert(!banks.fault && !atomic_load(&state.sound.clock_running));
+    }
+    external.handle=0;free(psram);psram=NULL;
+    puts("Sinclair 128K M3 prefill: four cold guest frames, one on resume PASS");
+#endif
     active_machine=NULL;tape=NULL;
     puts("48K M3 prefill: real guest frame, clock wrap and bounded dense event queue PASS");
 }

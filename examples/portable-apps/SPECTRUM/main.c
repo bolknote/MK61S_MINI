@@ -1000,8 +1000,9 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static __attribute__((noinline)) void prime_audio(void) {
-    // Generate real guest events before PWM. Wide video snapshots and the
-    // original 128K ROM's RAM test need extra time for cold PSRAM pages.
+    // Generate real guest events before PWM. Wide needs time for its
+    // initial video snapshot. The original 128K ROM needs more lead to
+    // cover the busy transition from RAM test to menu drawing.
     // Each 512T slice fits in the free half of the queue even with two
     // events per OUT, so it never waits on gated audio.
     spectrum_sound* sound=&machine.sound;
@@ -1009,7 +1010,7 @@ static __attribute__((noinline)) void prime_audio(void) {
     const uint32_t frame=sinclair128?SPECTRUM_128_FRAME_TSTATES:SPECTRUM_FRAME_TSTATES;
     const bool cold128=sinclair128 && !machine.cpu.cyc && !machine.cpu.pc;
     const bool wide=SPECTRUM_HAS_PENTAGON && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_WIDE;
-    const uint32_t end=(uint32_t)machine.cpu.cyc+(wide || cold128?2*spectrum_frame_cycles(&machine):frame);
+    const uint32_t end=(uint32_t)machine.cpu.cyc+(cold128?4*frame:wide?2*spectrum_frame_cycles(&machine):frame);
     int32_t left;
     while((left=(int32_t)(end-(uint32_t)machine.cpu.cyc))>0 &&
           !(machine.memory && machine.memory->fault) && !tape->fault && !tape->choices) {
