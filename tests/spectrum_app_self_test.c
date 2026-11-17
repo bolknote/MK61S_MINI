@@ -449,9 +449,25 @@ static void extended_frames(void) {
         assert(restarting.active && restarting.selected && !restarting.next && video_calls==calls);
         assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
-        assert(!restarting.active && video_calls==calls+(i?SPECTRUM_WIDE_STRIPS:3));
+        const unsigned strips=i?SPECTRUM_WIDE_STRIPS:3;
+        assert(!restarting.active && video_calls==calls+strips);
+        if(!i) {
+            restarting.pending=mode;
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+            assert(!restarting.active && restarting.valid[0] && restarting.valid[1]);
+        }
+        assert(restarting.valid[restarting.page]);
+        state.cpu.port_out(&state.cpu,0x7ffd,state.memory->paging^8);
+        restarting.pending=mode;
+        video_capture_delay_us=20080;
+        const unsigned prior=video_calls;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(restarting.active && restarting.selected && !restarting.next && video_calls==prior);
+        assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(!restarting.active && video_calls==prior+strips);
     }
-    puts("First image survives 18.813/20.080 ms cold capture at 20.480 ms guest cadence: PASS");
+    puts("Cold capture and live display-bank change at 20.480 ms guest cadence: PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;

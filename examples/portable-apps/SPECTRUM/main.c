@@ -981,8 +981,10 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
                 }
                 now=pacing_clock_us();
                 const uint32_t duration=now-start+2000;
-                // A first full capture must not increase the guard for subsequent strips.
-                if(!cold && duration>*guard) *guard=duration;
+                // Learn from steps that fit their slot. A long overrun must
+                // leave the already captured strips a chance to reach the LCD.
+                const bool fits=!SPECTRUM_HAS_PENTAGON || !machine.pentagon || duration<target-start;
+                if(!cold && fits && duration>*guard) *guard=duration;
             }
         }
 #endif
