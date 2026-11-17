@@ -138,16 +138,20 @@ def check(probe, oracle, reduced):
 
 
 def check_streaming_work(probe, oracle):
-    # The two fractional inverse cases place the virtual factor on opposite
-    # sides of the root product. The last one also needs a wide window.
+    # The reciprocal cases stream each possible factor, including a square
+    # followed by multiplication by the base in an inner window. The tight
+    # budget for -1023/128 catches a return to per-digit recomputation.
+    cases = ((1023.,4096), (-1024.,4096), (-1023.,4096), (1023/128,4096),
+             (-1/1024,4096), (-1023/128,3390), (1023/1024,4096),
+             (-1025/64,4096), (-1023/256,5200))
     x = ONE-1
     count = 0
-    for exponent in (1023., -1024., -1023., 1023/128, -1/1024, -1023/128):
+    for exponent, budget in cases:
         y = bits(exponent)
         rounded = oracle.reference('pow',x,y)
         for lower in (rounded-1, rounded):
             want = expected_side(x,y,lower)
-            got = probe(x,y,lower,4096)
+            got = probe(x,y,lower,budget)
             assert got == want, (hex(x),hex(y),hex(lower),got,want)
             count += 1
     return count

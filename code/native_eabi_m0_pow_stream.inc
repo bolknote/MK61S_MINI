@@ -20,6 +20,7 @@ constexpr unsigned NodeCount = 224;
 constexpr unsigned MaximumDepth = 125;
 constexpr unsigned MaterializedWords = 1728;
 constexpr unsigned CacheSize = 8;
+constexpr unsigned ProgressInterval = 1024;
 constexpr U AbsMask = UINT64_C(0x7fffffffffffffff);
 
 using Progress = void (*)();
@@ -85,6 +86,7 @@ struct Retained {
 
 struct DigitWindow {
     Word* word = nullptr;
+    uint64_t carry = 0;
     unsigned slot = 0;
     NodeId node = 0, root = 0;
 };
@@ -100,6 +102,13 @@ Index words(Index bits) {
     return (bits + RadixBits - 1) >> 4;
 }
 
+inline uint64_t diagonal_sum(const Word* first, const Word* end, const Word* reverse) {
+    uint64_t sum = 0;
+    while (first != end)
+        sum += uint32_t(*first++) * *--reverse;
+    return sum;
+}
+
 class Products {
 public:
     Products(U a, U b, Progress progress)
@@ -112,8 +121,17 @@ public:
     }
 
     void tick() {
-        if (++steps % 1024 == 0 && progress)
+        if (++steps % ProgressInterval == 0 && progress)
             progress();
+    }
+
+    void tick(unsigned count) {
+        // Count a whole retained diagonal before its tight multiply loop.
+        const unsigned work = steps % ProgressInterval + count;
+        steps += count;
+        if (progress)
+            for (unsigned remaining = work; remaining >= ProgressInterval; remaining -= ProgressInterval)
+                progress();
     }
 
     MK61_POW_STREAM NodeId multiply(NodeId left, NodeId right, Operand* store = nullptr) {
@@ -148,27 +166,18 @@ public:
 
     Index bit_limit(NodeId node) const { return bit_limits[node]; }
 
-    MK61_POW_STREAM void use_digit_window(NodeId root) {
-        if (root < 2 || retained(root).word)
+    MK61_POW_STREAM void use_digit_windows(NodeId root) {
+        unsigned used[2]{};
+        for (unsigned i = 0; i < 2; ++i)
+            if (operands[i].node)
+                used[i] = unsigned(words(bit_limits[operands[i].node]));
+        if (!reserve_window(window, root, used) || !reserve_window(inner, window.node, used))
             return;
-        const auto [left, right] = nodes[root];
-        const auto a = retained(left);
-        const auto b = retained(right);
-        if (bool(a.word) == bool(b.word))
-            return;
-        const unsigned count = a.word ? a.count : b.count;
-        // Once materialization is over, keep the virtual factor's sliding
-        // diagonal in the unused tail of a retained operand. Its width is
-        // at most the length of the other factor.
-        for (auto& operand : operands) {
-            const unsigned used = operand.node ? unsigned(words(bit_limits[operand.node])) : 0;
-            if (count <= MaterializedWords - used) {
-                window.word = operand.word + used;
-                window.node = a.word ? right : left;
-                window.root = root;
-                return;
-            }
-        }
+        // The inner window ends at a product of two retained operands. This
+        // keeps the general recomputation stack out of the two-window path.
+        const auto [left, right] = nodes[inner.node];
+        if (!retained(left).word || !retained(right).word)
+            inner.root = 0;
     }
 
     Word next(NodeId node, Index at, Accumulator& carry) {
@@ -183,7 +192,7 @@ private:
     Node nodes[NodeCount];
     Operand operands[2];
     CacheEntry cache[CacheSize];
-    DigitWindow window;
+    DigitWindow window, inner;
     unsigned next_node = 2, steps = 0;
     Progress progress;
 
@@ -202,6 +211,29 @@ private:
         if (view.word) {
             value = view.word[unsigned(at)];
             return true;
+        }
+        return false;
+    }
+
+    MK61_POW_STREAM bool reserve_window(DigitWindow& buffer, NodeId root, unsigned* used) {
+        if (root < 2 || retained(root).word)
+            return false;
+        const auto [left, right] = nodes[root];
+        const auto a = retained(left);
+        const auto b = retained(right);
+        if (bool(a.word) == bool(b.word))
+            return false;
+        const unsigned count = a.word ? a.count : b.count;
+        // Each sliding diagonal uses the length of its retained factor.
+        // The two reservations share the unused operand tails.
+        for (unsigned i = 0; i < 2; ++i) {
+            if (count <= MaterializedWords - used[i]) {
+                buffer.word = operands[i].word + used[i];
+                buffer.node = a.word ? right : left;
+                buffer.root = root;
+                used[i] += count;
+                return true;
+            }
         }
         return false;
     }
@@ -253,9 +285,9 @@ private:
         const auto a = retained(node.left);
         const auto b = retained(node.right);
         if (a.word && b.word)
-            return retained_column(a, b, unsigned(at), carry);
+            return retained_column(a, b, unsigned(at), carry.low.low);
         if (id == window.root)
-            return window_column(a.word ? a : b, at, carry);
+            return window_column(window, a.word ? a : b, at, carry.low.low);
         auto [first, end] = diagonal(node, at);
         for (Index reverse = at - first; first < end; ++first, --reverse) {
             tick();
@@ -266,53 +298,66 @@ private:
         return Accumulator::take(carry.low, carry.high);
     }
 
-    MK61_POW_STREAM Word retained_column(Retained a, Retained b, unsigned at, Accumulator& carry) {
+    MK61_POW_STREAM Word retained_column(Retained a, Retained b, unsigned at, uint64_t& carry) {
         const bool square = a.word == b.word;
         const unsigned begin = at >= b.count ? at+1-b.count : 0;
         unsigned end = at < a.count ? at+1 : a.count;
-        if (square && end > at/2+1)
-            end = at/2+1;
+        if (square && end > (at+1)/2)
+            end = (at+1)/2;
+        const bool has_square = square && !(at&1U) && at/2 < a.count;
+        tick((end > begin ? end-begin : 0) + has_square);
 
         // The retained operands have fewer than 2^11 terms per diagonal.
         // The carry and the diagonal sum fit in 43 bits.
-        uint64_t sum = carry.low.low;
-        for (unsigned i = begin; i < end; ++i) {
-            tick();
-            const uint32_t term = uint32_t(a.word[i])*b.word[at-i];
-            sum += term;
-            if (square && i != at-i)
-                sum += term;
-        }
-        carry.low.low = sum >> RadixBits;
+        uint64_t sum = begin < end ? diagonal_sum(a.word+begin, a.word+end, b.word+(at-begin+1)) : 0;
+        if (square)
+            sum *= 2;
+        if (has_square)
+            sum += uint32_t(a.word[at/2]) * a.word[at/2];
+        sum += carry;
+        carry = sum >> RadixBits;
         return Word(sum);
     }
 
-    MK61_POW_STREAM Word window_column(Retained fixed, Index at, Accumulator& carry) {
-        const Index length = words(bit_limits[window.node]);
+    MK61_POW_STREAM Word window_column(DigitWindow& buffer, Retained fixed, Index at, uint64_t& carry) {
+        const Index length = words(bit_limits[buffer.node]);
         const Index end = at < length ? at + 1 : length;
         // The root scan reaches each virtual digit in order. Only the
         // newest digit can be absent from this diagonal's window.
         if (at < length) {
-            window.word[window.slot] = digit(window.node, at);
-            if (++window.slot == fixed.count)
-                window.slot = 0;
+            const auto [left, right] = nodes[buffer.node];
+            const auto a = retained(left);
+            const auto b = retained(right);
+            Word value;
+            if (a.word && b.word) {
+                tick();
+                value = retained_column(a, b, unsigned(at), buffer.carry);
+            } else if (inner.root == buffer.node) {
+                tick();
+                value = window_column(inner, a.word ? a : b, at, buffer.carry);
+            } else {
+                value = digit(buffer.node, at);
+            }
+            buffer.word[buffer.slot] = value;
+            if (++buffer.slot == fixed.count)
+                buffer.slot = 0;
         }
         const Index first = at >= fixed.count ? at + 1 - fixed.count : Index(0);
-        uint64_t sum = carry.low.low;
+        uint64_t sum = carry;
         if (first < end) {
-            unsigned count = unsigned(end - first);
-            unsigned slot = window.slot + fixed.count - count;
+            const unsigned count = unsigned(end - first);
+            unsigned slot = buffer.slot + fixed.count - count;
             if (slot >= fixed.count)
                 slot -= fixed.count;
             // The retained factor bounds the number of terms as above.
-            for (unsigned i = unsigned(at - first); count; --count, --i) {
-                tick();
-                sum += uint32_t(window.word[slot]) * fixed.word[i];
-                if (++slot == fixed.count)
-                    slot = 0;
-            }
+            tick(count);
+            const unsigned tail = fixed.count - slot;
+            const unsigned contiguous = count < tail ? count : tail;
+            const Word* reverse = fixed.word + unsigned(at-first) + 1;
+            sum += diagonal_sum(buffer.word+slot, buffer.word+slot+contiguous, reverse);
+            sum += diagonal_sum(buffer.word, buffer.word+(count-contiguous), reverse-contiguous);
         }
-        carry.low.low = sum >> RadixBits;
+        carry = sum >> RadixBits;
         return Word(sum);
     }
 
@@ -342,16 +387,23 @@ private:
         return try_digit(id, at, value) ? value : recompute(id, at);
     }
 
-    MK61_POW_STREAM void start_frame(Frame& frame, NodeId id, Index at) const {
-        frame = {{}, {}, {}, {}, 0, id, State::begin};
+    const CacheEntry* preceding_digit(NodeId id, Index at) const {
+        const CacheEntry* nearest = nullptr;
         // Each cached carry is the carry into the column after its digit.
         // Resume at the nearest such column at or before the requested one.
         for (const auto& entry : cache) {
-            if (entry.node == id && entry.column < at && entry.column >= frame.current) {
-                frame.current = entry.column + 1;
-                frame.carry_low = entry.carry_low;
-                frame.carry_high = entry.carry_high;
-            }
+            if (entry.node == id && entry.column < at && (!nearest || entry.column > nearest->column))
+                nearest = &entry;
+        }
+        return nearest;
+    }
+
+    MK61_POW_STREAM void start_frame(Frame& frame, NodeId id, Index at) const {
+        frame = {{}, {}, {}, {}, 0, id, State::begin};
+        if (const auto* previous = preceding_digit(id, at)) {
+            frame.current = previous->column + 1;
+            frame.carry_low = previous->carry_low;
+            frame.carry_high = previous->carry_high;
         }
     }
 
@@ -363,14 +415,14 @@ private:
         const auto b = retained(node.right);
         if (!a.word || !b.word)
             return false;
-        Frame frame;
-        start_frame(frame, id, at);
-        Accumulator carry{frame.carry_low, frame.carry_high};
-        for (unsigned column = unsigned(frame.current); column <= unsigned(at); ++column) {
+        const auto* previous = preceding_digit(id, at);
+        uint64_t carry = previous ? previous->carry_low.low : 0;
+        const unsigned first = previous ? unsigned(previous->column)+1 : 0;
+        for (unsigned column = first; column <= unsigned(at); ++column) {
             tick();
             value = retained_column(a, b, column, carry);
         }
-        cache[cache_slot(id, at)] = {at, carry.low, carry.high, value, id};
+        cache[cache_slot(id, at)] = {at, Index(carry), 0, value, id};
         return true;
     }
 
@@ -506,10 +558,9 @@ MK61_POW_STREAM int compare(Dyadic x, U p, unsigned k, bool inverse,
     Products products(x.odd, midpoint.odd, progress);
     NodeId left = products.power(0, p);
     const NodeId right = products.power_of_two(1, k);
-    if (inverse) {
+    if (inverse)
         left = products.multiply(left, right);
-        products.use_digit_window(left);
-    }
+    products.use_digit_windows(left);
     const Index common = signed_less(left_scale, right_scale) ? left_scale : right_scale;
     Shifted a(left_scale-common, left, products.bit_limit(left));
     Shifted b(right_scale-common, right, products.bit_limit(right));
