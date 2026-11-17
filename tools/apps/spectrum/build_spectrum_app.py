@@ -31,7 +31,8 @@ SOURCES = ["examples/portable-apps/SPECTRUM/main.c",
            "examples/portable-apps/SPECTRUM/tape.c",
            "examples/portable-apps/SPECTRUM/inflate.c",
            "examples/portable-apps/SPECTRUM/szx.c",
-           "examples/portable-apps/SPECTRUM/pentagon_video.c"]
+           "examples/portable-apps/SPECTRUM/pentagon_video.c",
+           "sdk/portable/rp2040_divide.S"]
 
 
 def demo_snapshot(pentagon=False):
@@ -98,6 +99,7 @@ def copy_assets(output):
     shutil.copy2(ROOT / "third_party/z80/LICENSE", licenses / "z80-MIT.txt")
     shutil.copy2(ROOT / "third_party/emu2149/LICENSE", licenses / "emu2149-MIT.txt")
     shutil.copy2(ROOT / "third_party/spectrum-rom/README.copyright", licenses / "ROM-copyright.txt")
+    shutil.copy2(ROOT / "third_party/rp2040-softfloat/LICENSE.TXT", licenses / "RP2040-LICENSE.txt")
     copy_icon("applications",output / "autoexec.wbmp")
     copy_icon("license",licenses / "autoexec.wbmp")
 
@@ -123,6 +125,9 @@ def main():
                                   "--output-dir", str(directory)]
         if name == "SPECTRUM":
             command += ["--handled-magic", "Z1", "--define", "Z80_NO_WAIT_STATES"]
+        else:
+            # Keeping parameters intact produces a smaller Thumb-1 image.
+            command.append("--no-ipa-sra")
         subprocess.run(command, check=True)
     copy_assets(args.output_dir)
     sound_module=build_sound_module(args.build_dir/'m3',toolchain=args.toolchain,optimization='-Os',

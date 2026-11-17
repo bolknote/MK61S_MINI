@@ -77,10 +77,16 @@ void spectrum_memory_map_pages(spectrum_memory* m,const uint8_t* read[64],uint8_
         if(m->paged_rom && !ram0 && !m->overlay && tag==(SPECTRUM_ROM_BASE/1024+((m->paging&16)?16u:0u)+page))read[page]=bytes;
         if(bank==upper) { read[48+page]=bytes;if(m->dirty[slot]) write[48+page]=bytes; }
     }
-    for(unsigned page=0;page<16;++page) {
-        read[16+page]=write[16+page]=fixed_byte(m,5,page*1024);
-        read[32+page]=write[32+page]=fixed_byte(m,2,page*1024);
-        if(fixed(m,upper)) read[48+page]=write[48+page]=fixed_byte(m,upper,page*1024);
+    for(unsigned page=0;page<15;++page) {
+        read[16+page]=write[16+page]=m->cache+page*1024;
+        read[32+page]=write[32+page]=m->fixed2+page*1024;
+    }
+    read[31]=write[31]=m->fixed_tail[0];
+    read[47]=write[47]=m->fixed_tail[1];
+    if(upper==5 || upper==2) {
+        const unsigned base=upper==5?16:32;
+        memcpy(read+48,read+base,16*sizeof(*read));
+        memcpy(write+48,write+base,16*sizeof(*write));
     }
 }
 static uint8_t* page(spectrum_memory* m,unsigned tag) {

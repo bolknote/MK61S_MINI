@@ -8,6 +8,13 @@ static bool mapped_disk(const spectrum* s) {
     return s->disk.mapped && (s->disk.cache || s->disk.direct_rom[s->disk.mode] ||
         (s->memory && (s->memory->rom_banks[0] || s->memory->paged_rom)));
 }
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+static __attribute__((noinline)) void watch_write_window(z80* z,unsigned window) {
+    z->write_map[window]=NULL;
+    uint8_t** pages=z->write_pages+window*16;
+    for(unsigned i=0;i<6;++i)pages[i]=pages[i+8]=NULL;
+}
+#endif
 void spectrum_refresh_map(spectrum* s) {
     z80* z=&s->cpu;
     z->contention_mask=spectrum_is_128(s) && (s->memory->paging&1)?0x4000:0xc000;
@@ -24,12 +31,48 @@ void spectrum_refresh_map(spectrum* s) {
     z->write_map[3]=s->memory?spectrum_memory_mapped(s->memory,true):s->ram+32768;
     spectrum_memory_map_pages(s->memory,z->read_pages,z->write_pages);
     spectrum_disk_map_pages(s,z->read_pages,z->write_pages);
-    for(unsigned window=0;window<4;++window) for(unsigned page=0;page<16;++page) {
-        const unsigned i=window*16+page;
-        if(z->read_map[window]) z->read_pages[i]=z->read_map[window]+page*1024;
-        if(z->write_map[window]) z->write_pages[i]=z->write_map[window]+page*1024;
+    for(unsigned window=0;window<4;++window) {
+        const uint8_t* const from=z->read_map[window];
+        uint8_t* const to=z->write_map[window];
+        for(unsigned page=0;page<16;++page) {
+            const unsigned i=window*16+page;
+            if(from) z->read_pages[i]=from+page*1024;
+            if(to) z->write_pages[i]=to+page*1024;
+        }
     }
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    if(SPECTRUM_HAS_SINCLAIR && s->hicolor) {
+        unsigned windows=0;
+        if(spectrum_timex_mode(s)==2 && !spectrum_is_pentagon(s)) {
+            const unsigned paging=s->memory?s->memory->paging:0;
+            // Only the fixed bank has native video bytes in SRAM.
+            // Watch its two CPU aliases, leaving the shadow screen's
+            // bank-cache path available for an ordinary full snapshot.
+            if(!(paging&8)) {
+                watch_write_window(z,1);windows=2;
+                if((paging&7)==5) {watch_write_window(z,3);windows|=8;}
+            }
+        }
+        s->hicolor->windows=(uint8_t)windows;
+    }
+#endif
 }
+
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+void spectrum_hicolor_watch(spectrum* s,spectrum_hicolor_changes* changes) {
+    if(changes) *changes=(spectrum_hicolor_changes){0};
+    if(changes || s->hicolor) {s->hicolor=changes;spectrum_refresh_map(s);}
+}
+void spectrum_hicolor_dirty(spectrum_hicolor_changes* changes,unsigned offset) {
+    spectrum_video_damage* d=&changes->strips[offset>>11];
+    const unsigned x=offset&31,y=((offset>>8)&7)|((offset>>2)&56);
+    if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+1};return;}
+    if(x<d->left) d->left=(uint8_t)x;
+    if(x>=d->right) d->right=(uint8_t)(x+1);
+    if(y<d->top) d->top=(uint8_t)y;
+    if(y>=d->bottom) d->bottom=(uint8_t)(y+1);
+}
+#endif
 
 static uint8_t read_byte(void* raw,uint16_t address) {
     spectrum* s=raw;
@@ -48,10 +91,16 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
     if(address<0x4000 && !low_ram(s->memory)) {
         spectrum_disk_write_memory(s,address,value);return;
     }
-    if(!s->memory) {
-        s->ram[address-0x4000]=value;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    const unsigned offset=address&8191u;
+    if(SPECTRUM_HAS_SINCLAIR && s->hicolor && (s->hicolor->windows&(1u<<(address>>14))) &&
+       offset<SPECTRUM_BITMAP_BYTES) {
+        uint8_t* const cell=(s->memory?s->memory->cache:s->ram)+(address&16383u);
+        if(*cell!=value) {*cell=value;spectrum_hicolor_dirty(s->hicolor,offset);}
         return;
     }
+#endif
+    if(!s->memory) {s->ram[address-0x4000]=value;return;}
     *spectrum_memory_byte(s->memory,address,true)=value;
     if(address<0x4000 || address>=0xc000) {
         if(s->memory->fault) s->cpu.ldir_until=0;
@@ -231,9 +280,24 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
         s->beeper=(value>>4)&1;
     }
     if(s->memory && !(port&0x8002) && (spectrum_is_pentagon(s) || spectrum_is_128(s))) {
-        (void)spectrum_memory_page(s->memory,value);spectrum_refresh_map(s);
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        const unsigned previous=s->memory->paging;
+#endif
+        (void)spectrum_memory_page(s->memory,value);
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(SPECTRUM_HAS_SINCLAIR && s->hicolor && ((s->memory->paging^previous)&8)) s->hicolor->repaint=true;
+#endif
+        spectrum_refresh_map(s);
     }
-    if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) s->timex_mode=value;
+    if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) {
+        const unsigned previous=s->timex_mode;
+        s->timex_mode=value;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(s->hicolor && ((previous^value)&7)) {s->hicolor->repaint=true;spectrum_refresh_map(s);}
+#else
+        (void)previous;
+#endif
+    }
     if((port&0xC002)==0xC000) {
         if((s->extensions&SPECTRUM_TURBOSOUND) && value>=0xFE) s->sound.selected=value==0xFE;
         else {
@@ -268,7 +332,7 @@ static void reset_ay(spectrum* s) {
 void spectrum_reset_cpu(spectrum* s) {
     z80_init(&s->cpu);s->cpu.read_byte=read_byte;s->cpu.write_byte=write_byte;
     s->cpu.port_in=port_in;s->cpu.port_out=port_out;s->cpu.userdata=s;
-    spectrum_disk_filter(s);spectrum_refresh_map(s);
+    s->hicolor=NULL;spectrum_disk_filter(s);spectrum_refresh_map(s);
     s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=s->key_rows=0;
     s->video_bytes=NULL;
     memset(s->keys,0x1F,sizeof(s->keys));
@@ -395,49 +459,63 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     return elapsed;
 }
 static bool down(const uint8_t* keys,unsigned c) { return (keys[c/8]&(1U<<(c&7)))!=0; }
-static void key(spectrum* s,unsigned row,unsigned column) {
-    s->keys[row]&=(uint8_t)~(1U<<column);s->key_rows|=(uint8_t)(1U<<row);
-}
-static void character(spectrum* s,unsigned c) {
-    static const char rows[8][6]={" zxcv","asdfg","qwert","12345","09876","poiuy","\rlkjh","  mnb"};
-    for(unsigned row=0;row<8;++row) for(unsigned column=0;column<5;++column)
-        if((unsigned char)rows[row][column]==c && c!=' ') key(s,row,column);
-    if(c==' ') key(s,7,0);
+#define MATRIX(row,column) ((row)*8+(column))
+enum { SYMBOL_SHIFT=64,CAPS_SHIFT=128 };
+static void key(spectrum* s,unsigned mapping) {
+    if(mapping&CAPS_SHIFT) { s->keys[0]&=(uint8_t)~1u;s->key_rows|=1; }
+    if(mapping&SYMBOL_SHIFT) { s->keys[7]&=(uint8_t)~2u;s->key_rows|=128; }
+    const unsigned row=(mapping>>3)&7;
+    s->keys[row]&=(uint8_t)~(1U<<(mapping&7));s->key_rows|=(uint8_t)(1U<<row);
 }
 void spectrum_keyboard(spectrum* s,const uint8_t wire[32]) {
+    static const uint8_t ascii['z'-' '+1]={
+        ['z'-' ']=MATRIX(0,1),['x'-' ']=MATRIX(0,2),['c'-' ']=MATRIX(0,3),['v'-' ']=MATRIX(0,4),
+        ['a'-' ']=MATRIX(1,0),['s'-' ']=MATRIX(1,1),['d'-' ']=MATRIX(1,2),['f'-' ']=MATRIX(1,3),['g'-' ']=MATRIX(1,4),
+        ['q'-' ']=MATRIX(2,0),['w'-' ']=MATRIX(2,1),['e'-' ']=MATRIX(2,2),['r'-' ']=MATRIX(2,3),['t'-' ']=MATRIX(2,4),
+        ['1'-' ']=MATRIX(3,0),['2'-' ']=MATRIX(3,1),['3'-' ']=MATRIX(3,2),['4'-' ']=MATRIX(3,3),['5'-' ']=MATRIX(3,4),
+        ['0'-' ']=MATRIX(4,0),['9'-' ']=MATRIX(4,1),['8'-' ']=MATRIX(4,2),['7'-' ']=MATRIX(4,3),['6'-' ']=MATRIX(4,4),
+        ['p'-' ']=MATRIX(5,0),['o'-' ']=MATRIX(5,1),['i'-' ']=MATRIX(5,2),['u'-' ']=MATRIX(5,3),['y'-' ']=MATRIX(5,4),
+        ['l'-' ']=MATRIX(6,1),['k'-' ']=MATRIX(6,2),['j'-' ']=MATRIX(6,3),['h'-' ']=MATRIX(6,4),
+        [' '-' ']=MATRIX(7,0),['m'-' ']=MATRIX(7,2),['n'-' ']=MATRIX(7,3),['b'-' ']=MATRIX(7,4),
+        ['!'-' ']=SYMBOL_SHIFT|MATRIX(3,0),['@'-' ']=SYMBOL_SHIFT|MATRIX(3,1),['#'-' ']=SYMBOL_SHIFT|MATRIX(3,2),
+        ['$'-' ']=SYMBOL_SHIFT|MATRIX(3,3),['%'-' ']=SYMBOL_SHIFT|MATRIX(3,4),['&'-' ']=SYMBOL_SHIFT|MATRIX(4,4),
+        ['\''-' ']=SYMBOL_SHIFT|MATRIX(4,3),['('-' ']=SYMBOL_SHIFT|MATRIX(4,2),[')'-' ']=SYMBOL_SHIFT|MATRIX(4,1),
+        ['_'-' ']=SYMBOL_SHIFT|MATRIX(4,0),['"'-' ']=SYMBOL_SHIFT|MATRIX(5,0),[';'-' ']=SYMBOL_SHIFT|MATRIX(5,1),
+        [','-' ']=SYMBOL_SHIFT|MATRIX(7,3),['.'-' ']=SYMBOL_SHIFT|MATRIX(7,2),[':'-' ']=SYMBOL_SHIFT|MATRIX(0,1),
+        ['?'-' ']=SYMBOL_SHIFT|MATRIX(0,3),['/'-' ']=SYMBOL_SHIFT|MATRIX(0,4),['*'-' ']=SYMBOL_SHIFT|MATRIX(7,4),
+        ['-'-' ']=SYMBOL_SHIFT|MATRIX(6,3),['+'-' ']=SYMBOL_SHIFT|MATRIX(6,2),['='-' ']=SYMBOL_SHIFT|MATRIX(6,1),
+        ['<'-' ']=SYMBOL_SHIFT|MATRIX(2,3),['>'-' ']=SYMBOL_SHIFT|MATRIX(2,4)
+    };
+    static const uint8_t special[][2]={
+        {10,MATRIX(6,0)},{13,MATRIX(6,0)},{0xa5,MATRIX(0,0)},{0xa1,MATRIX(7,1)},{0xa4,MATRIX(7,1)},
+        {8,CAPS_SHIFT|MATRIX(4,0)},{0x7f,CAPS_SHIFT|MATRIX(4,0)},{0xd4,CAPS_SHIFT|MATRIX(4,0)},
+        {9,CAPS_SHIFT|MATRIX(7,1)},{0x82,CAPS_SHIFT|MATRIX(7,1)},{0xd0,CAPS_SHIFT|MATRIX(7,0)},
+        {0x81,CAPS_SHIFT|MATRIX(3,0)},{0x83,CAPS_SHIFT|MATRIX(3,4)},{0x84,CAPS_SHIFT|MATRIX(4,2)},
+        {0x86,CAPS_SHIFT|MATRIX(4,1)},{0x87,CAPS_SHIFT|MATRIX(3,1)},{0x88,CAPS_SHIFT|MATRIX(3,2)},
+        {0x89,CAPS_SHIFT|MATRIX(3,3)},{0xd6,CAPS_SHIFT|MATRIX(4,3)},{0xd7,CAPS_SHIFT|MATRIX(4,4)}
+    };
+    static const uint8_t arrows[]={0xb7,0xb4,0xb6,0xb5,0x85};
+    static const uint8_t joystick[][5]={
+        {MATRIX(4,3),MATRIX(4,4),MATRIX(4,2),MATRIX(4,1),MATRIX(4,0)},
+        {MATRIX(3,1),MATRIX(3,0),MATRIX(3,2),MATRIX(3,3),MATRIX(3,4)}
+    };
     memset(s->keys,0x1F,sizeof(s->keys));s->joystick=s->key_rows=0;
     const bool alt=down(wire,0xA1) || down(wire,0xA4);
-    if(down(wire,0xA5)) key(s,0,0); // PicoCalc Ctrl -> Caps Shift.
-    if(alt) key(s,7,1);
-    for(unsigned c=32;c<127;++c) if(down(wire,c)) {
-        if(c>='A' && c<='Z') { character(s,c+32);if(!alt) key(s,0,0); }
-        else if((c>='a' && c<='z') || (c>='0' && c<='9') || c==' ') character(s,c);
-        else {
-            static const char symbols[]="!@#$%&'()_\";,. :?/*-+=<>";
-            static const char letters[]="1234567890ponm zcvbjklrt";
-            for(unsigned i=0;i<sizeof(symbols)-1;++i) if((unsigned char)symbols[i]==c) {
-                key(s,7,1);character(s,(unsigned char)letters[i]);break;
-            }
+    for(unsigned c=' ';c<='z';++c) if(down(wire,c)) {
+        const bool upper=c>='A' && c<='Z';
+        const unsigned mapping=ascii[c+(upper?'a'-'A':0)-' '];
+        if(mapping) key(s,mapping|(upper && !alt?CAPS_SHIFT:0));
+    }
+    for(unsigned i=0;i<sizeof(special)/sizeof(*special);++i)
+        if(down(wire,special[i][0])) key(s,special[i][1]);
+    for(unsigned i=0;i<sizeof(arrows);++i) if(down(wire,arrows[i])) {
+        s->joystick|=(uint8_t)(1u<<i);
+        if(s->joystick_mode) {
+            key(s,joystick[s->joystick_mode!=1][i]);
         }
     }
-    if(down(wire,10) || down(wire,13)) key(s,6,0);
-    if(down(wire,8) || down(wire,0x7F) || down(wire,0xD4)) { key(s,0,0);key(s,4,0); }
-    if(down(wire,9) || down(wire,0x82)) { key(s,0,0);key(s,7,1); }
-    if(down(wire,0xD0)) { key(s,0,0);key(s,7,0); }
-    const uint8_t shortcut[]={0x81,0x83,0x84,0x86,0x87,0x88,0x89,0xD6,0xD7};
-    const char target[]="158923476";
-    for(unsigned i=0;i<sizeof(shortcut);++i) if(down(wire,shortcut[i])) { key(s,0,0);character(s,target[i]); }
-    if(down(wire,0xB7)) s->joystick|=1;
-    if(down(wire,0xB4)) s->joystick|=2;
-    if(down(wire,0xB6)) s->joystick|=4;
-    if(down(wire,0xB5)) s->joystick|=8;
-    if(down(wire,0x85)) s->joystick|=16;
-    if(s->joystick_mode) {
-        const char* joystick=s->joystick_mode==1?"67890":"12345";
-        const unsigned mask[]={2,1,4,8,16};
-        for(unsigned i=0;i<5;++i) if(s->joystick&mask[i]) character(s,(unsigned char)joystick[i]);
-    }
 }
+#undef MATRIX
 uint16_t spectrum_color(unsigned index) {
     return spectrum_colors[index&15];
 }

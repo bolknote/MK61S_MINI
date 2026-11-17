@@ -7,14 +7,19 @@ enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_WIDE=64 };
 typedef struct {
     const spectrum_memory_io* io;
     uint32_t address,frames;
-    uint16_t palette[64],border;
+    uint16_t border;
     bool ulaplus;
+    uint16_t palette[64];
 } spectrum_video_snapshot;
 unsigned spectrum_video_mode(const spectrum*);
 bool spectrum_video_strip(const spectrum*,unsigned mode,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
 bool spectrum_video_capture(const spectrum*,unsigned mode,uint8_t* work,spectrum_video_snapshot*);
 bool spectrum_video_snapshot_strip(const spectrum*,const spectrum_video_snapshot*,unsigned mode,unsigned strip,
                                    uint8_t* pixels,mk61_service_color_frame*);
+void spectrum_hicolor_flash(const spectrum*,spectrum_hicolor_changes*);
+void spectrum_hicolor_patch(const spectrum*,const spectrum_video_snapshot*,unsigned strip,
+                            const spectrum_video_damage*,uint8_t* pixels);
+void spectrum_hicolor_frame(const spectrum_video_damage*,unsigned strip,uint8_t* pixels,mk61_service_color_frame*);
 typedef struct {
     const mk61_app_services* api;
     const uint8_t* font;

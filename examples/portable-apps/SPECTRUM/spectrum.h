@@ -30,6 +30,13 @@
 #define SPECTRUM_RASTER_PACKED_STRIP_BYTES (3U*SPECTRUM_RASTER_CELLS+SPECTRUM_RASTER_CELLS/8U)
 #define SPECTRUM_RASTER_PACKED_BYTES (SPECTRUM_RASTER_PACKED_STRIP_BYTES*SPECTRUM_RASTER_STRIPS)
 
+typedef struct { uint8_t left,right,top,bottom; } spectrum_video_damage;
+typedef struct {
+    spectrum_video_damage strips[3];
+    uint8_t windows;
+    bool repaint;
+} spectrum_hicolor_changes;
+
 typedef struct spectrum {
     z80 cpu;
     uint8_t* ram;
@@ -47,6 +54,7 @@ typedef struct spectrum {
     void* video_context;
     uint8_t* video_bytes;
     bool (*video_store)(void*,unsigned,const uint8_t*);
+    spectrum_hicolor_changes* hicolor;
     uint16_t video_cell;
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,timex_mode,ulaplus_palette[64];
@@ -81,6 +89,8 @@ void spectrum_reset_cpu(spectrum*);
 void spectrum_set_audio(spectrum*,uint32_t rate,void (*sample)(void*,int16_t),void* context);
 void spectrum_attach_memory(spectrum*,spectrum_memory*);
 void spectrum_refresh_map(spectrum*);
+void spectrum_hicolor_watch(spectrum*,spectrum_hicolor_changes*);
+void spectrum_hicolor_dirty(spectrum_hicolor_changes*,unsigned offset);
 uint32_t spectrum_frame_cycles(const spectrum*);
 uint32_t spectrum_run(spectrum*,uint32_t tstates);
 void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));

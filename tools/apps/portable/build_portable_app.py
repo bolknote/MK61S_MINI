@@ -242,6 +242,8 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system or getattr(args, "optimize_size", False) else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if getattr(args, "no_ipa_sra", False):
+        flags.append("-fno-ipa-sra")
     for definition in getattr(args, "define", ()):
         if not re.fullmatch(r"[a-zA-Z_]\w*(?:=[a-zA-Z_0-9]+)?", definition):
             raise ValueError(f"invalid preprocessor definition: {definition}")
@@ -519,6 +521,7 @@ def main() -> None:
     parser.add_argument("--packer", type=Path)
     parser.add_argument("--handled-magic")
     parser.add_argument("--optimize-size", action="store_true", help="Use GCC -Oz for a tightly bounded user APP")
+    parser.add_argument("--no-ipa-sra", action="store_true", help="Keep GCC from splitting function parameters during LTO")
     args = parser.parse_args()
     if args.local_float_math_mask is not None and not args.local_float_math:
         parser.error("--local-float-math-mask requires --local-float-math")

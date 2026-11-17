@@ -62,19 +62,9 @@ bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectr
     return true;
 }
 
-static bool hicolor_strip(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,unsigned strip,uint8_t* pixels) {
-    enum { CELLS=COLOR_WIDTH*COLOR_LINES/8 };
-    _Static_assert(5*CELLS<=SPECTRUM_VIDEO_WORK_BYTES,"HiColor strip too large");
-    uint8_t* attributes=pixels+CELLS;
-    uint8_t* source=pixels+4*CELLS;
-    for(unsigned plane=0;plane<2;++plane) {
-        const unsigned at=strip*CELLS+plane*8192;
-        if(!video_read(s,saved,bank,at,source,CELLS)) return false;
-        for(unsigned y=0;y<COLOR_LINES;++y)
-            memcpy(pixels+plane*CELLS+y*32,source+ula_line(y),32);
-    }
+static void hicolor_attributes(const spectrum_video_snapshot* saved,uint8_t* attributes,unsigned cells) {
     const bool plus=saved->ulaplus;
-    for(unsigned i=CELLS;i--;) {
+    for(unsigned i=cells;i--;) {
         const unsigned a=attributes[i],group=plus?(a>>6)*16:(a&64)>>3;
         unsigned paper=group+((a>>3)&7)+(plus?8:0),ink=group+(a&7);
         if(!plus && (a&128) && (saved->frames&16)) { const unsigned t=paper;paper=ink;ink=t; }
@@ -82,7 +72,49 @@ static bool hicolor_strip(const spectrum* s,const spectrum_video_snapshot* saved
         attributes[4*i]=(uint8_t)bg;attributes[4*i+1]=(uint8_t)(bg>>8);
         attributes[4*i+2]=(uint8_t)fg;attributes[4*i+3]=(uint8_t)(fg>>8);
     }
+}
+
+static bool hicolor_strip(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,unsigned strip,uint8_t* pixels) {
+    enum { CELLS=COLOR_WIDTH*COLOR_LINES/8 };
+    _Static_assert(5*CELLS<=SPECTRUM_VIDEO_WORK_BYTES,"HiColor strip too large");
+    uint8_t* source=pixels+4*CELLS;
+    for(unsigned plane=0;plane<2;++plane) {
+        const unsigned at=strip*CELLS+plane*8192;
+        if(!video_read(s,saved,bank,at,source,CELLS)) return false;
+        for(unsigned y=0;y<COLOR_LINES;++y)
+            memcpy(pixels+plane*CELLS+y*32,source+ula_line(y),32);
+    }
+    hicolor_attributes(saved,pixels+CELLS,CELLS);
     return true;
+}
+
+void spectrum_hicolor_flash(const spectrum* s,spectrum_hicolor_changes* changes) {
+    const uint8_t* const attributes=(s->memory?s->memory->cache:s->ram)+8192;
+    for(unsigned i=0;i<SPECTRUM_BITMAP_BYTES;++i)
+        if(attributes[i]&128) spectrum_hicolor_dirty(changes,i);
+}
+
+void spectrum_hicolor_patch(const spectrum* s,const spectrum_video_snapshot* saved,unsigned strip,
+                            const spectrum_video_damage* d,uint8_t* pixels) {
+    const uint8_t* const screen=s->memory?s->memory->cache:s->ram;
+    const unsigned width=d->right-d->left,cells=width*(d->bottom-d->top);
+    uint8_t* const attributes=pixels+cells;
+    for(unsigned y=d->top;y<d->bottom;++y) {
+        const unsigned at=ula_line(strip*COLOR_LINES+y)+d->left,offset=(y-d->top)*width;
+        memcpy(pixels+offset,screen+at,width);
+        memcpy(attributes+offset,screen+8192+at,width);
+    }
+    hicolor_attributes(saved,attributes,cells);
+}
+
+void spectrum_hicolor_frame(const spectrum_video_damage* d,unsigned strip,uint8_t* pixels,
+                            mk61_service_color_frame* f) {
+    const unsigned cols=d->right-d->left,rows=d->bottom-d->top,cells=cols*rows;
+    *f=(mk61_service_color_frame){0};
+    f->pixels=pixels;f->tiles=pixels+cells;
+    f->pixel_bytes=cells;f->tile_bytes=4*cells;
+    f->x=32+8*d->left;f->y=64+64*strip+d->top;f->width=8*cols;f->height=rows;
+    f->format=MK61_COLOR_CELL565|MK61_COLOR_PRESERVE_OUTSIDE;
 }
 
 static uint8_t colors(uint8_t byte) {
@@ -188,18 +220,17 @@ bool spectrum_video_snapshot_strip(const spectrum* s,const spectrum_video_snapsh
        (mode!=SPECTRUM_VIDEO_HICOLOR && !s->memory) ||
        strip>=(mode==SPECTRUM_VIDEO_WIDE?SPECTRUM_WIDE_STRIPS:3)) return false;
     const unsigned bank=saved->io?5:s->memory && (s->memory->paging&8)?7:5;
+    if(SPECTRUM_HAS_SINCLAIR && mode==SPECTRUM_VIDEO_HICOLOR) {
+        static const spectrum_video_damage full={0,32,0,64};
+        spectrum_hicolor_frame(&full,strip,pixels,frame);
+        return hicolor_strip(s,saved,bank,strip,pixels);
+    }
     *frame=(mk61_service_color_frame){0};
     frame->pixels=pixels;
     for(unsigned i=0;i<16;++i) frame->palette[i]=spectrum_color(i);
     frame->format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
     if(mode!=SPECTRUM_VIDEO_WIDE) {
         frame->x=32;frame->y=64+strip*COLOR_LINES;frame->width=COLOR_WIDTH;frame->height=COLOR_LINES;
-        if(mode==SPECTRUM_VIDEO_HICOLOR) {
-            frame->format=MK61_COLOR_CELL565|MK61_COLOR_PRESERVE_OUTSIDE;
-            frame->pixel_bytes=COLOR_WIDTH*COLOR_LINES/8;
-            frame->tiles=pixels+frame->pixel_bytes;frame->tile_bytes=frame->pixel_bytes*4;
-            return hicolor_strip(s,saved,bank,strip,pixels);
-        }
         frame->pixel_bytes=COLOR_WIDTH*COLOR_LINES/2;
         return color_strip(s,saved,bank,strip,pixels);
     }

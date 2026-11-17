@@ -22,8 +22,11 @@ static bool legacy_lcd;
 static const char* opened_name;
 static bool open_error, save_opened_game;
 static bool test_flow;
-static unsigned video_calls,video_shows,video_origin;
-static bool video_test,video_pages,video_scroll,video_fail_once;
+static unsigned video_calls,video_shows,video_origin,video_psram_ops;
+static uint32_t video_submit_us;
+static bool video_test,video_pages,video_scroll,video_fail_once,video_busy_once,video_page_failed;
+static mk61_service_color_frame last_strip;
+static uint8_t last_attrs[4];
 static unsigned open_keys,open_path_calls,selected_reads;
 static unsigned snapshots_written;
 static uint8_t canvas[12800],*psram;
@@ -125,6 +128,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(r->handle==1 && psram);
         if(a==MK61_BUFFER_RELEASE) { free(psram);psram=NULL;return 1; }
         assert(r->offset<=psram_bytes && r->size<=psram_bytes-r->offset);
+        if(video_test && r->offset>=RASTER_BASE) ++video_psram_ops;
         if(a==MK61_BUFFER_READ) memcpy(r->data,psram+r->offset,r->size);
         else if(a==MK61_BUFFER_WRITE) memcpy(psram+r->offset,r->data,r->size);
         else if(a==MK61_BUFFER_FILL) memset(psram+r->offset,0,r->size);
@@ -191,7 +195,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             ++lcd_clock_requests;if(legacy_lcd) return 0;
             return lcd_clock=24000000;
         }
-        if(a==MK61_COLOR_END) { lcd_clock=12000000;return 1; }
+        if(a==MK61_COLOR_END) { lcd_clock=12000000;video_pages=video_scroll=false;return 1; }
         if(video_test) {
             if(a==MK61_COLOR_PAGES_BEGIN_V2) {
                 const mk61_service_color_pages* pages=payload;
@@ -201,6 +205,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             if(a==MK61_COLOR_PAGE_SELECT || a==MK61_COLOR_PAGE_SHOW) {
                 const unsigned page=*(unsigned*)payload;
                 assert(video_pages && page<2 && page!=video_origin);
+                if(video_page_failed) {video_page_failed=false;return 0;}
                 if(a==MK61_COLOR_PAGE_SHOW) {video_origin=page;++video_shows;}
                 return 1;
             }
@@ -213,7 +218,12 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
                 if(video_fail_once) {video_fail_once=false;return 0;}
                 video_scroll=true;return 1;
             }
-            assert(a==MK61_COLOR_PRESENT);++video_calls;return 1;
+            assert(a==MK61_COLOR_PRESENT && c==sizeof(last_strip));
+            if(video_busy_once) {video_busy_once=false;return 2;}
+            micros_now+=video_submit_us;video_submit_us=0;
+            last_strip=*(const mk61_service_color_frame*)payload;
+            if(last_strip.tile_bytes==sizeof(last_attrs)) memcpy(last_attrs,last_strip.tiles,sizeof(last_attrs));
+            ++video_calls;return 1;
         }
         if(a==MK61_COLOR_PALETTE64) { assert(c==128 && payload);return ++palette_calls%5?1:2; }
         if(a==MK61_COLOR_FORMATS) return 0;
@@ -297,6 +307,12 @@ static const void* query(uint32_t id,uint32_t version) { assert(id==MK61_APP_SER
 static const mk61_app_api api={.magic=MK61_APP_API_MAGIC,.version=MK61_APP_API_VERSION,.struct_size=sizeof(mk61_app_api),
     .service=pump,.delay_ms=delay,.display_clear=clear_screen,.graphics_begin=graphics_begin,.graphics_end=graphics_end,.query_service=query};
 const mk61_app_api* mk61_api=&api;
+static void guest_store(spectrum* s,uint16_t address,uint8_t value) {
+    const uint8_t code[]={0x3e,value,0x32,(uint8_t)address,(uint8_t)(address>>8)};
+    assert(spectrum_bank_write(s->memory,2,0,code,sizeof(code)));
+    s->cpu.pc=0x8000;
+    z80_step(&s->cpu);z80_step(&s->cpu);
+}
 static void extended_frames(void) {
     static uint8_t fixed[32768],slots[16384],rom[16384];
     spectrum state;active_machine=&state;services=&common;
@@ -308,19 +324,84 @@ static void extended_frames(void) {
     memset(&state,0,sizeof(state));state.ram=fixed;state.rom=rom;
     assert(spectrum_memory_init_fragmented(&bank_memory,fixed,fixed+16384,tails,runs,64,io));
     spectrum_attach_memory(&state,&bank_memory);
-    video_test=true;video_output out={0};
-    const unsigned expected[]={3,6,6,7,14,14,21};
+    spectrum_hicolor_changes changes;
+    video_test=true;video_output out={.guard_us=VIDEO_INITIAL_GUARD_US};
+    const unsigned expected[]={3,6,6,7,14,14,21,22,25,25,26,29,30,31,34,37,41};
     for(unsigned turn=0;turn<sizeof(expected)/sizeof(*expected);++turn) {
-        const unsigned mode=turn<4?SPECTRUM_VIDEO_16C:SPECTRUM_VIDEO_WIDE;
-        if(turn==3) {const uint8_t pixel=0x29;assert(spectrum_bank_write(&bank_memory,5,0,&pixel,1));}
+        const unsigned mode=turn<4 || turn==16?SPECTRUM_VIDEO_16C:
+            turn<8?SPECTRUM_VIDEO_WIDE:SPECTRUM_VIDEO_HICOLOR;
+        if(turn==3) {
+            const uint8_t pixel=0x29;assert(spectrum_bank_write(&bank_memory,5,0,&pixel,1));video_busy_once=true;
+        }
+        if(turn==4) {const uint8_t attr=0x47;assert(spectrum_bank_write(&bank_memory,4,0x1018,&attr,1));}
         if(turn==6) video_fail_once=true;
-        assert(video_begin(&out,mode,canvas));
-        for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
+        if(turn==7) {const uint8_t pixel=0xff;assert(spectrum_bank_write(&bank_memory,4,24,&pixel,1));}
+        if(turn==8) {
+            state.memory->banks=8;state.memory->extended=false;state.pentagon=false;
+            state.extensions|=SPECTRUM_TIMEX;
+            spectrum_hicolor_watch(&state,&changes);
+            state.cpu.port_out(&state.cpu,0x7ffd,5);
+            state.cpu.port_out(&state.cpu,0xff,2);
+            assert(changes.windows==10 && !state.cpu.write_pages[16] && !state.cpu.write_pages[48]);
+            assert(state.cpu.read_pages[16]==state.cpu.read_pages[48] && state.cpu.write_pages[22]);
+        }
+        if(turn==9) guest_store(&state,0x4000,bank_memory.cache[0]);
+        if(turn==10) guest_store(&state,0xf011,0x47);
+        if(turn==11) state.border=1;
+        if(turn==12) guest_store(&state,0x6000,0xc7);
+        if(turn==13) state.frames=16;
+        if(turn==14) {
+            guest_store(&state,0x4000,0x55);guest_store(&state,0x47ff,0x55);
+            guest_store(&state,0x4800,0x55);guest_store(&state,0x4fff,0x55);
+        }
+        if(turn==15) {
+            state.cpu.port_out(&state.cpu,0x7ffd,15);
+            assert(changes.repaint && !changes.windows && state.cpu.write_pages[16]);
+        }
+        if(turn==16) {
+            spectrum_hicolor_watch(&state,NULL);
+            state.memory->banks=64;state.memory->extended=state.pentagon=true;
+        }
+        const unsigned io_before=video_psram_ops;
+        if(turn==10) {
+            uint8_t blocked[32]={0};
+            uint32_t deadline=micros_now+4800-guest_time_us(spectrum_frame_cycles(&machine));
+            uint32_t keyboard_deadline=micros_now+100000;
+            const char* error=NULL;
+            out.pending=mode;
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&out,canvas,&error) && !error);
+            assert(out.pending==mode && !out.active && video_calls==expected[turn-1]);
+            deadline=micros_now;video_submit_us=4000;
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&out,canvas,&error) && !error);
+            assert(!out.pending && out.guard_us>=6000);
+        } else {
+            assert(video_begin(&out,mode,canvas));
+            if(turn==16) {
+                assert(video_present(&out,canvas) && out.next==1);
+                video_page_failed=true;
+            }
+            for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
+        }
         assert(!out.active && video_calls==expected[turn]);
+        if(turn==9 || turn==10 || turn==12 || turn==13) assert(video_psram_ops==io_before);
+        if(turn==14 || turn==15) assert(!out.packed && video_psram_ops>io_before);
+        if(turn==13) {
+            assert(last_strip.width==8 && last_strip.height==1 && last_strip.x==32 && last_strip.y==64);
+            assert(last_attrs[0]==255 && last_attrs[1]==255 && last_attrs[2]==0 && last_attrs[3]==0);
+        }
+        if(turn==3 || turn==7 || turn==10) {
+            const unsigned x=turn==3?32:turn==7?0:32+17*8,y=turn==3?64:turn==7?8:192;
+            assert(last_strip.x==x && last_strip.y==y && last_strip.width==8 && last_strip.height==1);
+            assert(last_strip.format&MK61_COLOR_PRESERVE_OUTSIDE);
+            if(turn==10) {
+                assert(last_strip.pixel_bytes==1 && last_strip.tile_bytes==4);
+                assert(last_attrs[0]==0 && last_attrs[1]==0 && last_attrs[2]==255 && last_attrs[3]==255);
+            } else assert(last_strip.pixel_bytes==4 && !last_strip.tile_bytes);
+        }
     }
     assert(video_shows==4);
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
-    puts("Actual LCD strip renderer: two hidden pages, identical strips suppressed, scroll fault repaints complete frame PASS");
+    puts("Actual LCD strip renderer: HiColor watched writes, no sparse PSRAM I/O, FLASH, bank flip, 16C/wide and fault recovery PASS");
 }
 
 static void bounded_audio_prefill(void) {
