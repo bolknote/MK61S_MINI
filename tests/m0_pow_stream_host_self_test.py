@@ -19,6 +19,22 @@ WRAPPER = '''#include "native_eabi_m0_pow_stream.inc"
 extern "C" int relation(uint64_t x, uint64_t y, uint64_t lower) {
     return m0_pow_stream::side(x,y,lower,nullptr);
 }
+namespace {
+struct WorkLimit {};
+unsigned remaining;
+void check_work() {
+    if (--remaining == 0)
+        throw WorkLimit{};
+}
+}
+extern "C" int relation_with_budget(uint64_t x, uint64_t y, uint64_t lower, unsigned budget) {
+    remaining = budget;
+    try {
+        return m0_pow_stream::side(x,y,lower,check_work);
+    } catch (const WorkLimit&) {
+        return 0;
+    }
+}
 '''
 
 
@@ -72,16 +88,18 @@ def build(out, cxx, reduced):
         # Leave the interpreter and depth limit intact. Keeping only eight
         # words forces recomputation on small enough powers for an oracle.
         header = (ROOT / 'code/native_eabi_m0_pow_stream.inc').read_text()
-        needle = 'constexpr unsigned MaterializedWords = 1792;'
+        needle = 'constexpr unsigned MaterializedWords = 1728;'
         assert header.count(needle) == 1
         (out / 'native_eabi_m0_pow_stream.inc').write_text(
             header.replace(needle, 'constexpr unsigned MaterializedWords = 8;'))
     library = out / 'probe.so'
     subprocess.run([cxx, '-std=c++17', '-O2', '-Wall', '-Wextra', '-Werror', '-shared', '-fPIC',
                     '-I'+str(ROOT/'code'), str(wrapper), '-o', str(library)], check=True)
-    probe = ctypes.CDLL(str(library)).relation
-    probe.argtypes = (ctypes.c_uint64,)*3
-    probe.restype = ctypes.c_int
+    probe = ctypes.CDLL(str(library))
+    probe.relation.argtypes = (ctypes.c_uint64,)*3
+    probe.relation.restype = ctypes.c_int
+    probe.relation_with_budget.argtypes = (ctypes.c_uint64,)*3 + (ctypes.c_uint,)
+    probe.relation_with_budget.restype = ctypes.c_int
     return probe
 
 
@@ -119,6 +137,22 @@ def check(probe, oracle, reduced):
     return cases
 
 
+def check_streaming_work(probe, oracle):
+    # The two fractional inverse cases place the virtual factor on opposite
+    # sides of the root product. The last one also needs a wide window.
+    x = ONE-1
+    count = 0
+    for exponent in (1023., -1024., -1023., 1023/128, -1/1024, -1023/128):
+        y = bits(exponent)
+        rounded = oracle.reference('pow',x,y)
+        for lower in (rounded-1, rounded):
+            want = expected_side(x,y,lower)
+            got = probe(x,y,lower,4096)
+            assert got == want, (hex(x),hex(y),hex(lower),got,want)
+            count += 1
+    return count
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
@@ -126,8 +160,11 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True)
     oracle = Oracle()
-    counts = {name: check(build(args.output/name,args.cxx,reduced),oracle,reduced)
-              for name,reduced in (('production',False),('recompute',True))}
+    production = build(args.output/'production',args.cxx,False)
+    reduced = build(args.output/'recompute',args.cxx,True)
+    counts = dict(production=check(production.relation,oracle,False),
+                  recompute=check(reduced.relation,oracle,True),
+                  streamed=check_streaming_work(production.relation_with_budget,oracle))
     print(json.dumps(dict(status='PASS', cases=counts, mpfr=oracle.version),indent=2))
 
 

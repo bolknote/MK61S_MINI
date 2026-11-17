@@ -18,7 +18,7 @@ using U = uint64_t;
 constexpr unsigned RadixBits = 16;
 constexpr unsigned NodeCount = 224;
 constexpr unsigned MaximumDepth = 125;
-constexpr unsigned MaterializedWords = 1792;
+constexpr unsigned MaterializedWords = 1728;
 constexpr unsigned CacheSize = 8;
 constexpr U AbsMask = UINT64_C(0x7fffffffffffffff);
 
@@ -51,7 +51,8 @@ struct Node {
 };
 
 struct CacheEntry {
-    Index column;
+    Index column, carry_low;
+    uint32_t carry_high;
     Word word;
     NodeId node = 0; // A cached product always has a nonzero node number.
 };
@@ -80,6 +81,12 @@ struct Operand {
 struct Retained {
     const Word* word;
     unsigned count;
+};
+
+struct DigitWindow {
+    Word* word = nullptr;
+    unsigned slot = 0;
+    NodeId node = 0, root = 0;
 };
 
 unsigned word_bits(U value) {
@@ -141,6 +148,29 @@ public:
 
     Index bit_limit(NodeId node) const { return bit_limits[node]; }
 
+    MK61_POW_STREAM void use_digit_window(NodeId root) {
+        if (root < 2 || retained(root).word)
+            return;
+        const auto [left, right] = nodes[root];
+        const auto a = retained(left);
+        const auto b = retained(right);
+        if (bool(a.word) == bool(b.word))
+            return;
+        const unsigned count = a.word ? a.count : b.count;
+        // Once materialization is over, keep the virtual factor's sliding
+        // diagonal in the unused tail of a retained operand. Its width is
+        // at most the length of the other factor.
+        for (auto& operand : operands) {
+            const unsigned used = operand.node ? unsigned(words(bit_limits[operand.node])) : 0;
+            if (count <= MaterializedWords - used) {
+                window.word = operand.word + used;
+                window.node = a.word ? right : left;
+                window.root = root;
+                return;
+            }
+        }
+    }
+
     Word next(NodeId node, Index at, Accumulator& carry) {
         Word value;
         return retained(node, at, value) ? value : column(node, at, carry);
@@ -153,6 +183,7 @@ private:
     Node nodes[NodeCount];
     Operand operands[2];
     CacheEntry cache[CacheSize];
+    DigitWindow window;
     unsigned next_node = 2, steps = 0;
     Progress progress;
 
@@ -223,6 +254,8 @@ private:
         const auto b = retained(node.right);
         if (a.word && b.word)
             return retained_column(a, b, unsigned(at), carry);
+        if (id == window.root)
+            return window_column(a.word ? a : b, at, carry);
         auto [first, end] = diagonal(node, at);
         for (Index reverse = at - first; first < end; ++first, --reverse) {
             tick();
@@ -240,7 +273,7 @@ private:
         if (square && end > at/2+1)
             end = at/2+1;
 
-        // The 1,792-word operands have fewer than 2^11 terms per diagonal.
+        // The retained operands have fewer than 2^11 terms per diagonal.
         // The carry and the diagonal sum fit in 43 bits.
         uint64_t sum = carry.low.low;
         for (unsigned i = begin; i < end; ++i) {
@@ -254,6 +287,35 @@ private:
         return Word(sum);
     }
 
+    MK61_POW_STREAM Word window_column(Retained fixed, Index at, Accumulator& carry) {
+        const Index length = words(bit_limits[window.node]);
+        const Index end = at < length ? at + 1 : length;
+        // The root scan reaches each virtual digit in order. Only the
+        // newest digit can be absent from this diagonal's window.
+        if (at < length) {
+            window.word[window.slot] = digit(window.node, at);
+            if (++window.slot == fixed.count)
+                window.slot = 0;
+        }
+        const Index first = at >= fixed.count ? at + 1 - fixed.count : Index(0);
+        uint64_t sum = carry.low.low;
+        if (first < end) {
+            unsigned count = unsigned(end - first);
+            unsigned slot = window.slot + fixed.count - count;
+            if (slot >= fixed.count)
+                slot -= fixed.count;
+            // The retained factor bounds the number of terms as above.
+            for (unsigned i = unsigned(at - first); count; --count, --i) {
+                tick();
+                sum += uint32_t(window.word[slot]) * fixed.word[i];
+                if (++slot == fixed.count)
+                    slot = 0;
+            }
+        }
+        carry.low.low = sum >> RadixBits;
+        return Word(sum);
+    }
+
     static void accumulate(Index& low, uint32_t& high, uint32_t product, bool twice) {
         Accumulator::add(low, high, product);
         if (twice)
@@ -261,31 +323,63 @@ private:
     }
 
     static unsigned cache_slot(NodeId id, Index at) {
-        return unsigned((at.low ^ (at.low >> 7) ^ at.high ^ (unsigned(id)*97U))) &
-               (CacheSize-1);
+        // Consecutive virtual nodes in a power chain have separate slots.
+        return ((unsigned(at.low) << 1) | (id & 1U)) & (CacheSize-1);
     }
 
-    bool lookup(NodeId id, Index at, Word& value) const {
+    bool try_digit(NodeId id, Index at, Word& value) {
         if (retained(id, at, value))
             return true;
         const CacheEntry& previous = cache[cache_slot(id, at)];
         if (previous.node != id || previous.column != at)
-            return false;
+            return retained_digit(id, at, value);
         value = previous.word;
         return true;
     }
 
     Word digit(NodeId id, Index at) {
         Word value;
-        return lookup(id, at, value) ? value : recompute(id, at);
+        return try_digit(id, at, value) ? value : recompute(id, at);
     }
 
-    // An uncached child restarts at column zero. The parent resumes with
-    // the exact requested digit. Each frame descends to a smaller node.
+    MK61_POW_STREAM void start_frame(Frame& frame, NodeId id, Index at) const {
+        frame = {{}, {}, {}, {}, 0, id, State::begin};
+        // Each cached carry is the carry into the column after its digit.
+        // Resume at the nearest such column at or before the requested one.
+        for (const auto& entry : cache) {
+            if (entry.node == id && entry.column < at && entry.column >= frame.current) {
+                frame.current = entry.column + 1;
+                frame.carry_low = entry.carry_low;
+                frame.carry_high = entry.carry_high;
+            }
+        }
+    }
+
+    // A virtual product can still have both inputs in the retained arrays.
+    // Its indices and carry then fit the same bounds as materialization.
+    MK61_POW_STREAM bool retained_digit(NodeId id, Index at, Word& value) {
+        const Node& node = nodes[id];
+        const auto a = retained(node.left);
+        const auto b = retained(node.right);
+        if (!a.word || !b.word)
+            return false;
+        Frame frame;
+        start_frame(frame, id, at);
+        Accumulator carry{frame.carry_low, frame.carry_high};
+        for (unsigned column = unsigned(frame.current); column <= unsigned(at); ++column) {
+            tick();
+            value = retained_column(a, b, column, carry);
+        }
+        cache[cache_slot(id, at)] = {at, carry.low, carry.high, value, id};
+        return true;
+    }
+
+    // The parent resumes with the exact requested digit. Each frame
+    // descends to a smaller node.
     MK61_POW_STREAM Word recompute(NodeId id, Index at) {
         Frame frames[MaximumDepth];
         auto* frame = frames;
-        *frame = {{}, {}, {}, {}, 0, id, State::begin};
+        start_frame(*frame, id, at);
         Word value = 0;
         for (;;) {
             tick();
@@ -307,7 +401,8 @@ private:
                                     parent.current-parent.first;
                     }
                     if (f.current == requested) {
-                        cache[cache_slot(f.node, requested)] = {requested, value, f.node};
+                        cache[cache_slot(f.node, requested)] = {
+                            requested, f.carry_low, f.carry_high, value, f.node};
                         if (frame == frames)
                             return value;
                         --frame;
@@ -317,16 +412,16 @@ private:
                     }
                 } else {
                     f.state = State::right;
-                    if (!lookup(node.left, f.first, value))
-                        *++frame = {{}, {}, {}, {}, 0, node.left, State::begin};
+                    if (!try_digit(node.left, f.first, value))
+                        start_frame(*++frame, node.left, f.first);
                 }
                 break;
             case State::right: {
                 f.left_word = value;
                 f.state = State::accumulate;
                 const Index child_at = f.current - f.first;
-                if (!lookup(node.right, child_at, value))
-                    *++frame = {{}, {}, {}, {}, 0, node.right, State::begin};
+                if (!try_digit(node.right, child_at, value))
+                    start_frame(*++frame, node.right, child_at);
                 break;
             }
             case State::accumulate:
@@ -411,8 +506,10 @@ MK61_POW_STREAM int compare(Dyadic x, U p, unsigned k, bool inverse,
     Products products(x.odd, midpoint.odd, progress);
     NodeId left = products.power(0, p);
     const NodeId right = products.power_of_two(1, k);
-    if (inverse)
+    if (inverse) {
         left = products.multiply(left, right);
+        products.use_digit_window(left);
+    }
     const Index common = signed_less(left_scale, right_scale) ? left_scale : right_scale;
     Shifted a(left_scale-common, left, products.bit_limit(left));
     Shifted b(right_scale-common, right, products.bit_limit(right));
