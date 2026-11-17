@@ -60,13 +60,15 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False,
     interval_patches={}
     if interval_hint or force_power_bounds:
         path=stage/'code/native_eabi_m0_pow_interval.inc';source=path.read_text()
-        for old,new in [
+        guards=[
             ('if(exact_boundary(x,y,result)) return true;',
              'if(P!=1024 && exact_boundary(x,y,result)) return true;'),
             ('if(lower!=upper) {','if(lower!=upper || P==1024) {'),
-            ('if(upper==lower+1) result=lower;',
-             'if(upper==lower+1 || upper==lower) result=lower;'),
-        ]:
+        ]
+        adjacency='if(upper==lower+1) result=lower;'
+        if adjacency in source:
+            guards.append((adjacency,'if(upper==lower+1 || upper==lower) result=lower;'))
+        for old,new in guards:
             assert source.count(old)==1,old
             source=source.replace(old,new)
             interval_patches[old]=new
