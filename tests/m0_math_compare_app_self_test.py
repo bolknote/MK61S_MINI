@@ -57,6 +57,8 @@ def main():
     p.add_argument('--rom',type=Path,help='Captured factory ROM, required only by direct-ROM experiments.')
     p.add_argument('--rom-metadata',type=Path)
     p.add_argument('--bootrom',type=Path,help='Execute actual SDK ROM bit/memory helpers')
+    p.add_argument('--rom-operations',nargs='+',choices=('atan','cos','exp','pow','sin'),default=('cos','exp','sin'),
+        help='Require these operations in the v3 BootROM comparison')
     p.add_argument('--bounded-warmup',action='store_true')
     p.add_argument('--warmup-pairs-cap',type=int,default=32768)
     a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
@@ -160,7 +162,7 @@ def main():
     expected_kinds=set(range(13)) if a.kinds is None else set(a.kinds)
     assert expected_kinds and expected_kinds<=set(range(13)),sorted(expected_kinds)
     assert {key[0] for key in selected}==expected_kinds,(sorted(selected),sorted(expected_kinds))
-    if direct_rom:assert set(selected)=={(1,op) for op in ('cos','exp','sin')}
+    if direct_rom:assert set(selected)=={(0 if op=='pow' else 1,op) for op in a.rom_operations}
     rows=[]
     for (kind,_),chunk in sorted(selected.items()):
         data=Path(chunk['input']).read_bytes();header=list(struct.unpack_from('<8I',data));count=min(2,header[4]);header[4]=count;header[5]=1
@@ -201,18 +203,23 @@ def main():
                     parsed=decode_v5(result,dict(chunk,cases=count,loops=1),original,
                         minimum_warmup_us=1000,pairs_cap=a.warmup_pairs_cap)
                 else:parsed=decode(result,dict(chunk,cases=count,loops=1),original)
+                if direct_rom:
+                    assert parsed['owned_wrong_rounding']==parsed['qfplib_wrong_results']==0
                 if a.cache_counters:
                     assert all(v['cache']['median_misses_per_call']==0 and v['cache']['median_accesses_per_call']==0 for v in parsed['timings'].values())
             rows.append(dict(kind=kind,operation=chunk['operation'],negative=negative,calls=reached))
             print('PASS',kind,chunk['operation'],'failure detected' if negative else 'exact results',flush=True)
         if direct_rom:
-            for word,value in ((7,0x1d),(7,header[7]&~1),(7,header[6]),(3,0)):
+            invalid=[(7,0x1d),(7,header[7]&~1),(7,header[6]),(3,1-kind)]
+            if kind==0:
+                invalid.extend(((11,0xbff00000),(9,0x80000000)))  # Wrong exponent and negative base.
+            for word,value in invalid:
                 source=bytearray(original)
                 struct.pack_into('<I',source,word*4,value)
                 result=None
                 status=m.call('timing_test_entry',0)[0]&0xFFFFFFFF
                 assert status and result is None,(word,value,status)
-            print('PASS rejects non-math ROM, even and flash references, and binary ABI',flush=True)
+            print('PASS rejects invalid ROM addresses and inputs',flush=True)
     report=dict(status='PASS',cases=rows,cache_counters=a.cache_counters,warmup_tested=has_warmup,
         rounds=rounds,wire_version=version,
         tested_kinds=sorted(expected_kinds),all_abi_kinds_tested=expected_kinds==set(range(13)),

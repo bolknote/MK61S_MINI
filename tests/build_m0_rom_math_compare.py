@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Prepare PicoCalc exp/sin/cos timing against the factory RP2040 v3 ROM."""
+"""Prepare PicoCalc math timing against the factory RP2040 v3 ROM."""
 import argparse
 import base64
 import gzip
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
 import struct
 import subprocess
@@ -14,12 +15,14 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from check_m0_math_layout import verify
-from m0_mpfr_oracle import Oracle
+from m0_bootrom import OFFSETS, ROM_SHA as ROM_SHA256
+from m0_mpfr_oracle import Oracle, bits
 from native_eabi_m0_arm_self_test import Machine
 from tools.firmware.picocalc.build_picocalc import compiler_bin
 
-ROM_SHA256 = 'ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe'
-OFFSETS = {'sin': 0x40, 'cos': 0x3c, 'exp': 0x4c}
+DIRECT = ('sin', 'cos', 'exp')
+ROM_CALL = dict(atan='atan2', pow='sqrt', **{op: op for op in DIRECT})
+FORMULAS = dict(atan='atan2(x,1)', pow='ddiv(1,dsqrt(x))', **{op: f'{op}(x)' for op in DIRECT})
 TARGET = 'mk61s-picocalc-pico-h'
 
 
@@ -35,14 +38,21 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for arg in ('production', 'bootrom', 'records', 'output'):
         p.add_argument('--'+arg, required=True, type=Path)
+    p.add_argument('--operations', nargs='+', choices=tuple(ROM_CALL),
+                   help='Operations to select from the CURRENT records; pow requires y=-0.5')
+    p.add_argument('--directory', default='/MK61S-M0-TIMING-ROM', help='Temporary SD directory included in the test APP')
     a = p.parse_args()
+    assert re.fullmatch(r'/[A-Z0-9-]+', a.directory), a.directory
+    operations = set(a.operations or DIRECT)
     source, bootrom, records, out = (path.resolve() for path in (
         a.production, a.bootrom, a.records, a.output))
     rom = bootrom.read_bytes()
     assert len(rom) == 0x4000 and sha(bootrom) == ROM_SHA256
     assert rom[0x10:0x14] == b'Mu\x01\x03'
-    addresses = {op: struct.unpack_from('<I', rom, 0x24c+offset)[0]
-                 for op, offset in OFFSETS.items()}
+    entries = {ROM_CALL[op] for op in operations}
+    if 'pow' in operations:
+        entries.add('ddiv')
+    addresses = {name: struct.unpack_from('<I', rom, 0x24c+OFFSETS[name])[0] for name in entries}
     assert all(0 < address < len(rom) and address&1 for address in addresses.values())
     out.mkdir(parents=True, exist_ok=False)
     image = out/'firmware'
@@ -67,33 +77,45 @@ def main():
         for line in trusted:
             row = json.loads(line)
             op = row['operation']
-            if row['run'] != 'CURRENT' or op not in addresses:
+            if row['run'] != 'CURRENT' or op not in operations:
                 continue
             data = base64.b64decode(row['input_base64'], validate=True)
             assert hashlib.sha256(data).hexdigest() == row['input_sha256']
             magic, version, index, kind, count, loops, _, _ = struct.unpack_from('<8I', data)
-            assert (magic, version, kind) == (0x4D304246, 1, 1) and len(data) == 32+24*count
-            symbol = f'_ZN12compact_math{len(op)}{op}Ed'
+            binary = op == 'pow'
+            assert (magic, version, kind) == (0x4D304246, 1, int(not binary)) and len(data) == 32+24*count
+            assert 1 <= count <= 512 and 1 <= loops <= 4096 and count*loops <= 65536
+            symbol = f'_ZN12compact_math{len(op)}{op}Ed' + ('d' if binary else '')
             owned_address = machine.elf.symbols[symbol]|1
+            rom_entry = ROM_CALL[op]
+            rom_address = addresses[rom_entry]
             own_cost, rom_cost = 0, 0
             for x, y, expected in struct.iter_unpack('<3Q', data[32:]):
-                want = reference.reference(op, x)
-                own, _, cost = machine.call(symbol, x, count=True)
-                other, _, ref_cost = machine.call('rom_'+op, x, count=True)
+                want = reference.reference(op, x, y) if binary else reference.reference(op, x)
+                own, _, cost = machine.call(symbol, x, y if binary else 0, count=True)
+                other, _, ref_cost = machine.call('rom_'+rom_entry, x, bits(1.) if op=='atan' else 0, count=True)
+                if binary:
+                    assert y == bits(-.5) and 0x0010000000000000 <= x < 0x7ff0000000000000
+                    other, _, division_cost = machine.call('rom_ddiv', bits(1.), other, count=True)
+                    ref_cost += division_cost
                 assert want == expected == own == other, (index, hex(x), hex(want), hex(own), hex(other))
                 own_cost += cost
                 rom_cost += ref_cost
             path = inputs/f'{index:03d}.bin'
-            path.write_bytes(data[:24]+struct.pack('<II',owned_address,addresses[op])+data[32:])
+            with path.open('xb') as packet:
+                packet.write(data[:24]+struct.pack('<II',owned_address,rom_address)+data[32:])
             chunks.append(dict(index=index,stream_index=index,part=0,operation=op,stream=row['stream'],
                                cases=count,kind=kind,loops=loops,input=str(path),input_sha256=sha(path),
-                               own_address=owned_address,qfplib_address=addresses[op],
+                               own_address=owned_address,qfplib_address=rom_address,
                                reference_kind='RP2040_factory_BootROM_v3',
-                               reference_formula=op+'(x)', reference_domain='Finite MPFR-correct samples'))
+                               reference_formula=FORMULAS[op], reference_domain='Finite MPFR-correct samples'))
             profile.append(dict(index=index,operation=op,stream=row['stream'],cases=count,
                                 own_mean_instructions=own_cost/count,rom_mean_instructions=rom_cost/count))
-    assert len(chunks) == 27 and sum(c['cases'] for c in chunks) == 1255
-    directory = '/MK61S-M0-TIMING-ROM'
+    cases = sum(c['cases'] for c in chunks)
+    assert {c['operation'] for c in chunks} == operations
+    if not a.operations:
+        assert len(chunks) == 27 and cases == 1255
+    directory = a.directory
     fixture = out/'TIMING-fixture.c'
     shutil.copy2(ROOT/'tests/fixtures/m0_math_compare_benchmark.c', fixture)
     wrapper = out/'TIMING.c'
@@ -119,7 +141,7 @@ def main():
         primary_estimator='order_balanced_median',bootrom_sha256=ROM_SHA256,reference_kind='RP2040_factory_BootROM_v3',
         reference_flash_bytes=0,records_sha256=sha(records)))
     dump(out/'host-profile.json',dict(groups=profile,mpfr=reference.version,wrong=0,hardware_timing=False))
-    print('PASS:',len(chunks),'groups / 1255 MPFR-correct cases; unmodified production flash')
+    print('PASS:',len(chunks),'groups /',cases,'MPFR-correct cases; unmodified production flash')
 
 
 if __name__ == '__main__':

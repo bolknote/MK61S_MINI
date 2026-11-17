@@ -128,14 +128,47 @@ static int flash_entry(uint32_t address) {
     return address >= UINT32_C(0x10000001) && address < UINT32_C(0x10200000) && (address&1);
 }
 #ifdef MK61_M0_TIMING_RP2040_ROM_V3
+enum { ROM_DIV=0x0c, ROM_SQRT=0x18, ROM_COS=0x3c, ROM_SIN=0x40, ROM_EXP=0x4c, ROM_ATAN2=0x58 };
+static double (*rom_div)(double,double);
+static double (*rom_sqrt)(double);
+static double (*rom_atan2)(double,double);
+
 static __attribute__((noipa)) uint32_t rom_word(uint32_t address) {
     return *(const volatile uint32_t*)(uintptr_t)address;
 }
-static int raw_rom_entry(uint32_t address) {
-    if (!(address&1) || address >= 0x4000U || rom_word(0x10U) != 0x0301754dU) return 0;
-    return address==rom_word(0x24cU+0x3cU) ||  /* cos */
-           address==rom_word(0x24cU+0x40U) ||  /* sin */
-           address==rom_word(0x24cU+0x4cU);    /* exp */
+
+static uint32_t rom_entry(unsigned offset) {
+    uint32_t address=rom_word(0x24cU+offset);
+    return (address&1) && address<0x4000U ? address : 0;
+}
+
+static LEAF double rom_atan(double x) {
+    return rom_atan2(x,1.0);
+}
+
+static LEAF double rom_inverse_root(double x,double y) {
+    (void)y;
+    return rom_div(1.0,rom_sqrt(x));
+}
+
+static uintptr_t rom_reference(unsigned kind,uint32_t address) {
+    if (!address || rom_word(0x10U)!=0x0301754dU) return 0;
+    if (kind==UNARY) {
+        if (address==rom_entry(ROM_COS) || address==rom_entry(ROM_SIN) || address==rom_entry(ROM_EXP))
+            return address;
+        if (address==rom_entry(ROM_ATAN2)) {
+            rom_atan2=(double(*)(double,double))(uintptr_t)address;
+            return (uintptr_t)rom_atan;
+        }
+    }
+    if (kind==BINARY && address==rom_entry(ROM_SQRT)) {
+        const uint32_t divide=rom_entry(ROM_DIV);
+        if (!divide) return 0;
+        rom_sqrt=(double(*)(double))(uintptr_t)address;
+        rom_div=(double(*)(double,double))(uintptr_t)divide;
+        return (uintptr_t)rom_inverse_root;
+    }
+    return 0;
 }
 #endif
 
@@ -152,12 +185,23 @@ NO_TABLES int main(void) {
        mk61_api->file_size(file.id)!=sizeof(h)+h[4]*sizeof(Vector)) return MK61_APP_INVALID_FILE;
     if(!flash_entry(h[6])) return MK61_APP_INVALID_FILE;
 #ifdef MK61_M0_TIMING_RP2040_ROM_V3
-    if(h[3]!=UNARY || !raw_rom_entry(h[7])) return MK61_APP_INVALID_FILE;
+    const uintptr_t reference=rom_reference(h[3],h[7]);
+    if(!reference) return MK61_APP_INVALID_FILE;
 #else
     if(!flash_entry(h[7])) return MK61_APP_INVALID_FILE;
+    const uintptr_t reference=h[7];
 #endif
     Vector inputs[CASES];
     if(mk61_api->file_read(file.id,sizeof(h),(uint8_t*)inputs,h[4]*sizeof(Vector))!=h[4]*sizeof(Vector)) return MK61_APP_IO_ERROR;
+#ifdef MK61_M0_TIMING_RP2040_ROM_V3
+    if(h[3]==BINARY) {
+        for(unsigned i=0;i<h[4];++i) {
+            if(inputs[i].b!=UINT64_C(0xbfe0000000000000) ||
+               inputs[i].a<UINT64_C(0x0010000000000000) || inputs[i].a>=UINT64_C(0x7ff0000000000000))
+                return MK61_APP_INVALID_FILE;
+        }
+    }
+#endif
     output.magic=UINT32_C(0x4D305250);output.version=REPORT_VERSION;output.group=h[2];output.kind=h[3];
     output.cases=h[4];output.loops=h[5];output.rounds=ROUNDS;output.failures=0;output.first=UINT32_MAX;output.warmup_us=0;
 #ifdef MK61_M0_TIMING_BOUNDED_WARMUP
@@ -165,7 +209,7 @@ NO_TABLES int main(void) {
 #endif
     for(unsigned i=0;i<h[4];++i) {
         output.results[i][0]=invoke(h[6],h[3],inputs[i]);
-        output.results[i][1]=invoke(h[7],h[3],inputs[i]);
+        output.results[i][1]=invoke(reference,h[3],inputs[i]);
         if(!same(output.results[i][0],inputs[i].expected,h[3])) {
             if(!output.failures) output.first=i;
             ++output.failures;
@@ -182,7 +226,7 @@ NO_TABLES int main(void) {
             if(output.warmup_pairs>=MK61_M0_TIMING_WARMUP_PAIRS_CAP) break;
 #endif
             sink=invoke(h[6],h[3],inputs[i]);
-            sink=invoke(h[7],h[3],inputs[i]);
+            sink=invoke(reference,h[3],inputs[i]);
 #ifdef MK61_M0_TIMING_BOUNDED_WARMUP
             ++output.warmup_pairs;
 #endif
@@ -203,7 +247,7 @@ NO_TABLES int main(void) {
             output.control_hits[which][round]=last_hits;output.control_accesses[which][round]=last_accesses;
 #endif
             mk61_api->service();
-            output.raw[which][round]=measure(h[6+which],h[3],inputs,h[4],h[5]);
+            output.raw[which][round]=measure(which ? reference : h[6],h[3],inputs,h[4],h[5]);
 #ifdef MK61_M0_TIMING_CACHE
             output.hits[which][round]=last_hits;output.accesses[which][round]=last_accesses;
 #endif
