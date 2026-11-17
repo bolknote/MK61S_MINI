@@ -1,0 +1,85 @@
+{
+  "status": "PASS_FINITE_EXACT_CHECKS",
+  "mpfr": "4.2.2",
+  "bit_cap": 8192,
+  "small_exhaustive_comparisons": 12672,
+  "exact_midpoint_comparisons": 286,
+  "stopped_before_materialization": 522,
+  "maximum_work": {
+    "rounds": 10,
+    "maximum_power_width_lower_bound": 717751,
+    "largest_materialized_width": 8177
+  },
+  "examples": [
+    {
+      "x": "0000000000000001",
+      "y": "3bf6000000000001",
+      "lower": "3fefffffffffffff",
+      "status": "requires wider exact power",
+      "compact": {
+        "divisions": 16,
+        "remaining_original_exponents": [
+          6192449487634433,
+          -83076749736557242056487941267521536
+        ]
+      },
+      "rounds": 1,
+      "maximum_power_width_lower_bound": 724453949076593182831,
+      "largest_materialized_width": 0,
+      "maximum_odd_power_width_lower_bound": 711038135204804420186,
+      "stopped_quotient": 13415813871788762645
+    },
+    {
+      "x": "000fffffffffffff",
+      "y": "bbffffffffffffff",
+      "lower": "3ff0000000000000",
+      "status": "requires wider exact power",
+      "compact": {
+        "divisions": 5,
+        "remaining_original_exponents": [
+          9007199254740991,
+          -83076749736557242056487941267521536
+        ]
+      },
+      "rounds": 1,
+      "maximum_power_width_lower_bound": 488838717953303172097,
+      "largest_materialized_width": 0,
+      "maximum_odd_power_width_lower_bound": 488838717953303172097,
+      "stopped_quotient": 9223372036854776832
+    },
+    {
+      "x": "3fefffffffffffff",
+      "y": "c01ff80000000000",
+      "lower": "3ff0000000000003",
+      "status": "decided",
+      "compact": {
+        "divisions": 3,
+        "remaining_original_exponents": [
+          1023,
+          -128
+        ]
+      },
+      "rounds": 1,
+      "maximum_power_width_lower_bound": 372,
+      "largest_materialized_width": 372,
+      "maximum_odd_power_width_lower_bound": 365
+    }
+  ],
+  "signed_crt_ambiguity": {
+    "x": "3fefffffffffffff",
+    "y": "c01ff80000000000",
+    "lower": "3ff0000000000003",
+    "exact_difference_bits": 60957,
+    "modulus_bits": 60,
+    "same_residue_positive": 44343270669834109,
+    "same_residue_negative": -955656745330165954,
+    "residue_alone_determines_sign": false
+  },
+  "prototype_sha256": "1634c61ba393f888a9d34e0f9920725f40d4fec3f919e978373afbe62ef1f1df",
+  "reference_sha256": {
+    "tests/m0_mpfr_oracle.py": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a",
+    "tests/m0_pow_stream_host_self_test.py": "4c8de296b197e3de5bb12fdde97607da10fe00d6220e33c956deb629f6554f77"
+  },
+  "scope": "Finite exact checks, compact exponent identities and a residue-class ambiguity example. The large-power examples are direct comparator calls. They do not establish that the public firmware reaches its late fallback on those inputs.",
+  "practical_all_input_bound_established": false
+}

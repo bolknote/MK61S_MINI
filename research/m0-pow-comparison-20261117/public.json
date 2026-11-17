@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "elf_sha256": "519a4a4d1867ca45bb89ea45160bcc63f8c5006c03d9094690732bf9610e846f",
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "rows": [
+    {
+      "x": "0000000000000001",
+      "y": "3bf6000000000001",
+      "rounded": "3ff0000000000000",
+      "rescue_entries": 0,
+      "final_entries": 0
+    },
+    {
+      "x": "000fffffffffffff",
+      "y": "bbffffffffffffff",
+      "rounded": "3ff0000000000000",
+      "rescue_entries": 0,
+      "final_entries": 0
+    },
+    {
+      "x": "3fefffffffffffff",
+      "y": "c01ff80000000000",
+      "rounded": "3ff0000000000004",
+      "rescue_entries": 0,
+      "final_entries": 0
+    }
+  ],
+  "mpfr": "4.2.2",
+  "scope": "Public ARM entry point on three direct-comparator examples. All are resolved before the owned rescue."
+}
