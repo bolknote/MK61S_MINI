@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import re
 
-from generate_m0_exp_center import render
+from generate_m0_exp_center import refine_rows, render, render_scale
 
 
 def certificate(root):
@@ -18,6 +18,9 @@ def certificate(root):
     max_t = F(1, 1 << 22)
     # x and n*ln(2)/512 are both truncated to Q69 from below.
     # The step itself is rounded at Q96, and n < 2^20.
+    # Decompose the exact step as an integer plus a 27-bit fraction.
+    # With n < 2^20, the 16-bit partial products and carry additions
+    # fit uint32_t up to the deliberately modular high output word.
     reduction_error = 1 + F(1, 256)
     assert reduction_error == 1 + F(1 << 20, 2 * (1 << 27))
     ln2_lo = sum((F(2, (2*i+1)*3**(2*i+1)) for i in range(44)), F(0))
@@ -30,6 +33,21 @@ def certificate(root):
     inverse = 0xB8AA3B29
     max_n = (((1 << 32)-1)*inverse+(1 << 43)) >> 44
     assert max_n < 1 << 20
+    word_mask = (1 << 16)-1
+    hi_n = max_n >> 16
+    step_integer = (step_high << 5)+(step_low >> 27)
+    step_fraction = step_low & ((1 << 27)-1)
+    fraction_lo, fraction_hi = step_fraction & word_mask, step_fraction >> 16
+    integer_lo, integer_hi = step_integer & word_mask, (step_integer >> 16) & word_mask
+    frac_product = word_mask*fraction_lo
+    frac_mid = word_mask*fraction_hi+hi_n*fraction_lo+(frac_product >> 16)
+    fraction_units = (hi_n*fraction_hi << 5)+(frac_mid >> 11)
+    low_product = word_mask*integer_lo+fraction_units
+    middle_product = word_mask*integer_hi+hi_n*integer_lo+(low_product >> 16)
+    assert max(frac_product, frac_mid, fraction_units, low_product, middle_product) < 1 << 32
+    # The discarded low 16 product bits cannot round up the subsequent
+    # shift by 11. The returned low and middle words compose floor(n*C).
+    assert (step_integer << 27)+step_fraction == (step_high << 32)+step_low
     # The half-up bit of head*inverse stays in the high word for every
     # selected e. Before the modular subtraction, bound the actual
     # residual: head truncation costs at most inverse*2^(9-53), and
@@ -55,6 +73,11 @@ def certificate(root):
     # The square of that integer is <=2^62, and its rounded Q69
     # half-square is below 2^25. Omitting the signed cubic is safe.
     assert (max_t*(1 << 53))**2 == 1 << 62
+    # If the high half of t53 is 32768, its low half is zero.
+    # Otherwise the complete low carry of the exact square fits a word.
+    low_square = word_mask*word_mask
+    assert 2*32767*word_mask+(low_square >> 16) < 1 << 32
+    assert (1 << 30)+32 < 1 << 32
     assert (max_t**2*s/2).denominator == 1 and max_t**2*s/2 <= 1 << 24
     square_error = F(1, 2) + s*(max_t+F(1, 1 << 55))/(1 << 54)
     taylor = s*max_t**3/(6*(1-max_t))
@@ -103,6 +126,16 @@ def certificate(root):
     base_product_error = (1+F(1,1<<33))*dmax/(1 << 62)
     value_error = (1+F(1,1<<26)) + 2*d_error + base_product_error + F(5,2)
     assert value_error < 31
+    # Approximate the missing seven bits by 64; their error is at
+    # most 64 Q69 units until the complete row is read for a midpoint.
+    packed_error = value_error+64
+    assert packed_error < 95
+    for shift in (0,1):
+        # Replacing the estimate inside the broad midpoint guard cannot
+        # borrow from or carry into the high mantissa or change normalization.
+        deviation = (95+64) << shift
+        assert 0 < 65536-deviation < 65536+deviation < 131072
+        assert deviation < 1 << 15
     # |wide32(ah,dl)+wide32(al,dh)| fits 64 bits: ah < 2^31,
     # al < 2^32, dh < 2^27. The final scaled product fits signed64.
     assert (1 << 63) + (1 << 59) + (1 << 29) < 1 << 64
@@ -116,10 +149,8 @@ def certificate(root):
     # Reproduce every dyadic-center constant and prove exact enclosing
     # inequalities for the reused table, independently of MPFR.
     assert render() == (code / 'native_eabi_m0_exp_center_table.inc').read_text()
-    refine = (code / 'native_eabi_m0_refine_table.inc').read_text()
-    block = refine.split('refine_exp_table[512][3]={', 1)[1].split('};', 1)[0]
-    rows = [tuple(map(int, m)) for m in re.findall(r'\{(\d+)U,(\d+)U,(\d+)U\}', block)]
-    assert len(rows) == 512
+    rows = refine_rows(root)
+    assert render_scale(rows) == (code / 'native_eabi_m0_exp_scale_table.inc').read_text()
     for i, (lo, mid, hi) in enumerate(rows):
         q = lo+(mid << 32)+(hi << 64)
         if i == 0:
@@ -127,10 +158,13 @@ def certificate(root):
         assert (2*q-1)**512 < 1 << (95*512+i) < (2*q+1)**512
     sources = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (
         code / 'native_eabi_m0_exp_center.inc', code / 'native_eabi_m0_exp_center_table.inc',
-        code / 'native_eabi_m0_exp_table.inc', code / 'native_eabi_m0_refine_table.inc')}
+        code / 'native_eabi_m0_exp_table.inc', code / 'native_eabi_m0_refine_table.inc',
+        code / 'native_eabi_m0_exp_scale_table.inc')}
     return dict(status='PASS_RATIONAL_EXP_CENTER_ENCLOSURE', sources=sources,
-                result_error_units_q69=float(value_error), accepted_radius=31,
-                normalized_radius=62, coefficient_rows=1470, table_bytes=11760)
+                result_error_units_q69=float(packed_error), accepted_radius=95,
+                normalized_radius=190, unpacked_error_units_q69=float(value_error),
+                unpacked_radius=31, coefficient_rows=1470, table_bytes=11760,
+                packed_scale_rows=len(rows), packed_scale_bytes=8*len(rows))
 
 
 def main():

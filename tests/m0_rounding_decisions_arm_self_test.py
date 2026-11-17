@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Check signed atan division and the historical exp guard when linked."""
+"""Check signed atan division and the linked exp rounding guard."""
 import argparse
+import base64
+import gzip
 import hashlib
 import json
 from pathlib import Path
 import random
 import struct
 import time
-from native_eabi_m0_arm_self_test import Machine
+from native_eabi_m0_arm_self_test import Machine, ROOT, UC_HOOK_MEM_READ
 
 MASK=(1<<32)-1
 
@@ -64,6 +66,43 @@ def check_legacy_exp(m,samples,digest):
     return len(vectors)
 
 
+def check_exp_scale_guard(machine):
+    # The three widened-guard inputs need one missing scale word each.
+    # Falling straight through to full refinement regresses these cases.
+    reads_wanted = {20: 0, 28: 1, 34: 1, 35: 1}
+    table = '_ZN7m0_eabiL16refine_exp_tableE'
+    start = machine.elf.symbols[table]
+    end = start + machine.elf.sizes[table]
+    reads = []
+
+    def read_scale_word(_uc, _access, address, size, _value, _user):
+        reads.append((address-start, size))
+
+    hook = machine.uc.hook_add(UC_HOOK_MEM_READ, read_scale_word, begin=start, end=end-1)
+    checked = set()
+    try:
+        records = ROOT/'doc/measurements/m0-exp-q70-20261106/records.jsonl.gz'
+        with gzip.open(records, 'rt') as source:
+            for line in source:
+                row = json.loads(line)
+                group = row['index']
+                if row['run'] != 'CURRENT' or row['operation'] != 'exp' or group not in reads_wanted:
+                    continue
+                packet = base64.b64decode(row['input_base64'], validate=True)
+                assert hashlib.sha256(packet).hexdigest() == row['input_sha256'] and len(packet) == 56
+                x, _, expected = struct.unpack_from('<3Q', packet, 32)
+                reads.clear()
+                actual = machine.call('_ZN12compact_math3expEd', x)[0]
+                assert actual == expected, (group, hex(actual), hex(expected))
+                assert len(reads) == reads_wanted[group], (group, reads)
+                assert all(offset % 12 == 0 and size == 4 for offset, size in reads), (group, reads)
+                checked.add(group)
+    finally:
+        machine.uc.hook_del(hook)
+    assert checked == set(reads_wanted)
+    return len(checked)
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--elf',type=Path,required=True);p.add_argument('--samples',type=int,default=10000)
@@ -77,6 +116,7 @@ def main():
         assert '_ZL10exp_center' in m.elf.symbols,'Unrecognized RP2040 exp implementation'
         exp_decisions=0
         exp_scope='Current exp uses dyadic centers; see certify_m0_exp_center.py and qualify_m0_rounding.py.'
+    exp_scale_cases = check_exp_scale_guard(m) if '_ZL16exp_center_scale' in m.elf.symbols else 0
     signed_calls=0
     states=[(0,0,0,0,0,0,1),(17,3,17,3,5,2,3),(0x80000001,7,0x80000001,7,0x11223344,0x55667788,2)]
     heads=[0,1,-1,32,-32,(1<<18)-1,1<<18,-(1<<18),(1<<24)-1,-((1<<24)-1),33*(1<<24),-33*(1<<24)]
@@ -93,7 +133,7 @@ def main():
                     assert bytes(m.uc.mem_read(0xD0000060,28))==before;contexts+=1
                 digest.update(struct.pack('<4I',head&MASK,denominator,words[-1],got));signed_calls+=1
     result=dict(status='PASS_INTEGER_EXP_DECISIONS_SIGNED_ATAN_DIVISION' if exp_decisions else 'PASS_SIGNED_ATAN_DIVISION',
-        exp_decisions=exp_decisions,exp_scope=exp_scope,signed_divisions=signed_calls,
+        exp_decisions=exp_decisions,exp_scope=exp_scope,exp_scale_guard_cases=exp_scale_cases,signed_divisions=signed_calls,
         DIRTY_PENDING_checks=contexts,wrong=0,records_sha256=digest.hexdigest(),elf_sha256=hashlib.sha256(a.elf.read_bytes()).hexdigest(),
         source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),hardware_IO=0,pow_calls=0,
         scope='Signed SIO quotient vs exact truncation in clean, dirty and pending contexts; Machine checks divider latency and preserved ABI/stack.')

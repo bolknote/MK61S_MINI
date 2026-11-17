@@ -152,6 +152,14 @@ SECTIONS {
     } > FLASH
     ASSERT(SIZEOF(.m0_exp_center_extension) <= 0x3000,
            "Exp center table exceeds its 12 KiB flash slot")
+    .m0_exp_scale_extension 0x10195f00 : {
+        *(.m0_exp_scale_table)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.m0_exp_center_extension) + SIZEOF(.m0_exp_center_extension) <= ADDR(.m0_exp_scale_extension),
+           "Exp center coefficients overlap the packed scale table")
+    ASSERT(ADDR(.m0_exp_scale_extension) + SIZEOF(.m0_exp_scale_extension) <= 0x101ac248,
+           "Exp scale table overlaps AI inference")
     /* Same 8KiB cache indices as the0.729s/token E0CDF5AB model code.
      * UI/diagnostic growth must not move these instruction streams. */
     .ai_inference_extension 0x101ac248 : {
