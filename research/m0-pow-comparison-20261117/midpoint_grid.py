@@ -4,6 +4,7 @@ import argparse
 from fractions import Fraction
 from functools import lru_cache
 import json
+from math import factorial
 from pathlib import Path
 from time import perf_counter
 
@@ -48,15 +49,19 @@ class FixedInterval:
         self.unit = 1 << precision
 
     def rational(self, numerator, denominator=1):
-        scaled = numerator*self.unit
+        scaled = numerator << self.precision
         return scaled//denominator, ceil_div(scaled, denominator)
 
     def scale(self, a, factor):
         return (a[0]*factor, a[1]*factor) if factor >= 0 else (a[1]*factor, a[0]*factor)
 
     def multiply(self, a, b):
-        products = [x*y for x in a for y in b]
-        return min(products)//self.unit, ceil_div(max(products), self.unit)
+        if a[0] >= 0 and b[0] >= 0:
+            lo, hi = a[0]*b[0], a[1]*b[1]
+        else:
+            products = [x*y for x in a for y in b]
+            lo, hi = min(products), max(products)
+        return lo >> self.precision, (hi+self.unit-1) >> self.precision
 
     def divide(self, a, b):
         assert b[0] > 0
@@ -66,20 +71,71 @@ class FixedInterval:
 
     def log(self, numerator, denominator):
         assert denominator <= numerator <= 2*denominator
-        t = self.rational(numerator-denominator, numerator+denominator)
+        difference, total_value = numerator-denominator, numerator+denominator
+        if difference == 0:
+            return 0, 0
+        t = self.rational(difference, total_value)
+        shrink = total_value.bit_length()-difference.bit_length()
+        if difference << shrink > total_value:
+            shrink -= 1
+        # The exact argument t is at most both 1/3 and 2^-shrink.
+        # Its square therefore contracts by max(3, 2*shrink) bits.
         square = self.multiply(t, t)
         power, total = t, (0, 0)
-        terms = ceil_div(self.precision+1, 3)
+        terms = ceil_div(self.precision+1, max(3, 2*shrink))
         for n in range(terms):
             divisor = 2*n+1
             total = total[0]+power[0]//divisor, total[1]+ceil_div(power[1], divisor)
             power = self.multiply(power, square)
-        # t<=1/3. The tail of 2*atanh(t) is <(3/4)*8^-terms.
+        # The omitted tail is at most 2*t/(1-t^2) times t^(2*terms).
+        # The first factor is at most 3/4 and the second is below one unit.
         return 2*total[0], 2*total[1]+1
 
 
 def add(a, b):
     return a[0]+b[0], a[1]+b[1]
+
+
+def convolve(first, second, count):
+    """Exact signed integer convolution using sufficiently wide binary digits."""
+    a = max(map(abs, first)).bit_length()
+    b = max(map(abs, second)).bit_length()
+    if not a or not b:
+        return [0]*count
+    # Each coefficient sums at most min(len(first), len(second)) products.
+    # With the added sign bit it fits strictly between -base/2 and base/2.
+    width = a+b+min(len(first), len(second)).bit_length()+1
+
+    def pack(coefficients):
+        value = 0
+        for coefficient in reversed(coefficients):
+            value = (value << width)+coefficient
+        return value
+
+    value = pack(first)*pack(second)
+    base = 1 << width
+    coefficients = []
+    for _ in range(count):
+        digit = value & (base-1)
+        if digit >= base//2:
+            digit -= base
+        coefficients.append(digit)
+        value = (value-digit) >> width
+    return coefficients
+
+
+def interval_series_product(first, second, grid):
+    """Enclose a product via exact convolutions of midpoint and radius."""
+    a = [(lo+hi)//2 for lo, hi in first]
+    b = [(lo+hi)//2 for lo, hi in second]
+    a_radius = [hi-mid for (_, hi), mid in zip(first, a)]
+    b_radius = [hi-mid for (_, hi), mid in zip(second, b)]
+    count = len(first)
+    center = convolve(a, b, count)
+    right = convolve(list(map(abs, a)), b_radius, count)
+    left = convolve(a_radius, [abs(mid)+rad for mid, rad in zip(b, b_radius)], count)
+    return [((mid-r-s) >> grid.precision, (mid+r+s+grid.unit-1) >> grid.precision)
+            for mid, r, s in zip(center, left, right)]
 
 
 @lru_cache(maxsize=12)
@@ -118,13 +174,7 @@ def exact_series(e, center, half, bits, p_origin, count, degree, precision):
     offset = [constant_term, *quotient[1:]]
     powers = [[grid.rational(1), *([(0, 0)]*(count-1))], offset]
     for _ in range(1, degree):
-        polynomial = []
-        for k in range(count):
-            coeff = (0, 0)
-            for i in range(k+1):
-                coeff = add(coeff, grid.multiply(offset[i], powers[-1][k-i]))
-            polynomial.append(coeff)
-        powers.append(polynomial)
+        powers.append(interval_series_product(offset, powers[-1], grid))
     return grid, powers
 
 
@@ -133,7 +183,32 @@ def vanishes_modulo(powers, polynomial, modulus, x, y):
                for (i, j), coefficient in zip(powers, polynomial)) % modulus == 0
 
 
-def exclude_residues(powers, polynomials, modulus):
+@lru_cache(maxsize=12)
+def newton_parity_masks(powers):
+    # For k below a power of two T, binom(n,k) mod 2 is T-periodic
+    # on the integers, by (1+z)^T = 1+z^T in characteristic 2.
+    period = 1 << max(i+j for i, j in powers).bit_length()
+    masks = tuple(sum(1 << (x*period+y) for x in range(period) for y in range(period)
+                      if (i & x) == i and (j & y) == j) for i, j in powers)
+    return (1 << (period*period))-1, masks
+
+
+def exclude_residues(powers, polynomials, modulus, basis='monomial'):
+    if basis == 'newton':
+        assert modulus == 2
+        roots, masks = newton_parity_masks(tuple(powers))
+        selected = []
+        for polynomial in polynomials:
+            odd = 0
+            for coefficient, mask in zip(polynomial, masks):
+                if coefficient & 1:
+                    odd ^= mask
+            if roots & odd:
+                selected.append(polynomial)
+                roots &= ~odd
+            if not roots:
+                return selected
+        return None
     roots = {(x, y) for x in range(modulus) for y in range(modulus)}
     selected = []
     for polynomial in polynomials:
@@ -146,21 +221,61 @@ def exclude_residues(powers, polynomials, modulus):
     return None
 
 
+@lru_cache(maxsize=12)
+def newton_expansion(powers, degree):
+    """Coefficients of degree! times each product of two binomials."""
+    falling = [[1]]
+    for k in range(degree):
+        old = falling[-1]
+        falling.append([a-k*b for a, b in zip([0, *old], [*old, 0])])
+    scale = factorial(degree)
+    terms = []
+    locations = {power: k for k, power in enumerate(powers)}
+    for i, j in powers:
+        factor, remainder = divmod(scale, factorial(i)*factorial(j))
+        assert remainder == 0
+        terms.append([(locations[a, b], factor*left*right)
+                      for a, left in enumerate(falling[i]) if left
+                      for b, right in enumerate(falling[j]) if right])
+    return scale, terms
+
+
 def verify_block(row):
     e, split, index, degree, work_bits = (row[k] for k in ('e', 'split', 'block', 'degree', 'work_bits'))
-    start, center, half, bits, powers, terms = block_geometry(e, split, index, degree, work_bits)
+    _, _, _, _, powers, _ = block_geometry(e, split, index, degree, work_bits)
     assert type(row['p_origin']) is int
+    modulus = row['modulus']
+    assert type(modulus) is int and 2 <= modulus <= 31
+    polynomials = row['polynomials']
+    for polynomial in polynomials:
+        assert len(polynomial) == len(powers) and any(polynomial)
+        assert all(type(coefficient) is int for coefficient in polynomial)
+    basis = row.get('basis', 'monomial')
+    assert basis in ('monomial', 'newton')
+    scale = 1
+    monomials = polynomials
+    if basis == 'newton':
+        scale, expansion = newton_expansion(tuple(powers), degree)
+        monomials = []
+        for polynomial in polynomials:
+            coefficients = [0]*len(powers)
+            for value, term in zip(polynomial, expansion):
+                if value:
+                    for k, factor in term:
+                        coefficients[k] += value*factor
+            monomials.append(coefficients)
+        # The bound is on degree! * P. Allow enough checker precision
+        # for the larger ordinary coefficients after the conversion.
+        maximum = max((sum(map(abs, poly)) for poly in monomials), default=0)
+        work_bits = max(work_bits, maximum.bit_length()-scale.bit_length()+8)
+    start, center, half, bits, _, terms = block_geometry(e, split, index, degree, work_bits)
     precision = degree*max(bits-2, Y_OFFSET_BITS)+work_bits+116+64
     grid, series = exact_series(e, center, half, bits, row['p_origin'], terms, degree, precision)
     # On the circle, |I|<=2^(bits-2) and |J(t)|<2^44 by constants().
     # Cauchy's estimate gives the tail bound used below. For a candidate
     # integer J the vertical strip accounts for the second unit per term.
     per_term_error = 2 << (precision-work_bits)
-    modulus = row['modulus']
-    assert type(modulus) is int and 2 <= modulus <= 31
-    for polynomial in row['polynomials']:
-        assert len(polynomial) == len(powers) and any(polynomial)
-        assert all(type(coefficient) is int for coefficient in polynomial)
+    for polynomial in monomials:
         coeffs = [(i, j, a*half**i) for (i, j), a in zip(powers, polynomial) if a]
         norm = per_term_error*sum(map(abs, polynomial))
         for k in range(terms):
@@ -169,13 +284,13 @@ def verify_block(row):
                 if k >= i:
                     total = add(total, grid.scale(series[j][k-i], coeff))
             norm += max(map(abs, total))
-        assert norm < grid.unit, ('polynomial is not strictly below one', e, index)
-    assert exclude_residues(powers, row['polynomials'], modulus) is not None, (
+        assert norm < scale*grid.unit, ('polynomial is not strictly below one', e, index)
+    assert exclude_residues(powers, polynomials, modulus, basis) is not None, (
         'polynomials have a common modular zero', e, index)
     return start, start+2*half
 
 
-def generate_block(e, split, index, degree, work_bits, delta=0.99):
+def generate_block(e, split, index, degree, work_bits, delta=0.99, basis='monomial'):
     # The search can use Arb and a heuristic lattice reduction. Every
     # accepted polynomial is replayed by verify_block without either one.
     from flint import arb, arb_series, ctx, fmpz_mat
@@ -189,15 +304,25 @@ def generate_block(e, split, index, degree, work_bits, delta=0.99):
     t = arb_series([0, 1], prec=terms)
     log_x = log_center+(1+t*(arb(half)/center)).log()
     offset = (c if e > 0 else -c)/log_x-origin
-    series = [arb_series([1], prec=terms)]
-    for _ in range(degree):
-        series.append(series[-1]*offset)
+    one = arb_series([1], prec=terms)
+    series = [one]
+    newton_x = [one]
+    for k in range(degree):
+        if basis == 'newton':
+            series.append(series[-1]*(offset-k)/(k+1))
+            newton_x.append(newton_x[-1]*(half*t-k)/(k+1))
+        else:
+            series.append(series[-1]*offset)
     scale = 1 << work_bits
     penalty = terms+2
     coefficients = []
     for r, (i, j) in enumerate(powers):
-        weighted = series[j]*(scale*half**i)
-        snapped = [0]*i+[int(weighted[k].mid().floor().fmpz()) for k in range(terms-i)]
+        if basis == 'newton':
+            weighted = series[j]*newton_x[i]*scale
+            snapped = [int(weighted[k].mid().floor().fmpz()) for k in range(terms)]
+        else:
+            weighted = series[j]*(scale*half**i)
+            snapped = [0]*i+[int(weighted[k].mid().floor().fmpz()) for k in range(terms-i)]
         coefficients.append(snapped+[penalty*int(r == k) for k in range(len(powers))])
     start = perf_counter()
     reduced = fmpz_mat(coefficients).lll(delta=delta)
@@ -208,15 +333,19 @@ def generate_block(e, split, index, degree, work_bits, delta=0.99):
         estimate = sum(abs(int(reduced[r, k])) for k in range(terms))
         if estimate+(2*terms+2)*sum(map(abs, polynomial)) < scale:
             small.append(polynomial)
-    for modulus in (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31):
-        selected = exclude_residues(powers, small, modulus)
+    moduli = (2,) if basis == 'newton' else (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
+    for modulus in moduli:
+        selected = exclude_residues(powers, small, modulus, basis)
         if selected:
-            return dict(e=e, split=split, block=index, degree=degree, work_bits=work_bits,
-                        p_origin=origin, modulus=modulus, polynomials=selected), elapsed
+            row = dict(e=e, split=split, block=index, degree=degree, work_bits=work_bits,
+                       p_origin=origin, modulus=modulus, polynomials=selected)
+            if basis == 'newton':
+                row['basis'] = basis
+            return row, elapsed
     return None, elapsed
 
 
-def verify(rows):
+def verify_interval_policy():
     max_y = Fraction((1 << 53)-1, DENOMINATOR)
     gap = Fraction(1, 1 << GAP_BITS)
     # Other midpoints are farther from one even allowing this log gap.
@@ -236,6 +365,11 @@ def verify(rows):
         assert 745*max_y+q_width < Fraction(1, 1 << 53)
         product_counts.append(2+2*ceil_div(p, 3)+4*ceil_div(p, 53))
     assert product_counts == [384, 766]
+    return product_counts
+
+
+def verify(rows):
+    product_counts = verify_interval_policy()
     intervals = sorted(verify_block(row) for row in rows)
     assert intervals and all(a[1] <= b[0] for a, b in zip(intervals, intervals[1:])), (
         'empty or overlapping block coverage')

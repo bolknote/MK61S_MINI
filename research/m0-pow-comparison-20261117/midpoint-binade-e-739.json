@@ -1,0 +1,363 @@
+{
+  "status": "PASS_COMPLETE_BINADE",
+  "binary64_base_binade": -739,
+  "exponent_denominator": "2^116",
+  "only_possible_midpoint": "1-2^-54",
+  "strict_abs_log_gap_lower_bound": "2^-900",
+  "first_analytic_suffix_encoding": "11c44109edb2079d",
+  "analytically_separated_bases": 3306188822149219,
+  "required_checkpoint_blocks": 69699,
+  "maximum_512_and_1024_full_products": [
+    384,
+    766
+  ],
+  "tool_sha256": {
+    "midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
+    "midpoint_binade.py": "d6a30d235bf130edb656a747915c91cd1f5681563290634d21efa704bb9a559a"
+  },
+  "interval_source_sha256": {
+    "code/native_eabi_m0_pow_interval.inc": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753",
+    "code/native_eabi_m0_pow_interval_table.inc": "5e235aa46c4a1fbed4bd00d958fd7bb401cfb7ff5b354b3675b1348e36771c5d",
+    "dev/tools/certify_m0_pow_interval.py": "6c3ba7665c2a5949609c430eda0cc9c3ce17f1e61d8b528f851935db00434e8c"
+  },
+  "practical_uniform_bound_for_all_binary64": false,
+  "base_domain": "[2^-739,2^-738)",
+  "total_binary64_bases_covered": 4503599627370496,
+  "verified_checkpoint_blocks": 69699,
+  "verified_lattice_subblocks": 272652,
+  "checkpoint_journal_shards": 1090,
+  "checkpoint_manifest_sha256": "815c4913860ddd23355450c9a9bf214c8d0a9b5590f321dfc22e338e84373110",
+  "checkpoint_archive": {
+    "filename": "pow-e-739-q116-checkpoints.tar.zst",
+    "bytes": 503787766,
+    "sha256": "c556167a4c75cbb8f2cf9ce59fd829949990cef32fbe2d6f8e1103cc6cf8a438"
+  },
+  "independent_passes": [
+    {
+      "verified_first_block": 0,
+      "verified_stop_block": 32768,
+      "verified_lattice_subblocks": 124928,
+      "checkpoint_manifest_sha256": "547c77c30ab0861cb8b016e973703a52d8e2712e226463ce9b61d569d40fbe67",
+      "arithmetic_backend": "Python integers"
+    },
+    {
+      "verified_first_block": 32768,
+      "verified_stop_block": 51200,
+      "verified_lattice_subblocks": 73728,
+      "checkpoint_manifest_sha256": "21cc5350f84a214a56b50a132d468b364f901b57579c0fa48770c7ae96461045",
+      "arithmetic_backend": "FLINT exact integer polynomials"
+    },
+    {
+      "verified_first_block": 51200,
+      "verified_stop_block": 69699,
+      "verified_lattice_subblocks": 73996,
+      "checkpoint_manifest_sha256": "8432af10691f7ecebbb7cb63733066a70b79002eef916809b4f9cdba133724c2",
+      "arithmetic_backend": "FLINT exact integer polynomials"
+    }
+  ],
+  "flint_verify_sha256": "05295792f83a4572b996e39623c1bc445dc3d2d8237b8fe1208982e68d08fa45",
+  "flint_version": "3.6.0",
+  "python_flint_version": "0.9.0",
+  "accelerated_generation_wall_seconds": 1441.1,
+  "accelerated_generation_workers": 10,
+  "accelerated_generation_range": [
+    2048,
+    69699
+  ],
+  "resume_test": "PASS_VERIFIED_RANGE",
+  "paired_cpu_benchmark": {
+    "status": "PASS",
+    "cases": 14,
+    "median_before_cpu_seconds": 0.2714420000000004,
+    "median_after_cpu_seconds": 0.08152500000000007,
+    "ratio_of_medians": 3.3295553511192906,
+    "total_cpu_time_ratio": 9.09837064880868,
+    "rows": [
+      {
+        "block": 0,
+        "old_rank": 66,
+        "before_s": 1.9507530000000002,
+        "after_s": 0.09321099999999971,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 22,
+        "old_rank": 66,
+        "before_s": 1.863601,
+        "after_s": 0.07693299999999992,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 43,
+        "old_rank": 66,
+        "before_s": 2.08211,
+        "after_s": 0.07495299999999983,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 499,
+        "old_rank": 66,
+        "before_s": 2.071358,
+        "after_s": 0.08762099999999862,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 1455,
+        "old_rank": 55,
+        "before_s": 0.24592299999999945,
+        "after_s": 0.08723099999999917,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 5250,
+        "old_rank": 55,
+        "before_s": 0.2762360000000008,
+        "after_s": 0.08546499999999924,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 12000,
+        "old_rank": 55,
+        "before_s": 0.26734599999999986,
+        "after_s": 0.08147600000000033,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 21111,
+        "old_rank": 55,
+        "before_s": 0.2586050000000011,
+        "after_s": 0.08633799999999958,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 30303,
+        "old_rank": 55,
+        "before_s": 0.2525359999999992,
+        "after_s": 0.07944800000000107,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 41939,
+        "old_rank": 55,
+        "before_s": 0.25554400000000044,
+        "after_s": 0.08143099999999848,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 52133,
+        "old_rank": 55,
+        "before_s": 0.24749800000000022,
+        "after_s": 0.08157399999999981,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 62001,
+        "old_rank": 55,
+        "before_s": 0.27553800000000095,
+        "after_s": 0.08124700000000118,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 69696,
+        "old_rank": 55,
+        "before_s": 0.24288000000000132,
+        "after_s": 0.07643100000000125,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      },
+      {
+        "block": 69698,
+        "old_rank": 55,
+        "before_s": 0.2923960000000001,
+        "after_s": 0.08974199999999932,
+        "new_subblocks": 4,
+        "new_max_rank": 28
+      }
+    ]
+  },
+  "arm_mpfr_check": {
+    "status": "PASS",
+    "elf_sha256": "519a4a4d1867ca45bb89ea45160bcc63f8c5006c03d9094690732bf9610e846f",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "mpfr": "4.2.2",
+    "checked_pairs": 32,
+    "distinct_pairs": 27,
+    "public_late_entries": {},
+    "directed_1024_calls": 32,
+    "rows": [
+      {
+        "x": "11c0000000000000",
+        "y": "3bfffc3abec364cb",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c0000000000000",
+        "y": "3bfffc3abec364cd",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c0000000000000",
+        "y": "3bfffc3abec364cf",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c0000000000000",
+        "y": "bbfffc3abec364cd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c0000000000001",
+        "y": "3bfffc3abec364cb",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c0000000000001",
+        "y": "3bfffc3abec364cd",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c0000000000001",
+        "y": "3bfffc3abec364cf",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c0000000000001",
+        "y": "bbfffc3abec364cd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c22084f6d903ce",
+        "y": "3bfffe39a4a0025f",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c22084f6d903ce",
+        "y": "3bfffe39a4a00261",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c22084f6d903ce",
+        "y": "3bfffe39a4a00263",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c22084f6d903ce",
+        "y": "bbfffe39a4a00261",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079c",
+        "y": "3bfffffffffffffd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079c",
+        "y": "3bffffffffffffff",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c44109edb2079c",
+        "y": "3bffffffffffffff",
+        "rounded": "3fefffffffffffff"
+      },
+      {
+        "x": "11c44109edb2079c",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079d",
+        "y": "3bfffffffffffffd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079d",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079d",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079d",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079e",
+        "y": "3bfffffffffffffd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079e",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079e",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11c44109edb2079e",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cffffffffffffe",
+        "y": "3bfffffffffffffd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cffffffffffffe",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cffffffffffffe",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cffffffffffffe",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cfffffffffffff",
+        "y": "3bfffffffffffffd",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cfffffffffffff",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cfffffffffffff",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000"
+      },
+      {
+        "x": "11cfffffffffffff",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000"
+      }
+    ]
+  },
+  "scope": "For every binary64 base in this binade and every binary64 exponent with reduced denominator 2^116, the fixed-point interval decides by 1024 bits. This certificate does not establish a practical uniform latency bound across the full binary64 domain."
+}
