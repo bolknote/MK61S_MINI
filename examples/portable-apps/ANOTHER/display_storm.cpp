@@ -78,7 +78,7 @@ bool load_rects(Source &source, aw_assets &assets, uint32_t &at, uint8_t *scratc
 // AWS3 appends the idle and two image hashes, the return-frame dirty-band
 // mask and window count. Each image has a palette and five full-width strips.
 // The final windows restore the frame after the white flash.
-bool load_prelude(aw_display_storm &s, Source &source, aw_assets &assets, uint32_t at,
+bool load_prelude(aw_display_storm &s, Source &source, aw_assets &assets, uint32_t &at,
                   uint8_t *scratch, unsigned rects, bool &fits) {
     uint8_t meta[AW_STORM_PRELUDE_HEADER];
     if (s.first < AW_STORM_IDLE_LEAD || !source.take(meta, sizeof(meta))) return false;
@@ -107,6 +107,24 @@ bool load_prelude(aw_display_storm &s, Source &source, aw_assets &assets, uint32
                       AW_STORM_BLOCK, false, fits);
 }
 
+// AWS4 appends the return from the first flash over the earlier idle page.
+bool load_idle_return(aw_display_storm &s, Source &source, aw_assets &assets,
+                       uint32_t at, uint8_t *scratch, bool &fits) {
+    uint8_t header[AW_STORM_IDLE_RETURN_HEADER];
+    if (!source.take(header, sizeof(header))) return false;
+    auto &ret = s.prelude.idle_return;
+    ret.hash = le32(header);
+    ret.dirty_bands = le32(header + 4);
+    const unsigned count = header[8];
+    if (!count || count > AW_STORM_IDLE_RETURN_RECTS || (ret.dirty_bands >> AW_VIDEO_BANDS)) return false;
+    for (unsigned i = 0; i < 16; ++i) ret.palette[i] = le16(header + 9 + 2 * i);
+    ret.first = s.prelude.return_end;
+    ret.end = uint8_t(ret.first + count);
+    ret.page = 2;
+    return load_rects(source, assets, at, scratch, s.rects + ret.first, count,
+                      AW_VIDEO_PAGE_BYTES, false, fits);
+}
+
 bool select_page(aw_display_pages &p, unsigned page, aw_display_page_fn select, void *ctx) {
     if (p.selected == page) return true;
     if (!select(ctx, page)) return false;
@@ -116,6 +134,30 @@ bool select_page(aw_display_pages &p, unsigned page, aw_display_page_fn select, 
 
 bool read_rect(aw_display_compact &slot, const aw_storm_rect &r) {
     return store(*slot.assets, r.offset, slot.scratch, unsigned(r.width) * r.height, false);
+}
+
+bool pump_rect(aw_display_storm &s, aw_display_pages &p, unsigned page, uint8_t &cursor,
+               const uint16_t *palette, const aw_storm_output &lcd, void *ctx) {
+    if (page == p.visible) return false;
+    if (p.selected != page) {
+        const unsigned result = lcd.try_select(ctx, page);
+        if (result != 1) return result == 2;
+        p.selected = page;
+    }
+    auto &slot = *p.slot[page];
+    const auto &r = s.rects[cursor];
+    slot.valid = false;
+    // Load the next window during DMA and reuse scratch until it is accepted.
+    if (!s.staged) {
+        if (!read_rect(slot, r)) return false;
+        s.staged = true;
+    }
+    const unsigned result = lcd.try_draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+    if (result == 1) {
+        ++cursor;
+        s.staged = false;
+    }
+    return result == 1 || result == 2;
 }
 
 bool upload_strip(aw_display_storm &s, aw_display_pages &p, aw_storm_image &image,
@@ -186,6 +228,39 @@ bool show_retained(aw_display_storm &s, aw_display_pages &p, const uint8_t *pixe
     return aw_display_pages_finish(&p, palette, identities, -1, ok);
 }
 
+bool show_idle_return(aw_display_storm &s, aw_display_pages &p, const uint8_t *pixels,
+                       const uint16_t *palette, const uint32_t *identities,
+                       const aw_storm_output &lcd, void *ctx) {
+    auto &ret = s.prelude.idle_return;
+    ret.active = false;
+    bool staged = s.staged;
+    s.staged = false;
+    const unsigned page = ret.page;
+    if (p.visible != (page ^ 1u) || memcmp(palette, ret.palette, AW_STORM_PALETTE_BYTES) ||
+        aw_storm_frame_hash(pixels, palette) != ret.hash || !select_page(p, page, lcd.select, ctx)) return false;
+    auto &slot = *p.slot[page];
+    slot.valid = false;
+    p.pending_pixels = pixels;
+    p.pending_bands = ret.dirty_bands;
+    bool ok = true;
+    for (unsigned i = ret.cursor; ok && i < ret.end; ++i) {
+        const auto &r = s.rects[i];
+        ok = (staged || read_rect(slot, r)) &&
+            lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+        staged = false;
+    }
+    if (!aw_display_pages_finish(&p, palette, identities, -1, ok)) return false;
+    if (!lcd.wait(ctx, 0) || !lcd.show(ctx, page)) return slot.valid = false;
+    p.visible = page;
+    return true;
+}
+
+void begin_before_flash(aw_display_storm &s, aw_display_pages &p, const aw_storm_output &lcd, void *ctx) {
+    s.prelude.before_flash.page = uint8_t(p.visible ^ 1u);
+    s.prelude.uploading = true;
+    aw_storm_pump(&s, &p, &lcd, ctx);
+}
+
 bool render_normal(aw_display_storm &s, const uint8_t *pixels, const uint16_t *palette,
                    const uint32_t *identities, unsigned lead, aw_storm_normal_fn normal, void *ctx) {
     // The ordinary renderer owns the LCD selection and shared scratch until
@@ -223,9 +298,9 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
     Source source{read, ctx, bytes};
     uint8_t header[AW_STORM_HEADER];
     if (!source.take(header, sizeof(header)) ||
-        memcmp(header, "AWS", 3) || header[3] < '1' || header[3] > '3' || le16(header + 10)) return false;
+        memcmp(header, "AWS", 3) || header[3] < '1' || header[3] > '4' || le16(header + 10)) return false;
     const uint32_t hash = le32(header + 4);
-    const bool has_prelude = header[3] == '3';
+    const bool has_prelude = header[3] >= '3', has_idle_return = header[3] == '4';
     s->ahead = header[3] >= '2';
     s->first = le16(header + 8);
     if (s->first > UINT16_MAX - AW_STORM_WARM_FRAMES - AW_STORM_FRAMES) return false;
@@ -249,6 +324,8 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
         rects = f.end;
     }
     if (has_prelude && !load_prelude(*s, source, *assets, at, scratch, rects, fits)) return false;
+    bool return_fits = fits;
+    if (has_idle_return && !load_idle_return(*s, source, *assets, at, scratch, return_fits)) return false;
     s->at = 0;
     s->warmed = 0;
     s->pending = AW_STORM_FRAMES;
@@ -256,6 +333,7 @@ bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
     s->rendering = false;
     s->ready = source.at == bytes && source.hash == hash;
     s->prelude.available = s->ready && has_prelude && fits;
+    s->prelude.idle_return.available = s->ready && has_idle_return && return_fits;
     return s->ready;
 }
 
@@ -279,6 +357,14 @@ bool aw_storm_warm(aw_display_storm *s, aw_display_pages *p, unsigned index,
 
 void aw_storm_pump(aw_display_storm *s, aw_display_pages *p, const aw_storm_output *lcd, void *ctx) {
     if (!s->ready || s->rendering || p->pending_bands) return;
+    auto &ret = s->prelude.idle_return;
+    if (ret.active) {
+        if (ret.cursor < ret.end && !pump_rect(*s, *p, ret.page, ret.cursor, ret.palette, *lcd, ctx)) {
+            ret.active = false;
+            s->staged = false;
+        }
+        return;
+    }
     if (s->prelude.uploading) {
         auto &image = s->prelude.before_flash;
         if (!upload_strip(*s, *p, image, *lcd, true, ctx)) image.page = 2;
@@ -289,29 +375,7 @@ void aw_storm_pump(aw_display_storm *s, aw_display_pages *p, const aw_storm_outp
     const auto &f = s->frames[s->pending];
     if (s->cursor == f.end) return;
     const unsigned page = f.page ^ s->front ^ 1u;
-    if (page == p->visible) { s->ready = false; return; }
-    if (p->selected != page) {
-        const unsigned result = lcd->try_select(ctx, page);
-        if (result != 1) { if (result != 2) s->ready = false; return; }
-        p->selected = page;
-    }
-    auto &slot = *p->slot[page];
-    const auto &r = s->rects[s->cursor];
-    slot.valid = false;
-    // Load the next rectangle even if the previous one still owns the DMA.
-    // Deferred presents reuse this scratch until the worker accepts it.
-    if (!s->staged) {
-        if (!read_rect(slot, r)) { s->ready = false; return; }
-        s->staged = true;
-    }
-    const unsigned result = lcd->try_draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height,
-                                          slot.scratch, s->palette[f.page], false);
-    if (result == 1) {
-        ++s->cursor;
-        s->staged = false;
-    } else if (result != 2) {
-        s->ready = false;
-    }
+    if (!pump_rect(*s, *p, page, s->cursor, s->palette[f.page], *lcd, ctx)) s->ready = false;
 }
 
 bool aw_storm_present(aw_display_storm *s, aw_display_pages *p, unsigned index,
@@ -371,6 +435,12 @@ bool aw_storm_present_intro(aw_display_storm *s, aw_display_pages *p, const uint
             return render_normal(*s, pixels, palette, identities, 0, normal, ctx);
         const unsigned lead = s->first - n;
         auto &image = pre.before_flash;
+        auto &ret = pre.idle_return;
+        const bool return_due = lead == AW_STORM_FIRST_PRELOAD_LEAD - 1 && ret.available && ret.page < 2;
+        if (return_due && ret.active && show_idle_return(*s, *p, pixels, palette, identities, *lcd, ctx)) {
+            begin_before_flash(*s, *p, *lcd, ctx);
+            return true;
+        }
         bool lab_ready = false, before_flash = false;
         if (lead == AW_STORM_FIRST_PRELOAD_LEAD) {
             lab_ready = use_image(*p, pre.lab, aw_storm_frame_hash(pixels, palette), palette, identities);
@@ -388,9 +458,20 @@ bool aw_storm_present_intro(aw_display_storm *s, aw_display_pages *p, const uint
                  (pre.lab.strips < AW_STORM_WARM_FRAMES && !upload_strip(*s, *p, pre.lab, *lcd, false, ctx))))
                 pre.lab.page = 2;
         } else if (lab_ready && p->visible == pre.lab.page && lcd->try_select && lcd->try_draw) {
-            image.page = uint8_t(p->visible ^ 1u);
-            pre.uploading = true;
-            aw_storm_pump(s, p, lcd, ctx);
+            const unsigned idle_page = p->visible ^ 1u;
+            if (ret.available && p->slot[idle_page]->valid) {
+                // Start updating the old page immediately after frame 2405
+                // is shown. Reserve the newly freed page for 2415 afterwards.
+                ret.page = uint8_t(idle_page);
+                ret.cursor = ret.first;
+                ret.active = true;
+                s->staged = false;
+                aw_storm_pump(s, p, lcd, ctx);
+            } else {
+                begin_before_flash(*s, *p, *lcd, ctx);
+            }
+        } else if (return_due && p->visible < 2) {
+            begin_before_flash(*s, *p, *lcd, ctx);
         } else if (lead == 1) {
             image.used = image.used && p->visible == image.page;
             if (before_flash && p->visible < 2 && p->slot[p->visible]->valid)

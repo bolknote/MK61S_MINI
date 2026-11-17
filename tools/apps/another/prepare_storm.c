@@ -9,6 +9,7 @@
 
 enum { WARM_START = 2416, CLIP_START = WARM_START + AW_STORM_WARM_FRAMES };
 enum { IDLE_START = WARM_START - AW_STORM_IDLE_LEAD, LAB_FRAME = WARM_START - AW_STORM_FIRST_PRELOAD_LEAD };
+enum { LAB_RETURN = LAB_FRAME + 1 };
 enum { PSRAM_BYTES = 2 * 1024 * 1024, LCD_PIXELS = AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT };
 enum { WINDOW_COST = 3000 }; /* Approximate SPI bytes per window at 24 MHz. */
 
@@ -29,13 +30,13 @@ typedef struct {
     aw_display_pages display;
     uint8_t psram[PSRAM_BYTES], pixels[AW_VIDEO_PAGE_BYTES], spare[AW_VIDEO_PAGE_BYTES];
     uint8_t scratch[2 * AW_STORM_BLOCK];
-    cache_section clip, prelude;
+    cache_section clip, prelude, idle_return;
     uint16_t gram[2][LCD_PIXELS], before[2][LCD_PIXELS];
     uint16_t saved_rgb[LCD_PIXELS], saved_palette[16];
     uint8_t saved_indices[AW_VIDEO_PAGE_BYTES];
     unsigned index, active, front, rectangles;
     bool palette_ready[2];
-    bool prelude_ok, done;
+    bool prelude_ok, idle_return_ok, done;
 } builder;
 
 static bool bank_read(void *ctx, uint8_t bank, uint32_t offset, void *out, uint32_t bytes) {
@@ -188,18 +189,58 @@ static bool emit_image(cache_section *section, const uint8_t *pixels, const uint
     return true;
 }
 
+static uint32_t dirty_bands(const uint8_t *old, const uint8_t *pixels) {
+    uint32_t bands = 0;
+    const unsigned band_bytes = AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE;
+    for (unsigned i = 0; i < AW_VIDEO_BANDS; ++i) {
+        const unsigned offset = i * band_bytes;
+        if (memcmp(old + offset, pixels + offset, band_bytes)) bands |= 1u << i;
+    }
+    return bands;
+}
+
+static bool build_idle_return(builder *b, const uint8_t *pixels, const uint16_t *palette) {
+    const uint32_t hash = aw_storm_frame_hash(pixels, palette);
+    if (hash != 0x99833f62u) return false;
+
+    /* These windows were measured on PicoCalc. Their horizontal splits keep
+     * LCD traffic at 62836 bytes. Derive the pixels from the local DOS files
+     * and verify the reconstructed RGB565 frame before saving the cache. */
+    static const rectangle windows[] = {
+        {71, 11, 29, 13}, {48, 24, 99, 64}, {18, 32, 30, 61}, {48, 88, 79, 65},
+        {15, 126, 23, 51}, {130, 130, 16, 30}, {124, 160, 14, 27},
+    };
+    const unsigned count = sizeof(windows) / sizeof(windows[0]);
+    uint8_t header[AW_STORM_IDLE_RETURN_HEADER];
+    put32(header, hash);
+    put32(header + 4, dirty_bands(b->saved_indices, pixels));
+    header[8] = (uint8_t)count;
+    encode_palette(header + 9, palette);
+    cache_section *section = &b->idle_return;
+    if (!append(section, header, sizeof(header))) return false;
+    for (unsigned i = 0; i < count; ++i)
+        if (!emit_rect(section, windows[i], pixels, palette, b->saved_rgb)) return false;
+    return !memcmp(b->saved_rgb, b->gram[b->display.visible], sizeof(b->saved_rgb));
+}
+
 static bool build_prelude(builder *b, unsigned n, const uint8_t *pixels, const uint16_t *palette) {
     cache_section *pre = &b->prelude;
     const uint16_t *screen = b->gram[b->display.visible];
     if (n >= IDLE_START && n < LAB_FRAME) {
         const uint32_t hash = aw_storm_frame_hash(pixels, palette);
         if (hash != 0xf11dd654u) return false;
+        if (n == IDLE_START) {
+            memcpy(b->saved_rgb, screen, sizeof(b->saved_rgb));
+            memcpy(b->saved_indices, pixels, sizeof(b->saved_indices));
+        }
         put32(pre->data, hash);
     } else if (n == LAB_FRAME) {
         const uint32_t hash = aw_storm_frame_hash(pixels, palette);
         if (hash != 0x4b4da3f6u) return false;
         put32(pre->data + 4, hash);
         return emit_image(pre, pixels, palette);
+    } else if (n == LAB_RETURN) {
+        b->idle_return_ok = build_idle_return(b, pixels, palette);
     } else if (n == WARM_START - 1) {
         const uint32_t hash = aw_storm_frame_hash(pixels, palette);
         if (hash != 0xa0ed0567u) return false;
@@ -211,16 +252,10 @@ static bool build_prelude(builder *b, unsigned n, const uint8_t *pixels, const u
     } else if (n == WARM_START + 1) {
         if (memcmp(b->saved_palette, palette, sizeof(b->saved_palette)) ||
             aw_storm_frame_hash(pixels, palette) != 0xfacddbf4u) return false;
-        uint32_t bands = 0;
-        const unsigned band_bytes = AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE;
-        for (unsigned i = 0; i < AW_VIDEO_BANDS; ++i) {
-            const unsigned offset = i * band_bytes;
-            if (memcmp(b->saved_indices + offset, pixels + offset, band_bytes)) bands |= 1u << i;
-        }
         rectangle rects[AW_VIDEO_HEIGHT];
         const unsigned count = plan_rects(rects, b->saved_rgb, screen);
         if (!count || count > AW_STORM_RETURN_RECTS) return false;
-        put32(pre->data + 12, bands);
+        put32(pre->data + 12, dirty_bands(b->saved_indices, pixels));
         pre->data[16] = (uint8_t)count;
         unsigned area = 0;
         for (unsigned i = 0; i < count; ++i) {
@@ -342,8 +377,11 @@ static bool build(builder *b) {
     put16(b->clip.data + 8, WARM_START);
     for (unsigned i = 0; i < 4800 && !b->done && b->vm.part <= AW_STORM_PART; ++i)
         if (!aw_vm_frame(&b->vm, &input)) return false;
-    if (b->prelude_ok && append(&b->clip, b->prelude.data, b->prelude.bytes))
+    if (b->prelude_ok && append(&b->clip, b->prelude.data, b->prelude.bytes)) {
         b->clip.data[3] = '3';
+        if (b->idle_return_ok && append(&b->clip, b->idle_return.data, b->idle_return.bytes))
+            b->clip.data[3] = '4';
+    }
     uint32_t hash = AW_STORM_HASH_INIT;
     for (size_t i = 8; i < b->clip.bytes; ++i) hash = aw_storm_hash_byte(hash, b->clip.data[i]);
     put32(b->clip.data + 4, hash);

@@ -3,7 +3,7 @@
 
 #include "display_pages.h"
 
-/* AWS1/AWS2/AWS3 are local caches of one DOS intro sequence. Frame indices are
+/* AWS1 through AWS4 are local caches of one DOS intro sequence. Frame indices are
  * relative to the intro part, independent of the copy-protection screen. */
 #define AW_STORM_PART 0x3E81u
 #define AW_STORM_WARM_FRAMES 5u
@@ -11,7 +11,8 @@
 #define AW_STORM_FRAMES 18u
 #define AW_STORM_RECTS 48u
 #define AW_STORM_RETURN_RECTS 8u
-#define AW_STORM_PRELUDE_RECTS (2u * AW_STORM_WARM_FRAMES + AW_STORM_RETURN_RECTS)
+#define AW_STORM_IDLE_RETURN_RECTS 12u
+#define AW_STORM_PRELUDE_RECTS (2u * AW_STORM_WARM_FRAMES + AW_STORM_RETURN_RECTS + AW_STORM_IDLE_RETURN_RECTS)
 #define AW_STORM_IDLE_LEAD 26u
 #define AW_STORM_FIRST_PRELOAD_LEAD 11u
 #define AW_STORM_ANCHOR_LEAD_MS 8u
@@ -19,6 +20,8 @@
 #define AW_STORM_HEADER 64u
 #define AW_STORM_PRELUDE_HEADER 17u
 #define AW_STORM_PALETTE_BYTES 32u
+#define AW_STORM_IDLE_RETURN_HEADER (9u + AW_STORM_PALETTE_BYTES)
+#define AW_STORM_IDLE_RETURN_RESERVE 8192u
 #define AW_STORM_MAX_FILE 65536u
 #define AW_STORM_HASH_INIT 2166136261u
 
@@ -40,7 +43,15 @@ typedef struct {
 } aw_storm_image;
 
 typedef struct {
+    uint32_t hash, dirty_bands;
+    uint16_t palette[16];
+    uint8_t first, end, cursor, page;
+    bool available, active;
+} aw_storm_idle_return;
+
+typedef struct {
     aw_storm_image lab, before_flash;
+    aw_storm_idle_return idle_return;
     uint32_t idle_hash, dirty_bands;
     uint8_t return_first, return_end, saved_page;
     bool available, uploading, returning;

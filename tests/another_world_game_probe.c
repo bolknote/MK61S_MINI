@@ -19,7 +19,9 @@ static unsigned page_selected=2, page_visible=2, page_shows;
 static aw_display_storm storm;
 static unsigned replayed, intro_frames, anchor_calls, blocking_wire;
 static unsigned worker_busy, busy_polls;
-static bool normal_used, tight_psram;
+static unsigned idle_returns;
+static uint64_t wire_at_flash, wire_at_return;
+static bool normal_used, tight_psram, base_prelude_only, return_mismatch;
 static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     FILE *file = ctx;
     return fseek(file, (long)offset, SEEK_SET) == 0 && fread(out, 1, size, file) == size;
@@ -77,6 +79,9 @@ static bool storm_blocking_show(void *ctx, unsigned page) {
         --worker_busy;
         if (!aw_display_pages_write_one(&pages)) return false;
     }
+    const unsigned flash = storm.first - AW_STORM_FIRST_PRELOAD_LEAD;
+    if (intro_frames == flash + 1) wire_at_flash = display_bytes[display_part];
+    if (intro_frames == flash + 2) wire_at_return = display_bytes[display_part];
     return display_show_page(ctx, page);
 }
 static bool storm_blocking_draw(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
@@ -171,7 +176,9 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         assert(size > 0 && size <= AW_STORM_MAX_FILE &&
                aw_storm_load(&storm, h->audio->assets, second + AW_VIDEO_PAGE_BYTES,
                              compact.scratch, (uint32_t)size, storm_read, file));
-        assert(storm.prelude.available == (!tight_psram && !memcmp(magic, "AWS3", sizeof(magic))));
+        assert(storm.prelude.available == (!tight_psram && magic[3] >= '3'));
+        assert(storm.prelude.idle_return.available == (magic[3] == '4' && !tight_psram && !base_prelude_only));
+        if (return_mismatch) storm.prelude.idle_return.hash ^= 1u;
         fclose(file);
 #endif
 #endif
@@ -220,6 +227,15 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
                 assert(normal_used && blocking_wire == 0 && page_shows == before_shows + 1);
             if (intro_frame == storm.first + 1u)
                 assert(!normal_used && blocking_wire == 5984 && storm.pending == 0);
+            if (intro_frame == storm.first - AW_STORM_FIRST_PRELOAD_LEAD + 1u) {
+                if (storm.prelude.idle_return.available && !return_mismatch) {
+                    assert(!normal_used && page_shows == before_shows + 1);
+                    assert(wire_at_return - wire_at_flash == 62836);
+                    ++idle_returns;
+                } else {
+                    assert(normal_used);
+                }
+            }
         }
     } else {
         assert(storm_normal(NULL, pixels, palette, identities, 0));
@@ -320,7 +336,12 @@ int main(int argc, char **argv) {
     host h = {0}; h.path = argv[1]; h.capacity = 2u * 1024u * 1024u;
 #ifdef AW_TEST_STORM
     tight_psram = getenv("AW_STORM_TIGHT_PSRAM") != NULL;
-    if (!tight_psram) h.capacity += AW_VIDEO_PAGE_BYTES;
+    base_prelude_only = getenv("AW_STORM_BASE_PRELUDE") != NULL;
+    return_mismatch = getenv("AW_STORM_RETURN_MISMATCH") != NULL;
+    if (!tight_psram) {
+        h.capacity += AW_VIDEO_PAGE_BYTES;
+        if (!base_prelude_only) h.capacity += AW_STORM_IDLE_RETURN_RESERVE;
+    }
 #endif
     h.store = calloc(1, h.capacity);
     uint8_t *pixels = malloc(AW_VIDEO_PAGE_BYTES), *spare = NULL, *background = NULL; aw_assets *a = calloc(1, sizeof(*a));
@@ -410,6 +431,9 @@ int main(int argc, char **argv) {
 #ifdef AW_TEST_STORM
     assert(replayed == AW_STORM_FRAMES && storm.warmed == AW_STORM_WARM_FRAMES && !storm.ready);
     assert(anchor_calls == (unsigned)storm.prelude.available && busy_polls);
+    assert(idle_returns == (unsigned)(storm.prelude.idle_return.available && !return_mismatch));
+    if (idle_returns)
+        puts("DOS intro: frame 2406 reused the hidden page with 62836 LCD bytes");
     if (storm.prelude.available)
         puts("DOS intro: both preloaded frames latched, restored the saved page with 5984 LCD bytes");
     puts("DOS intro: all warm steps and cached frames used, RGB565 matches each live frame");

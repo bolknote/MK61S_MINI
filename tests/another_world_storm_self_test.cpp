@@ -6,7 +6,7 @@
 namespace {
 constexpr unsigned pixels = AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT;
 constexpr unsigned storage_base = 65536;
-uint8_t ram[120000], scratch[2 * AW_STORM_BLOCK];
+uint8_t ram[170000], scratch[2 * AW_STORM_BLOCK];
 uint16_t gram[2][pixels];
 uint8_t live[AW_VIDEO_PAGE_BYTES];
 const uint16_t palette[16] = {0x1234, 0xabcd, 0xf01d};
@@ -64,6 +64,28 @@ std::vector<uint8_t> fixture(bool ahead = false) {
             file.insert(file.end(),r,r+7);
         }
     }
+    seal(file);
+    return file;
+}
+
+std::vector<uint8_t> prelude_fixture() {
+    auto file = fixture(true);
+    file[3] = '3';
+    uint8_t meta[AW_STORM_PRELUDE_HEADER] = {};
+    meta[16] = 1;
+    file.insert(file.end(), meta, meta + sizeof(meta));
+    // A ZX0 strip consisting of 6400 repeats of packed index 0x11.
+    const uint8_t strip[] = {0x90, 0x11, 0x15, 0x55, 0x75, 0x55, 0x58};
+    for (unsigned image = 0; image < 2; ++image) {
+        file.resize(file.size() + AW_STORM_PALETTE_BYTES);
+        for (unsigned y = 0; y < AW_VIDEO_HEIGHT; y += AW_STORM_STRIP_ROWS) {
+            const uint8_t r[] = {0, uint8_t(y), AW_VIDEO_STRIDE, AW_STORM_STRIP_ROWS, sizeof(strip), 0};
+            file.insert(file.end(), r, r + sizeof(r));
+            file.insert(file.end(), strip, strip + sizeof(strip));
+        }
+    }
+    const uint8_t delta[] = {0, 0, 1, 1, 1, 0, 0x11};
+    file.insert(file.end(), delta, delta + sizeof(delta));
     seal(file);
     return file;
 }
@@ -204,4 +226,27 @@ int main() {
             assert(visible==1 && writes==7 && last_lead && gram[1][80*AW_VIDEO_WIDTH+12]==palette[1]);
         }
     }
+
+    data = prelude_fixture();
+    assert(load(data.size()) && storm.prelude.available && !storm.prelude.idle_return.available);
+    const auto prelude_end = data.size();
+    data[3] = '4';
+    uint8_t meta[AW_STORM_IDLE_RETURN_HEADER] = {};
+    put32(meta, 0x99833f62u);
+    put32(meta + 4, 1);
+    meta[8] = 1;
+    data.insert(data.end(), meta, meta + sizeof(meta));
+    const uint8_t delta[] = {0, 0, 2, 1, 2, 0, 0x22, 0x33};
+    data.insert(data.end(), delta, delta + sizeof(delta));
+    seal(data);
+    assert(load(data.size()) && storm.prelude.available && storm.prelude.idle_return.available);
+    const auto &ret = storm.prelude.idle_return;
+    assert(ret.hash == 0x99833f62u && ret.dirty_bands == 1 && ret.end == ret.first + 1);
+    assets.capacity = storm.rects[ret.first].offset;
+    assert(load(data.size()) && storm.prelude.available && !storm.prelude.idle_return.available);
+    assets.capacity = sizeof(ram);
+    assert(!load(data.size() - 1));
+    put32(data.data() + prelude_end + 4, 1u << AW_VIDEO_BANDS);
+    seal(data);
+    assert(!load(data.size()));
 }

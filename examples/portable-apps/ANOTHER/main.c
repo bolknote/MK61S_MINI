@@ -123,7 +123,8 @@ static void audio_pump(void) {
 }
 static void pump(void *ctx) {
     (void)ctx; mk61_api->service(); audio_pump(); poll_keys();
-    if (pages_ready && storm->ready && (storm->pending < AW_STORM_FRAMES || storm->prelude.uploading) &&
+    if (pages_ready && storm->ready && (storm->pending < AW_STORM_FRAMES || storm->prelude.uploading ||
+                                       storm->prelude.idle_return.active) &&
         vm->part == AW_STORM_PART && !input.quit && !pump_failed)
         aw_storm_pump(storm, pages_display, &storm_lcd, NULL);
 }
@@ -277,9 +278,12 @@ int main(void) {
         MK61_SERVICE_CAP_COLOR_DISPLAY | MK61_SERVICE_CAP_TEXT_COLORS | MK61_SERVICE_CAP_FILE_BYTES | MK61_SERVICE_CAP_AUDIO_STREAM);
     if (!services) { message("Update PicoCalc", "firmware / PSRAM"); return 0; }
     char storm_magic[4];
-    const bool extended_storm = file_read(storm_cache, 0, storm_magic, sizeof(storm_magic)) &&
-        !memcmp(storm_magic, "AWS3", sizeof(storm_magic));
-    if (!(extended_storm && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES,
+    const bool storm_header = file_read(storm_cache, 0, storm_magic, sizeof(storm_magic));
+    const bool idle_return = storm_header && !memcmp(storm_magic, "AWS4", sizeof(storm_magic));
+    const bool extended_storm = idle_return || (storm_header && !memcmp(storm_magic, "AWS3", sizeof(storm_magic)));
+    if (!(idle_return && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES +
+                                                AW_STORM_IDLE_RETURN_RESERVE, MK61_BUFFER_EXTERNAL, &external)) &&
+        !(extended_storm && mk61_app_buffer_acquire(services, EXTERNAL_BYTES + AW_VIDEO_PAGE_BYTES,
                                                     MK61_BUFFER_EXTERNAL, &external)) &&
         !mk61_app_buffer_acquire(services, EXTERNAL_BYTES, MK61_BUFFER_EXTERNAL, &external)) {
         error = "Not enough memory"; goto done;
