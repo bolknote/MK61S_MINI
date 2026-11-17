@@ -45,6 +45,13 @@ def main():
     for x in (2.,3.,5.,9.,81.,.0625):
         for y in (.25,.5,1.,2.,3.,4.,7.,17.,33.,-.5,-3.):pairs.append((bits(x),bits(y)))
     pairs += [(bits(2.),bits(y)) for y in (-1075.,-1074.,-1073.,1023.,1024.)]
+    # Sweep both sides of the artificial log-space cutoff and the true
+    # output cutoffs. The bases around one exercise the pre-left-shift guard.
+    for x in (3., 0.75, real(0x3FEFFFFFFFFFFFFF), real(0x3FF0000000000001),
+              real(0x000FFFFFFFFFFFFF), real(0x7FEFFFFFFFFFFFFF)):
+        for logarithm in (799., 800., 801., 1024*math.log(2.), -1075*math.log(2.)):
+            y = logarithm/math.log(x)
+            pairs.extend((bits(x),bits(k)) for k in (math.nextafter(y,-math.inf),y,math.nextafter(y,math.inf)))
     corpus_sample=0
     if a.corpus:
         position=0

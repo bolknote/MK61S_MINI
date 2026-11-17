@@ -4,6 +4,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import math
 from pathlib import Path
 import random
 import struct
@@ -29,6 +30,11 @@ def main():
               (2.,-1074.),(2.,-1075.),(1.-2.**-53,2.**60),(1.+2.**-52,2.**60),
               (81.,.75),(9.,17.),(float.fromhex('0x1.fffffffffffffp1023'),1.),
               (float.fromhex('0x1p-1022'),1.5),(2.**-215,5.)]
+    # Both sides of the guard, with and without a pre-left-shift check.
+    for x in (3.,1.-2.**-53,1.+2.**-52):
+        for logarithm in (-800.,800.):
+            y=logarithm/math.log(x)
+            pairs.extend((x,variant) for variant in (math.nextafter(y,-math.inf),y,math.nextafter(y,math.inf)))
     pointer=SP-15000
     frame_lowest=[SP]
     def written(_uc,_access,address,size,_value,_user):

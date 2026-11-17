@@ -259,14 +259,15 @@ template<unsigned P> struct Fixed {
     if(ex<0) logarithm={subtract(times(l2.lo,unsigned(-ex)),lm.hi),subtract(times(l2.hi,unsigned(-ex)),lm.lo)};
     else logarithm={add(times(l2.lo,unsigned(ex)),lm.lo),add(times(l2.hi,unsigned(ex)),lm.hi)};
     const I unscaled={times(logarithm.lo,sy),times(logarithm.hi,sy)};
-    if(ey>52) {
-      const B threshold=shift(integer(800),52-ey,false);
-      if(compare(unscaled.lo,threshold)>0) {result=negative?0:infinity;return true;}
-      if(compare(unscaled.hi,threshold)>0) return false;
+    // The directed interval after scaling is narrower than one. If its
+    // upper endpoint reaches 800, the true magnitude exceeds 799, beyond
+    // both binary64 rounding cutoffs. Test before a left shift can overflow.
+    const B limit=integer(800);
+    if(ey>52 && compare(unscaled.hi,shift(limit,52-ey,false))>=0) {
+      result=negative?0:infinity;return true;
     }
     const I q={shift(unscaled.lo,ey-52,false),shift(unscaled.hi,ey-52,true)};
-    if(compare(q.lo,integer(800))>0) {result=negative?0:infinity;return true;}
-    if(compare(q.hi,integer(800))>0) return false;
+    if(compare(q.hi,limit)>=0) {result=negative?0:infinity;return true;}
     // Approximate q/ln2 solely to choose a reduction; verify |r|<1/2 below.
     const uint32_t head=uint32_t(shifted64(q.lo,P-20));
     const uint32_t al=head&0xFFFFU,ah=head>>16,bl=1512775U&0xFFFFU,bh=1512775U>>16;
