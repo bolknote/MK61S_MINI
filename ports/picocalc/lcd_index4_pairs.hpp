@@ -9,6 +9,12 @@ namespace picocalc::lcd {
 // Two little-endian RGB565 words in the order consumed by the LCD DMA.
 class Index4Pairs {
 public:
+    static constexpr unsigned pixels_per_step = 64;
+
+    static constexpr bool supports(uint16_t format) {
+        return (format & ~MK61_COLOR_PRESERVE_OUTSIDE) == MK61_COLOR_INDEX4;
+    }
+
     void refresh(const uint16_t* colors) {
         if (valid_ && std::memcmp(palette_, colors, sizeof(palette_)) == 0) return;
         for (unsigned high = 0; high < 16; ++high) {
@@ -31,7 +37,7 @@ public:
         const uint8_t* packed = f.pixels + y * ((f.width + 1u) / 2);
         unsigned remaining = r.width;
         while (remaining) {
-            const unsigned count = progress && remaining > 64 ? 64 : remaining;
+            const unsigned count = progress && remaining > pixels_per_step ? pixels_per_step : remaining;
             span(packed, x, count, out);
             if (progress) progress();
             remaining -= count;

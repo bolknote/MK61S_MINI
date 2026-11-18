@@ -377,6 +377,20 @@ void color_session(bool chain) {
             "palette redraw preserves border");
     bits[0]^=1;require(panel.color(MK61_COLOR_PRESENT,&f)==1,"queue last color transfer");
     require(panel.color(MK61_COLOR_END)==1 && !controller.pending && !panel.color_active(),"end drains transfer before APP buffer release");
+    std::array<u8,320> indexed{};indexed.fill(0x13);
+    mk61_service_color_frame band{};band.pixels=indexed.data();band.pixel_bytes=indexed.size();
+    band.y=80;band.width=320;band.height=2;
+    band.format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
+    band.palette[1]=0x1234;band.palette[3]=0x5678;
+    require(panel.color(MK61_COLOR_PRESENT,&band)==1 && controller.pending,"single-page INDEX4 band accepted");
+    controller.run();
+    for(unsigned x=0;x<band.width;++x)
+        require(controller.visible_row(band.y)[x]==band.palette[x&1?3:1],"single-page INDEX4 RGB565 order");
+    band.palette[3]=0x9ABC;
+    require(panel.color(MK61_COLOR_PRESENT,&band)==1 && controller.pending,"INDEX4 palette-only redraw");
+    controller.run();
+    require(controller.visible_row(band.y+1)[319]==0x9ABC,"single-page INDEX4 uses the new palette");
+    require(panel.color(MK61_COLOR_END)==1,"single-page INDEX4 ended");
     mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
     require(controller.visible(mono),"complete mono snapshot restored after color");
     std::printf("Panel color session chain=%u: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS\n",chain);

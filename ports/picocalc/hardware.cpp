@@ -537,12 +537,15 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
     configure_dma();stream_.reset(rect);
+    // Small dirty windows keep the scalar path and its existing service cadence.
+    const bool indexed_pairs=color && lcd::Index4Pairs::supports(color_frame_.format) &&
+        (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
     const auto descriptor=[&](unsigned index) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         const auto next=lcd::Stream::prepare(rect,index,index&1?chained_scanlines:scanlines,
             [&](unsigned row,u16* out) {
                 if(color) {
-                    if(pages_active_) index4_pairs_.line(color_frame_,rect,row,out,[] {io_worker::service();});
+                    if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,[] {io_worker::service();});
                     else lcd::color_scanline(color_frame_,rect,row,out,color_palette_,[] {io_worker::service();});
                     // Pixel expansion is CPU work too: keep M3 transport
                     // serviced between rows, not only between 3-row strips.
@@ -758,11 +761,13 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
     const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
     busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
     spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+    const bool indexed_pairs=lcd::Index4Pairs::supports(color_frame_.format) &&
+        (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
     const auto prepare=[&](unsigned row) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         u16* out=scanlines+(row&1U)*Screen::WIDTH;
         if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
-        else if(pages_active_) index4_pairs_.line(color_frame_,rect,row,out);
+        else if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out);
         else lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
     };
     bool ok=true;
@@ -787,9 +792,9 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
 }
 void Panel::transfer_color() {
     const u64 start=time_us_64();
-    // Page transactions always submit INDEX4. Use the transferred palette
-    // here, after the controller-polarity compensation performed on core 0.
-    if(pages_active_) index4_pairs_.refresh(color_frame_.palette);
+    // Use the palette from the queued snapshot, including the compensation
+    // for hardware pages. The lookup is shared by all INDEX4 rectangles.
+    if(lcd::Index4Pairs::supports(color_frame_.format)) index4_pairs_.refresh(color_frame_.palette);
     // Source coordinates stay logical even when GRAM wraps. Legacy color APPs
     // can also preserve pixels left by a scrolled surface; END's next full
     // monochrome flush restores its own origin without losing fixed pixels.
