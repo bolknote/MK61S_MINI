@@ -1,4 +1,5 @@
 #include "display_compact.h"
+#include "row_rle.h"
 #include <string.h>
 
 #define COMPACT_ROWS 10u
@@ -58,36 +59,9 @@ static bool compress(aw_display_compact *d, const uint8_t *pixels) {
     unsigned used = 0;
     for (unsigned y = 0; y < AW_VIDEO_HEIGHT; ++y) {
         d->offsets[y] = (uint16_t)used;
-        const uint8_t *row = pixels + y * AW_VIDEO_STRIDE;
-        unsigned x = 0;
-        while (x < AW_VIDEO_STRIDE) {
-            unsigned run = 1;
-            while (x + run < AW_VIDEO_STRIDE && run < 128 && row[x + run] == row[x])
-                ++run;
-            if (run >= 3) {
-                if (used + 2 > d->capacity)
-                    return false;
-                d->previous[used++] = (uint8_t)(128u | (run - 1));
-                d->previous[used++] = row[x];
-                x += run;
-            } else {
-                unsigned n = 0;
-                while (x + n < AW_VIDEO_STRIDE && n < 128) {
-                    unsigned at = x + n, r = 1;
-                    while (at + r < AW_VIDEO_STRIDE && r < 3 && row[at + r] == row[at])
-                        ++r;
-                    if (r >= 3)
-                        break;
-                    ++n;
-                }
-                if (!n || used + 1 + n > d->capacity)
-                    return false;
-                d->previous[used++] = (uint8_t)(n - 1);
-                memcpy(d->previous + used, row + x, n);
-                used += n;
-                x += n;
-            }
-        }
+        const unsigned size = aw_pack_row(pixels + y * AW_VIDEO_STRIDE, d->previous + used, d->capacity - used);
+        if (!size) return false;
+        used += size;
         if ((y & 31u) == 31u)
             aw_assets_progress(d->assets);
     }
@@ -98,9 +72,6 @@ static bool compress(aw_display_compact *d, const uint8_t *pixels) {
 static bool repeat_above(const uint8_t *row, const uint8_t *above, unsigned x) {
     return above && x + 2 < AW_VIDEO_STRIDE && row[x] == above[x] &&
            row[x + 1] == above[x + 1] && row[x + 2] == above[x + 2];
-}
-static bool repeat_byte(const uint8_t *row, unsigned x) {
-    return x + 2 < AW_VIDEO_STRIDE && row[x] == row[x + 1] && row[x] == row[x + 2];
 }
 static uint32_t word_at(const uint8_t *p) {
     uint32_t word;
@@ -136,7 +107,7 @@ static unsigned pack_band(const uint8_t *pixels, uint8_t *packed, unsigned capac
                 continue;
             }
             const unsigned end = x + 64 < AW_VIDEO_STRIDE ? x + 64 : AW_VIDEO_STRIDE;
-            if (repeat_byte(row, x)) {
+            if (aw_row_run(row, x)) {
                 x += 3;
                 while (x < end && row[x] == row[start]) ++x;
                 if (capacity - used < 2) return 0;
@@ -144,7 +115,7 @@ static unsigned pack_band(const uint8_t *pixels, uint8_t *packed, unsigned capac
                 packed[used++] = row[start];
             } else {
                 ++x;
-                while (x < end && !repeat_above(row, above, x) && !repeat_byte(row, x)) ++x;
+                while (x < end && !repeat_above(row, above, x) && !aw_row_run(row, x)) ++x;
                 const unsigned count = x - start;
                 if (capacity - used < 1 + count) return 0;
                 packed[used++] = (uint8_t)(0xc0u | (count - 1));

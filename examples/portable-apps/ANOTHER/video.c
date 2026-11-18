@@ -1,6 +1,7 @@
 /* Polygon and page semantics follow Raw, Copyright (C) 2004 Gregory Montoir,
  * GPL-2.0-or-later. Pages and shape data use the portable PSRAM asset store. */
 #include "video.h"
+#include "row_rle.h"
 #include <string.h>
 
 static uint8_t page_id(const aw_video *v, uint8_t page) {
@@ -49,28 +50,11 @@ static void cache_background(aw_video *v, const uint8_t *pixels) {
     unsigned used = 0;
     for (unsigned y = 0; y < AW_VIDEO_HEIGHT; ++y) {
         v->background_offsets[y] = (uint16_t)used;
-        const uint8_t *row = pixels + y * AW_VIDEO_STRIDE;
-        unsigned x = 0;
-        while (x < AW_VIDEO_STRIDE) {
-            unsigned run = 1;
-            while (x + run < AW_VIDEO_STRIDE && run < 128 && row[x + run] == row[x]) ++run;
-            if (run >= 3) {
-                if (used + 2 > v->background_capacity) return;
-                *background_at(v, used++) = (uint8_t)(128u | (run - 1));
-                *background_at(v, used++) = row[x]; x += run;
-            } else {
-                unsigned n = 0;
-                while (x + n < AW_VIDEO_STRIDE && n < 128) {
-                    unsigned at = x + n, r = 1;
-                    while (at + r < AW_VIDEO_STRIDE && r < 3 && row[at + r] == row[at]) ++r;
-                    if (r >= 3) break;
-                    ++n;
-                }
-                if (!n || used + 1 + n > v->background_capacity) return;
-                *background_at(v, used++) = (uint8_t)(n - 1);
-                background_copy_to(v, used, row + x, n); used += n; x += n;
-            }
-        }
+        uint8_t packed[AW_VIDEO_STRIDE + 2];
+        const unsigned size = aw_pack_row(pixels + y * AW_VIDEO_STRIDE, packed, sizeof(packed));
+        if (!size || size > v->background_capacity - used) return;
+        background_copy_to(v, used, packed, size);
+        used += size;
         if ((y & 31u) == 31u) aw_assets_progress(v->assets);
     }
     v->background_offsets[AW_VIDEO_HEIGHT] = (uint16_t)used;
@@ -201,18 +185,17 @@ static bool transfer(aw_video *v, bool write, uint32_t offset, uint8_t *bytes, u
 }
 bool aw_video_flush(aw_video *v) {
     if (!v || v->fault) return false;
-    bool wrote = false;
     if (v->resident_valid && v->dirty) {
         if (!transfer(v, true, page_at(v, v->resident_page), v->pixels, AW_VIDEO_PAGE_BYTES))
             return !(v->fault = true);
-        v->dirty = false; wrote = true;
+        v->dirty = false;
     }
     if (v->spare_valid && v->spare_dirty) {
         if (!transfer(v, true, page_at(v, v->spare_page), v->spare, AW_VIDEO_PAGE_BYTES))
             return !(v->fault = true);
-        v->spare_dirty = false; wrote = true;
+        v->spare_dirty = false;
     }
-    return !wrote || aw_assets_flush(v->assets) || !(v->fault = true);
+    return aw_assets_flush(v->assets) || !(v->fault = true);
 }
 static void swap_resident(aw_video *v) {
     uint8_t *p = v->pixels; v->pixels = v->spare; v->spare = p;
@@ -340,6 +323,12 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
         if (scroll < 0) { from = (uint32_t)(-scroll) * AW_VIDEO_STRIDE; size -= from; }
         else { to = (uint32_t)scroll * AW_VIDEO_STRIDE; size -= to; }
     }
+    /* During a shake, page 3 supplies the scroll for successive display
+     * pages. Otherwise both alternating display pages can stay in SRAM. */
+    if (v->last_copy_scrolled_scratch && src == 0 && (dst == 1 || dst == 2) &&
+        v->spare_valid && v->spare_page == 3 && v->resident_page != dst && v->resident_page != 0)
+        swap_resident(v);
+    v->last_copy_scrolled_scratch = scrolled && src == 3 && (dst == 1 || dst == 2);
     /* When copying from the second resident page to an uncached one, keep
      * the source in SRAM instead of evicting and rereading it. */
     if (src != dst && v->spare_valid && v->spare_page == src && v->resident_page != dst)
@@ -487,16 +476,22 @@ static bool line(aw_video *v, int x1, int x2, int y, uint8_t color) {
     if (x2 > 319) x2 = 319;
     const unsigned from = (unsigned)x1 / 2, to = (unsigned)x2 / 2;
     uint8_t source[AW_VIDEO_STRIDE];
+    const bool external = v->draw_page != v->resident_page;
+    const unsigned offset = (unsigned)y * AW_VIDEO_STRIDE;
+    uint8_t *row = v->pixels + offset;
     if (color > 0x10) {
-        if (v->resident_page == 0) return true;
+        if (v->draw_page == 0) return true;
         if (v->spare_valid && v->spare_page == 0)
             memcpy(source, v->spare + (unsigned)y * AW_VIDEO_STRIDE + from, to - from + 1);
         else if (v->background_valid) {
             if (!background_read(v, (unsigned)y, from, to - from + 1, source)) return !(v->fault = true);
         } else if (!aw_assets_read(v->assets, page_at(v, 0) + (unsigned)y * AW_VIDEO_STRIDE + from,
                                  source, to - from + 1)) return !(v->fault = true);
+    } else if (external) {
+        row = source;
+        if (!aw_assets_read(v->assets, page_at(v, 0) + offset + from, row + from, to - from + 1))
+            return !(v->fault = true);
     }
-    uint8_t *row = v->pixels + (unsigned)y * AW_VIDEO_STRIDE;
     if (from == to) {
         const uint8_t mask = (uint8_t)((x1 & 1 ? 0x0F : 0xFF) & (x2 & 1 ? 0xFF : 0xF0));
         edge(row + from, mask, color, color > 0x10 ? source[0] : 0);
@@ -510,12 +505,22 @@ static bool line(aw_video *v, int x1, int x2, int y, uint8_t color) {
             else memcpy(row + begin, source + begin - from, end - begin);
         }
     }
-    if (v->bands) v->bands->page[v->resident_page][(unsigned)y / AW_VIDEO_BAND_ROWS] = 0;
-    mark_dirty(v);
+    if (v->bands) v->bands->page[v->draw_page][(unsigned)y / AW_VIDEO_BAND_ROWS] = 0;
+    if (external) {
+        if (!aw_assets_write(v->assets, page_at(v, 0) + offset + from, row + from, to - from + 1))
+            return !(v->fault = true);
+        v->background_valid = v->background_attempted = false;
+    } else mark_dirty(v);
     return true;
 }
 static bool fill_polygon(shape *s, uint8_t color, point center) {
     aw_video *v = s->v;
+    /* A few changed background pixels fit in the asset cache. Loading the
+     * entire background here would also evict a live 32 KB display page. */
+    const bool small_external_background = v->draw_page == 0 && !v->background_valid &&
+        v->resident_page != 0 && v->spare_valid && v->spare_page != 0 &&
+        (v->spare_page == 3 || v->resident_page == 3) && s->width <= 16 && s->height <= 8;
+    if (!small_external_background && !resident(v, v->draw_page, false)) return false;
     if (!s->width && s->height == 1 && s->count == 4) return line(v, center.x, center.x, center.y, color);
     int x1 = center.x - s->width / 2, x2 = center.x + s->width / 2;
     int y = center.y - s->height / 2, y2 = center.y + s->height / 2;
@@ -553,9 +558,17 @@ static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigne
         s->height = (uint16_t)(fetch(s) * (uint32_t)zoom / 64);
         s->count = fetch(s);
         if (s->count < 2 || s->count >= 50 || (s->count & 1)) return !(s->v->fault = true);
-        for (unsigned i = 0; i < s->count; ++i) {
-            s->vertices[i].x = (int16_t)(fetch(s) * (uint32_t)zoom / 64);
-            s->vertices[i].y = (int16_t)(fetch(s) * (uint32_t)zoom / 64);
+        /* The DOS coordinates are byte pairs. Fetch the list together and
+         * widen it backwards so the unread pairs stay intact. */
+        uint8_t *xy = (uint8_t *)s->vertices;
+        const unsigned bytes = 2u * s->count;
+        if (s->cursor > s->v->shape_size || bytes > s->v->shape_size - s->cursor ||
+            !aw_assets_read(s->v->assets, s->v->shape_base + s->cursor, xy, bytes))
+            return !(s->v->fault = true);
+        s->cursor += bytes;
+        for (unsigned i = s->count; i-- > 0;) {
+            const uint8_t x = xy[2 * i], y = xy[2 * i + 1];
+            s->vertices[i] = (point){(int16_t)(x * (uint32_t)zoom / 64), (int16_t)(y * (uint32_t)zoom / 64)};
         }
         return !s->v->fault && fill_polygon(s, color, at);
     }
@@ -579,8 +592,8 @@ static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigne
 }
 bool aw_video_polygon(aw_video *v, uint32_t base, uint32_t size, uint16_t offset,
                       uint16_t zoom, int16_t x, int16_t y) {
-    if (!v || base > v->assets->capacity || size > v->assets->capacity - base || offset >= size ||
-        !resident(v, v->draw_page, false)) return false;
+    if (!v || v->fault || base > v->assets->capacity || size > v->assets->capacity - base || offset >= size)
+        return false;
     v->shape_base = base; v->shape_size = size;
     shape s = {0}; s.v = v; s.cursor = offset;
     const point at = {x, y};

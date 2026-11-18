@@ -20,7 +20,7 @@ static aw_display_storm storm;
 static unsigned replayed, intro_frames, anchor_calls, blocking_wire;
 static unsigned worker_busy, busy_polls;
 static unsigned idle_returns, tail_replayed;
-static unsigned deferred_latches, visible_overlaps, draw_lead;
+static unsigned deferred_latches, visible_overlaps, draw_lead, last_window_lead, wire_before_last;
 static uint32_t lcd_time;
 static uint64_t wire_at_flash, wire_at_return;
 static bool normal_used, tight_psram, base_prelude_only, return_mismatch, limited_tail, incomplete_black;
@@ -30,7 +30,12 @@ static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     FILE *file = ctx;
     return fseek(file, (long)offset, SEEK_SET) == 0 && fread(out, 1, size, file) == size;
 }
-static bool storm_wait(void *ctx, unsigned lead_ms) { (void)ctx; if (lead_ms) draw_lead = lead_ms; return true; }
+static bool storm_wait(void *ctx, unsigned lead_ms) {
+    (void)ctx;
+    if (lead_ms && !draw_lead) draw_lead = lead_ms;
+    else if (lead_ms) { last_window_lead = lead_ms; wire_before_last = blocking_wire; }
+    return true;
+}
 #endif
 #endif
 static aw_display_compact compact;
@@ -236,7 +241,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     const unsigned tail_start = clip_start + AW_STORM_FRAMES;
     const unsigned before_page = pages.visible;
     lcd_time = intro_frame;
-    blocking_wire = draw_lead = 0;
+    blocking_wire = draw_lead = last_window_lead = wire_before_last = 0;
     normal_used = false;
     if (intro_frame != UINT32_MAX && storm.ready) {
         assert(aw_storm_present_intro(&storm, &pages, pixels, palette, identities, &storm_lcd, storm_normal, NULL));
@@ -295,7 +300,10 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
                 assert(blocking_wire == wire[index]);
                 if (overlap) {
                     static const unsigned expected_lead[] = {28, 31, 25};
+                    static const unsigned final_lead[] = {7, 6, 8};
+                    static const unsigned final_bytes[] = {15008, 12800, 20224};
                     assert(draw_lead == expected_lead[index]);
+                    assert(last_window_lead == final_lead[index] && wire_before_last == wire[index] - final_bytes[index]);
                 }
             }
             ++tail_replayed;

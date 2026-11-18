@@ -35,7 +35,7 @@ typedef struct {
     bool resident_valid, dirty, fault;
     uint8_t *spare;
     uint8_t spare_page;
-    bool spare_valid, spare_dirty;
+    bool spare_valid, spare_dirty, last_copy_scrolled_scratch;
     uint8_t *background, *background_tail;
     uint16_t background_split, background_capacity, background_size, background_offsets[AW_VIDEO_HEIGHT + 1];
     bool background_valid, background_attempted;
@@ -60,7 +60,7 @@ const uint32_t *aw_video_band_identities(const aw_video *v);
 bool aw_video_flush(aw_video *v);
 bool aw_video_select(aw_video *v, uint8_t page);
 /* Select a drawing target without loading bytes that the next operation may
- * replace completely. Drawing and presentation make the page resident. */
+ * replace completely. Use aw_video_select for direct access to its pixels. */
 bool aw_video_set_draw_page(aw_video *v, uint8_t page);
 bool aw_video_fill(aw_video *v, uint8_t page, uint8_t color);
 bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll);

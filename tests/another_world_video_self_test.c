@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct { uint8_t *bytes; uint32_t size; unsigned presents; uint8_t first; uint32_t read_bytes; } memory;
+typedef struct { uint8_t *bytes; uint32_t size; unsigned presents; uint8_t first; uint32_t read_bytes, write_bytes; } memory;
 static bool bank(void *ctx, uint8_t id, uint32_t offset, void *out, uint32_t size) {
     (void)ctx; (void)id; (void)offset; (void)out; (void)size; return false;
 }
@@ -17,6 +17,7 @@ static bool read_store(void *ctx, uint32_t at, void *out, uint32_t size) {
 static bool write_store(void *ctx, uint32_t at, const void *in, uint32_t size) {
     memory *m = ctx;
     if (at > m->size || size > m->size - at) return false;
+    m->write_bytes += size;
     memcpy(m->bytes + at, in, size); return true;
 }
 static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
@@ -27,7 +28,7 @@ static unsigned pixel(const uint8_t *p, unsigned x, unsigned y) {
 }
 static void run(bool two_pages) {
     aw_asset_entry entries[AW_ASSET_LIMIT];
-    memory m = {calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), 8192 + 4 * AW_VIDEO_PAGE_BYTES, 0, 0, 0};
+    memory m = {.bytes = calloc(1, 8192 + 4 * AW_VIDEO_PAGE_BYTES), .size = 8192 + 4 * AW_VIDEO_PAGE_BYTES};
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *spare = two_pages ? malloc(AW_VIDEO_PAGE_BYTES) : NULL;
     aw_assets a; aw_video v;
     aw_video_bands bands;
@@ -93,6 +94,37 @@ static void run(bool two_pages) {
     assert(aw_assets_read(&a, 8192, &value, 1) && value == 0x44);
     assert(aw_assets_read(&a, 8192 + 2 * AW_VIDEO_PAGE_BYTES + 100 * AW_VIDEO_STRIDE + 80, &value, 1));
     assert((value >> 4) == 4);
+    if (two_pages) {
+        /* A sub-byte edit to an evicted background must preserve its other
+         * nibble, both SRAM pages and their exact band identities. */
+        assert(aw_video_fill(&v, 0, 5) && aw_video_fill(&v, 3, 3) && aw_video_fill(&v, 1, 1));
+        assert(aw_video_copy(&v, 0x83, 1, 0));
+        assert(aw_video_flush(&v));
+        const uint8_t page = v.resident_page, spare_page = v.spare_page;
+        const uint32_t reads = m.read_bytes;
+        assert(aw_video_set_draw_page(&v, 0));
+        assert(aw_video_polygon(&v, 120, sizeof(dot), 0, 64, 161, 100));
+        assert(v.resident_page == page && v.spare_page == spare_page);
+        assert(m.read_bytes - reads < AW_VIDEO_PAGE_BYTES);
+        assert(bands.page[0][12] == 0 && bands.page[0][11] == 6 && bands.page[1][12] == 4 && bands.page[3][12] == 4);
+        assert(aw_video_flush(&v));
+        assert(m.bytes[8192 + 100 * AW_VIDEO_STRIDE + 80] == 0x5D);
+        assert(aw_video_copy(&v, 0, 2, 0));
+        assert(v.spare_page == 3 && pixel(v.pixels, 161, 100) == 13);
+        assert(aw_video_select(&v, 0) && pixel(v.pixels, 160, 100) == 5);
+
+        /* Once the shake ends, holding page 3 here would write a whole
+         * display page to PSRAM on every ordinary background copy. */
+        assert(aw_video_fill(&v, 3, 3) && aw_video_fill(&v, 1, 1));
+        assert(aw_video_flush(&v));
+        const uint32_t writes = m.write_bytes;
+        for (unsigned i = 0; i < 10; ++i) {
+            const uint8_t dst = (i & 1u) ? 1 : 2;
+            assert(aw_video_copy(&v, 0, dst, 0) && aw_video_show(&v, dst));
+            assert(pixel(v.pixels, 161, 100) == 13);
+        }
+        assert(m.write_bytes == writes);
+    }
     bands.last_identity = UINT32_MAX - AW_VIDEO_BANDS + 1;
     assert(aw_video_show(&v, 2) && !aw_video_band_identities(&v));
     assert(!aw_video_polygon(&v, 100, 2, 0, 64, 0, 0) && v.fault);

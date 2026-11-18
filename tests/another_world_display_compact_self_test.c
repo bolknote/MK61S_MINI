@@ -78,11 +78,12 @@ static void run(unsigned capacity, bool shared_scratch) {
     free(store); if (!shared_scratch) free(scratch); free(p); free(previous); free(frame);
 }
 static void scrolled(unsigned capacity) {
-    uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES), *previous = malloc(capacity);
+    uint8_t *storage = malloc(AW_VIDEO_PAGE_BYTES + 1), *previous = malloc(capacity);
     uint8_t *store = calloc(1, AW_VIDEO_PAGE_BYTES), *old_frame = malloc(AW_VIDEO_PAGE_BYTES);
     panel *p = calloc(1, sizeof(*p));
     uint16_t *rotated = malloc(sizeof(p->pixels));
-    assert(frame && previous && store && old_frame && p && rotated);
+    assert(storage && previous && store && old_frame && p && rotated);
+    uint8_t *frame = storage + 1; /* Packed row scans must also accept unaligned frames. */
     aw_assets a = {0}; a.capacity = AW_VIDEO_PAGE_BYTES; a.ctx = store; a.store_read = rd; a.store_write = wr;
     aw_display_compact d;
     assert(aw_display_compact_init(&d, &a, 0, previous, capacity, previous, capacity));
@@ -110,7 +111,7 @@ static void scrolled(unsigned capacity) {
     }
     assert(d.external);
     assert(!aw_display_compact_present_scrolled(&d, frame, palette, AW_VIDEO_HEIGHT, send_rect, p));
-    free(rotated); free(p); free(old_frame); free(store); free(previous); free(frame);
+    free(rotated); free(p); free(old_frame); free(store); free(previous); free(storage);
 }
 int main(void) {
     run(12800, false); run(400, false); run(12800, true); run(3200, true);

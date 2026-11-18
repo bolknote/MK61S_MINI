@@ -385,8 +385,16 @@ bool draw_tail_frame(aw_display_storm &s, aw_display_pages &p, unsigned index, c
         for (unsigned i = frame.first; ok && i <= frame.end; ++i) {
             if (i == last) continue;
             const auto &r = s.rects[i == frame.end ? last : i];
-            ok = read_rect(slot, r) &&
-                lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+            ok = read_rect(slot, r);
+            if (ok && tail.overlap && i == frame.end) {
+                // The overlap profile runs SPI at 24 MHz (3000 RGB565 bytes
+                // per ms). Time the last window itself so faster preparation
+                // cannot finish the visible frame ahead of its deadline.
+                const unsigned wire_bytes = unsigned(r.width) * r.height * 4;
+                const unsigned lead = (wire_bytes + 2999u) / 3000u + 1u;
+                ok = lcd.wait(ctx, lead);
+            }
+            if (ok) ok = lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
         }
         if (white) ok = aw_display_pages_finish(&p, palette, identities, 1, ok);
         if (ok && tail.overlap) {

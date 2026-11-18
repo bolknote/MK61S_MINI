@@ -106,6 +106,12 @@ bool aw_assets_write_direct(aw_assets *a, uint32_t offset, const void *in, uint3
 bool aw_assets_read(aw_assets *a, uint32_t offset, void *out, uint32_t size) {
     if (!a || (!out && size) || offset > a->capacity || size > a->capacity - offset) return false;
     uint8_t *p = out;
+    if (size == 1) {
+        aw_asset_cache *c = cached(a, offset);
+        if (!c) return false;
+        *p = c->data[offset % AW_ASSET_PAGE];
+        return true;
+    }
     if (size >= AW_ASSET_PAGE) return transfer_direct(a, offset, p, size, false);
     while (size) {
         aw_asset_cache *c = cached(a, offset);
