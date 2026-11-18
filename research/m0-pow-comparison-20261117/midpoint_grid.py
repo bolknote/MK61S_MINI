@@ -124,6 +124,19 @@ def convolve(first, second, count):
     return coefficients
 
 
+def use_flint_products():
+    """Use FLINT's exact signed polynomial multiplication in this process."""
+    from flint import fmpz_poly
+
+    def multiply(first, second, count):
+        exact = fmpz_poly(first)*fmpz_poly(second)
+        coefficients = [int(value) for value in exact.coeffs()[:count]]
+        return coefficients+[0]*(count-len(coefficients))
+
+    global convolve
+    convolve = multiply
+
+
 def interval_series_product(first, second, grid):
     """Enclose a product via exact convolutions of midpoint and radius."""
     a = [(lo+hi)//2 for lo, hi in first]

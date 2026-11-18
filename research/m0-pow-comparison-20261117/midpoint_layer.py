@@ -12,7 +12,7 @@ from time import perf_counter
 
 from midpoint_binade import (Binade, DEFAULT_BINADE, EXPONENTS, analytic_interval, block_range,
                              generate_parent, read_shard, verify_parent)
-from midpoint_grid import verify_interval_policy
+from midpoint_grid import use_flint_products, verify_interval_policy
 
 SHARD_WIDTH = 512
 
@@ -73,7 +73,7 @@ def jobs(root, binades, limit):
             yield Shard(binade, directory, index, min(index+SHARD_WIDTH, stop))
 
 
-def run(mode, root, binades, workers, limit, reserve, report):
+def run(mode, root, binades, workers, limit, reserve, report, flint_products):
     all_shards = list(jobs(root, binades, limit))
     if mode == 'generate':
         root.mkdir(parents=True, exist_ok=True)
@@ -88,7 +88,8 @@ def run(mode, root, binades, workers, limit, reserve, report):
     start = perf_counter()
     total, saved, checked, failed = 0, 0, 0, 0
     digests = {}
-    with ProcessPoolExecutor(max_workers=workers) as pool:
+    initializer = use_flint_products if flint_products else None
+    with ProcessPoolExecutor(max_workers=workers, initializer=initializer) as pool:
         active = {}
 
         def submit_next():
@@ -128,6 +129,7 @@ def run(mode, root, binades, workers, limit, reserve, report):
             shard.stop-shard.first for shard in all_shards), incomplete_shards=failed,
             binades=[binade.exponent for binade in binades], pilot=limit is not None,
             exponent_grid_step='2^-116', strict_abs_log_gap_lower_bound='2^-900',
+            integer_product_backend='flint' if flint_products else 'python',
             checkpoint_manifest_sha256=manifest.hexdigest(),
             tool_sha256={})
         for name in ('midpoint_grid.py', 'midpoint_binade.py', 'midpoint_layer.py'):
@@ -147,6 +149,8 @@ def main():
     parser.add_argument('--binade', type=int, action='append', help='limit the run to these binades')
     parser.add_argument('--pilot', type=int, help='maximum shards per selected binade')
     parser.add_argument('--reserve-gib', type=int, default=32, help='keep this much space free')
+    parser.add_argument('--flint-products', action='store_true',
+                        help='use native exact integer polynomial products')
     parser.add_argument('--report', type=Path, help='write the verification manifest summary')
     args = parser.parse_args()
     if args.workers < 1 or args.reserve_gib < 0 or (args.pilot is not None and args.pilot < 1):
@@ -166,7 +170,7 @@ def main():
         binades = [Binade(exponent) for exponent in dict.fromkeys(order) if exponent != DEFAULT_BINADE]
         binades = [binade for binade in binades if not binade.direct]
     return run(args.mode, args.checkpoint, binades, args.workers, args.pilot,
-               args.reserve_gib << 30, args.report)
+               args.reserve_gib << 30, args.report, args.flint_products)
 
 
 if __name__ == '__main__':

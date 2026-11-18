@@ -183,7 +183,7 @@ def generate_parent(binade, index):
         return None
 
     for block in range(index*4, index*4+4):
-        row = find(split+2, block, ((6, 90, 0.50), (7, 98, 0.70)))
+        row = find(split+2, block, ((5, 90, 0.65), (6, 90, 0.50), (7, 98, 0.70)))
         if row is None:
             break
         children.append(row)
