@@ -1,0 +1,15 @@
+{
+  "verified_blocks": 110144,
+  "expected_blocks": 110144,
+  "incomplete_shards": 0,
+  "binades": [738],
+  "pilot": false,
+  "exponent_grid_step": "2^-116",
+  "strict_abs_log_gap_lower_bound": "2^-900",
+  "checkpoint_manifest_sha256": "c6da16c7158d6792f71786b73a3e1260b4925ec92f978cb17ab814cf20703a0d",
+  "tool_sha256": {
+    "midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
+    "midpoint_binade.py": "d6d2b1f09c5b435f2031e0ffd88ec87612eb290281a1d401a9af2f0d56bce951",
+    "midpoint_layer.py": "fcaa0f831864b12d05d7d666fe93110eba8d0e4ca4140dc63b2c77d14b6e9020"
+  }
+}
