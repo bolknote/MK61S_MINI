@@ -37,10 +37,11 @@ void clock_text(char (&text)[12], unsigned sec) {
 }
 }
 
-void Screen::begin(const mk61_app_services* api, uint8_t* pixels, uint8_t* raster) {
+void Screen::begin(const mk61_app_services* api, uint8_t* pixels, TapeArtBuffer* art) {
     services = api;
     strip = pixels;
-    this->raster = raster;
+    tape_art = art;
+    raster = art ? art->pixels : nullptr;
     record = raster;
     angle = 0;
     palette_ready = false;

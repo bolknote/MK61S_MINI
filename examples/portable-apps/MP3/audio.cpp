@@ -64,9 +64,14 @@ bool Decoder::step(bool full) {
         return false;
     }
 
-    // Use libmad's low-pass half-rate synthesis for 32/44.1/48 kHz streams.
-    // It preserves both channels and reduces the cost before upsampling to PWM.
-    if (!full && !(frame.header.flags & MAD_FLAG_LSF_EXT)) frame.options |= MAD_OPTION_HALFSAMPLERATE;
+    if (!full && !(frame.header.flags & MAD_FLAG_LSF_EXT)) {
+        // synth_half takes every other PCM sample. Subbands 16–31 would fold
+        // into the audible band, so remove them before the synthesis bank.
+        for (unsigned ch = 0; ch < MAD_NCHANNELS(&frame.header); ++ch)
+            for (auto& slot : frame.sbsample[ch])
+                std::memset(slot + 16, 0, 16 * sizeof(*slot));
+        frame.options |= MAD_OPTION_HALFSAMPLERATE;
+    }
     mad_synth_frame(&synth, &frame);
     return synth.pcm.length != 0;
 }

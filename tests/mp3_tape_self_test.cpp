@@ -19,6 +19,8 @@ std::array<std::vector<uint8_t>, 2> assets;
 std::array<uint16_t, 320 * 320> pixels;
 std::vector<uint8_t> psram;
 unsigned sd_reads = 0, lcd_pixels = 0;
+unsigned buffer_bytes = 0, lcd_calls = 0;
+unsigned now_ms = 0;
 bool emulate_busy = false, busy = false;
 
 uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) {
@@ -60,6 +62,7 @@ uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) 
             return 1;
         }
         assert(buffer.offset <= psram.size() && buffer.size <= psram.size() - buffer.offset);
+        buffer_bytes += buffer.size;
         auto* address = psram.data() + buffer.offset;
         if (a == MK61_BUFFER_READ) std::memcpy(buffer.data, address, buffer.size);
         else {
@@ -78,6 +81,7 @@ uint32_t call(uint32_t operation, uint32_t a, uint32_t b, uint32_t, void* data) 
         for (unsigned row = 0; row < frame.height; ++row)
             color_scanline(frame, area, row, pixels.data() + (frame.y + row) * mp3::screen_width + frame.x);
         lcd_pixels += frame.width * frame.height;
+        ++lcd_calls;
         busy = true;
         return 1;
     }
@@ -95,7 +99,7 @@ const auto& render(mp3::Screen& screen, unsigned position, unsigned time, bool p
     constexpr unsigned duration = 160;
     screen.tape_pose(position, duration, time, playing ? 0xfb0007a0 : 0);
     for (unsigned y = 0; y < 320; y += mp3::strip_height) {
-        for (unsigned layer = 0; layer < 3; ++layer) assert(screen.read_tape_band(y, layer));
+        for (unsigned layer = 0; layer < 3; ++layer) assert(screen.read_tape_band(y, layer, !full));
         screen.paint_tape(y, "Title", "Artist", position, duration, 100, playing, false, 0, nullptr);
         unsigned result, attempts = 0;
         do {
@@ -105,6 +109,78 @@ const auto& render(mp3::Screen& screen, unsigned position, unsigned time, bool p
         assert(result == 1);
     }
     return pixels;
+}
+
+void check_prepared_reels(const mk61_app_services& services) {
+    mp3::Screen cached{}, reference{};
+    mp3::TapeArtBuffer art{}, disk_art{};
+    uint8_t strip[mp3::tape_band_bytes], disk_strip[mp3::tape_band_bytes];
+    cached.begin(&services, strip, &art);
+    reference.begin(&services, disk_strip, &disk_art);
+    cached.cache_tapes();
+    assert(cached.select_tape(mp3::TapeView::reel) && reference.select_tape(mp3::TapeView::reel));
+
+    unsigned transferred = 0, windows = 0;
+    for (unsigned frame = 0; frame <= 160; ++frame) {
+        const unsigned time = frame * 33, pos = 35 + time / 1000;
+        if (frame == 80) {
+            // Leave a real left-half update on the LCD and abandon its pending right half.
+            for (auto* screen : {&cached, &reference}) screen->tape_pose(pos, 160, time - 10, 0);
+            for (unsigned layer = 0; layer < 3; ++layer) assert(cached.read_tape_band(16, layer, true));
+            busy = false;
+            assert(cached.present_tape(16) == 2);
+        }
+        sd_reads = buffer_bytes = lcd_calls = 0;
+        const auto image = render(cached, pos, time, true);
+        assert(sd_reads == 0);
+        if (frame) { transferred += buffer_bytes; windows += lcd_calls; }
+        pixels.fill(0xdead);
+        assert(render(reference, pos, time, true, true) == image);
+    }
+    // Full-screen comparison above includes five extra stationary UI strips per frame.
+    assert(transferred / 160 < 75000 && windows / 160 < 19);
+    cached.release_tapes();
+}
+
+void check_reel_cadence(const mk61_app_services& services, mp3::Workspace& work) {
+    mp3::Player player{};
+    mp3::TapeArtBuffer art{};
+    player.services = &services;
+    player.work = &work;
+    player.playing = true;
+    work.decoder.eof = true;
+    player.screen.begin(&services, work.strip, &art);
+    player.screen.cache_tapes();
+    assert(player.screen.select_tape(mp3::TapeView::reel));
+    player.lcd_hz = 24000000;
+    const auto draw = [&](unsigned at) {
+        now_ms = at;
+        unsigned steps = 0;
+        do {
+            player.draw();
+            assert(!player.display_failed && ++steps < 200);
+        } while (player.draw_y < player.draw_end);
+    };
+    player.redraw();
+    draw(0);
+    draw(0); // Transport refresh.
+    draw(0);
+    assert(player.reel_frames == 1 && player.next_frame == 33);
+    draw(32);
+    assert(player.reel_frames == 1);
+    draw(35);
+    assert(player.reel_frames == 2 && player.next_frame == 66);
+    player.lcd_hz = 12000000;
+    draw(66);
+    draw(132);
+    assert(player.reel_frames == 3 && player.next_frame == 133);
+    draw(133);
+    assert(player.reel_frames == 4 && player.reel_ms == 133);
+    player.playing = false;
+    draw(140);
+    draw(1000);
+    assert(player.reel_frames == 4 && player.reel_ms == 140);
+    player.screen.release_tapes();
 }
 }
 
@@ -131,11 +207,12 @@ int main(int argc, char** argv) {
     work.queue.volume(100);
     work.queue.play();
     assert(work.queue.push(0x1234fedcu));
-    uint8_t raster[mp3::tape_chunk_bytes]{};
+    mp3::TapeArtBuffer art{};
     mk61_app_api api{};
     api.service = [] {};
+    api.millis_ms = [] { return now_ms; };
     mk61_api = &api;
-    player.screen.begin(&services, work.strip, raster);
+    player.screen.begin(&services, work.strip, &art);
     player.screen.cache_tapes();
     assert(sd_reads && !psram.empty());
     sd_reads = 0;
@@ -178,6 +255,8 @@ int main(int argc, char** argv) {
     player.screen.release_tapes();
     assert(psram.empty());
     assert(render(player.screen, 26, 650, false) == cached_frame && sd_reads > 0);
+    check_prepared_reels(services);
+    check_reel_cadence(services, work);
     mp3::Player tuning{};
     tuning.services = &services;
     tuning.work = &work;

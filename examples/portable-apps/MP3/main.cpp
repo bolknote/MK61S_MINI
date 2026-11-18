@@ -44,6 +44,8 @@ struct Player {
          paused = false, output = false, playing = false, running = true, display_failed = false;
     bool deck_dirty = true, clock_running = false, have_animation_frames = false;
     bool tape_pose_pending = false;
+    bool reel_running = false, reel_animation = false;
+    unsigned reel_ms = 0, reel_frames = 0;
     bool hires_available = false, speakers = false;
     Quality quality = Quality::standard;
     uint8_t key_state[32]{};
@@ -437,6 +439,7 @@ struct Player {
         strip_ready = false;
         read_page = 0;
         tape_pose_pending = true;
+        reel_animation = false;
     }
     void refresh_deck() { deck_dirty = true; }
     void display_clock(unsigned now) {
@@ -451,6 +454,8 @@ struct Player {
     }
     void animate(unsigned now) {
         const bool running_now = playing && !browsing && (screen.record || screen.tape_view() != TapeView::none);
+        if (reel_running) reel_ms += now - angle_at;
+        reel_running = running_now && screen.tape_view() == TapeView::reel;
         if (clock_running) angle_phase = (angle_phase + now - angle_at) % turn_ms;
         if (clock_running != running_now) {
             if (clock_running) animation_ms += now - animation_started;
@@ -508,7 +513,10 @@ struct Player {
                 // Finish each picture before starting another. Derive the
                 // angle from time so fast mode keeps the same rotation speed.
                 screen.angle = angle_phase * rotation_frames / turn_ms;
-                next_frame = now + (lcd_hz >= fast_lcd_hz ? (screen.tape_view() == TapeView::reel ? 40 : 50) : 125);
+                reel_animation = screen.tape_view() == TapeView::reel;
+                const unsigned period = lcd_hz >= fast_lcd_hz ? (reel_animation ? 33 : 50) : (reel_animation ? 67 : 125);
+                // Absorb small scheduling delays without queuing missed frames.
+                next_frame = (reel_animation && now - next_frame < period ? next_frame : now) + period;
             }
         }
         if (draw_y == draw_end) return;
@@ -521,7 +529,7 @@ struct Player {
                 tape_pose_pending = false;
             }
             if (read_page < 3) {
-                if (!screen.read_tape_band(y, read_page++)) {
+                if (!screen.read_tape_band(y, read_page++, true)) {
                     screen.use_record();
                     message = M8("Оформление недоступно");
                     redraw();
@@ -537,10 +545,15 @@ struct Player {
                 strip_ready = false;
                 read_page = 0;
                 draw_y += strip_height;
+                // Only the VU needles move below the spools. The ordinary
+                // deck refresh handles the time and text once per second.
+                if (reel_animation && draw_y == 192) draw_y = 208;
+                if (reel_animation && draw_y == 224) draw_y = draw_end;
                 if (draw_y == screen_width) deck_second = position;
                 else if (clock_running && draw_y == screen.tape_end()) {
                     have_animation_frames = true;
                     ++record_frames;
+                    if (reel_animation) ++reel_frames;
                 }
             }
             return;
@@ -629,8 +642,8 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
     app.work->queue.volume(app.volume);
 
     mk61_service_buffer art{};
-    (void)mk61_app_buffer_acquire(s, tape_chunk_bytes, MK61_BUFFER_DIRECT, &art);
-    app.screen.begin(s, app.work->strip, art.data);
+    (void)mk61_app_buffer_acquire(s, sizeof(TapeArtBuffer), MK61_BUFFER_DIRECT, &art);
+    app.screen.begin(s, app.work->strip, art.data ? new (art.data) TapeArtBuffer : nullptr);
     if (id != UINT32_MAX) {
         if (!app.call_file(MK61_FILE_BYTES_PATH, nullptr, id, app.path, sizeof(app.path))) {
             if (art.handle) mk61_app_buffer_release(s, art.handle);
@@ -683,11 +696,12 @@ uint32_t run(uint32_t id, uint32_t app_id = UINT32_MAX) {
         if (length > 0 && length < (int)sizeof(line))
             s->call(MK61_SERVICE_DEBUG_WRITE, (unsigned)length, 0, 0, line);
     }
-    if (app.have_animation_frames) {
-        char line[112];
+    if (app.have_animation_frames || app.reel_running || app.reel_ms) {
+        char line[128];
+        const unsigned reel_ms = app.reel_ms + (app.reel_running ? finished_at - app.angle_at : 0);
         const int length = mk61_app_snprintf(s, line, sizeof(line),
-            "MP3_VIDEO_FRAMES=%u MP3_VIDEO_MS=%u MP3_LCD_HZ=%u\n",
-            app.record_frames, playing_ms, app.lcd_hz);
+            "MP3_VIDEO_FRAMES=%u MP3_VIDEO_MS=%u MP3_LCD_HZ=%u\nMP3_REEL_FRAMES=%u MP3_REEL_MS=%u\n",
+            app.record_frames, playing_ms, app.lcd_hz, app.reel_frames, reel_ms);
         if (length > 0 && length < (int)sizeof(line))
             s->call(MK61_SERVICE_DEBUG_WRITE, (unsigned)length, 0, 0, line);
     }

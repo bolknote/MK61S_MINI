@@ -6,7 +6,6 @@ namespace {
 constexpr unsigned tape_header_bytes = 52;
 constexpr unsigned half_width = screen_width / 2;
 constexpr unsigned base_bands = screen_width / strip_height;
-constexpr unsigned reel_bands = 12;
 constexpr unsigned transparent = 0;
 constexpr TapeView tape_views[] = {TapeView::cassette, TapeView::reel};
 
@@ -94,9 +93,25 @@ bool Screen::read_tape(TapeView view, void* data, unsigned offset, unsigned size
 bool Screen::select_tape(TapeView view) {
     uint8_t header[tape_header_bytes];
     if (!raster || view == TapeView::none || !read_tape(view, header, 0, sizeof(header))) return false;
-    const unsigned bits = !std::memcmp(header, "TV02", 4) ? 6 : !std::memcmp(header, "TV01", 4) ? 5 : 0;
-    if (!bits) return false;
+    const bool prepared = view == TapeView::reel && !std::memcmp(header, "TV03", 4);
+    unsigned bits = 7;
+    if (!prepared) {
+        if (!std::memcmp(header, "TV02", 4)) bits = 6;
+        else if (!std::memcmp(header, "TV01", 4)) bits = 5;
+        else return false;
+    }
     for (unsigned i = 36; i < sizeof(header); ++i) if (header[i] >= 16) return false;
+    static_assert(sizeof(TapeArtBuffer::Bounds) == 4);
+    const unsigned damage_bytes = prepared ? sizeof(tape_art->damage) : 0;
+    if (!read_tape(view, raster, tape_header_bytes, damage_bytes + sizeof(tape_art->base))) return false;
+    if (prepared) {
+        for (unsigned i = 0; i < damage_bytes; i += 4)
+            if (raster[i] > raster[i + 1] || raster[i + 1] > half_width / 2 ||
+                raster[i + 2] > raster[i + 3] || raster[i + 3] > strip_height) return false;
+        std::memcpy(tape_art->damage, raster, damage_bytes);
+    }
+    std::memcpy(tape_art->base, raster + damage_bytes, sizeof(tape_art->base));
+    indexed_phase[0] = indexed_phase[1] = 255;
     for (unsigned i = 0; i < 16; ++i) palette[i] = header[4 + i * 2] | (header[5 + i * 2] << 8);
     std::memcpy(ring_color, header + 36, sizeof(ring_color));
     phase_bits = bits;
@@ -105,9 +120,21 @@ bool Screen::select_tape(TapeView view) {
     return true;
 }
 
-bool Screen::read_tape_chunk(unsigned id, int side) {
-    uint8_t entry[6];
-    if (!read_tape(tape, entry, tape_header_bytes + id * sizeof(entry), sizeof(entry))) return false;
+bool Screen::read_tape_chunk(unsigned band, int side) {
+    const uint8_t* entry = tape_art->base[band];
+    if (side >= 0) {
+        const unsigned pose = phase(side);
+        if (indexed_phase[side] != pose) {
+            const unsigned bands = tape == TapeView::cassette ? 4 : reel_bands;
+            const unsigned group = (side * (1u << phase_bits) + pose) * bands;
+            const unsigned table = tape_header_bytes + (phase_bits == 7 ? sizeof(tape_art->damage) : 0);
+            auto& entries = tape_art->sprites[side];
+            if (!read_tape(tape, entries, table + (base_bands + group) * sizeof(entries[0]), bands * sizeof(entries[0])))
+                return false;
+            indexed_phase[side] = pose;
+        }
+        entry = tape_art->sprites[side][band];
+    }
     const uint32_t offset = uint32_t(entry[0]) | uint32_t(entry[1]) << 8 | uint32_t(entry[2]) << 16 | uint32_t(entry[3]) << 24;
     const unsigned size = entry[4] | (entry[5] << 8);
     if (!size || size > tape_chunk_bytes || !read_tape(tape, raster, offset, size)) return false;
@@ -152,7 +179,7 @@ void Screen::tape_pose(unsigned position, unsigned duration, uint32_t played_ms,
     for (unsigned side = 0; side < 2; ++side) {
         const unsigned fraction = side ? progress : 1024 - progress;
         const unsigned radius = root(core * core + fraction * (rim * rim - core * core) / 1024);
-        if (spool_radius[side] != radius) winding_valid = 0;
+        if (spool_radius[side] != radius) winding_valid = reel_displayed = 0;
         spool_radius[side] = radius;
         spool_phase[side] += uint64_t(delta) * (cassette ? 18 : 25) * rim / spool_radius[side];
         const int level = (int16_t)(levels >> (16 * side));
@@ -216,7 +243,7 @@ void Screen::paint_spool(unsigned side) {
     }
 }
 
-bool Screen::read_tape_band(unsigned y, unsigned layer) {
+bool Screen::read_tape_band(unsigned y, unsigned layer, bool incremental) {
     const unsigned art_top = tape_top(), bands = tape == TapeView::cassette ? 4 : reel_bands;
     const bool spools = y >= art_top && y < art_top + bands * strip_height;
     if (!layer) {
@@ -225,6 +252,26 @@ bool Screen::read_tape_band(unsigned y, unsigned layer) {
         tape_rect_ready = false;
         const unsigned band = spools ? (y - art_top) / strip_height : 0;
         const uint32_t bit = 1u << band, offset = tape_shadow + (base_bands + band) * tape_band_bytes;
+        reel_partial = incremental && phase_bits == 7 && spools && (reel_displayed & bit);
+        if (reel_partial) {
+            reel_sides = 0;
+            for (unsigned side = 0; side < 2; ++side) {
+                const auto& r = tape_art->damage[side][band];
+                if (phase(side) == tape_art->displayed_phase[side][band] || r.left == r.right || r.first == r.end) continue;
+                const unsigned left = side * (half_width / 2);
+                tape_rects[tape_rect_count++] = {left + r.left, left + r.right, r.first, r.end};
+                reel_sides |= 1u << side;
+            }
+            if (!reel_sides) return true;
+            if (tape_rect_count == 2) {
+                auto& left = tape_rects[0];
+                const auto& right = tape_rects[1];
+                if (left.right == right.left && left.first == right.first && left.end == right.end) {
+                    left.right = right.right;
+                    tape_rect_count = 1;
+                }
+            }
+        }
         if (spools && (winding_valid & bit) && tape_buffer(MK61_BUFFER_READ, offset, strip, tape_band_bytes))
             return true;
         if (!read_tape_chunk(y / strip_height, -1)) return false;
@@ -240,9 +287,8 @@ bool Screen::read_tape_band(unsigned y, unsigned layer) {
     }
     if (!spools) return true;
     const unsigned side = layer - 1;
-    const unsigned phases = 1u << phase_bits;
-    const unsigned phase = (spool_phase[side] >> (16 - phase_bits)) & (phases - 1);
-    return read_tape_chunk(base_bands + (side * phases + phase) * bands + (y - art_top) / strip_height, side);
+    if (reel_partial && !(reel_sides & (1u << side))) return true;
+    return read_tape_chunk((y - art_top) / strip_height, side);
 }
 
 uint32_t Screen::present_tape(unsigned y) {
@@ -250,7 +296,7 @@ uint32_t Screen::present_tape(unsigned y) {
     constexpr unsigned stride = screen_width / 2;
     const unsigned band = y / strip_height;
     const uint32_t bit = 1u << band, offset = tape_shadow + band * tape_band_bytes;
-    if (!tape_rect_count) {
+    if (!reel_partial && !tape_rect_count) {
         if ((tape_valid & bit) && tape_buffer(MK61_BUFFER_READ, offset, raster, tape_band_bytes)) {
             // Split the reel strip into two independent damage rectangles.
             // The stationary area between the reels can stay in GRAM.
@@ -272,7 +318,6 @@ uint32_t Screen::present_tape(unsigned y) {
                 }
                 if (rect.end) tape_rects[tape_rect_count++] = rect;
             }
-            if (!tape_rect_count) return 1;
         } else {
             tape_rects[0] = {0, stride, 0, strip_height};
             tape_rect_count = 1;
@@ -294,10 +339,17 @@ uint32_t Screen::present_tape(unsigned y) {
         if (accepted != 1) return accepted;
         // A partial update no longer matches the saved complete strip.
         tape_valid &= ~bit;
+        reel_displayed &= ~bit;
         ++tape_rect_next;
         tape_rect_ready = false;
     }
-    if (tape_buffer(MK61_BUFFER_WRITE, offset, strip, tape_band_bytes)) tape_valid |= bit;
+    if (!reel_partial && tape_rect_count && tape_buffer(MK61_BUFFER_WRITE, offset, strip, tape_band_bytes))
+        tape_valid |= bit;
+    if (phase_bits == 7 && band < reel_bands) {
+        tape_art->displayed_phase[0][band] = phase(0);
+        tape_art->displayed_phase[1][band] = phase(1);
+        reel_displayed |= bit;
+    }
     return 1;
 }
 

@@ -8,7 +8,7 @@ import struct
 import numpy as np
 from PIL import Image, ImageDraw
 
-WIDTH, HEIGHT, BAND, PHASES = 320, 320, 16, 64
+WIDTH, HEIGHT, BAND = 320, 320, 16
 RINGS = 16
 PALETTES = {
     'cassette': ('11100f', '6b5b49', 'faead2', 'a4927c', 'cc7948', '302c27', '201e1b', '494239',
@@ -116,7 +116,7 @@ def backdrop(source, kind, colors):
     return image
 
 
-def sprite_bands(source, kind, side, phase):
+def sprite_bands(source, kind, side, phase, phases):
     sprite = Image.open(source / f'{kind}-{side}.png').convert('RGBA')
     if kind == 'cassette':
         cx = (229.3, 550.8)[side] * 320 / 780
@@ -127,7 +127,7 @@ def sprite_bands(source, kind, side, phase):
         width, height, aspect, top, bands = 162.45, 158.03, .972, 0, 12
     cx -= side * (WIDTH // 2)
     cy -= top
-    angle = phase * math.tau / PHASES
+    angle = phase * math.tau / phases
     cos, sin = math.cos(angle), math.sin(angle)
     sx, sy = sprite.width / width, sprite.height * aspect / height
     transform = (sx * cos, sx * sin / aspect, sprite.width / 2 - sx * (cos * cx + sin * cy / aspect),
@@ -142,9 +142,20 @@ def pack(source, kind):
     colors = [expand(value) for value in palette]
     base = backdrop(source, kind, colors)
     strips = [quantize(base.crop((0, y, WIDTH, y + BAND)), colors) for y in range(0, HEIGHT, BAND)]
+    phases = 128 if kind == 'reel' else 64
+    damage = bytearray()
     for side in range(2):
-        for phase in range(PHASES):
-            strips.extend(quantize(image, colors, True) for image in sprite_bands(source, kind, side, phase))
+        first = len(strips)
+        for phase in range(phases):
+            strips.extend(quantize(image, colors, True) for image in sprite_bands(source, kind, side, phase, phases))
+        if kind == 'reel':
+            # A constant pair (including transparency) always composites to
+            # the same pixels while the winding underneath is stationary.
+            frames = np.frombuffer(b''.join(strips[first:]), dtype=np.uint8).reshape(phases, -1, BAND, WIDTH // 4)
+            for band in np.any(frames != frames[0], axis=0):
+                rows, cols = np.where(band)
+                damage.extend((int(cols.min()), int(cols.max()) + 1, int(rows.min()), int(rows.max()) + 1)
+                              if rows.size else (0, 0, 0, 0))
     texture = np.asarray(Image.open(source / 'tape-pack.webp').convert('RGB'), dtype=np.int32)
     cy, cx = (np.array(texture.shape[:2]) - 1) / 2
     y, x = np.indices(texture.shape[:2])
@@ -155,7 +166,7 @@ def pack(source, kind):
         color = np.median(texture[section], axis=0)
         nearest = ((np.array(colors) - color) ** 2 * [3, 5, 2]).sum(axis=1)
         rings.append(nearest.argmin())
-    header = b'TV02' + struct.pack('<16H', *palette) + bytes(rings)
+    header = (b'TV03' if damage else b'TV02') + struct.pack('<16H', *palette) + bytes(rings) + damage
     cursor = len(header) + len(strips) * 6
     offsets = bytearray()
     payload = bytearray()

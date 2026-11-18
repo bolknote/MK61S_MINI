@@ -60,10 +60,10 @@ Frames decode(const char* path, unsigned seek = 0, unsigned target = mp3::output
     assert(!result.audio.empty());
     return result;
 }
-double energy(const Frames& data, unsigned channel, unsigned begin, unsigned end) {
+double energy(const Frames& data, unsigned channel, unsigned begin, unsigned end, unsigned rate = mp3::output_rate) {
     double power = 0;
-    unsigned span = (end - begin) * mp3::output_rate / 10;
-    for (unsigned at = begin * mp3::output_rate / 10; span--; ++at) {
+    unsigned span = (end - begin) * rate / 10;
+    for (unsigned at = begin * rate / 10; span--; ++at) {
         const double value = (int16_t)(data.audio.at(at) >> (16 * channel));
         power += value * value;
     }
@@ -113,7 +113,15 @@ uint32_t synthesis_digest(bool half_rate) {
 }
 
 int main(int argc, char** argv) {
-    assert(argc == 3);
+    assert(argc == 6);
+    for (int i = 3; i < argc; ++i) {
+        // Left carries 15 kHz, right carries the in-band 1 kHz reference.
+        const auto half = decode(argv[i]);
+        const double reference = energy(half, 1, 5, 15);
+        assert(reference > 1e10 && energy(half, 0, 5, 15) * 10000 < reference);
+        const auto full = decode(argv[i], 0, mp3::full_rate);
+        assert(energy(full, 0, 5, 15, mp3::full_rate) > energy(full, 1, 5, 15, mp3::full_rate) / 8);
+    }
     // These digests were generated with the original libmad synthesis window.
     assert(synthesis_digest(false) == 0xe5dbb325u);
     assert(synthesis_digest(true) == 0x6756b758u);
