@@ -91,6 +91,7 @@ extern "C" double mk61_m0_cr_exp(double x) { return core_exp::cr_exp(x); }
 #include "native_eabi_m0_pow_exact.inc"
 #include "native_eabi_m0_pow_power_bounds.inc"
 #include "native_eabi_m0_pow_large_power.inc"
+#include "native_eabi_m0_pow_dyadic.inc"
 #include "native_eabi_m0_pow_stream.inc"
 
 extern "C" __attribute__((noinline,cold,section(".m0_pow_exact_extension")))
@@ -136,6 +137,11 @@ double mk61_m0_pow_rescue(double x,double y,double sign) {
   result=UINT64_C(0x7FF0000000000000); // Unknown initial rounding hint.
 #endif
   __builtin_memcpy(&a,&x,8);__builtin_memcpy(&b,&y,8);__builtin_memcpy(&s,&sign,8);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  const uint64_t dyadic=m0_pow_dyadic::evaluate(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b);
+  if(dyadic!=m0_pow_dyadic::Undecided) result=dyadic;
+  else
+#endif
   if(!m0_pow_interval::Fixed<512>::evaluate(a,b,result) &&
      !m0_pow_interval::Fixed<1024>::evaluate(a,b,result)
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI

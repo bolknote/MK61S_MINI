@@ -27,6 +27,8 @@ def main():
         entries[name] += 1
 
     for name, fragment in (
+            ('dyadic', 'm0_pow_dyadic12_GLOBAL__N_1L8evaluateEyy'),
+            ('dyadic_products', 'PowerBoundsILj10EE8multiplyE'),
             ('512', 'm0_pow_interval5FixedILj512EE8evaluateEyyRy'),
             ('1024', 'm0_pow_interval5FixedILj1024EE8evaluateEyyRy'),
             ('products', 'm0_pow_interval5FixedILj512EE7productE'),
@@ -36,9 +38,13 @@ def main():
             ('8192', 'PowerBoundsILj512EE4sideE')):
         matches = [address & ~1 for symbol, address in machine.elf.symbols.items()
                    if fragment in symbol and address]
+        if name.startswith('dyadic') and not matches:
+            continue
         address, = matches
         machine.uc.hook_add(UC_HOOK_CODE, entered, name, begin=address, end=address)
 
+    dyadic = any('m0_pow_dyadic12_GLOBAL__N_1L8evaluateEyy' in name for name in machine.elf.symbols)
+    stage = 'dyadic' if dyadic else '512'
     rows = []
     for exponent in (-1074, -738, -1, 0, 1, 738, 1023):
         x = bits(math.ldexp(1., exponent))
@@ -51,21 +57,23 @@ def main():
                 got, _, instructions = machine.call('mk61_m0_pow_rescue', x, y,
                                                     c=bits(1.), count=True)
                 stages = {key: value for key, value in entries.items()
-                          if key not in ('products', 'divisions')}
-                assert got == expected and stages == {'512': 1}, (
+                          if key not in ('products', 'divisions', 'dyadic_products')}
+                assert got == expected and stages == {stage: 1}, (
                     hex(x), hex(y), hex(got), hex(expected), dict(entries))
-                assert entries['products'] <= 60 and entries['divisions'] <= 58
+                full_products = entries['dyadic_products'] if dyadic else entries['products']
+                assert full_products <= (64 if dyadic else 60)
+                assert entries['divisions'] <= (0 if dyadic else 58)
                 row = dict(base_exponent=exponent, denominator_shift=shift,
                            negative=sign < 0, rounded=f'{got:016x}',
                            instructions=instructions,
                            stack_bytes=SP-machine.stack_lowest,
-                           full_products=entries['products'],
+                           full_products=full_products,
                            limb_divisions=36*entries['divisions'])
                 rows.append(row)
                 print('PASS', len(rows), row, flush=True)
 
     report = dict(
-        status='PASS', mpfr=oracle.version, cases=len(rows), rows=rows,
+        status='PASS', mpfr=oracle.version, cases=len(rows), stage=stage, rows=rows,
         elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),
         bootrom_sha256=machine.bootrom_sha256,
         maximum_instructions=max(row['instructions'] for row in rows),
@@ -73,7 +81,7 @@ def main():
         maximum_full_products=max(row['full_products'] for row in rows),
         maximum_limb_divisions=max(row['limb_divisions'] for row in rows),
         scope='Forced production rescue calls with real linked memory and BootROM. '
-              'All selected cases finish in the actual 512-bit interval and respect '
+              'All selected cases finish in the expected refinement and respect '
               'the separately certified arithmetic loop bounds. Saved registers, SP, '
               'bounded writes and the RP2040 divider model remain checked. Observed '
               'instruction and stack maxima are finite test results, not uniform timing bounds.')

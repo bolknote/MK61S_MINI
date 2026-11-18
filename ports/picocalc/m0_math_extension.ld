@@ -78,6 +78,7 @@ SECTIONS {
     } > FLASH
     .m0_pow_refine_extension 0x10168000 : {
         *(.m0_pow_refine_extension)
+        *(.m0_pow_refine_data)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
     /* Keep the shared argument/dispatcher below cache offset0xa00.

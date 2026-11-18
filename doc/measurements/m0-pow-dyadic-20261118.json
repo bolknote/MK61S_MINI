@@ -1,0 +1,370 @@
+{
+  "build": {
+    "base_commit": "acb812c837ac80321de36c51cb711f06999ba764",
+    "build_id": "5B61DB7C",
+    "crc32": "7D25584D",
+    "bin_sha256": "2c3ce6fd762a4c6256f840f35d5da6119cbfb4f69c9a27d50176c510aa493bfe",
+    "flash_bytes": 1805072,
+    "static_ram_bytes": 119896,
+    "scratch_y_bytes": 4096,
+    "hardware_verified": false
+  },
+  "certificate": {
+    "status": "PASS_DYADIC_POW_DOMAINS",
+    "published_domains": {
+      "binary64": {
+        "source": "https://www.vinc17.net/research/papers/rr_worstcases.pdf",
+        "property": 3,
+        "normalized_gap_bits": 112
+      },
+      "extended": {
+        "sources": [
+          "https://rex-radar.inria.fr/rapportsactivite/RA2005/spaces/spaces.pdf",
+          "https://perso.ens-lyon.fr/damien.stehle/downloads/randombits.pdf"
+        ],
+        "fraction_range": "[1/2,1)",
+        "grid_shift": 64,
+        "directed_gap_bits": 140
+      }
+    },
+    "tail_grid": {
+      "checked": 73181437,
+      "ranges": {
+        "-": 48787625,
+        "+": 24393812
+      },
+      "mpfr": "4.2.2",
+      "closest": [
+        "-",
+        12158323
+      ],
+      "minimum_gap_units": 5886719944,
+      "unit_exponent": -176,
+      "strict_log2_gap": "2^-147",
+      "exponent_magnitude_limit": "2^-37",
+      "minimum_unreduced_exponent_denominator_shift": 90
+    },
+    "interval_width_q159": 384,
+    "maximum_full_products": 64,
+    "source_sha256": {
+      "code/native_eabi_m0_pow_dyadic_table.inc": "f30425f743063018a5ecc093902ce503407aa4f66af2461d393868c8b04b66bd",
+      "dev/tools/certify_m0_pow_dyadic.py": "a1b04a6d500b29fdc444b9570c5ff17ce7de018c97eb32ddf3fc9c1f2bc6488f",
+      "dev/tools/m0_pow_dyadic_grid.c": "ee2a45d6a4f817b543e2ce9e6eecc857c5fb5af7f0789f0b0400a091a1c74724",
+      "code/native_eabi_m0_pow_dyadic.inc": "4be785e862445856e2eaae5abe061c281386b24b7232abc99537464f82a92cee",
+      "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+      "code/native_eabi_m0_cr.cpp": "d4bddfb2c5deac4a569598d640f3e33f87585b32afe0168f6076d299d4a188a0"
+    }
+  },
+  "arm": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": "1957b2725a57e94be14111a001cfe5549785b08252e87f6853d071610aaa756f",
+    "control_elf_sha256": "5ec81b87d882e265f1ab15af8dc5e52511c6dec60645f10ccb6768aa323cffe7",
+    "direct_cases": 8056,
+    "domains": {
+      "small_y": 894,
+      "binary64_fraction": 5164,
+      "guarded_only": 717,
+      "extended_fraction": 173,
+      "integer_or_saturation": 1108
+    },
+    "undecided": {},
+    "counter_samples": {
+      "all_ones_fraction": {
+        "x": "4000000000000000",
+        "y": "3bffffffffffffff",
+        "rounded": "3ff0000000000000",
+        "products": 53,
+        "control": {
+          "instructions": 791484,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 96167,
+          "stack_bytes": 380
+        }
+      },
+      "small_negative_argument": {
+        "x": "4000000000000000",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000",
+        "products": 53,
+        "control": {
+          "instructions": 790269,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 93582,
+          "stack_bytes": 380
+        }
+      },
+      "small_x_wide_product": {
+        "x": "0000000000000001",
+        "y": "bbffffffffffffff",
+        "rounded": "3ff0000000000000",
+        "products": 53,
+        "control": {
+          "instructions": 960255,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 96350,
+          "stack_bytes": 380
+        }
+      },
+      "at_zero_midpoint": {
+        "x": "4000000000000000",
+        "y": "c090cc0000000000",
+        "rounded": "0000000000000000",
+        "products": 0,
+        "control": {
+          "instructions": 1951,
+          "stack_bytes": 1828
+        },
+        "candidate": {
+          "instructions": 172,
+          "stack_bytes": 220
+        }
+      },
+      "below_overflow": {
+        "x": "7fe0000000000000",
+        "y": "3ff0040100401003",
+        "rounded": "7feffffffffffa70",
+        "products": 50,
+        "control": {
+          "instructions": 1127326,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 90829,
+          "stack_bytes": 380
+        }
+      },
+      "published_boundary": {
+        "x": "4000000000000000",
+        "y": "3f5e4596526bf94d",
+        "rounded": "3ff0053fc2ec2b53",
+        "products": 29,
+        "control": {
+          "instructions": 3316426,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 53318,
+          "stack_bytes": 380
+        }
+      },
+      "extended_grid": {
+        "x": "0000000000000001",
+        "y": "bf4a9e70ad0b1c53",
+        "rounded": "3ffd4adf79cecf43",
+        "products": 36,
+        "control": {
+          "instructions": 5517258,
+          "stack_bytes": 2712
+        },
+        "candidate": {
+          "instructions": 65994,
+          "stack_bytes": 380
+        }
+      }
+    }
+  },
+  "regression": {
+    "status": "PASS",
+    "elf_sha256": "1957b2725a57e94be14111a001cfe5549785b08252e87f6853d071610aaa756f",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "pow": {
+        "status": "PASS",
+        "cases": 80395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 80196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "d75b9e207238fbc0c67b321453b5a6c54b4c1c4e66eaaf7e2accf47617b79fdf"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "The exact RP2040 pow fallback has no practical uniform latency bound."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+    "actual_bootrom": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "initializers": [
+        {
+          "name": "__aeabi_bits_init",
+          "table": "aeabi_bits_funcs",
+          "pointers": [
+            "0x309",
+            "0x357",
+            "0x38f",
+            "0x32d"
+          ]
+        },
+        {
+          "name": "__aeabi_mem_init",
+          "table": "aeabi_mem_funcs",
+          "pointers": [
+            "0x26b9",
+            "0x261d",
+            "0x26ad",
+            "0x2605"
+          ]
+        }
+      ],
+      "intrinsic_models": []
+    }
+  },
+  "tail_arm": {
+    "control": {
+      "status": "PASS",
+      "stage": "512",
+      "cases": 28,
+      "maximum_instructions": 1212441,
+      "maximum_stack_bytes": 2712,
+      "maximum_full_products": 56,
+      "maximum_limb_divisions": 1944
+    },
+    "candidate": {
+      "status": "PASS",
+      "stage": "dyadic",
+      "cases": 28,
+      "maximum_instructions": 96350,
+      "maximum_stack_bytes": 380,
+      "maximum_full_products": 53,
+      "maximum_limb_divisions": 0
+    }
+  },
+  "rescue_instruction_bound": {
+    "max_iterations": 64,
+    "max_per_iteration": {
+      "bit_loop": 29,
+      "multiplication": 1421,
+      "normalization": 270,
+      "scale_addition": 39,
+      "memset": 49,
+      "copy_with_veneers": 148
+    },
+    "fixed_overhead": 4096,
+    "total": 129280,
+    "reported_rounded_upper": 130000,
+    "scope": "Successful dyadic resolve from mk61_m0_pow_rescue, including BootROM memory routines."
+  },
+  "test_source_sha256": {
+    "tests/m0_pow_dyadic_arm_self_test.py": "70d93e4685c2de6ae2b4f04b70d947215d3a6b6458482a32800d2145f52f44b7",
+    "tests/m0_pow_power_of_two_tail_arm_self_test.py": "82cfdae81b60a44f314ed65895441d1dcdda6ec1b6f6d66c0d6c6e219fab9de3",
+    "tests/qualify_m0_rounding.py": "a48c10b87bd30aa4ffb4119462ba0d9f207e5d365fa79f7f261c738c6cc57d81",
+    "tests/native_eabi_m0_arm_self_test.py": "85f9ec4ac2f2ecddb2749176e7c2ed4351296efe409261a29905e5276576c686",
+    "tests/m0_mpfr_oracle.py": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+  },
+  "practical_uniform_latency_established": false,
+  "picocalc_sram": {
+    "clock_hz": 125000000,
+    "mpfr": "4.2.2",
+    "order": [
+      "Fixed512",
+      "Q159",
+      "Q159",
+      "Fixed512"
+    ],
+    "resident_build": "5AB206B0",
+    "resident_crc": "FFC7A5EC",
+    "unchanged_boots": 28,
+    "watchdog_resets": 0,
+    "crash": "NONE",
+    "temporary_directory_removed": true,
+    "cdc_descriptor_closed": true,
+    "app_sha256": "15260bed324e6011a2ea1cf2c7789fb954512f1667ebdefed5858ba5ca2d22cd",
+    "input_sha256": "e6dd82715f949e4c1b5282ea16f15f9f3cfbaa1c04ff4a28f3fa491e5f234182",
+    "result_sha256": "099f33c4a0bc94c4286ac52f1e19158134e950681f4041ff980902a3f7f3b397",
+    "manifest_sha256": "bd33eb2eb2214e0bb5ce96dded4b2d101bebea44bac50b410244d9bdbd61a1c4",
+    "rows": [
+      {
+        "x": "4000000000000000",
+        "y": "3bffffffffffffff",
+        "name": "all_ones_fraction",
+        "result": "3ff0000000000000",
+        "repeat": 8,
+        "timings_us": [
+          75861,
+          7694,
+          7679,
+          75862
+        ],
+        "interval_mean_us": 9482.6875,
+        "dyadic_mean_us": 960.8125
+      },
+      {
+        "x": "0000000000000001",
+        "y": "bbffffffffffffff",
+        "name": "small_x_wide_product",
+        "result": "3ff0000000000000",
+        "repeat": 8,
+        "timings_us": [
+          91941,
+          7637,
+          7638,
+          91941
+        ],
+        "interval_mean_us": 11492.625,
+        "dyadic_mean_us": 954.6875
+      },
+      {
+        "x": "4000000000000000",
+        "y": "c090cc0000000000",
+        "name": "at_zero_midpoint",
+        "result": "0000000000000000",
+        "repeat": 128,
+        "timings_us": [
+          2787,
+          276,
+          276,
+          2786
+        ],
+        "interval_mean_us": 21.76953125,
+        "dyadic_mean_us": 2.15625
+      },
+      {
+        "x": "7fe0000000000000",
+        "y": "3ff0040100401003",
+        "name": "below_overflow",
+        "result": "7feffffffffffa70",
+        "repeat": 8,
+        "timings_us": [
+          108138,
+          7197,
+          7197,
+          108165
+        ],
+        "interval_mean_us": 13518.9375,
+        "dyadic_mean_us": 899.625
+      },
+      {
+        "x": "0000000000000001",
+        "y": "bf4a9e70ad0b1c53",
+        "name": "extended_grid",
+        "result": "3ffd4adf79cecf43",
+        "repeat": 8,
+        "timings_us": [
+          534540,
+          5237,
+          5238,
+          534539
+        ],
+        "interval_mean_us": 66817.4375,
+        "dyadic_mean_us": 654.6875
+      }
+    ]
+  }
+}
