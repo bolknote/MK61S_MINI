@@ -58,7 +58,7 @@ def main():
     image+=b'\xff'*(META-0x08000000-len(image))+packed[:32]+struct.pack('<I',0xc001cafe)
     if len(image)>SETTINGS-0x08000000:raise ValueError('Bootstrap overlaps settings')
     (out/'bootstrap.bin').write_bytes(image)
-    sd=out/'sd/Apps/BIOS';sd.mkdir(parents=True,exist_ok=True)
+    sd=out/'Disk/System/BIOS';sd.mkdir(parents=True,exist_ok=True)
     shutil.copyfile(out/'BIOS.M3U',sd/'BIOS.M3U')
     shutil.copyfile(ROOT/'doc/explorer-icons/system.wbmp',sd/'autoexec.wbmp')
     appbuild=out/'updater'
@@ -82,6 +82,8 @@ def main():
         ROOT/'tools/firmware/picocalc/bios_stm3_input.py',ROOT/'tools/firmware/picocalc/bios_stm3_reply.py',
         ROOT/'tools/firmware/picocalc/bios_stm3_crc.py',ROOT/'tools/firmware/picocalc/bios_stm3_result.py',
         ROOT/'ports/picocalc/bios/stm3_crc_f103.h',
+        ROOT/'tools/firmware/picocalc/bios_rtc_cache.py',
+        ROOT/'ports/picocalc/bios/rtc_cache.c',ROOT/'ports/picocalc/bios/rtc_cache.h',
         ROOT/'examples/portable-apps/BIOSUPD/main.c',ROOT/'sdk/coproc/pico_uart1.c',ROOT/'sdk/coproc/stm3_client.h']if p.is_file()})
     # Archive the fully staged source, including the current coprocessor
     # extension. Rebuilding it does not rely on an old .build work directory.

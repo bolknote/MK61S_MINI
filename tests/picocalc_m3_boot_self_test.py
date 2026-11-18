@@ -6,8 +6,11 @@ ROOT=Path(__file__).resolve().parents[1]
 def release(folder):
     """The reviewed ROM image, SD payload and archived sources stay a set."""
     manifest=json.loads((folder/'manifest.json').read_text())
+    sd=folder/'Disk'
+    assert {item.name for item in sd.iterdir()}=={'System'},'unexpected SD root'
+    bios_folder=sd/'System/BIOS'
     for name,info in manifest['files'].items():
-        path=folder/'sd/Apps/BIOS/BIOSUPD.APP' if name=='BIOSUPD.APP' else folder/name
+        path=bios_folder/name if name=='BIOSUPD.APP' else folder/name
         data=path.read_bytes()
         assert len(data)==info['bytes'] and hashlib.sha256(data).hexdigest()==info['sha256'],name
     package=(folder/'BIOS.M3U').read_bytes();header=package[:32];bios=package[32:]
@@ -16,7 +19,7 @@ def release(folder):
     assert len(bios)<=0xd400 and not len(bios)%4
     assert words[5]==zlib.crc32(bios) and words[7]==zlib.crc32(header[:28])
     assert bios==(folder/'bios.bin').read_bytes()
-    assert package==(folder/'sd/Apps/BIOS/BIOS.M3U').read_bytes()
+    assert package==(bios_folder/'BIOS.M3U').read_bytes()
     bootstrap=(folder/'bootstrap.bin').read_bytes();boot=(folder/'boot.bin').read_bytes()
     assert len(bootstrap)==0xf424 and len(boot)<=8192
     assert bootstrap[:8192]==boot+b'\xff'*(8192-len(boot))

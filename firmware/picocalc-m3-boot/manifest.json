@@ -8,8 +8,8 @@
   "boot_ram_bytes": 620,
   "app_start": "0x8002000",
   "app_limit": 54272,
-  "app_bytes": 29844,
-  "app_global_ram_bytes": 10472,
+  "app_bytes": 29996,
+  "app_global_ram_bytes": 10480,
   "app_stack_bytes": 4096,
   "metadata_start": "0x800f400",
   "settings_start": "0x800f800",
@@ -22,20 +22,20 @@
       "sha256": "5440fa62bfd40fd2ea7e66205f4692510e3a92ec7ca8c07ed4bb54f6d179b175"
     },
     "bios.bin": {
-      "bytes": 29844,
-      "sha256": "4c65bec8684ce551eb993cd9253b8a5704e92737553da94ffba99919c8ae233f"
+      "bytes": 29996,
+      "sha256": "ebcb2f10bb75700e7639af081c6f37a6f1084c7c9c0e729e632bc2bd5461ffc5"
     },
     "BIOS.M3U": {
-      "bytes": 29876,
-      "sha256": "b87f4aee723e576085b57d9259cbb7073dfc6991f278268138c0a73739221675"
+      "bytes": 30028,
+      "sha256": "85cc90b2bd5d7472fda4372f6314d447df98b94d9d266f920027836a61b84ad9"
     },
     "bootstrap.bin": {
       "bytes": 62500,
-      "sha256": "53229baab58bcfcc784d2aa97396ac4797157c329aa730bb7ab14e6e20ae59ba"
+      "sha256": "1ae0961392838452fb313c4b49af1a454719a82961566dfd8ca9299c22fbd0b5"
     },
     "source.zip": {
-      "bytes": 108070,
-      "sha256": "2e39ddf05c47ee7f6bcf07873c817d3883db30f0241d6a9f0b4431c708e17389"
+      "bytes": 109621,
+      "sha256": "f7bcbaa83ef7790dd49e7083e744c1ca0421ff7e93bd3710e1eb31b310547590"
     },
     "BIOSUPD.APP": {
       "bytes": 3845,
@@ -70,13 +70,13 @@
     "clock_hz": 72000000,
     "uart_baud": 2250000,
     "base_image_sha256": "3b313836c5fa260851c4a8cc6dc4bca8b3c98b7270cc9e484932cd7f268e7282",
-    "bin": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-commit-20261110/boot-final/base/source/build/picocalc_BIOS_jcs.bin",
-    "elf": "/Users/bolk/Projects/MK61S_MINI/.build/spectrum-commit-20261110/boot-final/base/source/build/picocalc_BIOS_jcs.elf",
-    "bin_sha256": "dcb4b8020089d01ade3adaa21051f7cb98c9b6f7e01c17da1b9964675fc6f333",
-    "image_bytes": 29604,
-    "global_ram_bytes": 10464,
+    "bin": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-rtc-20261118/candidate-final/base/source/build/picocalc_BIOS_jcs.bin",
+    "elf": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-rtc-20261118/candidate-final/base/source/build/picocalc_BIOS_jcs.elf",
+    "bin_sha256": "9f40547b25d43cbee621bc641ce3a2b88018983d6608d1867bc786ce3ae68a75",
+    "image_bytes": 29756,
+    "global_ram_bytes": 10472,
     "stack_reserved_bytes": 4096,
-    "ram_unallocated_bytes": 5920,
+    "ram_unallocated_bytes": 5912,
     "pmu_power_protocol": 1,
     "delta": {
       "legacy_read_sites": 19,
@@ -93,10 +93,14 @@
       "result_protocol_hello_flag": 32,
       "keyboard_index_slots": 68,
       "keyboard_index_persistent_RAM_bytes": 0,
-      "keyboard_GPIO_reads_per_scan": 152
+      "keyboard_GPIO_reads_per_scan": 152,
+      "rtc_second_flag_cache": true,
+      "rtc_added_interrupts": 0,
+      "rtc_i2c_setters_invalidate": true,
+      "rtc_calendar_restore_invalidates": true
     },
     "source_archive_sha256": "0c0a3910c340ac52625d73c7c477c636b8f4725d17beff58d22ef0acbcedd12c",
-    "staged_sources_sha256": "8277b9a77970d8bac3ec74611faf033509008f69e574e7ae6112c9cc72cfd2ea",
+    "staged_sources_sha256": "f6888987d7b8a242281edcd8b5a3ffa3c6e6a65bf2839c1aeba278c7493dea1c",
     "physical_io": false,
     "option_byte_programming": false,
     "upstream": {
@@ -121,11 +125,11 @@
         "bytes": 48
       },
       "pmu_irq": {
-        "address": "0x2000085f",
+        "address": "0x2000086b",
         "bytes": 1
       },
       "pmu_online": {
-        "address": "0x20000878",
+        "address": "0x20000884",
         "bytes": 1
       },
       "io_active": {
@@ -146,13 +150,13 @@
     "ports/picocalc/bios/boot/update.c": "8a50f5fcc0374cda87e9126f842e23e156b01cab5da2817780170577477e91e2",
     "ports/picocalc/bios/boot/start.S": "d60da2552be9f1b4437c45eb3bb8a035b7450513b6ea6e4fe1995d8232deab69",
     "ports/picocalc/bios/boot/entry.h": "75bfb68e014e1f5d768f0eaff401a7429961603e0c2428b82dc85b673bd66bc8",
-    "ports/picocalc/bios/boot/README.md": "489570436a1f91970e9c998d096959488326a3f91976f206e2280d6076a984f6",
+    "ports/picocalc/bios/boot/README.md": "be1655daa9b4c79fa0ee0e017f5e819e3a6da367b8321f122a5a4ebc53ced128",
     "ports/picocalc/bios/boot/wire.c": "33f1b9fafccdbf1d3596eead5a4f943e3ec767fa2ed0396ffa38dff69fe88c5c",
     "ports/picocalc/bios/boot/entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
     "ports/picocalc/bios/boot/update.h": "a8725ef9baf8a8064f881e56d1538fcecddadc2c7a926a8de9470db01f774c3a",
-    "tools/firmware/picocalc/build_boot_bios.py": "f0c10b5b08665157438366eab83ab136d6ce3fd99ea8a176bf94504590005dc7",
+    "tools/firmware/picocalc/build_boot_bios.py": "161eaeaa49da641a989b395d7d66dd7b181c179a82de0b2dbeb682010a7560ec",
     "tools/firmware/picocalc/bios_boot.py": "56cb9cc8cf9b6f1c6dfe0a0df8390c5110e3311289c5919abc4d10b8b96ee52f",
-    "tools/firmware/picocalc/build_async_bios.py": "d09e54dc3cbde15e2ffd4c3e3d85dce783bfa0098689a1abd9d892704a9629e9",
+    "tools/firmware/picocalc/build_async_bios.py": "b7e9211e55a713bacae0db8c8c2b99fa7cc3ea1f1dd7db211148ea5efa4f2965",
     "tools/firmware/picocalc/bios_keyboard_index.py": "59bc5206ef25244629e3ce7d1106b7ad3a63a208085c440414f92bd941e62f76",
     "tools/firmware/picocalc/bios_pmu_async.py": "9e719e32d3f6519104283bfee19d3e998ce199c75f6971ec406ca75a68f2c665",
     "tools/firmware/picocalc/bios_stm3_input.py": "48c910456ab242e9f82751400528db0d75aa9d5944a9517463efb53640c054ac",
@@ -160,6 +164,9 @@
     "tools/firmware/picocalc/bios_stm3_crc.py": "f737d964efe07f5f5173204bf5dadf07b9ff1217d5a2ca671ef967f2a5bbb807",
     "tools/firmware/picocalc/bios_stm3_result.py": "bd53292ae96917951a40cfa569285f56081da5d6f4e079c763467a6eac2a4d38",
     "ports/picocalc/bios/stm3_crc_f103.h": "d240e2d5b48121d146cfcaded937677a2ae21ef8c9d5d3786eafe30d0d3ddf84",
+    "tools/firmware/picocalc/bios_rtc_cache.py": "6caacde966abed868005beaca52b76e40262684684bd33213bc3aa8e0ac298a3",
+    "ports/picocalc/bios/rtc_cache.c": "90fe6b3ce1a60198d48e964acd1b4d5c88ee142bc40d2ce36d73716f71235699",
+    "ports/picocalc/bios/rtc_cache.h": "5acda6735a863cd2840d95b25732940a7244b7ddfec6bfe5454c16ff98be90d4",
     "examples/portable-apps/BIOSUPD/main.c": "69766ea5126d1c3018237b6a592a5a70e553e4bb8dafe5952b5730dd6b635fbe",
     "sdk/coproc/pico_uart1.c": "21ace812d861500c10c9566da8b5e1e3e028d61bef0901b2af2748f08495231b",
     "sdk/coproc/stm3_client.h": "284dbbc80d4381b4657587ed45837edf7d6ad7417b1b1b559cf8b5d72195edbd"
@@ -181,6 +188,7 @@
     "source/Core/Inc/protocol.h": "e3d8e361d8f926a52cfd78b1303beded9a36f39858b6042752549ca5b7744396",
     "source/Core/Inc/regs.h": "f6716853f3db50efb709e169192727bd87501190f7f2cb4b51f43d2470871819",
     "source/Core/Inc/rtc.h": "55790257e9eebe565475ebee1a74f5ebc6600ab321fbf36437e664d8dbcbdb0b",
+    "source/Core/Inc/rtc_cache.h": "5acda6735a863cd2840d95b25732940a7244b7ddfec6bfe5454c16ff98be90d4",
     "source/Core/Inc/stm32f1xx_hal_conf.h": "693dcf6d74754c58f23a130fae53dbed25f933a987063fd2c396b405c1f3bcd7",
     "source/Core/Inc/stm32f1xx_it.h": "0beccf859f738288f5b78a9ec82282d8c44e1d457eafb8638b73c9de6193c3ff",
     "source/Core/Inc/stm3_crc_f103.h": "d240e2d5b48121d146cfcaded937677a2ae21ef8c9d5d3786eafe30d0d3ddf84",
@@ -196,22 +204,23 @@
     "source/Core/Src/eeprom.c": "455788331a446e0e14fef26cb48987603af2070bc7314521cfc15976bdb6b6a0",
     "source/Core/Src/fifo.c": "3fdcc2a85ed52a731fb8e075e92ee4f7e84e23a593d14698f52c792f2bea41ba",
     "source/Core/Src/hal_interface.c": "cae0f1eb02e829d6a4d9450f58ec37ea04b7934460c307ff50295e2828d7cbe5",
-    "source/Core/Src/i2cs.c": "88fcdfe43a83240afaa972069a17615d7c575af8dd37fc219a61037b6e9b118b",
+    "source/Core/Src/i2cs.c": "5a4cbef9590cbacab0bdf1f481c6667e6a5047f0dcc00e3d3236adb8fa3c134c",
     "source/Core/Src/keyboard.c": "f6dc61f828dc8e168ab7c01ea978269d0df2cb1763fcc07cdf25b85605482afb",
     "source/Core/Src/m3b_entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
-    "source/Core/Src/main.c": "e0c35d1d8ab7789fe90a1e8d728f374c85fc030c40f2c179a79615395ff7fcac",
+    "source/Core/Src/main.c": "8b1693a3bfd8f6f4745bd61ea51976561a62d51d92b0c93e44d5d9f9bec8a64d",
     "source/Core/Src/power_status.c": "764890612017dd3cc7af31f4bc15c0d6d4556ed6844a07c67de852b2c7ac3fdc",
     "source/Core/Src/regs.c": "5ddcad682076de73040f2cfec8ac5ae60de4c498b4ac61986f015772411846fb",
-    "source/Core/Src/rtc.c": "9d3a7ed52c6c6ba151ac02159c157657fe92d7230e559d312d9907fb4ab8c3c1",
+    "source/Core/Src/rtc.c": "b6d13323dc00d02ac67437ee732c908c556ad8dba0e2e501a662aa64b030984c",
+    "source/Core/Src/rtc_cache.c": "90fe6b3ce1a60198d48e964acd1b4d5c88ee142bc40d2ce36d73716f71235699",
     "source/Core/Src/stm32f1xx_it.c": "12dd069e29c94e4746229e67b068f50901e5fcda8d85a9a72e2aea7a15267954",
     "source/Core/Src/stm3_runtime.c": "dc8c483f10d86a673d500687cf4ab661d1382c01d1f01fa082b4555d2decea26",
     "source/Core/Src/stm3_uart_dma.c": "3a6ed732838420dc4b9c3b6ebb5ce5e05053df92b851eb82a1be8179a0d8f5bc",
     "source/Core/Src/system_stm32f1xx.c": "066a4c59a0a6697a31d9fa7722413655808493e4436a4c0b1ecbb765ffa3a604",
-    "source/Makefile": "c94d4ddf809b325404354ce524765e9165189380f29fa4b3a41a43b57f3afc7a",
+    "source/Makefile": "2f6fb8ea3189b63739d23d349e24c28b774bfdd8922bafad8e810969363cf10b",
     "source/STM32F103XX_FLASH.ld": "068d777d43120c4723b2808e2638ce72b33f66b3bb2cace1e3195d9cc53f4c13",
     "source/startup_stm32f103xb.s": "a9a5fc7ed5ff617527dd98b3092830f4d17ed4bf57c99eac2c53bdb514ce138c",
     "source/LICENSE": "feaa84fb75c878ad3fab6b6debda9667f04b0b7e02b82b00ff092c2d79044e7b",
-    "boot/README.md": "489570436a1f91970e9c998d096959488326a3f91976f206e2280d6076a984f6",
+    "boot/README.md": "be1655daa9b4c79fa0ee0e017f5e819e3a6da367b8321f122a5a4ebc53ced128",
     "boot/boot.ld": "da7b1cc5fc7298f18f862744635e239325ffef32b2d90630636773d15b78feab",
     "boot/entry.c": "6b49a288297d3cd91d9d64df87eb333758fcf5dc8429d94128ad4e0927a994c7",
     "boot/entry.h": "75bfb68e014e1f5d768f0eaff401a7429961603e0c2428b82dc85b673bd66bc8",
@@ -223,6 +232,6 @@
     "boot/wire.c": "33f1b9fafccdbf1d3596eead5a4f943e3ec767fa2ed0396ffa38dff69fe88c5c",
     "boot/wire.h": "b5d46159b65a13fe1c1523b4e81255edd077cf91329e7844256fa178999791f5",
     "rebuild.py": "7178bf08cb8fa2561e8bb3215572533382e8660d0f2def9ffe1e02f32ef33b8f",
-    "expected.json": "ea918656f4193deb3cf976f391d4382ddff7cda23f879aa7129ba822064f2e4a"
+    "expected.json": "86f4f1902cfeb12fc99d1d58528b21d03478ac1eee0d7ed55448379e12f3a7c7"
   }
 }

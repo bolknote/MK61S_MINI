@@ -1,7 +1,8 @@
 # Обновление BIOS M3 через Pico H
 
-Сборка: `python3 tools/firmware/picocalc/build_boot_bios.py`. Скопируйте
-полученный `sd/Apps/BIOS` на карту, откройте `BIOSUPD.APP`, нажмите Enter.
+Запустите `python3 tools/firmware/picocalc/build_boot_bios.py` для сборки.
+Скопируйте `System` из `Disk/` в корень карты, откройте
+**Весь диск → System → BIOS → BIOSUPD.APP** и нажмите Enter.
 Esc отменяет операцию до её начала. Образ `BIOS.M3U` лежит рядом с APP.
 
 Сначала на M3 один раз устанавливается постоянный загрузчик. Старый BIOS

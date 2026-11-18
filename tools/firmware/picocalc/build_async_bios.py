@@ -22,6 +22,7 @@ from bios_stm3_reply import stage_stm3_reply
 from bios_stm3_crc import stage_stm3_crc
 from bios_stm3_result import stage_stm3_result
 from bios_keyboard_index import stage_keyboard_index
+from bios_rtc_cache import stage_rtc_cache
 from elf32 import ELF
 
 
@@ -78,6 +79,7 @@ def main():
     delta.update(stage_stm3_crc(source))
     delta.update(stage_stm3_result(source))
     delta.update(stage_keyboard_index(source))
+    delta.update(stage_rtc_cache(source))
     sources = {str(p.relative_to(source)): sha(p) for p in source.rglob("*")
                if p.is_file() and not p.is_relative_to(source / "Drivers") and not p.is_relative_to(source / "build")}
     output.mkdir(parents=True, exist_ok=True)

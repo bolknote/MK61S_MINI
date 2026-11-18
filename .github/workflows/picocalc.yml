@@ -104,11 +104,14 @@ jobs:
           git -C .build/m3-upstream submodule update --init --recursive
       - name: Build permanent loader, relocated BIOS and Pico updater
         run: python3 tools/firmware/picocalc/build_boot_bios.py --drivers .build/m3-upstream/Drivers --output-dir .build/m3-boot
+      - name: Check RTC cache and packaged hooks
+        run: python3 tests/picocalc_rtc_cache_self_test.py
       - name: Execute actual Thumb loader and update failure cases
         run: |
           python3 -m venv .build/m3-arm-tests
           .build/m3-arm-tests/bin/python -m pip install unicorn==2.1.4
           .build/m3-arm-tests/bin/python tests/picocalc_m3_boot_arm_self_test.py --firmware .build/m3-boot --output .build/m3-boot/arm-result.json
+          .build/m3-arm-tests/bin/python tests/picocalc_rtc_cache_arm_self_test.py --elf .build/m3-boot/base/source/build/picocalc_BIOS_jcs.elf --output .build/m3-boot/rtc-arm-result.json
       - uses: actions/upload-artifact@v7
         with:
           name: picocalc-m3-bios-update
@@ -118,8 +121,9 @@ jobs:
             .build/m3-boot/boot.bin
             .build/m3-boot/BIOS.M3U
             .build/m3-boot/source.zip
-            .build/m3-boot/sd/
+            .build/m3-boot/Disk/
             .build/m3-boot/arm-result.json
+            .build/m3-boot/rtc-arm-result.json
           if-no-files-found: error
 
   stm32-regression:
