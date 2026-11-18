@@ -27,7 +27,7 @@
     "limb_multiply_accumulates": 5490
   },
   "source_sha256": {
-    "research/m0-pow-comparison-20261117/large_exponents.py": "2a059f62e6e949070f01adac8383e68a3d9ba1460516bc5bf37865fcdeea4022",
+    "research/m0-pow-comparison-20261117/large_exponents.py": "effcad2b963d4e9f466e3a881af52bed4e8983b87e2aa14a9a9148ae688a4a5b",
     "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
     "code/native_eabi_m0_pow_large_constants.inc": "5b3f47d15abfd6d2c476043bb6dff14a4b1dc0cda7be3ebd4883e3efaa712ea4",
     "code/native_eabi_m0_pow_large.inc": "4df5742d9f31d527e323b8d8d41b7afc17d053187783fa1cfb9e6463a9d3ed1a",

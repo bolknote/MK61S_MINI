@@ -132,6 +132,8 @@ def fast_argument():
 
 
 def certify(workers):
+    if not __debug__:
+        raise RuntimeError('Enable Python assertions to verify the certificate')
     cuts = geometry()
     tasks = [(i, min(i+CHUNK, OUTPUT_LIMIT)) for i in range(0, OUTPUT_LIMIT, CHUNK)]
     start = monotonic()
@@ -183,7 +185,6 @@ def header():
 
 
 def main():
-    assert __debug__, 'Keep Python assertions enabled'
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--report', type=Path, required=True)
