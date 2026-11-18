@@ -26,6 +26,21 @@ static unsigned unexpected_extra_acquisitions;
 #ifdef AW_TEST_LCD_READBACK
 static uint16_t mock_gram[2][320*200];static unsigned mock_page,mock_op,mock_param,mock_x,mock_xend,mock_y;
 static uint8_t mock_params[4];static bool mock_active,mock_selected,mock_data;
+#ifdef AW_TRACE_HOST
+static unsigned visible_page, checked_frames;
+
+uint32_t aw_host_startup_millis(void) { return now_ms / 8; }
+
+void aw_host_check_pixels(const uint8_t *pixels, const uint16_t *palette, unsigned frame) {
+    assert(frame == 2387 + checked_frames);
+    for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i) {
+        const uint16_t *pair = &mock_gram[visible_page][2 * i];
+        assert(pair[0] == (palette[pixels[i] >> 4] ^ 0xffffu));
+        assert(pair[1] == (palette[pixels[i] & 15] ^ 0xffffu));
+    }
+    ++checked_frames;
+}
+#endif
 bool picocalc_lcd_test_begin(void){
 #if defined(AW_TEST_LCD_READBACK_FAIL) || defined(AW_TEST_LCD_FULL_FAIL_SPI)
     return false;
@@ -70,6 +85,9 @@ static uint32_t now(void) { return now_ms++; }
 static void service(void) { ++now_ms; if (audio_queued) --audio_queued; }
 static uint32_t clear(void) { loading_text = false; return 1; }
 static uint32_t write_text(uint32_t x, uint32_t y, const char *s, uint32_t n) {
+#ifdef AW_TRACE_HOST
+    if (!x && !y && n == 18 && !memcmp(s, "Preparing intro...", n)) return 1;
+#endif
     if (!x && !y && n == 17 && !memcmp(s, "Loading sounds...", n)) {
         loading_text = true; return 1;
     }
@@ -196,6 +214,9 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
         r->queued = audio_queued; return 1;
     }
     if (op == MK61_SERVICE_COLOR_DISPLAY) {
+#ifdef AW_TRACE_HOST
+        if (a == MK61_COLOR_SPI_HZ) return *(const uint32_t *)payload;
+#endif
         if (a == MK61_COLOR_END) { paging=false;return 1; }
         if (a == MK61_COLOR_PAGES_BEGIN) {
             ++legacy_page_begins;
@@ -215,7 +236,12 @@ static uint32_t call(uint32_t op, uint32_t a, uint32_t b, uint32_t c, void *payl
                 mock_page=*(uint32_t *)payload;
 #endif
             }
-            else {++page_shows;if(page_mode==3)return 0;}
+            else {
+                ++page_shows;if(page_mode==3)return 0;
+#ifdef AW_TRACE_HOST
+                visible_page = *(const uint32_t *)payload;
+#endif
+            }
             return 1;
         }
         if (a == MK61_COLOR_PAGES_END) {assert(paging);paging=false;++page_ends;return 1;}
@@ -308,6 +334,8 @@ int main(int argc, char **argv) {
         assert(strstr(debug_output,"AWFULL PASS"));
 #elif defined(AW_TEST_LCD_READBACK_FAIL)
         assert(strstr(debug_output,"AWPIX FAIL"));
+#elif defined(AW_TRACE_HOST)
+        assert(checked_frames == 67 && strstr(debug_output, "SCK END 0 0"));
 #else
         assert(strstr(debug_output,"AWSTORM DONE"));
 #endif

@@ -1,0 +1,39 @@
+.program wire
+.origin 0
+public edge:
+    wait 1 gpio 10
+    wait 0 gpio 10
+    jmp x-- edge
+public selected:
+    jmp pin deselected
+    jmp x-- selected
+deselected:
+    jmp selected
+public gap:
+    wait 1 gpio 10
+gap_fall:
+    wait 0 gpio 10
+    set y, 31
+gap_loop:
+    jmp pin gap_fall
+    jmp y-- gap_loop
+    mov isr, null
+    in pins, 1
+    mov y, isr
+    jmp !y gap_count
+    jmp gap
+gap_count:
+    jmp x-- gap
+public raw:
+    wait 0 gpio 13
+    set y, 3
+raw_block:
+    set x, 31
+raw_bit:
+    wait 1 gpio 10
+    wait 0 gpio 10
+    jmp x-- raw_bit
+    jmp y-- raw_block
+    wait 1 gpio 10
+public sample:
+    in pins, 1
