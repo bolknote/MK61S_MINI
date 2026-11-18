@@ -1,0 +1,576 @@
+{
+  "status": "PASS_RESIDUE_COMPARISON",
+  "certificate": {
+    "status": "PASS_RESIDUE_BOUND",
+    "practical_uniform_latency_established": false,
+    "log_gap_bits": 16300,
+    "maximum_residue_bits": 49152,
+    "maximum_product_width_bound": 65450,
+    "residue_array_bytes": 18432,
+    "maximum_squarings_per_power": 15,
+    "maximum_limb_products_positive": 5614932,
+    "maximum_limb_products_inverse": 5602202,
+    "sufficient_numerator_limits_by_denominator": {
+      "1": {
+        "positive": 1234,
+        "inverse": 1233
+      },
+      "2": {
+        "positive": 1234,
+        "inverse": 1232
+      },
+      "4": {
+        "positive": 1234,
+        "inverse": 1230
+      },
+      "8": {
+        "positive": 1234,
+        "inverse": 1226
+      },
+      "16": {
+        "positive": 1234,
+        "inverse": 1218
+      },
+      "32": {
+        "positive": 1234,
+        "inverse": 1202
+      },
+      "64": {
+        "positive": 1234,
+        "inverse": 1169
+      },
+      "128": {
+        "positive": 1234,
+        "inverse": 1104
+      },
+      "256": {
+        "positive": 1234,
+        "inverse": 973
+      },
+      "512": {
+        "positive": 1234,
+        "inverse": 713
+      },
+      "1024": {
+        "positive": 1234,
+        "inverse": 191
+      }
+    },
+    "source_sha256": {
+      "dev/tools/certify_m0_pow_residue.py": "9cc1e9cac41f139dc5720093e907ab45619e3d8be330a40243bc6ff9d4ee3990",
+      "code/native_eabi_m0_pow_residue.inc": "682e794b8203b437c991930c7af81ecd3be86c4b94e25d964f5bc0c819c33bca",
+      "code/native_eabi_m0_cr.cpp": "2cb9f97e3c4bd0f97719583c87f67d2047e79a16a012fb6537d5615f8b1669ca",
+      "code/native_eabi_m0_pow_log_side.inc": "101dfc82e9db785324a491d0701fc4caa9fef61ca0ad059073f8652296247418",
+      "code/native_eabi_m0_pow_stream.inc": "f18c7e6d9d9cf6ad2aa74d34bed84d001e6400fe4bb58590ccd9f27fa0d041e7"
+    }
+  },
+  "production_candidate": {
+    "head": "b6101918ac39cd25530e4e6cdfb30170da77e154",
+    "build": "77D87243",
+    "crc32": "EAD063B8",
+    "elf_sha256": "b8f0f978427bb797cdbfef254be0396f67e83ccbc1eb6e29a12f08f0352dc772",
+    "binary_sha256": "9084a8c35eef09a62194603768f772530e33badd547fce25744b3d00fc64f2be",
+    "flash_bytes": 1805072,
+    "static_ram_bytes": 119384,
+    "scratch_y_bytes": 4096,
+    "stream_section_bytes": 10856
+  },
+  "host": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "counts": {
+      "admitted": 4024,
+      "right_shift": 1429,
+      "non_tie": 4020,
+      "inverse": 2050,
+      "left_shift": 542,
+      "exact_tie": 4,
+      "no_shift": 3,
+      "rejected": 3
+    },
+    "maximum_modulus_bits": 49152,
+    "benchmark_cases": [
+      {
+        "name": "positive",
+        "x": 4607182418800017376,
+        "y": 4652222813120233472,
+        "lower": 4607182418799984607,
+        "expected": 1,
+        "gap": 50,
+        "exponent_numerator": 1025,
+        "denominator": 1,
+        "modulus_bits": 49152,
+        "full_integer_bits": 49200
+      },
+      {
+        "name": "negative",
+        "x": 4607182418800001024,
+        "y": 13844342331467104256,
+        "lower": 4607182418800086975,
+        "expected": 1,
+        "gap": 34,
+        "exponent_numerator": 1087,
+        "denominator": 128,
+        "modulus_bits": 49152,
+        "full_integer_bits": 49178
+      },
+      {
+        "name": "balanced",
+        "x": 4607182418800017344,
+        "y": 13829797991654883328,
+        "lower": 4607182418800017437,
+        "expected": -1,
+        "gap": 38,
+        "exponent_numerator": 469,
+        "denominator": 512,
+        "modulus_bits": 49152,
+        "full_integer_bits": 49180
+      }
+    ],
+    "virtual_product_case": {
+      "name": "virtual_recomputation",
+      "x": 9142045784583740095,
+      "y": 13830686397050126336,
+      "lower": 200080554861,
+      "expected": 1,
+      "gap": 35,
+      "modulus_bits": 47618,
+      "exponent_numerator": 527,
+      "denominator": 512,
+      "full_integer_bits": 47643
+    }
+  },
+  "linked_arm": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": "b8f0f978427bb797cdbfef254be0396f67e83ccbc1eb6e29a12f08f0352dc772",
+    "direct": [
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fe0000000000000",
+        "lower": "3ff1111111191110",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "0000000000000001",
+        "y": "bfd70a3d70a3d70a",
+        "lower": "5818eeea8e7afd22",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 107
+        }
+      },
+      {
+        "x": "0000000000000003",
+        "y": "3fefffeb074a771d",
+        "lower": "0000000000000002",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "7fefffffffffffff",
+        "y": "3ff0000000000001",
+        "lower": "7fefffffffffffff",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "3feffffffc000000",
+        "y": "3fd1659e4b40566e",
+        "lower": "3feffffffee9a61b",
+        "expected": -1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      }
+    ],
+    "forced_routes": [
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fe0000000000000",
+        "lower": "3ff1111111191110",
+        "rounded": "3ff1111111191111",
+        "stages": {
+          "forced_8192": 1,
+          "log": 1,
+          "watchdog": 214
+        },
+        "stack_bytes": 15508
+      },
+      {
+        "x": "4000000000000000",
+        "y": "c090cc0000000000",
+        "lower": "0000000000000000",
+        "rounded": "0000000000000000",
+        "stages": {
+          "forced_8192": 1,
+          "log": 1,
+          "residue": 1
+        },
+        "stack_bytes": 13292
+      },
+      {
+        "x": "4000000000000000",
+        "y": "c090cc0000000000",
+        "lower": "0000000000000000",
+        "rounded": "0000000000000000",
+        "stages": {
+          "forced_8192": 1,
+          "log": 1,
+          "residue": 1,
+          "forced_residue": 1,
+          "stream": 1
+        },
+        "stack_bytes": 13292
+      }
+    ]
+  },
+  "regression": {
+    "status": "PASS",
+    "elf_sha256": "b8f0f978427bb797cdbfef254be0396f67e83ccbc1eb6e29a12f08f0352dc772",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "pow": {
+        "status": "PASS",
+        "cases": 80395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 80196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "d75b9e207238fbc0c67b321453b5a6c54b4c1c4e66eaaf7e2accf47617b79fdf"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "The exact RP2040 pow fallback has no practical uniform latency bound."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+    "actual_bootrom": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "initializers": [
+        {
+          "name": "__aeabi_bits_init",
+          "table": "aeabi_bits_funcs",
+          "pointers": [
+            "0x309",
+            "0x357",
+            "0x38f",
+            "0x32d"
+          ]
+        },
+        {
+          "name": "__aeabi_mem_init",
+          "table": "aeabi_mem_funcs",
+          "pointers": [
+            "0x26b9",
+            "0x261d",
+            "0x26ad",
+            "0x2605"
+          ]
+        }
+      ],
+      "intrinsic_models": []
+    }
+  },
+  "virtual_product_stream_host": {
+    "status": "PASS",
+    "callback_count": 843852,
+    "tracked_steps_lower": 864103424,
+    "tracked_steps_upper": 864104447,
+    "result": 1,
+    "case": {
+      "name": "virtual_recomputation",
+      "x": 9142045784583740095,
+      "y": 13830686397050126336,
+      "lower": 200080554861,
+      "expected": 1,
+      "gap": 35,
+      "exponent_numerator": 527,
+      "denominator": 512,
+      "modulus_bits": 47618,
+      "full_integer_bits": 47643,
+      "factor_bits": [
+        27909,
+        19734,
+        13928,
+        9867
+      ]
+    }
+  },
+  "benchmark_emulator": {
+    "proof": {
+      "status": "PASS",
+      "mpfr": "4.2.2",
+      "app_sha256": "8a2fe2d11b2f73d31d0113b553d5d33b4607199e1dd9b56eeca909f1c7e736ae",
+      "input_sha256": "2e0f251d7fc8d84d0fc1cd05682f775c857c583cbc3964a0ae8709f68c760b0d",
+      "runs": [
+        {
+          "relocated_base": "2001e000",
+          "cases": 4,
+          "guest_calls": {
+            "pow_sram_stream": 6,
+            "pow_sram_residue": 8,
+            "m0_pow_residue12_GLOBAL__N_1L11modulo_side": 8
+          },
+          "service_calls": 16094,
+          "stack_written_bytes": 19312,
+          "instructions_abba": [
+            [
+              32544408,
+              41705331,
+              41705331,
+              32544408
+            ],
+            [
+              51675010,
+              58103527,
+              58103527,
+              51675010
+            ],
+            [
+              60335710,
+              75339956,
+              75339956,
+              60335710
+            ],
+            [
+              null,
+              70245135,
+              70245135,
+              null
+            ]
+          ]
+        },
+        {
+          "relocated_base": "20024000",
+          "cases": 4,
+          "guest_calls": {
+            "pow_sram_stream": 6,
+            "pow_sram_residue": 8,
+            "m0_pow_residue12_GLOBAL__N_1L11modulo_side": 8
+          },
+          "service_calls": 16094,
+          "stack_written_bytes": 19312,
+          "instructions_abba": [
+            [
+              32544408,
+              41705331,
+              41705331,
+              32544408
+            ],
+            [
+              51675010,
+              58103527,
+              58103527,
+              51675010
+            ],
+            [
+              60335710,
+              75339956,
+              75339956,
+              60335710
+            ],
+            [
+              null,
+              70245135,
+              70245135,
+              null
+            ]
+          ]
+        }
+      ]
+    },
+    "app_memory_bytes": 14228,
+    "clock_hz": 125000000,
+    "order": [
+      "stream",
+      "residue",
+      "residue",
+      "stream"
+    ],
+    "source_pins": {
+      "native_eabi_m0_pow_residue.inc": {
+        "original": "682e794b8203b437c991930c7af81ecd3be86c4b94e25d964f5bc0c819c33bca",
+        "portable": "896df08449a683839a0a82110c0dba698a9ab89ad04360fd6fba7881f5558368"
+      },
+      "native_eabi_m0_pow_stream.inc": {
+        "original": "f18c7e6d9d9cf6ad2aa74d34bed84d001e6400fe4bb58590ccd9f27fa0d041e7",
+        "portable": "a9900f092ba64ff90015e99095ea17be8cfe7f16e9346aa7d6821ee90498c63b"
+      },
+      "native_eabi_m0_pow_exact.inc": {
+        "original": "6696a03a2b7e59bf278e9b9bb5d287d8388c748e1399eb34c96677c22468ca25",
+        "portable": "565ec62204b3b64d53adc6b4fa4faded850e142f0487003e19bb16d5014e2f21"
+      },
+      "native_eabi_m0_uint128.hpp": {
+        "original": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+        "portable": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7"
+      },
+      "pow_core.cpp": "500c079b50dcc739d5f53e94c62ae538e037fe4fd77ff4508be5c9c2f814837d",
+      "POWRES.c": "a82910a896ff1e95e3b96f3510b706222a7ea117136142468be8ca79ebc05b1a"
+    }
+  },
+  "test_source_sha256": {
+    "tests/m0_pow_residue_self_test.py": "1ff3565db6f65f0f786aa2a27ab46718804821693b00f8da0e92375756a379f9",
+    "tests/m0_pow_log_side_self_test.py": "93ea48401db14ec69ebcae88c1606805c0a670842172a1c39717dedbc6a3ff70"
+  },
+  "practical_uniform_latency_established": false,
+  "hardware_sram": {
+    "status": "PASS",
+    "clock_hz": 125000000,
+    "order": [
+      "stream",
+      "residue",
+      "residue",
+      "stream"
+    ],
+    "app_bytes": 12087,
+    "input_bytes": 160,
+    "app_sha256": "8a2fe2d11b2f73d31d0113b553d5d33b4607199e1dd9b56eeca909f1c7e736ae",
+    "input_sha256": "2e0f251d7fc8d84d0fc1cd05682f775c857c583cbc3964a0ae8709f68c760b0d",
+    "manifest_sha256": "157af59f46c366360ac31caa4802e7c2fc5d762744adddcf1c9f05e2b8242d5b",
+    "raw_result_sha256": "6ebdb8f235a2ca5a4ca347c0ccbae3c109302ded93eab7aec0ecbdedd207182d",
+    "session_sha256": "7e8faff67336bd87a3a2a43cf523aff636a30ee79299ec1045a6df6d85e491c1",
+    "finished_utc": "2026-11-18T16:32:05.727373+00:00",
+    "before": {
+      "BUILD": "F1B747A6",
+      "ACTUAL": "CF0B0F3B",
+      "IMAGE": "1805072",
+      "BOOTS": "36",
+      "BOOT_WATCHDOG": "0",
+      "CRASH": "NONE",
+      "UI": "CALCULATOR",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "MAX_GAP_MS": "979",
+      "SETTINGS_WRITES": "0",
+      "SETTINGS_ERASES": "0"
+    },
+    "after": {
+      "BUILD": "F1B747A6",
+      "ACTUAL": "CF0B0F3B",
+      "IMAGE": "1805072",
+      "BOOTS": "36",
+      "BOOT_WATCHDOG": "0",
+      "CRASH": "NONE",
+      "UI": "CALCULATOR",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "MAX_GAP_MS": "979",
+      "SETTINGS_WRITES": "0",
+      "SETTINGS_ERASES": "0"
+    },
+    "temporary_directory_removed": true,
+    "cdc_descriptor_closed": true,
+    "flash_writes": 0,
+    "dfu": false,
+    "reboot": false,
+    "rows": [
+      {
+        "gap": 50,
+        "modulus_bits": 49152,
+        "denominator": 1,
+        "exponent_numerator": 1025,
+        "x": "3fefffffffffffe0",
+        "y": "4090040000000000",
+        "lower": "3fefffffffff7fdf",
+        "name": "positive",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          450846,
+          560939,
+          560304,
+          435774
+        ],
+        "stream_mean_us": 443310.0,
+        "residue_mean_us": 560621.5
+      },
+      {
+        "gap": 34,
+        "modulus_bits": 49152,
+        "denominator": 128,
+        "exponent_numerator": 1087,
+        "x": "3fefffffffffc000",
+        "y": "c020fc0000000000",
+        "lower": "3ff0000000010fbf",
+        "name": "negative",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          670802,
+          779185,
+          779265,
+          670521
+        ],
+        "stream_mean_us": 670661.5,
+        "residue_mean_us": 779225.0
+      },
+      {
+        "gap": 38,
+        "modulus_bits": 49152,
+        "denominator": 512,
+        "exponent_numerator": 469,
+        "x": "3fefffffffffffc0",
+        "y": "bfed500000000000",
+        "lower": "3ff000000000001d",
+        "name": "balanced",
+        "result": "ffffffffffffffff",
+        "repeat": 1,
+        "timings_us": [
+          807329,
+          1012091,
+          1012394,
+          807308
+        ],
+        "stream_mean_us": 807318.5,
+        "residue_mean_us": 1012242.5
+      },
+      {
+        "gap": 35,
+        "modulus_bits": 47618,
+        "denominator": 512,
+        "exponent_numerator": 527,
+        "x": "7edf123456789abf",
+        "y": "bff0780000000000",
+        "lower": "0000002e95bafb6d",
+        "name": "virtual_recomputation",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          null,
+          941962,
+          941918,
+          null
+        ],
+        "stream_mean_us": null,
+        "residue_mean_us": 941940.0
+      }
+    ]
+  }
+}

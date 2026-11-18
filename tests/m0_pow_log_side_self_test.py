@@ -19,6 +19,7 @@ DIRECT = 'm0_pow_log_side12_GLOBAL__N_1L4sideEyyy'
 POWER = 'PowerBoundsILj512EE4sideE'
 FINAL = 'mk61_m0_pow_round_final'
 STREAM = 'm0_pow_stream12_GLOBAL__N_14sideEyyy'
+RESIDUE = 'm0_pow_residue12_GLOBAL__N_1L4sideEyyy'
 TIE = (bits(2.), bits(-1075.), 0)
 
 
@@ -123,16 +124,33 @@ def arm_tests(args, oracle):
 
     address = arm.elf.symbols[symbol(POWER)] & ~1
     arm.uc.hook_add(UC_HOOK_CODE,force_overlap,begin=address,end=address)
+    has_residue = any(RESIDUE in name for name in arm.elf.symbols)
+    force_stream = False
+    if has_residue:
+        def residue_entry(uc, _pc, _size, _name):
+            count(uc,0,0,'residue')
+            if force_stream:
+                count(uc,0,0,'forced_residue')
+                uc.reg_write(UC_ARM_REG_R0,0)
+                uc.reg_write(UC_ARM_REG_PC,uc.reg_read(UC_ARM_REG_LR))
+
+        address = arm.elf.symbols[symbol(RESIDUE)] & ~1
+        arm.uc.hook_add(UC_HOOK_CODE,residue_entry,begin=address,end=address)
     arm.uc.ctl_flush_tb()
     routes = []
     first = report[0]
-    for x,y,lower in (tuple(int(first[key],16) for key in ('x','y','lower')),TIE):
+    test_routes = [(tuple(int(first[key],16) for key in ('x','y','lower')),False), (TIE,False)]
+    if has_residue:
+        test_routes.append((TIE,True))
+    for (x,y,lower),force_stream in test_routes:
         entries.clear()
         arm.stack_lowest = SP
         rounded = oracle.reference('pow',x,y)
         assert arm.call(FINAL,x,y,c=lower)[0]==rounded
         assert entries['forced_8192']==entries['log']==1
-        assert entries.get('stream',0)==int((x,y,lower)==TIE)
+        is_tie = (x,y,lower)==TIE
+        assert entries.get('residue',0)==int(has_residue and is_tie)
+        assert entries.get('stream',0)==int(force_stream or (is_tie and not has_residue))
         routes.append(dict(x=f'{x:016x}',y=f'{y:016x}',lower=f'{lower:016x}',
                            rounded=f'{rounded:016x}',stages=entries.copy(),stack_bytes=SP-arm.stack_lowest))
         print('PASS route',routes[-1],flush=True)
