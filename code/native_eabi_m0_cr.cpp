@@ -92,6 +92,7 @@ extern "C" double mk61_m0_cr_exp(double x) { return core_exp::cr_exp(x); }
 #include "native_eabi_m0_pow_power_bounds.inc"
 #include "native_eabi_m0_pow_large_power.inc"
 #include "native_eabi_m0_pow_dyadic.inc"
+#include "native_eabi_m0_pow_log_side.inc"
 #include "native_eabi_m0_pow_stream.inc"
 
 extern "C" __attribute__((noinline,cold,section(".m0_pow_exact_extension")))
@@ -101,7 +102,8 @@ uint64_t mk61_m0_pow_large_subnormal(uint64_t y) {
 
 #define M0_POW_FINAL __attribute__((noinline,cold,section(".m0_pow_stream_extension")))
 static M0_POW_FINAL int pow_final_side(uint64_t x,uint64_t y,uint64_t lower) {
-  const int side=m0_pow_power_bounds::PowerBounds<512>::side(x,y,lower);
+  int side=m0_pow_power_bounds::PowerBounds<512>::side(x,y,lower);
+  if(!side) side=m0_pow_log_side::side(x,y,lower);
   return side?side:m0_pow_stream::side(x,y,lower,mk61_m0_pow_progress);
 }
 

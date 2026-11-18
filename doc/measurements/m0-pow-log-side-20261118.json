@@ -1,0 +1,445 @@
+{
+  "status": "PASS_LOG_SIDE",
+  "practical_uniform_latency_established": false,
+  "production_candidate": {
+    "source_revision": "530bcfa64f31cd36812def21a341d4d7df0513f6",
+    "build": "22BF1BEC",
+    "crc32": "5672DAB8",
+    "elf_sha256": "234e8879a09dbcd8466f050226d1760dfb9da5ca2fccfc1d510b20c10d6be9cd",
+    "binary_sha256": "d987c1e1f7f4f40d17eaa21af1aad377ef76f943fc614acec4d1aa47bf878edc",
+    "flash_bytes": 1805072,
+    "log_table_address": "10158000",
+    "log_table_bytes": 32768,
+    "scratch_y_bytes": 4096
+  },
+  "certificate": {
+    "status": "PASS_LOG_SIDE",
+    "arithmetic": {
+      "precision": 16384,
+      "error_units_upper": 364835,
+      "comparison_guard_bits": 83,
+      "unresolved_gap": "2^-16300",
+      "maximum_factors": {
+        "single": 510,
+        "blocks": 1134
+      },
+      "maximum_selected_operations_per_log": {
+        "reduction_word_updates": 1683456,
+        "limb_divisions": 492544,
+        "single_factor_group_inserts": 44850,
+        "block_power_limb_products": 420350
+      }
+    },
+    "close_one": {
+      "reference": "https://www.impan.pl/shop/en/publication/transaction/download/product/82485",
+      "theorem": "Theorem 2",
+      "parameters": {
+        "rho_shift": 29,
+        "a": 79,
+        "h": 57,
+        "mu": "5/12"
+      },
+      "maximum_base_displacement": "2^-27",
+      "maximum_abs_y_within_input_domain": "1/2",
+      "positive_base_encodings": 100663297,
+      "nonzero_log_gap": "2^-15977",
+      "loss_nats": 11018,
+      "maximum_q_exponent": 81
+    },
+    "practical_uniform_latency_established": false,
+    "source_sha256": {
+      "dev/tools/certify_m0_pow_log_side.py": "195c32347da9b056e827370bd90704a53050739613dbe3df344efd27791ad548",
+      "code/native_eabi_m0_pow_log_side_table.inc": "6fd6221e9ccd692935acdbedffad2120fd5371b7b070d567a67eb12ec09e1eae",
+      "code/native_eabi_m0_pow_log_side.inc": "101dfc82e9db785324a491d0701fc4caa9fef61ca0ad059073f8652296247418",
+      "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+      "code/native_eabi_m0_cr.cpp": "4339ea3c0ab1cb8e8f47ebaf8912ec39f6406bd3eacd3e3a6924f9ba6db3fa6b"
+    }
+  },
+  "host": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "directed_log_enclosures": 521,
+    "maximum_log_error_units": 114410,
+    "non_tie_comparisons": 1026,
+    "exact_ties": 2
+  },
+  "arm": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": "234e8879a09dbcd8466f050226d1760dfb9da5ca2fccfc1d510b20c10d6be9cd",
+    "direct": [
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fe0000000000000",
+        "lower": "3ff1111111191110",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "0000000000000001",
+        "y": "bfd70a3d70a3d70a",
+        "lower": "5818eeea8e7afd22",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 107
+        }
+      },
+      {
+        "x": "0000000000000003",
+        "y": "3fefffeb074a771d",
+        "lower": "0000000000000002",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "7fefffffffffffff",
+        "y": "3ff0000000000001",
+        "lower": "7fefffffffffffff",
+        "expected": 1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      },
+      {
+        "x": "3feffffffc000000",
+        "y": "3fd1659e4b40566e",
+        "lower": "3feffffffee9a61b",
+        "expected": -1,
+        "stack_bytes": 15412,
+        "stages": {
+          "log": 1,
+          "watchdog": 214
+        }
+      }
+    ],
+    "forced_routes": [
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fe0000000000000",
+        "lower": "3ff1111111191110",
+        "rounded": "3ff1111111191111",
+        "stages": {
+          "forced_8192": 1,
+          "log": 1,
+          "watchdog": 214
+        },
+        "stack_bytes": 15508
+      },
+      {
+        "x": "4000000000000000",
+        "y": "c090cc0000000000",
+        "lower": "0000000000000000",
+        "rounded": "0000000000000000",
+        "stages": {
+          "forced_8192": 1,
+          "log": 1,
+          "stream": 1
+        },
+        "stack_bytes": 13292
+      }
+    ]
+  },
+  "regression": {
+    "status": "PASS",
+    "elf_sha256": "234e8879a09dbcd8466f050226d1760dfb9da5ca2fccfc1d510b20c10d6be9cd",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "pow": {
+        "status": "PASS",
+        "cases": 80395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 80196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "d75b9e207238fbc0c67b321453b5a6c54b4c1c4e66eaaf7e2accf47617b79fdf"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "The exact RP2040 pow fallback has no practical uniform latency bound."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+    "actual_bootrom": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "initializers": [
+        {
+          "name": "__aeabi_bits_init",
+          "table": "aeabi_bits_funcs",
+          "pointers": [
+            "0x309",
+            "0x357",
+            "0x38f",
+            "0x32d"
+          ]
+        },
+        {
+          "name": "__aeabi_mem_init",
+          "table": "aeabi_mem_funcs",
+          "pointers": [
+            "0x26b9",
+            "0x261d",
+            "0x26ad",
+            "0x2605"
+          ]
+        }
+      ],
+      "intrinsic_models": []
+    }
+  },
+  "evidence_source_sha256": {
+    "tests/fixtures/m0_pow_log_side_host.cpp": "04e6079e4fa191b07df6e9217bf537faff67cc97249c3de9b10118c140d774bc",
+    "tests/m0_pow_log_side_self_test.py": "faa8efd67f6da0bf6791bdac81307b87a40e3bc24125deb12403cdd7fde737c6",
+    "dev/tools/certify_m0_pow_close_one.py": "dc3d955ce050757d3cc59c1e0479e9fcb3e03529c1367ab99b9d3e76115568e0",
+    "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645"
+  },
+  "linked_script_sha256": "e2fd0204206ff0daec431c5a0adffca85b70729faaa13811bd979c72f5083cae",
+  "hardware_sram_comparators": {
+    "status": "PASS",
+    "clock_hz": 125000000,
+    "order": [
+      "8192",
+      "log16384",
+      "log16384",
+      "8192"
+    ],
+    "app_bytes": 38562,
+    "app_memory_bytes": 39220,
+    "app_sha256": "93216a8a45f2287d15015933a051cd3b0d7663b3aab8bf21599c5e01059d768a",
+    "input_bytes": 200,
+    "input_sha256": "4e49bb472e5d715a24af22300b2566763ce873ea203f819261fb1e97e27c789f",
+    "manifest_sha256": "0384fb0ce176385ce9f9595497232f7dd23adf3b1a17e99aac3cdc61d40612f9",
+    "result_sha256": "1f66e20a074bf87c1ea69a140f38d3c1a5ba6a2ba96ed7ad56b3051f527cd6cb",
+    "session_sha256": "6dcec7466336085e0201f7fb0ccbbdc5d376dc2579961555b192a44200fb1fb9",
+    "finished_utc": "2026-11-18T14:27:54.302432+00:00",
+    "before": {
+      "BUILD": "546F415E",
+      "ACTUAL": "F89D238E",
+      "IMAGE": "1805072",
+      "BOOTS": "29",
+      "BOOT_WATCHDOG": "0",
+      "CRASH": "NONE",
+      "UI": "CALCULATOR",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "MAX_GAP_MS": "947",
+      "SETTINGS_WRITES": "0",
+      "SETTINGS_ERASES": "0"
+    },
+    "after": {
+      "BUILD": "546F415E",
+      "ACTUAL": "F89D238E",
+      "IMAGE": "1805072",
+      "BOOTS": "29",
+      "BOOT_WATCHDOG": "0",
+      "CRASH": "NONE",
+      "UI": "CALCULATOR",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "MAX_GAP_MS": "2392",
+      "SETTINGS_WRITES": "0",
+      "SETTINGS_ERASES": "0"
+    },
+    "flash_writes": 0,
+    "dfu": false,
+    "reboot": false,
+    "temporary_directory_removed": true,
+    "cdc_descriptor_closed": true,
+    "rows": [
+      {
+        "x": "000fffffffffffff",
+        "y": "bbffffffffffffff",
+        "lower": "3ff0000000000000",
+        "name": "wide_denominator",
+        "result": "ffffffffffffffff",
+        "repeat": 1,
+        "timings_us": [
+          2388153,
+          1663113,
+          1662788,
+          2388133
+        ],
+        "power_mean_us": 2388143.0,
+        "log_mean_us": 1662950.5
+      },
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fda123456789abc",
+        "lower": "3ff0dd2269d6f366",
+        "name": "wide_normal",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          1350668,
+          1927335,
+          1927603,
+          1350675
+        ],
+        "power_mean_us": 1350671.5,
+        "log_mean_us": 1927469.0
+      },
+      {
+        "x": "3ff2345678abcdef",
+        "y": "3fe0000000000000",
+        "lower": "3ff1111111191110",
+        "name": "ordinary_half",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          313,
+          1923510,
+          1923432,
+          313
+        ],
+        "power_mean_us": 313.0,
+        "log_mean_us": 1923471.0
+      },
+      {
+        "x": "3feffffffc000000",
+        "y": "3fd1659e4b40566e",
+        "lower": "3feffffffee9a61b",
+        "name": "close_one",
+        "result": "ffffffffffffffff",
+        "repeat": 1,
+        "timings_us": [
+          1351090,
+          1924474,
+          1924379,
+          1351091
+        ],
+        "power_mean_us": 1351090.5,
+        "log_mean_us": 1924426.5
+      },
+      {
+        "x": "0000000000000003",
+        "y": "3fefffeb074a771d",
+        "lower": "0000000000000002",
+        "name": "subnormal_result",
+        "result": "0000000000000001",
+        "repeat": 1,
+        "timings_us": [
+          1265020,
+          1928191,
+          1928682,
+          1265023
+        ],
+        "power_mean_us": 1265021.5,
+        "log_mean_us": 1928436.5
+      }
+    ],
+    "emulator_relocation_preflight": {
+      "status": "PASS",
+      "mpfr": "4.2.2",
+      "app_sha256": "93216a8a45f2287d15015933a051cd3b0d7663b3aab8bf21599c5e01059d768a",
+      "input_sha256": "4e49bb472e5d715a24af22300b2566763ce873ea203f819261fb1e97e27c789f",
+      "runs": [
+        {
+          "relocated_base": "2001e000",
+          "cases": 5,
+          "guest_calls": {
+            "pow_sram_8192": 10,
+            "pow_sram_log": 10,
+            "m0_pow_log_side12_GLOBAL__N_1L4sideEyyy": 10
+          },
+          "service_calls": 2158,
+          "stack_written_bytes": 15780,
+          "instructions_abba": [
+            [
+              191777083,
+              162655084,
+              162655084,
+              191777083
+            ],
+            [
+              108140885,
+              192609094,
+              192609094,
+              108140885
+            ],
+            [
+              26782,
+              192202675,
+              192202675,
+              26782
+            ],
+            [
+              108125606,
+              192214783,
+              192214783,
+              108125606
+            ],
+            [
+              101334462,
+              192675511,
+              192675511,
+              101334462
+            ]
+          ]
+        },
+        {
+          "relocated_base": "20024000",
+          "cases": 5,
+          "guest_calls": {
+            "pow_sram_8192": 10,
+            "pow_sram_log": 10,
+            "m0_pow_log_side12_GLOBAL__N_1L4sideEyyy": 10
+          },
+          "service_calls": 2158,
+          "stack_written_bytes": 15780,
+          "instructions_abba": [
+            [
+              191777083,
+              162655084,
+              162655084,
+              191777083
+            ],
+            [
+              108140885,
+              192609094,
+              192609094,
+              108140885
+            ],
+            [
+              26782,
+              192202675,
+              192202675,
+              26782
+            ],
+            [
+              108125606,
+              192214783,
+              192214783,
+              108125606
+            ],
+            [
+              101334462,
+              192675511,
+              192675511,
+              101334462
+            ]
+          ]
+        }
+      ]
+    }
+  }
+}

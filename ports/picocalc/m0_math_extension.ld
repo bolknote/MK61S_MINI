@@ -63,6 +63,14 @@ SECTIONS {
         *(.m0_asin_refine_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
+    .m0_pow_log_table 0x10158000 : {
+        *(.m0_pow_log_table)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.m0_asin_refine_extension) + SIZEOF(.m0_asin_refine_extension) <= ADDR(.m0_pow_log_table),
+           "Asin refinement overlaps pow logarithm table")
+    ASSERT(ADDR(.m0_pow_log_table) + SIZEOF(.m0_pow_log_table) <= 0x10160000,
+           "Pow logarithm table overlaps pow hot code")
     .m0_pow_extension 0x10160000 : {
         *(.m0_pow_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
