@@ -1,0 +1,410 @@
+{
+  "status": "PASS_PREIMAGE_GRID",
+  "exponent_binades": [
+    -64,
+    -55
+  ],
+  "normalized_exponent_significand_bits": 20,
+  "signed_binary64_exponents": 10485760,
+  "base_domain": "all finite positive binary64 bases",
+  "checked_breakpoint_preimages": 1170210816,
+  "checked_normalized_preimages_both_signs": 2340421632,
+  "breakpoint_counts": {
+    "-64": 2,
+    "-63": 4,
+    "-62": 8,
+    "-61": 18,
+    "-60": 36,
+    "-59": 70,
+    "-58": 140,
+    "-57": 280,
+    "-56": 558,
+    "-55": 1116
+  },
+  "fixed_point_bits": 144,
+  "minimum_distance_to_mantissa_grid_units": 352063166210037072,
+  "closest": {
+    "float": {
+      "exponent_binade": -57,
+      "significand": 772911,
+      "breakpoint_offset_units": -78,
+      "breakpoint_offset_shift": 54,
+      "distance_to_mantissa_grid_units": 352063166210037072
+    },
+    "midpoint": {
+      "exponent_binade": -56,
+      "significand": 603395,
+      "breakpoint_offset_units": 39,
+      "breakpoint_offset_shift": 53,
+      "distance_to_mantissa_grid_units": 391752810233234339
+    }
+  },
+  "absolute_log_gap_strict_lower_bound": "2^-151",
+  "first_512_bit_stage_decides": true,
+  "first_512_bit_work": {
+    "log_series_iterations": 171,
+    "exp_iterations_per_endpoint": 12,
+    "maximum_full_fixed_point_products": 392,
+    "maximum_product_limb_multiply_accumulates": 508032,
+    "maximum_limb_divisions": 14040
+  },
+  "core_math_256_bit_rounding": {
+    "relative_approximation_error_strict_upper_bound": "2^-240",
+    "rejected_absolute_log_gap_strict_upper_bound": "2^-237",
+    "rescue_reachable_in_certified_domain": false
+  },
+  "source_sha256": {
+    "research/m0-pow-comparison-20261117/small_exponents.py": "bd68f4198ff26b5d8e19590dffa0b52fafa041e812701a04596b0de8ed1ae02c",
+    "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
+    "dev/tools/certify_m0_pow_power_bounds.py": "b78135930c147fde23c9ad85fea02fcbb88aecc70309acf27efd495688f2c616",
+    "dev/tools/certify_m0_pow_interval.py": "6c3ba7665c2a5949609c430eda0cc9c3ce17f1e61d8b528f851935db00434e8c",
+    "third_party/core_math/pow/pow.c": "7923cfc21e02a9f4f16b85d8fac539192d5efc3e117dbcf3138fcdce153de000",
+    "code/native_eabi_m0_cr.cpp": "d62f37ff08e619554879bd2769ab316542c8b914c3781bb040b5919d131f2893",
+    "code/native_eabi_m0_pow_interval.inc": "dbb3a29b7561b1b3bff826149adffbb18c1e7815630ec4e32399eb6413b9d753",
+    "code/native_eabi_m0_pow_interval_table.inc": "5e235aa46c4a1fbed4bd00d958fd7bb401cfb7ff5b354b3675b1348e36771c5d"
+  },
+  "practical_uniform_bound_for_all_binary64": false,
+  "fixed_point_enumeration": {
+    "workers": 12,
+    "wall_seconds": 822.6,
+    "independent_arb_sample": {
+      "status": "PASS",
+      "independently_enclosed_breakpoint_preimages": 20000,
+      "normalized_preimages_both_signs": 40000,
+      "arb_working_precision_bits": 320
+    }
+  },
+  "all_significand_bits_round_to_one": {
+    "status": "PASS_ROUND_TO_ONE_RANGES",
+    "exponent_binades": [
+      -64,
+      -55
+    ],
+    "exponent_significand_bits": 53,
+    "paired_inputs_covered": 161196875369457446238234976496648192,
+    "paired_inputs_in_ten_exponent_binades": 830361849173499387066328475102085120,
+    "certified_base_ranges": {
+      "-64": {
+        "decreases": {
+          "first": "11c44109edb2079d",
+          "last": "6e19476504ba8727"
+        },
+        "increases": {
+          "first": "0000000000000001",
+          "last": "7fefffffffffffff"
+        }
+      },
+      "-63": {
+        "decreases": {
+          "first": "28d9755956ad4d9e",
+          "last": "57041c7a8814bf83"
+        },
+        "increases": {
+          "first": "11c44109edb20890",
+          "last": "6e19476504ba85f8"
+        }
+      },
+      "-62": {
+        "decreases": {
+          "first": "34642eb9f39afaa7",
+          "last": "4b795e54c5dd4296"
+        },
+        "increases": {
+          "first": "28d9755956ad4e37",
+          "last": "57041c7a8814bf0a"
+        }
+      },
+      "-61": {
+        "decreases": {
+          "first": "3a2969d47321e48d",
+          "last": "45b425982cf597ff"
+        },
+        "increases": {
+          "first": "34642eb9f39afae3",
+          "last": "4b795e54c5dd424a"
+        }
+      },
+      "-60": {
+        "decreases": {
+          "first": "3d0c8464f7616445",
+          "last": "42d1f43fcc4b6642"
+        },
+        "increases": {
+          "first": "3a2969d47321e4b3",
+          "last": "45b425982cf597e1"
+        }
+      },
+      "-59": {
+        "decreases": {
+          "first": "3e7e355bbaee85b8",
+          "last": "4160f2ebd0a8002a"
+        },
+        "increases": {
+          "first": "3d0c8464f761645a",
+          "last": "42d1f43fcc4b6635"
+        }
+      },
+      "-58": {
+        "decreases": {
+          "first": "3f35fc21041027a6",
+          "last": "40a749ea7d470c75"
+        },
+        "increases": {
+          "first": "3e7e355bbaee85c4",
+          "last": "4160f2ebd0a80024"
+        }
+      },
+      "-57": {
+        "decreases": {
+          "first": "3f92c155b8213cf2",
+          "last": "404b4c902e273a5c"
+        },
+        "increases": {
+          "first": "3f35fc21041027aa",
+          "last": "40a749ea7d470c70"
+        }
+      },
+      "-56": {
+        "decreases": {
+          "first": "3fc152aaa3bf81cb",
+          "last": "401d8e64b8d4ddb0"
+        },
+        "increases": {
+          "first": "3f92c155b8213cf4",
+          "last": "404b4c902e273a5a"
+        }
+      },
+      "-55": {
+        "decreases": {
+          "first": "3fd78b56362cef37",
+          "last": "4005bf0a8b14576a"
+        },
+        "increases": {
+          "first": "3fc152aaa3bf81cc",
+          "last": "401d8e64b8d4ddae"
+        }
+      }
+    },
+    "applies_with_sign": "Use decreases when y*log(x)<0 and increases when y*log(x)>0. Both ranges include x=1, which returns 1 directly.",
+    "absolute_log_gap_strict_lower_bound_for_x_other_than_one": "2^-117",
+    "core_math_256_bit_rounding": {
+      "relative_approximation_error_strict_upper_bound": "2^-240",
+      "rejected_absolute_log_gap_strict_upper_bound": "2^-237",
+      "rescue_reachable_in_certified_domain": false
+    },
+    "source_sha256": {
+      "research/m0-pow-comparison-20261117/round_one_ranges.py": "099d1dd722d1b6009fa9f54bc614e6b3cc53a154518db16916b412ee386b05a9",
+      "research/m0-pow-comparison-20261117/small_exponents.py": "bd68f4198ff26b5d8e19590dffa0b52fafa041e812701a04596b0de8ed1ae02c",
+      "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
+      "third_party/core_math/pow/pow.c": "7923cfc21e02a9f4f16b85d8fac539192d5efc3e117dbcf3138fcdce153de000"
+    }
+  },
+  "implementation_validation": {
+    "hardware_verified": false,
+    "firmware_build_id": "2a2c28bf",
+    "firmware_crc32": "56f961cd",
+    "elf_sha256": "d07acdbc1d087fd9808ef720e37df1a7cda7f4341f5ecc2c46a55e9f7373cded",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "compiled_rounding_guard_checks": 794,
+    "public_pow_mpfr_cases": 80395,
+    "public_pow_result_sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29",
+    "forced_phase_tests": {
+      "cases": 3146,
+      "stage_entry_counts": {
+        "stage2": 43,
+        "stage3": 22
+      },
+      "elf_sha256": "c5dd71c8b79d87693679d7796f9b29ddcc612e4348c67d7a699354d962ca8e58"
+    },
+    "forced_rescue_test_cases": 31,
+    "preimage_neighbors": {
+      "status": "PASS",
+      "public_cases": 116,
+      "core_direct_cases": 116,
+      "forced_512_cases": 20,
+      "forced_512_vectors": [
+        {
+          "x": "19c4401c6fe7ad29",
+          "y": "3c67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "19c4401c6fe7ad2a",
+          "y": "3c67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "19c4401c6fe7ad2b",
+          "y": "3c67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "19c4401c6fe7ad2c",
+          "y": "3c67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "19c4401c6fe7ad2d",
+          "y": "3c67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "277dae158754534a",
+          "y": "bc726a0600000000",
+          "result": "3ff0000000000014"
+        },
+        {
+          "x": "277dae158754534b",
+          "y": "bc726a0600000000",
+          "result": "3ff0000000000014"
+        },
+        {
+          "x": "277dae158754534c",
+          "y": "bc726a0600000000",
+          "result": "3ff0000000000014"
+        },
+        {
+          "x": "277dae158754534d",
+          "y": "bc726a0600000000",
+          "result": "3ff0000000000013"
+        },
+        {
+          "x": "277dae158754534e",
+          "y": "bc726a0600000000",
+          "result": "3ff0000000000013"
+        },
+        {
+          "x": "5861402b8d5f7a72",
+          "y": "3c726a0600000000",
+          "result": "3ff0000000000013"
+        },
+        {
+          "x": "5861402b8d5f7a73",
+          "y": "3c726a0600000000",
+          "result": "3ff0000000000013"
+        },
+        {
+          "x": "5861402b8d5f7a74",
+          "y": "3c726a0600000000",
+          "result": "3ff0000000000013"
+        },
+        {
+          "x": "5861402b8d5f7a75",
+          "y": "3c726a0600000000",
+          "result": "3ff0000000000014"
+        },
+        {
+          "x": "5861402b8d5f7a76",
+          "y": "3c726a0600000000",
+          "result": "3ff0000000000014"
+        },
+        {
+          "x": "6619488d7b6aa56b",
+          "y": "bc67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "6619488d7b6aa56c",
+          "y": "bc67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "6619488d7b6aa56d",
+          "y": "bc67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "6619488d7b6aa56e",
+          "y": "bc67965e00000000",
+          "result": "3fefffffffffffd9"
+        },
+        {
+          "x": "6619488d7b6aa56f",
+          "y": "bc67965e00000000",
+          "result": "3fefffffffffffd9"
+        }
+      ],
+      "maximum_observed_guest_instructions": {
+        "public": 130385,
+        "core": 130236,
+        "forced": 7203801
+      },
+      "mpfr": "4.2.2",
+      "elf_sha256": "d07acdbc1d087fd9808ef720e37df1a7cda7f4341f5ecc2c46a55e9f7373cded",
+      "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+    },
+    "round_to_one_endpoints": {
+      "status": "PASS",
+      "certified_arm_endpoints": 40,
+      "adjacent_uncertified_cases": 38,
+      "adjacent_results_not_equal_to_one": 38,
+      "mpfr": "4.2.2"
+    },
+    "synthetic_guard_routing": {
+      "status": "PASS_SYNTHETIC_GUARD_ROUTING",
+      "mpfr": "4.2.2",
+      "results": {
+        "before": {
+          "elf_sha256": "d2e541faef64ef564fe4cb304e67d5a310abae98a528bb7ed83eeff8713f69d0",
+          "rows": [
+            {
+              "case": "below_first_normal_midpoint",
+              "x": "3ff8000000000000",
+              "y": "3fd4000000000000",
+              "expected": "3ff2294f418200da",
+              "got": "3ff0000000000000",
+              "rescue_entries": 0
+            },
+            {
+              "case": "below_zero_minsub_midpoint",
+              "x": "4008000000000000",
+              "y": "c08531fef209dba3",
+              "expected": "0000000000000001",
+              "got": "0000000000000000",
+              "rescue_entries": 0
+            }
+          ]
+        },
+        "after": {
+          "elf_sha256": "82d822e3e593f9b05b2b61f3e0c8970fc847b3e82f8d4450899c86d21a41078c",
+          "rows": [
+            {
+              "case": "below_first_normal_midpoint",
+              "x": "3ff8000000000000",
+              "y": "3fd4000000000000",
+              "expected": "3ff2294f418200da",
+              "got": "3ff2294f418200da",
+              "rescue_entries": 1
+            },
+            {
+              "case": "below_zero_minsub_midpoint",
+              "x": "4008000000000000",
+              "y": "c08531fef209dba3",
+              "expected": "0000000000000001",
+              "got": "0000000000000001",
+              "rescue_entries": 0
+            }
+          ]
+        }
+      },
+      "scope": "Synthetic evaluator state, injected before the two affected guards in a separate ARM build."
+    },
+    "natural_refinement": {
+      "status": "PASS",
+      "cases": 20,
+      "stage_visits": {
+        "public": {
+          "stage2": 10,
+          "stage3": 1
+        },
+        "core": {
+          "stage2": 10,
+          "stage3": 1
+        }
+      },
+      "elf_sha256": "f22e83305e17a8a5142972b63802c46b1b562cc26cc911c5c1471b0ecb63e560",
+      "scope": "Instrumentation only. No forced branch or approximation change."
+    }
+  }
+}
