@@ -172,9 +172,21 @@ static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t
                     bool banded, unsigned shift, uint32_t known, uint32_t *dirty) {
     if (!d || !pixels || !palette || !present || pixels == d->previous || pixels == d->scratch)
         return false;
-    const bool full = !d->valid || memcmp(d->palette, palette, sizeof(d->palette));
     const unsigned band_rows = banded ? AW_VIDEO_BAND_ROWS : COMPACT_ROWS;
     const unsigned bands = AW_VIDEO_HEIGHT / band_rows;
+    bool full = !d->valid || memcmp(d->palette, palette, sizeof(d->palette));
+    /* Equal strip identities prove that the entire index image already
+     * matches the LCD. Identities 1 through 16 also specify a fill colour. */
+    if (full && d->valid && !banded && known == (1u << bands) - 1u) {
+        full = false;
+        for (unsigned b = 0; b < AW_VIDEO_BANDS; ++b) {
+            const uint32_t color = d->scroll_ids[b] - 1u;
+            if (color >= 16 || d->palette[color] != palette[color]) {
+                full = true;
+                break;
+            }
+        }
+    }
     rectangle rects[AW_VIDEO_BANDS];
     unsigned count = 0;
     *dirty = 0;

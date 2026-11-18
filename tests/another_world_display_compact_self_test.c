@@ -113,7 +113,46 @@ static void scrolled(unsigned capacity) {
     assert(!aw_display_compact_present_scrolled(&d, frame, palette, AW_VIDEO_HEIGHT, send_rect, p));
     free(rotated); free(p); free(old_frame); free(store); free(previous); free(storage);
 }
+static void palette_on_fills(void) {
+    uint8_t frame[AW_VIDEO_PAGE_BYTES], previous[3200], store[AW_VIDEO_PAGE_BYTES];
+    uint32_t ids[AW_VIDEO_BANDS];
+    uint16_t palette[16] = {0};
+    panel *p = calloc(1, sizeof(*p));
+    assert(p);
+    aw_assets assets = {.capacity = sizeof(store), .ctx = store, .store_read = rd, .store_write = wr};
+    aw_display_compact d;
+    assert(aw_display_compact_init(&d, &assets, 0, previous, sizeof(previous), previous, sizeof(previous)));
+    for (unsigned b = 0; b < AW_VIDEO_BANDS; ++b) {
+        const unsigned color = b % 2 ? 3 : 7;
+        ids[b] = color + 1;
+        memset(frame + b * AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE, color * 17, AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE);
+    }
+    palette[3] = 0x307;
+    palette[7] = 0x4A5;
+    assert(aw_display_compact_present_tracked(&d, frame, palette, 0, ids, send_rect, p));
+    equal(p, frame, palette);
+    const unsigned shown = p->calls;
+    palette[2] = 0xCAFE;
+    assert(aw_display_compact_present_tracked(&d, frame, palette, 0, ids, send_rect, p));
+    assert(p->calls == shown && d.palette[2] == 0xCAFE);
+    equal(p, frame, palette);
+    palette[3] = 0x780;
+    assert(aw_display_compact_present_tracked(&d, frame, palette, 0, ids, send_rect, p));
+    assert(p->calls > shown);
+    equal(p, frame, palette);
+    /* A general identity proves index equality, but carries no colour. */
+    ids[0] = 42;
+    assert(aw_display_compact_present_tracked(&d, frame, palette, 0, ids, send_rect, p));
+    const unsigned unknown = p->calls;
+    palette[2] ^= 1;
+    assert(aw_display_compact_present_tracked(&d, frame, palette, 0, ids, send_rect, p));
+    assert(p->calls > unknown);
+    equal(p, frame, palette);
+    free(p);
+}
+
 int main(void) {
+    palette_on_fills();
     run(12800, false); run(400, false); run(12800, true); run(3200, true);
     scrolled(12800); scrolled(3200);
     puts("Another World compact display tests passed"); return 0;

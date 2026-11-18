@@ -396,13 +396,14 @@ static void music(void *ctx, unsigned id, unsigned delay, unsigned pos) {
 }
 static void stop_audio(void *ctx) { host *h = ctx; aw_audio_stop(h->audio); aw_audio_stop(h->remote); }
 #if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
-/* The normal DOS route from the pool to the first camera cut. Model the
- * bounded background writes between displays without a host wall clock. */
+/* Replay the DOS route from the pool, modelling the bounded background
+ * writes between displays independently of the host wall clock. */
 typedef struct {
     host io;
     aw_video video;
     unsigned slices, previous_scroll, checked;
-    uint64_t previous_reads, previous_writes;
+    uint64_t previous_reads, previous_writes, pool_start_io;
+    uint64_t route_hash;
 } cut_probe;
 
 static bool cut_wait(void *ctx, unsigned slices) {
@@ -421,10 +422,24 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
                    page_pixels[0] + (y + shift) % AW_VIDEO_HEIGHT * AW_VIDEO_WIDTH, AW_VIDEO_WIDTH * sizeof(uint16_t));
         memcpy(page_pixels[0], page_pixels[1], sizeof(page_pixels[0]));
     }
+    const uint64_t wire_before = display_bytes[display_part];
     assert(aw_display_compact_present_tracked(&compact, pixels, palette, shift,
                                                aw_video_band_identities(&p->video), display_rect, NULL));
     for (unsigned i = 0; i < AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT; ++i)
         assert(page_pixels[0][i] == palette[(pixels[i / 2] >> ((i & 1) ? 0 : 4)) & 15]);
+    const uint32_t frame_hash = aw_storm_frame_hash(pixels, palette);
+    p->route_hash = (p->route_hash ^ frame_hash) * UINT64_C(1099511628211);
+    /* Evicting the background between alternating display pages costs
+     * over 5,000 PSRAM transactions during these twenty pool frames. */
+    if (p->io.frames == 5) p->pool_start_io = p->io.store_reads + p->io.store_writes;
+    if (p->io.frames == 25) assert(p->io.store_reads + p->io.store_writes - p->pool_start_io <= 800);
+    if (p->io.frames >= 5 && p->io.frames <= 7) {
+        static const uint32_t hashes[] = {0x8F7FC229u, 0xD3E992A3u, 0xA3437B92u};
+        static const unsigned payloads[] = {0, 128000, 45968};
+        const unsigned i = p->io.frames - 5;
+        assert(p->slices == 4 && frame_hash == hashes[i]);
+        assert(display_bytes[display_part] - wire_before == payloads[i]);
+    }
     /* Foreground PSRAM budgets under the eight idle polls below. Physical
      * frame deadlines are measured independently on the device. */
     static const struct { unsigned frame, slices; uint32_t hash, reads, writes; } cuts[] = {
@@ -436,7 +451,7 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
     };
     if (p->checked < sizeof(cuts) / sizeof(cuts[0]) && p->io.frames == cuts[p->checked].frame) {
         assert(p->slices == cuts[p->checked].slices);
-        assert(aw_storm_frame_hash(pixels, palette) == cuts[p->checked].hash);
+        assert(frame_hash == cuts[p->checked].hash);
         const uint64_t reads = p->io.store_read_bytes - p->previous_reads;
         const uint64_t writes = p->io.store_write_bytes - p->previous_writes;
         assert(reads <= cuts[p->checked].reads && writes <= cuts[p->checked].writes);
@@ -453,7 +468,10 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
     return true;
 }
 static int camera_cut(const char *path) {
-    cut_probe p = {.io = {.path = path, .capacity = 2 * 1024 * 1024}};
+    cut_probe p = {
+        .io = {.path = path, .capacity = 2 * 1024 * 1024},
+        .route_hash = UINT64_C(14695981039346656037)
+    };
     p.io.store = calloc(1, p.io.capacity);
     uint8_t pixels[AW_VIDEO_PAGE_BYTES], spare[AW_VIDEO_PAGE_BYTES], list[4096];
     char name[1024];
@@ -476,14 +494,15 @@ static int camera_cut(const char *path) {
     assert(aw_vm_init(&vm, &a, &p.video, (aw_vm_host){.ctx = &p, .frame_wait = cut_wait}, 1));
     vm.vars[0xBC] = 0x10; vm.vars[0xC6] = 0x80; vm.vars[0xF2] = 4000; vm.vars[0xDC] = 33;
     assert(aw_vm_set_part(&vm, AW_VM_FIRST_PART + 2));
-    for (unsigned step = 0; step < 500 && p.io.frames < 245; ++step) {
+    for (unsigned step = 0; step < 1800; ++step) {
         aw_input input = {.directions = step < 90 ? AW_INPUT_UP : AW_INPUT_RIGHT, .button = step >= 90};
         if (step >= 120 && step % 55 < 18) input.directions |= AW_INPUT_UP;
         assert(aw_vm_frame(&vm, &input));
     }
-    assert(p.io.frames >= 245 && p.checked == 5);
+    /* Fingerprint of the independently recorded 1802 indexed frames and palettes. */
+    assert(p.io.frames == 1802 && p.route_hash == UINT64_C(0xDEBE2AC625BAA207) && p.checked == 5);
     free(p.io.store);
-    puts("DOS camera cut verified at frames 168-170 and 222-223");
+    puts("DOS pool route and camera cuts verified across 1802 frames");
     return 0;
 }
 #endif

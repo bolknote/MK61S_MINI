@@ -381,6 +381,11 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
     if (v->last_copy_scrolled_scratch && src == 0 && (dst == 1 || dst == 2) &&
         v->spare_valid && v->spare_page == 3 && v->resident_page != dst && v->resident_page != 0)
         swap_resident(v);
+    /* When alternating display pages are replaced from page 3, the
+     * following polygons can still read the background straight from SRAM. */
+    if (!scrolled && src == 3 && (dst == 1 || dst == 2) && !v->background_valid &&
+        v->spare_valid && v->spare_page == 0 && v->resident_page != dst && v->resident_page != 3)
+        swap_resident(v);
     v->last_copy_scrolled_scratch = scrolled && src == 3 && (dst == 1 || dst == 2);
     /* When copying from the second resident page to an uncached one, keep
      * the source in SRAM instead of evicting and rereading it. */
