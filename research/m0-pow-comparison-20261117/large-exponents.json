@@ -550,6 +550,79 @@
     "fast_exp_certificate": {
       "status": "PASS_ARITHMETIC_BOUNDS",
       "pow_exp_q62_enclosure": "3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise"
-    }
+    },
+    "other_public_regression": {
+      "sqrt": {
+        "status": "PASS",
+        "cases": 10018,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+      },
+      "sin": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+      },
+      "cos": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+      },
+      "tan": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+      },
+      "atan": {
+        "status": "PASS",
+        "cases": 20401,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+      },
+      "asin": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+      },
+      "acos": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+      },
+      "ln": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+      },
+      "log10": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+      },
+      "fma": {
+        "status": "PASS",
+        "cases": 24553,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+      }
+    },
+    "other_public_regression_report_sha256": "9356783e6859f4794ba4e1f65d01074f9944d47c9c864f93aa87b5aef66de782"
   }
 }
