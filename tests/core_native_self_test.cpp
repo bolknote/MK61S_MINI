@@ -57,6 +57,47 @@ static void initialize(bool expanded) {
   core_61::enable();
 }
 
+static void check_context_nibbles() {
+  scenario = "packed context nibbles";
+  for(unsigned value = 0; value <= 0xFFFF; ++value) {
+    for(unsigned offset = 0; offset < 4; ++offset) {
+      u8 input[12] = {}, packed[8], restored[12];
+      std::memset(packed, 0xA5, sizeof(packed));
+      std::memset(restored, 0xA5, sizeof(restored));
+      u8* digits = input + offset;
+      for(unsigned i = 0; i < 4; ++i) digits[i] = (value >> (4 * i)) & 15U;
+      digits[4] = 3;
+      digits[5] = 12;
+      u8* bytes = packed + offset + 1;
+      require(core_61::pack_nibbles(digits, 6, bytes), "valid digits rejected");
+      require(bytes[-1] == 0xA5 && bytes[0] == (value & 255) && bytes[1] == (value >> 8) &&
+              bytes[2] == 0xC3 && bytes[3] == 0xA5, "packed bytes or guard changed");
+      u8* decoded = restored + offset + 1;
+      core_61::unpack_nibbles(bytes, 6, decoded);
+      require(decoded[-1] == 0xA5 && std::memcmp(digits, decoded, 6) == 0 &&
+              decoded[6] == 0xA5, "unpacked digits or guard changed");
+    }
+  }
+  u8 invalid[6] = {}, packed[3];
+  for(u8& digit : invalid) {
+    digit = 0x10;
+    require(!core_61::pack_nibbles(invalid, sizeof(invalid), packed),
+            "invalid nibble accepted in a word or two-digit tail");
+    digit = 0;
+  }
+  initialize(false);
+  State destination;
+  std::memset(destination.bytes, 0xA5, sizeof(destination.bytes));
+  const State untouched = destination;
+  for(u8* bad : {&ringM[sizeof(ringM) - 1], &m_IK1302.R[0], &m_IK1302.ST[41],
+                 &m_IK1303.R[1], &m_IK1303.ST[40], &m_IK1306.R[2], &m_IK1306.ST[39]}) {
+    *bad |= 0x10;
+    require(!core_61::save_context(destination) && same(destination, untouched),
+            "invalid nibble committed a partial snapshot");
+    *bad &= 15;
+  }
+}
+
 // The public snapshot always uses 16-byte logical body offsets, regardless
 // of Flash packing or cache residency. Exercise every body in all six lanes.
 static void check_and_amk_context_offsets(bool expanded) {
@@ -945,6 +986,7 @@ static void check_far_bank_zero_branch() {
 int main() {
   using namespace native_test;
   std::setvbuf(stdout, nullptr, _IONBF, 0);
+  check_context_nibbles();
   for(bool expanded : {false, true}) {
     check_and_amk_context_offsets(expanded);
 #if MK61_CORE_PREDECODED_ROM

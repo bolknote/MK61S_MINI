@@ -62,7 +62,7 @@ extern void release_segment_ws_graphics(void);
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
-#include "terminal_front_coding.hpp"
+#include "terminal_isa_families.hpp"
 #include "terminal_listing.hpp"
 #include "terminal_mnemonics.hpp"
 #include "terminal_line_editor.hpp"
@@ -304,18 +304,7 @@ static_assert(terminal_mnemonic_equals(
               "opcode D9 must retain the P9 register mnemonic");
 
 #if MK61_F401_PRODUCT_BUILD
-// Consecutive mnemonic families share long prefixes (sto[0]..sto[E],
-// Kx>=0 0..E, ...). Store only the common-prefix length plus each suffix in
-// product F401 images. The canonical CSV strings above remain the single
-// editable source and are consumed entirely at compile time.
-static_assert(terminal_front_coding::source_valid(ISA_61),
-              "front-coded mnemonic source contains a control byte");
-static_assert(terminal_mnemonic_max_length(ISA_61) <
-                  terminal_front_coding::END,
-              "front-coded mnemonic prefix does not fit its marker byte");
-
-static constexpr auto ISA_61_FRONT = terminal_front_coding::encode<
-    terminal_front_coding::encoded_size(ISA_61)>(ISA_61);
+static constexpr terminal_mnemonics::RegisterFamilies<ISA_61> ISA_61_FAMILIES;
 #endif
 
 class TerminalMnemonicTable {
@@ -326,11 +315,9 @@ class TerminalMnemonicTable {
                  sizeof(ISA_61)),
         table_(nullptr) {
       if(!scratch_.ok()) return;
-      if(terminal_front_coding::decode(
-           ISA_61_FRONT.bytes, sizeof(ISA_61_FRONT.bytes),
-           (char*) scratch_.data(), sizeof(ISA_61))) {
-        table_ = (const char*) scratch_.data();
-      }
+      char* table = reinterpret_cast<char*>(scratch_.data());
+      ISA_61_FAMILIES.expand(table);
+      table_ = table;
     }
 #else
       : table_(ISA_61) {}

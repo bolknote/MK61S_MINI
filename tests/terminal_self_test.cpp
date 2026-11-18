@@ -2,7 +2,7 @@
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
 #include "terminal_file_transfer.hpp"
-#include "terminal_front_coding.hpp"
+#include "terminal_isa_families.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_encoding.hpp"
 #include "terminal_output.hpp"
@@ -453,27 +453,17 @@ static void test_assembler_accepts_final_mnemonic_and_is_atomic_input(void) {
   assert(assembly.error == terminal_core::AssemblyError::TOO_LONG);
 }
 
-static void test_terminal_mnemonic_front_coding(void) {
-  static constexpr char source[] = "sto0,sto1,stoA,K\317->X9,?";
-  static_assert(terminal_front_coding::source_valid(source),
-                "valid CP1251 mnemonic table rejected");
-  static constexpr auto encoded = terminal_front_coding::encode<
-      terminal_front_coding::encoded_size(source)>(source);
-  static_assert(sizeof(encoded.bytes) < sizeof(source),
-                "front coding should shrink mnemonic families");
+static constexpr char classic_isa[] =
+#include "terminal_classic_isa.inc"
+;
 
-  char decoded[sizeof(source)] = {};
-  assert(terminal_front_coding::decode(
-      encoded.bytes, sizeof(encoded.bytes), decoded, sizeof(decoded)));
-  assert(std::memcmp(decoded, source, sizeof(source)) == 0);
-  assert(!terminal_front_coding::decode(
-      encoded.bytes, sizeof(encoded.bytes), decoded, sizeof(decoded) - 1U));
-  assert(!terminal_front_coding::decode(
-      encoded.bytes, sizeof(encoded.bytes) - 1U, decoded, sizeof(decoded)));
-
-  const u8 bad_prefix[] = {1, 'x', terminal_front_coding::END};
-  assert(!terminal_front_coding::decode(
-      bad_prefix, sizeof(bad_prefix), decoded, sizeof(decoded)));
+static void test_terminal_mnemonic_families(void) {
+  static constexpr terminal_mnemonics::RegisterFamilies<classic_isa> families;
+  char guarded[sizeof(classic_isa) + 2];
+  std::memset(guarded, '!', sizeof(guarded));
+  families.expand(guarded + 1);
+  assert(std::memcmp(guarded + 1, classic_isa, sizeof(classic_isa)) == 0);
+  assert(guarded[0] == '!' && guarded[sizeof(guarded) - 1] == '!');
 }
 
 static void test_script_allowlist_is_explicit(void) {
@@ -1136,7 +1126,7 @@ int main(void) {
   test_display_integer_fast_path_matches_legacy();
   test_register_initializer_parser_is_atomic();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
-  test_terminal_mnemonic_front_coding();
+  test_terminal_mnemonic_families();
   test_script_allowlist_is_explicit();
   test_terminal_wire_is_fixed_cp1251();
   test_m61_print_escapes_and_interpolation();

@@ -3,24 +3,25 @@
 #if MK61_PROPORTIONAL_UI_FONTS
 
 #include "ui_font.hpp"
+#include "little_endian.hpp"
 
 namespace ui_font {
 namespace {
 
-struct FaceData {
-  const uint8_t* records;
-  const uint8_t* shapes;
-  Metrics metrics;
-};
-
-// F401 stores only the exceptional codepoints; its 64 Cyrillic glyphs
-// already occupy one consecutive range. Keep other targets' lookup unchanged.
 #if defined(STM32F401xC) || defined(STM32F401xE) || \
     (!defined(__arm__) && !defined(__thumb__) && defined(MK61_TEST_FONT_CYRILLIC_RANGE))
-#define MK61_UI_FONT_CYRILLIC_RANGE 1
+#define MK61_UI_FONT_F401 1
+using ShapeWord = uint16_t;
 #else
-#define MK61_UI_FONT_CYRILLIC_RANGE 0
+#define MK61_UI_FONT_F401 0
+using ShapeWord = uint8_t;
 #endif
+
+struct FaceData {
+  const uint8_t* records;
+  const ShapeWord* shapes;
+  Metrics metrics;
+};
 #include "ui_font_data.inc"
 
 unsigned faceIndex(Face face) {
@@ -30,7 +31,7 @@ unsigned faceIndex(Face face) {
   return size;
 }
 
-#if MK61_UI_FONT_CYRILLIC_RANGE
+#if MK61_UI_FONT_F401
 int glyphIndex(uint32_t codepoint) {
   if(codepoint >= 0x20U && codepoint <= 0x7EU)
     return (int)(codepoint - 0x20U);
@@ -84,6 +85,19 @@ Glyph glyph(Face face, uint32_t codepoint) {
   const FaceData& data = FACES[selected];
   const unsigned bit = (unsigned) index * 18U;
   const uint8_t* encoded = data.records + bit / 8U;
+#if MK61_UI_FONT_F401
+  const uint32_t value = little_endian::read32(encoded) >> (bit & 7U);
+  const unsigned offset = value & 0xFFFU;
+  const uint16_t shape = data.shapes[(value >> 12) & 0x3FU];
+  const uint8_t margins = HORIZONTAL_MARGINS[shape >> 12];
+  const uint8_t width = shape & 15U;
+  const uint8_t height = (shape >> 4) & 15U;
+  return {PIXEL_BITMAP + offset, width, height,
+          static_cast<int8_t>(margins & 7U),
+          static_cast<int8_t>(int(height) + int((shape >> 8) & 15U) - 3),
+          static_cast<uint8_t>(width + (margins >> 3)),
+          font_glyph::BitmapLayout::TIGHT_MSB, fallback};
+#else
   const uint32_t value = ((uint32_t) encoded[0] | ((uint32_t) encoded[1] << 8) |
       ((uint32_t) encoded[2] << 16)) >> (bit & 7U);
   const unsigned offset = value & 0xFFFU;
@@ -97,6 +111,7 @@ Glyph glyph(Face face, uint32_t codepoint) {
           static_cast<int8_t>((fields >> 8) & 7U), static_cast<int8_t>(bearing_y),
           static_cast<uint8_t>((fields >> 16) & 0x1FU),
           font_glyph::BitmapLayout::TIGHT_MSB, fallback};
+#endif
 }
 
 } // namespace ui_font

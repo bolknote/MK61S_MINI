@@ -30,6 +30,14 @@
 #include "config.h"
 #endif
 #include "rust_types.h"
+#include "little_endian.hpp"
+#if defined(STM32F401xC) || defined(STM32F401xE) || \
+    (!defined(ARDUINO) && !defined(__arm__) && !defined(__thumb__) && defined(MK61_TEST_WORD_CONTEXT))
+#include <type_traits>
+#define MK61_CORE_WORD_CONTEXT 1
+#else
+#define MK61_CORE_WORD_CONTEXT 0
+#endif
 #include "stm32_sram_bit_band.hpp"
 #include "dwt_profiler.hpp"
 #if MK61_CORE_PACKED_AMK
@@ -2297,7 +2305,6 @@ static_assert(dcw_fields_match(ROM.IK1306.microinstructions, IK1306_DCW),
     (!defined(ARDUINO) && !defined(__arm__) && !defined(__thumb__) && \
      defined(MK61_TEST_AND_AMK_6BIT))
 #define MK61_CORE_AND_AMK_6BIT 1
-#include "little_endian.hpp"
 // Six-bit Flash rows retain one address per body and the old logical values.
 // Conditional 60/62/64/66 tokens map reversibly to the four codes 60..63.
 // The trailing byte permits the last bounded two-byte column read.
@@ -4730,9 +4737,8 @@ void reset_hot_table_cache_statistics(void) {
 }
 
 // Полное состояние ядра: кольцо ДОЗУ, структуры трёх микросхем и единица угла.
-// Указатели внутри структур микросхем относятся к этому процессу, поэтому их
-// побайтовое копирование безопасно, пока сохранение и восстановление происходят
-// в одном запуске. Так захватывается всё наблюдаемое пользователем, включая
+// Снимок хранит логические смещения вместо указателей и упаковывает по две
+// тетрады в байт. Так захватывается всё наблюдаемое пользователем, включая
 // экранный регистр X2 (защёлку дисплея IK1302, отдельную от стека X) и защёлку ошибки.
 //
 // Хранилище ContextBuffer во владении вызывающей стороны избавляет обычную
@@ -4855,6 +4861,38 @@ static_assert(sizeof(PackedIK1306) == 80, "IK1306 snapshot layout changed");
 static_assert(sizeof(CoreContextSnapshot) <= core_61::CONTEXT_BUFFER_SIZE,
               "core context does not fit the public opaque buffer");
 
+#if MK61_CORE_WORD_CONTEXT
+static bool pack_nibbles(const u8* input, usize count, u8* output) {
+  if(!input || !output || (count & 1U)) return false;
+  const usize end = count & ~usize(3);
+  for(usize i = 0; i < end; i += 4) {
+    const u32 word = little_endian::read32(input + i);
+    if(word & 0xF0F0F0F0U) return false;
+    // Combine adjacent nibbles in the low byte of each halfword.
+    const u32 pairs = (word | (word >> 4)) & 0x00FF00FFU;
+    little_endian::write16(output + i / 2, static_cast<u16>(pairs | (pairs >> 8)));
+  }
+  if(end != count) {
+    const u16 pair = little_endian::read16(input + end);
+    if(pair & 0xF0F0U) return false;
+    output[end / 2] = static_cast<u8>(pair | (pair >> 4));
+  }
+  return true;
+}
+
+static void unpack_nibbles(const u8* input, usize count, u8* output) {
+  const usize end = count & ~usize(3);
+  for(usize i = 0; i < end; i += 4) {
+    const u32 word = little_endian::read16(input + i / 2);
+    const u32 pairs = (word | (word << 8)) & 0x00FF00FFU;
+    little_endian::write32(output + i, (pairs | (pairs << 4)) & 0x0F0F0F0FU);
+  }
+  if(end != count) {
+    const u8 pair = input[end / 2];
+    little_endian::write16(output + end, (pair & 0x0FU) | ((pair & 0xF0U) << 4));
+  }
+}
+#else
 static bool pack_nibbles(const u8* input, usize count, u8* output) {
   if(input == nullptr || output == nullptr || (count & 1U) != 0) return false;
   for(usize index = 0; index < count; index += 2) {
@@ -4872,6 +4910,8 @@ static void unpack_nibbles(const u8* input, usize count, u8* output) {
     output[index + 1U] = value >> 4;
   }
 }
+
+#endif
 
 static bool snapshot_offset(const u8* pointer, const u8* base,
                             usize size, u16& output) {
@@ -4910,7 +4950,61 @@ static const u8* restore_and_amk_pointer(const u8* base, u16 offset) {
                 AND_AMK_ACTIVE_STRIDE;
 }
 
+#if MK61_CORE_WORD_CONTEXT
+// Only scalars with the same relative offsets and types in both layouts may
+// be copied together. Ring and microcode pointers go through the offset codec.
+template<class Chip, class Dest, class Src>
+static inline void copy_chip_scalars(Dest& dest, const Src& src) {
+#define SAME_SLOT(first, field) \
+  (offsetof(Dest, field) - offsetof(Dest, first) == offsetof(Src, field) - offsetof(Src, first) && \
+   std::is_same_v<decltype(Dest::field), decltype(Src::field)>)
+  static_assert(SAME_SLOT(AMK, AMK) && SAME_SLOT(AMK, L) && SAME_SLOT(AMK, S) &&
+                SAME_SLOT(AMK, S1) && SAME_SLOT(AMK, P) && SAME_SLOT(AMK, T) &&
+                SAME_SLOT(AMK, MOD) && SAME_SLOT(AMK, flag_FC));
+  if constexpr (std::is_same_v<Chip, IK1302>) {
+    static_assert(SAME_SLOT(AMK, key_y) && SAME_SLOT(AMK, key_x) &&
+                  SAME_SLOT(AMK, key_xm) && SAME_SLOT(AMK, displayed) && SAME_SLOT(AMK, comma));
+  }
+  constexpr usize scalar_bytes = offsetof(Src, flag_FC) - offsetof(Src, AMK) + sizeof(Src::flag_FC);
+  static_assert(scalar_bytes == (std::is_same_v<Chip, IK1302> ? 13 : 8) * sizeof(u32));
+  auto* to = reinterpret_cast<u8*>(&dest);
+  const auto* from = reinterpret_cast<const u8*>(&src);
+  memcpy(to + offsetof(Dest, AMK), from + offsetof(Src, AMK), scalar_bytes);
+  if constexpr (std::is_same_v<Chip, IK1303>) {
+    static_assert(SAME_SLOT(key_x, key_x) && SAME_SLOT(key_x, key_xm) &&
+                  SAME_SLOT(key_x, key_y) && SAME_SLOT(key_x, comma));
+    static_assert(offsetof(Src, comma) - offsetof(Src, key_x) + sizeof(Src::comma) == 4 * sizeof(u16));
+    memcpy(to + offsetof(Dest, key_x), from + offsetof(Src, key_x), 4 * sizeof(u16));
+  }
+#undef SAME_SLOT
+}
+
+template<class Chip, class Packed>
+constexpr usize register_nibble_count() {
+  static_assert(offsetof(Chip, ST) == offsetof(Chip, R) + sizeof(Chip::R));
+  static_assert(sizeof(Chip::R) + sizeof(Chip::ST) == 2 * sizeof(Packed::registers));
+  return sizeof(Chip::R) + sizeof(Chip::ST);
+}
+
+template<class Chip, class Packed>
+static inline bool pack_chip_registers(const Chip& chip, Packed& packed) {
+  copy_chip_scalars<Chip>(packed, chip);
+  const u8* bytes = reinterpret_cast<const u8*>(&chip) + offsetof(Chip, R);
+  return pack_nibbles(bytes, register_nibble_count<Chip, Packed>(), packed.registers);
+}
+
+template<class Chip, class Packed>
+static inline void unpack_chip_registers(const Packed& packed, Chip& chip) {
+  copy_chip_scalars<Chip>(chip, packed);
+  u8* bytes = reinterpret_cast<u8*>(&chip) + offsetof(Chip, R);
+  unpack_nibbles(packed.registers, register_nibble_count<Chip, Packed>(), bytes);
+}
+#endif
+
 static bool save_ik1302(PackedIK1302& output) {
+#if MK61_CORE_WORD_CONTEXT
+  return pack_chip_registers(m_IK1302, output) &&
+#else
   output.AMK = m_IK1302.AMK;
   output.key_y = m_IK1302.key_y;
   output.key_x = m_IK1302.key_x;
@@ -4928,6 +5022,7 @@ static bool save_ik1302(PackedIK1302& output) {
                       output.registers) &&
          pack_nibbles(m_IK1302.ST, sizeof(m_IK1302.ST),
                       output.registers + sizeof(m_IK1302.R) / 2U) &&
+#endif
          snapshot_and_amk_offset(
              m_IK1302.pAND_AMK1, IK1302_AND_AMK_ACTIVE,
              output.p_and_amk1) &&
@@ -4938,6 +5033,9 @@ static bool save_ik1302(PackedIK1302& output) {
 }
 
 static bool save_ik1303(PackedIK1303& output) {
+#if MK61_CORE_WORD_CONTEXT
+  return pack_chip_registers(m_IK1303, output) &&
+#else
   output.AMK = m_IK1303.AMK;
   output.MOD = m_IK1303.MOD;
   output.S = m_IK1303.S;
@@ -4954,6 +5052,7 @@ static bool save_ik1303(PackedIK1303& output) {
                       output.registers) &&
          pack_nibbles(m_IK1303.ST, sizeof(m_IK1303.ST),
                       output.registers + sizeof(m_IK1303.R) / 2U) &&
+#endif
          snapshot_offset(m_IK1303.pM, ringM, sizeof(ringM), output.p_m) &&
          snapshot_and_amk_offset(
              m_IK1303.pAND_AMK, IK1303_AND_AMK_ACTIVE,
@@ -4964,6 +5063,9 @@ static bool save_ik1303(PackedIK1303& output) {
 }
 
 static bool save_ik1306(PackedIK1306& output) {
+#if MK61_CORE_WORD_CONTEXT
+  return pack_chip_registers(m_IK1306, output) &&
+#else
   output.AMK = m_IK1306.AMK;
   output.L = m_IK1306.L;
   output.S = m_IK1306.S;
@@ -4976,6 +5078,7 @@ static bool save_ik1306(PackedIK1306& output) {
                       output.registers) &&
          pack_nibbles(m_IK1306.ST, sizeof(m_IK1306.ST),
                       output.registers + sizeof(m_IK1306.R) / 2U) &&
+#endif
          snapshot_and_amk_offset(
              m_IK1306.pAND_AMK1, IK1306_AND_AMK_ACTIVE,
              output.p_and_amk1) &&
@@ -5020,6 +5123,9 @@ static bool valid_context_snapshot(const CoreContextSnapshot& snapshot) {
 }
 
 static void restore_ik1302(const PackedIK1302& input) {
+#if MK61_CORE_WORD_CONTEXT
+  unpack_chip_registers(input, m_IK1302);
+#else
   m_IK1302.AMK = input.AMK;
   m_IK1302.key_y = input.key_y;
   m_IK1302.key_x = input.key_x;
@@ -5036,6 +5142,7 @@ static void restore_ik1302(const PackedIK1302& input) {
   unpack_nibbles(input.registers, sizeof(m_IK1302.R), m_IK1302.R);
   unpack_nibbles(input.registers + sizeof(m_IK1302.R) / 2U,
                  sizeof(m_IK1302.ST), m_IK1302.ST);
+#endif
   m_IK1302.pAND_AMK1 = restore_and_amk_pointer(
       IK1302_AND_AMK_ACTIVE, input.p_and_amk1);
   m_IK1302.pAND_AMK = restore_and_amk_pointer(
@@ -5044,6 +5151,9 @@ static void restore_ik1302(const PackedIK1302& input) {
 }
 
 static void restore_ik1303(const PackedIK1303& input) {
+#if MK61_CORE_WORD_CONTEXT
+  unpack_chip_registers(input, m_IK1303);
+#else
   m_IK1303.AMK = input.AMK;
   m_IK1303.MOD = input.MOD;
   m_IK1303.S = input.S;
@@ -5059,6 +5169,7 @@ static void restore_ik1303(const PackedIK1303& input) {
   unpack_nibbles(input.registers, sizeof(m_IK1303.R), m_IK1303.R);
   unpack_nibbles(input.registers + sizeof(m_IK1303.R) / 2U,
                  sizeof(m_IK1303.ST), m_IK1303.ST);
+#endif
   m_IK1303.pM = ringM + input.p_m;
   m_IK1303.pAND_AMK = restore_and_amk_pointer(
       IK1303_AND_AMK_ACTIVE, input.p_and_amk);
@@ -5067,6 +5178,9 @@ static void restore_ik1303(const PackedIK1303& input) {
 }
 
 static void restore_ik1306(const PackedIK1306& input) {
+#if MK61_CORE_WORD_CONTEXT
+  unpack_chip_registers(input, m_IK1306);
+#else
   m_IK1306.AMK = input.AMK;
   m_IK1306.L = input.L;
   m_IK1306.S = input.S;
@@ -5078,6 +5192,7 @@ static void restore_ik1306(const PackedIK1306& input) {
   unpack_nibbles(input.registers, sizeof(m_IK1306.R), m_IK1306.R);
   unpack_nibbles(input.registers + sizeof(m_IK1306.R) / 2U,
                  sizeof(m_IK1306.ST), m_IK1306.ST);
+#endif
   m_IK1306.pAND_AMK1 = restore_and_amk_pointer(
       IK1306_AND_AMK_ACTIVE, input.p_and_amk1);
   m_IK1306.pAND_AMK = restore_and_amk_pointer(
@@ -5168,8 +5283,13 @@ bool save_context(ContextBuffer& out) {
       (extended_program.error ? 0x04U : 0U) |
       (extended_program.numeric_strobe_pending ? 0x08U : 0U);
   snapshot.extended_pending_prefix = extended_program.pending_prefix;
+#if MK61_CORE_WORD_CONTEXT
+  memcpy(out.bytes, &snapshot, sizeof(snapshot));
+  memset(out.bytes + sizeof(snapshot), 0, sizeof(out.bytes) - sizeof(snapshot));
+#else
   memset(out.bytes, 0, sizeof(out.bytes));
   memcpy(out.bytes, &snapshot, sizeof(snapshot));
+#endif
   return true;
 }
 

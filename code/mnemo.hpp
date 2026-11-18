@@ -34,6 +34,16 @@ class key_mnenonic {
     }
 
     int    next_mnemo_pos(const char* descriptor) {
+#if MK61_PACKED_KEY_MNEMONICS
+      const usize start = mnemo_pos;
+      if(!descriptor || start >= sizeof(mnemo_buffer) - 1) return 0;
+      const u8 tag = static_cast<u8>(*descriptor++);
+      const usize length = tag & ~STORE_KEY;
+      const usize remaining = sizeof(mnemo_buffer) - 1 - start;
+      const usize count = length < remaining ? length : remaining;
+      for(usize i = 0; i < count; ++i) mnemo_buffer[start + i] = descriptor[i];
+      return (tag & STORE_KEY) ? start + count : 0;
+#else
       if(descriptor == NULL || mnemo_pos >= sizeof(mnemo_buffer) - 1) return 0;
       const i8 control = (i8) descriptor[0];
       usize len = (control < 0) ? ((u8) control & ~STORE_KEY) : (u8) control;
@@ -46,6 +56,7 @@ class key_mnenonic {
         for(usize i=0; i < len; i++) mnemo_buffer[mnemo_pos + i] = descriptor[i+1];
         return 0;
       }
+#endif
     }
 
     void  build_mnemo(i32 keycode) {
@@ -65,12 +76,12 @@ class key_mnenonic {
           mnemo_buffer[2] = 'T';
           edit_extend_program();
         } else {
-          mnemo_pos = next_mnemo_pos(mnemo_code[keycode]);
+          mnemo_pos = next_mnemo_pos(key_mnemonic(keycode));
         }
       } else {
         switch(last_key) {
           case  KEY_F:
-              mnemo_pos = next_mnemo_pos(mnemo_code_F[keycode]);
+              mnemo_pos = next_mnemo_pos(f_key_mnemonic(keycode));
 
               // Обратный вызов для смены режима
               if(keycode == KEY_EPOWER) 
@@ -79,7 +90,7 @@ class key_mnenonic {
                 exit_auto_mode();
             break;
           case  KEY_K:
-              mnemo_pos = next_mnemo_pos(mnemo_code_K[keycode]);
+              mnemo_pos = next_mnemo_pos(k_key_mnemonic(keycode));
             break;
           // П->x, x->П (#N)
           case  KEY_Px:

@@ -39,7 +39,7 @@ prelude = r'''
 #include <string>
 #include <vector>
 #include "terminal_core.hpp"
-#include "terminal_front_coding.hpp"
+#include "terminal_isa_families.hpp"
 #include "terminal_encoding.hpp"
 #include "terminal_mnemonics_legacy.hpp"
 #if __has_include("terminal_mnemonics.hpp")

@@ -20,7 +20,9 @@ for core_case in 0:0 0:2 1:0 1:2 1:1; do
   # The new storage format uses the already checked F401 shared/field path.
   if [[ "$amk_bits" == 6 && ( "$dcw_fields" != 1 || "$shared" != 1 ) ]]; then continue; fi
   amk_flags=()
-  if [[ "$amk_bits" == 6 ]]; then amk_flags=(-DMK61_TEST_AND_AMK_6BIT=1); fi
+  if [[ "$amk_bits" == 6 ]]; then
+    amk_flags=(-DMK61_TEST_AND_AMK_6BIT=1 -DMK61_TEST_WORD_CONTEXT=1)
+  fi
   if [[ "$amk_words" == 1 ]]; then amk_flags+=(-DMK61_MEMORY_TEST_WORDS=1); fi
   sharing_flags=()
   if [[ "$shared" == 1 ]]; then sharing_flags=(-DMK61_TEST_SHARED_TICK=1); fi

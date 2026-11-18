@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-18",
+  "baseline_head": "d4d77eaa5901d4fc3b0b72d49b36258ebf45d10f",
+  "source_date_epoch": 1793448000,
+  "toolchain": {
+    "arm": "xPack GNU Arm 14.2.1-1.1",
+    "arduino_cli": "1.5.1",
+    "stm32duino": "2.12.0"
+  },
+  "measurement": "Matched release cases. Flash includes the CRC footer, initialized data and padding. Static RAM and maximum compiler-reported stack frame match the baseline for every case.",
+  "scope": "The F401 keyboard and context changes apply to product and capability builds. Register-family encoding replaces the previous product mnemonic decoder. Compact font metrics apply when proportional UI fonts are enabled.",
+  "flash_columns": [
+    "release_case",
+    "before_bytes",
+    "after_bytes",
+    "saved_bytes",
+    "free_after_bytes",
+    "minimum_free_bytes"
+  ],
+  "flash": [
+    ["f401-arduino-classic-v3", 256956, 255900, 1056, 6244, 2048],
+    ["f401-capability-a00-usb", 243376, 242776, 600, 19368, 512],
+    ["f401-capability-ws-graphics", 239116, 238520, 596, 23624, 512],
+    ["f401-capability-ws-usb", 249608, 248996, 612, 13148, 512],
+    ["f401-capability-ws-usb-graphics", 251816, 251204, 612, 10940, 512],
+    ["f401-product-a00", 222516, 221644, 872, 40500, 8192],
+    ["f401-product-classic-v2", 256944, 255976, 968, 6168, 4096],
+    ["f401-product-classic-v3", 256980, 255996, 984, 6148, 4096],
+    ["f401-product-mini-v2-a00", 222584, 221696, 888, 40448, 8192],
+    ["f401-product-ws0010", 230288, 229412, 876, 32732, 8192]
+  ],
+  "classic_v3_isolated": {
+    "method": "Each change was linked alone against the same GCC baseline. The final link also changes code and data alignment.",
+    "saved_bytes": {
+      "keyboard": 360,
+      "terminal": 276,
+      "context": 240,
+      "fonts": 96,
+      "combined": 984
+    },
+    "baseline_sha256": "4b3fddeccbe93bd0554f0d254d734c74cdf26b39e7a6ee73e5b1397c93de5c85",
+    "combined_sha256": "9fe1ec1217409954cc1e449e7bc1cfd553a59b8ce091cd97a1fc7c58c6639231"
+  },
+  "cortex_m4": {
+    "target": "GCC F401 Classic V3 resident ELF on Unicorn Cortex-M4. Counts are executed guest instructions.",
+    "hardware": "Physical F401 unavailable. Hardware cycle counts were not measured.",
+    "instruction_columns": [
+      "before",
+      "after"
+    ],
+    "core_enable": [1855677, 1855677],
+    "core_step_counts_in_both_images": [
+      1818400,
+      1817428,
+      1749977,
+      1750963,
+      1780514,
+      1818558
+    ],
+    "core_key_lines_xy": [
+      [0, 0],
+      [0, 0],
+      [2, 9],
+      [0, 0],
+      [3, 4],
+      [0, 0]
+    ],
+    "snapshot_sha256_in_both_images": [
+      "6f47817403575fe4a206301086130fa0c0e7b2fd2bcce2248cc4c0dc3244d2e7",
+      "0d77da98aeccf9aeff911346dab066150158da1a1e4d62fbe6c34bdfe2a8db08",
+      "045de2e80f65e9a793587095a84f78061b786df9fcae1e9e4390b8a100938729",
+      "1215e041849b8ffdcacabce9b37e7ce9464203f3d7008d5f291da2cac8edf743",
+      "35bd9b9c25869064dd5acf97d9d2d63aa39a78c906ac99e81f49ad6081b66d9b",
+      "f2b4e690b0b858cec3648ce8621544c108e25129e99713f70f8a5a88a80ff193"
+    ],
+    "save_context": [6957, 3675],
+    "restore_context": [5417, 3483],
+    "context_compatibility": "Six 896-byte snapshots matched byte-for-byte. Each image restored the other image’s snapshots. Both rejected a corrupted magic without changing live state.",
+    "keyboard_120_cases": [7684, 7433],
+    "keyboard_instruction_delta_counts": {
+      "-3": 17,
+      "-2": 100,
+      "0": 3
+    },
+    "keyboard_method": "40 Classic keys in plain, F and K states through the key handler. Compared the returned mnemonic position and all eight label bytes at descriptor return, or handler exit for bypassed keys.",
+    "terminal_4_asm_commands": [237805, 187741],
+    "terminal_method": "Executed asm 0000 with operands 1, Kx>=0 4, KП->X9 (M8), and + 2 3. The command result and calculator snapshot matched for each command.",
+    "glyph_561_lookups": [35019, 31653],
+    "glyph_method": "181 codepoints and six fallbacks per face. Compared advances, bearings, dimensions, layout and bitmap bytes with each source atlas."
+  },
+  "tests": [
+    "Nine native F401 release cases and the pinned STM32duino Classic V3 release check passed CRC, ELF and budget checks.",
+    "All 14 native core configurations passed with ASan/UBSan. Packed contexts cover every four-nibble tuple, four alignments, short tails, invalid high bits and failed-save atomicity.",
+    "Both terminal profiles passed ASM/ISA/LASM/PUB comparisons across all 240 mnemonics. The F401 assembler preserved program memory when scratch was busy.",
+    "Legacy and F401 font formats each matched all 543 glyphs and 24845 pixels across three source atlases.",
+    "Keyboard scanning and handoff passed. Profile mappings and terminal key sequences passed for Mini, Classic and 40th.",
+    "The M61 Runner suite passed on the native, F401 and Mini host profiles, including input, timers, lookups and two asynchronous campaigns per profile."
+  ],
+  "f411_control": {
+    "case": "f411-classic-v3",
+    "comparison": "Byte-identical resident.bin before sealing in matched builds.",
+    "bytes": 386368,
+    "sha256": "9ceaaa89611eb2d0a9f1ead34154397b9fa8acb51f9d6de45f48f84c2dd38a9e"
+  }
+}

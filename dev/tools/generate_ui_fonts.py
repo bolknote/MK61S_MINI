@@ -148,7 +148,7 @@ def generate(directory=ATLAS_DIR):
              "// Row-major MSB-first bits, tightly packed within each glyph.",
              f"static constexpr unsigned GLYPH_COUNT = {len(repertoire)};",
              f"static constexpr unsigned ASCII_GLYPH_COUNT = {ascii_count};",
-             "#if MK61_UI_FONT_CYRILLIC_RANGE",
+             "#if MK61_UI_FONT_F401",
              f"static constexpr unsigned CYRILLIC_GLYPH_INDEX = {ascii_count + cyrillic_start};",
              f"static constexpr unsigned NON_CYRILLIC_PREFIX_COUNT = {cyrillic_start};",
              f"static constexpr unsigned NON_CYRILLIC_GLYPH_COUNT = {len(non_cyrillic)};",
@@ -168,6 +168,7 @@ def generate(directory=ATLAS_DIR):
         lines.append("  " + ", ".join(f"0x{v:02X}" for v in bitmap[start:start + 16]) + ",")
     lines.append("};")
     bitmap_bytes = len(bitmap)
+    horizontal_margins = []
     for name, atlas in zip(NAMES, atlases):
         symbol = name.upper().replace("-", "_")
         metrics = []
@@ -184,6 +185,24 @@ def generate(directory=ATLAS_DIR):
                 metrics.append(shape)
             require(len(metrics) <= 64, "UI metric dictionary exceeds six bits")
             entries.append(values[0] | (metrics.index(shape) << 12))
+        # F401 stores four nibbles per shape. Horizontal margins are shared
+        # across faces, and the vertical bearing is relative to glyph height.
+        words = []
+        for width, height, x, y, advance in metrics:
+            vertical = y + 3 - height
+            require(0 <= vertical < 16 and 0 <= advance - width < 32,
+                    f"{name}: glyph margins exceed the F401 format")
+            horizontal = (advance - width) << 3 | x
+            if horizontal not in horizontal_margins:
+                horizontal_margins.append(horizontal)
+            index = horizontal_margins.index(horizontal)
+            require(index < 16, "F401 horizontal margin index exceeds four bits")
+            words.append(width | height << 4 | vertical << 8 | index << 12)
+        lines.extend(("#if MK61_UI_FONT_F401",
+                      f"static const uint16_t {symbol}_METRICS[] = {{"))
+        for start in range(0, len(words), 8):
+            lines.append("  " + ", ".join(f"0x{v:04X}" for v in words[start:start + 8]) + ",")
+        lines.extend(("};", "#else"))
         # Twenty-one metric bits; three guards permit every four-byte read.
         packed_metrics = bytearray((len(metrics) * 21 + 7) // 8 + 3)
         for index, (width, height, x, y, advance) in enumerate(metrics):
@@ -195,10 +214,12 @@ def generate(directory=ATLAS_DIR):
         lines.append(f"static const uint8_t {symbol}_METRICS[] = {{")
         for start in range(0, len(packed_metrics), 16):
             lines.append("  " + ", ".join(f"0x{v:02X}" for v in packed_metrics[start:start + 16]) + ",")
-        lines.append("};")
-        # Twelve offset bits and six metric-index bits; two zero guard bytes
-        # make the renderer's final three-byte read valid at every bit position.
+        lines.extend(("};", "#endif"))
+        # Twelve offset bits and six metric-index bits, including room for the
+        # final F401 word load even when it extends past the last record.
         packed_records = bytearray((len(entries) * 18 + 7) // 8 + 2)
+        require((len(entries) - 1) * 18 // 8 + 4 <= len(packed_records),
+                "F401 record load extends past the guard bytes")
         for index, value in enumerate(entries):
             bit = index * 18
             encoded = value << (bit & 7)
@@ -208,6 +229,9 @@ def generate(directory=ATLAS_DIR):
         for start in range(0, len(packed_records), 16):
             lines.append("  " + ", ".join(f"0x{v:02X}" for v in packed_records[start:start+16]) + ",")
         lines.append("};")
+    lines.extend(("#if MK61_UI_FONT_F401", "static const uint8_t HORIZONTAL_MARGINS[] = {",
+                  "  " + ", ".join(f"0x{v:02X}" for v in horizontal_margins) + ",",
+                  "};", "#endif"))
     lines.append("static const FaceData FACES[] = {")
     for name, atlas in zip(NAMES, atlases):
         symbol = name.upper().replace("-", "_")

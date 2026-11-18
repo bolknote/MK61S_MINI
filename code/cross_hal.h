@@ -128,10 +128,21 @@ struct TMnemo {
   char*   txt;
 };
 
+extern const u8 mnemo_code_register[40];
+#if defined(STM32F401xC) || defined(STM32F401xE)
+#define MK61_PACKED_KEY_MNEMONICS 1
+const char* key_mnemonic(unsigned key);
+const char* f_key_mnemonic(unsigned key);
+const char* k_key_mnemonic(unsigned key);
+#else
+#define MK61_PACKED_KEY_MNEMONICS 0
 extern const char* const mnemo_code[40];
-extern const u8    mnemo_code_register[40];
 extern const char* const mnemo_code_F[40];
 extern const char* const mnemo_code_K[40];
+inline const char* key_mnemonic(unsigned key) { return mnemo_code[key]; }
+inline const char* f_key_mnemonic(unsigned key) { return mnemo_code_F[key]; }
+inline const char* k_key_mnemonic(unsigned key) { return mnemo_code_K[key]; }
+#endif
 static const u8    STORE_KEY = 0x80;
 
 #endif

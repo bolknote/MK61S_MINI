@@ -2,7 +2,8 @@
 import json,subprocess,sys,tempfile
 from pathlib import Path
 R=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(R/'tools'));from program_pack import program_binary
+sys.path.insert(0, str(R / 'tools' / 'programs'))
+from program_pack import program_binary
 temp=tempfile.TemporaryDirectory(prefix='m61-lookup-');D=Path(temp.name);image=bytearray(224)
 image[10]=123;image[12]=45;image[20:23]=bytes.fromhex('563412');image[26:29]=bytes.fromhex('030201');image[111:114]=bytes.fromhex('a1b2c3');image[123]=171
 packed=program_binary(image);(D/'table.bin').write_bytes(packed);(D/'invalid.bin').write_bytes(bytes([packed[0]^1])+packed[1:]);(D/'autoexec.m61').write_text('load 0000 table.bin\n:l\nwait 60000\nrun :l\n')
