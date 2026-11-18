@@ -152,6 +152,25 @@ class Machine:
         self.pool_begin = (self.input + 2048 + 31) & ~31
         self.pool_end = elf.symbol('__mk61_dynamic_end')
         self.stack_top = elf.symbol('_estack') - 16
+        stop = 0x080FF000
+        def native_call(symbol, arguments=()):
+            for register, value in zip(
+                    (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3), arguments):
+                self.uc.reg_write(register, value)
+            self.uc.reg_write(UC_ARM_REG_SP, self.stack_top)
+            if len(arguments) > 4:
+                self.put(self.stack_top, *arguments[4:])
+            self.uc.reg_write(UC_ARM_REG_LR, stop | 1)
+            self.uc.emu_start(elf.symbol(symbol) | 1, stop, count=1000000)
+            assert self.uc.reg_read(UC_ARM_REG_PC) == stop
+            return self.uc.reg_read(UC_ARM_REG_R0)
+        if any('init_arena_storage' in name for name in elf.symbols):
+            # The fixture loads data/BSS directly and bypasses Reset_Handler.
+            # Execute the same arena initializer registered in .preinit_array
+            # before any resident allocator call, including on fixed F401 RAM.
+            initializer = elf.symbol('init_arena_storage') | 1
+            assert self.words(elf.symbol('arena_preinit'), 1)[0] == initializer
+            native_call('init_arena_storage')
         self.api = elf.symbol('_ZN12loadable_app12_GLOBAL__N_1L3APIE')
         self.sys = elf.symbol('_ZZN15loadable_module12app_servicesEvE3api')
         assert struct.unpack('<IHH', self.uc.mem_read(self.sys, 8)) == (0x31535953, 2, 28)
@@ -165,19 +184,7 @@ class Machine:
                                (ROOT / 'code/shared_memory_owner_catalog.inc').read_text())
             owner = names.index('LANGUAGE_VM')
             temporary = 0x2001C800
-            stop = 0x080FF000
             self.uc.mem_write(temporary, bytes(48))
-            def native_call(symbol, arguments):
-                for register, value in zip(
-                        (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3), arguments):
-                    self.uc.reg_write(register, value)
-                self.uc.reg_write(UC_ARM_REG_SP, self.stack_top)
-                if len(arguments) > 4:
-                    self.put(self.stack_top, *arguments[4:])
-                self.uc.reg_write(UC_ARM_REG_LR, stop | 1)
-                self.uc.emu_start(elf.symbol(symbol) | 1, stop, count=1000000)
-                assert self.uc.reg_read(UC_ARM_REG_PC) == stop
-                return self.uc.reg_read(UC_ARM_REG_R0)
             acquire = '_ZN13shared_memory5Lease7acquire'
             arguments = (temporary, 0, owner, 8192)
             if not any(acquire in name for name in elf.symbols):
