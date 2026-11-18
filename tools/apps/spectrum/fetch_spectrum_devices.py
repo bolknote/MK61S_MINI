@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch pinned original disk-interface firmware and prepare virtual media."""
+"""Fetch pinned disk-interface and Timex ROMs and prepare virtual media."""
 
 import sys as _repo_sys
 from pathlib import Path as _RepoPath
@@ -12,6 +12,11 @@ from urllib.request import urlopen
 import zipfile
 from tools.apps.spectrum.spectrum_media import blank_trd, esxdos_image
 
+TIMEX_ROMS = {
+    "tc2068-0.rom": "6338f94b2ee5000b81a64a4f055b8f1d2db6e669e52cafc11233ff63896fae13",
+    "tc2068-1.rom": "e52e861bd30c144f174a596233c6f3e5804cff170fdc50d44ba61a1683b8174c",
+}
+FUSE_ROMS = "https://raw.githubusercontent.com/fuse-emulator/fuse/3af134c07bb471d6945aaeb9edbe1d7ce2e854d3/roms/"
 SOURCES = {
     "trdos.rom": {
         "url": "https://raw.githubusercontent.com/programandala-net/tr-dos/3f58896baf4cba5a9dc54117ea5a1d64d567c213/trdos.rom",
@@ -22,6 +27,14 @@ SOURCES = {
         "url": "https://zxgit.org/dj-apendix/Div_MMC/raw/commit/587cec36f4da2a51a2fd6fd8d7358c3851f660c9/File_Soft/esxdos089.zip",
         "sha256": "d455888361cd13d455e362a4c841452b6f4568d30f9069443044affdd40de9a4",
         "copyright": "esxDOS 0.8.9, (c) 2005-2021 Papaya Dezign. https://esxdos.org/",
+    },
+    **{
+        name: {
+            "url": FUSE_ROMS + name,
+            "sha256": digest,
+            "copyright": "Timex 2068 ROM derived from Amstrad code. See licenses/ROM-copyright.txt.",
+        }
+        for name, digest in TIMEX_ROMS.items()
     },
 }
 ESXMMC_SHA = "89706de560d66432fe19ddb895e7cde49e252e932687dcb57fb92259a0259339"

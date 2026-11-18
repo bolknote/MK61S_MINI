@@ -25,7 +25,8 @@ bool spectrum_ui_begin(spectrum_ui* u,const mk61_app_services* api,const spectru
     if(!mk61_api->graphics_begin()) return false;
     mk61_service_framebuffer buffer={0};
     if(!api->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(buffer),0,&buffer) || !buffer.pixels || buffer.bytes<9984) return false;
-    mk61_service_file_bytes request={"48.rom",buffer.pixels+9216,0x3D00,768};
+    const char* font_rom=SPECTRUM_HAS_TIMEX_2068?"tc2068-0.rom":"48.rom";
+    mk61_service_file_bytes request={font_rom,buffer.pixels+9216,0x3D00,768};
     if(!api->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_READ,0,sizeof(request),&request)) return false;
     u->font=buffer.pixels+9216;
     memset(&u->frame,0,sizeof(u->frame));u->frame.pixels=buffer.pixels;u->frame.tiles=buffer.pixels+8192;

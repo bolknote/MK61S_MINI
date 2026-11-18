@@ -38,16 +38,56 @@ static uint8_t* save_z80(uint8_t* p,const spectrum* s) {
     return p+Z80_BYTES;
 }
 
+#if SPECTRUM_HAS_TIMEX_2068
+enum { DOCK_BLOCK=SPECTRUM_TIMEX_CHUNK_BYTES+11 };
+static unsigned cartridge_blocks(const spectrum_cartridge* cartridge) {
+    unsigned n=0;
+    for(unsigned bank=0;bank<2;++bank)
+        for(unsigned bits=cartridge->present[bank];bits;bits&=bits-1) ++n;
+    return n;
+}
+static unsigned read_cartridge(const spectrum* s,uint32_t at,uint8_t* out,uint32_t bytes) {
+    const spectrum_cartridge* cart=&s->cartridge;
+    unsigned index=at/DOCK_BLOCK;
+    const unsigned part=at%DOCK_BLOCK;
+    for(unsigned bank=0;bank<2;++bank) for(unsigned chunk=0;chunk<8;++chunk) {
+        const unsigned bit=1u<<chunk;
+        if(!(cart->present[bank]&bit)) continue;
+        if(index) {--index;continue;}
+        if(part<11) {
+            uint8_t block[11];
+            uint8_t* p=header(block,ID('D','O','C','K'),SPECTRUM_TIMEX_CHUNK_BYTES+3);
+            put16(p,(bank==SPECTRUM_TIMEX_DOCK?4:0)|((cart->writable[bank]&bit)?2:0));
+            p[2]=(uint8_t)chunk;
+            if(bytes>11-part) bytes=11-part;
+            memcpy(out,block+part,bytes);
+        } else {
+            if(bytes>DOCK_BLOCK-part) bytes=DOCK_BLOCK-part;
+            if(!s->memory->io.read(s->memory->io.context,spectrum_timex_chunk(cart,bank,chunk)+part-11,out,bytes))
+                return 0;
+        }
+        return bytes;
+    }
+    return 0;
+}
+#endif
+
 uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
     uint8_t* p=writer->header;
     memset(writer,0,sizeof(*writer));
-    const bool div=s->disk.mode==SPECTRUM_DISK_DIVMMC && s->disk.spi.io.bytes;
+    const bool div=!SPECTRUM_HAS_TIMEX_2068 && s->disk.mode==SPECTRUM_DISK_DIVMMC && s->disk.spi.io.bytes;
     if(div && (!spectrum_disk_cache_end(s) || !spectrum_memory_sync(s->memory))) return 0;
     const unsigned model=spectrum_model(s);
-    writer->machine=s;writer->banks=model?s->memory->banks:3;
+    writer->machine=s;writer->banks=3;
     memcpy(p,"ZXST\x01\x05",6);
+#if SPECTRUM_HAS_TIMEX_2068
+    if(!s->memory || !spectrum_memory_sync(s->memory)) return 0;
+    p[6]=model==SPECTRUM_TS2068?12:9;
+#else
     static const uint8_t machine_ids[]={1,13,14,2};
+    if(model) writer->banks=s->memory->banks;
     p[6]=machine_ids[model];
+#endif
     p=save_z80(p+8,s);
     p=header(p,ID('S','P','C','R'),ULA_BYTES);
     p[0]=s->border;p[1]=model?s->memory->paging:0;
@@ -64,7 +104,11 @@ uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
         p+=PALETTE_BYTES;
     }
     if(SPECTRUM_HAS_SINCLAIR && (s->extensions&SPECTRUM_TIMEX)) {
-        p=header(p,ID('S','C','L','D'),2);p[1]=s->timex_mode;p+=2;
+        p=header(p,ID('S','C','L','D'),2);
+#if SPECTRUM_HAS_TIMEX_2068
+        p[0]=s->timex_hsr;
+#endif
+        p[1]=s->timex_mode;p+=2;
     }
     writer->prefix=(unsigned)(p-writer->header);
     const unsigned div_bytes=div?SPI_BYTES+DIV_RAM_BYTES:0;
@@ -75,7 +119,11 @@ uint32_t spectrum_szx_save(spectrum_szx_writer* writer,spectrum* s) {
         p[3]=s->disk.control;p[4]=s->disk.automap;p[5]=s->disk.spi_data;
         put32(p+22,s->disk.spi.io.bytes);
     }
-    return writer->bytes=writer->prefix+writer->banks*PAGE_BLOCK+sizeof(writer->extension)+div_bytes;
+    writer->bytes=writer->prefix+writer->banks*PAGE_BLOCK+sizeof(writer->extension)+div_bytes;
+#if SPECTRUM_HAS_TIMEX_2068
+    writer->bytes+=cartridge_blocks(&s->cartridge)*DOCK_BLOCK;
+#endif
+    return writer->bytes;
 }
 
 static unsigned flat_bank(unsigned n) {
@@ -112,17 +160,27 @@ int spectrum_szx_read(void* context,uint32_t offset,uint8_t* out,uint32_t bytes)
             }
         } else {
             const unsigned part=offset-base;
+#if !SPECTRUM_HAS_TIMEX_2068
             const unsigned spi_end=sizeof(writer->extension)+SPI_BYTES;
+#endif
             if(part<sizeof(writer->extension)) {
                 take=sizeof(writer->extension)-part;if(take>bytes)take=bytes;
                 memcpy(out,writer->extension+part,take);
-            } else if(part<spi_end) {
+            }
+#if SPECTRUM_HAS_TIMEX_2068
+            else {
+                take=read_cartridge(s,part-sizeof(writer->extension),out,bytes);
+                if(!take) return 0;
+            }
+#else
+            else if(part<spi_end) {
                 take=spi_end-part;if(take>bytes)take=bytes;
                 memcpy(out,(const uint8_t*)&s->disk.spi+SPI_BODY+part-sizeof(writer->extension),take);
             } else {
                 take=bytes;
                 if(!s->memory->io.read(s->memory->io.context,SPECTRUM_DIV_RAM+part-spi_end,out,take))return 0;
             }
+#endif
         }
         offset+=take;out+=take;bytes-=take;
     }
@@ -139,6 +197,8 @@ enum spectrum_error spectrum_szx_model(const spectrum_source* source,unsigned* m
     case 1: *model=SPECTRUM_48;return SPECTRUM_OK;
     case 2: *model=SPECTRUM_128;return SPECTRUM_OK;
     case 8: *model=SPECTRUM_TC2048;return SPECTRUM_OK;
+    case 9: *model=SPECTRUM_TC2068;return SPECTRUM_OK;
+    case 12: *model=SPECTRUM_TS2068;return SPECTRUM_OK;
     case 13: *model=SPECTRUM_P512;return SPECTRUM_OK;
     case 14: *model=SPECTRUM_P1024;return SPECTRUM_OK;
     default: return SPECTRUM_UNSUPPORTED;
@@ -153,11 +213,17 @@ typedef struct {
     uint8_t extension[STATE_BYTES],scld[2];
     uint32_t spi;
     bool has_ay,has_palette,has_scld;
+#if SPECTRUM_HAS_TIMEX_2068
+    uint32_t cart_offset[2][8];
+    uint16_t cart_size[2][8];
+    spectrum_cartridge cart;
+#endif
 } snapshot;
 
 static enum spectrum_error inspect(const spectrum_source* source,snapshot* state,unsigned model) {
     bool has_cpu=false,has_ula=false;
-    const bool flat=model==SPECTRUM_48 || model==SPECTRUM_TC2048;
+    const bool timex=SPECTRUM_HAS_TIMEX_2068 && spectrum_timex_2068(model);
+    const bool flat=model==SPECTRUM_48 || model==SPECTRUM_TC2048 || timex;
     const unsigned banks=model==SPECTRUM_P1024?64:model==SPECTRUM_P512?32:8;
     for(uint32_t at=8;at<source->size;) {
         uint8_t h[8];
@@ -179,13 +245,34 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
             out=state->palette;length=size==66?66:PALETTE_BYTES;state->has_palette=true;break;
         case ID('S','C','L','D'): if(state->has_scld) return SPECTRUM_FORMAT;
             out=state->scld;length=2;state->has_scld=true;break;
+#if SPECTRUM_HAS_TIMEX_2068
+        case ID('R','O','M',0): return SPECTRUM_UNSUPPORTED;
+        case ID('D','O','C','K'): {
+            uint8_t page[3];
+            if(size<sizeof(page)) return SPECTRUM_FORMAT;
+            if(!source->read(source->context,at,page,sizeof(page))) return SPECTRUM_IO;
+            const unsigned flags=word(page),chunk=page[2];
+            const unsigned bank=(flags&4)?SPECTRUM_TIMEX_DOCK:SPECTRUM_TIMEX_EXROM;
+            const unsigned bytes=size-sizeof(page);
+            if((flags&~7u) || chunk>=8 || state->cart_offset[bank][chunk] ||
+               ((flags&1)?bytes<6 || bytes>65535:bytes!=SPECTRUM_TIMEX_CHUNK_BYTES)) return SPECTRUM_FORMAT;
+            state->cart_offset[bank][chunk]=at+sizeof(page);
+            state->cart_size[bank][chunk]=(flags&1)?(uint16_t)bytes:0;
+            state->cart.present[bank]|=(uint8_t)(1u<<chunk);
+            if(flags&2) state->cart.writable[bank]|=(uint8_t)(1u<<chunk);
+            break;
+        }
+#endif
         case ID('M','K','6','1'):
             if(state->extension[0] || size<STATE_BYTES) return SPECTRUM_FORMAT;
             if(!source->read(source->context,at,state->extension,STATE_BYTES))return SPECTRUM_IO;
             if(state->extension[0]!=1)return SPECTRUM_UNSUPPORTED;
             if(state->extension[1]>3 || state->extension[2]>15 ||
                (state->extension[3]&0x30) || state->extension[4]>1)return SPECTRUM_FORMAT;
-            if(dword(state->extension+22))state->spi=at+STATE_BYTES;
+            if(dword(state->extension+22)) {
+                if(SPECTRUM_HAS_TIMEX_2068) return SPECTRUM_UNSUPPORTED;
+                state->spi=at+STATE_BYTES;
+            }
             if(size!=STATE_BYTES+(state->spi?SPI_BYTES+DIV_RAM_BYTES:0))return SPECTRUM_FORMAT;
             break;
         case ID('R','A','M','P'): {
@@ -212,15 +299,42 @@ static enum spectrum_error inspect(const spectrum_source* source,snapshot* state
         at+=size;
     }
     const uint8_t* z=state->cpu;
-    const unsigned frame=flat?SPECTRUM_FRAME_TSTATES:model==SPECTRUM_128?SPECTRUM_128_FRAME_TSTATES:71680;
+    const unsigned frame=timex && model==SPECTRUM_TS2068?SPECTRUM_TS2068_FRAME_TSTATES:
+        flat?SPECTRUM_FRAME_TSTATES:model==SPECTRUM_128?SPECTRUM_128_FRAME_TSTATES:71680;
     if(!has_cpu || !has_ula || z[26]>1 || z[27]>1 || z[28]>2 ||
        dword(z+29)>=frame || state->ula[0]>7 ||
        (state->has_ay && state->ay[1]>15)) return SPECTRUM_FORMAT;
-    if(state->has_scld && (state->scld[0] || !spectrum_timex_supported(state->scld[1]))) return SPECTRUM_UNSUPPORTED;
+    if(!timex && state->has_scld && (state->scld[0] || !spectrum_timex_supported(state->scld[1]))) return SPECTRUM_UNSUPPORTED;
     if(flat) return state->ram[0] && state->ram[2] && state->ram[5]?SPECTRUM_OK:SPECTRUM_FORMAT;
     for(unsigned i=0;i<banks;++i) if(!state->ram[i]) return SPECTRUM_FORMAT;
     return SPECTRUM_OK;
 }
+
+#if SPECTRUM_HAS_TIMEX_2068
+static enum spectrum_error stage_cartridge(spectrum* s,snapshot* state,const spectrum_source* source,uint8_t* low) {
+    const spectrum_cartridge staged=spectrum_timex_stage(s);
+    state->cart.slot=staged.slot;
+    const spectrum_memory_io* io=&s->memory->io;
+    const spectrum_inflate_output output={.first=low,.split=SPECTRUM_TIMEX_CHUNK_BYTES,.limit=SPECTRUM_TIMEX_CHUNK_BYTES};
+    uint8_t buffer[512];
+    for(unsigned bank=0;bank<2;++bank) for(unsigned chunk=0;chunk<8;++chunk) {
+        const uint32_t at=state->cart_offset[bank][chunk];
+        if(!at) continue;
+        const uint32_t base=spectrum_timex_chunk(&state->cart,bank,chunk);
+        const unsigned bytes=state->cart_size[bank][chunk];
+        if(bytes) {
+            unsigned used;
+            const enum spectrum_error error=spectrum_inflate(source,at,bytes,&output,&used);
+            if(error || used!=SPECTRUM_TIMEX_CHUNK_BYTES) return error?error:SPECTRUM_FORMAT;
+            if(!io->write(io->context,base,low,used)) return SPECTRUM_IO;
+        } else for(unsigned n=0;n<SPECTRUM_TIMEX_CHUNK_BYTES;n+=sizeof(buffer)) {
+            if(!source->read(source->context,at+n,buffer,sizeof(buffer)) || !io->write(io->context,base+n,buffer,sizeof(buffer)))
+                return SPECTRUM_IO;
+        }
+    }
+    return SPECTRUM_OK;
+}
+#endif
 
 static void restore_cpu(spectrum* s,const uint8_t* p) {
     z80* z=&s->cpu;
@@ -250,24 +364,27 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     const unsigned current=spectrum_model(s);
     if((!SPECTRUM_HAS_PENTAGON && (model==SPECTRUM_P512 || model==SPECTRUM_P1024)) ||
        (model==SPECTRUM_TC2048?SPECTRUM_48:model)!=current) return SPECTRUM_UNSUPPORTED;
+#if SPECTRUM_HAS_TIMEX_2068
+    if(!s->memory) return SPECTRUM_UNSUPPORTED;
+#endif
     snapshot state={0};
     result=inspect(source,&state,model);
     if(result) return result;
     uint8_t buffer[SPI_BYTES];
-    if(state.spi) {
+    if(!SPECTRUM_HAS_TIMEX_2068 && state.spi) {
         const spectrum_disk_io* card=&s->disk.spi.io;
         if(!s->memory || s->disk.mode!=SPECTRUM_DISK_DIVMMC || !card->read ||
            card->bytes!=dword(state.extension+22)) return SPECTRUM_MEDIA;
         if(!source->read(source->context,state.spi,buffer,SPI_BYTES))return SPECTRUM_IO;
         if(!spi_valid(buffer,card))return SPECTRUM_FORMAT;
-    } else if(s->disk.mode==SPECTRUM_DISK_DIVMMC && !s->disk.spi.reads)return SPECTRUM_MEDIA;
+    } else if(!SPECTRUM_HAS_TIMEX_2068 && s->disk.mode==SPECTRUM_DISK_DIVMMC && !s->disk.spi.reads)return SPECTRUM_MEDIA;
     const spectrum_inflate_output output={.first=low,.second=high,.split=12288,.limit=PAGE};
     bool packed=false;
     for(unsigned bank=0;bank<SZX_MAX_BANKS;++bank) packed|=state.compressed[bank]!=0;
     if(packed && (!low || !high)) return SPECTRUM_UNSUPPORTED;
     // These areas can borrow clean cache slots. Flush and invalidate before
     // validating data so a malformed compressed block cannot destroy RAM.
-    if(packed && s->memory) {
+    if((packed || SPECTRUM_HAS_TIMEX_2068) && s->memory) {
         if(!spectrum_memory_flush_pages(s->memory)) return SPECTRUM_IO;
         spectrum_refresh_map(s);
     }
@@ -276,8 +393,12 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
         result=spectrum_inflate(source,state.ram[bank],state.compressed[bank],&output,&used);
         if(result || used!=PAGE) return result?result:SPECTRUM_FORMAT;
     }
+#if SPECTRUM_HAS_TIMEX_2068
+    result=stage_cartridge(s,&state,source,low);
+    if(result) return result;
+#endif
 
-    if(!spectrum_disk_snapshot(s)) return SPECTRUM_IO;
+    if(!SPECTRUM_HAS_TIMEX_2068 && !spectrum_disk_snapshot(s)) return SPECTRUM_IO;
     spectrum_reset_cpu(s);
     if(s->memory && !spectrum_memory_reset(s->memory)) return SPECTRUM_IO;
     for(unsigned bank=0;bank<SZX_MAX_BANKS;++bank) if(state.ram[bank]) {
@@ -299,7 +420,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
                (s->memory && !spectrum_bank_write(s->memory,bank,at,buffer,512))) return SPECTRUM_IO;
         }
     }
-    if(current && (!spectrum_memory_control(s->memory,state.ula[2]) ||
+    if(!SPECTRUM_HAS_TIMEX_2068 && current && (!spectrum_memory_control(s->memory,state.ula[2]) ||
                  !spectrum_memory_page(s->memory,state.ula[1]))) return SPECTRUM_IO;
     restore_cpu(s,state.cpu);
     s->border=state.ula[0];s->beeper=(state.ula[3]>>4)&1;
@@ -313,7 +434,7 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
         s->sound.selected=(p[1]>>1)&(p[1]&1);
         s->ay2.adr=s->sound.selected_reg[1]=p[2];
         for(unsigned i=0;i<16;++i)PSG_writeReg(&s->ay2,i,p[6+i]);
-        if(state.spi) {
+        if(!SPECTRUM_HAS_TIMEX_2068 && state.spi) {
             const spectrum_memory_io* io=&s->memory->io;
             for(unsigned at=0;at<DIV_RAM_BYTES;at+=512) {
                 if(!source->read(source->context,state.spi+SPI_BYTES+at,buffer,512) ||
@@ -332,6 +453,9 @@ enum spectrum_error spectrum_load_szx(spectrum* s,const spectrum_source* source,
     if(SPECTRUM_HAS_SINCLAIR && (state.has_scld || model==SPECTRUM_TC2048)) {
         s->extensions|=SPECTRUM_TIMEX;s->timex_mode=state.scld[1];
     }
+#if SPECTRUM_HAS_TIMEX_2068
+    s->timex_hsr=state.scld[0];s->cartridge=state.cart;
+#endif
     spectrum_refresh_map(s);
     return SPECTRUM_OK;
 }

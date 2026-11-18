@@ -27,6 +27,16 @@ void spectrum_sound_reset(spectrum* s) {
 }
 static uint32_t audio_time(spectrum* s) {
     const uint32_t now=(uint32_t)s->cpu.cyc;
+#if SPECTRUM_HAS_TIMEX_2068
+    if(!s->timex_ntsc) return now;
+    // TS2068's guest clock relates to the 3.5 MHz audio timeline as 126:125.
+    spectrum_sound* q=&s->sound;
+    const uint32_t delta=now-q->guest_cursor,whole=delta/126;
+    const uint32_t remainder=delta-whole*126+q->clock_remainder;
+    const unsigned carry=remainder>=126;
+    q->guest_cursor=now;q->clock_remainder=remainder-carry*126;
+    return q->producer_time+=delta-whole-carry;
+#else
     if(!spectrum_is_128(s)) return now;
     // Convert 3.5469 MHz guest cycles to the shared 3.5 MHz audio timeline.
     // Keep the fraction and use modular deltas so guest cycle wrap is harmless.
@@ -40,6 +50,7 @@ static uint32_t audio_time(spectrum* s) {
     const uint32_t scaled=delta*469+q->clock_remainder,loss=scaled/35469;
     q->clock_remainder=scaled-loss*35469;q->producer_time+=delta-loss;
     return q->producer_time;
+#endif
 }
 void spectrum_sound_write(spectrum* s,unsigned device,unsigned reg,unsigned value) {
     spectrum_sound* q=&s->sound;
@@ -95,7 +106,7 @@ void spectrum_sound_recover(void* context) {
     for(unsigned i=0;i<2;++i) {
         PSG* p=i?&s->ay2:&s->ay;memset(p,0,sizeof(*p));p->quality=1;p->rate=25000;
         PSG_setVolumeMode(p,s->sound_chip==SPECTRUM_YM?1:2);
-        PSG_setClock(p,spectrum_is_128(s)?SPECTRUM_128_AY_HZ:1750000);PSG_reset(p);
+        PSG_setClock(p,spectrum_ay_clock(s));PSG_reset(p);
         for(unsigned reg=0;reg<16;++reg)PSG_writeReg(p,reg,q->regs[i][reg]);
     }
     q->beeper=q->latest_dac[0];q->covox=q->latest_dac[1];q->specdrum=q->latest_dac[2];

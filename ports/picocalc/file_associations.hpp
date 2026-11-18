@@ -10,6 +10,8 @@ inline program_store::TypeMagic handler(const char* path) {
     if(!dot || std::strlen(dot)!=4) return program_store::TYPE_MAGIC_NONE;
     if((dot[1]|32)=='m' && (dot[2]|32)=='p' && dot[3]=='3')
         return program_store::make_type_magic('A','3');
+    if((dot[1]|32)=='d' && (dot[2]|32)=='c' && (dot[3]|32)=='k')
+        return program_store::make_type_magic('T','8');
     const char* leaf = std::strrchr(path, '/');
     leaf = leaf ? leaf + 1 : path;
     // Only the distributed game collection has a reserved IMG name.

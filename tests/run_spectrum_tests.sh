@@ -13,6 +13,14 @@ clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/sdk/portable/include" -I"$root/code" \
     "$root/tests/spectrum_display_self_test.c" -o "$build/display"
 "$build/display" "$root/third_party/spectrum-rom/48.rom"
+clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE=5 \
+    -I"$root/sdk/portable/include" -I"$root/code" \
+    "$root/tests/spectrum_display_self_test.c" -o "$build/display-timex2068"
+if [[ -n "${SPECTRUM_TIMEX_ROMS:-}" ]]; then
+    "$build/display-timex2068" "$SPECTRUM_TIMEX_ROMS/tc2068-0.rom"
+else
+    "$build/display-timex2068"
+fi
 clang -std=c11 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${flags[@]}" \
     "$root/tests/z80_alu_self_test.c" "$root/third_party/z80/z80.c" -o "$build/z80-alu"
 "$build/z80-alu"
@@ -63,6 +71,16 @@ clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -lz -o "$build/media-features"
 "$build/media-features" "$root/third_party/spectrum-rom/48.rom" \
     "$root/third_party/spectrum-rom/128-0.rom" "$root/third_party/spectrum-rom/128-1.rom"
+clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE=5 -DZ80_TIMEX_IO \
+    -I"$root/sdk/portable/include" -I"$root/code" \
+    "$root/tests/spectrum_timex2068_self_test.c" "${media[@]}" "$app/timex.c" \
+    "$app/spectrum.c" "$app/memory.c" "$app/mapper.c" "$app/peripherals.c" "$app/spi.c" "$app/fdc.c" \
+    "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -lz -o "$build/timex2068"
+timex_roms=()
+if [[ -n "${SPECTRUM_TIMEX_ROMS:-}" ]]; then
+    timex_roms=("$SPECTRUM_TIMEX_ROMS/tc2068-0.rom" "$SPECTRUM_TIMEX_ROMS/tc2068-1.rom")
+fi
+"$build/timex2068" "${timex_roms[@]}"
 if [[ -n "${SPECTRUM_DEVICE_ASSETS:-}" ]]; then
     python3 - "$root" "$SPECTRUM_DEVICE_ASSETS" "$build/app-assets" <<'PY'
 import sys, shutil
@@ -123,6 +141,16 @@ screen_snapshot('HIRES.SZX',8,6,(5,2,0))
 screen_snapshot('HICOLOR.SZX',1,2,(5,2,0))
 screen_snapshot('WIDE.SZX',14,64,range(64))
 screen_snapshot('COLOR16.SZX',14,1,range(64))
+screen_snapshot('TS2068.SZX',12,2,(5,2,0))
+timex_extended[2:5]=bytes((15,0x80,0x86))
+programs=[bytearray(snapshot[27+i*16384:27+(i+1)*16384]) for i in range(3)]
+programs[1][0]=0x76
+(target/'TC2068.Z80').write_bytes(timex_header+struct.pack('<H',54)+timex_extended+b''.join(
+    struct.pack('<HB',0xffff,page)+data for page,data in zip((8,4,5),programs)))
+cart=bytearray(8192)
+cart[:5]=bytes((0,1,16,0,254))
+cart[16:23]=bytes.fromhex('F3 3E 02 D3 FF 76 00')
+(target/'BOOT.DCK').write_bytes(bytes((0,2,0,0,0,0,0,0,0))+cart)
 PY
     clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" \
         -I"$root/sdk/portable/include" -I"$root/code" \
@@ -180,7 +208,25 @@ PY
                 SPECTRUM_TEST_FLOW=1 SPECTRUM_OPEN_FILE="$selected" "$build/app-profile" "$build/app-assets"
             done
         fi
+        if [[ "$profile" == 1 ]]; then
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET=TX2068.APP SPECTRUM_FLOW_MODEL=5 \
+                SPECTRUM_OPEN_FILE=TC2068.Z80 "$build/app-profile" "$build/app-assets"
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_FLOW_TARGET=TX2068.APP SPECTRUM_FLOW_MODEL=6 \
+                SPECTRUM_OPEN_FILE=TS2068.SZX "$build/app-profile" "$build/app-assets"
+        fi
     done
+    if [[ -n "${SPECTRUM_TIMEX_ROMS:-}" ]]; then
+        for rom in "${timex_roms[@]}"; do cp "$rom" "$build/app-assets/"; done
+        clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE=5 -DZ80_TIMEX_IO \
+            -I"$root/sdk/portable/include" -I"$root/code" \
+            "$root/tests/spectrum_app_self_test.c" "$app/spectrum.c" "$app/memory.c" "$app/timex.c" \
+            "$app/peripherals.c" "$app/fdc.c" "$app/spi.c" "$app/mapper.c" "$app/media.c" "${media[@]}" \
+            "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/app-timex2068"
+        for selected in TS2068.SZX TC2068.Z80 BOOT.DCK; do
+            SPECTRUM_TEST_FLOW=1 SPECTRUM_REMOTE_AUDIO=1 SPECTRUM_OPEN_FILE="$selected" \
+                "$build/app-timex2068" "$build/app-assets"
+        done
+    fi
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \

@@ -12,7 +12,7 @@ import shutil
 import struct
 import subprocess
 import sys
-from tools.apps.spectrum.fetch_spectrum_devices import prepare as prepare_devices
+from tools.apps.spectrum.fetch_spectrum_devices import TIMEX_ROMS, prepare as prepare_devices
 from tools.apps.spectrum.build_spectrum_library import LAUNCHER, prepare as prepare_games
 from tools.apps.spectrum.build_spectrum_m3 import build as build_sound_module
 
@@ -32,9 +32,9 @@ SOURCES = ["examples/portable-apps/SPECTRUM/main.c",
            "examples/portable-apps/SPECTRUM/tape.c",
            "examples/portable-apps/SPECTRUM/inflate.c",
            "examples/portable-apps/SPECTRUM/szx.c",
+           "examples/portable-apps/SPECTRUM/timex.c",
            "examples/portable-apps/SPECTRUM/pentagon_video.c",
            "sdk/portable/rp2040_divide.S"]
-
 
 def demo_snapshot(pentagon=False):
     """Original Z80 demo; IM2 interrupt handler, animated colors, ROM font."""
@@ -112,6 +112,7 @@ def main():
     parser.add_argument("--output-dir", type=Path, default=ROOT / ".build/firmware/picocalc-pico-h/apps/SPECTRUM")
     parser.add_argument("--device-assets", type=Path, help="prepared folder from fetch_spectrum_devices.py")
     parser.add_argument("--fetch-devices", action="store_true", help="fetch pinned ROMs and create disk images")
+    parser.add_argument("--timex-roms", type=Path, help="directory containing the original Timex HOME and EXROM files")
     parser.add_argument("--with-games", action="store_true", help="include locally downloaded Spectrum library")
     parser.add_argument("--games-output", type=Path, help="Write the collection to its own folder in Games")
     args = parser.parse_args()
@@ -121,15 +122,18 @@ def main():
     for source in SOURCES:
         base_command += ["--source", str(ROOT / source)]
     profiles = (("SPECTRUM", 1, args.build_dir), ("SINCLAIR", 2, args.build_dir / "sinclair"),
-                ("ZXVIDEO", 3, args.build_dir / "zxvideo"), ("TIMEX", 4, args.build_dir / "timex"))
+                ("ZXVIDEO", 3, args.build_dir / "zxvideo"), ("TIMEX", 4, args.build_dir / "timex"),
+                ("TX2068", 5, args.build_dir / "tx2068"))
     for name, profile, directory in profiles:
         command = base_command + ["--name", name, "--define", f"SPECTRUM_APP_PROFILE={profile}",
                                   "--output-dir", str(directory)]
         if name == "SPECTRUM":
             command += ["--handled-magic", "Z1"]
+        if name == "TX2068":
+            command += ["--handled-magic", "T8", "--define", "Z80_TIMEX_IO"]
         if profile in (1,3):
             command += ["--define", "Z80_NO_WAIT_STATES"]
-        if profile in (2,4):
+        if profile in (2,4,5):
             # Keeping parameters intact produces a smaller Thumb-1 image.
             command.append("--no-ipa-sra")
         subprocess.run(command, check=True)
@@ -146,6 +150,16 @@ def main():
         for name in ("trdos.rom", "esxmmc.rom", "ESXDOS.img", "BLANK.trd", "devices.json"):
             shutil.copy2(assets / name, args.output_dir / name)
         shutil.copytree(assets / "licenses", args.output_dir / "licenses", dirs_exist_ok=True)
+    timex_roms = args.timex_roms
+    if timex_roms is None and assets and any((assets / name).exists() for name in TIMEX_ROMS):
+        timex_roms = assets
+    if timex_roms is not None:
+        roms = {name: (timex_roms / name).read_bytes() for name in TIMEX_ROMS}
+        for name, data in roms.items():
+            if hashlib.sha256(data).hexdigest() != TIMEX_ROMS[name]:
+                raise ValueError("Timex ROM checksum mismatch: " + name)
+        for name, data in roms.items():
+            (args.output_dir / name).write_bytes(data)
     esxdos = assets / "esxdos089.zip" if assets else None
     if args.with_games:
         games = args.games_output or args.output_dir / "games"
@@ -158,12 +172,9 @@ def main():
     report = json.loads((args.build_dir / "SPECTRUM.json").read_text())
     report["sources"] = SOURCES
     report["app_sha256"] = hashlib.sha256((args.output_dir / "SPECTRUM.APP").read_bytes()).hexdigest()
-    report["sinclair_app"] = json.loads((profiles[1][2] / "SINCLAIR.json").read_text())
-    report["sinclair_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "SINCLAIR.APP").read_bytes()).hexdigest()
-    report["video_app"] = json.loads((profiles[2][2] / "ZXVIDEO.json").read_text())
-    report["video_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "ZXVIDEO.APP").read_bytes()).hexdigest()
-    report["timex_app"] = json.loads((profiles[3][2] / "TIMEX.json").read_text())
-    report["timex_app"]["app_sha256"] = hashlib.sha256((args.output_dir / "TIMEX.APP").read_bytes()).hexdigest()
+    for key, (name, _, directory) in zip(("sinclair_app", "video_app", "timex_app", "timex2068_app"), profiles[1:]):
+        report[key] = json.loads((directory / f"{name}.json").read_text())
+        report[key]["app_sha256"] = hashlib.sha256((args.output_dir / f"{name}.APP").read_bytes()).hexdigest()
     inputs = sorted(set(SOURCES) | {
         str(p.relative_to(ROOT)) for folder in ("examples/portable-apps/SPECTRUM", "third_party/z80", "third_party/emu2149")
         for p in (ROOT / folder).glob("*.h")})

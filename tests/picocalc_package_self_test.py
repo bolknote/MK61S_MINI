@@ -74,6 +74,7 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(reader.read(disk+relative),(target/'apps'/(name+'.APP')).read_bytes())
                 expected=['Disk/Programs/Spectrum/SPECTRUM.APP','Disk/Programs/Spectrum/SINCLAIR.APP',
                     'Disk/Programs/Spectrum/ZXVIDEO.APP','Disk/Programs/Spectrum/TIMEX.APP','Disk/Programs/Spectrum/48.rom',
+                    'Disk/Programs/Spectrum/TX2068.APP',
                     'Disk/Programs/MP3/MP3.APP','Disk/Programs/MP3/RECORD.LP',
                     'Disk/Programs/MP3/CASSETTE.TV','Disk/Programs/MP3/REEL.TV',
                     'Disk/Programs/Examples/PATTERN.wbmp','Disk/Programs/Examples/Sheets/BUDGET.mks',

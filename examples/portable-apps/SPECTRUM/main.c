@@ -69,10 +69,12 @@ static mk61_app_flow* app_flow;
 static spectrum_preferences preferences;
 static bool preferences_dirty;
 static bool exact_raster;
-enum { DEFAULT_MODEL=SPECTRUM_APP_PROFILE==3?SPECTRUM_P1024:SPECTRUM_APP_PROFILE==4?SPECTRUM_48:
+enum { DEFAULT_MODEL=SPECTRUM_HAS_TIMEX_2068?SPECTRUM_TS2068:SPECTRUM_APP_PROFILE==3?SPECTRUM_P1024:SPECTRUM_APP_PROFILE==4?SPECTRUM_48:
        SPECTRUM_HAS_PENTAGON?SPECTRUM_P512:SPECTRUM_128 };
 
 static bool model_available(unsigned model) {
+    if(spectrum_timex_2068(model)) return SPECTRUM_HAS_TIMEX_2068;
+    if(SPECTRUM_HAS_TIMEX_2068) return false;
     if(model==SPECTRUM_TC2048) return SPECTRUM_HAS_TIMEX;
     return model==SPECTRUM_P512 || model==SPECTRUM_P1024?SPECTRUM_HAS_PENTAGON:SPECTRUM_HAS_SINCLAIR;
 }
@@ -387,6 +389,10 @@ static int poll_guest(uint8_t blocked[32],uint32_t* deadline,uint32_t now) {
     const int key=scan_keys();guest_keyboard(blocked);return key;
 }
 enum { ROOT_RESUME, ROOT_DISK_OR_NMI=6 };
+#if SPECTRUM_HAS_TIMEX_2068
+static const char* const root_items[]={"Start machine","Cartridge...","Eject cartridge","Snapshot...","Machine...",
+        "Options...","Tape...","Save snapshot","Reset","Help","Exit"};
+#else
 static const char* const root_items[]={"Start machine","Snapshot...","Beta Disk...","DivMMC...",
         "Machine...","Options...","TR-DOS","Reset","Help",
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -394,12 +400,14 @@ static const char* const root_items[]={"Start machine","Snapshot...","Beta Disk.
 #endif
         SPECTRUM_HAS_EXTENDED_VIDEO?"Standard video...":"Video extensions...","Exit"
 };
+#endif
 enum { ROOT_COUNT=sizeof(root_items)/sizeof(*root_items) };
+static const char* const root_title=SPECTRUM_HAS_TIMEX_2068?"Timex 2068":"Spectrum";
 
 static void root_labels(const char* labels[ROOT_COUNT]) {
     memcpy(labels,root_items,sizeof(root_items));
     if(started) labels[ROOT_RESUME]="Resume";
-    if(machine.disk.mode==SPECTRUM_DISK_DIVMMC) labels[ROOT_DISK_OR_NMI]="NMI browser";
+    if(!SPECTRUM_HAS_TIMEX_2068 && machine.disk.mode==SPECTRUM_DISK_DIVMMC) labels[ROOT_DISK_OR_NMI]="NMI browser";
 }
 
 static bool menu_draw(const char* title,const char* const* labels,unsigned count,unsigned selected,bool nested) {
@@ -407,7 +415,7 @@ static bool menu_draw(const char* title,const char* const* labels,unsigned count
     if(nested) {
         const char* root[ROOT_COUNT];
         root_labels(root);
-        spectrum_ui_window(&osd,8,8,224,"Spectrum",root,ROOT_COUNT,root_selected);
+        spectrum_ui_window(&osd,8,8,224,root_title,root,ROOT_COUNT,root_selected);
     }
     spectrum_ui_window(&osd,nested?40:8,nested?(count>11?24:40):8,nested?208:224,title,labels,count,selected);
     spectrum_ui_footer(&osd,selected<count?"Enter: select    Esc: back":"Press any key");
@@ -437,7 +445,7 @@ static void message(const char* value) {
         at=end;if(value[at]==' ' || value[at]=='\n') ++at;
     }
     if(!count) { copy[0][0]=0;lines[0]=copy[0];count=1; }
-    if(!menu_draw("Spectrum",lines,count,count,false)) {
+    if(!menu_draw(root_title,lines,count,count,false)) {
         // A missing ROM/font must still produce a readable startup error.
         if(machine.memory) { (void)spectrum_memory_flush_pages(machine.memory);spectrum_refresh_map(&machine); }
         mk61_api->graphics_end();mk61_api->display_clear();
@@ -477,10 +485,10 @@ static bool switch_to_app(const char* name,unsigned model,uint32_t file_id,const
     return true;
 }
 static bool switch_app(unsigned model,uint32_t file_id,const char* path) {
-    const char* name=model==SPECTRUM_TC2048?"TIMEX.APP":
+    const char* name=spectrum_timex_2068(model)?"TX2068.APP":model==SPECTRUM_TC2048?"TIMEX.APP":
         model==SPECTRUM_P512 || model==SPECTRUM_P1024?
             (SPECTRUM_HAS_EXTENDED_VIDEO?"ZXVIDEO.APP":"SPECTRUM.APP"):
-            (SPECTRUM_HAS_EXTENDED_VIDEO?"TIMEX.APP":"SINCLAIR.APP");
+            (SPECTRUM_HAS_EXTENDED_VIDEO && !SPECTRUM_HAS_TIMEX_2068?"TIMEX.APP":"SINCLAIR.APP");
     return switch_to_app(name,model,file_id,path);
 }
 static __attribute__((noinline)) bool file_size(const char* path,uint32_t* size) {
@@ -497,7 +505,7 @@ static const char* preferences_name(void) {
     return SPECTRUM_APP_PROFILE==2?"SINCLAIR.CFG":"SPECTRUM.CFG";
 }
 static void load_preferences(void) {
-    preferences=(spectrum_preferences){DEFAULT_MODEL,15,0,SPECTRUM_AY,SPECTRUM_ABC,0,3};
+    preferences=(spectrum_preferences){DEFAULT_MODEL,SPECTRUM_HAS_TIMEX_2068?0:15,0,SPECTRUM_AY,SPECTRUM_ABC,0,3};
     preferences_dirty=false;
     if(!SPECTRUM_HAS_PREFERENCES) return;
     uint8_t bytes[SPECTRUM_PREFERENCES_BYTES];uint32_t size;
@@ -524,7 +532,7 @@ static void parent_directory(void) {
     if(slash==directory) directory[1]=0;
     else if(slash) *slash=0;else { directory[0]='/';directory[1]=0; }
 }
-enum { FILE_SNAPSHOT, FILE_BETA, FILE_DIV, FILE_TAPE };
+enum { FILE_SNAPSHOT, FILE_BETA, FILE_DIV, FILE_TAPE, FILE_CARTRIDGE };
 static bool is_snapshot(const char* path) {
     return suffix(path,".sna") || suffix(path,".z80")
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -533,6 +541,9 @@ static bool is_snapshot(const char* path) {
         ;
 }
 static bool is_tape(const char* path) { return suffix(path,".tap") || suffix(path,".tzx"); }
+#if SPECTRUM_HAS_TIMEX_2068
+static bool is_cartridge(const char* path) { return suffix(path,".dck"); }
+#endif
 static bool entry(unsigned selected,mk61_service_file_info* out,unsigned type) {
     unsigned matched=0;
     for(unsigned i=0;i<4096;++i) {
@@ -541,6 +552,9 @@ static bool entry(unsigned selected,mk61_service_file_info* out,unsigned type) {
         mk61_api->service();
         const bool match=type==FILE_SNAPSHOT?is_snapshot(f.name):
             type==FILE_BETA?(suffix(f.name,".trd") || suffix(f.name,".scl")):
+#if SPECTRUM_HAS_TIMEX_2068
+            type==FILE_CARTRIDGE?is_cartridge(f.name):
+#endif
             type==FILE_DIV?suffix(f.name,".img"):is_tape(f.name);
         if(f.name[0]=='.' || !(f.directory || match)) continue;
         if(matched++==selected) { *out=f;return true; }
@@ -559,7 +573,11 @@ static bool choose_file(unsigned type) {
             names[count]=labels[count];++count;
         }
         if(!count) { names[0]="No matching files";count=1; }
-        static const char* const titles[]={"Snapshot","Beta Disk","DivMMC","Tape"};
+        static const char* const titles[]={"Snapshot","Beta Disk","DivMMC","Tape"
+#if SPECTRUM_HAS_TIMEX_2068
+            ,"Cartridge"
+#endif
+        };
         if(!menu_draw(titles[type],names,count,found?selected-top:count,false)) return false;
         const int c=wait_key();
         if(escape(c)) return false;
@@ -586,9 +604,10 @@ static bool load_rom(uint8_t* rom) {
 static __attribute__((noinline)) bool load_banked_roms(bool pentagon) {
     uint8_t bytes[512];
     for(unsigned bank=0;bank<2;++bank) {
-        const char* name=pentagon?(bank?"128-1.rom":"128-0.rom"):"48.rom";
+        const char* name=SPECTRUM_HAS_TIMEX_2068?(bank?"tc2068-1.rom":"tc2068-0.rom"):
+            pentagon?(bank?"128-1.rom":"128-0.rom"):"48.rom";
         uint32_t size;
-        if(!file_size(name,&size) || size!=SPECTRUM_ROM_BYTES) return false;
+        if(!file_size(name,&size) || size!=(SPECTRUM_HAS_TIMEX_2068 && bank?8192:SPECTRUM_ROM_BYTES)) return false;
         for(unsigned at=0;at<size;at+=sizeof(bytes)) {
             if(!read_source((void*)name,at,bytes,sizeof(bytes)) ||
                !external_write(NULL,SPECTRUM_ROM_BASE+bank*SPECTRUM_ROM_BYTES+at,bytes,sizeof(bytes))) return false;
@@ -598,6 +617,12 @@ static __attribute__((noinline)) bool load_banked_roms(bool pentagon) {
 }
 static bool select_model(unsigned model) {
     if(!model_available(model)) return false;
+#if SPECTRUM_HAS_TIMEX_2068
+    machine.timex_ntsc=model==SPECTRUM_TS2068;
+    if(machine.memory) {
+        reset_machine();started=false;return !machine.memory->fault;
+    }
+#endif
     if(!banked_buffers) {
         if(model!=SPECTRUM_48) return false;
         reset_machine();started=false;return true;
@@ -920,9 +945,17 @@ static bool raster_available(void) {
 static bool settings(mk61_service_lease* workspace) {
     unsigned selected=0;
     for(;;) {
-        static const char* const joysticks[]={"Joystick: Kempston","Joystick: Sinclair 1","Joystick: Sinclair 2"};
         static const char* const layouts[]={"Stereo: Mono","Stereo: ABC","Stereo: ACB"};
         const unsigned enabled=machine.extensions;
+#if SPECTRUM_HAS_TIMEX_2068
+        static const char* const joysticks[]={"Joystick: Timex 1","Joystick: Timex 2","Joystick: Sinclair 1"};
+        const char* labels[]={joysticks[machine.joystick_mode],
+            machine.sound_chip==SPECTRUM_YM?"Sound chip: YM2149":"Sound chip: AY-3-8912",
+            layouts[machine.sound_layout],enabled&SPECTRUM_ULAPLUS?"ULAplus: On":"ULAplus: Off","Back"};
+        const unsigned back=4;
+        const char actions[]="jcs4 ";
+#else
+        static const char* const joysticks[]={"Joystick: Kempston","Joystick: Sinclair 1","Joystick: Sinclair 2"};
         const bool readonly=machine.disk.mode==1?machine.disk.fdc.io.readonly:machine.disk.spi.io.readonly;
         const char* labels[12]={
             enabled&SPECTRUM_TURBOSOUND?"TurboSound: On":"TurboSound: Off",
@@ -947,6 +980,7 @@ static bool settings(mk61_service_lease* workspace) {
 #endif
         labels[back]="Back";
         memcpy(actions+back," di",4);
+#endif
         const int choice=menu_pick("Options",labels,back+1,&selected,true,actions);
         if(choice<0 || (unsigned)choice==back) {
             if(SPECTRUM_HAS_PREFERENCES) {
@@ -967,10 +1001,10 @@ static bool settings(mk61_service_lease* workspace) {
         else if(SPECTRUM_HAS_TIMEX && c=='v') { machine.extensions^=SPECTRUM_TIMEX;machine.timex_mode=0; }
         else if(c=='r') exact_raster=!exact_raster;
 #endif
-        else if(c=='d' || c=='D') mount_media(SPECTRUM_DISK_BETA);
-        else if(c=='i' || c=='I') mount_media(SPECTRUM_DISK_DIVMMC);
-        else if(c=='u' || c=='U') { (void)spectrum_disk_mode(&machine,0);reset_machine();started=false; }
-        else if(c=='w' || c=='W') {
+        else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='d' || c=='D')) mount_media(SPECTRUM_DISK_BETA);
+        else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='i' || c=='I')) mount_media(SPECTRUM_DISK_DIVMMC);
+        else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='u' || c=='U')) { (void)spectrum_disk_mode(&machine,0);reset_machine();started=false; }
+        else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='w' || c=='W')) {
             if(machine.disk.mode==1 && !floppy.scl) machine.disk.fdc.io.readonly=!machine.disk.fdc.io.readonly;
             else if(machine.disk.mode==2) machine.disk.spi.io.readonly=!machine.disk.spi.io.readonly;
             if(SPECTRUM_HAS_PREFERENCES && (machine.disk.mode==2 || (machine.disk.mode==1 && !floppy.scl))) {
@@ -982,6 +1016,21 @@ static bool settings(mk61_service_lease* workspace) {
         }
     }
 }
+#if SPECTRUM_HAS_TIMEX_2068
+static bool load_cartridge(void) {
+    uint32_t size;
+    if(!file_size(snapshot_path,&size)) {message("Cannot read cartridge");return false;}
+    const spectrum_source source={snapshot_path,size,read_source};
+    const enum spectrum_error result=spectrum_load_dck(&machine,&source);
+    if(result) {
+        if(machine.memory->fault) started=false;
+        message(result==SPECTRUM_UNSUPPORTED?"Unsupported DCK bank":
+                result==SPECTRUM_FORMAT?"Invalid DCK file":"Cannot read cartridge");
+        return false;
+    }
+    stop_tape();started=true;return true;
+}
+#endif
 static __attribute__((noinline)) bool load_snapshot(uint32_t file_id) {
     uint32_t size;
     if(!file_size(snapshot_path,&size)) {
@@ -997,6 +1046,10 @@ static __attribute__((noinline)) bool load_snapshot(uint32_t file_id) {
     stop_tape();
     enum spectrum_error error;
     if(suffix(snapshot_path,".sna")) {
+        if(SPECTRUM_HAS_TIMEX_2068) {
+            if(switch_app(size==49179?SPECTRUM_48:SPECTRUM_128,file_id,snapshot_path)) return false;
+            message("Open SNA in SINCLAIR.APP");return false;
+        }
         if(!SPECTRUM_HAS_SINCLAIR && size==49179 && switch_app(SPECTRUM_48,file_id,snapshot_path)) return false;
         const unsigned banked=SPECTRUM_HAS_SINCLAIR?SPECTRUM_128:SPECTRUM_P512;
         if((size==131103 || size==147487) && spectrum_model(&machine)==SPECTRUM_48 && !select_model(banked))
@@ -1015,7 +1068,8 @@ static __attribute__((noinline)) bool load_snapshot(uint32_t file_id) {
         if(!error && ((model==SPECTRUM_128 && !spectrum_is_128(&machine)) ||
            (model==SPECTRUM_48 && spectrum_is_128(&machine)) ||
            (model==SPECTRUM_P512 && !spectrum_is_pentagon(&machine)) ||
-           (model==SPECTRUM_TC2048 && spectrum_model(&machine)!=SPECTRUM_48)) &&
+           (model==SPECTRUM_TC2048 && spectrum_model(&machine)!=SPECTRUM_48) ||
+           (SPECTRUM_HAS_TIMEX_2068 && model!=spectrum_model(&machine))) &&
            !select_model(model==SPECTRUM_TC2048?SPECTRUM_48:model)) error=SPECTRUM_UNSUPPORTED;
         if(!error) error=spectrum_load_z80(&machine,&source);
     }
@@ -1033,6 +1087,7 @@ static void help(void) {
     message("Ctrl: Caps Shift\nAlt: Symbol Shift\nTab/F2: Extended mode\nF1: Edit  F6: Graphics\nBackspace: Delete\nArrows + F5: joystick\nEsc: pause / menu\nF10: exit");
 }
 static uint32_t guest_time_us(uint32_t cycles) {
+    if(spectrum_model(&machine)==SPECTRUM_TS2068) return cycles*125u/441u;
     return spectrum_is_128(&machine)?cycles*10000u/35469u:cycles*2/7;
 }
 static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t* deadline
@@ -1053,6 +1108,10 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
     if(spectrum_is_128(&machine)) {
         const unsigned remainder=(SPECTRUM_128_FRAME_TSTATES*10000u)%35469u;
         *deadline+=((machine.frames%35469u)*remainder)%35469u<remainder;
+    }
+    if(spectrum_model(&machine)==SPECTRUM_TS2068) {
+        const unsigned remainder=(SPECTRUM_TS2068_FRAME_TSTATES*125u)%441u;
+        *deadline+=((machine.frames%441u)*remainder)%441u<remainder;
     }
     const uint32_t phase_us=guest_time_us(machine.frame_tstates);
     uint32_t target=*deadline+phase_us;
@@ -1141,16 +1200,18 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static __attribute__((noinline)) void prime_audio(void) {
     // Generate real guest events before PWM. Wide needs time for its
-    // initial video snapshot. The original 128K ROM needs more lead to
-    // cover the busy transition from RAM test to menu drawing.
+    // initial video snapshot. The original 128K and 2068 ROMs need more
+    // lead across the RAM test, paging, and the first complete screen.
     // Each 512T slice fits in the free half of the queue even with two
     // events per OUT, so it never waits on gated audio.
     spectrum_sound* sound=&machine.sound;
     const bool sinclair128=spectrum_is_128(&machine);
-    const uint32_t frame=sinclair128?SPECTRUM_128_FRAME_TSTATES:SPECTRUM_FRAME_TSTATES;
+    const uint32_t frame=SPECTRUM_HAS_TIMEX_2068?spectrum_frame_cycles(&machine):
+        sinclair128?SPECTRUM_128_FRAME_TSTATES:SPECTRUM_FRAME_TSTATES;
     const bool cold128=sinclair128 && !machine.cpu.cyc && !machine.cpu.pc;
     const bool wide=SPECTRUM_HAS_PENTAGON && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_WIDE;
-    const uint32_t end=(uint32_t)machine.cpu.cyc+(cold128?4*frame:wide?2*spectrum_frame_cycles(&machine):frame);
+    const bool cold2068=SPECTRUM_HAS_TIMEX_2068 && !machine.cpu.cyc && !machine.cpu.pc;
+    const uint32_t end=(uint32_t)machine.cpu.cyc+(cold128 || cold2068?4*frame:wide?2*spectrum_frame_cycles(&machine):frame);
     int32_t left;
     while((left=(int32_t)(end-(uint32_t)machine.cpu.cyc))>0 &&
           !(machine.memory && machine.memory->fault) && !tape->fault && !tape->choices) {
@@ -1217,7 +1278,7 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     const bool raster=exact_raster && raster_available() &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
-    if(audio_mode==2 && (spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
+    if(audio_mode==2 && (SPECTRUM_HAS_TIMEX_2068 || spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
        (!machine.pentagon && (raster || tape->playing)))) prime_audio();
     spectrum_hicolor_changes changes;
     if(SPECTRUM_HAS_TIMEX && (machine.extensions&SPECTRUM_TIMEX)) spectrum_hicolor_watch(&machine,&changes);
@@ -1400,6 +1461,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
     mk61_service_lease ram={0},rom={0};
     mk61_service_buffer sram[2]={{0}};
     banked_buffers=(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_EXTERNAL_BUFFERS)!=0;
+    if(SPECTRUM_HAS_TIMEX_2068 && !banked_buffers) {message("Timex requires PSRAM");return 0;}
     if(!SPECTRUM_HAS_SINCLAIR && !banked_buffers) {
         if(!switch_app(SPECTRUM_48,file_id,NULL)) message("Pentagon requires PSRAM\nUse SINCLAIR.APP for 48K");
         return 0;
@@ -1429,8 +1491,8 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
         message("Not enough SRAM for Spectrum");return 0;
     }
     uint32_t rom_size;
-    if((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
-       (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES))) {
+    if(!SPECTRUM_HAS_TIMEX_2068 && ((!banked_buffers && !load_rom(rom.data)) || (banked_buffers &&
+       (!file_size("48.rom",&rom_size) || rom_size!=SPECTRUM_ROM_BYTES)))) {
         message("Put 16 KiB 48.rom\nnext to SPECTRUM.APP");return 0;
     }
     page_runs[0]=ram.data;page_runs[1]=rom.data;
@@ -1443,8 +1505,13 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
     exact_raster=preferences.raster;
     spectrum_sound_configure(&machine,preferences.chip,preferences.layout);
     const bool remember_model=SPECTRUM_HAS_PREFERENCES && initial_model!=UINT32_MAX && file_id==MK61_SERVICE_INVALID_ID;
-    if(initial_model==UINT32_MAX) initial_model=preferences.model;
+    if(initial_model==UINT32_MAX || (SPECTRUM_HAS_TIMEX_2068 && !model_available(initial_model)))
+        initial_model=preferences.model;
     if(!select_model(banked_buffers?initial_model:SPECTRUM_48)) {
+        if(SPECTRUM_HAS_TIMEX_2068) {
+            message("Check tc2068-0.rom and\ntc2068-1.rom next to APP");
+            goto done;
+        }
         if(!select_model(SPECTRUM_48)) return 0;
     }
     if(remember_model && preferences.model!=spectrum_model(&machine)) {
@@ -1456,16 +1523,24 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
             message("Update firmware for file launch");
         } else {
             strcpy(directory,snapshot_path);parent_directory();
+            bool play=false;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             if(is_tape(snapshot_path)) {
                 if(!SPECTRUM_HAS_SINCLAIR) {
                     if(switch_app(SPECTRUM_48,file_id,snapshot_path)) goto done;
                     message("Open this tape in SINCLAIR.APP");
-                } else if(select_model(SPECTRUM_48) && mount_tape()) tape_ready();
+                } else if((SPECTRUM_HAS_TIMEX_2068 || select_model(SPECTRUM_48)) && mount_tape()) tape_ready();
             } else
 #endif
-            if(is_snapshot(snapshot_path) ? load_snapshot(file_id) :
-               mount_selected_media(suffix(snapshot_path,".img") ? SPECTRUM_DISK_DIVMMC : SPECTRUM_DISK_BETA)) {
+#if SPECTRUM_HAS_TIMEX_2068
+            if(is_cartridge(snapshot_path)) play=load_cartridge();
+            else if(is_snapshot(snapshot_path)) play=load_snapshot(file_id);
+            else message("Unsupported Timex file");
+#else
+            play=is_snapshot(snapshot_path)?load_snapshot(file_id):
+                mount_selected_media(suffix(snapshot_path,".img")?SPECTRUM_DISK_DIVMMC:SPECTRUM_DISK_BETA);
+#endif
+            if(play) {
                 // The Explorer's opening Enter/F-key may still be held.
                 // Seed the normal guest-key blocker before starting the CPU.
                 const int key=scan_keys();
@@ -1482,17 +1557,21 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
     for(;;) {
         const char* labels[ROOT_COUNT];
         root_labels(labels);
+#if SPECTRUM_HAS_TIMEX_2068
+        const char hotkeys[]="rkeomplsbhq";
+#else
         char hotkeys[]="rodimptbh"
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
             "ls"
 #endif
             "vq";
         if(machine.disk.mode==SPECTRUM_DISK_DIVMMC) hotkeys[ROOT_DISK_OR_NMI]='n';
-        const int choice=menu_pick("Spectrum",labels,ROOT_COUNT,&root_selected,false,hotkeys);
+#endif
+        const int choice=menu_pick(root_title,labels,ROOT_COUNT,&root_selected,false,hotkeys);
         const int c=choice<0?'q':choice==0?13:hotkeys[choice];
         if(escape(c) || c=='q' || c=='Q' || c==0x90) break;
         if(c=='h' || c=='H') { help();continue; }
-        if(c=='v') {
+        if(!SPECTRUM_HAS_TIMEX_2068 && c=='v') {
             const bool pentagon=spectrum_is_pentagon(&machine);
             const char* name=SPECTRUM_HAS_EXTENDED_VIDEO?(pentagon?"SPECTRUM.APP":"SINCLAIR.APP"):
                 pentagon?"ZXVIDEO.APP":"TIMEX.APP";
@@ -1504,9 +1583,15 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
         if(c=='l') { tape_menu();continue; }
         if(c=='s') { if(!save_snapshot(&ram)) break;continue; }
 #endif
-        if(c=='d' || c=='D') { mount_media(SPECTRUM_DISK_BETA);continue; }
-        if(c=='i' || c=='I') { mount_media(SPECTRUM_DISK_DIVMMC);continue; }
+        if(!SPECTRUM_HAS_TIMEX_2068 && (c=='d' || c=='D')) { mount_media(SPECTRUM_DISK_BETA);continue; }
+        if(!SPECTRUM_HAS_TIMEX_2068 && (c=='i' || c=='I')) { mount_media(SPECTRUM_DISK_DIVMMC);continue; }
         if(c=='m' || c=='M') {
+#if SPECTRUM_HAS_TIMEX_2068
+            const char* models[]={"TS2068 (NTSC)","TC2068 (PAL)"};
+            unsigned model=!machine.timex_ntsc;
+            const int picked=menu_pick("Machine",models,2,&model,true,NULL);
+            if(picked>=0 && !select_model(picked?SPECTRUM_TC2068:SPECTRUM_TS2068)) message("PSRAM I/O error");
+#else
             const char* models[]={"Spectrum 48K","Pentagon 512K","Pentagon 1024K","Sinclair 128K"};
             unsigned model=spectrum_model(&machine);
             int picked;
@@ -1529,22 +1614,32 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
                 preferences.model=(uint8_t)picked;preferences_dirty=true;
                 if(!save_preferences(&ram)) goto done;
             }
+#endif
             continue;
         }
+#if SPECTRUM_HAS_TIMEX_2068
+        if(c=='e') {
+            machine.cartridge=(spectrum_cartridge){0};
+            reset_machine();started=false;continue;
+        }
+        if(c=='k') {
+            if(!choose_file(FILE_CARTRIDGE) || !load_cartridge()) continue;
+        } else
+#endif
         if(c=='o' || c=='O') {
             if(!choose_file(FILE_SNAPSHOT) || !load_snapshot(MK61_SERVICE_INVALID_ID)) {
                 if(switching_app()) goto done;
                 continue;
             }
         }
-        else if((c=='t' || c=='T') && machine.disk.mode==SPECTRUM_DISK_BETA && started) {
+        else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='t' || c=='T') && machine.disk.mode==SPECTRUM_DISK_BETA && started) {
             if(spectrum_model(&machine)!=SPECTRUM_48) (void)spectrum_memory_page(machine.memory,machine.memory->paging|16);
             spectrum_refresh_map(&machine);
             machine.cpu.sp-=2;
             machine.cpu.write_byte(&machine,machine.cpu.sp,(uint8_t)machine.cpu.pc);
             machine.cpu.write_byte(&machine,(uint16_t)(machine.cpu.sp+1),(uint8_t)(machine.cpu.pc>>8));
             machine.cpu.pc=15616;machine.cpu.halted=false;
-        } else if((c=='n' || c=='N') && machine.disk.mode==SPECTRUM_DISK_DIVMMC && started) z80_gen_nmi(&machine.cpu);
+        } else if(!SPECTRUM_HAS_TIMEX_2068 && (c=='n' || c=='N') && machine.disk.mode==SPECTRUM_DISK_DIVMMC && started) z80_gen_nmi(&machine.cpu);
         else if(c=='b' || c=='B' || enter(c)) {
             if(c=='b' || c=='B' || !started) reset_machine();
             started=true;
@@ -1580,7 +1675,7 @@ uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
     if(!mk61_app_flow_compatible(flow) || flow->context_size<2*sizeof(uint32_t)) return 0;
     const uint32_t* context=flow->context;
     const uint32_t file=flow->current.phase==MK61_APP_FLOW_FILE_PHASE?context[0]:MK61_SERVICE_INVALID_ID;
-    const unsigned model=context[1] && context[1]<=SPECTRUM_128+1?context[1]-1:UINT32_MAX;
+    const unsigned model=context[1] && context[1]<=SPECTRUM_TS2068+1?context[1]-1:UINT32_MAX;
     app_flow=flow;
     const int result=run_app(file,model);
     if(!switching_app()) mk61_app_flow_return(flow,(uint32_t)result,MK61_FLOW_OK);

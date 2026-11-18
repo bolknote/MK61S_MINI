@@ -18,7 +18,8 @@ static void delay(uint32_t ms) { assert(ms==1);++delays; }
 static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* p) {
     if(op==MK61_SERVICE_FILE_BYTES) {
         const mk61_service_file_bytes* r=p;
-        assert(a==MK61_FILE_BYTES_READ && !b && c==sizeof(*r) && !strcmp(r->path,"48.rom") && r->offset==0x3D00 && r->size==768);
+        const char* filename=SPECTRUM_HAS_TIMEX_2068?"tc2068-0.rom":"48.rom";
+        assert(a==MK61_FILE_BYTES_READ && !b && c==sizeof(*r) && !strcmp(r->path,filename) && r->offset==0x3D00 && r->size==768);
         memcpy(r->data,rom+0x3D00,768);return 1;
     }
     if(op==MK61_SERVICE_DISPLAY) {
@@ -47,14 +48,21 @@ int main(int argc,char** argv) {
         supported=mode;clocks=presents=delays=0;hz=12000000;
         spectrum_ui u;spectrum s={0};
         assert(spectrum_ui_begin(&u,&common,&s,false));
+#if SPECTRUM_HAS_TIMEX_2068
+        const char* labels[]={"Start machine","Cartridge...","Eject cartridge","Snapshot...","Machine...",
+            "Options...","Tape...","Save snapshot","Reset","Help","Exit"};
+        const char* title="Timex 2068";
+#else
         const char* labels[]={"Start machine","Snapshot...","Beta Disk...","DivMMC...","Machine...","Options...","TR-DOS","Reset","Help","Exit"};
-        spectrum_ui_window(&u,8,8,224,"Spectrum",labels,10,0);
+        const char* title="Spectrum";
+#endif
+        spectrum_ui_window(&u,8,8,224,title,labels,sizeof(labels)/sizeof(*labels),0);
         spectrum_ui_footer(&u,"Enter: select    Esc: back");
         assert(spectrum_ui_present(&u) && presents==2 && delays==1 && clocks==1);
         if(mode && argc==2) {
             uint32_t crc=UINT32_MAX;
             for(unsigned i=0;i<9216;++i) { crc^=canvas[i];for(unsigned bit=0;bit<8;++bit)crc=(crc>>1)^((crc&1)?0xEDB88320U:0); }
-            printf("Spectrum ordinary root menu snapshot CRC=%08lX\n",(unsigned long)(crc^UINT32_MAX));
+            printf("%s ordinary root menu snapshot CRC=%08lX\n",title,(unsigned long)(crc^UINT32_MAX));
         }
         assert(spectrum_ui_begin(&u,&common,&s,true) && clocks==2);
         assert(spectrum_ui_present(&u));

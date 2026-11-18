@@ -12,10 +12,11 @@
 #define SPECTRUM_APP_PROFILE 0
 #endif
 #define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1 && SPECTRUM_APP_PROFILE!=3)
-#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE!=2 && SPECTRUM_APP_PROFILE!=4)
+#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==1 || SPECTRUM_APP_PROFILE==3)
 #define SPECTRUM_HAS_EXTENDED_VIDEO (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE>=3)
 #define SPECTRUM_HAS_PREFERENCES (SPECTRUM_APP_PROFILE<3)
 #define SPECTRUM_HAS_TIMEX (SPECTRUM_HAS_SINCLAIR && SPECTRUM_HAS_EXTENDED_VIDEO)
+#define SPECTRUM_HAS_TIMEX_2068 (SPECTRUM_APP_PROFILE==5)
 #define SPECTRUM_HAS_PENTAGON_VIDEO (SPECTRUM_HAS_PENTAGON && SPECTRUM_HAS_EXTENDED_VIDEO)
 #define SPECTRUM_HAS_RASTER (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==2)
 
@@ -25,6 +26,9 @@
 #define SPECTRUM_128_FRAME_TSTATES 70908U
 #define SPECTRUM_128_CPU_HZ 3546900U
 #define SPECTRUM_128_AY_HZ 1773400U
+#define SPECTRUM_TS2068_FRAME_TSTATES (262U*224U)
+#define SPECTRUM_TS2068_CPU_HZ 3528000U
+#define SPECTRUM_TS2068_AY_HZ 1764000U
 #define SPECTRUM_BITMAP_BYTES 6144U
 #define SPECTRUM_ATTRIBUTE_BYTES 768U
 #define SPECTRUM_RASTER_STRIP_ROWS 32U
@@ -48,6 +52,12 @@ typedef struct {
     spectrum_video_damage strips[2][SPECTRUM_WIDE_STRIPS];
     uint8_t mode,bank,upper,windows,repaint;
 } spectrum_pentagon_changes;
+#if SPECTRUM_HAS_TIMEX_2068
+enum { SPECTRUM_TIMEX_DOCK, SPECTRUM_TIMEX_EXROM, SPECTRUM_TIMEX_CHUNK_BYTES=8192 };
+typedef struct {
+    uint8_t present[2],writable[2],slot;
+} spectrum_cartridge;
+#endif
 static inline void spectrum_video_include_cell(spectrum_video_damage* d,unsigned x,unsigned y,unsigned rows) {
     if(!d->bottom) {*d=(spectrum_video_damage){x,x+1,y,y+rows};return;}
     if(x<d->left) d->left=(uint8_t)x;
@@ -62,6 +72,9 @@ typedef struct spectrum {
     const uint8_t* rom;
     uint8_t keys[8],joystick,border,beeper,key_rows;
     uint32_t frames,frame_tstates,frame_origin;
+#if SPECTRUM_HAS_TIMEX_2068
+    uint32_t contention_origin;
+#endif
     spectrum_memory* memory; /* NULL: ordinary 48K; otherwise banked RAM. */
     bool pentagon;
     PSG ay;
@@ -80,19 +93,37 @@ typedef struct spectrum {
     uint16_t video_cell;
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,timex_mode,ulaplus_palette[64];
+#if SPECTRUM_HAS_TIMEX_2068
+    spectrum_cartridge cartridge;
+    uint8_t timex_hsr;
+    bool timex_ntsc;
+#endif
     uint32_t sample_rate,sample_phase;
     int32_t audio_input,audio_output;
     void* audio_context;
     void (*audio_sample)(void*,int16_t);
 } spectrum;
-enum { SPECTRUM_48, SPECTRUM_P512, SPECTRUM_P1024, SPECTRUM_128, SPECTRUM_TC2048 };
-static inline bool spectrum_is_128(const spectrum* s) { return SPECTRUM_HAS_SINCLAIR && s->memory && s->memory->banks==8; }
+enum { SPECTRUM_48, SPECTRUM_P512, SPECTRUM_P1024, SPECTRUM_128, SPECTRUM_TC2048, SPECTRUM_TC2068, SPECTRUM_TS2068 };
+static inline bool spectrum_is_128(const spectrum* s) {
+    return SPECTRUM_HAS_SINCLAIR && !SPECTRUM_HAS_TIMEX_2068 && s->memory && s->memory->banks==8;
+}
 static inline bool spectrum_is_pentagon(const spectrum* s) {
     return SPECTRUM_APP_PROFILE==1 || (SPECTRUM_HAS_PENTAGON && s->pentagon);
 }
 static inline unsigned spectrum_model(const spectrum* s) {
+#if SPECTRUM_HAS_TIMEX_2068
+    return s->timex_ntsc?SPECTRUM_TS2068:SPECTRUM_TC2068;
+#else
     return spectrum_is_pentagon(s)?(s->memory && s->memory->extended?SPECTRUM_P1024:SPECTRUM_P512):
         spectrum_is_128(s)?SPECTRUM_128:SPECTRUM_48;
+#endif
+}
+static inline bool spectrum_timex_2068(unsigned model) { return model==SPECTRUM_TC2068 || model==SPECTRUM_TS2068; }
+static inline unsigned spectrum_cpu_clock(unsigned model) {
+    return model==SPECTRUM_TS2068?SPECTRUM_TS2068_CPU_HZ:model==SPECTRUM_128?SPECTRUM_128_CPU_HZ:3500000;
+}
+static inline unsigned spectrum_ay_clock(const spectrum* s) {
+    return spectrum_model(s)==SPECTRUM_TS2068?SPECTRUM_TS2068_AY_HZ:spectrum_is_128(s)?SPECTRUM_128_AY_HZ:1750000;
 }
 static inline unsigned spectrum_timex_mode(const spectrum* s) {
     return SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX)?s->timex_mode&7:0;
@@ -113,6 +144,13 @@ typedef struct {
 enum spectrum_error {
     SPECTRUM_OK, SPECTRUM_IO, SPECTRUM_FORMAT, SPECTRUM_UNSUPPORTED, SPECTRUM_MEDIA
 };
+#if SPECTRUM_HAS_TIMEX_2068
+void spectrum_timex_map(spectrum*);
+bool spectrum_timex_access(spectrum*,uint16_t address,bool writing,uint8_t*);
+spectrum_cartridge spectrum_timex_stage(spectrum*);
+uint32_t spectrum_timex_chunk(const spectrum_cartridge*,unsigned bank,unsigned chunk);
+enum spectrum_error spectrum_load_dck(spectrum*,const spectrum_source*);
+#endif
 void spectrum_init(spectrum*,uint8_t* ram,const uint8_t* rom);
 void spectrum_reset(spectrum*);
 void spectrum_reset_cpu(spectrum*);

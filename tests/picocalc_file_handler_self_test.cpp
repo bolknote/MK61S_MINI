@@ -14,6 +14,7 @@ std::set<std::string> directories;
 unsigned scans=0,launches=0;
 std::string launched,message;
 constexpr auto spectrum_magic=program_store::make_type_magic('Z','1');
+constexpr auto timex_magic=program_store::make_type_magic('T','8');
 constexpr auto mp3_magic=program_store::make_type_magic('A','3');
 void directory(std::string path) {
     while(!path.empty()) {
@@ -83,6 +84,7 @@ int main() {
     for(const char* path:{"/games/A.Z80","/games/A.sna","/games/A.Szx","/games/A.TRD","/games/A.ScL","/A.tap","/X.TzX"})
         assert(file_associations::handler(path)==spectrum_magic);
     assert(file_associations::handler("/Documents/Music/Title.Mp3")==mp3_magic);
+    assert(file_associations::handler("/Games/Timex/Cartridge.DcK")==timex_magic);
     for(const char* path:{"/games/A.z80.txt","/A.sna/file","/A.img","/A.tap.bak","/Documents/Music/Title.mp3.bak"})
         assert(!file_associations::handler(path));
     reset();file("/Games/Sub/Title.sna");app("/Games/Sub/Local.App");app("/Apps/ZX/SPECTRUM.APP");
@@ -92,6 +94,9 @@ int main() {
     reset();file("/Games/Spectrum Collection/GAMES.img");app("/Programs/Spectrum/SPECTRUM.APP");
     assert(!service.run_handled("/Games/Spectrum Collection/GAMES.img",spectrum_magic) &&
            launched=="/Programs/Spectrum/SPECTRUM.APP");
+    reset();file("/Games/Timex/Cartridge.DCK");app("/Programs/Spectrum/SPECTRUM.APP");app("/Programs/Spectrum/TX2068.APP",timex_magic);
+    assert(!service.run_handled("/Games/Timex/Cartridge.DCK",timex_magic) &&
+           launched=="/Programs/Spectrum/TX2068.APP");
     const auto urq_magic=program_store::TYPE_MAGIC_URQ;
     reset();file("/Games/Quest/game.urq");app("/System/URQ/URQ.APP",urq_magic);
     assert(!service.run_handled("/Games/Quest/game.urq",urq_magic) && launched=="/System/URQ/URQ.APP");

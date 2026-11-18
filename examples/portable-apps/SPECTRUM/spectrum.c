@@ -5,7 +5,7 @@ static bool low_ram(const spectrum_memory* m) {
     return SPECTRUM_HAS_PENTAGON && m && m->extended && (m->control&8) && !m->overlay;
 }
 static bool mapped_disk(const spectrum* s) {
-    return s->disk.mapped && (s->disk.cache || s->disk.direct_rom[s->disk.mode] ||
+    return !SPECTRUM_HAS_TIMEX_2068 && s->disk.mapped && (s->disk.cache || s->disk.direct_rom[s->disk.mode] ||
         (s->memory && (s->memory->rom_banks[0] || s->memory->paged_rom)));
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -84,7 +84,7 @@ void spectrum_refresh_map(spectrum* s) {
     z->read_map[3]=s->memory?spectrum_memory_mapped(s->memory,false):s->ram+32768;
     z->write_map[3]=s->memory?spectrum_memory_mapped(s->memory,true):s->ram+32768;
     spectrum_memory_map_pages(s->memory,z->read_pages,z->write_pages);
-    spectrum_disk_map_pages(s,z->read_pages,z->write_pages);
+    if(!SPECTRUM_HAS_TIMEX_2068) spectrum_disk_map_pages(s,z->read_pages,z->write_pages);
     for(unsigned window=0;window<4;++window) {
         const uint8_t* const from=z->read_map[window];
         uint8_t* const to=z->write_map[window];
@@ -114,6 +114,9 @@ void spectrum_refresh_map(spectrum* s) {
 #if SPECTRUM_HAS_PENTAGON_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     if(s->pentagon_video) pentagon_watch_map(s,s->pentagon_video);
 #endif
+#if SPECTRUM_HAS_TIMEX_2068
+    spectrum_timex_map(s);
+#endif
 }
 
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
@@ -137,6 +140,10 @@ void spectrum_pentagon_watch(spectrum* s,spectrum_pentagon_changes* changes) {
 
 static uint8_t read_byte(void* raw,uint16_t address) {
     spectrum* s=raw;
+#if SPECTRUM_HAS_TIMEX_2068
+    uint8_t data;
+    if(spectrum_timex_access(s,address,false,&data)) return data;
+#endif
     if(address<0x4000 && mapped_disk(s)) return spectrum_disk_read_memory(s,address);
     if(!s->memory) return address<0x4000?s->rom[address]:s->ram[address-0x4000];
     if(address<0x4000 && !s->memory->paged_rom && !low_ram(s->memory)) return s->rom[address];
@@ -149,8 +156,12 @@ static uint8_t read_byte(void* raw,uint16_t address) {
 }
 static void write_byte(void* raw,uint16_t address,uint8_t value) {
     spectrum* s=raw;
+#if SPECTRUM_HAS_TIMEX_2068
+    if(spectrum_timex_access(s,address,true,&value)) return;
+#endif
     if(address<0x4000 && !low_ram(s->memory)) {
-        spectrum_disk_write_memory(s,address,value);return;
+        if(!SPECTRUM_HAS_TIMEX_2068) spectrum_disk_write_memory(s,address,value);
+        return;
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
     const unsigned offset=address&8191u;
@@ -181,6 +192,16 @@ static void write_byte(void* raw,uint16_t address,uint8_t value) {
     }
 }
 enum { ULA_CONTENTION_START=14335, ULA_128_CONTENTION_START=14361 };
+static unsigned ula_48_start(const spectrum* s) {
+#if SPECTRUM_HAS_TIMEX_2068
+    return s->timex_ntsc?9168:14320;
+#else
+    (void)s;return ULA_CONTENTION_START;
+#endif
+}
+static bool ula_port(uint16_t port) {
+    return SPECTRUM_HAS_TIMEX_2068?(uint8_t)port==0xfe:!(port&1);
+}
 static unsigned ula_bitmap(unsigned y,unsigned x) {
     return ((y&192)<<5)|((y&7)<<8)|((y&56)<<2)|x;
 }
@@ -199,8 +220,8 @@ static uint8_t floating_bus_128(spectrum* s) {
 }
 uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     if(!(s->extensions&SPECTRUM_TURBOSOUND)) s->sound.selected=0;
-    uint8_t device;if(spectrum_disk_in(s,port,&device)) return device;
-    if(!(port&1)) {
+    uint8_t device;if(!SPECTRUM_HAS_TIMEX_2068 && spectrum_disk_in(s,port,&device)) return device;
+    if(ula_port(port)) {
         uint8_t value=0xBF;
         if(s->ear && s->ear(s->ear_context,&s->cpu)) value|=0x40;
         const uint8_t* key=s->keys;
@@ -211,12 +232,29 @@ uint8_t spectrum_port_in(spectrum* s,uint16_t port) {
     if((s->extensions&SPECTRUM_ULAPLUS) && port==0xFF3B)
         return (s->ulaplus_select&64)?s->ulaplus_mode:s->ulaplus_palette[s->ulaplus_select&63];
     if(SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) return s->timex_mode;
-    if((port&0xC002)==0xC000) {
+#if SPECTRUM_HAS_TIMEX_2068
+    const unsigned reg=s->ay.adr,low=(uint8_t)port;
+    if(low==0xf4) return s->timex_hsr;
+    if(low==0xf5 || low==0xf6) {
+        const uint8_t* regs=s->sound.asynchronous?s->sound.regs[0]:s->ay.reg;
+        if(reg==15) return 255;
+        if(reg!=14) return regs[reg];
+        if(low==0xf5) return 255;
+        unsigned value=(regs[7]&64)?regs[14]:255;
+        if(s->joystick_mode<2 && (port&(0x100u<<s->joystick_mode))) {
+            const unsigned held=s->joystick;
+            const unsigned pins=((held&1)<<3)|((held&2)<<1)|((held&4)>>1)|((held&8)>>3)|((held&16)<<3);
+            value&=~pins;
+        }
+        return (uint8_t)value;
+    }
+#endif
+    if(!SPECTRUM_HAS_TIMEX_2068 && (port&0xC002)==0xC000) {
         PSG* ay=s->sound.selected?&s->ay2:&s->ay;
         const uint8_t* regs=s->sound.asynchronous?s->sound.regs[s->sound.selected]:ay->reg;
         return ay->adr==15 || (ay->adr==14 && !(regs[7]&64))?0xFF:regs[ay->adr];
     }
-    if((port&0xFF)==0x1F && !s->joystick_mode) return s->joystick;
+    if(!SPECTRUM_HAS_TIMEX_2068 && (port&0xFF)==0x1F && !s->joystick_mode) return s->joystick;
     return spectrum_is_128(s)?floating_bus_128(s):0xFF;
 }
 static uint8_t port_in(z80* cpu,uint16_t port) { return spectrum_port_in(cpu->userdata,port); }
@@ -225,7 +263,11 @@ static uint8_t port_in(z80* cpu,uint16_t port) { return spectrum_port_in(cpu->us
 static unsigned ula_line(unsigned time) { return ((time>>5)*2341u)>>14; }
 static unsigned ula_wait(void* raw,uint32_t cycles) {
     const spectrum* s=raw;
-    const uint32_t at=cycles-s->frame_origin-ULA_CONTENTION_START;
+#if SPECTRUM_HAS_TIMEX_2068
+    const uint32_t at=cycles-s->contention_origin;
+#else
+    const uint32_t at=cycles-s->frame_origin-ula_48_start(s);
+#endif
     const unsigned phase=at&7;
     if(at>=192*224 || phase>=6 || at-ula_line(at)*224>=128) return 0;
     return 6-phase;
@@ -372,9 +414,18 @@ static inline void raster_until(spectrum* s,uint32_t cycles) { (void)s;(void)cyc
 static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     spectrum* s=cpu->userdata;
     if(!(s->extensions&SPECTRUM_TURBOSOUND)) s->sound.selected=0;
-    if(spectrum_disk_out(s,port,value)) return;
+    if(!SPECTRUM_HAS_TIMEX_2068 && spectrum_disk_out(s,port,value)) return;
     if(port==0xEFF7 && s->memory && spectrum_is_pentagon(s)) { (void)spectrum_memory_control(s->memory,value);spectrum_refresh_map(s); }
-    if(!(port&1)) {
+#if SPECTRUM_HAS_TIMEX_2068
+    switch((uint8_t)port) {
+    case 0xf4:
+        if(s->timex_hsr!=value) {s->timex_hsr=value;spectrum_refresh_map(s);}
+        return;
+    case 0xf5: s->ay.adr=s->sound.selected_reg[0]=value&15;return;
+    case 0xf6: spectrum_sound_write(s,0,s->ay.adr,value);return;
+    }
+#endif
+    if(ula_port(port)) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         if(s->video_bytes && s->border!=(value&7)) {
             // OUT FE latches new border color at an 8-pixel boundary.
@@ -401,19 +452,25 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
         const unsigned previous=s->timex_mode;
         s->timex_mode=value;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        if(s->hicolor && ((previous^value)&7)) {s->hicolor->repaint=true;spectrum_refresh_map(s);}
+        const unsigned changed=previous^value;
+        if(s->hicolor && (changed&(SPECTRUM_HAS_TIMEX_2068?63:7))) s->hicolor->repaint=true;
+        bool remap=s->hicolor && (changed&7);
+#if SPECTRUM_HAS_TIMEX_2068
+        remap|=(changed&128) && s->timex_hsr;
+#endif
+        if(remap) spectrum_refresh_map(s);
 #else
         (void)previous;
 #endif
     }
-    if((port&0xC002)==0xC000) {
+    if(!SPECTRUM_HAS_TIMEX_2068 && (port&0xC002)==0xC000) {
         if((s->extensions&SPECTRUM_TURBOSOUND) && value>=0xFE) s->sound.selected=value==0xFE;
         else {
             PSG* ay=s->sound.selected?&s->ay2:&s->ay;ay->adr=value&15;
             s->sound.selected_reg[s->sound.selected]=ay->adr;
         }
     }
-    if((port&0xC002)==0x8000) {
+    if(!SPECTRUM_HAS_TIMEX_2068 && (port&0xC002)==0x8000) {
         const unsigned chip=s->sound.selected,reg=chip?s->ay2.adr:s->ay.adr;
         spectrum_sound_write(s,chip,reg,value);
     }
@@ -433,7 +490,7 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
 static void reset_ay(spectrum* s) {
     memset(&s->ay,0,sizeof(s->ay));PSG_setVolumeMode(&s->ay,s->sound_chip==SPECTRUM_YM?1:2);
     s->ay.quality=1;s->ay.rate=s->sample_rate?s->sample_rate:25000;
-    PSG_setClock(&s->ay,spectrum_is_128(s)?SPECTRUM_128_AY_HZ:1750000);PSG_reset(&s->ay);
+    PSG_setClock(&s->ay,spectrum_ay_clock(s));PSG_reset(&s->ay);
     s->ay2=s->ay;spectrum_sound_reset(s);
     s->sample_phase=0;s->audio_input=s->audio_output=0;
 }
@@ -444,7 +501,11 @@ void spectrum_reset_cpu(spectrum* s) {
 #if SPECTRUM_HAS_PENTAGON
     s->pentagon_video=NULL;
 #endif
-    spectrum_disk_filter(s);spectrum_refresh_map(s);
+#if SPECTRUM_HAS_TIMEX_2068
+    s->timex_hsr=s->timex_mode=0;s->extensions|=SPECTRUM_TIMEX;
+#endif
+    if(!SPECTRUM_HAS_TIMEX_2068) spectrum_disk_filter(s);
+    spectrum_refresh_map(s);
     s->frames=s->frame_tstates=s->frame_origin=0;s->border=s->beeper=s->joystick=s->key_rows=0;
     s->video_bytes=NULL;
     memset(s->keys,0x1F,sizeof(s->keys));
@@ -461,6 +522,9 @@ void spectrum_init(spectrum* s,uint8_t* ram,const uint8_t* rom) {
     spectrum_reset(s);
 }
 void spectrum_reset(spectrum* s) {
+#if SPECTRUM_HAS_TIMEX_2068
+    if(s->memory && !s->memory->fault && !spectrum_memory_sync(s->memory)) return;
+#endif
     spectrum_reset_cpu(s);
     if(s->memory) {
         (void)spectrum_memory_reset(s->memory);
@@ -468,7 +532,7 @@ void spectrum_reset(spectrum* s) {
          * in the 128K ROM menu would lock 7FFD and break 128K disk loaders. */
         if((spectrum_is_pentagon(s) || spectrum_is_128(s)) && s->disk.mode==SPECTRUM_DISK_BETA) (void)spectrum_memory_page(s->memory,16);
     } else memset(s->ram,0,SPECTRUM_RAM_BYTES);
-    spectrum_disk_reset(s);
+    if(!SPECTRUM_HAS_TIMEX_2068) spectrum_disk_reset(s);
     spectrum_refresh_map(s);
 }
 void spectrum_set_audio(spectrum* s,uint32_t rate,void (*sample)(void*,int16_t),void* context) {
@@ -480,6 +544,7 @@ void spectrum_attach_memory(spectrum* s,spectrum_memory* memory) {
     s->memory=memory;s->pentagon=SPECTRUM_HAS_PENTAGON && memory && !spectrum_is_128(s);spectrum_reset_cpu(s);
 }
 uint32_t spectrum_frame_cycles(const spectrum* s) {
+    if(spectrum_model(s)==SPECTRUM_TS2068) return SPECTRUM_TS2068_FRAME_TSTATES;
     return spectrum_is_pentagon(s)?71680:spectrum_is_128(s)?SPECTRUM_128_FRAME_TSTATES:SPECTRUM_FRAME_TSTATES;
 }
 
@@ -488,7 +553,7 @@ static void ldir_deadline(spectrum* s,uint32_t phase,uint32_t frame,uint32_t lef
     uint32_t limit=phase<irq?irq-phase:frame-phase;
     if(limit>left) limit=left;
     s->cpu.ldir_until=s->sample_rate || s->cpu.before_store || !limit?0:(uint32_t)s->cpu.cyc+limit;
-    const unsigned start=sinclair128?ULA_128_CONTENTION_START:ULA_CONTENTION_START;
+    const unsigned start=sinclair128?ULA_128_CONTENTION_START:ula_48_start(s);
     if(phase<start+192*(sinclair128?228:224)) {
         // Only batches that touch contended addresses need the shorter budget.
         const uint32_t free_cycles=phase<start?start-phase:0;
@@ -501,14 +566,19 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
     uint32_t elapsed=0,phase=s->frame_tstates;
     const uint32_t frame=spectrum_frame_cycles(s);
     const bool sinclair128=spectrum_is_128(s);
-    const unsigned irq=sinclair128?36:32,clock=sinclair128?SPECTRUM_128_CPU_HZ:3500000;
+    const unsigned irq=sinclair128?36:32,clock=spectrum_cpu_clock(spectrum_model(s));
     spectrum_memory* const memory=s->memory;
     const bool legacy_audio=s->sample_rate && s->audio_sample;
     s->cpu.wait=spectrum_is_pentagon(s)?NULL:sinclair128?ula_128_wait:ula_wait;
     s->frame_origin=(uint32_t)s->cpu.cyc-phase;
+#if SPECTRUM_HAS_TIMEX_2068
+    // Cache the absolute start once per slice instead of testing the model
+    // on every contended bus access.
+    s->contention_origin=s->frame_origin+ula_48_start(s);
+#endif
     // Keep the frame phase local while the machine's INT level is asserted;
     // neither MMU/port callbacks nor the asynchronous audio consumer use it.
-    s->cpu.int_pending=phase<irq;s->cpu.int_data=0xFF;
+    s->cpu.int_pending=phase<irq && !(SPECTRUM_HAS_TIMEX_2068 && (s->timex_mode&64));s->cpu.int_data=0xFF;
     ldir_deadline(s,phase,frame,tstates,sinclair128);
     while(elapsed<tstates && !(memory && memory->fault)) {
         const uint32_t old_phase=phase;
@@ -542,9 +612,12 @@ uint32_t spectrum_run(spectrum* s,uint32_t tstates) {
 #endif
             phase-=frame;++s->frames;
             s->frame_origin+=frame;
+#if SPECTRUM_HAS_TIMEX_2068
+            s->contention_origin+=frame;
+#endif
             ldir_deadline(s,phase,frame,elapsed<tstates?tstates-elapsed:0,sinclair128);
         }
-        if(phase<irq) s->cpu.int_pending=true;
+        if(phase<irq) s->cpu.int_pending=!(SPECTRUM_HAS_TIMEX_2068 && (s->timex_mode&64));
         else if(old_phase<irq) {
             s->cpu.int_pending=false;ldir_deadline(s,phase,frame,elapsed<tstates?tstates-elapsed:0,sinclair128);
         }
@@ -622,8 +695,8 @@ void spectrum_keyboard(spectrum* s,const uint8_t wire[32]) {
         if(down(wire,special[i][0])) key(s,special[i][1]);
     for(unsigned i=0;i<sizeof(arrows);++i) if(down(wire,arrows[i])) {
         s->joystick|=(uint8_t)(1u<<i);
-        if(s->joystick_mode) {
-            key(s,joystick[s->joystick_mode!=1][i]);
+        if(SPECTRUM_HAS_TIMEX_2068?s->joystick_mode==2:s->joystick_mode!=0) {
+            key(s,joystick[!SPECTRUM_HAS_TIMEX_2068 && s->joystick_mode!=1][i]);
         }
     }
 }
@@ -761,6 +834,7 @@ static enum spectrum_error load_bank(reader* r,spectrum* s,unsigned bank,bool co
     r->at+=16384;return SPECTRUM_OK;
 }
 enum spectrum_error spectrum_load_sna(spectrum* s,const spectrum_source* source) {
+    if(SPECTRUM_HAS_TIMEX_2068) return SPECTRUM_UNSUPPORTED;
     uint8_t h[27];
     if(!source || (source->size!=49179 && source->size!=131103 && source->size!=147487)) return SPECTRUM_UNSUPPORTED;
     const bool banked=source->size!=49179;
@@ -858,6 +932,8 @@ static unsigned z80_model(unsigned extra,unsigned hardware) {
     if(hardware==(extra==23?3:4)) return SPECTRUM_128;
     if(hardware==9) return SPECTRUM_P512;
     if(hardware==14) return SPECTRUM_TC2048;
+    if(hardware==15) return SPECTRUM_TC2068;
+    if(hardware==128) return SPECTRUM_TS2068;
     return UINT32_MAX;
 }
 enum spectrum_error spectrum_z80_model(const spectrum_source* source,unsigned* model) {
@@ -889,14 +965,18 @@ enum spectrum_error spectrum_load_z80(spectrum* s,const spectrum_source* source)
         if(source->size<32+extra) return SPECTRUM_FORMAT;
         if(!source_read(source,32,extended,extra)) return SPECTRUM_IO;
         model=z80_model(extra,extended[2]);banked=model==SPECTRUM_128 || model==SPECTRUM_P512;
+        if(spectrum_timex_2068(model) && (!SPECTRUM_HAS_TIMEX_2068 || model!=spectrum_model(s))) return SPECTRUM_UNSUPPORTED;
         if(model==UINT32_MAX || (banked && (!s->memory || (!spectrum_is_pentagon(s) && !spectrum_is_128(s)))) ||
-           (extended[5]&128) || (model==SPECTRUM_TC2048?(extended[3] || !spectrum_timex_supported(extended[4])):extended[4]) ||
+           (extended[5]&128) || (!SPECTRUM_HAS_TIMEX_2068 &&
+           (model==SPECTRUM_TC2048?(extended[3] || !spectrum_timex_supported(extended[4])):extended[4])) ||
            (banked && (extended[3]&192) && !spectrum_is_128(s)) ||
            (model==SPECTRUM_P512 && !spectrum_is_pentagon(s)) ||
            (model==SPECTRUM_TC2048 && !SPECTRUM_HAS_SINCLAIR)) return SPECTRUM_UNSUPPORTED;
         pc=word(extended);
     }
+    if(SPECTRUM_HAS_TIMEX_2068 && (!s->memory || !spectrum_timex_2068(model))) return SPECTRUM_UNSUPPORTED;
     enum spectrum_error error=z80_pages(s,source,h,extra,banked,false);
+    if(SPECTRUM_HAS_TIMEX_2068 && !error && !spectrum_memory_sync(s->memory)) return SPECTRUM_IO;
     if(!error && (!spectrum_disk_snapshot(s) || (s->memory && !spectrum_memory_reset(s->memory)))) return SPECTRUM_IO;
     if(!error && s->memory && s->memory->extended) s->memory->control=4;
     if(!error) error=z80_pages(s,source,h,extra,banked,true);
@@ -911,8 +991,11 @@ enum spectrum_error spectrum_load_z80(spectrum* s,const spectrum_source* source)
         for(unsigned i=0;i<16;++i) PSG_writeReg(&s->ay,i,extended[7+i]);
         s->ay.adr=extended[6]&15;
     }
-    if(s->memory && !spectrum_memory_page(s->memory,banked?extended[3]:0x30)) return SPECTRUM_IO;
+    if(!SPECTRUM_HAS_TIMEX_2068 && s->memory && !spectrum_memory_page(s->memory,banked?extended[3]:0x30)) return SPECTRUM_IO;
     if(SPECTRUM_HAS_SINCLAIR && model==SPECTRUM_TC2048) { s->extensions|=SPECTRUM_TIMEX;s->timex_mode=extended[4]; }
+#if SPECTRUM_HAS_TIMEX_2068
+    s->timex_hsr=extended[3];s->timex_mode=extended[4];
+#endif
     spectrum_refresh_map(s);
     return SPECTRUM_OK;
 }

@@ -254,7 +254,12 @@ static inline uint16_t nextw(z80* const z) {
 static void io_cycle(z80* z,uint16_t port) {
   if(!bus_timed(z)) {z->io_at=(uint32_t)z->cyc;return;}
   bus_cycle(z,port,1);
+#if defined(Z80_TIMEX_IO)
+  const unsigned low=(uint8_t)port;
+  if(low==0xf4 || low==0xfe || low==0xff) contend_bus(z,3);
+#else
   if(!(port&1)) contend_bus(z,3);
+#endif
   else idle_bus(z,port,3);
   z->io_at=z->bus;
 }
@@ -986,8 +991,14 @@ void exec_opcode(z80* const z, uint8_t opcode) {
 }
 
 #if defined(__GNUC__) && !defined(__clang__)
+#if defined(Z80_TIMEX_IO)
+/* TS2068 BASIC polls through a full NTSC frame without HALT. Keep the
+ * timed dispatcher fast in this APP, which has room for the larger code. */
+__attribute__((optimize("O2")))
+#else
 /* Keep the bus-timed and ordinary paths within the PicoCalc APP slot. */
 __attribute__((optimize("Os")))
+#endif
 #endif
 static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) {
   const unsigned long before=z->cyc;

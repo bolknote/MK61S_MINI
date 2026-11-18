@@ -469,7 +469,7 @@ static uint32_t next_pulse(spectrum_tape* tape,unsigned model) {
                        !tape_read(tape,kind,b->data+tape->byte,count,4)) goto broken;
                     samples=dword(count);tape->byte+=4;
                 }
-                const uint32_t clock=model==SPECTRUM_128?SPECTRUM_128_CPU_HZ:3500000;
+                const uint32_t clock=spectrum_cpu_clock(model);
                 const uint64_t ticks=(uint64_t)samples*clock+tape->fraction;
                 const uint64_t duration=ticks/b->rate;
                 if(!samples || duration>=INT32_MAX) goto broken;
@@ -514,12 +514,12 @@ static uint32_t next_pulse(spectrum_tape* tape,unsigned model) {
             if(!b->pause) break;
             tape->phase=PAUSE_END;
             tape->level=!tape->level;
-            return model==SPECTRUM_128?3547:3500;
+            return (spectrum_cpu_clock(model)+500)/1000;
         case PAUSE_END:
             tape->phase=NEXT;tape->level=false;
             if(b->pause>1) {
                 const uint32_t ms=b->pause-1u;
-                return model==SPECTRUM_128?ms*35469u/10:ms*3500;
+                return model==SPECTRUM_128?ms*35469u/10:model==SPECTRUM_TS2068?ms*3528u:ms*3500u;
             }
             break;
         }
@@ -549,7 +549,14 @@ bool spectrum_tape_ear(void* context,const z80* cpu) {
     if(!tape->timed) {
         // The BASIC keyboard scanner also reads FE. Start at the ROM tape
         // routine or at the first EAR read by a loader running from RAM.
-        if(cpu->pc<0x4000 && (cpu->pc<0x0556 || cpu->pc>0x0605)) return false;
+        if(cpu->pc<0x4000) {
+#if SPECTRUM_HAS_TIMEX_2068
+            if((machine->timex_hsr&1) && (machine->timex_mode&128)) {
+                if(cpu->pc<0x00fc || cpu->pc>0x01a9) return false;
+            } else
+#endif
+            if(cpu->pc<0x0556 || cpu->pc>0x0605) return false;
+        }
         tape->deadline=now;tape->timed=true;
     }
     while((int32_t)(now-tape->deadline)>=0) {

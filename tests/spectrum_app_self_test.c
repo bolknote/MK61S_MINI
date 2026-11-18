@@ -284,6 +284,14 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         const unsigned format=f->format&~MK61_COLOR_PRESERVE_OUTSIDE;
         if(SPECTRUM_HAS_EXTENDED_VIDEO && (format==MK61_COLOR_INDEX4 || format==MK61_COLOR_CELL565)) {
             assert(f->pixel_bytes<=SPECTRUM_VIDEO_WORK_BYTES && f->width<=320 && f->height<=64);
+#if SPECTRUM_HAS_TIMEX_2068
+            if(!strcmp(opened_name,"TC2068.Z80"))
+                assert(spectrum_model(&machine)==SPECTRUM_TC2068 && machine.timex_hsr==0x80 && machine.timex_mode==0x86);
+            else {
+                assert(spectrum_model(&machine)==SPECTRUM_TS2068 && machine.ay.clk==1764000);
+                if(!strcmp(opened_name,"BOOT.DCK")) assert(machine.timex_hsr==1 && machine.cartridge.present[0]==1);
+            }
+#endif
             if(hicolor_sequence && format==MK61_COLOR_CELL565 && f->width==8 && f->height==1) {
                 assert(f->x==32 && f->y==64 && f->pixel_bytes==1);
                 assert(!hicolor_updates || f->pixels[0]==hicolor_marker+1);
@@ -578,6 +586,28 @@ static void extended_frames(void) {
 }
 
 #endif
+#if SPECTRUM_HAS_TIMEX_2068
+static void timex_audio_prefill(void) {
+    static uint8_t ram[SPECTRUM_RAM_BYTES],rom[SPECTRUM_ROM_BYTES]={0x76};
+    spectrum state;
+    spectrum_tape empty={0};
+    active_machine=&state;tape=&empty;
+    spectrum_init(&state,ram,rom);
+    state.timex_ntsc=true;spectrum_reset_cpu(&state);
+    for(unsigned run=0;run<2;++run) {
+        spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
+        const uint32_t before=(uint32_t)state.cpu.cyc;
+        const uint32_t cycles=(run?1:4)*SPECTRUM_TS2068_FRAME_TSTATES;
+        const uint32_t timeline=state.sound.time;
+        prime_audio();
+        assert((uint32_t)state.cpu.cyc-before==cycles);
+        assert(atomic_load(&state.sound.produced)-timeline==(cycles*125u+125u)/126u);
+        assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
+    }
+    active_machine=NULL;tape=NULL;
+    puts("TS2068 audio reserve: four cold frames and one on resume, exact NTSC conversion PASS");
+}
+#endif
 static void bounded_audio_prefill(void) {
     static uint8_t ram[SPECTRUM_RAM_BYTES],rom[SPECTRUM_ROM_BYTES];
     spectrum state;
@@ -700,12 +730,15 @@ int main(int argc,char** argv) {
     hicolor_sequence=SPECTRUM_APP_PROFILE==4 && opened_name && !strcmp(opened_name,"HICOLOR.SZX");
     save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
     test_flow=getenv("SPECTRUM_TEST_FLOW")!=NULL;
+#if SPECTRUM_HAS_TIMEX_2068
+    if(test_flow && opened_name && !strcmp(opened_name,"BOOT.DCK")) timex_audio_prefill();
+#endif
 #if SPECTRUM_APP_PROFILE
     if(test_flow) {
         uint32_t context[2]={42,0};
         mk61_app_flow step={.size=sizeof(step),.version=MK61_APP_FLOW_VERSION,.context=context,
             .context_size=sizeof(context),.current=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,5,MK61_APP_FLOW_FILE_PHASE)};
-        if(SPECTRUM_HAS_SINCLAIR) context[1]=SPECTRUM_128+1;
+        if(SPECTRUM_HAS_SINCLAIR && !SPECTRUM_HAS_TIMEX_2068) context[1]=SPECTRUM_128+1;
         assert(mk61_app_file_flow()==MK61_APP_FLOW_MAGIC && mk61_app_flow_step(&step));
         assert(!psram && !workspace && !generator.sample && open_path_calls==1 && graphics_ends==1);
         assert(!preferences_writes);
@@ -716,6 +749,7 @@ int main(int argc,char** argv) {
             printf("Actual APP Flow hands %s to %s and releases all leases PASS\n",opened_name,target);
         } else {
             assert(step.action==MK61_FLOW_RETURN && !step.result && audio_opens==1 && frames_shown);
+            if(SPECTRUM_HAS_TIMEX_2068) assert(selected_reads && remote_scans==1);
             if(hicolor_sequence) {
                 assert(hicolor_updates>=40);
                 puts("HiColor output preserves consecutive guest frame markers: PASS");
