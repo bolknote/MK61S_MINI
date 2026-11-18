@@ -1,0 +1,279 @@
+{
+  "build": {
+    "base_commit": "f737bf291d4471ee36fcdfc9e500b577ffc7e6cf",
+    "id": "BE550AE2",
+    "crc32": "DA00E4AE",
+    "compiler": "14.2.1",
+    "bin_sha256": "1f8f803e2a48c923ec6a8ec1aec12d09fe87b011204432560d3abf3e3f5c0a7b",
+    "scratch_y_bytes": 4096,
+    "hardware_verified": false
+  },
+  "certificate": {
+    "status": "PASS_LOWEST_POW_BINADE",
+    "exponent_encodings": [
+      "3bf0000000000000",
+      "3bffffffffffffff"
+    ],
+    "number_with_universal_one": {
+      "positive": 1691238872557029,
+      "negative": 1993721221186303
+    },
+    "first_exponents_that_can_round_below_one": {
+      "positive": "3bf6022c3c3aa5e5",
+      "negative_magnitude": "3bf71547652b82ff"
+    },
+    "base_range_rounding_to_one": [
+      "11c44109edb2079d",
+      "6e19476504ba8727"
+    ],
+    "power_of_two_threshold": 6653256548922161431,
+    "subnormal_log_offset_q94": "ba4886a969828efb1831cac9d6",
+    "positive_finite_base_and_signed_exponent_pairs": 83036184917349938706632847510208512,
+    "maximum_pairs_requiring_q94": 23969234302245722844065809039360,
+    "minimum_pairs_decided_without_log": 83012215683047692983788781701169152,
+    "maximum_q94_guard_distance_q157": 1284,
+    "maximum_possible_fallback_bases_per_signed_exponent": 1,
+    "ties_at_midpoint_possible": false,
+    "midpoint_threshold_q157": "080000000000001000000000000",
+    "maximum_log_error_q94": {
+      "normal": 640,
+      "subnormal": 155
+    },
+    "rounding_ambiguity_requires_existing_rescue": true,
+    "source_sha256": {
+      "code/native_eabi_m0_pow_tiny_binade_constants.inc": "d05d5f386a7330782a8f1791b4a2d966722c1f58d1b37e8696174e35cbd3cd55",
+      "code/native_eabi_m0_pow_fast.inc": "c23aa4a2232bc97d9e89f3bcfc265f1f6eb5e3ecdc3d47cf1c37ff6aaa11cee9",
+      "dev/tools/certify_m0_pow_fast.py": "7cfcc8921233b855343addc8ba74f4cb608880b23eee9ca20a84be12060e5af9",
+      "dev/tools/certify_m0_pow_tiny_binade.py": "d11f7a61a7ec7d97ca8427cb939aa20985307aa636c4211496895abb3d87ac5c",
+      "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645"
+    }
+  },
+  "targeted_arm": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": "5ec81b87d882e265f1ab15af8dc5e52511c6dec60645f10ccb6768aa323cffe7",
+    "control_elf_sha256": "456df57ac780253064ae590f7f8e6fc88194e317671bf0926d1c373d1b1b5a77",
+    "cases": 12695,
+    "categories": {
+      "early_one": 1564,
+      "exact_power_of_two": 909,
+      "integer_bounds": 2648,
+      "subnormal_q94": 14,
+      "q94_fallbacks": 0,
+      "normal_q94": 6160
+    },
+    "results_in_binade": {
+      "3ff0000000000000": 7696,
+      "3fefffffffffffff": 3599
+    },
+    "injected_ambiguity_cases": 2,
+    "samples": {
+      "minimum_subnormal_returns_one": {
+        "x": "0000000000000001",
+        "y": "3bf6022c3c3aa5e4",
+        "rounded": "3ff0000000000000",
+        "control": {
+          "instructions": 37382,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 160,
+          "stack_bytes": 704
+        }
+      },
+      "minimum_subnormal_crosses_midpoint": {
+        "x": "0000000000000001",
+        "y": "3bf6022c3c3aa5e5",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 37622,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 320,
+          "stack_bytes": 744
+        }
+      },
+      "maximum_finite_returns_one": {
+        "x": "7fefffffffffffff",
+        "y": "bbf71547652b82fe",
+        "rounded": "3ff0000000000000",
+        "control": {
+          "instructions": 42436,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 164,
+          "stack_bytes": 704
+        }
+      },
+      "maximum_finite_crosses_midpoint": {
+        "x": "7fefffffffffffff",
+        "y": "bbf71547652b82ff",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 42694,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 2119,
+          "stack_bytes": 952
+        }
+      },
+      "adjacent_subnormal_crosses_midpoint": {
+        "x": "0000000000000003",
+        "y": "3bffffffffffffff",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 15169,
+          "stack_bytes": 1848
+        },
+        "candidate": {
+          "instructions": 282,
+          "stack_bytes": 744
+        }
+      },
+      "normal_below_one_crosses_midpoint": {
+        "x": "11c44109edb2079c",
+        "y": "3bffffffffffffff",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 136100,
+          "stack_bytes": 2052
+        },
+        "candidate": {
+          "instructions": 2134,
+          "stack_bytes": 952
+        }
+      },
+      "normal_above_one_crosses_midpoint": {
+        "x": "6e19476504ba8728",
+        "y": "bbffffffffffffff",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 131587,
+          "stack_bytes": 2076
+        },
+        "candidate": {
+          "instructions": 2116,
+          "stack_bytes": 952
+        }
+      },
+      "previous_binade": {
+        "x": "0000000000000001",
+        "y": "3befffffffffffff",
+        "rounded": "3ff0000000000000",
+        "control": {
+          "instructions": 116,
+          "stack_bytes": 448
+        },
+        "candidate": {
+          "instructions": 123,
+          "stack_bytes": 472
+        }
+      },
+      "next_binade": {
+        "x": "0000000000000001",
+        "y": "3c00000000000000",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 11520,
+          "stack_bytes": 1848
+        },
+        "candidate": {
+          "instructions": 11526,
+          "stack_bytes": 1848
+        }
+      },
+      "ordinary": {
+        "x": "3ff23456789abcde",
+        "y": "3fda123456789abc",
+        "rounded": "3ff0dd2269d082af",
+        "control": {
+          "instructions": 1215,
+          "stack_bytes": 376
+        },
+        "candidate": {
+          "instructions": 1215,
+          "stack_bytes": 376
+        }
+      }
+    }
+  },
+  "regression_arm": {
+    "status": "PASS",
+    "elf_sha256": "5ec81b87d882e265f1ab15af8dc5e52511c6dec60645f10ccb6768aa323cffe7",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "pow": {
+        "status": "PASS",
+        "cases": 80395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 80196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "d75b9e207238fbc0c67b321453b5a6c54b4c1c4e66eaaf7e2accf47617b79fdf"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "The exact RP2040 pow fallback has no practical uniform latency bound."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input.",
+    "actual_bootrom": {
+      "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "initializers": [
+        {
+          "name": "__aeabi_bits_init",
+          "table": "aeabi_bits_funcs",
+          "pointers": [
+            "0x309",
+            "0x357",
+            "0x38f",
+            "0x32d"
+          ]
+        },
+        {
+          "name": "__aeabi_mem_init",
+          "table": "aeabi_mem_funcs",
+          "pointers": [
+            "0x26b9",
+            "0x261d",
+            "0x26ad",
+            "0x2605"
+          ]
+        }
+      ],
+      "intrinsic_models": []
+    }
+  },
+  "guest_instruction_bound": {
+    "integer_only": 2878,
+    "through_checked_q94": 5395,
+    "components": {
+      "public_dispatch_comparison_including_veneers": 2791,
+      "clz64_and_clz32": 44,
+      "lmul_and_low_product": 43,
+      "q94_log_body": 2412,
+      "q94_log_two_products": 82,
+      "subnormal_q94_shift_including_veneer": 23
+    },
+    "scope": "Positive finite x and 2^-64 <= abs(y) < 2^-63. The Q94 bound covers calls which resolve before CORE-MATH."
+  },
+  "test_source_sha256": {
+    "tests/m0_pow_tiny_binade_arm_self_test.py": "8c00d1bf3b8c7e0af75452527848ab224557f63a17bc90635653485e80ea7434",
+    "tests/qualify_m0_rounding.py": "a48c10b87bd30aa4ffb4119462ba0d9f207e5d365fa79f7f261c738c6cc57d81",
+    "tests/native_eabi_m0_arm_self_test.py": "85f9ec4ac2f2ecddb2749176e7c2ed4351296efe409261a29905e5276576c686",
+    "tests/m0_mpfr_oracle.py": "fb880de9b8fe7d4b0fc9225121b90d7c41d976fec01b67bf4f7d6e2a89c7000a"
+  },
+  "practical_uniform_latency_established": false
+}

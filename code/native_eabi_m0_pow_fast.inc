@@ -3,6 +3,7 @@
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 #define MK61_M0_POW_HOT_SECTION ".scratch_y.m0_pow_hot"
 #include "native_eabi_m0_pow_large.inc"
+#include "native_eabi_m0_pow_tiny_binade_constants.inc"
 #else
 #define MK61_M0_POW_HOT_SECTION ".m0_pow_extension"
 #endif
@@ -227,13 +228,65 @@ __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))
   else {t.low+=q.low;t.high+=q.high+U(t.low<old);}
   return {t,94,128+(n+1)/2,k<0};
 }
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
+static double pow_lowest_binade(U xb,U yb) {
+  using namespace m0_pow_tiny_binade;
+  constexpr U one=UINT64_C(0x3ff0000000000000);
+  const bool below=xb<one;
+  const bool inverse=bool(yb&D::Sign);
+  const U magnitude=yb&D::Magnitude;
+  if(below==inverse || magnitude<(inverse?FirstNegative:FirstPositive) ||
+     (xb>=FirstBase && xb<=LastBase)) return 1.0;
+
+  const U multiplier=(magnitude&D::Fraction)|D::Hidden;
+  const unsigned field=unsigned(xb>>52);
+  const unsigned top=field?0:63-clz64(xb);
+  const int exponent=field?int(field)-1023:int(top)-1074;
+  // Bound |ln(x)| by successive integer multiples of ln(2). For each
+  // exponent y only one base binade can straddle the midpoint.
+  const U lower=multiplier*unsigned(below?-exponent-1:exponent);
+  if(lower>=PowerOfTwo) return real(one-1);
+  if(lower+multiplier<PowerOfTwo) return 1.0;
+  const bool power_of_two=field?!(xb&D::Fraction):!(xb&(xb-1));
+  if(power_of_two) return real(one-U(below));
+
+  PowRefinedLog logarithm;
+  if(field) logarithm=pow_refined_log(xb);
+  else {
+    // For a subnormal M*2^-1074, use the absolute log of 2*M and
+    // subtract it from 1075*ln(2). The normal argument is never near one.
+    const U normal=(U(1024+top)<<52)|((xb<<(52-top))&D::Fraction);
+    logarithm=pow_refined_log(normal);
+    logarithm.q.high=LogOffsetHigh-logarithm.q.high-U(LogOffsetLow<logarithm.q.low);
+    logarithm.q.low=LogOffsetLow-logarithm.q.low;
+    ++logarithm.error;
+  }
+
+  // In this binade the only possible midpoint is 1-2^-54. The
+  // logarithm and the shifted product are enclosed in Q157 units.
+  Product argument;
+  if(!pow_scaled_argument(logarithm.q,multiplier,53,argument))
+    return mk61_m0_cr_pow(real(xb),real(yb));
+  const U low=argument.low-MidpointLow;
+  const U high=argument.high-MidpointHigh-U(argument.low<MidpointLow);
+  const unsigned error=logarithm.error+2;
+  if((!high && low<=error) || (high==UINT64_MAX && low>=U(0)-error))
+    return mk61_m0_cr_pow(real(xb),real(yb));
+  return real(one-U((high>>63)==0));
+}
+#endif
 __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension"))) static double pow_refine_checked(double x,double y) {
   const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
   const int ey=int(ym>>52)-1023;
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  // For positive finite binary64 x, |ln(x)| < 745. For |y| < 2^-64,
-  // exp(y*ln(x)) lies strictly inside the round-to-nearest cell of 1.
-  if(uint32_t(ym>>32)<0x3BF00000U && xb && xb<D::Infinity) return 1.0;
+  // For positive finite x, |ln(x)| < 745. Within |y| < 2^-63 the
+  // result can only reach the midpoint immediately below 1, and
+  // for |y| < 2^-64 even that midpoint is out of range.
+  if(uint32_t(ym>>32)<0x3C000000U && xb && xb<D::Infinity) {
+    if(uint32_t(ym>>32)<0x3BF00000U) return 1.0;
+    return pow_lowest_binade(xb,yb);
+  }
 #endif
   if(xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity || ey < -12 || ey>64 || xb==UINT64_C(0x3FF0000000000000))
     return mk61_m0_cr_pow(x,y);
