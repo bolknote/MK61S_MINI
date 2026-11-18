@@ -12,7 +12,8 @@ bool compile_spec_tree(const std::uint8_t *body, unsigned size,
 // translates that tree into calculator instructions; it never evaluates it.
 class SpecProtocol {
 public:
-  bool prompt(const char *task, unsigned angle, char *out, unsigned capacity);
+  bool prompt(const char *task, unsigned angle, char *out, unsigned capacity,
+              unsigned *system_bytes = nullptr);
   bool allows(std::uint16_t token, const char *piece) const;
   bool accept(std::uint16_t token, const char *piece);
   bool compile(Program &program) const;

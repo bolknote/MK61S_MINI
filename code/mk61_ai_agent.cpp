@@ -52,6 +52,58 @@ bool matches_user(const Result &r, const Example &input) {
   }
   return true;
 }
+bool checked_examples(const Session &s) {
+  return std::any_of(s.tests, s.tests + s.test_count, has_expectations);
+}
+void describe_test(char *feedback, unsigned capacity, unsigned index,
+                   const Example &e, const Result &r) {
+  char inputs[128]{};
+  unsigned used = 0;
+  for (unsigned j = 0; j < INPUT_COUNT; ++j)
+    if (e.inputs & (1U << j)) {
+      char b[32];
+      if (j < 15)
+        std::snprintf(b, sizeof(b), "R%X=%.8g,", j, e.values[j]);
+      else
+        std::snprintf(b, sizeof(b), "%c=%.8g,", "XYZT"[j - 15],
+                      e.values[j]);
+      const unsigned n = unsigned(std::strlen(b));
+      if (n >= sizeof(inputs) - used)
+        break;
+      std::memcpy(inputs + used, b, n + 1);
+      used += n;
+    }
+  if (!e.public_case)
+    std::snprintf(feedback, capacity,
+                  "Скрытый тест %u не пройден; status=%u", index + 1,
+                  unsigned(r.status));
+  else if (r.mismatch) {
+    unsigned ref = 0;
+    while (ref + 1 < INPUT_COUNT && !(r.mismatch & (1U << ref)))
+      ++ref;
+    char name[4];
+    if (ref < 15)
+      std::snprintf(name, sizeof(name), "R%X", ref);
+    else {
+      name[0] = "XYZT"[ref - 15];
+      name[1] = 0;
+    }
+    double expected = (e.inputs & (1U << ref)) ? e.values[ref] : 0;
+    if (r.failed_stage == 0 && (expectation_mask(e) & (1U << ref)))
+      expected = expected_value(e, ref);
+    else if (r.failed_stage && r.failed_stage <= e.scenario_count &&
+             e.scenario[r.failed_stage - 1].output_index == ref)
+      expected = e.scenario[r.failed_stage - 1].expected;
+    std::snprintf(feedback, capacity,
+                  "FAIL %s ожидалось %s=%.8g; получено %s=%.8g; status=%u",
+                  inputs, name, expected, name, r.actual[ref],
+                  unsigned(r.status));
+  } else
+    std::snprintf(feedback, capacity,
+                  "RUN %s X=%.8g status=%u; %s", inputs, r.x,
+                  unsigned(r.status),
+                  has_expectations(e) ? "тест не пройден" : "наблюдение");
+}
 } // namespace
 
 struct Agent::DirectRun {
@@ -60,6 +112,11 @@ struct Agent::DirectRun {
   Result results[TEST_COUNT]{}, last{};
   unsigned user = 0, bank = 0, passed = 0, angle = 1;
   bool current = false, observed = false, identical = false;
+};
+struct Agent::RepairRun {
+  Program candidate;
+  Result results[TEST_COUNT]{};
+  unsigned last_public = TEST_COUNT;
 };
 Executor local_executor() {
   return {nullptr, [](void *, const Program &p, const Example &e,
@@ -100,6 +157,7 @@ void Agent::reset() {
   pause_ = false;
   last_result_ = {};
   direct_.reset();
+  repair_.reset();
   direct_fallback_ = false;
 }
 void Agent::fail(const char *message) {
@@ -107,6 +165,7 @@ void Agent::fail(const char *message) {
   s_.state = RunState::ERROR;
   phase_ = resume_ = Phase::IDLE;
   direct_.reset();
+  repair_.reset();
   direct_fallback_ = false;
   save_session(store_, s_);
 }
@@ -153,6 +212,7 @@ AI_DIRECT_CODE bool Agent::start_direct() {
   last_result_ = {};
   trace_count_ = 0;
   prompt_count_ = generated_ = reused_prefix_ = test_ = 0;
+  metrics_.output_token_hash = 0;
   generation_task_ = s_.task_revision;
   generation_program_ = s_.program.version;
   generation_cases_ = case_stamp(s_);
@@ -206,7 +266,18 @@ bool Agent::begin_turn() {
     fail("Эта модель составляет программы. Режим объяснения ей недоступен.");
     return false;
   }
-  if (!(spec_enabled_ ? spec_.prompt(s_.task, default_angle_, prompt_, sizeof(prompt_))
+  if (spec_enabled_ && s_.intent == Intent::FIX && valid_program(s_.program) &&
+      !checked_examples(s_)) {
+    s_.state = RunState::NEEDS_INPUT;
+    std::snprintf(s_.feedback, sizeof(s_.feedback),
+                  "Добавь пример с ожидаемым результатом для проверки правки.");
+    phase_ = Phase::IDLE;
+    checkpoint();
+    return false;
+  }
+  unsigned system_bytes = 0;
+  if (!(spec_enabled_ ? spec_.prompt(s_.task, default_angle_, prompt_, sizeof(prompt_),
+                                    prefix_io_ ? &system_bytes : nullptr)
                      : build_prompt(s_, prompt_, sizeof(prompt_), prefix_))) {
     fail("Условие и текущая программа слишком длинные. Сократи описание.");
     return false;
@@ -223,6 +294,7 @@ bool Agent::begin_turn() {
   }
   ModelStatus status = ModelStatus::OK;
   const unsigned token_capacity = std::min(2047U, capacity - reserve);
+  system_tokens_ = 0;
   if (spec_enabled_) {
     // Newlines are complete BPE pre-token boundaries in this fixed protocol.
     // Stream them without enlarging the model's SRAM tokenization workspace.
@@ -233,6 +305,20 @@ bool Agent::begin_turn() {
       if(n>Model::MAX_TEXT){status=ModelStatus::TEXT_LONG;break;}
       std::memcpy(segment,p,n);segment[n]=0;unsigned used=0;
       status=model_.encode(segment,tokens_+prompt_count_,token_capacity-prompt_count_,used,false);
+      const unsigned offset = unsigned(p - prompt_);
+      if (status == ModelStatus::OK && offset < system_bytes && system_bytes <= offset + n) {
+        // BPE can merge across the end of the built-in constant table. Keep
+        // only tokens shared with its standalone encoding.
+        segment[system_bytes - offset] = 0;
+        std::uint16_t fixed[128];
+        unsigned count = 0;
+        if (model_.encode(segment, fixed, sizeof(fixed) / sizeof(*fixed), count, false) ==
+            ModelStatus::OK) {
+          const auto matching = std::mismatch(fixed, fixed + std::min(count, used),
+                                              tokens_ + prompt_count_).first - fixed;
+          system_tokens_ = prompt_count_ + unsigned(matching);
+        }
+      }
       prompt_count_+=used; p=end;
     }
     if(status==ModelStatus::OK)tokens_[prompt_count_++]=30;
@@ -259,7 +345,10 @@ bool Agent::begin_turn() {
   cached_count_ = std::min(unsigned(sizeof(cached_prefix_) / sizeof(cached_prefix_[0])), prompt_count_);
   std::copy(tokens_, tokens_ + cached_count_, cached_prefix_);
   prefilled_ = shared;
+  system_angle_ = default_angle_;
+  restore_prefix_ = save_prefix_ = prefix_io_ && shared < system_tokens_;
   generated_ = 0;
+  metrics_.output_token_hash = 2166136261U;
   generation_limit_ = capacity - prompt_count_ - (spec_enabled_ ? 4U : 0U);
   grammar_.reset(valid_program(s_.program), s_.intent == Intent::EXPLAIN, false,
                  s_.planning || s_.intent == Intent::EXPLAIN);
@@ -483,6 +572,19 @@ void Agent::process_reply() {
            "задачу.");
       return;
     }
+    if (spec_enabled_ && s_.intent == Intent::FIX && valid_program(s_.program) &&
+        hash != program_fingerprint(s_.program)) {
+      repair_.reset(new (std::nothrow) RepairRun);
+      if (!repair_) {
+        fail("Не хватает памяти для проверки правки.");
+        return;
+      }
+      repair_->candidate = candidate;
+      test_ = 0;
+      trace_count_ = 0;
+      phase_ = Phase::TESTS;
+      return;
+    }
     if (!valid_program(s_.program) || hash != program_fingerprint(s_.program))
       if (!accept_program(store_, s_, candidate.bytes, candidate.size)) {
         fail("Не удалось сохранить новую версию программы.");
@@ -577,10 +679,7 @@ void Agent::finish_tests() {
     checkpoint();
     return;
   }
-  bool oracle = false;
-  for (unsigned i = 0; i < s_.test_count; ++i)
-    oracle = oracle || has_expectations(s_.tests[i]);
-  if (!oracle && s_.intent != Intent::EXPLAIN) {
+  if (!checked_examples(s_) && s_.intent != Intent::EXPLAIN) {
     s_.state = RunState::NEEDS_INPUT;
     phase_ = Phase::IDLE;
     std::snprintf(s_.feedback, sizeof(s_.feedback),
@@ -588,10 +687,82 @@ void Agent::finish_tests() {
     checkpoint();
     return;
   }
+  if (spec_enabled_) {
+    // The SPEC prompt depends on the condition and angle. A failed example
+    // alone would send the exact same prompt and produce the same program.
+    s_.state = RunState::NEEDS_INPUT;
+    phase_ = Phase::IDLE;
+    checkpoint();
+    return;
+  }
   if (valid_program(s_.program))
     remember(s_.failed_programs, s_.failed_program_count,
              program_fingerprint(s_.program));
   begin_turn();
+}
+AI_DIRECT_CODE void Agent::record_repair(const Example &example, const Result &result) {
+  if (result.status != Execution::STOPPED ||
+      (has_expectations(example) && !result.passed)) {
+    const char note[] = "Правка отклонена. ";
+    std::memcpy(s_.feedback, note, sizeof(note) - 1);
+    describe_test(s_.feedback + sizeof(note) - 1,
+                  sizeof(s_.feedback) - sizeof(note) + 1, test_, example, result);
+    repair_.reset();
+    if (!append_event(store_, s_, "TOOL", s_.feedback)) {
+      fail("Не удалось сохранить результат проверки правки.");
+      return;
+    }
+    s_.state = RunState::NEEDS_INPUT;
+    phase_ = Phase::IDLE;
+    checkpoint();
+    return;
+  }
+  repair_->results[test_] = result;
+  if (example.public_case)
+    repair_->last_public = test_;
+  if (++test_ < s_.test_count) return;
+  const auto &candidate = repair_->candidate;
+  if (!accept_program(store_, s_, candidate.bytes, candidate.size)) {
+    fail("Не удалось сохранить проверенную правку.");
+    return;
+  }
+  for (unsigned i = 0; i < s_.test_count; ++i) {
+    s_.results[i] = repair_->results[i];
+    s_.results[i].version = s_.program.version;
+  }
+  if (repair_->last_public < s_.test_count) {
+    last_result_ = s_.results[repair_->last_public];
+    last_angle_ = s_.tests[repair_->last_public].angle;
+  }
+  repair_.reset();
+  std::snprintf(s_.feedback, sizeof(s_.feedback), "PASS");
+  auto_continue_ = false;
+  finish_tests();
+}
+AI_DIRECT_CODE bool Agent::tick_prefix(bool (*service)(void *), void *context) {
+  const bool save = !restore_prefix_;
+  if (save && (!save_prefix_ || prefilled_ != system_tokens_))
+    return false;
+  const auto status = prefix_io_(prefix_context_, tokens_, system_tokens_,
+                                 system_angle_, arithmetic_, save, service, context);
+  if (save) {
+    save_prefix_ = status == ModelStatus::CANCELLED;
+  } else {
+    restore_prefix_ = status == ModelStatus::CANCELLED;
+    if (status == ModelStatus::OK && model_.position() == system_tokens_) {
+      save_prefix_ = false;
+      prefilled_ = model_.position();
+    } else if (model_.position() != prefilled_) {
+      model_.reset();
+      prefilled_ = 0;
+    }
+    metrics_.reused_tokens += prefilled_;
+    metrics_.reused_tokens -= reused_prefix_;
+    reused_prefix_ = prefilled_;
+  }
+  if (status == ModelStatus::CANCELLED)
+    request_pause();
+  return true;
 }
 void Agent::tick(bool (*service)(void *), void *context) {
   if (!active())
@@ -683,6 +854,8 @@ void Agent::tick(bool (*service)(void *), void *context) {
     return true;
   };
   if (phase_ == Phase::PREFILL) {
+    if ((restore_prefix_ || save_prefix_) && tick_prefix(callback, &pump))
+      return;
     if (forwarded(tokens_[prefilled_], prefilled_ + 1 == prompt_count_)) {
       if (++prefilled_ == prompt_count_)
         phase_ = Phase::DECODE;
@@ -708,6 +881,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
           !spec_.accept(next_,piece)) {
         fail("Модель не завершила корректную спецификацию программы."); return;
       }
+      metrics_.output_token_hash = (metrics_.output_token_hash ^ next_) * 16777619U;
       if (spec_.ended()) {
         Program compiled;
         if (!append_event(store_,s_,"MODEL_SPEC",s_.reply) || !spec_.compile(compiled)) {
@@ -757,6 +931,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
     std::memcpy(s_.reply + used, piece, n + 1);
     ++generated_;
     ++metrics_.output_tokens;
+    metrics_.output_token_hash = (metrics_.output_token_hash ^ next_) * 16777619U;
     Reply parsed{};
     if (parse_reply(s_.reply, parsed) &&
         (parsed.run || parsed.trace || parsed.done || parsed.question[0])) {
@@ -768,7 +943,9 @@ void Agent::tick(bool (*service)(void *), void *context) {
   }
   if (phase_ == Phase::TESTS || phase_ == Phase::TRACE) {
     const bool trace = phase_ == Phase::TRACE;
-    const Program program = s_.program;
+    const bool staged = bool(repair_);
+    const auto version = s_.program.version;
+    const Program program = staged ? repair_->candidate : s_.program;
     const auto revision = s_.task_revision;
     Example example = test_ < s_.test_count ? s_.tests[test_] : Example{};
     if (test_ >= s_.test_count)
@@ -786,6 +963,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
             : Result{};
     if (micros_)
       metrics_.tool_us += micros_(clock_context_) - tool_start;
+    if (staged && !repair_) return;
     if (result.status == Execution::CANCELLED) {
       resume_ = phase_;
       phase_ = Phase::IDLE;
@@ -793,14 +971,21 @@ void Agent::tick(bool (*service)(void *), void *context) {
       checkpoint();
       return;
     }
-    if (s_.program.version != program.version || s_.task_revision != revision ||
+    if (s_.program.version != version || s_.task_revision != revision ||
+        (staged && (generation_cases_ != case_stamp(s_) ||
+                    generation_intent_ != s_.intent)) ||
         (test_ < s_.test_count &&
          s_.tests[test_].revision != example.revision)) {
       phase_ = Phase::IDLE;
+      repair_.reset();
       s_.state = RunState::DRAFT;
       std::snprintf(s_.feedback, sizeof(s_.feedback),
                     "Условие изменено. Устаревший результат отброшен.");
       checkpoint();
+      return;
+    }
+    if (staged) {
+      record_repair(example, result);
       return;
     }
     last_result_ = result;
@@ -865,52 +1050,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
         ++bad;
       const auto &e = s_.tests[bad];
       const auto &r = s_.results[bad];
-      char inputs[128]{};
-      unsigned used = 0;
-      for (unsigned j = 0; j < INPUT_COUNT; ++j)
-        if (e.inputs & (1U << j)) {
-          char b[32];
-          if (j < 15)
-            std::snprintf(b, sizeof(b), "R%X=%.8g,", j, e.values[j]);
-          else
-            std::snprintf(b, sizeof(b), "%c=%.8g,", "XYZT"[j - 15],
-                          e.values[j]);
-          const unsigned n = unsigned(std::strlen(b));
-          if (n >= sizeof(inputs) - used)
-            break;
-          std::memcpy(inputs + used, b, n + 1);
-          used += n;
-        }
-      if (!e.public_case)
-        std::snprintf(s_.feedback, sizeof(s_.feedback),
-                      "Скрытый тест %u не пройден; status=%u", bad + 1,
-                      unsigned(r.status));
-      else if (r.mismatch) {
-        unsigned ref = 0;
-        while (ref + 1 < INPUT_COUNT && !(r.mismatch & (1U << ref)))
-          ++ref;
-        char name[4];
-        if (ref < 15)
-          std::snprintf(name, sizeof(name), "R%X", ref);
-        else {
-          name[0] = "XYZT"[ref - 15];
-          name[1] = 0;
-        }
-        double expected = (e.inputs & (1U << ref)) ? e.values[ref] : 0;
-        if (r.failed_stage == 0 && (expectation_mask(e) & (1U << ref)))
-          expected = expected_value(e, ref);
-        else if (r.failed_stage && r.failed_stage <= e.scenario_count &&
-                 e.scenario[r.failed_stage - 1].output_index == ref)
-          expected = e.scenario[r.failed_stage - 1].expected;
-        std::snprintf(s_.feedback, sizeof(s_.feedback),
-                      "FAIL %s ожидалось %s=%.8g; получено %s=%.8g; status=%u",
-                      inputs, name, expected, name, r.actual[ref],
-                      unsigned(r.status));
-      } else
-        std::snprintf(s_.feedback, sizeof(s_.feedback),
-                      "RUN %s X=%.8g status=%u; %s", inputs, r.x,
-                      unsigned(r.status),
-                      has_expectations(e) ? "тест не пройден" : "наблюдение");
+      describe_test(s_.feedback, sizeof(s_.feedback), bad, e, r);
     }
     finish_tests();
   }

@@ -18,6 +18,8 @@ AI_COLD_CODE unsigned UI::request_perf(const char *directory) {
     return 3;
   agent.default_angle(example.angle);
   cancel = false;
+  std::snprintf(path, sizeof(path), "%s/PREFIX.ON", directory);
+  cache_prefix = files::exists(path);
 
   // The divider at clock entry belongs to the idle PIO program. Exercise
   // the aligned burst reader before checking the divider for inference.

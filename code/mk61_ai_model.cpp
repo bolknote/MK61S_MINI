@@ -239,6 +239,89 @@ std::uint32_t Model::cache_bytes() const {
   return 8 * config_.layers * config_.context * config_.kv_heads *
          config_.head_dim;
 }
+namespace {
+constexpr std::uint32_t kv_file_magic = 0x31564b4dU;
+constexpr unsigned kv_header_bytes = 7 * sizeof(std::uint32_t);
+unsigned kv_metadata_bytes(unsigned tokens) {
+  return (kv_header_bytes + tokens * sizeof(std::uint16_t) + 511U) & ~511U;
+}
+}
+#if defined(PICO_ON_DEVICE)
+__attribute__((section(".ai_diagnostic_extension"),noinline))
+#endif
+std::uint32_t Model::prefix_snapshot_bytes(unsigned count) const {
+  if (!count || count >= config_.context)
+    return 0;
+  return kv_metadata_bytes(count) +
+         8 * count * config_.layers * config_.kv_heads * config_.head_dim +
+         sizeof(std::uint32_t);
+}
+#if defined(PICO_ON_DEVICE)
+__attribute__((section(".ai_diagnostic_extension"),noinline))
+#endif
+ModelStatus Model::prefix_snapshot(Memory file, const std::uint16_t *tokens,
+                                  unsigned count, std::uint32_t build,
+                                  Arithmetic arithmetic, bool save,
+                                  bool (*service)(void *), void *context) {
+  const unsigned size = prefix_snapshot_bytes(count);
+  if (!workspace_ || !tokens || !size || file.size != size ||
+      (save ? (!file.write || count > position_) : !file.read))
+    return ModelStatus::FORMAT;
+  const std::uint32_t header[] = {
+      kv_file_magic, build, package_.size, header_[31], header_[29],
+      count, std::uint32_t(arithmetic) | (std::uint32_t(execution_.kernel) << 8) |
+                 (execution_.lut8 ? 0x10000U : 0)};
+  static_assert(sizeof(header) == kv_header_bytes);
+  const unsigned token_bytes = count * sizeof(*tokens);
+  const unsigned data_offset = kv_metadata_bytes(count);
+  if (save) {
+    std::memset(workspace_, 0, data_offset);
+    std::memcpy(workspace_, header, sizeof(header));
+    std::memcpy(workspace_ + sizeof(header), tokens, token_bytes);
+    if (!file.write(file.context, 0, workspace_, data_offset))
+      return ModelStatus::IO;
+  } else {
+    if (!file.read(file.context, 0, workspace_, data_offset))
+      return ModelStatus::IO;
+    if (std::memcmp(workspace_, header, sizeof(header)) ||
+        std::memcmp(workspace_ + sizeof(header), tokens, token_bytes))
+      return ModelStatus::FORMAT;
+    // A late failure must not expose a partly overwritten in-memory prefix.
+    position_ = 0;
+  }
+  const unsigned row_bytes = 8 * config_.kv_heads * config_.head_dim;
+  const unsigned kept = count * row_bytes, stride = config_.context * row_bytes;
+  unsigned offset = data_offset;
+  std::uint32_t checksum = ~0U;
+  for (unsigned layer = 0; layer < config_.layers; ++layer) {
+    for (unsigned at = 0; at < kept;) {
+      const unsigned bytes = std::min(4096U, kept - at);
+      if (service && !service(context))
+        return ModelStatus::CANCELLED;
+      if (save) {
+        if (!cache_.read(cache_.context, layer * stride + at, workspace_, bytes) ||
+            !file.write(file.context, offset, workspace_, bytes))
+          return ModelStatus::IO;
+      } else if (!file.read(file.context, offset, workspace_, bytes) ||
+                 !cache_.write(cache_.context, layer * stride + at, workspace_, bytes))
+        return ModelStatus::IO;
+      checksum = crc(workspace_, bytes, checksum);
+      offset += bytes;
+      at += bytes;
+    }
+  }
+  checksum = ~checksum;
+  if (save)
+    return file.write(file.context, offset, &checksum, sizeof(checksum))
+               ? ModelStatus::OK : ModelStatus::IO;
+  std::uint32_t stored;
+  if (!file.read(file.context, offset, &stored, sizeof(stored)))
+    return ModelStatus::IO;
+  if (stored != checksum)
+    return ModelStatus::FORMAT;
+  position_ = count;
+  return ModelStatus::OK;
+}
 // Loading only: keep this out of the fixed inference instruction stream.
 #if defined(PICO_ON_DEVICE)
 __attribute__((section(".ai_diagnostic_extension"),noinline))

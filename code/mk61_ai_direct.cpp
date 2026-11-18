@@ -282,6 +282,8 @@ struct Parser {
   }
   unsigned labels(Text t, unsigned depth);
   unsigned expression(Text t, unsigned depth);
+  unsigned arithmetic(Text &text, unsigned precedence, unsigned depth);
+  unsigned arithmetic_operand(Text &text, unsigned depth);
   bool serialize(unsigned index) {
     if (index >= count || result.size >= sizeof(result.body)) return false;
     const auto n = nodes[index];
@@ -294,6 +296,56 @@ struct Parser {
     return (n.op < neg || serialize(n.left)) && (n.op < 0x40 || serialize(n.right));
   }
 };
+
+unsigned Parser::arithmetic_operand(Text &text, unsigned depth) {
+  if (prefix(text, "+"))
+    return arithmetic(text, 3, depth + 1);
+  if (prefix(text, "-")) {
+    const auto child = arithmetic(text, 3, depth + 1);
+    return child == bad ? bad : node(neg, child);
+  }
+  static constexpr Word functions[] = {
+      {"abs(", 0x2e}, {"acos(", 0x26}, {"asin(", 0x25}, {"atan(", 0x27},
+      {"cos(", 0x29}, {"exp(", 0x22}, {"ln(", 0x24}, {"log10(", 0x23},
+      {"sin(", 0x28}, {"sqrt(", 0x2b}, {"tan(", 0x2a},
+  };
+  unsigned op = bad;
+  bool group = prefix(text, "(");
+  for (const auto &function : functions) {
+    if (!group && prefix(text, function.spelling)) {
+      op = function.op;
+      group = true;
+      break;
+    }
+  }
+  if (group) {
+    const auto inner = arithmetic(text, 1, depth + 1);
+    if (inner == bad || !prefix(text, ")")) return bad;
+    return op == bad ? inner : node(op, inner);
+  }
+  const auto end = text.find_first_of(" +-*/^()");
+  const auto atom = slice(text, 0, end);
+  if (atom.empty()) return bad;
+  text = trim(slice(text, atom.size()));
+  return atom == "pi" ? node(pi) : leaf(atom);
+}
+
+unsigned Parser::arithmetic(Text &text, unsigned precedence, unsigned depth) {
+  if (text.empty() || depth > 12) return bad;
+  auto left = arithmetic_operand(text, depth);
+  constexpr Text operators = "+-*/^";
+  while (left != bad && !text.empty()) {
+    const auto operation = operators.find(text.front());
+    if (operation == Text::npos) break;
+    const unsigned level = 1 + unsigned(operation) / 2;
+    if (level < precedence) break;
+    text = trim(slice(text, 1));
+    // A power binds from the right. The other binary operators bind left.
+    const auto right = arithmetic(text, level + unsigned(level != 3), depth + 1);
+    left = join(0x40 + unsigned(operation), left, right);
+  }
+  return left;
+}
 
 unsigned Parser::labels(Text text, unsigned depth) {
   prefix(text, "найди степень. ");
@@ -365,7 +417,14 @@ unsigned Parser::expression(Text text, unsigned depth) {
     references = saved_refs;
     result.literal_count = saved_literals;
   }
-  return leaf(text);
+  const unsigned saved_count = count, saved_refs = references, saved_literals = result.literal_count;
+  if (const auto atom = leaf(text); atom != bad) return atom;
+  const auto symbolic = arithmetic(text, 1, depth);
+  if (symbolic != bad && text.empty()) return symbolic;
+  count = saved_count;
+  references = saved_refs;
+  result.literal_count = saved_literals;
+  return bad;
 }
 
 constexpr Text stores[] = {"тот же результат запиши", "запиши ответ", "запиши результат",
@@ -491,9 +550,10 @@ bool parse_direct_task(const char *source, unsigned angle, DirectTask &out) {
   const Text next = ". затем вычисли: ";
   for (unsigned step = 0; step < 12; ++step) {
     const auto at = chain ? at_top(task, next) : Text::npos;
-    const auto section = at == Text::npos ? task : slice(task, 0, at);
+    auto section = sentence(at == Text::npos ? task : slice(task, 0, at));
+    prefix(section, "x=") || prefix(section, "x =") || prefix(section, "х=") || prefix(section, "х =");
     parser.references = 0;
-    const auto root = parser.expression(sentence(section), 0);
+    const auto root = parser.expression(section, 0);
     if (root == bad || parser.references != unsigned(step != 0)) return false;
     if (at == Text::npos) {
       if (!parser.serialize(root)) return false;

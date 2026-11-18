@@ -5,6 +5,9 @@
 
 namespace mk61ai {
 namespace {
+constexpr const char *base_constants[] = {"0",   "1", "-1",  "-2", "0.25", "0.5",
+                                          "1.5", "2", "2.5", "3",  "4",    "10"};
+constexpr unsigned base_count = sizeof(base_constants) / sizeof(*base_constants);
 bool word(unsigned char c) {
   return c >= 128 || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
          (c >= '0' && c <= '9') || c == '_';
@@ -84,10 +87,8 @@ bool SpecProtocol::collect(const char *task) {
   }
   normal[length] = 0;
   task = normal;
-  static const char *const base[] = {"0",   "1", "-1",  "-2", "0.25", "0.5",
-                                     "1.5", "2", "2.5", "3",  "4",    "10"};
   count_ = 0;
-  for (const auto s : base)
+  for (const auto s : base_constants)
     if (!add(s))
       return false;
   // This is literal extraction, not interpretation of an expression. Match
@@ -176,7 +177,7 @@ bool SpecProtocol::collect(const char *task) {
   return true;
 }
 bool SpecProtocol::prompt(const char *task, unsigned angle, char *out,
-                          unsigned cap) {
+                          unsigned cap, unsigned *system_bytes) {
   reset();
   if (angle > 2 || !collect(task))
     return false;
@@ -207,8 +208,11 @@ bool SpecProtocol::prompt(const char *task, unsigned angle, char *out,
       angle == 0   ? "DEG"
       : angle == 2 ? "GRAD"
                    : "RAD");
-  for (unsigned i = 0; i < count_; ++i)
+  for (unsigned i = 0; i < count_; ++i) {
     append("%s%02X=%s", i ? ";" : "", i, pool_[i]);
+    if (system_bytes && i + 1 == base_count)
+      *system_bytes = used;
+  }
   append("\nЗадача: %s\nЗаметки: Осталось действий: 12. Исправление: WRITE с "
          "компактной спецификацией SPEC. Проверяй результат по условию; "
          "stopped означает только останов. DONE заявляет решение. Если условие "

@@ -101,6 +101,15 @@ public:
   void clear_parameter_cache() { parameters_ = nullptr; }
   std::uint32_t cache_bytes() const;
   ModelStatus bind(void *workspace, std::size_t bytes, Memory cache);
+  // A snapshot contains a compact slice of each layer's FP32 KV, in order.
+  // The snapshot backend owns publication: write to a staged file and commit
+  // only on OK. Restore exposes KV to inference only after the checksum.
+  std::uint32_t prefix_snapshot_bytes(unsigned count) const;
+  ModelStatus prefix_snapshot(Memory file, const std::uint16_t *tokens,
+                              unsigned count, std::uint32_t build,
+                              Arithmetic arithmetic, bool save,
+                              bool (*service)(void *) = nullptr,
+                              void *context = nullptr);
   void reset() { position_ = 0; }
   bool rewind(unsigned position) {
     if (position > position_)

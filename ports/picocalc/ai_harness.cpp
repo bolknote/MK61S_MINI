@@ -45,6 +45,9 @@ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 #else
 #define AI_COLD_CODE
 #endif
+#ifndef MK61_PICOCALC_BUILD_ID
+#define MK61_PICOCALC_BUILD_ID 0U
+#endif
 
 namespace picocalc::ai {
 namespace {
@@ -240,6 +243,8 @@ struct UI {
   std::uint32_t compute_poll_stamp = 0;
   bool dual_core = true, filter_head = false, double_buffer = true;
   bool m3_core = false;
+  bool cache_prefix = !host.diagnostic_directory, prefix_io_active = false;
+  std::uint32_t prefix_read_us = 0, prefix_write_us = 0, prefix_loaded = 0;
   char m3_module_path[128] = "/AI/M3LINE.S3M";
   unsigned freeze_count = 0, thaw_count = 0, freeze_violations = 0, frozen_revision = 0;
   LinearKernel linear_kernel = LinearKernel::SRAM;
@@ -330,6 +335,7 @@ struct UI {
     profile_attention_us=profile_attention_io_us=profile_attention_jobs=0;
     profile_read_us=profile_matmul_us=profile_wait_us=0;profile_steps=0;profile_prompt_us=0;
     model_load_us = 0;
+    prefix_read_us = prefix_write_us = prefix_loaded = 0;
     request_measured = true;
     request_running = false;
     time_request(true);
@@ -579,7 +585,10 @@ struct UI {
       e.remote_join = [](void *) { return ai_m3::join(); };
     } else ai_m3::close();
     model.execution(e);
+    agent.prefix_io(cache_prefix && !e.remote_submit ? prefix_io : nullptr, this);
   }
+  static ModelStatus prefix_io(void *, const std::uint16_t *, unsigned,
+                               unsigned, Arithmetic, bool, bool (*)(void *), void *);
   static bool service(void *p) { return static_cast<UI *>(p)->pump(); }
   bool pump();
   void key(unsigned key);
@@ -670,7 +679,8 @@ bool UI::write_metrics(const char *path) {
       "us\":%llu,\"max_tick_us\":%lu,\"service_gap_us\":%lu,\"heap_capacity\":%"
       "lu,\"sampled_heap_peak\":%lu,\"stack_high_water\":%lu,\"psram_used\":%"
       "lu,\"psram_read_bytes\":%llu,\"psram_write_bytes\":%llu,\"model_load_"
-      "us\":%lu}\n",
+      "us\":%lu,\"prefix_loaded\":%lu,\"prefix_read_us\":%lu,\"prefix_write_us\":%lu,"
+      "\"output_token_hash\":%lu}\n",
       heap_capacity ? "true" : "false", (unsigned long)m.prefill_tokens,
       (unsigned long long)m.prefill_us, (unsigned long)m.decode_tokens, (unsigned long)m.output_tokens,
       (unsigned long long)m.decode_us, (unsigned long)m.reused_tokens,
@@ -678,9 +688,69 @@ bool UI::write_metrics(const char *path) {
       (unsigned long)service_gap, (unsigned long)heap_capacity,
       (unsigned long)heap_peak, (unsigned long)stack_peak,
       (unsigned long)buffers.external_used, (unsigned long long)psram_reads,
-      (unsigned long long)psram_writes, (unsigned long)model_load_us);
+      (unsigned long long)psram_writes, (unsigned long)model_load_us,
+      (unsigned long)prefix_loaded, (unsigned long)prefix_read_us,
+      (unsigned long)prefix_write_us, (unsigned long)m.output_token_hash);
   return n > 0 && unsigned(n) < sizeof(json) &&
          files::write(path, reinterpret_cast<const u8 *>(json), unsigned(n));
+}
+
+AI_COLD_CODE ModelStatus UI::prefix_io(void *raw, const std::uint16_t *tokens,
+                                      unsigned count, unsigned angle, Arithmetic mode,
+                                      bool save, bool (*service)(void *), void *context) {
+  auto &ui = *static_cast<UI *>(raw);
+  const char *const names[] = {"/AI/SYSDEG.KV", "/AI/SYSRAD.KV", "/AI/SYSGRD.KV"};
+  if (angle >= 3)
+    return ModelStatus::FORMAT;
+  char target[160];
+  const char *path = store_path(ui.store.context, names[angle], target);
+  const unsigned size = ui.model.prefix_snapshot_bytes(count);
+  if (!path || !size)
+    return ModelStatus::FORMAT;
+  const auto started = ui.call(MK61_SERVICE_MICROS);
+  files::WriteSession *writer = nullptr;
+  if (save) {
+    writer = files::begin_write(path, false, false, true);
+    if (!writer)
+      return ModelStatus::IO;
+  } else {
+    unsigned actual = 0;
+    if (!store_size(nullptr, path, actual) || actual != size)
+      return ModelStatus::FORMAT;
+  }
+  Memory file{};
+  file.size = size;
+  if (save) {
+    file.context = writer;
+    file.write = [](void *p, std::uint32_t, const void *data, unsigned n) {
+      return files::append_write(static_cast<files::WriteSession *>(p),
+                                 static_cast<const u8 *>(data), n);
+    };
+  } else {
+    file.context = const_cast<char *>(path);
+    file.read = [](void *p, std::uint32_t at, void *data, unsigned n) {
+      unsigned read = 0;
+      return files::read_range(static_cast<const char *>(p), at,
+                               static_cast<u8 *>(data), n, read) && read == n;
+    };
+  }
+  ui.prefix_io_active = true;
+  auto status = ui.model.prefix_snapshot(file, tokens, count, MK61_PICOCALC_BUILD_ID,
+                                         mode, save, service, context);
+  ui.prefix_io_active = false;
+  if (save) {
+    if (status != ModelStatus::OK)
+      files::cancel_write(writer);
+    else if (!files::commit_write(writer))
+      status = ModelStatus::IO;
+    ui.prefix_write_us += ui.call(MK61_SERVICE_MICROS) - started;
+  } else {
+    files::release_read_cursor();
+    ui.prefix_read_us += ui.call(MK61_SERVICE_MICROS) - started;
+    if (status == ModelStatus::OK)
+      ui.prefix_loaded += count;
+  }
+  return status;
 }
 
 AI_COLD_CODE void UI::scan_sessions() {
@@ -1786,13 +1856,21 @@ bool UI::pump() {
     const int code = host.key();
     if (code < 0)
       break;
-    key(unsigned(code));
+    if (prefix_io_active) {
+      // Keep the pause keys live while a snapshot holds the SD cursor or
+      // a staged write transaction.
+      if (code == 0x1b || code == 0xb1 || code == 0x85) {
+        cancel = true;
+        agent.request_pause();
+      }
+    } else
+      key(unsigned(code));
     if (cancel || quit)
       break;
   }
   const u32 now = host.api->millis_ms();
   if (screen == Screen::SESSION && request_running && now - last_draw >= 1000) dirty = true;
-  if (dirty && !(computing && freeze_screen) && draw_due(now) &&
+  if (dirty && !prefix_io_active && !(computing && freeze_screen) && draw_due(now) &&
       (now - last_draw >= 80 || (!agent.active() && !loading && !benchmarking)))
     draw();
   return !cancel && !quit;

@@ -52,7 +52,7 @@ public:
   struct Metrics {
     std::uint64_t prefill_us = 0, decode_us = 0, tool_us = 0;
     std::uint32_t max_tick_us = 0, prefill_tokens = 0, decode_tokens = 0,
-                  reused_tokens = 0, output_tokens = 0;
+                  reused_tokens = 0, output_tokens = 0, output_token_hash = 0;
   };
   enum class Phase : std::uint8_t {
     IDLE,
@@ -103,16 +103,24 @@ public:
   const Result &last_result() const { return last_result_; }
   unsigned last_angle() const { return last_angle_; }
   void default_angle(unsigned angle) { if (angle < 3) default_angle_ = angle; }
+  using PrefixIO = ModelStatus (*)(void *, const std::uint16_t *, unsigned,
+                                  unsigned, Arithmetic, bool,
+                                  bool (*)(void *), void *);
+  void prefix_io(PrefixIO io, void *context) {
+    prefix_io_ = io;
+    prefix_context_ = context;
+  }
   void spec_protocol(bool enabled) {
     if (spec_enabled_ != enabled) { reset(); cached_count_ = 0; model_.reset(); }
     spec_enabled_ = enabled;
   }
-  // One token or one bounded emulator request. service() remains active
-  // inside both operations; a pause leaves only completed results visible.
+  // One token, one prefix transfer, or one bounded emulator request. service()
+  // stays active during the operation and a pause exposes completed work only.
   void tick(bool (*service)(void *) = nullptr, void *context = nullptr);
 
 private:
   struct DirectRun;
+  struct RepairRun;
   Session &s_;
   Store store_;
   Inference model_;
@@ -126,6 +134,10 @@ private:
   unsigned prompt_count_ = 0, prefilled_ = 0, generated_ = 0, test_ = 0;
   unsigned generation_limit_ = 0, reused_prefix_ = 0, cached_count_ = 0;
   std::uint16_t cached_prefix_[2048]{};
+  PrefixIO prefix_io_ = nullptr;
+  void *prefix_context_ = nullptr;
+  unsigned system_tokens_ = 0, system_angle_ = 0;
+  bool restore_prefix_ = false, save_prefix_ = false;
   std::uint32_t pending_reply_ = 0;
   ToolGrammar grammar_;
   SpecProtocol spec_;
@@ -142,9 +154,12 @@ private:
   Trace traces_[16]{};
   unsigned trace_count_ = 0;
   std::unique_ptr<DirectRun> direct_;
+  std::unique_ptr<RepairRun> repair_;
   bool direct_fallback_ = false;
   void tick_direct(bool (*service)(void *), void *context);
+  void record_repair(const Example &example, const Result &result);
   bool begin_turn();
+  bool tick_prefix(bool (*service)(void *), void *context);
   void process_reply();
   void finish_tests();
   void fail(const char *message);
