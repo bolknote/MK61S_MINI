@@ -1,5 +1,6 @@
 #include "mk61_ai_direct.hpp"
 #include "mk61_ai_spec.hpp"
+#include "mk_math.hpp"
 #if defined(PICO_ON_DEVICE)
 #include "compact_math.hpp"
 #endif
@@ -494,8 +495,12 @@ double value(const DirectTask &spec, const Example &input, unsigned &at, double 
   case 0x2d: return a != 0 ? 1 / a : NAN;
   case 0x2e: return std::fabs(a);
   case 0x2f: return a < 0 ? -1 : 1;
-  case 0x30: return std::trunc(a);
-  case 0x31: return a - std::trunc(a);
+  case 0x30:
+  case 0x31: {
+    // The calculator helper canonicalizes a truncated zero.
+    const double integral = std::copysign(mk_math::trunc(a), a);
+    return op == 0x30 ? integral : a - integral;
+  }
   default: break;
   }
   const double b = value(spec, input, at, scale, depth + 1);

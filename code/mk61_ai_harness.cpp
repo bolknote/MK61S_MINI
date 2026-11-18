@@ -1,4 +1,5 @@
 #include "mk61_ai_harness.hpp"
+#include "mk_math.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -778,7 +779,7 @@ bool parse_example(const char *text, Example &example) {
         continue;
       }
       if (!std::strcmp(key, "STEPS") || !std::strcmp(key, "FRAMES")) {
-        if (value < 1 || value > 16384 || std::floor(value) != value)
+        if (value < 1 || value > 16384 || mk_math::trunc(value) != value)
           return false;
         if (key[0] == 'S')
           next.max_commands = std::uint16_t(value);
