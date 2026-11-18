@@ -1215,6 +1215,10 @@ static __attribute__((noinline)) void emulate_session(void) {
     // scan. The first pacing wait can poll input while M3 renders the queue.
     bool first_remote_frame=audio_mode==2;
     bool after_pace=false;
+#if SPECTRUM_HAS_TIMEX
+    const uint32_t video_frame=!machine.pentagon &&
+        (machine.extensions&SPECTRUM_TIMEX)?spectrum_frame_cycles(&machine):0;
+#endif
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 #if SPECTRUM_HAS_EXTENDED_VIDEO
     video_output video={.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
@@ -1236,7 +1240,18 @@ static __attribute__((noinline)) void emulate_session(void) {
             if(c==0x90) started=false;
             break;
         }
+#if SPECTRUM_HAS_TIMEX
+        // Latch completed Timex frames before the next interrupt can change
+        // their pixels. A fixed 2048T slice has a different overshoot each frame.
+        uint32_t slice=2048;
+        if(video_frame) {
+            const uint32_t left=video_frame-machine.frame_tstates;
+            if(left<slice) slice=left;
+        }
+        spectrum_run(&machine,slice);
+#else
         spectrum_run(&machine,2048);
+#endif
         if(machine.memory && machine.memory->fault) goto memory_error;
         if(needs_extended_video()) {error="Open this game in\nZXVIDEO.APP";break;}
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)

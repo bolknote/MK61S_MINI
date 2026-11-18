@@ -96,7 +96,10 @@ timex_extended[2]=14;timex_extended[4]=6
 (target/'TIMEX.Z80').write_bytes(timex_header+struct.pack('<H',54)+timex_extended+b''.join(
     struct.pack('<HB',0xffff,page)+snapshot[27+i*16384:27+(i+1)*16384] for i,page in enumerate((8,4,5))))
 def screen_snapshot(name,model,mode,banks):
-    cpu=bytearray(37);struct.pack_into('<HH',cpu,20,0xfffe,0x8001);cpu[28]=1;cpu[34]=2
+    hicolor=mode==2 and model==1
+    cpu=bytearray(37);struct.pack_into('<HH',cpu,20,0xfffe,0x8000 if hicolor else 0x8001)
+    cpu[28]=2 if hicolor else 1
+    cpu[34]=0 if hicolor else 2
     ula=bytearray(8);ula[2]=mode if model==14 else 0
     chunks=[(b'Z80R',cpu),(b'SPCR',ula)]
     if model!=14:chunks.append((b'SCLD',bytes([0,mode])))
@@ -104,6 +107,15 @@ def screen_snapshot(name,model,mode,banks):
         memory=bytearray(16384)
         if bank==2:memory[0]=0x76
         if bank==5:memory[:6144]=bytes([0x55])*6144
+        if hicolor and bank==2:
+            # IM2 with one update to the first bitmap cell after each interrupt.
+            program=bytes.fromhex('F3 31 F0 BF 3E 93 ED 47 ED 5E FB 76 3A 00 40 3C 32 00 40 C3 0B 80')
+            memory[:len(program)]=program
+            memory[0x13ff:0x1401]=b'\xa0\x91'
+            memory[0x11a0:0x11a3]=b'\xfb\xed\x4d'
+        if hicolor and bank==5:
+            memory[0]=0
+            memory[8192]=0x47
         chunks.append((b'RAMP',bytes([0,0,bank])+memory))
     (target/name).write_bytes(b'ZXST'+bytes([1,5,model,0])+b''.join(
         tag+struct.pack('<I',len(body))+body for tag,body in chunks))

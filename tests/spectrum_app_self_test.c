@@ -21,6 +21,8 @@ static uint32_t lcd_clock=12000000;
 static bool legacy_lcd;
 static const char* opened_name;
 static bool open_error, save_opened_game;
+static bool hicolor_sequence;
+static unsigned hicolor_updates,hicolor_marker;
 static bool test_flow;
 static const char* preferences_phase;
 static bool preferences_error;
@@ -282,6 +284,11 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         const unsigned format=f->format&~MK61_COLOR_PRESERVE_OUTSIDE;
         if(SPECTRUM_HAS_EXTENDED_VIDEO && (format==MK61_COLOR_INDEX4 || format==MK61_COLOR_CELL565)) {
             assert(f->pixel_bytes<=SPECTRUM_VIDEO_WORK_BYTES && f->width<=320 && f->height<=64);
+            if(hicolor_sequence && format==MK61_COLOR_CELL565 && f->width==8 && f->height==1) {
+                assert(f->x==32 && f->y==64 && f->pixel_bytes==1);
+                assert(!hicolor_updates || f->pixels[0]==hicolor_marker+1);
+                hicolor_marker=f->pixels[0];++hicolor_updates;
+            }
             ++frames_shown;++session_frames;return 1;
         }
         assert(f->pixel_bytes==6144 && f->tile_bytes==1536 && f->format==MK61_COLOR_TILE8);
@@ -323,9 +330,10 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(a==MK61_SERVICE_KEY_BITMAP && b==32);memset(payload,0,32);pump();
         if(opened_name) {
             unsigned key=0;
+            const unsigned limit=hicolor_sequence?48:12;
             if(open_error)key=open_keys++? 'q':' ';
             else if(open_keys++<2)key=13;
-            else if(session_frames>=12 || (SPECTRUM_HAS_EXTENDED_VIDEO && spectrum_video_mode(&machine) && machine.frames>=12)) {
+            else if(session_frames>=limit || (SPECTRUM_HAS_EXTENDED_VIDEO && spectrum_video_mode(&machine) && machine.frames>=limit)) {
                 if(!save_opened_game)key=0x90;
                 else if(!ui[0])key=27;
                 else if(!snapshots_written)key='s';
@@ -670,6 +678,7 @@ int main(int argc,char** argv) {
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
     remote_audio=getenv("SPECTRUM_REMOTE_AUDIO")!=NULL;
     opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
+    hicolor_sequence=SPECTRUM_APP_PROFILE==4 && opened_name && !strcmp(opened_name,"HICOLOR.SZX");
     save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
     test_flow=getenv("SPECTRUM_TEST_FLOW")!=NULL;
 #if SPECTRUM_APP_PROFILE
@@ -688,6 +697,10 @@ int main(int argc,char** argv) {
             printf("Actual APP Flow hands %s to %s and releases all leases PASS\n",opened_name,target);
         } else {
             assert(step.action==MK61_FLOW_RETURN && !step.result && audio_opens==1 && frames_shown);
+            if(hicolor_sequence) {
+                assert(hicolor_updates>=40);
+                puts("HiColor output preserves consecutive guest frame markers: PASS");
+            }
             printf("Actual profile %u APP Flow loads and plays %s PASS\n",SPECTRUM_APP_PROFILE,opened_name);
         }
         return 0;
