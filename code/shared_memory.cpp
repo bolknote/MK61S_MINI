@@ -5,6 +5,7 @@
 #include "native_libc.h"
 #include "mpu_guard_policy.hpp"
 
+#include <array>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,17 +24,14 @@ __asm__(".global mk61_lazy_workspace_bytes\n.set mk61_lazy_workspace_bytes, 8192
 #else
 __asm__(".global mk61_lazy_workspace_bytes\n.set mk61_lazy_workspace_bytes, 8224");
 #endif
-#define MK61_WORKSPACE_INITIAL nullptr
 static u8* workspace_storage;
 #else
 #define MK61_LAZY_RESIDENT_BUFFERS 0
-#define MK61_WORKSPACE_INITIAL workspace_storage
 alignas(8) static u8 workspace_storage[WORKSPACE_SIZE];
 #endif
 alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 #if MK61_SHARED_MEMORY_BULK_ENABLED
 #if MK61_LAZY_RESIDENT_BUFFERS
-#define MK61_BULK_INITIAL nullptr
 static_assert(BULK_SIZE == 8192, "update lazy bulk ELF reserve");
 #if MK61_USE_NATIVE_LIBC
 __asm__(".global mk61_lazy_bulk_bytes\n.set mk61_lazy_bulk_bytes, 8192");
@@ -42,7 +40,6 @@ __asm__(".global mk61_lazy_bulk_bytes\n.set mk61_lazy_bulk_bytes, 8224");
 #endif
 static u8* bulk_storage;
 #else
-#define MK61_BULK_INITIAL bulk_storage
 alignas(8) static u8 bulk_storage[BULK_SIZE];
 #endif
 #endif
@@ -224,22 +221,41 @@ struct ArenaState {
   u8 discard_pending : 1;
 };
 
-#define MK61_ARENA_STATE(memory_value, capacity_value, enabled_value)       \
-  {memory_value, capacity_value, 0, 0, 0, nullptr, nullptr, 0, 0,             \
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,                                  \
-   0, 0, Owner::NONE, Owner::NONE, enabled_value, false, false}
+using ArenaTable = std::array<ArenaState, (usize) Arena::COUNT>;
+static_assert((u8) Owner::NONE == 0, "an empty arena must have no owner");
 
-static ArenaState arenas[] = {
-  MK61_ARENA_STATE(MK61_WORKSPACE_INITIAL, WORKSPACE_SIZE, true),
-  MK61_ARENA_STATE(scratch_storage, SCRATCH_SIZE, true),
+constexpr void configure_arenas(ArenaTable& table) {
+  ArenaState& workspace = table[(usize) Arena::WORKSPACE];
+  if constexpr(!MK61_LAZY_RESIDENT_BUFFERS) workspace.memory = workspace_storage;
+  workspace.capacity = WORKSPACE_SIZE;
+  workspace.enabled = true;
+  ArenaState& scratch = table[(usize) Arena::SCRATCH];
+  scratch.memory = scratch_storage;
+  scratch.capacity = SCRATCH_SIZE;
+  scratch.enabled = true;
+  ArenaState& bulk = table[(usize) Arena::BULK];
+  bulk.capacity = BULK_SIZE;
 #if MK61_SHARED_MEMORY_BULK_ENABLED
-  MK61_ARENA_STATE(MK61_BULK_INITIAL, BULK_SIZE, true),
-#else
-  MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
+  if constexpr(!MK61_LAZY_RESIDENT_BUFFERS) bulk.memory = bulk_storage;
+  bulk.enabled = true;
 #endif
-  MK61_ARENA_STATE(nullptr, 0, true),
-  MK61_ARENA_STATE(nullptr, 0, MK61_SHARED_MEMORY_APP_ENABLED)
-};
+  table[(usize) Arena::OVERLAY].enabled = true;
+  table[(usize) Arena::APP].enabled = MK61_SHARED_MEMORY_APP_ENABLED;
+}
+
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+// Reset_Handler clears the counters in BSS before it runs preinit callbacks.
+static ArenaTable arenas;
+static void init_arena_storage() { configure_arenas(arenas); }
+__attribute__((used, section(".preinit_array")))
+static void (*const arena_preinit)() = init_arena_storage;
+#else
+static ArenaTable arenas = []() constexpr {
+  ArenaTable table = {};
+  configure_arenas(table);
+  return table;
+}();
+#endif
 #if MK61_OVERLAY_LANGUAGE_VM
 static WorkspacePartition* workspace_partition;
 #endif
@@ -252,13 +268,6 @@ static_assert(mpu_guard_policy::APP_END_ALIGNMENT == 256, "update APP placement 
 __asm__(".global mk61_app_placement_slack_bytes\n.set mk61_app_placement_slack_bytes, 224");
 #endif
 #endif
-
-
-#undef MK61_ARENA_STATE
-
-static_assert(sizeof(arenas) / sizeof(arenas[0]) == (usize) Arena::COUNT,
-              "shared-memory arena table is incomplete");
-
 static uintptr_t allocation_limit(void) {
   const ArenaState& app = arenas[(usize) Arena::APP];
   uintptr_t limit = app.capacity ? (uintptr_t)app.memory : pool_end();

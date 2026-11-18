@@ -1,0 +1,197 @@
+{
+  "date": "2026-11-18",
+  "baseline_head": "078405207e76da967fff1d882fdd26dd78b7777c",
+  "source_date_epoch": 1793448000,
+  "toolchain": {
+    "arm": "xPack GNU Arm 14.2.1-1.1",
+    "arduino_cli": "1.5.1",
+    "stm32duino": "2.12.0"
+  },
+  "measurement": "Working tree before and after the five resident changes. Sizes include the CRC footer, data initializers and padding. Each pair uses the same release case and feature flags.",
+  "flash_columns": [
+    "release_case",
+    "before_bytes",
+    "after_bytes",
+    "saved_bytes",
+    "free_after_bytes",
+    "minimum_free_bytes"
+  ],
+  "flash": [
+    ["f411-lcd1602-a00", 330820, 330020, 800, 194268, 16384],
+    ["f411-lcd1602-a00-usb-screen", 369180, 368336, 844, 155952, 16384],
+    ["f411-lcd1602-a00-no-lto", 349660, 348812, 848, 175476, 16384],
+    ["f411-lcd1602-a02", 330720, 329912, 808, 194376, 16384],
+    ["f411-oled1602-ws0010", 367264, 366436, 828, 157852, 16384],
+    ["f411-oled1602-ws0010-usb-screen", 387956, 387096, 860, 137192, 16384],
+    ["f411-oled1602-ws0010-no-graphics", 347832, 347044, 788, 177244, 16384],
+    ["f411-oled1602-ws0010-graphics-wbmp", 354968, 354148, 820, 170140, 16384],
+    ["f411-oled1602-ws0010-graphics-wbmp-markdown", 367264, 366436, 828, 157852, 16384],
+    ["f411-oled1602-ws0010-usb-screen-no-graphics", 386104, 385256, 848, 139032, 16384],
+    ["f411-mini-v2-a00", 330860, 330056, 804, 194232, 16384],
+    ["f411-mini-v2-a02", 330744, 329932, 812, 194356, 16384],
+    ["f411-classic-v2", 377292, 375916, 1376, 148372, 16384],
+    ["f411-classic-v3", 387728, 386368, 1360, 137920, 16384],
+    ["f411-classic-v3-usb-screen", 390680, 389316, 1364, 134972, 16384],
+    ["f411-40th", 377372, 375992, 1380, 148296, 16384],
+    ["f411-stop-ws0010", 367264, 366436, 828, 157852, 131072],
+    ["f411-stop-classic-v3-uc1609", 387728, 386368, 1360, 137920, 131072],
+    ["f401-arduino-classic-v3", 257468, 256956, 512, 5188, 2048],
+    ["f401-product-a00", 223436, 222516, 920, 39628, 8192],
+    ["f401-product-ws0010", 231196, 230288, 908, 31856, 8192],
+    ["f401-product-mini-v2-a00", 223508, 222584, 924, 39560, 8192],
+    ["f401-product-classic-v2", 257944, 256944, 1000, 5200, 4096],
+    ["f401-product-classic-v3", 257984, 256980, 1004, 5164, 4096],
+    ["f401-capability-a00-usb", 244328, 243376, 952, 18768, 512],
+    ["f401-capability-ws-usb", 250552, 249608, 944, 12536, 512],
+    ["f401-capability-ws-graphics", 240052, 239116, 936, 23028, 512],
+    ["f401-capability-ws-usb-graphics", 252780, 251816, 964, 10328, 512]
+  ],
+  "physical_f411": {
+    "board": "Classic V3 UC1609",
+    "clock_hz": 96000000,
+    "core_method": "prof core 80, 11 runs per image. Discard the first run and take the minimum, median and maximum of the 10 per-run means in cycles per core.step.",
+    "core_columns": [
+      "build",
+      "min",
+      "median",
+      "max"
+    ],
+    "classic_v3": [
+      ["before", 1723158, 1723160.0, 1723162],
+      ["before_reflash_control", 1723158, 1723160.5, 1723162],
+      ["after", 1723156, 1723158.0, 1723160]
+    ],
+    "classic_v3_usb_screen": [
+      ["before", 1724206, 1724209.5, 1724212],
+      ["after", 1724229, 1724230.0, 1724232]
+    ],
+    "display_method": "Attach USB Screen, start the DWT profiler, enter digits 1 through 8, stop the profiler. Compare all 768 bytes of the indicator pages at startup and after each key.",
+    "display_columns": [
+      "samples",
+      "min_cycles",
+      "average_cycles",
+      "max_cycles",
+      "total_cycles"
+    ],
+    "display_before": [
+      16,
+      1220,
+      98369,
+      203332,
+      1573907
+    ],
+    "display_after": [
+      16,
+      1225,
+      23965,
+      48597,
+      383444
+    ],
+    "matching_indicator_states": 9,
+    "sealed_builds": {
+      "classic_before": "810C616B",
+      "classic_after": "BCF5CCC6",
+      "usb_screen_before": "E6C0B6F1",
+      "usb_screen_after": "F00E7B04"
+    },
+    "restoration": "All 524288 internal Flash bytes matched the original DFU backup. Hardware CRC 076CC619, calculator registers, stack, program and working directory matched after restoration."
+  },
+  "cortex_m4_emulation": {
+    "renderer_workload": "Each of 256 masks on each of four active display pages in the linked Classic V3 binaries. Compared all destination bytes, an existing pattern and both guard zones. Counts are retired Thumb instructions.",
+    "renderer_columns": [
+      "mcu",
+      "comparisons",
+      "before_instructions",
+      "after_instructions"
+    ],
+    "renderer": [
+      [
+        "F401",
+        1024,
+        701184,
+        71552
+      ],
+      [
+        "F411",
+        1024,
+        2162688,
+        71552
+      ]
+    ],
+    "f401_core_method": "Run the linked Classic V3 core with the SRAM bit-band alias modeled. Enable the calculator, apply each key pair, execute one step, then compare the 896-byte saved CPU context. Instruction counts exclude the key and save calls.",
+    "f401_core_enable_instructions": [
+      1855939,
+      1855677
+    ],
+    "f401_step_columns": [
+      "key_x",
+      "key_y",
+      "before_instructions",
+      "after_instructions",
+      "matching_context_sha256"
+    ],
+    "f401_steps": [
+      [0, 0, 1818400, 1818400, "6f47817403575fe4a206301086130fa0c0e7b2fd2bcce2248cc4c0dc3244d2e7"],
+      [0, 0, 1817428, 1817428, "0d77da98aeccf9aeff911346dab066150158da1a1e4d62fbe6c34bdfe2a8db08"],
+      [2, 9, 1749977, 1749977, "045de2e80f65e9a793587095a84f78061b786df9fcae1e9e4390b8a100938729"],
+      [0, 0, 1750963, 1750963, "1215e041849b8ffdcacabce9b37e7ce9464203f3d7008d5f291da2cac8edf743"],
+      [3, 4, 1780514, 1780514, "35bd9b9c25869064dd5acf97d9d2d63aa39a78c906ac99e81f49ad6081b66d9b"],
+      [0, 0, 1818558, 1818558, "f2b4e690b0b858cec3648ce8621544c108e25129e99713f70f8a5a88a80ff193"]
+    ],
+    "arena_reset": "Five complete arena records compared after reset on both MCUs with pointers normalized by backing allocation. Data initializers and retained RAM matched. Hardware SystemInit and early DFU were skipped for this paired comparison.",
+    "cold_reset_without_hardware_hooks_columns": [
+      "mcu",
+      "before_instructions",
+      "after_instructions"
+    ],
+    "cold_reset_without_hardware_hooks": [
+      [
+        "F401",
+        29276,
+        29163
+      ],
+      [
+        "F411",
+        21715,
+        21586
+      ]
+    ],
+    "f411_usb_screen_core": {
+      "workload": "Same six key/step pairs and full context checks as F401, with the DWT profiler inactive in both images.",
+      "before_instructions": [
+        866915,
+        866995,
+        850052,
+        864407,
+        858689,
+        866925
+      ],
+      "after_instructions": [
+        866915,
+        866995,
+        850052,
+        864407,
+        858689,
+        866925
+      ],
+      "matching_saved_contexts": 6
+    }
+  },
+  "host_checks": {
+    "core_configurations_with_asan_ubsan": 14,
+    "ui_configurations_with_asan_ubsan": 10,
+    "arm_startup_fixtures": 18,
+    "m8_linked_native_cases": 27,
+    "runner_test_pythonpath": "tools/programs"
+  },
+  "f401_hardware": "Unavailable. F401 timing in this report is expressed only as emulator instruction counts.",
+  "identical_native_feature_manifests": 27,
+  "sealed_images_reproduced_by_release_builders": 28,
+  "profiles_with_release_app_bundles_verified": 15,
+  "release_checks": [
+    "tests/run_f401_release_matrix.sh",
+    "tests/run_f411_release_matrix.sh",
+    "tests/run_f411_usb_suspend_compile_check.sh",
+    "tests/run_f401_uc1609_compile_check.sh"
+  ]
+}

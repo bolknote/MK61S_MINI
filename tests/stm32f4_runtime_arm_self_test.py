@@ -146,6 +146,11 @@ u.emu_start(symbol('Reset_Handler') | 1, stop, timeout=10000000, count=1000000)
 assert u.reg_read(UC_ARM_REG_PC) == main, hex(u.reg_read(UC_ARM_REG_PC))
 assert get(core_clock) == frequency
 assert bytes(u.mem_read(retained, 192)) == retained_bytes
+# At entry to main the first ArenaState already describes WORKSPACE.
+# F401 has fixed backing storage and F411 acquires its backing storage lazily.
+workspace = e.symbol('L6arenasE')
+workspace_storage = e.symbol('L17workspace_storageE') if args.mcu == 'f401' else 0
+assert struct.unpack('<II', u.mem_read(workspace, 8)) == (workspace_storage, 8192)
 assert get(uw) == 0
 assert get(0xE000ED08) == 0x08000000
 assert get(0xE000ED88) & 0x00F00000 == 0x00F00000

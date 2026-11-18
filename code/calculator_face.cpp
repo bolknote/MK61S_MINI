@@ -59,6 +59,8 @@ static constexpr u8 DIGIT_HEIGHT = 1 +
     ((SOURCE_HEIGHT - 1) * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
 static constexpr u8 DIGIT_INSET = (DIGIT_PITCH - DIGIT_WIDTH) / 2;
 static constexpr i16 DIGIT_TOP = 24 + (SOURCE_HEIGHT - DIGIT_HEIGHT) / 2;
+static constexpr u8 FIRST_DIGIT_PAGE = DIGIT_TOP / PAGE_HEIGHT;
+static constexpr u8 LAST_DIGIT_PAGE = (DIGIT_TOP + DIGIT_HEIGHT - 1) / PAGE_HEIGHT;
 static constexpr u8 DIGIT_COUNT = 12;
 static constexpr u8 CLASSIC_TOP = 32;
 static_assert(DIGIT_COUNT * DIGIT_PITCH == WIDTH, "calculator digits must fill the glass");
@@ -110,61 +112,95 @@ static constexpr u16 SEGMENT_ROWS[8][SOURCE_HEIGHT] = {
   { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0x0003,0x0003,0x0003,0x0007,0x0007,0x0007,0x0007 },
 };
 
-// F401 trades its sparse source storage for compile-time scaled planes.
-// Other boards retain their existing renderer; the private selector is HOST-only.
-#if defined(STM32F401xC) || defined(STM32F401xE) || \
+#if defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE) || \
     (!defined(__arm__) && !defined(__thumb__) && defined(MK61_TEST_SCALED_SEGMENTS))
-// Compile the unchanged source strike to the glass's 10x21 integer grid.
-// Multiple source pixels which round to one output pixel are combined by OR.
-struct ScaledSegment {
-  u8 first, count;
-  u16 rows[7];
+// Each UC1609 column byte covers eight vertical pixels on one display page.
+struct SegmentStrip {
+  u8 columns[DIGIT_WIDTH];
+  u8 first;
+  u8 width;
 };
-struct ScaledSegments { ScaledSegment planes[8]; };
-constexpr ScaledSegments scaleSegments() {
-  ScaledSegments result = {};
-  for(unsigned segment = 0; segment < 8; ++segment) {
-    u16 rows[DIGIT_HEIGHT] = {};
-    for(unsigned row = 0; row < SOURCE_HEIGHT; ++row)
-      for(unsigned col = 0; col < SOURCE_WIDTH; ++col)
-        if(SEGMENT_ROWS[segment][row] & (0x8000U >> col))
-          rows[(row * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP] |=
-              (u16)(1U << ((col * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP));
-    unsigned first = 0, last = DIGIT_HEIGHT;
-    while(first < last && !rows[first]) ++first;
-    while(last > first && !rows[last-1]) --last;
-    if(last - first > 7) __builtin_trap();
-    result.planes[segment].first = (u8)first;
-    result.planes[segment].count = (u8)(last-first);
-    for(unsigned i = first; i < last; ++i)
-      result.planes[segment].rows[i-first] = rows[i];
+
+constexpr SegmentStrip segmentStrip(u8 page, u8 segment) {
+  SegmentStrip strip = {};
+  for(unsigned row = 0; row < SOURCE_HEIGHT; ++row) {
+    const unsigned y = DIGIT_TOP + (row * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
+    if(y / PAGE_HEIGHT != page) continue;
+    for(unsigned col = 0; col < SOURCE_WIDTH; ++col) {
+      if(SEGMENT_ROWS[segment][row] & (0x8000U >> col)) {
+        const unsigned x = (col * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
+        strip.columns[x] |= 1U << (y % PAGE_HEIGHT);
+      }
+    }
+  }
+  unsigned end = DIGIT_WIDTH;
+  while(strip.first < end && !strip.columns[strip.first]) ++strip.first;
+  while(end > strip.first && !strip.columns[end - 1]) --end;
+  strip.width = end - strip.first;
+  return strip;
+}
+
+constexpr unsigned stripBytes() {
+  unsigned bytes = 0;
+  for(u8 page = FIRST_DIGIT_PAGE; page <= LAST_DIGIT_PAGE; ++page) {
+    for(u8 segment = 0; segment < 8; ++segment) {
+      const u8 width = segmentStrip(page, segment).width;
+      if(width) bytes += 1 + width;
+    }
+  }
+  return bytes;
+}
+
+struct SegmentPage {
+  u8 mask;
+  u8 offset[8];
+};
+struct SegmentPages {
+  SegmentPage pages[LAST_DIGIT_PAGE - FIRST_DIGIT_PAGE + 1];
+  u8 strips[stripBytes()];
+};
+static_assert(DIGIT_WIDTH <= 15 && stripBytes() <= 256,
+              "segment strips must fit nibble widths and byte offsets");
+
+constexpr SegmentPages makeSegmentPages() {
+  SegmentPages result = {};
+  unsigned offset = 0;
+  for(u8 page = FIRST_DIGIT_PAGE; page <= LAST_DIGIT_PAGE; ++page) {
+    SegmentPage& index = result.pages[page - FIRST_DIGIT_PAGE];
+    for(u8 segment = 0; segment < 8; ++segment) {
+      const SegmentStrip strip = segmentStrip(page, segment);
+      if(!strip.width) continue;
+      index.mask |= 1U << segment;
+      index.offset[segment] = offset;
+      result.strips[offset++] = (strip.first << 4) | strip.width;
+      for(unsigned col = 0; col < strip.width; ++col)
+        result.strips[offset++] = strip.columns[strip.first + col];
+    }
   }
   return result;
 }
-static constexpr ScaledSegments SCALED_SEGMENTS = scaleSegments();
-void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
-  if(dot) mask |= 0x80;
-  for(u8 segment = 0; segment < 8; ++segment) {
-    if(!(mask & (1U << segment))) continue;
-    const ScaledSegment& plane = SCALED_SEGMENTS.planes[segment];
-    for(u8 row = 0; row < plane.count; ++row) {
-      const i16 y = DIGIT_TOP + plane.first + row;
-      if((u8)(y / PAGE_HEIGHT) != page) continue;
-      const u16 pixels = plane.rows[row];
-      const u8 page_bit = (u8)(1U << (y & 7));
-      for(u8 col = 0; col < DIGIT_WIDTH; ++col)
-        if(pixels & (1U << col)) out[x + DIGIT_INSET + col] |= page_bit;
-    }
+static constexpr SegmentPages SEGMENT_PAGES = makeSegmentPages();
+
+void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask) {
+  const SegmentPage& index = SEGMENT_PAGES.pages[page - FIRST_DIGIT_PAGE];
+  unsigned active = mask & index.mask;
+  out += x + DIGIT_INSET;
+  while(active) {
+    const unsigned segment = __builtin_ctz(active);
+    active &= active - 1;
+    const u8* strip = SEGMENT_PAGES.strips + index.offset[segment];
+    const u8 header = *strip++;
+    u8* dest = out + (header >> 4);
+    for(unsigned width = header & 15; width; --width) *dest++ |= *strip++;
   }
 }
-
 #else
-void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
+void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask) {
   for(u8 row = 0; row < SOURCE_HEIGHT; ++row) {
     const i16 y = DIGIT_TOP +
         (row * DIGIT_PITCH + SOURCE_STEP / 2) / SOURCE_STEP;
     if((u8) (y / PAGE_HEIGHT) != page) continue;
-    u16 pixels = dot ? SEGMENT_ROWS[7][row] : 0;
+    u16 pixels = (mask & 0x80U) ? SEGMENT_ROWS[7][row] : 0;
     for(u8 segment = 0; segment < 7; ++segment) {
       if(mask & (1U << segment)) pixels |= SEGMENT_ROWS[segment][row];
     }
@@ -228,7 +264,7 @@ void drawDecimalPage(u8* out, u8 page, i16 x) {
     PageCanvas canvas(page, out);
     canvas.hline(x + 14, CLASSIC_TOP + 14, 2);
     canvas.hline(x + 14, CLASSIC_TOP + 15, 2);
-  } else drawSegmentsPage(out, page, x, 0, true);
+  } else drawSegmentsPage(out, page, x, 0x80);
 }
 
 u16 segmentToken(u8 mask) {
@@ -256,8 +292,7 @@ void __attribute__((noinline)) drawIndicatorPage(
       } else {
         // Arbitrary segment patterns have no textual equivalent. Preserve
         // them exactly instead of losing information behind a '?' glyph.
-        drawSegmentsPage(out, page, digitLeft(slot), (u8) (mask & 0x7FU),
-                         (mask & 0x80U) != 0);
+        drawSegmentsPage(out, page, digitLeft(slot), mask);
       }
     }
     return;
@@ -331,8 +366,7 @@ void renderPage(const text_screen::Grid& grid, u8 page, u8 out[WIDTH]) {
   memset(out, 0, WIDTH);
   PageCanvas canvas(page, out);
   if(page < 2) drawService(canvas, grid);
-  if(page >= DIGIT_TOP / PAGE_HEIGHT &&
-     page < (DIGIT_TOP + DIGIT_HEIGHT + PAGE_HEIGHT - 1) / PAGE_HEIGHT) {
+  if(page >= FIRST_DIGIT_PAGE && page <= LAST_DIGIT_PAGE) {
     drawIndicatorPage(out, page, grid);
   }
 }

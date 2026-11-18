@@ -115,10 +115,37 @@ constexpr Literal<Output> make_literal(const char (&source)[Input]) {
 // For constexpr pointer tables, name an M8_ARRAY() object at file scope and
 // use its .data() so the pointer itself is a constant expression.
 #define M8_ARRAY(source) ::mk8::make_literal<::mk8::literal_size(source)>(source)
+#if defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE)
+#include <utility>
+namespace mk8 {
+namespace detail {
+
+// All translation units name the same object for the same encoded bytes.
+template<char... Bytes>
+struct PooledLiteral {
+  inline static constexpr char bytes[] = {Bytes...};
+};
+
+template<typename Source, size_t... I>
+constexpr const char* pooled_literal(std::index_sequence<I...>) {
+  constexpr auto text = Source::get();
+  return PooledLiteral<text[I]...>::bytes;
+}
+
+} // namespace detail
+} // namespace mk8
+
+#define M8(source) ([]() -> const char* { \
+  struct Source { static constexpr auto get() { return M8_ARRAY(source); } }; \
+  return ::mk8::detail::pooled_literal<Source>( \
+      std::make_index_sequence<::mk8::literal_size(source)>{}); \
+}())
+#else
 #define M8(source) ([]() -> const char* { \
   static constexpr auto m8_text = M8_ARRAY(source); \
   return m8_text.data(); \
 }())
+#endif
 #define M8_PUNCT(size, action, source) \
   ::mk8::make_punct((size), (action), M8_ARRAY(source))
 

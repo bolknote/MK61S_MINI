@@ -73,8 +73,8 @@ SECTIONS
   .rodata :
   {
     . = ALIGN(4);
-    *(.rodata)         /* .rodata sections (constants, strings, etc.) */
-    *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
+    *(.rodata)
+    *(SORT_BY_ALIGNMENT(.rodata*))
     . = ALIGN(4);
   } >FLASH
 
@@ -111,15 +111,8 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
-  .fini_array (READONLY) :
-  {
-    . = ALIGN(4);
-    PROVIDE_HIDDEN (__fini_array_start = .);
-    KEEP (*(SORT(.fini_array.*)))
-    KEEP (*(.fini_array*))
-    PROVIDE_HIDDEN (__fini_array_end = .);
-    . = ALIGN(4);
-  } >FLASH
+  /* The resident main loop runs until reset. There is no process teardown. */
+  /DISCARD/ : { *(.fini_array*) }
 
   /* Used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -129,8 +122,8 @@ SECTIONS
   {
     . = ALIGN(4);
     _sdata = .;        /* create a global symbol at data start */
-    *(.data)           /* .data sections */
-    *(.data*)          /* .data* sections */
+    *(.data)
+    *(SORT_BY_ALIGNMENT(.data*))
     *(.RamFunc)        /* .RamFunc sections */
     *(.RamFunc*)       /* .RamFunc* sections */
 

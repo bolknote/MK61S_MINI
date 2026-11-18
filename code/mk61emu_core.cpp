@@ -2824,10 +2824,14 @@ struct alignas(8) CoreHotTables {
   microinstruction_t ik1302_microinstructions[68];
   microinstruction_t ik1303_microinstructions[68];
   microinstruction_t ik1306_microinstructions[68];
+#if !MK61_CORE_DCW_FROM_MICRO
   u8 ik1302_dcw[68];
+#endif
   u8 ik1302_dcwa[68];
+#if !MK61_CORE_DCW_FROM_MICRO
   u8 ik1303_dcw[68];
   u8 ik1306_dcw[68];
+#endif
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
   u8 ik1302_and_amk[AND_AMK_RUNTIME_SIZE];
   u8 ik1303_and_amk[AND_AMK_RUNTIME_SIZE];
@@ -2891,18 +2895,28 @@ static const microinstruction_t* ik1303_microinstructions_active =
     ROM.IK1303.microinstructions;
 static const microinstruction_t* ik1306_microinstructions_active =
     ROM.IK1306.microinstructions;
+#if !MK61_CORE_DCW_FROM_MICRO
 static const u8* ik1302_dcw_active = IK1302_DCW;
+#endif
 static const u8* ik1302_dcwa_active = IK1302_DCWA;
+#if !MK61_CORE_DCW_FROM_MICRO
 static const u8* ik1303_dcw_active = IK1303_DCW;
 static const u8* ik1306_dcw_active = IK1306_DCW;
+#endif
 
 #define IK1302_MICROINSTRUCTIONS_ACTIVE ik1302_microinstructions_active
 #define IK1303_MICROINSTRUCTIONS_ACTIVE ik1303_microinstructions_active
 #define IK1306_MICROINSTRUCTIONS_ACTIVE ik1306_microinstructions_active
-#define IK1302_DCW_ACTIVE ik1302_dcw_active
 #define IK1302_DCWA_ACTIVE ik1302_dcwa_active
+#if MK61_CORE_DCW_FROM_MICRO
+#define IK1302_DCW_ACTIVE IK1302_DCW
+#define IK1303_DCW_ACTIVE IK1303_DCW
+#define IK1306_DCW_ACTIVE IK1306_DCW
+#else
+#define IK1302_DCW_ACTIVE ik1302_dcw_active
 #define IK1303_DCW_ACTIVE ik1303_dcw_active
 #define IK1306_DCW_ACTIVE ik1306_dcw_active
+#endif
 
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
 static const u8* ik1302_and_amk_active = IK1302_AND_AMK;
@@ -2962,10 +2976,14 @@ static void select_core_hot_table_view(bool use_workspace) {
       ? tables->ik1303_microinstructions : ROM.IK1303.microinstructions;
   ik1306_microinstructions_active = use_ram
       ? tables->ik1306_microinstructions : ROM.IK1306.microinstructions;
+#if !MK61_CORE_DCW_FROM_MICRO
   ik1302_dcw_active = use_ram ? tables->ik1302_dcw : IK1302_DCW;
+#endif
   ik1302_dcwa_active = use_ram ? tables->ik1302_dcwa : IK1302_DCWA;
+#if !MK61_CORE_DCW_FROM_MICRO
   ik1303_dcw_active = use_ram ? tables->ik1303_dcw : IK1303_DCW;
   ik1306_dcw_active = use_ram ? tables->ik1306_dcw : IK1306_DCW;
+#endif
 
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
   const u8* const ram1302 = tables == nullptr
@@ -3033,14 +3051,18 @@ static bool ensure_core_hot_tables(void) {
     copy_core_hot_table(
         tables->ik1306_microinstructions, ROM.IK1306.microinstructions,
         sizeof(tables->ik1306_microinstructions));
+#if !MK61_CORE_DCW_FROM_MICRO
     copy_core_hot_table(
         tables->ik1302_dcw, IK1302_DCW, sizeof(tables->ik1302_dcw));
+#endif
     copy_core_hot_table(
         tables->ik1302_dcwa, IK1302_DCWA, sizeof(tables->ik1302_dcwa));
+#if !MK61_CORE_DCW_FROM_MICRO
     copy_core_hot_table(
         tables->ik1303_dcw, IK1303_DCW, sizeof(tables->ik1303_dcw));
     copy_core_hot_table(
         tables->ik1306_dcw, IK1306_DCW, sizeof(tables->ik1306_dcw));
+#endif
 #if MK61_CORE_HOT_TABLES_IN_SRAM >= 2
     expand_core_hot_and_amk(tables->ik1302_and_amk, IK1302_AND_AMK);
     expand_core_hot_and_amk(tables->ik1303_and_amk, IK1303_AND_AMK);

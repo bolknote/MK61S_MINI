@@ -13,3 +13,8 @@ fi
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -I"$root/code" "$root/tests/utf8_codec_self_test.cpp" -o "$out"
 "$out"
+
+clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" -DSTM32F401xC \
+  -I"$root/code" "$root/tests/utf8_codec_self_test.cpp" \
+  "$root/tests/mk8_literal_peer.cpp" -o "$out"
+"$out"

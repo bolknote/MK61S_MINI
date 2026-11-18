@@ -11,6 +11,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef STM32F401xC
+const char* mk8_literal_from_other_unit();
+#endif
+
 namespace {
 
 void expect_valid(const u8* bytes, usize size, u32 codepoint) {
@@ -109,6 +113,12 @@ void test_mk8_compact_firmware_text(void) {
   static_assert(literal[10] == (char) mk8::BYTE_RIGHT_ARROW, "private M8 symbol");
   static_assert(literal[12] == (char) 0xA8 && literal[13] == (char) 0xB8,
                 "CP1251 exceptions");
+  const char* embedded = M8("Настройки → Ёё\0дальше");
+  assert(memcmp(embedded, literal.data(), sizeof(literal)) == 0);
+#ifdef STM32F401xC
+  assert(embedded == mk8_literal_from_other_unit());
+  assert(embedded != M8("Настройки → Ёё\0другой текст"));
+#endif
   struct MenuEntry { u8 size; bool (*action)(); char text[16]; };
   static constexpr auto menu_entry = M8_PUNCT(15, (bool (*)()) nullptr, "Настройки");
   const MenuEntry* const legacy = mk8::punct_view<MenuEntry>(menu_entry);

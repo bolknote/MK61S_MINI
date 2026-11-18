@@ -6,7 +6,7 @@ sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-for renderer in legacy f401; do
+for renderer in legacy stm32; do
 for variant in physical legacy-usb shared-usb physical-loan scoped-usb; do
 echo "UI pixel verification: renderer=$renderer variant=$variant"
 scoped=0
@@ -31,7 +31,7 @@ test_flags=(
   -include "$root/tests/ui_display_shim/panel.hpp"
   -I"$root/tests/ui_display_shim" -I"$root/code"
 )
-if [[ "$renderer" == f401 ]]; then test_flags+=(-DMK61_TEST_SCALED_SEGMENTS=1); fi
+if [[ "$renderer" == stm32 ]]; then test_flags+=(-DMK61_TEST_SCALED_SEGMENTS=1); fi
 manager_sources=()
 if [[ "$scoped" == 1 ]]; then
   # Pixel tests deliberately mock the ownership queries for externally supplied
