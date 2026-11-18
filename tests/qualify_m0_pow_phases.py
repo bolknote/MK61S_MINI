@@ -35,10 +35,13 @@ def build(snapshot,out):
     (stage/'tests/fixtures').mkdir(parents=True,exist_ok=True)
     shutil.copy2(ROOT/'tests/fixtures/m0_cr_memory.c',stage/'tests/fixtures/m0_cr_memory.c')
     path=stage/'third_party/core_math/pow/pow.c';original=path.read_bytes();source=original.decode()
+    exact_test='exact_pow (&e, x0, y, &R, exact)'
+    if f'if (R.ex >= -1075 && {exact_test})' in source:
+        exact_test='R.ex >= -1075 && '+exact_test
     patches={
       'if (__builtin_expect (res_min == res_max, 1)) {':'if (false && __builtin_expect (res_min == res_max, 1)) {',
       'if (rd)\n    // dint_tod':'if (rd && R.ex > 1023)\n    // dint_tod',
-      'if (exact_pow (&e, x0, y, &R, exact))':'if (!rd && exact_pow (&e, x0, y, &R, exact))',
+      f'if ({exact_test})':f'if (!rd && {exact_test})',
       '  dint64_t X, Y;':'  __asm__ volatile(".global mk61_pow_test_stage2\\nmk61_pow_test_stage2:" ::: "memory");\n  dint64_t X, Y;',
       '  qint64_t qX, qY;':'  __asm__ volatile(".global mk61_pow_test_stage3\\nmk61_pow_test_stage3:" ::: "memory");\n  qint64_t qX, qY;'
     }

@@ -1843,13 +1843,17 @@ double cr_pow (double x, double y) {
 
   /* case R < 2^-1075: underflow case */
   if (R.ex < -1075) {
+    // At ex=-1076 the zero/minsub midpoint is one past the last
+    // significand. Send its 29*2^10 ulp neighborhood to Ziv3.
+    if (R.ex < -1076 || R.hi != UINT64_MAX ||
+        R.lo < UINT64_MAX - (29u * (1u << 10) - 1u)) {
 #ifdef CORE_MATH_SUPPORT_ERRNO
-    errno = ERANGE; // underflow
+      errno = ERANGE; // underflow
 #endif
-    return 0.5 * (s * 0x1p-1074);
-  }
-
-  if (R.ex < -1022) { /* subnormal case */
+      return 0.5 * (s * 0x1p-1074);
+    }
+    rd = 0;
+  } else if (R.ex < -1022) { /* subnormal case */
     // for x^y = 2^-1022, we can have R < 2^-1022 here
 
     /* -1075 <= R.ex <= -1023 thus 2^-1075 <= R < 2^-1022 */
@@ -1868,16 +1872,14 @@ double cr_pow (double x, double y) {
        by 'ex' bits to the left, we get 'ex' extra bits after the round bit.
        Since ex>=1 we replace 28 by 14. */
 
-    rd = m + 14 > (2*14);
+    rd = m > 14 && m < UINT64_MAX - 14;
 
   } else {
 #define ERR_BND_2 28
     uint64_t lo = R.lo >> 10 | R.hi << 54;
     /* lo contains the 64 bits after the round bit */
-    rd = lo + ERR_BND_2 > (2*ERR_BND_2);
-    /* The value 28 comes from floor(29126/2^10): rd is 0 when lo <= 28 or
-       lo >= 2^64 - 28, which means that the approximation R is at distance
-       < 29*2^10 = 29696 ulps of a rounding boundary */
+    // The omitted ten bits can put the next boundary one unit closer.
+    rd = lo > ERR_BND_2 && lo < UINT64_MAX - ERR_BND_2;
   }
 
   R.sgn = s == -1.0;
@@ -1890,7 +1892,7 @@ double cr_pow (double x, double y) {
   // Detect rounding boundary cases
   double e;
 
-  if (exact_pow (&e, x0, y, &R, exact))
+  if (R.ex >= -1075 && exact_pow (&e, x0, y, &R, exact))
     return e;
 #endif /* ENABLE_EXACT */
 #endif /* ENABLE_ZIV2 */
@@ -1934,7 +1936,7 @@ double cr_pow (double x, double y) {
   uint64_t r2 = qZ.hl << 54 | qZ.lh >> 10;
   uint64_t r3 = qZ.lh << 54 | qZ.ll >> 10;
   rd = !((r1 == 0 && r2 == 0 && r3 <= ERR_BND_3) ||
-         (~r1 == 0 && ~r2 == 0 && r3 + (2*ERR_BND_3) <= ERR_BND_3));
+         (~r1 == 0 && ~r2 == 0 && r3 >= UINT64_MAX - ERR_BND_3));
 
   if (rd)
   {

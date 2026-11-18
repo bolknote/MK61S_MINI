@@ -30,10 +30,13 @@ def build(snapshot,output,force1024,force_exact_small=False,interval_hint=False,
     shared=stage/'third_party/core_math/pow/pow_accurate_body.inc'
     if shared.exists():paths.append(shared)
     sources={path:path.read_text() for path in paths}
+    exact_test='exact_pow (&e, x0, y, &R, exact)'
+    if any(f'if (R.ex >= -1075 && {exact_test})' in source for source in sources.values()):
+        exact_test='R.ex >= -1075 && '+exact_test
     patches={
         'if (__builtin_expect (res_min == res_max, 1)) {':'if (false && __builtin_expect (res_min == res_max, 1)) {',
         'if (rd)\n    // dint_tod':'if (rd && R.ex > 1023)\n    // dint_tod',
-        'if (exact_pow (&e, x0, y, &R, exact))':'if (false && exact_pow (&e, x0, y, &R, exact))',
+        f'if ({exact_test})':f'if (false && {exact_test})',
         '  if (rd)\n  {\n    qZ.sgn':'  if (false && rd)\n  {\n    qZ.sgn',
     }
     patch_locations={}

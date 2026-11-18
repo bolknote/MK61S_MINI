@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Reproduce the ARMv6-M/C++ CORE-MATH port from the pinned local snapshot.
 
-No mathematical coefficients or algorithms are changed: replace compiler-only
-128-bit integers, adapt C aggregate/goto syntax to GNU C++, and isolate modules.
-The generated files retain their upstream MIT notices.
+Replace compiler-only 128-bit integers, adapt C aggregate/goto syntax to
+GNU C++, isolate modules and apply the pow rounding-guard correction.
+The generated files retain their coefficients and upstream MIT notices.
 """
 
 import argparse
@@ -14,6 +14,52 @@ import re
 
 ROOT=Path(__file__).resolve().parents[2]
 NAMES=('sin','cos','tan','atan','asin','acos','log','log10','exp','pow')
+
+
+def correct_pow_rounding_guards(text):
+    changes = (
+        (
+            '  if (R.ex < -1075) {\n#ifdef CORE_MATH_SUPPORT_ERRNO\n'
+            '    errno = ERANGE; // underflow\n#endif\n'
+            '    return 0.5 * (s * 0x1p-1074);\n  }\n\n  if (R.ex < -1022)',
+            '  if (R.ex < -1075) {\n'
+            '    // At ex=-1076 the zero/minsub midpoint is one past the last\n'
+            '    // significand. Send its 29*2^10 ulp neighborhood to Ziv3.\n'
+            '    if (R.ex < -1076 || R.hi != UINT64_MAX ||\n'
+            '        R.lo < UINT64_MAX - (29u * (1u << 10) - 1u)) {\n'
+            '#ifdef CORE_MATH_SUPPORT_ERRNO\n'
+            '      errno = ERANGE; // underflow\n#endif\n'
+            '      return 0.5 * (s * 0x1p-1074);\n'
+            '    }\n'
+            '    rd = 0;\n'
+            '  } else if (R.ex < -1022)',
+        ),
+        (
+            '    rd = m + 14 > (2*14);',
+            '    rd = m > 14 && m < UINT64_MAX - 14;',
+        ),
+        (
+            '    rd = lo + ERR_BND_2 > (2*ERR_BND_2);\n'
+            '    /* The value 28 comes from floor(29126/2^10): rd is 0 when lo <= 28 or\n'
+            '       lo >= 2^64 - 28, which means that the approximation R is at distance\n'
+            '       < 29*2^10 = 29696 ulps of a rounding boundary */',
+            '    // The omitted ten bits can put the next boundary one unit closer.\n'
+            '    rd = lo > ERR_BND_2 && lo < UINT64_MAX - ERR_BND_2;',
+        ),
+        (
+            '  if (exact_pow (&e, x0, y, &R, exact))',
+            '  if (R.ex >= -1075 && exact_pow (&e, x0, y, &R, exact))',
+        ),
+        (
+            '         (~r1 == 0 && ~r2 == 0 && r3 + (2*ERR_BND_3) <= ERR_BND_3));',
+            '         (~r1 == 0 && ~r2 == 0 && r3 >= UINT64_MAX - ERR_BND_3));',
+        ),
+    )
+    for original, corrected in changes:
+        assert text.count(original) == 1, original
+        text = text.replace(original, corrected)
+    return text
+
 
 def adapt(name,filename,s):
     class FileName:
@@ -39,6 +85,7 @@ def adapt(name,filename,s):
      if p.name=='pow.c':
       s=s.replace('  uint64_t t = n << F;','  { uint64_t t = n << F;')
       s=s.replace('  pow2(r, G);\n\n end:', '  pow2(r, G); }\n\n end:')
+      s=correct_pow_rounding_guards(s)
     return s
 
 

@@ -60,7 +60,7 @@
     },
     "pow/pow.c": {
       "upstream_sha256": "678fcee66219574d754b7fbd0091461b9caa85cceaf95dd39978efebc62b9757",
-      "ported_sha256": "dd671f8191c81b5b70d81671e0d6e93afb385fe9e01b9d26d726f375aa66ffa1"
+      "ported_sha256": "7923cfc21e02a9f4f16b85d8fac539192d5efc3e117dbcf3138fcdce153de000"
     },
     "pow/pow.h": {
       "upstream_sha256": "b7c21d4cf273c09e5d0d347907832de6013d18199bdf67f532132567dd9fcb0c",
@@ -75,5 +75,6 @@
       "log/dint.h"
     ]
   },
-  "constant_storage": "C++ port shares byte-identical sin/cos/tan S,C and ln/log10 INVERSE_2,LOG_INV_2,P_2 arrays by const references with identical neutral storage types. No coefficients or mathematical algorithms changed."
+  "constant_storage": "C++ port shares byte-identical sin/cos/tan S,C and ln/log10 INVERSE_2,LOG_INV_2,P_2 arrays by const references with identical neutral storage types. No coefficients or mathematical algorithms changed.",
+  "pow_rounding_guard": "The port covers both sides of the known approximation-error band in the 128-bit and 256-bit rounding tests, including the approach to the zero/minsub midpoint."
 }
