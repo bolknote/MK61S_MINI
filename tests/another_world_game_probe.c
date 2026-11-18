@@ -14,8 +14,8 @@
 static aw_display_pages pages;
 static uint16_t page_pixels[2][AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT];
 static unsigned page_selected=2, page_visible=2, page_shows;
-#ifdef AW_TEST_STORM
 #include "../examples/portable-apps/ANOTHER/display_storm.h"
+#ifdef AW_TEST_STORM
 static aw_display_storm storm;
 static unsigned replayed, intro_frames, anchor_calls, blocking_wire;
 static unsigned worker_busy, busy_polls;
@@ -395,7 +395,103 @@ static void music(void *ctx, unsigned id, unsigned delay, unsigned pos) {
     aw_audio_music(h->remote, id, delay, pos);
 }
 static void stop_audio(void *ctx) { host *h = ctx; aw_audio_stop(h->audio); aw_audio_stop(h->remote); }
+#if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
+/* The normal DOS route from the pool to the first camera cut. Model the
+ * bounded background writes between displays without a host wall clock. */
+typedef struct {
+    host io;
+    aw_video video;
+    unsigned slices, previous_scroll, checked;
+    uint64_t previous_reads, previous_writes;
+} cut_probe;
+
+static bool cut_wait(void *ctx, unsigned slices) {
+    ((cut_probe *)ctx)->slices = slices;
+    return true;
+}
+static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
+    cut_probe *p = ctx;
+    const unsigned scroll = p->video.page_scroll[p->video.front_page];
+    const unsigned shift = (p->previous_scroll + AW_VIDEO_HEIGHT - scroll) % AW_VIDEO_HEIGHT;
+    p->previous_scroll = scroll;
+    page_selected = page_visible = 0;
+    if (shift) {
+        for (unsigned y = 0; y < AW_VIDEO_HEIGHT; ++y)
+            memcpy(page_pixels[1] + y * AW_VIDEO_WIDTH,
+                   page_pixels[0] + (y + shift) % AW_VIDEO_HEIGHT * AW_VIDEO_WIDTH, AW_VIDEO_WIDTH * sizeof(uint16_t));
+        memcpy(page_pixels[0], page_pixels[1], sizeof(page_pixels[0]));
+    }
+    assert(aw_display_compact_present_tracked(&compact, pixels, palette, shift,
+                                               aw_video_band_identities(&p->video), display_rect, NULL));
+    for (unsigned i = 0; i < AW_VIDEO_WIDTH * AW_VIDEO_HEIGHT; ++i)
+        assert(page_pixels[0][i] == palette[(pixels[i / 2] >> ((i & 1) ? 0 : 4)) & 15]);
+    /* Foreground PSRAM budgets under the eight idle polls below. Physical
+     * frame deadlines are measured independently on the device. */
+    static const struct { unsigned frame, slices; uint32_t hash, reads, writes; } cuts[] = {
+        {168, 3, 0x8D80D9F8u, 60 * 1024,  4 * 1024},
+        {169, 3, 0x222F7F27u,  4 * 1024, 16 * 1024},
+        {170, 3, 0x1A322527u,  2 * 1024,  2 * 1024},
+        {222, 4, 0xBA6ADCE8u, 18 * 1024, AW_VIDEO_PAGE_BYTES},
+        {223, 4, 0x4D86D570u, 18 * 1024, 28 * 1024}
+    };
+    if (p->checked < sizeof(cuts) / sizeof(cuts[0]) && p->io.frames == cuts[p->checked].frame) {
+        assert(p->slices == cuts[p->checked].slices);
+        assert(aw_storm_frame_hash(pixels, palette) == cuts[p->checked].hash);
+        const uint64_t reads = p->io.store_read_bytes - p->previous_reads;
+        const uint64_t writes = p->io.store_write_bytes - p->previous_writes;
+        assert(reads <= cuts[p->checked].reads && writes <= cuts[p->checked].writes);
+        ++p->checked;
+    }
+    for (unsigned poll = 0; poll < 8; ++poll) {
+        const uint64_t before = p->io.store_write_bytes;
+        assert(aw_video_write_one(&p->video));
+        assert(p->io.store_write_bytes - before <= 2 * AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE);
+    }
+    p->previous_reads = p->io.store_read_bytes;
+    p->previous_writes = p->io.store_write_bytes;
+    ++p->io.frames;
+    return true;
+}
+static int camera_cut(const char *path) {
+    cut_probe p = {.io = {.path = path, .capacity = 2 * 1024 * 1024}};
+    p.io.store = calloc(1, p.io.capacity);
+    uint8_t pixels[AW_VIDEO_PAGE_BYTES], spare[AW_VIDEO_PAGE_BYTES], list[4096];
+    char name[1024];
+    assert(snprintf(name, sizeof(name), "%s/MEMLIST.BIN", path) < (int)sizeof(name));
+    FILE *file = fopen(name, "rb");
+    assert(file);
+    const size_t bytes = fread(list, 1, sizeof(list), file);
+    assert(bytes && !ferror(file));
+    fclose(file);
+    aw_assets a;
+    aw_asset_entry entries[AW_ASSET_LIMIT];
+    assert(p.io.store && aw_assets_init(&a, entries, list, bytes, p.io.capacity, &p.io, bank_read, store_read, store_write));
+    assert(aw_video_init(&p.video, &a, a.used, pixels, cut_present, &p));
+    assert(aw_video_use_spare(&p.video, spare));
+    aw_video_bands bands;
+    aw_video_track_bands(&p.video, &bands);
+    assert(aw_display_compact_init(&compact, &a, a.used + 4 * AW_VIDEO_PAGE_BYTES,
+                                   compact_previous, sizeof(compact_previous), compact_previous, sizeof(compact_previous)));
+    aw_vm vm;
+    assert(aw_vm_init(&vm, &a, &p.video, (aw_vm_host){.ctx = &p, .frame_wait = cut_wait}, 1));
+    vm.vars[0xBC] = 0x10; vm.vars[0xC6] = 0x80; vm.vars[0xF2] = 4000; vm.vars[0xDC] = 33;
+    assert(aw_vm_set_part(&vm, AW_VM_FIRST_PART + 2));
+    for (unsigned step = 0; step < 500 && p.io.frames < 245; ++step) {
+        aw_input input = {.directions = step < 90 ? AW_INPUT_UP : AW_INPUT_RIGHT, .button = step >= 90};
+        if (step >= 120 && step % 55 < 18) input.directions |= AW_INPUT_UP;
+        assert(aw_vm_frame(&vm, &input));
+    }
+    assert(p.io.frames >= 245 && p.checked == 5);
+    free(p.io.store);
+    puts("DOS camera cut verified at frames 168-170 and 222-223");
+    return 0;
+}
+#endif
+
 int main(int argc, char **argv) {
+#if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
+    if (argc == 3 && !strcmp(argv[2], "camera-cut")) return camera_cut(argv[1]);
+#endif
     aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s DATA_DIR [WALK_STEPS]\n", argv[0]); return 2; }
     const unsigned limit = argc == 3 ? (unsigned)strtoul(argv[2], NULL, 10) : 5000;

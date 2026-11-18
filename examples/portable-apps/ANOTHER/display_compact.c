@@ -263,7 +263,7 @@ static bool prepare(aw_display_compact *d, const uint8_t *pixels, const uint16_t
     for (unsigned i = 0; i < count; ++i) {
         const rectangle r = rects[i];
         const unsigned row_bytes = r.x1 - r.x0;
-        const bool contiguous = banded && row_bytes == AW_VIDEO_STRIDE;
+        const bool contiguous = row_bytes == AW_VIDEO_STRIDE;
         const unsigned scratch_bytes = banded && !contiguous ? d->scratch_bytes - BAND_BYTES : d->scratch_bytes;
         const unsigned max_rows = scratch_bytes / row_bytes;
         for (unsigned y = r.y0; y < r.y1;) {
@@ -295,9 +295,25 @@ bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, co
 
 bool aw_display_compact_present_scrolled(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                                          unsigned shift, aw_display_rect_fn present, void *ctx) {
-    if (shift >= AW_VIDEO_HEIGHT) return false;
-    uint32_t dirty;
-    if (!prepare(d, pixels, palette, present, NULL, ctx, false, shift, 0, &dirty)) return false;
+    return aw_display_compact_present_tracked(d, pixels, palette, shift, NULL, present, ctx);
+}
+
+bool aw_display_compact_present_tracked(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
+                                         unsigned shift, const uint32_t *ids, aw_display_rect_fn present, void *ctx) {
+    if (!d || shift >= AW_VIDEO_HEIGHT) return false;
+    uint32_t dirty, known = 0;
+    /* A ten-row output strip can cross up to three eight-row VM bands.
+     * Every band must still identify the previous bytes at this origin. */
+    if (ids && !shift && d->valid) {
+        for (unsigned b = 0; b < AW_VIDEO_HEIGHT / COMPACT_ROWS; ++b) {
+            const unsigned first = b * COMPACT_ROWS / AW_VIDEO_BAND_ROWS;
+            const unsigned last = ((b + 1) * COMPACT_ROWS - 1) / AW_VIDEO_BAND_ROWS;
+            unsigned i = first;
+            while (i <= last && ids[i] && ids[i] == d->scroll_ids[i]) ++i;
+            if (i > last) known |= 1u << b;
+        }
+    }
+    if (!prepare(d, pixels, palette, present, NULL, ctx, false, shift, known, &dirty)) return false;
     if (dirty || shift) {
         /* Some frames do not fit in the borrowed framebuffer. Keep those
          * exactly in PSRAM and try the compact form again on the next frame. */
@@ -316,6 +332,8 @@ bool aw_display_compact_present_scrolled(aw_display_compact *d, const uint8_t *p
             }
     }
     memcpy(d->palette, palette, sizeof(d->palette));
+    if (ids) memcpy(d->scroll_ids, ids, sizeof(d->scroll_ids));
+    else memset(d->scroll_ids, 0, sizeof(d->scroll_ids));
     d->valid = true;
     return true;
 }

@@ -9,9 +9,11 @@
  * The backing store may be non-addressable PSRAM; its callbacks are called
  * only from the foreground. All offsets are relative to that store. */
 #define AW_ASSET_LIMIT 150u
-#define AW_ASSET_PAGE 1024u
+/* Small polygon and bytecode reads share this cache. Eight 512-byte pages
+ * keep more of their working set hot within the direct SRAM budget. */
+#define AW_ASSET_PAGE 512u
 #ifndef AW_ASSET_CACHE_SLOTS
-#define AW_ASSET_CACHE_SLOTS 5u
+#define AW_ASSET_CACHE_SLOTS 8u
 #endif
 #define AW_ASSET_MAX_TRANSFER 4096u
 #define AW_PREFETCH_INPUT_BYTES 256u

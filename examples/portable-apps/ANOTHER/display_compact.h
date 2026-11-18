@@ -13,6 +13,7 @@ typedef struct {
         uint16_t offsets[AW_VIDEO_HEIGHT + 1]; /* Legacy row RLE in SRAM. */
         uint16_t band_sizes[AW_VIDEO_BANDS];   /* Two-page snapshots in PSRAM. */
     };
+    uint32_t scroll_ids[AW_VIDEO_BANDS];
     uint16_t palette[16];
     aw_assets *assets;
     bool valid, external;
@@ -29,6 +30,9 @@ bool aw_display_compact_present(aw_display_compact *d, const uint8_t *pixels, co
  * the same row mapping to GRAM and publishes it after the rectangles finish. */
 bool aw_display_compact_present_scrolled(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
                                          unsigned shift, aw_display_rect_fn present, void *ctx);
+/* Nonzero VM band identities allow exact skips at an unchanged scan origin. */
+bool aw_display_compact_present_tracked(aw_display_compact *d, const uint8_t *pixels, const uint16_t *palette,
+                                        unsigned shift, const uint32_t *ids, aw_display_rect_fn present, void *ctx);
 /* Two-page output keeps independent bands in PSRAM. Prepare fills the dirty
  * mask before submitting rectangles. A wait callback gates writes to the
  * visible page. The caller can save one dirty band per busy LCD poll. */

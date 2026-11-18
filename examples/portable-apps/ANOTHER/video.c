@@ -183,17 +183,70 @@ static bool transfer(aw_video *v, bool write, uint32_t offset, uint8_t *bytes, u
     }
     return true;
 }
+static void identify_bands(aw_video *v, unsigned page);
+enum { BAND_BYTES = AW_VIDEO_STRIDE * AW_VIDEO_BAND_ROWS };
+
+/* Band identities cover index bytes. A nonzero match with the backing
+ * store lets an eviction skip a write, even after the SRAM page was reused.
+ * During a display wait, publish at most two changed bands per call. */
+static bool store_page(aw_video *v, unsigned page, uint8_t *pixels, bool *dirty, bool idle) {
+    if (!*dirty) return true;
+    identify_bands(v, page);
+    const uint32_t base = page_at(v, page);
+    if (!v->bands) {
+        if (idle) return true;
+        if (!transfer(v, true, base, pixels, AW_VIDEO_PAGE_BYTES)) return false;
+    } else {
+        uint32_t *ids = v->bands->page[page], *stored = v->bands->stored[page];
+        for (unsigned b = 0; b < AW_VIDEO_BANDS;) {
+            if (ids[b] == stored[b]) { ++b; continue; }
+            const unsigned start = b++;
+            while (b < AW_VIDEO_BANDS && ids[b] != stored[b] && (!idle || b - start < 2)) ++b;
+            const unsigned pos = start * BAND_BYTES, bytes = (b - start) * BAND_BYTES;
+            const bool ok = idle ? aw_assets_write_direct(v->assets, base + pos, pixels + pos, bytes)
+                                 : transfer(v, true, base + pos, pixels + pos, bytes);
+            if (!ok) return false;
+            memcpy(stored + start, ids + start, (b - start) * sizeof(*ids));
+            if (idle) return true;
+        }
+    }
+    *dirty = false;
+    return true;
+}
+bool aw_video_write_one(aw_video *v) {
+    if (!v || v->fault) return false;
+    if (!v->bands || !v->spare_valid) return true;
+    /* A scrolling copy keeps page 3 and replaces the displayed page.
+     * Ordinary copies evict the spare first. */
+    for (unsigned i = 0; i < 2; ++i) {
+        const bool spare = (i == 0) != v->last_copy_scrolled_scratch;
+        bool *dirty = spare ? &v->spare_dirty : &v->dirty;
+        if (!store_page(v, spare ? v->spare_page : v->resident_page, spare ? v->spare : v->pixels, dirty, true))
+            return !(v->fault = true);
+        if (*dirty) break;
+    }
+    return true;
+}
+static bool copy_from_store(aw_video *v, unsigned src, const uint32_t *replaced) {
+    const uint32_t *ids = v->bands->page[src];
+    const uint32_t *other = v->bands->page[v->spare_page];
+    for (unsigned b = 0; b < AW_VIDEO_BANDS; ++b) {
+        uint8_t *out = v->pixels + b * BAND_BYTES;
+        if (ids[b] && ids[b] == replaced[b]) continue;
+        if (ids[b] && ids[b] == other[b]) memcpy(out, v->spare + b * BAND_BYTES, BAND_BYTES);
+        else if (!transfer(v, false, page_at(v, src) + b * BAND_BYTES, out, BAND_BYTES)) return false;
+    }
+    return true;
+}
 bool aw_video_flush(aw_video *v) {
     if (!v || v->fault) return false;
     if (v->resident_valid && v->dirty) {
-        if (!transfer(v, true, page_at(v, v->resident_page), v->pixels, AW_VIDEO_PAGE_BYTES))
+        if (!store_page(v, v->resident_page, v->pixels, &v->dirty, false))
             return !(v->fault = true);
-        v->dirty = false;
     }
     if (v->spare_valid && v->spare_dirty) {
-        if (!transfer(v, true, page_at(v, v->spare_page), v->spare, AW_VIDEO_PAGE_BYTES))
+        if (!store_page(v, v->spare_page, v->spare, &v->spare_dirty, false))
             return !(v->fault = true);
-        v->spare_dirty = false;
     }
     return aw_assets_flush(v->assets) || !(v->fault = true);
 }
@@ -211,7 +264,7 @@ static bool resident(aw_video *v, uint8_t page, bool overwrite) {
         if (!v->spare_valid || v->spare_page != page) {
             if (v->spare_valid && v->spare_page == 0) cache_background(v, v->spare);
             if (v->spare_valid && v->spare_dirty &&
-                (!transfer(v, true, page_at(v, v->spare_page), v->spare, AW_VIDEO_PAGE_BYTES) ||
+                (!store_page(v, v->spare_page, v->spare, &v->spare_dirty, false) ||
                  !aw_assets_flush(v->assets))) return !(v->fault = true);
             v->spare_valid = false; v->spare_dirty = false;
             if (!overwrite && !transfer(v, false, page_at(v, page), v->spare, AW_VIDEO_PAGE_BYTES))
@@ -334,6 +387,10 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
     if (src != dst && v->spare_valid && v->spare_page == src && v->resident_page != dst)
         swap_resident(v);
     /* A complete replacement needs none of the destination's old bytes. */
+    /* A full copy can retain exact bands already present in either SRAM
+     * buffer. Remember which page provided the destination bytes. */
+    const uint32_t *replaced = v->bands && v->spare_valid ?
+        v->bands->page[v->resident_page == dst ? dst : v->spare_page] : NULL;
     if (!resident(v, dst, size == AW_VIDEO_PAGE_BYTES && src != dst)) return false;
     if (src == dst) memmove(v->pixels + to, v->pixels + from, size);
     else if (v->spare_valid && v->spare_page == src) memcpy(v->pixels + to, v->spare + from, size);
@@ -352,6 +409,9 @@ bool aw_video_copy(aw_video *v, uint8_t src, uint8_t dst, int16_t scroll) {
         }
     }
 #endif
+    else if (size == AW_VIDEO_PAGE_BYTES && replaced && v->bands) {
+        if (!copy_from_store(v, src, replaced)) return !(v->fault = true);
+    }
     else if (!transfer(v, false, page_at(v, src) + from, v->pixels + to, size))
         return !(v->fault = true);
 #if AW_VIDEO_PACKED_CACHE
@@ -449,18 +509,12 @@ typedef struct {
     uint16_t width, height;
     uint8_t count;
 } shape;
-static uint8_t fetch(shape *s) {
-    uint8_t value = 0;
-    if (s->cursor >= s->v->shape_size ||
-        !aw_assets_read(s->v->assets, s->v->shape_base + s->cursor, &value, 1)) {
-        s->v->fault = true; return 0;
-    }
-    ++s->cursor;
-    return value;
-}
-static uint16_t fetch16(shape *s) {
-    const uint16_t hi = fetch(s);
-    return (uint16_t)((hi << 8) | fetch(s));
+static bool shape_bytes(shape *s, uint8_t *out, unsigned count) {
+    if (s->cursor > s->v->shape_size || count > s->v->shape_size - s->cursor ||
+        !aw_assets_read(s->v->assets, s->v->shape_base + s->cursor, out, count))
+        return !(s->v->fault = true);
+    s->cursor += count;
+    return true;
 }
 static void edge(uint8_t *p, uint8_t mask, uint8_t color, uint8_t source) {
     if (color == 0x10) *p |= (uint8_t)(mask & 0x88);
@@ -509,6 +563,7 @@ static bool line(aw_video *v, int x1, int x2, int y, uint8_t color) {
     if (external) {
         if (!aw_assets_write(v->assets, page_at(v, 0) + offset + from, row + from, to - from + 1))
             return !(v->fault = true);
+        if (v->bands) v->bands->stored[0][(unsigned)y / AW_VIDEO_BAND_ROWS] = 0;
         v->background_valid = v->background_attempted = false;
     } else mark_dirty(v);
     return true;
@@ -522,9 +577,8 @@ static bool fill_polygon(shape *s, uint8_t color, point center) {
         (v->spare_page == 3 || v->resident_page == 3) && s->width <= 16 && s->height <= 8;
     if (!small_external_background && !resident(v, v->draw_page, false)) return false;
     if (!s->width && s->height == 1 && s->count == 4) return line(v, center.x, center.x, center.y, color);
-    int x1 = center.x - s->width / 2, x2 = center.x + s->width / 2;
-    int y = center.y - s->height / 2, y2 = center.y + s->height / 2;
-    if (x1 > 319 || x2 < 0 || y > 199 || y2 < 0) return true;
+    int x1 = center.x - s->width / 2, x2;
+    int y = center.y - s->height / 2;
     unsigned i = 0, j = s->count - 1;
     x2 = s->vertices[i++].x + x1; x1 = s->vertices[j--].x + x1;
     uint32_t c1 = (uint32_t)(int32_t)x1 * 65536u, c2 = (uint32_t)(int32_t)x2 * 65536u;
@@ -551,21 +605,23 @@ static bool fill_polygon(shape *s, uint8_t color, point center) {
 }
 static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigned depth) {
     if (depth > 32 || s->v->fault) return !(s->v->fault = true);
-    const uint8_t kind = fetch(s);
+    uint8_t item[4];
+    if (!shape_bytes(s, item, 4)) return false;
+    const uint8_t kind = item[0];
     if (kind >= 0xC0) {
         if (color & 0x80) color = kind & 0x3F;
-        s->width = (uint16_t)(fetch(s) * (uint32_t)zoom / 64);
-        s->height = (uint16_t)(fetch(s) * (uint32_t)zoom / 64);
-        s->count = fetch(s);
+        s->width = (uint16_t)(item[1] * (uint32_t)zoom / 64);
+        s->height = (uint16_t)(item[2] * (uint32_t)zoom / 64);
+        s->count = item[3];
         if (s->count < 2 || s->count >= 50 || (s->count & 1)) return !(s->v->fault = true);
         /* The DOS coordinates are byte pairs. Fetch the list together and
          * widen it backwards so the unread pairs stay intact. */
         uint8_t *xy = (uint8_t *)s->vertices;
         const unsigned bytes = 2u * s->count;
-        if (s->cursor > s->v->shape_size || bytes > s->v->shape_size - s->cursor ||
-            !aw_assets_read(s->v->assets, s->v->shape_base + s->cursor, xy, bytes))
-            return !(s->v->fault = true);
-        s->cursor += bytes;
+        if (bytes > s->v->shape_size - s->cursor) return !(s->v->fault = true);
+        if (at.x - s->width / 2 >= 320 || at.x + s->width / 2 < 0 ||
+            at.y - s->height / 2 >= 200 || at.y + s->height / 2 < 0) return true;
+        if (!shape_bytes(s, xy, bytes)) return false;
         for (unsigned i = s->count; i-- > 0;) {
             const uint8_t x = xy[2 * i], y = xy[2 * i + 1];
             s->vertices[i] = (point){(int16_t)(x * (uint32_t)zoom / 64), (int16_t)(y * (uint32_t)zoom / 64)};
@@ -573,16 +629,20 @@ static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigne
         return !s->v->fault && fill_polygon(s, color, at);
     }
     if ((kind & 0x3F) != 2) return !(s->v->fault = true);
-    at.x -= (int16_t)(fetch(s) * (uint32_t)zoom / 64);
-    at.y -= (int16_t)(fetch(s) * (uint32_t)zoom / 64);
-    unsigned children = fetch(s) + 1u;
+    at.x -= (int16_t)(item[1] * (uint32_t)zoom / 64);
+    at.y -= (int16_t)(item[2] * (uint32_t)zoom / 64);
+    unsigned children = item[3] + 1u;
     while (children-- && !s->v->fault) {
-        uint16_t offset = fetch16(s);
-        const int dx = (int)(fetch(s) * (uint32_t)zoom / 64);
-        const int dy = (int)(fetch(s) * (uint32_t)zoom / 64);
+        if (!shape_bytes(s, item, 4)) return false;
+        uint16_t offset = (uint16_t)((item[0] << 8) | item[1]);
+        const int dx = (int)(item[2] * (uint32_t)zoom / 64);
+        const int dy = (int)(item[3] * (uint32_t)zoom / 64);
         point child = { (int16_t)(at.x + dx), (int16_t)(at.y + dy) };
         uint8_t child_color = 0xFF;
-        if (offset & 0x8000) { child_color = fetch(s) & 0x7F; (void)fetch(s); }
+        if (offset & 0x8000) {
+            if (!shape_bytes(s, item, 2)) return false;
+            child_color = item[0] & 0x7F;
+        }
         const uint32_t saved = s->cursor;
         s->cursor = (uint32_t)(offset & 0x7FFF) * 2;
         if (!draw_shape(s, child_color, zoom, child, depth + 1)) return false;

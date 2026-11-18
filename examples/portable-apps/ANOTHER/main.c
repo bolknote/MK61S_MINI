@@ -162,6 +162,8 @@ static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
     const uint32_t deadline = last_frame - lead_ms;
     while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
         pump(NULL);
+        if (scroll_ready && (int32_t)(deadline - mk61_api->millis_ms()) >= 3 &&
+            !aw_video_write_one(video)) return false;
         /* Leave room for a storage operation and the audio/input pump. */
         if (!input.quit && !pump_failed && (int32_t)(deadline - mk61_api->millis_ms()) >= 12 &&
             !aw_assets_prefetch_step(&assets)) pump_failed = true;
@@ -193,6 +195,7 @@ static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
         if (result == 1) break;
         if (result != 2 || input.quit || pump_failed) return false;
         if (pages_ready && !aw_display_pages_write_one(pages_display)) return false;
+        if (scroll_ready && !aw_video_write_one(video)) return false;
         pump(NULL);
     }
     pump(NULL);
@@ -296,7 +299,8 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         const unsigned result = scroll_control(MK61_COLOR_SCROLL_BEGIN, sizeof(request), &request);
         if (result == 1 || result == 3) {
             if (result == 3) compact_display->valid = false;
-            if (!aw_display_compact_present_scrolled(compact_display, pixels, palette, (unsigned)shift, present_rect, NULL) ||
+            if (!aw_display_compact_present_tracked(compact_display, pixels, palette, shift,
+                                                   aw_video_band_identities(video), present_rect, NULL) ||
                 !wait_for_frame(NULL) || scroll_control(MK61_COLOR_SCROLL_END, 0, NULL) != 1) return false;
             previous_shake = (int16_t)shake;
             scroll_offset = offset;

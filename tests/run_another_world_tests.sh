@@ -226,6 +226,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$root/examples/portable-apps/ANOTHER/display_compact.c" "$root/examples/portable-apps/ANOTHER/display_pages.c" \
     "$root/tests/another_world_game_probe.c" -o "$build_dir/pages-game"
   "$build_dir/pages-game" "$ANOTHER_WORLD_DATA" 5000
+  "$build_dir/pages-game" "$ANOTHER_WORLD_DATA" camera-cut
   app="$root/examples/portable-apps/ANOTHER"
   zx0="$root/tools/apps/packer/third_party/zx0"
   ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$app" -I"$zx0" \

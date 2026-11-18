@@ -9,7 +9,7 @@
 #define AW_VIDEO_PAGE_BYTES (AW_VIDEO_STRIDE * AW_VIDEO_HEIGHT)
 #define AW_VIDEO_INTERP_SLOTS 32u
 #define AW_VIDEO_PAGE3_PACKED_BYTES 8192u
-/* The shipping image retains five resource-cache pages within its SRAM
+/* The shipping image retains the resource cache within its SRAM
  * budget by omitting this optional codec. Comparison builds can enable it. */
 #ifndef AW_VIDEO_PACKED_CACHE
 #define AW_VIDEO_PACKED_CACHE 0
@@ -20,7 +20,9 @@
 /* Nonzero identities describe exact index bytes. Full copies retain the
  * source identities and drawing invalidates the affected bands. */
 typedef struct {
-    uint32_t page[4][AW_VIDEO_BANDS], last_identity;
+    uint32_t page[4][AW_VIDEO_BANDS];
+    uint32_t stored[4][AW_VIDEO_BANDS]; /* Last confirmed bytes in each PSRAM band. */
+    uint32_t last_identity;
 } aw_video_bands;
 
 typedef bool (*aw_video_present_fn)(void *ctx, const uint8_t *pixels, const uint16_t *palette);
@@ -58,6 +60,8 @@ bool aw_video_use_packed_page3(aw_video *v, uint32_t base, uint16_t capacity);
 void aw_video_track_bands(aw_video *v, aw_video_bands *bands);
 const uint32_t *aw_video_band_identities(const aw_video *v);
 bool aw_video_flush(aw_video *v);
+/* Write at most two dirty bands while the LCD worker or frame clock is busy. */
+bool aw_video_write_one(aw_video *v);
 bool aw_video_select(aw_video *v, uint8_t page);
 /* Select a drawing target without loading bytes that the next operation may
  * replace completely. Use aw_video_select for direct access to its pixels. */

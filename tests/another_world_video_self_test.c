@@ -125,6 +125,20 @@ static void run(bool two_pages) {
         }
         assert(m.write_bytes == writes);
     }
+    if (two_pages) {
+        /* A whole-page change can drain over many LCD polls. If the game
+         * redraws an already written band, the next flush must repair it. */
+        assert(aw_video_fill(&v, 1, 7) && aw_video_fill(&v, 2, 8));
+        const uint32_t before = m.write_bytes;
+        assert(aw_video_write_one(&v));
+        assert(m.write_bytes > before && m.write_bytes - before <= 2 * AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE);
+        assert(aw_video_fill(&v, 1, 9));
+        assert(aw_video_flush(&v));
+        for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i) {
+            assert(m.bytes[8192 + AW_VIDEO_PAGE_BYTES + i] == 0x99);
+            assert(m.bytes[8192 + 2 * AW_VIDEO_PAGE_BYTES + i] == 0x88);
+        }
+    }
     bands.last_identity = UINT32_MAX - AW_VIDEO_BANDS + 1;
     assert(aw_video_show(&v, 2) && !aw_video_band_identities(&v));
     assert(!aw_video_polygon(&v, 100, 2, 0, 64, 0, 0) && v.fault);
