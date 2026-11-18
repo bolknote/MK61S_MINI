@@ -277,6 +277,52 @@ static void raster_test(void) {
     spectrum_raster_end(&machine);
 }
 
+static void raster_128_test(void) {
+    static uint8_t frame[SPECTRUM_RASTER_BYTES],buffer[SPECTRUM_RASTER_STRIP_BYTES];
+    const uint8_t program[]={
+        0x32,0x02,0xd8, // Change bank 5 through its upper-window alias.
+        0x3e,0x0f,0xed,0x79, // Show bank 7 and map it into the upper window.
+        0x3e,0x06,0x32,0x0b,0xd8, // Change an attribute after the beam passed it.
+        0x3e,0x2f,0xed,0x79, // Lock paging with the shadow screen active.
+        0xaf,0xed,0x79,0x76 // Attempt to flip back, then HALT.
+    };
+    bytes backing={psram,sizeof(psram)};
+    const spectrum_memory_io io={&backing,read_bytes,write_bytes,clear_bytes};
+    uint8_t* tails[]={fixed+15360,fixed+31744};
+    uint8_t* runs[]={pages,pages+8192,pages+10240,pages+14336};
+    spectrum_init(&machine,ram,rom);
+    assert(spectrum_memory_init_fragmented(&memory,fixed,fixed+16384,tails,runs,8,io));
+    // Force the ULA to evict CPU-visible pages during a long shadow capture.
+    memory.page_count=2;
+    spectrum_attach_memory(&machine,&memory);
+    assert(spectrum_memory_page(&memory,5));
+    spectrum_refresh_map(&machine);
+    memset(workspace,255,SPECTRUM_BITMAP_BYTES);
+    memset(workspace+SPECTRUM_BITMAP_BYTES,4,SPECTRUM_ATTRIBUTE_BYTES);
+    assert(spectrum_bank_write(&memory,5,0,workspace,6912));
+    memset(workspace+SPECTRUM_BITMAP_BYTES,2,SPECTRUM_ATTRIBUTE_BYTES);
+    assert(spectrum_bank_write(&memory,7,0,workspace,6912));
+    assert(spectrum_bank_write(&memory,2,0,program,sizeof(program)));
+    machine.cpu.pc=0x8000;machine.cpu.a=5;machine.cpu.bc=0x3ffd;
+    machine.cpu.cyc=UINT32_MAX-11;machine.frame_tstates=14362+228-5;
+    spectrum_raster_begin(&machine,buffer,frame,raster_copy);
+    spectrum_run(&machine,SPECTRUM_128_FRAME_TSTATES-machine.frame_tstates);
+    assert(!memory.fault && machine.video_bytes && machine.frames==1);
+    assert(memory.locked && memory.paging==0x2f);
+    assert(raster_pixel(frame,32+8*31,32)==spectrum_color(4));
+    assert(raster_pixel(frame,32+8*2,33)==spectrum_color(4));
+    assert(raster_pixel(frame,32+8*6,33)==spectrum_color(4));
+    assert(raster_pixel(frame,32+8*7,33)==spectrum_color(2));
+    assert(raster_pixel(frame,32+8*11,33)==spectrum_color(2));
+    assert(raster_pixel(frame,32+8*11,34)==spectrum_color(6));
+    assert(raster_pixel(frame,32+8*31,34)==spectrum_color(2));
+    assert(raster_pixel(frame,32+8*31,223)==spectrum_color(2));
+    assert(memory.cache[0x1802]==5);
+    for(unsigned page=0;page<16;++page)
+        assert(machine.cpu.read_pages[48+page]==spectrum_memory_cached_byte(&memory,7*16384+page*1024,false));
+    spectrum_raster_end(&machine);
+}
+
 static void compressed_page_test(void) {
     uint8_t in[16384],encoded[17000],result[16384];
     for(unsigned i=0;i<sizeof(in);++i) in[i]=(uint8_t)(i%137 ^ (i>>9));
@@ -657,7 +703,7 @@ int main(int argc,char** argv) {
     FILE* file=fopen(argv[1],"rb");assert(file);
     assert(fread(rom,1,sizeof(rom),file)==sizeof(rom));fclose(file);
     tape_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
-    contention_test();raster_test();
+    contention_test();raster_test();raster_128_test();
     for(unsigned model=0;model<3;++model) snapshot_test(model);
     sinclair128(argv[2],argv[3]);timex_hicolor();timex_hires();
     puts("ROM TAP load, TZX Generalized/Select/CSW, ULA bus timing and scanlines, zlib, SZX and EFF7 PASS");

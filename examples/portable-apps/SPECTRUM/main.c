@@ -37,7 +37,7 @@ enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
        2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
        VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:0),
        VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
-typedef struct { unsigned next;bool clear,ready; } raster_output;
+typedef struct { unsigned next;uint32_t guard_us;bool clear,ready; } raster_output;
 #if SPECTRUM_HAS_EXTENDED_VIDEO
 typedef struct {
     uint32_t guard_us;
@@ -119,6 +119,7 @@ static bool external_write(void* context,uint32_t at,const uint8_t* in,uint32_t 
     (void)context;return external_transfer(true,at,(uint8_t*)in,n);
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER
 /* The raster buffer is live during a Z80 bus callback. Keep the transfer
  * bounded and avoid re-entering the guest while the beam is being caught up. */
 static bool raster_store(void* context,unsigned strip,const uint8_t* data) {
@@ -144,6 +145,7 @@ static bool raster_present(uint8_t* buffer,raster_output* raster) {
     if(result==1) {raster->clear=raster->ready=false;++raster->next;}
     return result!=0;
 }
+#endif
 
 #if SPECTRUM_HAS_EXTENDED_VIDEO
 static uint32_t video_page(unsigned operation,unsigned page) {
@@ -909,6 +911,12 @@ static bool load_szx(const spectrum_source* source,uint32_t file_id) {
     return true;
 }
 #endif
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+static bool raster_available(void) {
+    return SPECTRUM_HAS_RASTER && !spectrum_is_pentagon(&machine) &&
+        !(machine.extensions&SPECTRUM_TIMEX) && external.handle;
+}
+#endif
 static bool settings(mk61_service_lease* workspace) {
     unsigned selected=0;
     for(;;) {
@@ -932,8 +940,7 @@ static bool settings(mk61_service_lease* workspace) {
             if(SPECTRUM_HAS_TIMEX) {
                 actions[back]='v';labels[back++]=machine.extensions&SPECTRUM_TIMEX?"Timex video: On":"Timex video: Off";
             }
-            if(SPECTRUM_HAS_RASTER && !(enabled&SPECTRUM_TIMEX) &&
-               spectrum_model(&machine)==SPECTRUM_48 && external.handle) {
+            if(raster_available()) {
                 actions[back]='r';labels[back++]=exact_raster?"Raster: On":"Raster: Off";
             }
         }
@@ -1029,8 +1036,16 @@ static uint32_t guest_time_us(uint32_t cycles) {
     return spectrum_is_128(&machine)?cycles*10000u/35469u:cycles*2/7;
 }
 static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t* deadline
-#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-                       ,video_output* video,uint8_t* work,const char** error
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER
+                       ,raster_output* raster
+#endif
+#if SPECTRUM_HAS_EXTENDED_VIDEO
+                       ,video_output* video
+#endif
+#if SPECTRUM_HAS_RASTER || SPECTRUM_HAS_EXTENDED_VIDEO
+                       ,uint8_t* work,const char** error
+#endif
 #endif
                        ) {
     *deadline+=guest_time_us(spectrum_frame_cycles(&machine));
@@ -1066,6 +1081,17 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
         // The resident millisecond delay already busy-pumps services.
         // Pump directly so it cannot carry us to the next millisecond.
         now=pacing_clock_us();
+#if SPECTRUM_HAS_RASTER && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        // Z80 has already published the frame. Spend its remaining wall
+        // time on PSRAM, strip expansion and LCD submission.
+        if(raster && raster->next<SPECTRUM_RASTER_STRIPS && (int32_t)(target-now)>(int32_t)raster->guard_us) {
+            const uint32_t start=now;
+            if(!raster_present(work,raster)) {*error="Raster output failed";return false;}
+            now=pacing_clock_us();
+            const uint32_t needed=now-start+2000;
+            if(needed>raster->guard_us && needed<target-start) raster->guard_us=needed;
+        }
+#endif
 #if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // Z80 has produced this frame's sound events. Fit capture and strip
         // work here, using the longest observed step plus the service guard.
@@ -1189,8 +1215,7 @@ static __attribute__((noinline)) void emulate_session(void) {
         message("No audio stream");return;
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    const bool raster=SPECTRUM_HAS_RASTER && exact_raster && spectrum_model(&machine)==SPECTRUM_48 &&
-        !(machine.extensions&SPECTRUM_TIMEX) && external.handle &&
+    const bool raster=exact_raster && raster_available() &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
     if(audio_mode==2 && (spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
        (!machine.pentagon && (raster || tape->playing)))) prime_audio();
@@ -1226,9 +1251,9 @@ static __attribute__((noinline)) void emulate_session(void) {
     video.ready_guard_us=VIDEO_READY_GUARD_US;
 #endif
 #endif
-    const unsigned present_budget=3;
-    unsigned present_attempts=0;
-    raster_output output={.next=SPECTRUM_RASTER_STRIPS,.clear=true};
+#if SPECTRUM_HAS_RASTER
+    raster_output output={.next=SPECTRUM_RASTER_STRIPS,.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
+#endif
 #endif
     for(;;) {
         // The pacing guard already polled input. Produce the next CPU/audio
@@ -1259,24 +1284,15 @@ static __attribute__((noinline)) void emulate_session(void) {
         if(tape->choices) break;
         if(raster && machine.cpu.before_store && !machine.video_bytes) goto memory_error;
 #endif
-        if(machine.frames==last_frame) {
-#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-            if(raster && output.next<SPECTRUM_RASTER_STRIPS && !machine.video_cell &&
-               present_attempts<present_budget) {
-                ++present_attempts;
-                if(!raster_present(scratch.pixels,&output)) {error="Raster output failed";break;}
-            }
-#endif
-            continue;
-        }
+        if(machine.frames==last_frame) continue;
         last_frame=machine.frames;
         first_remote_frame=false;
         // Submit the completed frame before its pacing wait, leaving the
         // next frame's first CPU/audio slice free of display conversion.
         {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER
             if(raster) {
-                present_attempts=0;
                 // Capture a full frame after audio has produced its first
                 // frame, and only when LCD has accepted the previous one.
                 if(machine.video_bytes) {
@@ -1287,6 +1303,7 @@ static __attribute__((noinline)) void emulate_session(void) {
                 }
                 goto paced;
             }
+#endif
 #if SPECTRUM_HAS_EXTENDED_VIDEO
             if(!SPECTRUM_HAS_PENTAGON && video.active) goto paced;
             video.pending=spectrum_video_mode(&machine);
@@ -1308,8 +1325,16 @@ static __attribute__((noinline)) void emulate_session(void) {
         }
 paced:
         if(!pace_frame(blocked,&keyboard_deadline,&deadline
-#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-                       ,&video,scratch.pixels,&error
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER
+                       ,raster?&output:NULL
+#endif
+#if SPECTRUM_HAS_EXTENDED_VIDEO
+                       ,&video
+#endif
+#if SPECTRUM_HAS_RASTER || SPECTRUM_HAS_EXTENDED_VIDEO
+                       ,scratch.pixels,&error
+#endif
 #endif
                        )) goto done;
         after_pace=true;

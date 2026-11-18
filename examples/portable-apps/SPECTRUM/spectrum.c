@@ -248,21 +248,40 @@ static uint16_t ulaplus_color(unsigned grb) {
     return (uint16_t)((((r<<2)|(r>>1))<<11)|(((g<<3)|g)<<5)|((b<<2)|(b>>1)));
 }
 #if SPECTRUM_HAS_RASTER && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-enum { RASTER_START=14336-32*224-16, RASTER_COLUMNS=40, RASTER_ROWS=256,
+enum { RASTER_START=ULA_CONTENTION_START+1-32*224-16,
+       RASTER_128_START=ULA_128_CONTENTION_START+1-32*228-16,
+       RASTER_COLUMNS=40, RASTER_ROWS=256,
        RASTER_CELLS=SPECTRUM_RASTER_CELLS };
 
 static const uint8_t* ula_screen(const spectrum* s) {
     return s->memory?s->memory->cache:s->ram;
 }
 
+static bool raster_shadow_row(spectrum* s,unsigned bitmap,unsigned attributes,uint8_t row[64]) {
+    spectrum_memory* m=s->memory;
+    const unsigned loads=m->loads,base=7*SPECTRUM_BANK_BYTES;
+    const uint8_t* pixels=spectrum_memory_external_byte(m,base+bitmap,false);
+    if(!pixels) return false;
+    // The attribute fetch can evict the bitmap page, so copy the pixels first.
+    memcpy(row,pixels,32);
+    const uint8_t* colors=spectrum_memory_external_byte(m,base+attributes,false);
+    if(loads!=m->loads) spectrum_refresh_map(s);
+    if(!colors) return false;
+    memcpy(row+32,colors,32);
+    return true;
+}
+
 /* Store each bitmap, two latched color codes and a ULAplus mode bit.
  * The codes already account for the palette at this point on the beam. */
 static void raster_until(spectrum* s,uint32_t cycles) {
-    int32_t elapsed=(int32_t)(cycles-s->frame_origin-RASTER_START);
+    const bool sinclair128=spectrum_is_128(s);
+    const unsigned line_cycles=sinclair128?228:224;
+    const int32_t elapsed=(int32_t)(cycles-s->frame_origin-(sinclair128?RASTER_128_START:RASTER_START));
     if(elapsed<=0 || !s->video_bytes) return;
     unsigned end=RASTER_ROWS*RASTER_COLUMNS;
-    if((unsigned)elapsed<RASTER_ROWS*224) {
-        const unsigned line=ula_line((unsigned)elapsed),through=(unsigned)elapsed-line*224;
+    if((unsigned)elapsed<RASTER_ROWS*line_cycles) {
+        const unsigned line=sinclair128?ula_128_line((unsigned)elapsed):ula_line((unsigned)elapsed);
+        const unsigned through=(unsigned)elapsed-line*line_cycles;
         end=line*RASTER_COLUMNS+(through<160?(through+3)/4:RASTER_COLUMNS);
     }
     unsigned cell=s->video_cell;
@@ -271,43 +290,56 @@ static void raster_until(spectrum* s,uint32_t cycles) {
     const bool plus=(s->extensions&SPECTRUM_ULAPLUS) && s->ulaplus_mode;
     const bool flash=!plus && (s->frames&16);
     const unsigned border=plus?s->ulaplus_palette[8+s->border]:s->border;
+    const bool shadow=sinclair128 && (s->memory->paging&8);
     const uint8_t* screen=ula_screen(s);
-    unsigned bitmap=ula_bitmap(y-32u,0),attributes=ula_attribute(y-32u,0);
-    for(;cell<end;++cell) {
-        unsigned paper=border,ink=border;
-        unsigned pixels=0;
-        if((y-32u)<192 && (x-4u)<32) {
-            const unsigned column=x-4;
-            const unsigned color=screen[attributes+column];
-            const unsigned group=plus?(color>>6)*16:(color&64)>>3;
-            pixels=screen[bitmap+column];
-            ink=group+(color&7);
-            paper=group+((color>>3)&7);
-            if(plus) {ink=s->ulaplus_palette[ink];paper=s->ulaplus_palette[paper+8];}
-            else if(flash && (color&128)) {const unsigned swap=ink;ink=paper;paper=swap;}
-        }
-        uint8_t* pair=s->video_bytes+RASTER_CELLS+2*inside;
-        uint8_t* mode=s->video_bytes+3*RASTER_CELLS+inside/8;
-        const unsigned shift=inside&7;
-        s->video_bytes[inside]=(uint8_t)pixels;
-        pair[0]=(uint8_t)paper;pair[1]=(uint8_t)ink;
-        *mode=(uint8_t)((shift?*mode:0)|((unsigned)plus<<shift));
-        if(++inside==RASTER_CELLS) {
-            if(!s->video_store(s->video_context,y/SPECTRUM_RASTER_STRIP_ROWS,s->video_bytes)) {
-                s->video_bytes=NULL;return;
+    uint8_t row[64];
+    for(;cell<end;++y,x=0) {
+        const unsigned through=x+end-cell,stop=through<RASTER_COLUMNS?through:RASTER_COLUMNS;
+        const uint8_t *bitmap=NULL,*attributes=NULL;
+        if((y-32u)<192 && x<36 && stop>4) {
+            const unsigned bits=ula_bitmap(y-32u,0),colors=ula_attribute(y-32u,0);
+            if(shadow) {
+                if(!raster_shadow_row(s,bits,colors,row)) {s->video_bytes=NULL;return;}
+                bitmap=row;attributes=row+32;
+            } else {
+                bitmap=screen+bits;attributes=screen+colors;
             }
-            inside=0;
         }
-        if(++x==RASTER_COLUMNS) {
-            x=0;++y;
-            bitmap=ula_bitmap(y-32u,0);attributes=ula_attribute(y-32u,0);
+        for(;x<stop;++x,++cell) {
+            unsigned paper=border,ink=border,pixels=0;
+            if(bitmap && (x-4u)<32) {
+                const unsigned column=x-4;
+                const unsigned color=attributes[column];
+                const unsigned group=plus?(color>>6)*16:(color&64)>>3;
+                pixels=bitmap[column];
+                ink=group+(color&7);
+                paper=group+((color>>3)&7);
+                if(plus) {ink=s->ulaplus_palette[ink];paper=s->ulaplus_palette[paper+8];}
+                else if(flash && (color&128)) {const unsigned swap=ink;ink=paper;paper=swap;}
+            }
+            uint8_t* pair=s->video_bytes+RASTER_CELLS+2*inside;
+            uint8_t* mode=s->video_bytes+3*RASTER_CELLS+inside/8;
+            const unsigned shift=inside&7;
+            s->video_bytes[inside]=(uint8_t)pixels;
+            pair[0]=(uint8_t)paper;pair[1]=(uint8_t)ink;
+            *mode=(uint8_t)((shift?*mode:0)|((unsigned)plus<<shift));
+            if(++inside==RASTER_CELLS) {
+                if(!s->video_store(s->video_context,y/SPECTRUM_RASTER_STRIP_ROWS,s->video_bytes)) {
+                    s->video_bytes=NULL;return;
+                }
+                inside=0;
+            }
         }
     }
     s->video_cell=end;
 }
 static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
     spectrum* s=context;
-    if((unsigned)address-0x4000u<6912) raster_until(s,cycles+1);
+    if((address&16383)>=SPECTRUM_BITMAP_BYTES+SPECTRUM_ATTRIBUTE_BYTES) return;
+    const bool sinclair128=spectrum_is_128(s);
+    const unsigned paging=sinclair128?s->memory->paging:0,screen=(paging&8)?7:5;
+    if((address>>14)==1?screen==5:sinclair128 && address>=0xc000 && (paging&7)==screen)
+        raster_until(s,cycles+1);
 }
 void spectrum_raster_begin(spectrum* s,uint8_t* buffer,void* context,
                            bool (*store)(void*,unsigned,const uint8_t*)) {
@@ -356,6 +388,8 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     if(s->memory && !(port&0x8002) && (spectrum_is_pentagon(s) || spectrum_is_128(s))) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         const unsigned previous=s->memory->paging;
+        if(SPECTRUM_HAS_RASTER && s->video_bytes && !s->memory->locked && ((previous^value)&8))
+            raster_until(s,cpu->io_at);
 #endif
         (void)spectrum_memory_page(s->memory,value);
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)

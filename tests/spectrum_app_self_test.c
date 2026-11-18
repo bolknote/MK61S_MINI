@@ -444,10 +444,10 @@ static void extended_frames(void) {
             uint32_t keyboard_deadline=micros_now+100000;
             const char* error=NULL;
             out.pending=mode;
-            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&out,canvas,&error) && !error);
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&out,canvas,&error) && !error);
             assert(out.pending==mode && !out.active && video_calls==expected[turn-1]);
             deadline=micros_now;video_submit_us=4000;
-            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&out,canvas,&error) && !error);
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&out,canvas,&error) && !error);
             assert(!out.pending && out.guard_us>=6000);
         } else {
             video_begin(&out,mode);
@@ -489,7 +489,7 @@ static void extended_frames(void) {
         uint8_t blocked[32]={0};
         uint32_t deadline=micros_now,keyboard_deadline=micros_now+100000;
         const char* error=NULL;
-        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&queued,canvas,&error) && !error);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&queued,canvas,&error) && !error);
         assert(!queued.active && !queued.pending && video_shows==6);
     }
 #endif
@@ -505,15 +505,15 @@ static void extended_frames(void) {
         const char* error=NULL;
         const unsigned calls=video_calls;
         video_capture_delay_us=i?20080:18813;
-        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         assert(restarting.active && restarting.selected && !restarting.next && video_calls==calls);
         assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
-        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         const unsigned strips=i?SPECTRUM_WIDE_STRIPS:3;
         assert(!restarting.active && video_calls==calls+strips);
         if(!i) {
             restarting.pending=mode;
-            assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
             assert(!restarting.active && restarting.valid[0] && restarting.valid[1]);
         }
         assert(restarting.valid[restarting.page]);
@@ -521,10 +521,10 @@ static void extended_frames(void) {
         restarting.pending=mode;
         video_capture_delay_us=20080;
         const unsigned prior=video_calls;
-        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         assert(restarting.active && restarting.selected && !restarting.next && video_calls==prior);
         assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
-        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&restarting,canvas,&error) && !error);
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         assert(!restarting.active && (i?video_calls<=prior+strips:video_calls==prior+strips));
     }
     puts("Cold capture and live display-bank change at 20.480 ms guest cadence: PASS");
@@ -554,6 +554,25 @@ static void extended_frames(void) {
     puts("Wide bank changes: one clipped rectangle, no traffic for equal banks, reference recovery after LCD fault PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
+    {
+        state.pentagon=bank_memory.extended=false;bank_memory.banks=8;
+        state.frame_tstates=0;
+        uint8_t blocked[32]={0};
+        uint32_t keyboard_deadline=micros_now+100000;
+        uint32_t deadline=micros_now+2000-guest_time_us(spectrum_frame_cycles(&state));
+        const char* error=NULL;
+        raster_output raster={.next=7,.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
+        video_output idle={0};
+        const unsigned operations=video_psram_ops,calls=video_calls;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
+        assert(raster.next==7 && !raster.ready && video_psram_ops==operations && video_calls==calls);
+        deadline=micros_now;
+        video_busy_once=true;video_submit_us=4900;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
+        assert(raster.next==8 && video_psram_ops==operations+1 && video_calls==calls+1);
+        assert(raster.guard_us>=6900 && last_strip.y==256 && last_strip.height==32);
+        puts("Raster strips wait for CPU slack and reuse the prepared strip after LCD busy: PASS");
+    }
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
     puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");
 }
