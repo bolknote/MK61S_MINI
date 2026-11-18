@@ -6,7 +6,7 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_onl
   if (!ensure_model() || !parameter_cache) return 3;
   const auto &cfg = model.config();
   if (cfg.layers != 10 || cfg.hidden != 128 || cfg.head_dim != 32 ||
-      cfg.vocab != 8192 || cfg.kv_heads * cfg.head_dim * 8 != row_bytes || cfg.context < 512)
+      cfg.kv_heads * cfg.head_dim * 8 != row_bytes || cfg.context < 512)
     return 3;
 
   std::uint16_t ids[64]{};
