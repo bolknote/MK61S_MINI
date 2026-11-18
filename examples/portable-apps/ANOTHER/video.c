@@ -213,6 +213,13 @@ static bool store_page(aw_video *v, unsigned page, uint8_t *pixels, bool *dirty,
     *dirty = false;
     return true;
 }
+bool aw_video_write_displayed(aw_video *v, unsigned batches) {
+    if (!v || v->fault) return false;
+    if (!v->resident_valid || !v->spare_valid || !v->bands) return true;
+    for (unsigned i = 0; i < batches && v->dirty; ++i)
+        if (!store_page(v, v->resident_page, v->pixels, &v->dirty, true)) return !(v->fault = true);
+    return true;
+}
 bool aw_video_write_one(aw_video *v) {
     if (!v || v->fault) return false;
     if (!v->bands || !v->spare_valid) return true;

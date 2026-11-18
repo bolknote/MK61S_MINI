@@ -85,7 +85,6 @@ static void game_intro_game(void) {
     const mk61_app_api api = {.millis_ms = now, .service = service};
     const mk61_app_services mock = {.call = color_service};
     aw_assets memory = {.capacity = sizeof(store), .store_read = read_store, .store_write = write_store};
-    aw_display_compact compact;
     aw_display_pages pages;
     aw_vm machine = {0};
     aw_video frame = {.front_page = 2};
@@ -94,9 +93,9 @@ static void game_intro_game(void) {
     uint16_t palette[16];
     for (unsigned i = 0; i < 16; ++i) palette[i] = (uint16_t)(i * 0x1111);
     mk61_api = &api; services = &mock; vm = &machine; video = &frame; storm = &cache;
-    compact_display = &compact; pages_display = &pages;
-    assert(aw_display_compact_init(&compact, &memory, 0, borrowed, sizeof(borrowed), borrowed, sizeof(borrowed)));
-    assert(aw_display_pages_init(&pages, &compact, AW_VIDEO_PAGE_BYTES));
+    pages_display = &pages;
+    assert(aw_display_compact_init(&compact_display, &memory, 0, borrowed, sizeof(borrowed), borrowed, sizeof(borrowed)));
+    assert(aw_display_pages_init(&pages, &compact_display, AW_VIDEO_PAGE_BYTES));
     pages_available = pages_ready = compact_ready = paging = true;
     scroll_ready = scroll_disabled = pump_failed = audio_open = scroll_open = scroll_valid = false;
     input = (aw_input){0}; last_frame = next_keys = clock_ms = 0;

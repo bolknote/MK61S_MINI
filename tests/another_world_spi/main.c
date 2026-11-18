@@ -1,4 +1,4 @@
-/* Diagnostic entry point for the two PicoCalc storm measurements. */
+/* Diagnostic entry point for the PicoCalc storm measurements. */
 #include "mk61_app.h"
 #include "audio.h"
 #include "display_compact.h"
@@ -12,7 +12,11 @@
 static const char storm_cache[] = "AWSTORM.BIN";
 static const mk61_app_services *services;
 static mk61_service_buffer external, screen, previous_frame, background_cache, background_tail;
+#if defined(AW_CS_PHASE) || defined(AW_PAGE_WRITE)
+static aw_assets *phase_assets;
+#else
 static aw_assets assets;
+#endif
 static aw_video *video;
 static aw_display_compact *compact_display;
 static aw_display_pages *pages_display;
@@ -29,7 +33,9 @@ static bool audio_open, pump_failed, compact_ready, pages_ready;
 static void pump(void *ctx);
 
 enum { TRACE_START = 2350, TRACE_FIRST = 2387, TRACE_LAST = 2453 };
-#ifndef AW_DMA_FEED
+#if defined(AW_CS_PHASE) || defined(AW_PAGE_WRITE)
+static unsigned intro, spi, hz, audio_before, audio_after;
+#elif !defined(AW_DMA_FEED)
 static unsigned intro, spi, hz, payload, windows, audio_before, audio_after;
 #else
 static unsigned observing, intro, spi, hz, audio_before, audio_after;
@@ -66,7 +72,21 @@ static bool startup_active(void) {
     if (startup_stage && (int32_t)(startup_now() - stage_deadline) >= 0) startup_timeout = pump_failed = true;
     return !startup_timeout && !input.quit;
 }
-#ifndef AW_DMA_FEED
+#if defined(AW_CS_PHASE) || defined(AW_PAGE_WRITE)
+static bool present_rect(void *, unsigned, unsigned, unsigned, unsigned, const uint8_t *, const uint16_t *, bool);
+static bool page_select(void *, unsigned);
+#ifdef AW_TRACE_HOST
+extern uint32_t aw_phase_mock_us(void);
+static uint32_t trace_time(void) { return aw_phase_mock_us(); }
+#else
+static uint32_t trace_time(void) { return *(volatile uint32_t *)0x40054028u; }
+#endif
+#ifdef AW_PAGE_WRITE
+#include "writeback/meter.h"
+#else
+#include "phases/meter.h"
+#endif
+#elif !defined(AW_DMA_FEED)
 static inline uint32_t trace_time(void) { return services->call(MK61_SERVICE_MICROS, 0, 0, 0, NULL); }
 #include "wire.h"
 static WirePoint *trace;
@@ -189,7 +209,11 @@ static bool store_write(void *ctx, uint32_t offset, const void *in, uint32_t siz
     r.offset = offset;
     r.data = (uint8_t *)in;
     r.size = size;
-    return services->call(MK61_SERVICE_BUFFER, MK61_BUFFER_WRITE, 0, sizeof(r), &r) != 0;
+    const bool ok = services->call(MK61_SERVICE_BUFFER, MK61_BUFFER_WRITE, 0, sizeof(r), &r) != 0;
+#ifdef AW_PAGE_WRITE
+    if (ok) wb_store(offset, size);
+#endif
+    return ok;
 }
 static bool pressed(const uint8_t *map, unsigned key) { return (map[key / 8] & (1u << (key & 7))) != 0; }
 static bool letter(const uint8_t *map, unsigned c) { return pressed(map, c) || pressed(map, c - 32); }
@@ -275,14 +299,29 @@ static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
 }
 static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
     (void)ctx;
+#if defined(AW_CS_PHASE) || defined(AW_PAGE_WRITE)
+    aw_assets *prefetch_assets = phase_assets;
+#else
+    aw_assets *prefetch_assets = &assets;
+#endif
     const uint32_t deadline = last_frame - lead_ms;
+#ifdef AW_CS_PHASE
+    PhasePoint begin = {0};
+    unsigned loops = 0, saved = ph_wait_begin(lead_ms, deadline, &begin);
+#endif
     while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
+#ifdef AW_CS_PHASE
+        ++loops;
+#endif
         pump(NULL);
         /* Leave room for a storage operation and the audio/input pump. */
         if (!input.quit && !pump_failed && (int32_t)(deadline - mk61_api->millis_ms()) >= 12 &&
-            !aw_assets_prefetch_step(&assets))
+            !aw_assets_prefetch_step(prefetch_assets))
             pump_failed = true;
     }
+#ifdef AW_CS_PHASE
+    ph_wait_end(saved, begin, loops);
+#endif
     return !input.quit && !pump_failed;
 }
 static bool wait_for_frame(void *ctx) { return wait_for_frame_lead(ctx, 0); }
@@ -305,13 +344,21 @@ static bool frame_wait(void *ctx, unsigned slices) {
         mk61_service_audio request = {0};
         request.rate = AW_AUDIO_RATE;
         request.volume = 100;
-        if (!services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_OPEN, 0, sizeof(request), &request))
+        if (!services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_OPEN, 0, sizeof(request), &request)) {
+#ifdef AW_CS_PHASE
+            report("PH FAIL audio-open %u\n", intro);
+#endif
             return false;
+        }
         audio_open = true;
         last_frame = next_audio = mk61_api->millis_ms();
     }
     if (intro == TRACE_FIRST) audio_before = underruns();
-#ifndef AW_DMA_FEED
+#if defined(AW_PAGE_WRITE)
+    wb_boundary(intro);
+#elif defined(AW_CS_PHASE)
+    ph_boundary(intro);
+#elif !defined(AW_DMA_FEED)
     sample(intro);
 #else
     observing = intro;
@@ -329,6 +376,9 @@ static bool frame_wait(void *ctx, unsigned slices) {
 static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height, const uint8_t *pixels,
                          const uint16_t *palette, bool clear) {
     (void)ctx;
+#ifdef AW_CS_PHASE
+    const PhasePoint start = ph->active && ph->detail ? ph_point() : (PhasePoint){0, 0};
+#endif
     mk61_service_color_frame frame = {0};
     frame.x = (uint16_t)x;
     frame.y = (uint16_t)(60 + y);
@@ -341,7 +391,11 @@ static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
     memcpy(frame.palette, palette, sizeof(frame.palette));
     const unsigned result =
         services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT, 0, sizeof(frame), &frame);
-#ifndef AW_DMA_FEED
+#if defined(AW_PAGE_WRITE)
+    if (result == 1 && !wb_accept(x, y, width, height)) return 0;
+#elif defined(AW_CS_PHASE)
+    ph_attempt(result, x, y, width, height, start);
+#elif !defined(AW_DMA_FEED)
     if (result == 1) {
         payload += width * height * 2u;
         ++windows;
@@ -354,6 +408,9 @@ static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
 }
 static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height, const uint8_t *pixels,
                          const uint16_t *palette, bool clear) {
+#ifdef AW_CS_PHASE
+    const unsigned queue = ph_queue(x, y, width, height);
+#endif
     for (;;) {
         const unsigned result = try_rect(ctx, x, y, width, height, pixels, palette, clear);
         if (result == 1) break;
@@ -361,15 +418,26 @@ static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
         if (pages_ready && !aw_display_pages_write_one(pages_display)) return false;
         pump(NULL);
     }
+#ifdef AW_CS_PHASE
+    ph_leave(queue);
+#endif
     pump(NULL);
     return !input.quit && !pump_failed;
 }
 static bool page_control(unsigned operation, unsigned page) {
     const uint32_t value = page;
+#ifdef AW_CS_PHASE
+    const unsigned fence = ph_enter(PH_FENCE);
+#endif
     for (;;) {
         const uint32_t result =
             services->call(MK61_SERVICE_COLOR_DISPLAY, operation, 0, sizeof(value), (void *)&value);
-        if (result == 1) return true;
+        if (result == 1) {
+#ifdef AW_CS_PHASE
+            ph_leave(fence);
+#endif
+            return true;
+        }
         if (result != 2 || input.quit || pump_failed) return false;
         if (operation == MK61_COLOR_PAGE_SHOW && !aw_display_pages_write_one(pages_display)) return false;
         pump(NULL);
@@ -386,7 +454,17 @@ static unsigned try_select(void *ctx, unsigned page) {
 }
 static bool page_show(void *ctx, unsigned page) {
     (void)ctx;
-    return page_control(MK61_COLOR_PAGE_SHOW, page);
+    const bool ok = page_control(MK61_COLOR_PAGE_SHOW, page);
+#ifdef AW_PAGE_PAIR
+    if (ok && intro == 2438) {
+        ++wb.latches;
+        wire_point(&wb.visible_wire[0]);
+    } else if (ok && intro == 2442) {
+        ++wb.black_latches;
+        wire_point(&wb.visible_wire[4]);
+    }
+#endif
+    return ok;
 }
 static uint32_t display_deadline(void *ctx) {
     (void)ctx;
@@ -438,7 +516,19 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         trace_done = input.quit = true;
         return false;
     }
-    if (!present_live(ctx, pixels, palette)) return false;
+#ifdef AW_CS_PHASE
+    (void)ph_enter(PH_PRESENT);
+#endif
+    if (!present_live(ctx, pixels, palette)) {
+#ifdef AW_CS_PHASE
+        report("PH FAIL present %u %u %u %u %u\n", intro, (unsigned)pump_failed, (unsigned)input.quit,
+               pages_display->visible, pages_display->selected);
+#endif
+        return false;
+    }
+#ifdef AW_CS_PHASE
+    (void)ph_enter(PH_NEXT);
+#endif
     if (intro == TRACE_START) {
         if (!page_select(ctx, pages_display->visible) || !startup_active()) return false;
         report("SCK FIRST %u %08X\n", intro, aw_storm_frame_hash(pixels, palette));
@@ -454,7 +544,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     ++intro;
     return true;
 }
-#ifndef AW_DMA_FEED
+#if !defined(AW_DMA_FEED) && !defined(AW_CS_PHASE) && !defined(AW_PAGE_WRITE)
 static bool calibrate(unsigned rate, unsigned bits, unsigned ordinal) {
     uint16_t palette[16] = {0, 0xffff};
     WirePoint a = {0}, b = {0};
@@ -503,13 +593,25 @@ static void stop_audio(void *ctx) {
 int main(void) {
     /* The firmware reserves a separate stack. Keeping long-lived state there
      * leaves a larger contiguous heap block for the video-page cache. */
+#if defined(AW_CS_PHASE) || defined(AW_PAGE_WRITE)
+    // Exchange the table and the asset cache between BSS and the reserved
+    // stack. All eight cache pages and both direct video buffers are retained.
+    static aw_asset_entry entries[AW_ASSET_LIMIT];
+    aw_assets assets;
+    phase_assets = &assets;
+#ifdef AW_CS_PHASE
+    static PhaseMeter meter;
+    ph = &meter;
+#endif
+#else
     aw_asset_entry entries[AW_ASSET_LIMIT];
-#ifndef AW_DMA_FEED
+#endif
+#if !defined(AW_CS_PHASE) && !defined(AW_DMA_FEED) && !defined(AW_PAGE_WRITE)
     WirePoint samples[TRACE_LAST - TRACE_FIRST + 2] = {0};
     trace = samples;
     WireBurst waveforms[4] = {0};
     bursts = waveforms;
-#else
+#elif defined(AW_DMA_FEED)
     FeedFrame results[FLAST - FFIRST + 1] = {0};
     feed_frames = results;
 #endif
@@ -706,7 +808,45 @@ int main(void) {
             goto done;
         }
     }
-#ifndef AW_DMA_FEED
+#if defined(AW_PAGE_WRITE)
+#ifdef AW_PAGE_PAIR
+    const unsigned marker = file_size("AWPGCTL.TAG");
+    wb.mode = 2;
+    switch (marker) {
+        case 4: wb.mode = 0; break;
+        case 5: wb.mode = 1; break;
+        case 6: wb.mode = 3; break;
+        case 7: wb.mode = 4; break;
+        case 8: wb.mode = 5; break;
+        case 9: wb.mode = 6; break;
+    }
+    aw_storm_configure_timing(&storm->tail, hz, spi);
+    static const aw_storm_writeback policies[] = {{0, 0}, {5000, 0}, {2000, 0}, {1500, 1000}, {1000, 1400}};
+    storm->tail.writeback[0] = policies[wb.mode > 4 ? 4 : wb.mode];
+    // Keep the same 200 rows and vary when eight hidden rows cross the bus.
+    static const uint8_t black_limits[][3] = {{32, 64, 96}, {40, 64, 96}, {32, 56, 88}};
+    memcpy(storm->tail.black_before_rows, black_limits[wb.mode > 4 ? wb.mode - 4 : 0], sizeof(black_limits[0]));
+#else
+    wb.mode = file_size("AWPGCTL.TAG") != 4;
+#endif
+    if (!wb_calibrate()) {
+        error = "writeback-calibration";
+        goto done;
+    }
+    report("WB MODE %u %u %u %u %u %u %u %u\n", wb.mode, hz, spi, (unsigned)storm->tail.overlap,
+           (unsigned)audio_prepared, (unsigned)paired_frames, background_cache.size, background_tail.size);
+    begin_stage("intro", 65000);
+#elif defined(AW_CS_PHASE)
+    ph->detail = file_size("AWPHCTL.TAG") != 4;
+    if (!ph_calibrate()) {
+        error = "PIO-calibration";
+        goto done;
+    }
+    report("PH CLOCK %u %u %u\n", hz, spi, (unsigned)storm->tail.overlap);
+    report("PH START pcm=%u arena=%u paired=%u bg=%u tail=%u\n", (unsigned)audio_prepared, (unsigned)arena_reserved,
+           (unsigned)paired_frames, background_cache.size, background_tail.size);
+    begin_stage("intro", 65000);
+#elif !defined(AW_DMA_FEED)
     if (!wire_begin()) {
         error = "PIO0-in-use";
         goto done;
@@ -743,7 +883,11 @@ done:
     wire_end();
 #endif
     if (trace_done) {
-#ifndef AW_DMA_FEED
+#if defined(AW_PAGE_WRITE)
+        wb_print();
+#elif defined(AW_CS_PHASE)
+        ph_print();
+#elif !defined(AW_DMA_FEED)
         for (unsigned k = 0; k < 4; ++k)
             print_burst(raw_frames[k], &bursts[k]);
         for (unsigned k = 0; k <= TRACE_LAST - TRACE_FIRST; ++k) {

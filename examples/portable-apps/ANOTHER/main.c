@@ -14,10 +14,9 @@ static const mk61_app_services *services;
 static mk61_service_buffer external, screen, previous_frame, background_cache, background_tail;
 static aw_assets *assets;
 static aw_asset_entry entries[AW_ASSET_LIMIT];
-static aw_video_bands band_state;
 static aw_video *video;
 static aw_display display;
-static aw_display_compact *compact_display;
+static aw_display_compact compact_display;
 static aw_display_pages *pages_display;
 static aw_display_storm *storm;
 static aw_storm_output storm_lcd;
@@ -166,11 +165,11 @@ static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
      * its next backdrop into the unused tail of the previous-frame buffer. */
     const unsigned strip_bytes = AW_BACKDROP_ROWS * AW_VIDEO_STRIDE;
     if (scroll_ready && pages_available && !vm->backdrop && vm->part == AW_VM_FIRST_PART + 2 &&
-        compact_display->valid && strip_bytes <= compact_display->capacity &&
-        (compact_display->external || compact_display->offsets[AW_VIDEO_HEIGHT] <= compact_display->capacity - strip_bytes) &&
+        compact_display.valid && strip_bytes <= compact_display.capacity &&
+        (compact_display.external || compact_display.offsets[AW_VIDEO_HEIGHT] <= compact_display.capacity - strip_bytes) &&
         (int32_t)(deadline - mk61_api->millis_ms()) >= 18)
         aw_vm_prepare_backdrop(vm, pages_display->second.external_base,
-                               compact_display->previous + compact_display->capacity - strip_bytes);
+                               compact_display.previous + compact_display.capacity - strip_bytes);
     while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
         pump(NULL);
         if (scroll_ready && (int32_t)(deadline - mk61_api->millis_ms()) >= 3 &&
@@ -197,7 +196,10 @@ static unsigned try_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsi
     frame.pixels = pixels; frame.pixel_bytes = width * height / 2;
     frame.format = MK61_COLOR_INDEX4 | (clear ? 0 : MK61_COLOR_PRESERVE_OUTSIDE);
     memcpy(frame.palette, palette, sizeof(frame.palette));
-    return services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT, 0, sizeof(frame), &frame);
+    const unsigned result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PRESENT, 0, sizeof(frame), &frame);
+    if (result == 1 && storm->tail.writeback_batches &&
+        !aw_video_write_displayed(video, storm->tail.writeback_batches)) return 0;
+    return result;
 }
 static bool present_rect(void *ctx, unsigned x, unsigned y, unsigned width, unsigned height,
                          const uint8_t *pixels, const uint16_t *palette, bool clear) {
@@ -265,8 +267,8 @@ static unsigned scroll_control(unsigned operation, unsigned bytes, void *request
 }
 static bool restore_pages(void) {
     vm->backdrop = 0; vm->backdrop_rows = 0;
-    compact_display->valid = false;
-    if (!pages_available || !aw_display_pages_init(pages_display, compact_display, pages_display->second.external_base))
+    compact_display.valid = false;
+    if (!pages_available || !aw_display_pages_init(pages_display, &compact_display, pages_display->second.external_base))
         return false;
     mk61_service_color_pages config = {60, AW_VIDEO_HEIGHT};
     return scroll_control(MK61_COLOR_PAGES_BEGIN_V2, sizeof(config), &config) == 1;
@@ -276,7 +278,7 @@ static bool end_scroll(void) {
     uint32_t spi_hz = 24000000;
     (void)services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_SPI_HZ, 0, sizeof(spi_hz), &spi_hz);
     scroll_ready = false;
-    compact_display->valid = false;
+    compact_display.valid = false;
     return true;
 }
 static bool present_pages(void *ctx, const uint8_t *pixels, const uint16_t *palette,
@@ -299,7 +301,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
     if (gameplay && compact_ready && !scroll_ready && !scroll_disabled) {
         if (pages_ready && !end_pages()) return false;
         pages_ready = false;
-        compact_display->valid = false;
+        compact_display.valid = false;
         scroll_ready = true; scroll_offset = 0; previous_shake = 0;
     }
     if (scroll_ready) {
@@ -310,8 +312,8 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         mk61_service_color_scroll request = {60, AW_VIDEO_HEIGHT, scroll_offset, offset};
         const unsigned result = scroll_control(MK61_COLOR_SCROLL_BEGIN, sizeof(request), &request);
         if (result == 1 || result == 3) {
-            if (result == 3) compact_display->valid = false;
-            if (!aw_display_compact_present_tracked(compact_display, pixels, palette, shift,
+            if (result == 3) compact_display.valid = false;
+            if (!aw_display_compact_present_tracked(&compact_display, pixels, palette, shift,
                                                    aw_video_band_identities(video), present_rect, NULL) ||
                 !wait_for_frame(NULL) || scroll_control(MK61_COLOR_SCROLL_END, 0, NULL) != 1) return false;
             previous_shake = (int16_t)shake;
@@ -332,13 +334,13 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
         if (assets->fault || !wait_for_frame(ctx) || !end_pages()) return false;
         /* An optional display transaction failed: restore a complete ordinary
          * frame, with no assumptions about either partially written page. */
-        pages_ready = false; compact_display->valid = false;
+        pages_ready = false; compact_display.valid = false;
         aw_video_track_bands(video, NULL);
     }
     if (input.quit || pump_failed) return false;
     if (compact_ready) {
         if (!wait_for_frame(ctx)) return false;
-        return aw_display_compact_present(compact_display, pixels, palette, present_rect, NULL) &&
+        return aw_display_compact_present(&compact_display, pixels, palette, present_rect, NULL) &&
             !input.quit && !pump_failed;
     }
     if (previous_frame.data) {
@@ -374,7 +376,7 @@ int main(void) {
     aw_audio audio_state; audio = &audio_state;
     aw_vm vm_state = {0}; vm = &vm_state; pages_ready = false;
     scroll_ready = scroll_disabled = pages_available = false;
-    aw_display_compact compact_state; compact_display = &compact_state;
+    aw_video_bands band_state;
     aw_display_pages pages_state; pages_display = &pages_state;
     aw_display_storm storm_state = {0}; storm = &storm_state;
     int16_t pending_samples[AW_AUDIO_BLOCK]; pending = pending_samples;
@@ -455,7 +457,7 @@ int main(void) {
         5 * AW_VIDEO_PAGE_BYTES <= assets->capacity - assets->used &&
         services->call(MK61_SERVICE_DISPLAY, MK61_SERVICE_DISPLAY_FRAMEBUFFER, sizeof(borrowed), 0, &borrowed) &&
         borrowed.pixels && borrowed.bytes >= 12800 && borrowed.width == 320 && borrowed.height == 320 &&
-        aw_display_compact_init(compact_display, assets, assets->used + 4 * AW_VIDEO_PAGE_BYTES,
+        aw_display_compact_init(&compact_display, assets, assets->used + 4 * AW_VIDEO_PAGE_BYTES,
                                 borrowed.pixels, 12800, borrowed.pixels, 12800) &&
         aw_video_use_spare(video, previous_frame.data)) compact_ready = true;
     if (compact_ready && 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets->capacity - assets->used)
@@ -480,7 +482,7 @@ int main(void) {
     if (compact_ready && 6 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets->capacity - assets->used) {
         const uint32_t second = assets->used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
         mk61_service_color_pages config = {60, AW_VIDEO_HEIGHT};
-        if (aw_display_pages_init(pages_display, compact_display, second)) {
+        if (aw_display_pages_init(pages_display, &compact_display, second)) {
             for (;;) {
                 const uint32_t result = services->call(MK61_SERVICE_COLOR_DISPLAY, MK61_COLOR_PAGES_BEGIN_V2, 0, sizeof(config), &config);
                 if (result == 1) {
@@ -500,9 +502,7 @@ int main(void) {
                 !storm_info.directory) {
                 aw_storm_load(storm, assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
                               storm_info.size, storm_read, NULL);
-                // The color-update lead times were measured at these clocks.
-                storm->tail.overlap = storm->tail.available && actual_spi_hz == 24000000u &&
-                    mk61_app_compute_hz(services) == 200000000u;
+                aw_storm_configure_timing(&storm->tail, mk61_app_compute_hz(services), actual_spi_hz);
             }
         }
     }

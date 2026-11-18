@@ -315,6 +315,10 @@ unsigned lead_ms(const aw_display_storm &s, const aw_storm_frame &f, uint32_t sp
 // white frame is on screen, the worker can finish the rest in one interval.
 constexpr unsigned black_rows_per_frame = 32;
 
+unsigned black_before_frame(const aw_storm_tail &tail, unsigned index) {
+    return tail.black_before_rows[index] ? tail.black_before_rows[index] : black_rows_per_frame * (index + 1);
+}
+
 unsigned finish_tail_latch(aw_storm_tail &tail, aw_display_pages &p, const aw_storm_output &lcd,
                            void *ctx, bool block) {
     if (!tail.latch_pending) return 1;
@@ -394,7 +398,16 @@ bool draw_tail_frame(aw_display_storm &s, aw_display_pages &p, unsigned index, c
                 const unsigned lead = (wire_bytes + 2999u) / 3000u + 1u;
                 ok = lcd.wait(ctx, lead);
             }
-            if (ok) ok = lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+            if (ok) {
+                const unsigned area = unsigned(r.width) * 2 * r.height;
+                const auto &policy = tail.writeback[index];
+                // Sending 2000 RGB565 pixels at 24 MHz covers one measured
+                // two-band PSRAM write. Busy retries must not spend this twice.
+                if (policy.min_pixels && area >= policy.min_pixels)
+                    tail.writeback_batches = uint8_t((area + policy.round_pixels) / 2000);
+                ok = lcd.draw(ctx, r.x * 2u, r.y, r.width * 2u, r.height, slot.scratch, palette, false);
+                tail.writeback_batches = 0;
+            }
         }
         if (white) ok = aw_display_pages_finish(&p, palette, identities, 1, ok);
         if (ok && tail.overlap) {
@@ -410,7 +423,7 @@ bool draw_tail_frame(aw_display_storm &s, aw_display_pages &p, unsigned index, c
     if (ok) {
         constexpr unsigned overlap_black_limits[] = {32, 72, AW_VIDEO_HEIGHT};
         tail.row_limit = tail.overlap ? overlap_black_limits[index]
-            : white ? AW_VIDEO_HEIGHT : black_rows_per_frame * (index + 2);
+            : white ? AW_VIDEO_HEIGHT : black_before_frame(tail, index + 1);
     }
     return ok;
 }
@@ -439,6 +452,21 @@ bool show_tail_black(aw_display_storm &s, aw_display_pages &p, const uint8_t *pi
 }
 
 } // namespace
+
+void aw_storm_configure_timing(aw_storm_tail *tail, uint32_t cpu_hz, uint32_t spi_hz) {
+    const bool fast_lcd = tail->available && spi_hz == 24000000u;
+    tail->overlap = fast_lcd && cpu_hz == 200000000u;
+    memset(tail->writeback, 0, sizeof(tail->writeback));
+    memset(tail->black_before_rows, 0, sizeof(tail->black_before_rows));
+    if (fast_lcd && cpu_hz == 125000000u) {
+        tail->writeback[0] = {1000, 1400}; // Save the displayed page before the VM evicts it.
+        tail->writeback[1] = {5000, 0};    // Leave the last 14080 bytes for the hidden black transfer.
+        // Eight hidden rows fit after the white flash. Leave their SPI time
+        // to the two preceding color updates.
+        tail->black_before_rows[1] = 56;
+        tail->black_before_rows[2] = 88;
+    }
+}
 
 bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
                    uint8_t *scratch, uint32_t bytes, aw_storm_read_fn read, void *ctx) {
@@ -664,7 +692,7 @@ bool aw_storm_present_intro(aw_display_storm *s, aw_display_pages *p, const uint
         if (index < AW_STORM_FRAMES && aw_storm_present(s, p, index, pixels, palette, lcd, ctx)) {
             if (index + 1 == AW_STORM_FRAMES && s->tail.available && lcd->try_select && lcd->try_draw) {
                 if (!s->tail.latch_pending) s->tail.visible = uint8_t(p->visible);
-                s->tail.row_limit = s->tail.overlap ? 0 : black_rows_per_frame;
+                s->tail.row_limit = s->tail.overlap ? 0 : black_before_frame(s->tail, 0);
                 s->ready = s->tail.active = true;
             }
             return true;

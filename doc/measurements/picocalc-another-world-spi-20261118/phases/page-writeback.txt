@@ -1,0 +1,3 @@
+VM_COPY src=0 dst=1 evicted=2 visible_windows=7 early_writes=0 early_bytes=0 synchronous_bytes=32000
+VM_COPY src=0 dst=1 evicted=2 visible_windows=7 early_writes=13 early_bytes=32000 synchronous_bytes=0
+All 67 VM fingerprints matched across both runs and every displayed pixel matched each live VM frame.

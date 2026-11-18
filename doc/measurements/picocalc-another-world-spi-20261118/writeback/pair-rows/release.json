@@ -1,0 +1,29 @@
+{
+  "stock_app_sha256": "5337580a391c34288caa3c02fcca4e6986de3b091df763841857cf906b14d4c4",
+  "file_bytes": 33291,
+  "memory_bytes": 41516,
+  "build": "1F0FF4B4",
+  "firmware_crc": "26A2CD8B",
+  "cpu_hz": 125000000,
+  "spi_hz": 24000000,
+  "boot_count": 37,
+  "lcd_submissions": [
+    11412,
+    11415
+  ],
+  "direct_buffer_bytes": 64000,
+  "cumulative_stack_used_before": 31140,
+  "cumulative_stack_used_after": 31140,
+  "stack_bytes": 32768,
+  "heap_free_before": 109184,
+  "heap_free_after": 109184,
+  "single_escape_returned": true,
+  "stock_files_readback": [
+    "before",
+    "after"
+  ],
+  "temporaries_removed": true,
+  "ui_after": "CALCULATOR",
+  "service_after": "CLOSED",
+  "runtime_after": "NONE"
+}

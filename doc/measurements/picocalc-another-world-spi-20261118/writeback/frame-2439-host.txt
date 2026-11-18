@@ -1,0 +1,4 @@
+COPY src=64 dst=255 front=1 back=2 resident=1 spare=0 scroll=0
+BACKING write page=1 bytes=32000
+WB PAGE 1 1 0 0 8 32000 0 0 24000 7 8
+WB LCD 66336 1BC65898

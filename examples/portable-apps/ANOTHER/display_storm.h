@@ -62,10 +62,17 @@ typedef struct {
 } aw_storm_prelude;
 
 typedef struct {
+    uint16_t min_pixels, round_pixels;
+} aw_storm_writeback;
+
+typedef struct {
     aw_storm_frame frames[AW_STORM_TAIL_FRAMES];
     uint32_t black_hash, latch_deadline;
     uint8_t black_pair, visible, black_rows, row_limit;
     bool available, active, overlap, latch_pending, visible_pending;
+    aw_storm_writeback writeback[AW_STORM_TAIL_FRAMES];
+    uint8_t black_before_rows[AW_STORM_TAIL_FRAMES]; /* Cumulative hidden rows before each visible update. */
+    uint8_t writeback_batches; /* Applies only to the current visible draw. */
 } aw_storm_tail;
 
 typedef struct {
@@ -135,6 +142,7 @@ extern "C" {
  * offset after the two LCD snapshots in the app's PSRAM reservation. */
 bool aw_storm_load(aw_display_storm *s, aw_assets *assets, uint32_t base,
                    uint8_t *scratch, uint32_t bytes, aw_storm_read_fn read, void *ctx);
+void aw_storm_configure_timing(aw_storm_tail *tail, uint32_t cpu_hz, uint32_t spi_hz);
 /* Warm only the hidden page. False leaves the ordinary renderer available.
  * Any destination written by the cache has its old snapshot invalidated. */
 bool aw_storm_warm(aw_display_storm *s, aw_display_pages *p, unsigned index,

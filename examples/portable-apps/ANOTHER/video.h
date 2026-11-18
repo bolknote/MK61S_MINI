@@ -63,6 +63,8 @@ const uint32_t *aw_video_band_identities(const aw_video *v);
 bool aw_video_flush(aw_video *v);
 /* Write at most two dirty bands while the LCD worker or frame clock is busy. */
 bool aw_video_write_one(aw_video *v);
+/* Publish up to two changed bands of the currently displayed VM page per batch. */
+bool aw_video_write_displayed(aw_video *v, unsigned batches);
 bool aw_video_select(aw_video *v, uint8_t page);
 /* Select a drawing target without loading bytes that the next operation may
  * replace completely. Use aw_video_select for direct access to its pixels. */

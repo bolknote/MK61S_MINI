@@ -155,6 +155,18 @@ static void run(bool two_pages) {
             for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i)
                 assert(m.bytes[v.page_base + page * AW_VIDEO_PAGE_BYTES + i] == expected[page]);
     }
+    /* Saving the displayed page during LCD DMA must respect the batch limit.
+     * A subsequent draw can change bands that have already reached PSRAM. */
+    assert(aw_video_fill(&v, 1, 12) && aw_video_fill(&v, 2, 14));
+    const uint32_t before_writeback = m.write_bytes;
+    const unsigned early_bytes = two_pages ? 4 * AW_VIDEO_BAND_ROWS * AW_VIDEO_STRIDE : 0;
+    assert(aw_video_write_displayed(&v, 0) && m.write_bytes == before_writeback);
+    assert(aw_video_write_displayed(&v, 2) && m.write_bytes - before_writeback == early_bytes);
+    const uint32_t backing = v.page_base + v.store_slot[2] * AW_VIDEO_PAGE_BYTES;
+    assert(!memcmp(m.bytes + backing, v.pixels, early_bytes));
+    assert(aw_video_fill(&v, 2, 3) && aw_video_flush(&v));
+    for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i)
+        assert(m.bytes[v.page_base + 2 * AW_VIDEO_PAGE_BYTES + i] == 0x33);
     bands.last_identity = UINT32_MAX - AW_VIDEO_BANDS + 1;
     assert(aw_video_show(&v, 2) && !aw_video_band_identities(&v));
     assert(!aw_video_polygon(&v, 100, 2, 0, 64, 0, 0) && v.fault);

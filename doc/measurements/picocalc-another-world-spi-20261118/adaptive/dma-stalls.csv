@@ -1,0 +1,11 @@
+trial,mode,frame,time_us,samples,cs16,mid_window,stalled_samples,positions,strip_boundaries,null_descriptor,minimum_us,first_sent,last_sent
+3-AWFEED-adaptive,adaptive,2438,28188,338,255,254,0,0,0,0,0,0,0
+3-AWFEED-adaptive,adaptive,2439,50387,1145,1067,995,127,7,7,7,2122,804,408
+3-AWFEED-adaptive,adaptive,2440,49467,1250,1202,1154,107,6,6,6,1842,516,192
+3-AWFEED-adaptive,adaptive,2441,47368,705,679,641,63,7,7,7,1028,1896,156
+3-AWFEED-adaptive,adaptive,2442,26912,204,187,180,0,0,0,0,0,0,0
+4-AWFEED-fixed,fixed,2438,28561,396,303,302,0,0,0,0,0,0,0
+4-AWFEED-fixed,fixed,2439,51444,1039,968,915,141,49,49,49,1037,804,816
+4-AWFEED-fixed,fixed,2440,49700,1047,1001,974,109,32,32,32,1572,774,2400
+4-AWFEED-fixed,fixed,2441,48701,652,613,564,77,26,26,26,910,1422,810
+4-AWFEED-fixed,fixed,2442,27490,203,185,179,2,1,1,1,41,8640,8640

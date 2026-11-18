@@ -148,6 +148,22 @@ void init_pages(aw_assets &assets, unsigned front) {
 }
 
 int main() {
+    aw_storm_tail timing{};
+    timing.available = true;
+    aw_storm_configure_timing(&timing, 125000000u, 24000000u);
+    assert(!timing.overlap && timing.writeback[0].min_pixels == 1000 && timing.writeback[0].round_pixels == 1400);
+    assert(timing.writeback[1].min_pixels == 5000 && !timing.writeback[1].round_pixels && !timing.writeback[2].min_pixels);
+    assert(timing.black_before_rows[1] == 56 && timing.black_before_rows[2] == 88);
+    aw_storm_configure_timing(&timing, 200000000u, 24000000u);
+    assert(timing.overlap);
+    for (const auto &policy : timing.writeback) assert(!policy.min_pixels);
+    for (auto rows : timing.black_before_rows) assert(!rows);
+    aw_storm_configure_timing(&timing, 125000000u, 12000000u);
+    assert(!timing.overlap && !timing.writeback[0].min_pixels && !timing.writeback[1].min_pixels);
+    timing.available = false;
+    aw_storm_configure_timing(&timing, 125000000u, 24000000u);
+    assert(!timing.writeback[0].min_pixels && !timing.writeback[1].min_pixels);
+
     aw_assets assets{};
     assets.capacity=sizeof(ram);assets.store_read=read_store;assets.store_write=write_store;
     auto data=fixture();
