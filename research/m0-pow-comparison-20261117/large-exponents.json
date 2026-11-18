@@ -27,14 +27,14 @@
     "limb_multiply_accumulates": 5490
   },
   "source_sha256": {
-    "research/m0-pow-comparison-20261117/large_exponents.py": "effcad2b963d4e9f466e3a881af52bed4e8983b87e2aa14a9a9148ae688a4a5b",
+    "research/m0-pow-comparison-20261117/large_exponents.py": "6786f7cd6d650bc0de1eadb9ddcb45d3ebf37fcf759bc04a9cb039d73eaaaf8d",
     "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
-    "code/native_eabi_m0_pow_large_constants.inc": "5b3f47d15abfd6d2c476043bb6dff14a4b1dc0cda7be3ebd4883e3efaa712ea4",
+    "code/native_eabi_m0_pow_large_constants.inc": "14fabb14d00d2c286d6223c6c63748f1b6c6928cf57049cd08e231f5ed78f77c",
     "code/native_eabi_m0_pow_large.inc": "4df5742d9f31d527e323b8d8d41b7afc17d053187783fa1cfb9e6463a9d3ed1a",
     "code/native_eabi_m0_pow_large_power.inc": "7315c09740a03bdb99a5893554dd6b6c3f6c4bef8f86692d12d797acd391d0b0",
     "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
-    "code/native_eabi_m0_pow_fast.inc": "4382ce89a5730abd286ab6297ee679ff4c77fd3e58ddedc89e9063a8e5484251",
-    "code/native_eabi_m0_pow_exp_round.inc": "891c0616e6fb3cd21fcbf9d367c204b792362c9edc885f2f124fffc7c9c071dc",
+    "code/native_eabi_m0_pow_fast.inc": "a2dcf0c077659aa58e4f65c67c7958695436e970fea9b0d543b0ed1a320e5a20",
+    "code/native_eabi_m0_pow_exp_round.inc": "0dad6d88af7fd65ee2aaaf7451b40792385a3d733c14cc6d45269775c304bd5a",
     "code/native_eabi_m0_cr.cpp": "881be7303bf23571acf7418e7934183dd795b562a6b086fed04a2d4fa07b3c10",
     "dev/tools/certify_m0_pow_fast.py": "7cfcc8921233b855343addc8ba74f4cb608880b23eee9ca20a84be12060e5af9"
   },
@@ -225,7 +225,8 @@
     "bin_sha256": "c86f8127dbce1bfbdedb513efe58e76fdf2443ae726e18015aa3b6707a03e983",
     "flash_bytes": 1805072,
     "static_ram_bytes": 119896,
-    "scratch_y_bytes": 4096
+    "scratch_y_bytes": 4096,
+    "proof_report_revision": "04dcdd88"
   },
   "repeated_arm_on_new_main": {
     "base_revision": "f6ac7b29451141595be9bc1c8d12cb54f58b9e8a",
@@ -317,6 +318,238 @@
       "maximum_instructions": 160061,
       "forced_stage": "mk61_m0_pow_large_subnormal",
       "maximum_witness_y": "43d6ffffffffffff"
+    }
+  },
+  "midpoint_comparison": {
+    "fractional_bits": 94,
+    "error_strict_upper_bound_units": 158,
+    "log_offset": "b1195eebd5e691eef3fec1be37",
+    "comparisons_at_most": 1
+  },
+  "q94_firmware": {
+    "base_revision": "59d99a2c8cf9db83840a2fa2a95d9a83127144b7",
+    "build_id": "f1942648",
+    "crc32": "32dccf86",
+    "bin_sha256": "dcf2a5f87bc55b5565d9daa8f2e6a84cdbf867493385b9a63faac60bc353425b",
+    "flash_bytes": 1805072,
+    "static_ram_bytes": 119896,
+    "scratch_y_bytes": 4096,
+    "arm": {
+      "status": "PASS",
+      "mpfr": "4.2.2",
+      "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "elf_sha256": "456df57ac780253064ae590f7f8e6fc88194e317671bf0926d1c373d1b1b5a77",
+      "control_elf_sha256": "7b7ba5b39719b8d710edb91f41cac4447ec723043d99c25d1ef1d97b33677be7",
+      "public_cases": 3478,
+      "covered_cases": 3031,
+      "stage_counts": {
+        "core": 411,
+        "fast": 1120,
+        "midpoint": 2
+      },
+      "refinements": [
+        {
+          "x": "3fefffffffffffff",
+          "y": "43d6c1a2366c8fc8",
+          "rounded": "0000000000aba8c7"
+        },
+        {
+          "x": "bfefffffffffffff",
+          "y": "43d6c1a2366c8fc8",
+          "rounded": "0000000000aba8c7"
+        }
+      ],
+      "direct_midpoint_comparisons": 16418,
+      "samples": {
+        "large_far_base": {
+          "x": "3feffffffffffffe",
+          "y": "43d0000000000000",
+          "rounded": "0000000000000000",
+          "control": {
+            "instructions": 87,
+            "stack_bytes": 80
+          },
+          "candidate": {
+            "instructions": 87,
+            "stack_bytes": 80
+          }
+        },
+        "large_other_direction": {
+          "x": "3ff0000000000001",
+          "y": "43d0000000000000",
+          "rounded": "7ff0000000000000",
+          "control": {
+            "instructions": 92,
+            "stack_bytes": 80
+          },
+          "candidate": {
+            "instructions": 92,
+            "stack_bytes": 80
+          }
+        },
+        "first_certified_subnormal": {
+          "x": "3fefffffffffffff",
+          "y": "43d6adcd003458bc",
+          "rounded": "0000000008000000",
+          "control": {
+            "instructions": 665,
+            "stack_bytes": 208
+          },
+          "candidate": {
+            "instructions": 670,
+            "stack_bytes": 208
+          }
+        },
+        "subnormal_interior": {
+          "x": "3fefffffffffffff",
+          "y": "43d6fb6eeab0c487",
+          "rounded": "0000000000002000",
+          "control": {
+            "instructions": 665,
+            "stack_bytes": 208
+          },
+          "candidate": {
+            "instructions": 670,
+            "stack_bytes": 208
+          }
+        },
+        "negative_base_even_exponent": {
+          "x": "bfefffffffffffff",
+          "y": "43d6adcd003458bc",
+          "rounded": "0000000008000000",
+          "control": {
+            "instructions": 665,
+            "stack_bytes": 208
+          },
+          "candidate": {
+            "instructions": 670,
+            "stack_bytes": 208
+          }
+        },
+        "last_minimum_subnormal": {
+          "x": "3fefffffffffffff",
+          "y": "43d74910d52d3051",
+          "rounded": "0000000000000001",
+          "control": {
+            "instructions": 662,
+            "stack_bytes": 208
+          },
+          "candidate": {
+            "instructions": 668,
+            "stack_bytes": 208
+          }
+        },
+        "first_zero": {
+          "x": "3fefffffffffffff",
+          "y": "43d74910d52d3052",
+          "rounded": "0000000000000000",
+          "control": {
+            "instructions": 73,
+            "stack_bytes": 80
+          },
+          "candidate": {
+            "instructions": 73,
+            "stack_bytes": 80
+          }
+        },
+        "first_infinity": {
+          "x": "3fefffffffffffff",
+          "y": "c3d62e42fefa39ef",
+          "rounded": "7ff0000000000000",
+          "control": {
+            "instructions": 74,
+            "stack_bytes": 80
+          },
+          "candidate": {
+            "instructions": 74,
+            "stack_bytes": 80
+          }
+        },
+        "ordinary": {
+          "x": "3ff23456789abcde",
+          "y": "3fda123456789abc",
+          "rounded": "3ff0dd2269d082af",
+          "control": {
+            "instructions": 1215,
+            "stack_bytes": 376
+          },
+          "candidate": {
+            "instructions": 1215,
+            "stack_bytes": 376
+          }
+        },
+        "near_one_ordinary": {
+          "x": "3fefffffffffffff",
+          "y": "3ff23456789abcde",
+          "rounded": "3fefffffffffffff",
+          "control": {
+            "instructions": 1340,
+            "stack_bytes": 352
+          },
+          "candidate": {
+            "instructions": 1340,
+            "stack_bytes": 352
+          }
+        },
+        "natural_midpoint_comparison": {
+          "x": "3fefffffffffffff",
+          "y": "43d6c1a2366c8fc8",
+          "rounded": "0000000000aba8c7",
+          "control": {
+            "instructions": 137625,
+            "stack_bytes": 516
+          },
+          "candidate": {
+            "instructions": 2357,
+            "stack_bytes": 520
+          }
+        }
+      }
+    },
+    "public_regression": {
+      "pow": {
+        "status": "PASS",
+        "cases": 80395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f68c56c96aa4aa786c53f0fb19d69c2ea4802dc40a9d54b88c9aa5711e98fd29"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 80196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "d75b9e207238fbc0c67b321453b5a6c54b4c1c4e66eaaf7e2accf47617b79fdf"
+      }
+    },
+    "linked_thumb_instruction_bound": {
+      "status": "PASS",
+      "maximum_guest_instructions": 3968,
+      "halfword_counts": {
+        "entries_midpoint_and_log": 3662,
+        "exp_product_and_veneer": 99,
+        "four_shift_calls_including_veneers": 92,
+        "clz32": 33,
+        "two_low_products_and_lmul_wrapper": 82
+      }
+    },
+    "timing_app_emulation": {
+      "status": "PASS",
+      "elf_sha256": "456df57ac780253064ae590f7f8e6fc88194e317671bf0926d1c373d1b1b5a77",
+      "app_sha256": "96ac15d5477a2f24bfc1bcbb3899a4a5e1768e280e84f191b193fce7acdebc91",
+      "exact_arm_stage_calls": {
+        "POW_PUBLIC": 5904,
+        "POW_MIDPOINT": 256,
+        "POW_DIRECT_160": 12
+      },
+      "rows": 9,
+      "mpfr": "4.2.2",
+      "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+      "scope": "Production arithmetic; fake platform timer, clock, watchdog and SD protocol"
+    },
+    "fast_exp_certificate": {
+      "status": "PASS_ARITHMETIC_BOUNDS",
+      "pow_exp_q62_enclosure": "3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise"
     }
   }
 }

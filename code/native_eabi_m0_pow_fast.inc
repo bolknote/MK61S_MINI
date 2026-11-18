@@ -474,6 +474,28 @@ static double pow_large_subnormal_refine(U yb) {
 }
 
 __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
+static double pow_large_subnormal_midpoint(U yb,U lower) {
+  using namespace m0_pow_large;
+  if(lower>=SubnormalCodes) return pow_large_subnormal_refine(yb);
+  // Scale (2*lower+1)*2^-1075 into an exactly representable normal.
+  const uint32_t odd=uint32_t(lower)*2+1;
+  const unsigned top=31-clz32(odd);
+  const U scaled=(U(970+top)<<52)|((U(odd)<<(52-top))&D::Fraction);
+  const PowRefinedLog logarithm=pow_refined_log(scaled);
+  const U target_low=logarithm.q.low+LogOffset94Low;
+  const U target_high=logarithm.q.high+LogOffset94High+U(target_low<LogOffset94Low);
+  const U significand=(yb&D::Fraction)|D::Hidden;
+  // The first two terms of -y*ln(1-2^-53) in Q94 are n*2^51+n/8.
+  const U argument_low=(significand<<51)+(significand>>3);
+  const U difference_low=target_low-argument_low;
+  const U difference_high=target_high-(significand>>13)-U(target_low<argument_low);
+  if((!difference_high && difference_low<=LogCompareError) ||
+     (difference_high==UINT64_MAX && difference_low>=U(0)-LogCompareError))
+    return pow_large_subnormal_refine(yb);
+  return real(lower+U((difference_high>>63)==0));
+}
+
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
 static double pow_large_subnormal_fast(U yb) {
   // y=1024*n, x=1-2^-53. The first two terms of -y*ln(x)
   // in Q64 are n*2^21+n*2^-33. Flooring and the tail lose <2 units.
@@ -482,7 +504,9 @@ static double pow_large_subnormal_fast(U yb) {
   constexpr unsigned input_error=2;
   constexpr bool negative_argument=true;
 #define MK61_POW_EXP_FAILURE() pow_large_subnormal_refine(yb)
+#define MK61_POW_EXP_MIDPOINT(lower) pow_large_subnormal_midpoint(yb,lower)
 #include "native_eabi_m0_pow_exp_round.inc"
+#undef MK61_POW_EXP_MIDPOINT
 #undef MK61_POW_EXP_FAILURE
 }
 

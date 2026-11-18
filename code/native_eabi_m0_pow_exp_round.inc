@@ -63,6 +63,9 @@
     if(k<-1075) {
       const U half=U(1)<<63;
       if(k<-1076 || (q<half && half-q>error)) return 0.0;
+#ifdef MK61_POW_EXP_MIDPOINT
+      return MK61_POW_EXP_MIDPOINT(0);
+#endif
     } else {
       const unsigned shift=unsigned(-k-1012);
       const U mask=(U(1)<<shift)-1,half=U(1)<<(shift-1),tail=q&mask;
@@ -71,6 +74,9 @@
         const U retained=q>>shift;
         return real(retained+U(tail>half || (tail==half && (retained&1))));
       }
+#ifdef MK61_POW_EXP_MIDPOINT
+      return MK61_POW_EXP_MIDPOINT(q>>shift);
+#endif
     }
     return MK61_POW_EXP_FAILURE();
   }

@@ -7,4 +7,8 @@ constexpr uint64_t ExceptionalBase = UINT64_C(0x3fefffffffffffff);
 constexpr uint64_t Overflow = UINT64_C(0x43d62e42fefa39ef);
 constexpr uint64_t SubnormalBand = UINT64_C(0x43d6adcd003458bc);
 constexpr uint64_t Underflow = UINT64_C(0x43d74910d52d3052);
+constexpr uint32_t SubnormalCodes = 0x08000000U;
+constexpr uint64_t LogOffset94High = UINT64_C(0x000000b1195eebd5);
+constexpr uint64_t LogOffset94Low = UINT64_C(0xe691eef3fec1be37);
+constexpr uint32_t LogCompareError = 158;
 }

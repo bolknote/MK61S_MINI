@@ -54,7 +54,8 @@ def run_public(arm, oracle, cuts, closest):
     def entered(_uc, _address, _size, stage):
         visits[stage] += 1
 
-    for fragment, stage in [('pow_large_subnormal_fast','fast'), ('mk61_m0_pow_large_subnormal','160'),
+    for fragment, stage in [('pow_large_subnormal_fast','fast'), ('pow_large_subnormal_midpoint','midpoint'),
+                            ('mk61_m0_pow_large_subnormal','160'),
                             ('mk61_m0_cr_pow','core'), ('mk61_m0_pow_rescue','rescue'),
                             ('mk61_m0_pow_round_final','stream')]:
         addresses = {value&~1 for name,value in arm.elf.symbols.items() if fragment in name}
@@ -71,15 +72,33 @@ def run_public(arm, oracle, cuts, closest):
         same = (nan(got) and bool(got&(1<<51))) if nan(expected) else got==expected
         assert same, (hex(x),hex(y),hex(got),hex(expected),visits)
         if through_large_path(x,y,cuts):
-            assert not any(visits[stage] for stage in ('core','rescue','stream')), (x,y,visits)
+            assert not any(visits[stage] for stage in ('160','core','rescue','stream')), (x,y,visits)
             covered += 1
-        if visits['160']:
-            assert through_large_path(x,y,cuts) and visits['fast']==visits['160']==1, (x,y,visits)
+        if visits['midpoint']:
+            assert through_large_path(x,y,cuts) and visits['fast']==visits['midpoint']==1, (x,y,visits)
             refinements.append(dict(x=f'{x:016x}',y=f'{y:016x}',rounded=f'{got:016x}'))
         totals.update(visits)
     assert totals['fast'] > 1000 and refinements
     return dict(public_cases=len(pairs), covered_cases=covered, stage_counts=dict(totals),
                 refinements=refinements)
+
+
+def check_midpoints(arm, oracle, cuts, closest):
+    name, = (name for name in arm.elf.symbols if 'pow_large_subnormal_midpoint' in name)
+    candidates = {0, 1, 2, 255, 256, 65535, 65536, closest, OUTPUT_LIMIT-1}
+    rng = random.Random(0x9494)
+    candidates.update(rng.randrange(OUTPUT_LIMIT) for _ in range(4096))
+    count = 0
+    for lower in sorted(candidates):
+        nearest = near_midpoint(lower)
+        for y in range(nearest-1,nearest+3):
+            if not cuts['band'] <= y < cuts['underflow']:
+                continue
+            expected = oracle.reference('pow',BASE,y)
+            got = arm.call(name,y,lower)[0]
+            assert expected in (lower,lower+1) and got==expected,(hex(lower),hex(y),got,expected)
+            count += 1
+    return count
 
 
 def count_samples(control, candidate, oracle, cuts, refinement):
@@ -94,7 +113,7 @@ def count_samples(control, candidate, oracle, cuts, refinement):
             ('first_infinity',BASE,cuts['overflow']|SIGN),
             ('ordinary',0x3ff23456789abcde,0x3fda123456789abc),
             ('near_one_ordinary',BASE,0x3ff23456789abcde)]
-    rows.append(('natural_160_bit_refinement',int(refinement['x'],16),int(refinement['y'],16)))
+    rows.append(('natural_midpoint_comparison',int(refinement['x'],16),int(refinement['y'],16)))
     result = {}
     for label,x,y in rows:
         want = oracle.reference('pow',x,y)
@@ -122,7 +141,9 @@ def main():
     oracle = Oracle()
     candidate = machine(args.elf,args.bootrom)
     control = machine(args.control,args.bootrom)
-    report = run_public(candidate,oracle,cuts,int(proof['closest_lower_encoding'],16))
+    closest = int(proof['closest_lower_encoding'],16)
+    report = run_public(candidate,oracle,cuts,closest)
+    report['direct_midpoint_comparisons'] = check_midpoints(candidate,oracle,cuts,closest)
     samples = count_samples(control,candidate,oracle,cuts,report['refinements'][0])
     result = dict(status='PASS',mpfr=oracle.version,bootrom_sha256=candidate.bootrom_sha256,
                   elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),
