@@ -107,8 +107,36 @@ static void strict_remote_stop_inside_backpressure(void) {
     for(unsigned i=0;i<1024;++i)spectrum_sound_write(&lagging,0,8,i&15);
     assert(yields==1 && lagging.ay.reg[8]==15);spectrum_sound_end(&lagging);
 }
+static void selected_registers_survive_sound_handoff(void) {
+    configure(&lagging,ram[0]);
+    z80* z=&lagging.cpu;
+    // Snapshot loaders can restore the chip address before audio is opened.
+    lagging.ay.adr=9;
+    lagging.ay2.adr=12;
+    spectrum_sound_begin(&lagging,NULL,NULL);
+    // The M3 mixer exports oscillator state, which has no Z80 port latch.
+    lagging.ay.adr=lagging.ay2.adr=0;
+    spectrum_sound_end(&lagging);
+    assert(lagging.ay.adr==9 && lagging.ay2.adr==12);
+    z->port_out(z,0xbffd,13);
+    assert(lagging.ay.reg[9]==13 && lagging.ay.reg[0]==70);
+
+    spectrum_sound_begin(&lagging,NULL,NULL);
+    z->port_out(z,0xfffd,7);
+    z->port_out(z,0xfffd,0xfe);
+    z->port_out(z,0xfffd,10);
+    spectrum_sound_recover(&lagging);
+    assert(lagging.ay.adr==7 && lagging.ay2.adr==10 && lagging.sound.selected==1);
+    z->port_out(z,0xbffd,11);
+    spectrum_sound_end(&lagging);
+    assert(lagging.ay2.reg[10]==11 && lagging.ay2.reg[0]==0);
+}
 int main(int argc,char** argv) {
     if(argc==2 && !strcmp(argv[1],"late-full"))late_full_queue_can_drain();
-    else {timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();io_keeps_current_timestamp_open();lost_coprocessor_recovers_inside_backpressure();strict_remote_stop_inside_backpressure();}
-    puts("Audio clock: AY phase continues through underrun, late full queue drains, unpublished events stay queued, timestamps wrap: PASS");
+    else {
+        timeline_keeps_running();late_full_queue_can_drain();unpublished_and_wrapping_events();startup_gate();
+        io_keeps_current_timestamp_open();lost_coprocessor_recovers_inside_backpressure();
+        strict_remote_stop_inside_backpressure();selected_registers_survive_sound_handoff();
+    }
+    puts("Audio clock: AY phase and port latches, late/full ring, unpublished events and timestamp wrap: PASS");
 }

@@ -88,7 +88,10 @@ void spectrum_sound_begin(spectrum* s,void (*yield)(void*),void* context) {
     q->guest_cursor=q->producer_time=q->time=(uint32_t)s->cpu.cyc;q->clock_remainder=0;
     atomic_store_explicit(&q->produced,q->time,memory_order_release);
     q->latest_dac[0]=q->beeper;q->latest_dac[1]=q->covox;q->latest_dac[2]=q->specdrum;
-    for(unsigned chip=0;chip<2;++chip) memcpy(q->regs[chip],chip?s->ay2.reg:s->ay.reg,16);
+    for(unsigned i=0;i<2;++i) {
+        const PSG* p=i?&s->ay2:&s->ay;
+        memcpy(q->regs[i],p->reg,16);q->selected_reg[i]=p->adr;
+    }
     q->yield=yield;q->yield_context=context;q->asynchronous=true;
     q->startup_samples=0;
     atomic_store_explicit(&q->clock_running,true,memory_order_release);
@@ -108,6 +111,7 @@ void spectrum_sound_recover(void* context) {
         PSG_setVolumeMode(p,s->sound_chip==SPECTRUM_YM?1:2);
         PSG_setClock(p,spectrum_ay_clock(s));PSG_reset(p);
         for(unsigned reg=0;reg<16;++reg)PSG_writeReg(p,reg,q->regs[i][reg]);
+        p->adr=q->selected_reg[i];
     }
     q->beeper=q->latest_dac[0];q->covox=q->latest_dac[1];q->specdrum=q->latest_dac[2];
     q->input=q->output=0;memset(q->stereo,0,sizeof(q->stereo));
@@ -123,6 +127,8 @@ void spectrum_sound_end(spectrum* s) {
     while((int32_t)(produced-(q->time+140))>=0) (void)spectrum_sound_render(s);
     uint32_t r=atomic_load_explicit(&q->read,memory_order_relaxed),w=atomic_load_explicit(&q->write,memory_order_acquire);
     while(r!=w) { const spectrum_sound_event e=q->events[r&(SPECTRUM_SOUND_QUEUE_EVENTS-1)];apply(s,e.device,e.reg,e.value);++r; }
+    // M3 restores synthesis state. Port selection belongs to the guest Z80.
+    s->ay.adr=q->selected_reg[0];s->ay2.adr=q->selected_reg[1];
     atomic_store_explicit(&q->read,r,memory_order_release);q->asynchronous=false;spectrum_sound_clock(s,false);
 }
 uint32_t spectrum_sound_render(void* context) {
