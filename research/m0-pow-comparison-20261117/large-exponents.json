@@ -1,0 +1,277 @@
+{
+  "status": "PASS_LARGE_EXPONENT_BAND",
+  "exceptional_base_encoding": "3fefffffffffffff",
+  "minimum_magnitude_encoding": "43d0000000000000",
+  "cutoff_encodings": {
+    "overflow": "43d62e42fefa39ef",
+    "band": "43d6adcd003458bc",
+    "underflow": "43d74910d52d3052"
+  },
+  "rounded_subnormal_codes_maximum": 134217728,
+  "checked_midpoints": 134217728,
+  "closest_lower_encoding": "0000000000aba8c7",
+  "minimum_exponent_grid_distance_units": 5645018407368498621387029,
+  "exponent_grid_fractional_bits": 112,
+  "log_gap_strict_lower_bound": "2^-73",
+  "largest_active_binade_positive_exponents_all_bases": 2623653783775044,
+  "largest_active_binade_negative_exponents_all_bases": 2763884486575633,
+  "positive_exponents_in_subnormal_power_path": 170715638192022,
+  "fast_exp_argument": {
+    "fractional_bits": 64,
+    "error_strict_upper_bound_units": 2
+  },
+  "integer_power_precision_bits": 160,
+  "power_work_bound": {
+    "squares": 62,
+    "multiply_by_base": 52,
+    "limb_multiply_accumulates": 5490
+  },
+  "source_sha256": {
+    "research/m0-pow-comparison-20261117/large_exponents.py": "2a059f62e6e949070f01adac8383e68a3d9ba1460516bc5bf37865fcdeea4022",
+    "research/m0-pow-comparison-20261117/midpoint_grid.py": "0f707181bf8e3ae93ab20dac3843bb647ee9dd456434b12aa898ba2851089645",
+    "code/native_eabi_m0_pow_large_constants.inc": "5b3f47d15abfd6d2c476043bb6dff14a4b1dc0cda7be3ebd4883e3efaa712ea4",
+    "code/native_eabi_m0_pow_large.inc": "4df5742d9f31d527e323b8d8d41b7afc17d053187783fa1cfb9e6463a9d3ed1a",
+    "code/native_eabi_m0_pow_large_power.inc": "7315c09740a03bdb99a5893554dd6b6c3f6c4bef8f86692d12d797acd391d0b0",
+    "code/native_eabi_m0_pow_power_bounds.inc": "4df51f0ddc5b7e517e1de7569bc16c9edaf14371ac777b16c89daa8fc38d92a8",
+    "code/native_eabi_m0_pow_fast.inc": "4382ce89a5730abd286ab6297ee679ff4c77fd3e58ddedc89e9063a8e5484251",
+    "code/native_eabi_m0_pow_exp_round.inc": "891c0616e6fb3cd21fcbf9d367c204b792362c9edc885f2f124fffc7c9c071dc",
+    "code/native_eabi_m0_cr.cpp": "881be7303bf23571acf7418e7934183dd795b562a6b086fed04a2d4fa07b3c10",
+    "dev/tools/certify_m0_pow_fast.py": "7cfcc8921233b855343addc8ba74f4cb608880b23eee9ca20a84be12060e5af9"
+  },
+  "practical_uniform_bound_for_all_binary64": false,
+  "host": {
+    "status": "PASS",
+    "packing": 4895,
+    "classification": 1380,
+    "saturated_against_mpfr": 972,
+    "direct_powers_against_mpfr": 12086,
+    "mpfr": "4.2.2"
+  },
+  "arm": {
+    "status": "PASS",
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "elf_sha256": "7b7ba5b39719b8d710edb91f41cac4447ec723043d99c25d1ef1d97b33677be7",
+    "control_elf_sha256": "50d390dc94560c0bc24f5bf87be5f383caa01223138725dfed486acd9ddc2cc5",
+    "public_cases": 3478,
+    "covered_cases": 3031,
+    "stage_counts": {
+      "core": 411,
+      "fast": 1120,
+      "160": 2
+    },
+    "refinements": [
+      {
+        "x": "3fefffffffffffff",
+        "y": "43d6c1a2366c8fc8",
+        "rounded": "0000000000aba8c7"
+      },
+      {
+        "x": "bfefffffffffffff",
+        "y": "43d6c1a2366c8fc8",
+        "rounded": "0000000000aba8c7"
+      }
+    ],
+    "samples": {
+      "large_far_base": {
+        "x": "3feffffffffffffe",
+        "y": "43d0000000000000",
+        "rounded": "0000000000000000",
+        "control": {
+          "instructions": 955,
+          "stack_bytes": 352
+        },
+        "candidate": {
+          "instructions": 87,
+          "stack_bytes": 80
+        }
+      },
+      "large_other_direction": {
+        "x": "3ff0000000000001",
+        "y": "43d0000000000000",
+        "rounded": "7ff0000000000000",
+        "control": {
+          "instructions": 959,
+          "stack_bytes": 352
+        },
+        "candidate": {
+          "instructions": 92,
+          "stack_bytes": 80
+        }
+      },
+      "first_certified_subnormal": {
+        "x": "3fefffffffffffff",
+        "y": "43d6adcd003458bc",
+        "rounded": "0000000008000000",
+        "control": {
+          "instructions": 38057,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 665,
+          "stack_bytes": 208
+        }
+      },
+      "subnormal_interior": {
+        "x": "3fefffffffffffff",
+        "y": "43d6fb6eeab0c487",
+        "rounded": "0000000000002000",
+        "control": {
+          "instructions": 38138,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 665,
+          "stack_bytes": 208
+        }
+      },
+      "negative_base_even_exponent": {
+        "x": "bfefffffffffffff",
+        "y": "43d6adcd003458bc",
+        "rounded": "0000000008000000",
+        "control": {
+          "instructions": 38103,
+          "stack_bytes": 1972
+        },
+        "candidate": {
+          "instructions": 665,
+          "stack_bytes": 208
+        }
+      },
+      "last_minimum_subnormal": {
+        "x": "3fefffffffffffff",
+        "y": "43d74910d52d3051",
+        "rounded": "0000000000000001",
+        "control": {
+          "instructions": 38014,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 662,
+          "stack_bytes": 208
+        }
+      },
+      "first_zero": {
+        "x": "3fefffffffffffff",
+        "y": "43d74910d52d3052",
+        "rounded": "0000000000000000",
+        "control": {
+          "instructions": 38652,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 73,
+          "stack_bytes": 80
+        }
+      },
+      "first_infinity": {
+        "x": "3fefffffffffffff",
+        "y": "c3d62e42fefa39ef",
+        "rounded": "7ff0000000000000",
+        "control": {
+          "instructions": 36876,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 74,
+          "stack_bytes": 80
+        }
+      },
+      "ordinary": {
+        "x": "3ff23456789abcde",
+        "y": "3fda123456789abc",
+        "rounded": "3ff0dd2269d082af",
+        "control": {
+          "instructions": 1212,
+          "stack_bytes": 376
+        },
+        "candidate": {
+          "instructions": 1215,
+          "stack_bytes": 376
+        }
+      },
+      "near_one_ordinary": {
+        "x": "3fefffffffffffff",
+        "y": "3ff23456789abcde",
+        "rounded": "3fefffffffffffff",
+        "control": {
+          "instructions": 1337,
+          "stack_bytes": 352
+        },
+        "candidate": {
+          "instructions": 1340,
+          "stack_bytes": 352
+        }
+      },
+      "natural_160_bit_refinement": {
+        "x": "3fefffffffffffff",
+        "y": "43d6c1a2366c8fc8",
+        "rounded": "0000000000aba8c7",
+        "control": {
+          "instructions": 38105,
+          "stack_bytes": 1932
+        },
+        "candidate": {
+          "instructions": 137625,
+          "stack_bytes": 516
+        }
+      }
+    }
+  },
+  "firmware": {
+    "base_revision": "070f23ce76eb08a99daba6f88be9778d1ede9731",
+    "build_id": "74ae8bed",
+    "crc32": "4157a868",
+    "bin_sha256": "c86f8127dbce1bfbdedb513efe58e76fdf2443ae726e18015aa3b6707a03e983",
+    "flash_bytes": 1805072,
+    "static_ram_bytes": 119896,
+    "scratch_y_bytes": 4096
+  },
+  "repeated_arm_on_new_main": {
+    "base_revision": "f6ac7b29451141595be9bc1c8d12cb54f58b9e8a",
+    "build_id": "30b3a4e1",
+    "crc32": "c30f1bd6",
+    "bin_sha256": "5e392351a23adb04dcfc0bfb4bb7b8a3ef96fdab2a311b0ce218ed21d0c29c8f",
+    "flash_bytes": 1805072,
+    "static_ram_bytes": 119896,
+    "scratch_y_bytes": 4096,
+    "status": "PASS",
+    "elf_sha256": "33867d1534c0def38d19c92d7b0a4fec060ef0a8de3626d2019fe5fccdc7a996",
+    "public_cases": 3478,
+    "covered_cases": 3031,
+    "identical_instruction_and_stack_samples": true
+  },
+  "public_regression": {
+    "pow": {
+      "status": "PASS",
+      "cases": 40395,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "0427494149a0cda2d3e41dc396ddc51af1744ecc7c7b1170290fb016fc4dc377"
+    },
+    "exp": {
+      "status": "PASS",
+      "cases": 40196,
+      "wrong_rounding": 0,
+      "examples": [],
+      "sha256": "27785ff042c0635482f443c4cba5ff08d2452b485887914e2cbb7547f15bfd75"
+    }
+  },
+  "timing_app_emulation": {
+    "status": "PASS",
+    "elf_sha256": "7b7ba5b39719b8d710edb91f41cac4447ec723043d99c25d1ef1d97b33677be7",
+    "app_sha256": "2d78518715b833ecdcdaeab387cf7f7bd49ea3a9567b2e0a1939d862e254fac8",
+    "exact_arm_stage_calls": {
+      "POW_PUBLIC": 5660,
+      "POW_DIRECT_160": 24
+    },
+    "rows": 9,
+    "mpfr": "4.2.2",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "scope": "Production arithmetic; fake platform timer, clock, watchdog and SD protocol"
+  },
+  "fast_exp_certificate": {
+    "status": "PASS_ARITHMETIC_BOUNDS",
+    "pow_exp_q62_enclosure": "3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise"
+  }
+}

@@ -2,6 +2,7 @@
 // Other ARMv6-M builds retain the existing flash section.
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 #define MK61_M0_POW_HOT_SECTION ".scratch_y.m0_pow_hot"
+#include "native_eabi_m0_pow_large.inc"
 #else
 #define MK61_M0_POW_HOT_SECTION ".m0_pow_extension"
 #endif
@@ -459,84 +460,43 @@ __attribute__((optimize("Os"),noinline,section(MK61_M0_POW_HOT_SECTION))) static
     negative_argument=logarithm.negative^bool(yb&D::Sign);
   }
 pow_exp_argument:
-  // The same certified residual polynomial covers finite results up
-  // through overflow and gradual underflow. Far endpoints remain exact.
-  if(argument.high>=(negative_argument?746U:710U)) return real(negative_argument?0:D::Infinity);
-  const U p0=wide32(uint32_t(argument.low>>32),0xB8AA3B29U);
-  const U p1=wide32(uint32_t(argument.high),0xB8AA3B29U)+(p0>>32);
-  const uint32_t n=uint32_t((p1+(1U<<21))>>22);
-  const U reduction=wide32(uint32_t(exp_step_high),n)+(U(uint32_t(exp_step_high>>32)*n)<<32);
-  U r=argument.low-reduction-uint32_t(wide32(n,exp_step_low)>>32);
-  int k=int(n);
-  if(negative_argument) {r=U(0)-r;k=-k;}
-  const bool negative=(r>>63)!=0;
-  const U magnitude=negative?U(0)-r:r;
-  // Protect the polynomial's certified domain independently of the segment
-  // estimate. Opposing truncations keep split reduction error below
-  // 1.001 Q64 units; certify_m0_exp_fast.py checks the complete interval.
-  if(magnitude>UINT64_C(12912720851596686)) return pow_refine_checked(x,y); // 0.0007
-  const U z=exp_high_square(magnitude)&((U(1)<<44)-1);
-  const uint32_t t=uint32_t((magnitude+(1U<<21))>>22); // |r| in Q42
-  // Evaluate r/6+r*r/24+r*r*r/120 in Q44; it still fits int32.
-  // The combined coefficient error is <3 Q44 units. Including the fifth
-  // term costs fewer wide products than the old Q40 fourth-degree path.
-  const uint32_t linear=pow_exp_linear32(t);
-  const uint32_t square=uint32_t((z+(1U<<22))>>23);
-  const uint32_t quadratic=uint32_t(wide32(square+1,0xAAAAAAABU)>>33);
-  const uint32_t cubic=(uint32_t(z>>32)*(t>>16)+(1U<<16))>>17;
-  const uint32_t fifth=((cubic+7)*2185U)>>15;
-  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
-    (negative?-int32_t(fifth):int32_t(fifth));
-  const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
-  const U p=wide32(uint32_t(z),tail_magnitude);
-  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
-  const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
-  const unsigned index=unsigned(k)&511U;
-  k=(k-int(index))/512;
-  U q=exp_table[index];
-  const bool below=(delta>>63)!=0;
-  const U d=below?U(0)-delta:delta;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  // The rounded13-product specialization has error<=1/2+2^-15.
-  const U correction=mk61_m0_pow_exp_product(q,d);
-#else
-  const U cross=wide32(uint32_t(q),uint32_t(d>>32))+
-    wide32(uint32_t(q>>32),uint32_t(d));
-  const U correction=wide32(uint32_t(q>>32),uint32_t(d>>32))+(cross>>32)+1;
-#endif
-  q=below?q-correction:q+correction;
-#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
-  unsigned error=(input_error<=129?3U:4U)+(input_error+1)/2;
-#else
-  unsigned error=4+(input_error+1)/2;
-#endif
-  if(error>=256) return pow_refine_checked(x,y);
-  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
-  if(k>1023) {
-    // At exponent1024 the overflow midpoint is Q62 2^62-256.
-    if(k>1024 || q-(U(1)<<62)+256>error) return real(D::Infinity);
-    return pow_refine_checked(x,y);
-  }
-  if(k<-1022) {
-    if(k<-1075) {
-      const U half=U(1)<<63;
-      if(k<-1076 || (q<half && half-q>error)) return 0.0;
-    } else {
-      const unsigned shift=unsigned(-k-1012);
-      const U mask=(U(1)<<shift)-1,half=U(1)<<(shift-1),tail=q&mask;
-      const U distance=tail>half?tail-half:half-tail;
-      if(distance>error) {
-        const U retained=q>>shift;
-        return real(retained+U(tail>half || (tail==half && (retained&1))));
-      }
-    }
-    return pow_refine_checked(x,y);
-  }
-  const uint32_t rounding_tail=uint32_t(q)&1023U;
-  if(uint32_t(rounding_tail-(512U-error))<=2*error) return pow_refine_checked(x,y);
-  const U rounded=(q+511+((q>>10)&1))>>10;
-  return real((U(k+1022)<<52)+rounded);
+#define MK61_POW_EXP_FAILURE() pow_refine_checked(x,y)
+#include "native_eabi_m0_pow_exp_round.inc"
+#undef MK61_POW_EXP_FAILURE
 }
+
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
+static double pow_large_subnormal_refine(U yb) {
+  const U result=mk61_m0_pow_large_subnormal(yb);
+  if(result!=UINT64_MAX) return real(result);
+  return mk61_m0_cr_pow(real(m0_pow_large::ExceptionalBase),real(yb));
+}
+
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
+static double pow_large_subnormal_fast(U yb) {
+  // y=1024*n, x=1-2^-53. The first two terms of -y*ln(x)
+  // in Q64 are n*2^21+n*2^-33. Flooring and the tail lose <2 units.
+  const U significand=(yb&D::Fraction)|D::Hidden;
+  const Product argument={significand>>43,(significand<<21)+(significand>>33)};
+  constexpr unsigned input_error=2;
+  constexpr bool negative_argument=true;
+#define MK61_POW_EXP_FAILURE() pow_large_subnormal_refine(yb)
+#include "native_eabi_m0_pow_exp_round.inc"
+#undef MK61_POW_EXP_FAILURE
+}
+
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
+static double pow_large_dispatch(double x,double y) {
+  const U xb=bits(x),yb=bits(y);
+  const U result=m0_pow_large::saturate(xb,yb);
+  if(result!=UINT64_MAX) return real(result);
+  if(m0_pow_large::subnormal_input(xb&D::Magnitude,yb))
+    return pow_large_subnormal_fast(yb);
+  if(xb&D::Sign) return pow_negative_integer(x,y);
+  return pow_positive_checked(x,y);
+}
+#endif
 
 __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) MK61_SOFT_PCS double mk61_m0_pow_dispatch(double x,double y) {
   const U xb=bits(x),yb=bits(y);
@@ -558,6 +518,10 @@ __attribute__((optimize("Os"),noinline,section(".m0_pow_dispatch_extension"))) M
   const U ym=yb&D::Magnitude;
   if(!ym) return real((xb&D::Magnitude)>D::Infinity && !(xb&D::Quiet)?xb|D::Quiet:UINT64_C(0x3FF0000000000000));
   if(xb==UINT64_C(0x3FF0000000000000)) return real(ym>D::Infinity && !(yb&D::Quiet)?yb|D::Quiet:xb);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  if(__builtin_expect(uint32_t(ym>>32)>=m0_pow_large::FirstHighWord,0))
+    return pow_large_dispatch(x,y);
+#endif
   if(xb&D::Sign) return pow_negative_integer(x,y);
   return pow_positive_checked(x,y);
 }
