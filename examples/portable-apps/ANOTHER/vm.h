@@ -30,11 +30,18 @@ typedef struct {
     uint16_t part, next_part, code_id, polygon_id, polygon2_id, palette_id;
     uint32_t cursor;
     uint8_t sp, palette_request;
+    /* Zero while preparing strips, UINT32_MAX for unsupported scenery,
+     * otherwise the PSRAM address of the completed indexed background. */
+    uint32_t backdrop;
+    uint8_t backdrop_rows;
     bool fault;
 } aw_vm;
 
 bool aw_vm_init(aw_vm *vm, aw_assets *assets, aw_video *video, aw_vm_host host, uint16_t seed);
 bool aw_vm_set_part(aw_vm *vm, uint16_t part);
+/* Use one inactive LCD backing page as a cache for the pool exit scenery. */
+#define AW_BACKDROP_ROWS 20u
+void aw_vm_prepare_backdrop(aw_vm *vm, uint32_t store, uint8_t *scratch);
 bool aw_vm_frame(aw_vm *vm, aw_input *input);
 
 #endif

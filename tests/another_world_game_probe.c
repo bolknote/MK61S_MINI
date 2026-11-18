@@ -147,6 +147,9 @@ typedef struct {
 #ifdef AW_DISPLAY_ANALYZE
     uint64_t store_reads, store_read_bytes, store_writes, store_write_bytes;
 #endif
+#if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
+    uint32_t backdrop_store, backdrop_read_bytes;
+#endif
     aw_audio *audio, *remote;
 } host;
 uint32_t module_entry(uint32_t, const stm3_api *, stm3_job *);
@@ -162,6 +165,10 @@ static bool store_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     if (offset > h->capacity || size > h->capacity - offset) return false;
 #ifdef AW_DISPLAY_ANALYZE
     ++h->store_reads; h->store_read_bytes += size;
+#endif
+#if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
+    if (h->backdrop_store && offset >= h->backdrop_store && offset - h->backdrop_store < AW_VIDEO_PAGE_BYTES)
+        h->backdrop_read_bytes += size;
 #endif
     memcpy(out, h->store + offset, size); return true;
 }
@@ -401,7 +408,9 @@ static void stop_audio(void *ctx) { host *h = ctx; aw_audio_stop(h->audio); aw_a
 typedef struct {
     host io;
     aw_video video;
+    aw_vm vm;
     unsigned slices, previous_scroll, checked;
+    unsigned strips_to_prepare;
     uint64_t previous_reads, previous_writes, pool_start_io;
     uint64_t route_hash;
 } cut_probe;
@@ -429,6 +438,7 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
         assert(page_pixels[0][i] == palette[(pixels[i / 2] >> ((i & 1) ? 0 : 4)) & 15]);
     const uint32_t frame_hash = aw_storm_frame_hash(pixels, palette);
     p->route_hash = (p->route_hash ^ frame_hash) * UINT64_C(1099511628211);
+    if (p->io.frames >= 6 && p->io.frames <= 68) assert(p->slices == 4);
     /* Evicting the background between alternating display pages costs
      * over 5,000 PSRAM transactions during these twenty pool frames. */
     if (p->io.frames == 5) p->pool_start_io = p->io.store_reads + p->io.store_writes;
@@ -449,6 +459,13 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
         {222, 4, 0xBA6ADCE8u, 18 * 1024, AW_VIDEO_PAGE_BYTES},
         {223, 4, 0x4D86D570u, 18 * 1024, 28 * 1024}
     };
+    if (p->io.frames == 64) {
+        assert(frame_hash == 0xF627725Bu && display_bytes[display_part] - wire_before == 128000);
+        assert(p->vm.backdrop_rows == p->strips_to_prepare * AW_BACKDROP_ROWS);
+        assert(p->io.backdrop_read_bytes == (p->vm.backdrop_rows == AW_VIDEO_HEIGHT ? AW_VIDEO_PAGE_BYTES : 0));
+        if (p->vm.backdrop_rows == AW_VIDEO_HEIGHT)
+            assert(p->io.store_write_bytes - p->previous_writes <= AW_VIDEO_PAGE_BYTES);
+    }
     if (p->checked < sizeof(cuts) / sizeof(cuts[0]) && p->io.frames == cuts[p->checked].frame) {
         assert(p->slices == cuts[p->checked].slices);
         assert(frame_hash == cuts[p->checked].hash);
@@ -456,6 +473,18 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
         const uint64_t writes = p->io.store_write_bytes - p->previous_writes;
         assert(reads <= cuts[p->checked].reads && writes <= cuts[p->checked].writes);
         ++p->checked;
+    }
+    /* Model one idle window per strip. A second run only finishes half
+     * the backdrop before the cut and must still show the same pixels. */
+    if (p->io.frames >= 26 && p->io.frames - 26 < p->strips_to_prepare) {
+        uint8_t scratch[AW_BACKDROP_ROWS * AW_VIDEO_STRIDE + 2];
+        scratch[0] = scratch[sizeof(scratch) - 1] = 0xa5;
+        const unsigned top = p->vm.backdrop_rows;
+        const uint64_t before = p->io.store_write_bytes;
+        aw_vm_prepare_backdrop(&p->vm, p->io.backdrop_store, scratch + 1);
+        assert(p->vm.backdrop_rows == top + AW_BACKDROP_ROWS);
+        assert(p->io.store_write_bytes - before == AW_BACKDROP_ROWS * AW_VIDEO_STRIDE);
+        assert(scratch[0] == 0xa5 && scratch[sizeof(scratch) - 1] == 0xa5);
     }
     for (unsigned poll = 0; poll < 8; ++poll) {
         const uint64_t before = p->io.store_write_bytes;
@@ -467,10 +496,11 @@ static bool cut_present(void *ctx, const uint8_t *pixels, const uint16_t *palett
     ++p->io.frames;
     return true;
 }
-static int camera_cut(const char *path) {
+static void camera_cut(const char *path, unsigned strips_to_prepare) {
     cut_probe p = {
         .io = {.path = path, .capacity = 2 * 1024 * 1024},
-        .route_hash = UINT64_C(14695981039346656037)
+        .route_hash = UINT64_C(14695981039346656037),
+        .strips_to_prepare = strips_to_prepare
     };
     p.io.store = calloc(1, p.io.capacity);
     uint8_t pixels[AW_VIDEO_PAGE_BYTES], spare[AW_VIDEO_PAGE_BYTES], list[4096];
@@ -485,31 +515,35 @@ static int camera_cut(const char *path) {
     aw_asset_entry entries[AW_ASSET_LIMIT];
     assert(p.io.store && aw_assets_init(&a, entries, list, bytes, p.io.capacity, &p.io, bank_read, store_read, store_write));
     assert(aw_video_init(&p.video, &a, a.used, pixels, cut_present, &p));
+    p.io.backdrop_store = a.used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
     assert(aw_video_use_spare(&p.video, spare));
     aw_video_bands bands;
     aw_video_track_bands(&p.video, &bands);
     assert(aw_display_compact_init(&compact, &a, a.used + 4 * AW_VIDEO_PAGE_BYTES,
                                    compact_previous, sizeof(compact_previous), compact_previous, sizeof(compact_previous)));
-    aw_vm vm;
-    assert(aw_vm_init(&vm, &a, &p.video, (aw_vm_host){.ctx = &p, .frame_wait = cut_wait}, 1));
-    vm.vars[0xBC] = 0x10; vm.vars[0xC6] = 0x80; vm.vars[0xF2] = 4000; vm.vars[0xDC] = 33;
-    assert(aw_vm_set_part(&vm, AW_VM_FIRST_PART + 2));
+    assert(aw_vm_init(&p.vm, &a, &p.video, (aw_vm_host){.ctx = &p, .frame_wait = cut_wait}, 1));
+    p.vm.vars[0xBC] = 0x10; p.vm.vars[0xC6] = 0x80; p.vm.vars[0xF2] = 4000; p.vm.vars[0xDC] = 33;
+    assert(aw_vm_set_part(&p.vm, AW_VM_FIRST_PART + 2));
     for (unsigned step = 0; step < 1800; ++step) {
         aw_input input = {.directions = step < 90 ? AW_INPUT_UP : AW_INPUT_RIGHT, .button = step >= 90};
         if (step >= 120 && step % 55 < 18) input.directions |= AW_INPUT_UP;
-        assert(aw_vm_frame(&vm, &input));
+        assert(aw_vm_frame(&p.vm, &input));
     }
     /* Fingerprint of the independently recorded 1802 indexed frames and palettes. */
     assert(p.io.frames == 1802 && p.route_hash == UINT64_C(0xDEBE2AC625BAA207) && p.checked == 5);
     free(p.io.store);
-    puts("DOS pool route and camera cuts verified across 1802 frames");
-    return 0;
 }
 #endif
 
 int main(int argc, char **argv) {
 #if defined(AW_TWO_PAGE_ANALYZE) && !defined(AW_TEST_STORM)
-    if (argc == 3 && !strcmp(argv[2], "camera-cut")) return camera_cut(argv[1]);
+    if (argc == 3 && !strcmp(argv[2], "camera-cut")) {
+        const unsigned strips = AW_VIDEO_HEIGHT / AW_BACKDROP_ROWS;
+        camera_cut(argv[1], strips);
+        camera_cut(argv[1], strips / 2);
+        puts("DOS pool route and camera cuts verified across 1802 frames with complete and partial scenery");
+        return 0;
+    }
 #endif
     aw_asset_entry entries[AW_ASSET_LIMIT];
     if (argc < 2 || argc > 3) { fprintf(stderr, "usage: %s DATA_DIR [WALK_STEPS]\n", argv[0]); return 2; }

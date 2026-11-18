@@ -138,6 +138,22 @@ static void run(bool two_pages) {
             assert(m.bytes[8192 + AW_VIDEO_PAGE_BYTES + i] == 0x99);
             assert(m.bytes[8192 + 2 * AW_VIDEO_PAGE_BYTES + i] == 0x88);
         }
+        for (unsigned page = 0; page < 4; ++page) assert(aw_video_fill(&v, page, (uint8_t)(page + 1)));
+        assert(aw_video_flush(&v));
+        /* The evicted page matches first the overwritten page's backing,
+         * then the other SRAM page's backing. Neither eviction needs I/O. */
+        assert(aw_video_fill(&v, 0, 2) && aw_video_fill(&v, 3, 7));
+        uint32_t written = m.write_bytes;
+        assert(aw_video_fill(&v, 1, 9) && m.write_bytes == written);
+        assert(aw_video_flush(&v));
+        assert(aw_video_fill(&v, 0, 9) && aw_video_fill(&v, 1, 11));
+        written = m.write_bytes;
+        assert(aw_video_fill(&v, 2, 12) && m.write_bytes == written);
+        assert(aw_video_flush(&v));
+        const uint8_t expected[] = {0x99, 0xbb, 0xcc, 0x77};
+        for (unsigned page = 0; page < 4; ++page)
+            for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i)
+                assert(m.bytes[v.page_base + page * AW_VIDEO_PAGE_BYTES + i] == expected[page]);
     }
     bands.last_identity = UINT32_MAX - AW_VIDEO_BANDS + 1;
     assert(aw_video_show(&v, 2) && !aw_video_band_identities(&v));

@@ -166,6 +166,32 @@ void staged_replacement_cuts() {
     assert(files::remove(path));
     std::puts("PASS staged replacement: cuts at publication and old-file cleanup");
 }
+void staged_packet_boundary(BYTE type) {
+    format(type);
+    constexpr const char* path = "/launch.app";
+    constexpr unsigned checkpoint = 32768;
+    const std::vector<u8> original = {'o', 'l', 'd'};
+    for (unsigned size : {checkpoint - 1, checkpoint, checkpoint + 1, 32940u}) {
+        std::vector<u8> replacement(size), copy(size);
+        for (unsigned i = 0; i < size; ++i) replacement[i] = (u8)(i ^ (i >> 8));
+        assert(files::write(path, original.data(), original.size()));
+        for (bool publish : {false, true}) {
+            auto* writer = files::begin_write(path, false, false, true);
+            assert(writer);
+            for (unsigned at = 0; at < size; at += 96)
+                assert(files::append_write(writer, replacement.data() + at, std::min(96u, size - at)));
+            if (publish) assert(files::commit_write(writer));
+            else files::cancel_write(writer);
+            const auto& expected = publish ? replacement : original;
+            unsigned used = 0;
+            assert(files::read(path, copy.data(), copy.size(), used) && used == expected.size());
+            assert(std::equal(expected.begin(), expected.end(), copy.begin()));
+            assert(!files::exists("/.MK61-0.TMP") && !files::exists("/.MK61-0.BAK"));
+        }
+    }
+    assert(files::remove(path));
+    std::puts("PASS staged binary packets across 32 KiB, cancellation and publication");
+}
 void suite(BYTE type,const char* name) {
     format(type);
     // Exercise first-use provisioning independently of an already valid journal.
@@ -287,5 +313,6 @@ DRESULT disk_ioctl(BYTE drive,BYTE op,void* out) {
 int main() {
     std::setbuf(stdout,nullptr);
     suite(FM_FAT,"FAT16");suite(FM_FAT32,"FAT32");suite(FM_EXFAT,"exFAT");
+    for (BYTE type : {FM_FAT, FM_FAT32, FM_EXFAT}) staged_packet_boundary(type);
     std::printf("PASS recovery: %u power-cut prefixes and %u interrupted-replay prefixes; three real FatFs formats\n",cuts,repair_cuts);
 }

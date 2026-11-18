@@ -29,6 +29,9 @@ int main(void) {
     uint8_t list[128 * 20 + 1] = {0};
     entry(list + 0x7D * 20, 0, 32); entry(list + 0x7E * 20, 32, 27); entry(list + 0x7F * 20, 96, 1);
     list[128 * 20] = 0xFF;
+    entry(list + 0x11 * 20, 96, 1);
+    entry(list + 0x1A * 20, 0, 32);
+    entry(list + 0x1C * 20, 96, 1);
     const uint8_t code[] = {
         0x00,1,0,2, 0x03,1,0,3, 0x08,1,0,21,
         0x0E,2,5, 0x0D,2, 0x0B,0,0, 0x10,2, 0x06, 0x11,
@@ -36,13 +39,14 @@ int main(void) {
     };
     /* Thread 1 starts at the second MOV instruction. */
     uint8_t program[sizeof(code)]; memcpy(program, code, sizeof(code)); program[11] = 24;
-    memory m = {0}; m.size = 4096 + 4 * AW_VIDEO_PAGE_BYTES; m.store = calloc(1, m.size);
+    memory m = {0}; m.size = 4096 + 5 * AW_VIDEO_PAGE_BYTES; m.store = calloc(1, m.size);
     uint8_t *frame = malloc(AW_VIDEO_PAGE_BYTES); aw_assets *a = calloc(1, sizeof(*a));
     aw_video *video = calloc(1, sizeof(*video)); aw_vm *vm = calloc(1, sizeof(*vm));
     assert(m.store && frame && a && video && vm);
     memcpy(m.bank + 32, program, sizeof(program));
     /* The declared code length must include both threads. */
     entry(list + 0x7E * 20, 32, sizeof(program));
+    entry(list + 0x1B * 20, 32, sizeof(program));
     assert(aw_assets_init(a, entries, list, sizeof(list), m.size, &m, bank, read_store, write_store));
     assert(aw_video_init(video, a, 4096, frame, present, &m));
     aw_vm_host hooks = {0};
@@ -54,6 +58,14 @@ int main(void) {
     assert(m.frames == 1 && vm->requested_pc[1] == 24);
     assert(aw_vm_frame(vm, &input)); assert(vm->vars[2] == 7);
     assert(aw_vm_frame(vm, &input)); assert(vm->pc[0] == 0xFFFF && vm->pc[1] == 0xFFFF);
+    /* A different pool script has no matching scenery sequence. Its VM and
+     * video must still take the ordinary path without writing to the cache. */
+    assert(aw_vm_set_part(vm, AW_VM_FIRST_PART + 2));
+    const uint32_t store = m.size - AW_VIDEO_PAGE_BYTES;
+    uint8_t scratch[AW_BACKDROP_ROWS * AW_VIDEO_STRIDE];
+    aw_vm_prepare_backdrop(vm, store, scratch);
+    assert(!vm->backdrop_rows && !vm->fault && aw_vm_frame(vm, &input) && m.frames == 2);
+    for (unsigned i = 0; i < AW_VIDEO_PAGE_BYTES; ++i) assert(!m.store[store + i]);
     free(vm); free(video); free(a); free(frame); free(m.store);
     puts("Another World VM tests passed"); return 0;
 }

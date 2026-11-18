@@ -12,7 +12,9 @@
 static const char storm_cache[] = "AWSTORM.BIN";
 static const mk61_app_services *services;
 static mk61_service_buffer external, screen, previous_frame, background_cache, background_tail;
-static aw_assets assets;
+static aw_assets *assets;
+static aw_asset_entry entries[AW_ASSET_LIMIT];
+static aw_video_bands band_state;
 static aw_video *video;
 static aw_display display;
 static aw_display_compact *compact_display;
@@ -160,13 +162,22 @@ static bool storm_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
 static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
     (void)ctx;
     const uint32_t deadline = last_frame - lead_ms;
+    /* During gameplay the second LCD page is idle. Rasterize one strip of
+     * its next backdrop into the unused tail of the previous-frame buffer. */
+    const unsigned strip_bytes = AW_BACKDROP_ROWS * AW_VIDEO_STRIDE;
+    if (scroll_ready && pages_available && !vm->backdrop && vm->part == AW_VM_FIRST_PART + 2 &&
+        compact_display->valid && strip_bytes <= compact_display->capacity &&
+        (compact_display->external || compact_display->offsets[AW_VIDEO_HEIGHT] <= compact_display->capacity - strip_bytes) &&
+        (int32_t)(deadline - mk61_api->millis_ms()) >= 18)
+        aw_vm_prepare_backdrop(vm, pages_display->second.external_base,
+                               compact_display->previous + compact_display->capacity - strip_bytes);
     while ((int32_t)(mk61_api->millis_ms() - deadline) < 0 && !input.quit && !pump_failed) {
         pump(NULL);
         if (scroll_ready && (int32_t)(deadline - mk61_api->millis_ms()) >= 3 &&
             !aw_video_write_one(video)) return false;
         /* Leave room for a storage operation and the audio/input pump. */
         if (!input.quit && !pump_failed && (int32_t)(deadline - mk61_api->millis_ms()) >= 12 &&
-            !aw_assets_prefetch_step(&assets)) pump_failed = true;
+            !aw_assets_prefetch_step(assets)) pump_failed = true;
     }
     return !input.quit && !pump_failed;
 }
@@ -253,6 +264,7 @@ static unsigned scroll_control(unsigned operation, unsigned bytes, void *request
     }
 }
 static bool restore_pages(void) {
+    vm->backdrop = 0; vm->backdrop_rows = 0;
     compact_display->valid = false;
     if (!pages_available || !aw_display_pages_init(pages_display, compact_display, pages_display->second.external_base))
         return false;
@@ -317,7 +329,7 @@ static bool present(void *ctx, const uint8_t *pixels, const uint16_t *palette) {
                                     &storm_lcd, present_pages, ctx)
             : present_pages(ctx, pixels, palette, identities, 0);
         if (shown) return !input.quit && !pump_failed;
-        if (assets.fault || !wait_for_frame(ctx) || !end_pages()) return false;
+        if (assets->fault || !wait_for_frame(ctx) || !end_pages()) return false;
         /* An optional display transaction failed: restore a complete ordinary
          * frame, with no assumptions about either partially written page. */
         pages_ready = false; compact_display->valid = false;
@@ -357,7 +369,7 @@ static void message(const char *line1, const char *line2) {
 int main(void) {
     /* The firmware reserves a separate stack. Keeping long-lived state there
      * leaves a larger contiguous heap block for the video-page cache. */
-    aw_asset_entry entries[AW_ASSET_LIMIT];
+    aw_assets asset_state; assets = &asset_state;
     aw_video video_state; video = &video_state;
     aw_audio audio_state; audio = &audio_state;
     aw_vm vm_state = {0}; vm = &vm_state; pages_ready = false;
@@ -365,7 +377,6 @@ int main(void) {
     aw_display_compact compact_state; compact_display = &compact_state;
     aw_display_pages pages_state; pages_display = &pages_state;
     aw_display_storm storm_state = {0}; storm = &storm_state;
-    aw_video_bands band_state;
     int16_t pending_samples[AW_AUDIO_BLOCK]; pending = pending_samples;
     const char *error = NULL; bool graphics = false, paired_frames = false;
     bool audio_prepared = false, arena_reserved = false; uint32_t compute = 0;
@@ -400,7 +411,7 @@ int main(void) {
         !file_read("MEMLIST.BIN", 0, screen.data, info.size)) {
         error = "Missing MEMLIST.BIN"; goto done;
     }
-    if (!aw_assets_init(&assets, entries, screen.data, info.size, external.size, NULL, bank_read, store_read, store_write)) {
+    if (!aw_assets_init(assets, entries, screen.data, info.size, external.size, NULL, bank_read, store_read, store_write)) {
         error = "Invalid game data"; goto done;
     }
     mk61_api->display_clear();
@@ -408,7 +419,7 @@ int main(void) {
     mk61_api->service();
     if (!mk61_api->graphics_begin()) { error = "Display unavailable"; goto done; }
     graphics = true;
-    assets.progress = pump;
+    assets->progress = pump;
     next_keys = next_audio = mk61_api->millis_ms();
     aw_prepared_cache prepared = {0};
     mk61_service_file_info prepared_info;
@@ -416,13 +427,13 @@ int main(void) {
     const bool has_prepared = services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0,
                                               sizeof(prepared_stat), &prepared_stat) &&
         !prepared_info.directory &&
-        aw_prepared_open(&prepared, screen.data, info.size, assets.count, prepared_info.size,
+        aw_prepared_open(&prepared, screen.data, info.size, assets->count, prepared_info.size,
                          screen.data + 4096, AW_VIDEO_PAGE_BYTES - 4096, NULL, prepared_read);
-    for (unsigned id = 0; id < assets.count && !input.quit && !pump_failed; ++id) {
-        const aw_asset_entry *e = &assets.entries[id];
+    for (unsigned id = 0; id < assets->count && !input.quit && !pump_failed; ++id) {
+        const aw_asset_entry *e = &assets->entries[id];
         if (e->type || !e->bank || !e->size || !e->packed_size) continue;
-        if ((!has_prepared || !aw_prepared_load(&prepared, &assets, id)) &&
-            !aw_assets_load(&assets, id) && assets.fault) {
+        if ((!has_prepared || !aw_prepared_load(&prepared, assets, id)) &&
+            !aw_assets_load(assets, id) && assets->fault) {
             error = "Cannot load game"; goto done;
         }
     }
@@ -434,24 +445,24 @@ int main(void) {
     storm_lcd = (aw_storm_output){page_select, page_show, page_rect, wait_for_frame_lead,
                                  try_select, try_rect, actual_spi_hz, display_deadline, page_latch_at};
     compute = mk61_app_compute_begin(services);
-    if (!aw_video_init(video, &assets, assets.used, screen.data, present, NULL)) { error = "Video init failed"; goto done; }
+    if (!aw_video_init(video, assets, assets->used, screen.data, present, NULL)) { error = "Video init failed"; goto done; }
     /* The native monochrome framebuffer is borrowed until graphics_end.
      * Store the previous color frame there losslessly, freeing the second
      * direct buffer to cache a game page. Once the old frame is compared,
      * the same borrowed framebuffer is scratch for the color rectangles. */
     mk61_service_framebuffer borrowed = {0};
-    if (previous_frame.data && assets.used <= assets.capacity &&
-        5 * AW_VIDEO_PAGE_BYTES <= assets.capacity - assets.used &&
+    if (previous_frame.data && assets->used <= assets->capacity &&
+        5 * AW_VIDEO_PAGE_BYTES <= assets->capacity - assets->used &&
         services->call(MK61_SERVICE_DISPLAY, MK61_SERVICE_DISPLAY_FRAMEBUFFER, sizeof(borrowed), 0, &borrowed) &&
         borrowed.pixels && borrowed.bytes >= 12800 && borrowed.width == 320 && borrowed.height == 320 &&
-        aw_display_compact_init(compact_display, &assets, assets.used + 4 * AW_VIDEO_PAGE_BYTES,
+        aw_display_compact_init(compact_display, assets, assets->used + 4 * AW_VIDEO_PAGE_BYTES,
                                 borrowed.pixels, 12800, borrowed.pixels, 12800) &&
         aw_video_use_spare(video, previous_frame.data)) compact_ready = true;
-    if (compact_ready && 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets.capacity - assets.used)
-        (void)aw_video_use_packed_page3(video, assets.used + 5 * AW_VIDEO_PAGE_BYTES, AW_VIDEO_PAGE3_PACKED_BYTES);
+    if (compact_ready && 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets->capacity - assets->used)
+        (void)aw_video_use_packed_page3(video, assets->used + 5 * AW_VIDEO_PAGE_BYTES, AW_VIDEO_PAGE3_PACKED_BYTES);
     aw_vm_host host = {NULL, frame_wait, pump, sound, music, stop_audio};
-    if (!aw_vm_init(vm, &assets, video, host, (uint16_t)mk61_api->millis_ms())) { error = "VM init failed"; goto done; }
-    aw_audio_init(audio, &assets, vm);
+    if (!aw_vm_init(vm, assets, video, host, (uint16_t)mk61_api->millis_ms())) { error = "VM init failed"; goto done; }
+    aw_audio_init(audio, assets, vm);
     if (!aw_vm_set_part(vm, AW_VM_FIRST_PART)) { error = "Cannot load game"; goto done; }
     if (!services->call(MK61_SERVICE_AUDIO_STREAM, MK61_AUDIO_OPEN, 0, sizeof(request), &request)) {
         error = "Audio unavailable"; goto done;
@@ -466,8 +477,8 @@ int main(void) {
                 drop_background();
         }
     }
-    if (compact_ready && 6 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets.capacity - assets.used) {
-        const uint32_t second = assets.used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
+    if (compact_ready && 6 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES <= assets->capacity - assets->used) {
+        const uint32_t second = assets->used + 5 * AW_VIDEO_PAGE_BYTES + AW_VIDEO_PAGE3_PACKED_BYTES;
         mk61_service_color_pages config = {60, AW_VIDEO_HEIGHT};
         if (aw_display_pages_init(pages_display, compact_display, second)) {
             for (;;) {
@@ -487,7 +498,7 @@ int main(void) {
             mk61_service_file_bytes request = {storm_cache, &storm_info, 0, sizeof(storm_info)};
             if (services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(request), &request) &&
                 !storm_info.directory) {
-                aw_storm_load(storm, &assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
+                aw_storm_load(storm, assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
                               storm_info.size, storm_read, NULL);
                 // The color-update lead times were measured at these clocks.
                 storm->tail.overlap = storm->tail.available && actual_spi_hz == 24000000u &&

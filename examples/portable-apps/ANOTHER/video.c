@@ -11,7 +11,7 @@ static uint8_t page_id(const aw_video *v, uint8_t page) {
     return 0;
 }
 static uint32_t page_at(const aw_video *v, unsigned page) {
-    return v->page_base + page * AW_VIDEO_PAGE_BYTES;
+    return v->page_base + v->store_slot[page] * AW_VIDEO_PAGE_BYTES;
 }
 static void mark_dirty(aw_video *v) {
     v->dirty = true;
@@ -248,7 +248,26 @@ bool aw_video_flush(aw_video *v) {
         if (!store_page(v, v->spare_page, v->spare, &v->spare_dirty, false))
             return !(v->fault = true);
     }
-    return aw_assets_flush(v->assets) || !(v->fault = true);
+    if (!aw_assets_flush(v->assets)) return !(v->fault = true);
+    /* Flush publishes the four logical pages at their original offsets. */
+    for (unsigned page = 0; page < 4; ++page) {
+        const unsigned slot = v->store_slot[page];
+        if (slot == page) continue;
+        unsigned other = page + 1;
+        while (v->store_slot[other] != page) ++other;
+        uint8_t a[AW_ASSET_PAGE], b[AW_ASSET_PAGE];
+        for (unsigned off = 0; off < AW_VIDEO_PAGE_BYTES; off += sizeof(a)) {
+            unsigned n = AW_VIDEO_PAGE_BYTES - off;
+            if (n > sizeof(a)) n = sizeof(a);
+            const uint32_t x = page_at(v, page) + off, y = page_at(v, other) + off;
+            if (!aw_assets_read_direct(v->assets, x, a, n) || !aw_assets_read_direct(v->assets, y, b, n) ||
+                !aw_assets_write_direct(v->assets, x, b, n) || !aw_assets_write_direct(v->assets, y, a, n))
+                return !(v->fault = true);
+        }
+        v->store_slot[page] = (uint8_t)page;
+        v->store_slot[other] = (uint8_t)slot;
+    }
+    return true;
 }
 static void swap_resident(aw_video *v) {
     uint8_t *p = v->pixels; v->pixels = v->spare; v->spare = p;
@@ -257,12 +276,31 @@ static void swap_resident(aw_video *v) {
     v->resident_valid = v->spare_valid; v->dirty = v->spare_dirty;
     v->spare_valid = valid; v->spare_dirty = dirty;
 }
+/* On a full replacement, either the discarded page or the other SRAM
+ * page can donate its backing slot if it already contains the evicted
+ * pixels. A resident donor retains its complete copy in SRAM. */
+static bool reuse_store(aw_video *v, unsigned donor) {
+    const unsigned old = v->spare_page;
+    uint32_t *ids = v->bands->page[old];
+    for (unsigned b = 0; b < AW_VIDEO_BANDS; ++b)
+        if (!ids[b] || ids[b] != v->bands->stored[donor][b]) return false;
+    const uint8_t slot = v->store_slot[old];
+    v->store_slot[old] = v->store_slot[donor]; v->store_slot[donor] = slot;
+    memcpy(v->bands->stored[donor], v->bands->stored[old], sizeof(v->bands->stored[0]));
+    memcpy(v->bands->stored[old], ids, sizeof(v->bands->stored[0]));
+    v->spare_dirty = false;
+    return true;
+}
 static bool resident(aw_video *v, uint8_t page, bool overwrite) {
     if (v->fault || page > 3) return false;
     if (v->resident_valid && v->resident_page == page) return true;
     if (v->spare) {
         if (!v->spare_valid || v->spare_page != page) {
             if (v->spare_valid && v->spare_page == 0) cache_background(v, v->spare);
+            if (v->bands && v->spare_valid && v->spare_dirty && overwrite) {
+                if (!reuse_store(v, page) && v->resident_valid && reuse_store(v, v->resident_page))
+                    v->dirty = true;
+            }
             if (v->spare_valid && v->spare_dirty &&
                 (!store_page(v, v->spare_page, v->spare, &v->spare_dirty, false) ||
                  !aw_assets_flush(v->assets))) return !(v->fault = true);
@@ -285,6 +323,8 @@ bool aw_video_init(aw_video *v, aw_assets *a, uint32_t base, uint8_t *pixels,
         4 * AW_VIDEO_PAGE_BYTES > a->capacity - base) return false;
     memset(v, 0, sizeof(*v));
     v->assets = a; v->pixels = pixels; v->page_base = base; v->present = present; v->present_ctx = ctx;
+    for (unsigned i = 0; i < 4; ++i) v->store_slot[i] = i;
+    v->clip_rows = AW_VIDEO_HEIGHT;
     v->front_page = 2; v->back_page = 1; v->draw_page = 2;
     v->interp[0] = 0x4000;
     for (unsigned i = 1; i < AW_VIDEO_INTERP_SLOTS; ++i) v->interp[i] = (uint16_t)(0x4000 / i);
@@ -529,7 +569,7 @@ static void edge(uint8_t *p, uint8_t mask, uint8_t color, uint8_t source) {
     }
 }
 static bool line(aw_video *v, int x1, int x2, int y, uint8_t color) {
-    if (y < 0 || y >= 200 || x2 < 0 || x1 >= 320) return true;
+    if ((unsigned)y >= v->clip_rows || x2 < 0 || x1 >= 320) return true;
     if (x1 > x2) { int t = x1; x1 = x2; x2 = t; }
     if (x1 < 0) x1 = 0;
     if (x2 > 319) x2 = 319;
@@ -602,7 +642,7 @@ static bool fill_polygon(shape *s, uint8_t color, point center) {
         else for (int h = dy2; h; --h) {
             if (y >= 0 && !line(v, (int16_t)(c1 >> 16), (int16_t)(c2 >> 16), y, color)) return false;
             c1 += (uint32_t)step1; c2 += (uint32_t)step2;
-            if (++y > 199) return true;
+            if (++y >= v->clip_rows) return true;
             if (!(y & 31)) aw_assets_progress(v->assets);
         }
     }
@@ -625,7 +665,7 @@ static bool draw_shape(shape *s, uint8_t color, uint16_t zoom, point at, unsigne
         const unsigned bytes = 2u * s->count;
         if (bytes > s->v->shape_size - s->cursor) return !(s->v->fault = true);
         if (at.x - s->width / 2 >= 320 || at.x + s->width / 2 < 0 ||
-            at.y - s->height / 2 >= 200 || at.y + s->height / 2 < 0) return true;
+            at.y - s->height / 2 >= s->v->clip_rows || at.y + s->height / 2 < 0) return true;
         if (!shape_bytes(s, xy, bytes)) return false;
         for (unsigned i = s->count; i-- > 0;) {
             const uint8_t x = xy[2 * i], y = xy[2 * i + 1];

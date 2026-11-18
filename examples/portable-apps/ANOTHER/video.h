@@ -33,6 +33,7 @@ typedef struct {
     uint32_t page_base, shape_base, shape_size;
     uint16_t palette[16], interp[AW_VIDEO_INTERP_SLOTS];
     uint8_t draw_page, front_page, back_page, resident_page;
+    uint8_t store_slot[4], clip_rows;
     uint8_t page_scroll[4]; /* Circular row displacement carried by page copies. */
     bool resident_valid, dirty, fault;
     uint8_t *spare;

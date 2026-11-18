@@ -56,6 +56,7 @@ bool aw_vm_set_part(aw_vm *v, uint16_t part) {
          * releases skip that screen entirely, but still need the variable for
          * the password screen and other later scripts. */
         if (v->part == AW_VM_FIRST_PART) v->vars[0xDC] = 33;
+        v->backdrop = 0; v->backdrop_rows = 0;
         memset(v->loaded, 0, sizeof(v->loaded));
         const uint8_t *p = parts[part - AW_VM_FIRST_PART];
         for (unsigned i = 0; i < 4; ++i) if (p[i] && !load(v, p[i])) return false;
@@ -92,6 +93,49 @@ static bool draw(aw_vm *v, unsigned id, uint16_t offset, uint16_t zoom, int16_t 
     if (!aw_video_polygon(v->video, e->store_offset, e->size, offset, zoom, x, y)) return !(v->fault = true);
     return true;
 }
+/* The DOS pool exit builds its scenery by filling page zero, selecting it,
+ * and calling a sequence of literal polygons. The offset is only a hint:
+ * unsupported bytecode runs normally. The cache contains live indexed
+ * pixels generated from this installation's immutable polygon resource. */
+enum { POOL_SCENERY_FILL = 0x19D3 };
+void aw_vm_prepare_backdrop(aw_vm *v, uint32_t store, uint8_t *scratch) {
+    aw_video *live = v->video;
+    if (v->part != AW_VM_FIRST_PART + 2 || v->backdrop || !scratch || !store) return;
+    v->backdrop = UINT32_MAX;
+    aw_assets *a = v->assets;
+    const aw_asset_entry *code = &a->entries[v->code_id], *poly = &a->entries[v->polygon_id];
+    uint8_t cmd[8];
+    if (AW_VIDEO_PAGE_BYTES > a->capacity || store > a->capacity - AW_VIDEO_PAGE_BYTES ||
+        POOL_SCENERY_FILL + sizeof(cmd) > code->size ||
+        !aw_assets_read(a, code->store_offset + POOL_SCENERY_FILL, cmd, sizeof(cmd)) ||
+        cmd[0] != 0x0E || cmd[1] || cmd[3] != 0x0D || cmd[4] || cmd[5] != 4) return;
+    unsigned pc = (cmd[6] << 8) | cmd[7];
+    const unsigned fill = cmd[2] & 15u;
+    const unsigned top = v->backdrop_rows;
+    const unsigned rows = AW_VIDEO_HEIGHT - top < AW_BACKDROP_ROWS ? AW_VIDEO_HEIGHT - top : AW_BACKDROP_ROWS;
+    const unsigned bytes = rows * AW_VIDEO_STRIDE;
+    aw_video working = {.assets = a, .pixels = scratch, .resident_valid = true, .clip_rows = (uint8_t)rows};
+    memcpy(working.interp, live->interp, sizeof(working.interp));
+    memset(scratch, fill * 17u, bytes);
+    for (unsigned n = 0; n <= 32 && pc < code->size; ++n) {
+        if (!aw_assets_read(a, code->store_offset + pc, cmd, 1)) return;
+        if (cmd[0] == 5) {
+            if (n && aw_assets_write_direct(a, store + top * AW_VIDEO_STRIDE, scratch, bytes)) {
+                v->backdrop_rows = (uint8_t)(top + rows);
+                v->backdrop = v->backdrop_rows == AW_VIDEO_HEIGHT ? store : 0;
+            }
+            return;
+        }
+        if (!(cmd[0] & 0x80) || code->size - pc < 4 ||
+            !aw_assets_read(a, code->store_offset + pc + 1, cmd + 1, 3)) return;
+        const uint16_t offset = (uint16_t)(((cmd[0] << 8) | cmd[1]) * 2);
+        int x = cmd[2], y = cmd[3];
+        if (y > 199) { x += y - 199; y = 199; }
+        if (!aw_video_polygon(&working, poly->store_offset, poly->size, offset, 64, x, (int16_t)(y - (int)top))) return;
+        pc += 4;
+    }
+}
+
 static bool run_thread(aw_vm *v) {
     bool done = false;
     for (unsigned instructions = 0; !done && !v->fault && instructions < 100000u; ++instructions) {
@@ -170,7 +214,17 @@ static bool run_thread(aw_vm *v) {
             break;
         }
         case 0x0D: if (!aw_video_set_draw_page(v->video, byte(v))) return !(v->fault = true); break;
-        case 0x0E: a = byte(v); b = byte(v); if (!aw_video_fill(v->video, a, b)) return !(v->fault = true); break;
+        case 0x0E:
+            a = byte(v); b = byte(v);
+            if (!aw_video_fill(v->video, a, b)) return !(v->fault = true);
+            if (v->cursor == POOL_SCENERY_FILL + 3 && v->backdrop_rows == AW_VIDEO_HEIGHT && v->sp < 64) {
+                aw_video *video = v->video;
+                if (!aw_assets_read_direct(v->assets, v->backdrop, video->pixels, AW_VIDEO_PAGE_BYTES)) return !(v->fault = true);
+                if (video->bands) memset(video->bands->page[0], 0, sizeof(video->bands->page[0]));
+                video->draw_page = 0;
+                v->cursor += 5;
+            }
+            break;
         case 0x0F: a = byte(v); b = byte(v); if (!aw_video_copy(v->video, a, b, v->vars[0xF9])) return !(v->fault = true); break;
         case 0x10: {
             a = byte(v); const unsigned delay = v->vars[0xFF] < 0 ? 0 : (unsigned)v->vars[0xFF];
