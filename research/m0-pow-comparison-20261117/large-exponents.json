@@ -239,7 +239,22 @@
     "elf_sha256": "33867d1534c0def38d19c92d7b0a4fec060ef0a8de3626d2019fe5fccdc7a996",
     "public_cases": 3478,
     "covered_cases": 3031,
-    "identical_instruction_and_stack_samples": true
+    "identical_instruction_and_stack_samples": true,
+    "public_regression_cases": {
+      "sqrt": 40018,
+      "sin": 86304,
+      "cos": 86304,
+      "tan": 86304,
+      "atan": 80401,
+      "asin": 80070,
+      "acos": 80070,
+      "ln": 85397,
+      "log10": 85397,
+      "exp": 80196,
+      "pow": 80395,
+      "fma": 80907
+    },
+    "public_regression_report_sha256": "32fd7e6e3e446fd7a638ccf96ed029f048b4d529838c1e54025fc6fd3aae3e8c"
   },
   "public_regression": {
     "pow": {
@@ -273,5 +288,35 @@
   "fast_exp_certificate": {
     "status": "PASS_ARITHMETIC_BOUNDS",
     "pow_exp_q62_enclosure": "3+ceil(E/2) for E<=129;4+ceil(E/2) otherwise"
+  },
+  "linked_thumb_instruction_bound": {
+    "elf_sha256": "7b7ba5b39719b8d710edb91f41cac4447ec723043d99c25d1ef1d97b33677be7",
+    "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "public_scope": "Certified finite large-exponent domain",
+    "instructions_at_most": 204600,
+    "components": {
+      "public_and_q64": {
+        "calls": 1,
+        "instructions_per_call": 1300
+      },
+      "power_setup_rounding_and_loop": {
+        "calls": 1,
+        "instructions_per_call": 4000
+      },
+      "squares_including_normalization": {
+        "calls": 62,
+        "instructions_per_call": 2250
+      },
+      "base_products_including_normalization": {
+        "calls": 52,
+        "instructions_per_call": 1150
+      }
+    },
+    "additional_emulator_sample": {
+      "calls": 262,
+      "maximum_instructions": 160061,
+      "forced_stage": "mk61_m0_pow_large_subnormal",
+      "maximum_witness_y": "43d6ffffffffffff"
+    }
   }
 }
