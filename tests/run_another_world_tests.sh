@@ -234,6 +234,7 @@ if [ -n "${ANOTHER_WORLD_DATA:-}" ]; then
     "$app/text.c" "$app/audio.c" "$app/display_compact.c" "$app/display_pages.c" \
     "$zx0/optimize.c" "$zx0/compress.c" "$zx0/memory.c" -o "$build_dir/prepare-storm"
   if "$build_dir/prepare-storm" "$ANOTHER_WORLD_DATA" "$build_dir/AWSTORM.BIN" >/dev/null; then
+    python3 "$root/tests/another_world_spi/writeback/edge/check_release.py" "$ANOTHER_WORLD_DATA" --cache "$build_dir/AWSTORM.BIN"
     ${CC:-cc} -std=c11 -O2 -Wall -Wextra -Werror -I"$root/sdk/coproc" \
       -DAW_DISPLAY_ANALYZE -DAW_COMPACT_DISPLAY -DAW_TWO_PAGE_ANALYZE -DAW_PROBE_FIRST_PART \
       -DAW_VIDEO_BACKGROUND -DAW_VIDEO_PACKED3 -DAW_VIDEO_PACKED_CACHE=1 -DAW_TEST_STORM \

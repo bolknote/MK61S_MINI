@@ -1,0 +1,28 @@
+{
+  "app_sha256": "77c931393c2adf0c391f22f94fd025ad912e1fe7d20225bae21994457fe1df28",
+  "app_sd_bytes": 33330,
+  "app_sram_bytes": 41492,
+  "firmware": "1BD26110",
+  "firmware_crc": "2E77D884",
+  "boots": 52,
+  "cpu_hz": 125000000,
+  "peri_hz": 48000000,
+  "spi_hz": 24000000,
+  "direct_bytes": 64000,
+  "first_lcd_submissions": 5580,
+  "second_lcd_submissions": 5587,
+  "stack_used_before": 32768,
+  "stack_used_after": 32768,
+  "stack_bytes": 32768,
+  "single_escape": true,
+  "power_returned": "SLEEP_USB",
+  "temporary_removed": true,
+  "original_files_verified": [
+    "before",
+    "after"
+  ],
+  "runtime": "NONE",
+  "service": "CLOSED",
+  "physical_keys": "0",
+  "crash": "NONE"
+}

@@ -23,7 +23,7 @@ static aw_storm_output storm_lcd;
 static aw_vm *vm;
 static aw_audio *audio;
 static aw_input input;
-static uint8_t keys[32], previous[32];
+static uint8_t previous[32];
 static int16_t *pending;
 static unsigned pending_at, pending_count;
 static uint32_t next_keys, next_audio, last_frame;
@@ -58,6 +58,12 @@ static bool file_read(const char *path, uint32_t offset, void *out, uint32_t siz
     mk61_service_file_bytes r = {path, out, offset, size};
     return services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_READ, 0, sizeof(r), &r) != 0;
 }
+static uint32_t file_size(const char *path) {
+    mk61_service_file_info info;
+    mk61_service_file_bytes request = {path, &info, 0, sizeof(info)};
+    return services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(request), &request) &&
+        !info.directory ? info.size : 0;
+}
 static bool acquire_external(void) {
     static const uint32_t reserve[] = {
         0,
@@ -88,21 +94,23 @@ static bool prepared_read(void *ctx, uint32_t offset, void *out, uint32_t size) 
     (void)ctx;
     return file_read("AWCACHE.BIN", offset, out, size);
 }
+static bool store_io(unsigned op, uint32_t offset, void *data, uint32_t size) {
+    mk61_service_buffer r = mk61_app_buffer_request();
+    r.handle = external.handle; r.offset = offset; r.data = data; r.size = size;
+    return services->call(MK61_SERVICE_BUFFER, op, 0, sizeof(r), &r) != 0;
+}
 static bool store_read(void *ctx, uint32_t offset, void *out, uint32_t size) {
     (void)ctx;
-    mk61_service_buffer r = mk61_app_buffer_request();
-    r.handle = external.handle; r.offset = offset; r.data = out; r.size = size;
-    return services->call(MK61_SERVICE_BUFFER, MK61_BUFFER_READ, 0, sizeof(r), &r) != 0;
+    return store_io(MK61_BUFFER_READ, offset, out, size);
 }
 static bool store_write(void *ctx, uint32_t offset, const void *in, uint32_t size) {
     (void)ctx;
-    mk61_service_buffer r = mk61_app_buffer_request();
-    r.handle = external.handle; r.offset = offset; r.data = (uint8_t *)in; r.size = size;
-    return services->call(MK61_SERVICE_BUFFER, MK61_BUFFER_WRITE, 0, sizeof(r), &r) != 0;
+    return store_io(MK61_BUFFER_WRITE, offset, (void *)in, size);
 }
 static bool pressed(const uint8_t *map, unsigned key) { return (map[key / 8] & (1u << (key & 7))) != 0; }
 static bool letter(const uint8_t *map, unsigned c) { return pressed(map, c) || pressed(map, c - 32); }
 static void poll_keys(void) {
+    uint8_t keys[32];
     const uint32_t now = mk61_api->millis_ms();
     if ((int32_t)(now - next_keys) < 0) return;
     next_keys = now + 20;
@@ -179,6 +187,18 @@ static bool wait_for_frame_lead(void *ctx, unsigned lead_ms) {
             !aw_assets_prefetch_step(assets)) pump_failed = true;
     }
     return !input.quit && !pump_failed;
+}
+/* The last hidden storm page is ready before its scheduled flip. Preserve
+ * its VM page during that wait, before the next copy evicts it from SRAM. */
+static bool wait_for_storm_125(void *ctx, unsigned lead_ms) {
+    if (storm->tail.active && lead_ms) {
+        lead_ms += 5;
+    } else if (!lead_ms && !storm->tail.active && pages_display->selected != pages_display->visible &&
+               storm->at == storm->first + AW_STORM_WARM_FRAMES + AW_STORM_FRAMES &&
+               !aw_video_write_displayed(video, 11)) {
+        return false;
+    }
+    return wait_for_frame_lead(ctx, lead_ms);
 }
 static bool wait_for_frame(void *ctx) { return wait_for_frame_lead(ctx, 0); }
 static bool wait_before_storm(void *ctx) { return wait_for_frame_lead(ctx, AW_STORM_ANCHOR_LEAD_MS); }
@@ -406,14 +426,11 @@ int main(void) {
         if (!acquire_frames(&paired_frames)) { error = "Not enough memory"; goto done; }
     }
     if (previous_frame.data) aw_display_init(&display, previous_frame.data);
-    mk61_service_file_info info;
-    mk61_service_file_bytes stat = {"MEMLIST.BIN", &info, 0, sizeof(info)};
-    if (!services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(stat), &stat) ||
-        info.directory || !info.size || info.size > 4096 ||
-        !file_read("MEMLIST.BIN", 0, screen.data, info.size)) {
+    const uint32_t list_bytes = file_size("MEMLIST.BIN");
+    if (!list_bytes || list_bytes > 4096 || !file_read("MEMLIST.BIN", 0, screen.data, list_bytes)) {
         error = "Missing MEMLIST.BIN"; goto done;
     }
-    if (!aw_assets_init(assets, entries, screen.data, info.size, external.size, NULL, bank_read, store_read, store_write)) {
+    if (!aw_assets_init(assets, entries, screen.data, list_bytes, external.size, NULL, bank_read, store_read, store_write)) {
         error = "Invalid game data"; goto done;
     }
     mk61_api->display_clear();
@@ -424,12 +441,9 @@ int main(void) {
     assets->progress = pump;
     next_keys = next_audio = mk61_api->millis_ms();
     aw_prepared_cache prepared = {0};
-    mk61_service_file_info prepared_info;
-    mk61_service_file_bytes prepared_stat = {"AWCACHE.BIN", &prepared_info, 0, sizeof(prepared_info)};
-    const bool has_prepared = services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0,
-                                              sizeof(prepared_stat), &prepared_stat) &&
-        !prepared_info.directory &&
-        aw_prepared_open(&prepared, screen.data, info.size, assets->count, prepared_info.size,
+    const uint32_t prepared_bytes = file_size("AWCACHE.BIN");
+    const bool has_prepared = prepared_bytes &&
+        aw_prepared_open(&prepared, screen.data, list_bytes, assets->count, prepared_bytes,
                          screen.data + 4096, AW_VIDEO_PAGE_BYTES - 4096, NULL, prepared_read);
     for (unsigned id = 0; id < assets->count && !input.quit && !pump_failed; ++id) {
         const aw_asset_entry *e = &assets->entries[id];
@@ -496,13 +510,20 @@ int main(void) {
             }
         }
         if (pages_ready) {
-            mk61_service_file_info storm_info;
-            mk61_service_file_bytes request = {storm_cache, &storm_info, 0, sizeof(storm_info)};
-            if (services->call(MK61_SERVICE_FILE_BYTES, MK61_FILE_BYTES_STAT, 0, sizeof(request), &request) &&
-                !storm_info.directory) {
+            const uint32_t storm_bytes = file_size(storm_cache);
+            if (storm_bytes) {
                 aw_storm_load(storm, assets, second + AW_VIDEO_PAGE_BYTES, borrowed.pixels,
-                              storm_info.size, storm_read, NULL);
-                aw_storm_configure_timing(&storm->tail, mk61_app_compute_hz(services), actual_spi_hz);
+                              storm_bytes, storm_read, NULL);
+                const uint32_t cpu_hz = mk61_app_compute_hz(services);
+                aw_storm_configure_timing(&storm->tail, cpu_hz, actual_spi_hz);
+                if (storm->tail.available && cpu_hz == 125000000u && actual_spi_hz == 24000000u) {
+                    /* Defer eight hidden black rows until after the white
+                     * flash so the three color updates can take the SPI bus. */
+                    storm->tail.black_before_rows[0] = 24;
+                    storm->tail.black_before_rows[1] = 48;
+                    storm->tail.black_before_rows[2] = 80;
+                    storm_lcd.wait = wait_for_storm_125;
+                }
             }
         }
     }
