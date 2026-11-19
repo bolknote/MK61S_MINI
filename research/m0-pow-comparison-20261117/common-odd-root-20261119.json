@@ -1,0 +1,14 @@
+{
+  "status": "PASS_COMMON_ODD_ROOT",
+  "first": 3,
+  "stop": 134217729,
+  "roots_checked": 67108863,
+  "coefficient_bits": 122,
+  "grid_bits": 320,
+  "least_root": 60178921,
+  "min_grid_units": "3402064321835540746749819051209513861000323323710605",
+  "convergent_denominator": "1183367959682454080769663893716456795",
+  "strict_log_gap_bits": 266,
+  "mpfr": "4.2.2",
+  "verifier_source_sha256": "c9a4b646f9933c455a4470d5ffaffe8e6e46323b336243bbb237155c9174a075"
+}
