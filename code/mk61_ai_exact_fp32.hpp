@@ -28,6 +28,43 @@ inline __attribute__((always_inline)) float product(float a,float b) {
 }
 }
 namespace mk61ai::exact_fp32 {
+struct ProductOperand {
+  float value;
+  std::uint32_t bits, exponent, high, low;
+  explicit ProductOperand(float v) : value(v) {
+    std::memcpy(&bits,&v,4);
+    exponent=(bits>>23)&255;
+    high=((bits>>8)&0x7fff)|0x8000;
+    low=bits&255;
+  }
+};
+
+inline __attribute__((always_inline)) float attention_product(const ProductOperand &a,float b) {
+  const ProductOperand rhs(b);
+  // The leading bit of the rounded mantissa supplies one exponent unit.
+  const unsigned exponent=a.exponent+rhs.exponent-128U;
+  if(a.exponent-1U>=254 || rhs.exponent-1U>=254 || exponent>=252)
+    return product(a.value,b);
+
+  const std::uint32_t cross=a.high*rhs.low+a.low*rhs.high;
+  const std::uint32_t coarse=a.high*rhs.high+(cross>>8);
+  const unsigned wide=coarse>>31, shift=7+wide;
+  const std::uint32_t half=1U<<(shift-1);
+  const std::uint32_t biased=coarse+half;
+  std::uint32_t mantissa=biased>>shift;
+  // The omitted tail is smaller than 2 << 16. It can affect nearest-even
+  // rounding only at the halfway bucket or immediately below it.
+  const std::uint32_t bucket=biased&((half<<1)-1);
+  if(((biased+1)&((half<<1)-1))<2) {
+    const std::uint32_t tail=((cross&255)<<8)+a.low*rhs.low;
+    if(bucket) mantissa+=tail+(mantissa&1)>65536;
+    else if(!tail) mantissa-=mantissa&1;
+  }
+  const std::uint32_t encoded=(((exponent+wide)<<23)+mantissa)|
+                              ((a.bits^rhs.bits)&0x80000000U);
+  float result;std::memcpy(&result,&encoded,4);return result;
+}
+
 // Keep the product rounded before adding it. This normalizes the common
 // one-bit cancellation inline; deeper cancellation still uses CLZ.
 inline __attribute__((always_inline)) float attention_sum(float a,float b) {

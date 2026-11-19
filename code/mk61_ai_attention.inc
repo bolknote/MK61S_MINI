@@ -40,15 +40,15 @@ MK61_ATTENTION_FAST void AttentionBatch::run_width32(void *raw) {
       float dot=0;
       const auto *row=b.values+t*32;
       for(unsigned j=0;j<32;++j)
-        dot=exact_fp32::attention_sum(dot,exact_fp32::product(b.query[j],row[j]));
+        dot=exact_fp32::attention_sum(dot,exact_fp32::attention_product(exact_fp32::ProductOperand(b.query[j]),row[j]));
       b.output[t]=exact_fp32::product(dot,b.scale);
     }
   } else {
     for(unsigned t=0;t<b.rows;++t) {
-      const float factor=math::div(b.scores[t],b.sum);
+      const exact_fp32::ProductOperand factor(math::div(b.scores[t],b.sum));
       const auto *row=b.values+t*32;
       for(unsigned j=0;j<32;++j)
-        b.output[j]=exact_fp32::attention_sum(b.output[j],exact_fp32::product(factor,row[j]));
+        b.output[j]=exact_fp32::attention_sum(b.output[j],exact_fp32::attention_product(factor,row[j]));
     }
   }
 }
