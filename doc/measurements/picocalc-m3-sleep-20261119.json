@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-11-19",
-  "status": "HOST_ARM_PASS_HARDWARE_PENDING",
+  "status": "PASS",
   "feature": "Coordinated ordinary M3/Pico sleep retaining Pico RAM and application state",
   "protocol": {
     "i2c_register": "0x10",
@@ -15,9 +15,8 @@
   "mode": "Cortex-M3 SLEEP/WFI with clocks/peripherals and Pico power retained",
   "module_or_uart_active_blocks_wait": true,
   "old_bios_behavior": "read-only capability discovery; normal previous sleep behavior",
-  "physical_hardware_test": false,
+  "physical_hardware_test": true,
   "electrical_power_measured": false,
-  "hardware_pending_reason": "Coordinator confirmation and exclusive device handoff pending",
   "pico": {
     "build": "DB3AF53C",
     "crc": "A2F351AD",
@@ -115,7 +114,7 @@
       "early SECF then counter update without another flag"
     ]
   },
-  "hil_package_sha256": "601cae418f19ff61b8c9af5ec4e27b39880b43a66fbd07027327013b9ac62b37",
+  "hil_package_sha256": "82c297fb87ab4d62d295208e2c9e0571c6047ede615e4de146696d536f211c03",
   "planned_hardware_tests": [
     "old M3 byte identity",
     "new Pico complete Flash readback",
@@ -131,6 +130,376 @@
     "No electrical current or battery lifetime measurement",
     "WFI telemetry records attempts and elapsed TIM2 time, not instantaneous electrical power",
     "Long power-button hold remains full power-off and does not retain Pico RAM",
-    "Resident M3 modules and active transfers inhibit M3 WFI"
-  ]
+    "Resident M3 modules and active transfers inhibit M3 WFI",
+    "Sleep and wake keys were injected through USB into the production system input handler; physical buttons were not pressed",
+    "All seven hardware sleep tests used USB power; the battery clock path is covered by HOST kernel tests, not this hardware run"
+  ],
+  "hardware": {
+    "tested_at_utc": "2026-11-19T09:17:26.527146+00:00",
+    "UID": "E6657CD423721C35",
+    "source_commit": "2f0ff84b",
+    "Pico_installs": 1,
+    "M3_installs": 1,
+    "Pico_full_new_image_readback": "PASS",
+    "M3_full_body_boot_metadata_identity": "PASS",
+    "M3_metadata_header_crc32": "AAFFDE01",
+    "old_BIOS_fallback": "PASS",
+    "sleep_cycles": [
+      {
+        "test": "calculator-0",
+        "asleep": {
+          "POWER_MODE": "SLEEP_USB",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "1",
+          "RUNTIME": "NONE"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "calculator-1",
+        "asleep": {
+          "POWER_MODE": "SLEEP_USB",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "1",
+          "RUNTIME": "NONE"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "calculator-2",
+        "asleep": {
+          "POWER_MODE": "SLEEP_USB",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "1",
+          "RUNTIME": "NONE"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "SLEEPCAN.APP-0",
+        "asleep": {
+          "POWER_MODE": "SLEEP_SERVICE",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "1",
+          "RUNTIME": "APP"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "SLEEPCAN.APP-1",
+        "asleep": {
+          "POWER_MODE": "SLEEP_SERVICE",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "1",
+          "RUNTIME": "APP"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "SLEEPHLD.APP-0",
+        "asleep": {
+          "POWER_MODE": "SLEEP_SERVICE",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "0",
+          "RUNTIME": "APP"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      },
+      {
+        "test": "SLEEPHLD.APP-1",
+        "asleep": {
+          "POWER_MODE": "SLEEP_SERVICE",
+          "SYS_HZ": "125000000",
+          "PERI_HZ": "48000000",
+          "SLEEP": "1",
+          "SLEEP_APPLIED": "1",
+          "M3_SLEEP_WANTED": "1",
+          "M3_SLEEP_ACK": "1",
+          "M3_SLEEP_WFI": "0",
+          "RUNTIME": "APP"
+        },
+        "awake": {
+          "SLEEP": "0",
+          "SLEEP_APPLIED": "0",
+          "M3_SLEEP_WANTED": "0",
+          "M3_SLEEP_ACK": "0",
+          "M3_SLEEP_WFI": "0"
+        },
+        "counter_deltas": {
+          "I2C_TIMEOUTS": 0,
+          "I2C_ABORTS": 0,
+          "IO_I2C_RESETS": 0,
+          "IO_ERRORS": 0,
+          "LCD_ERRORS": 0,
+          "DMA_TIMEOUTS": 0,
+          "M3_SLEEP_ERRORS": 0,
+          "SETTINGS_WRITES": 0,
+          "RTC_SET": 0,
+          "BOOTS": 0,
+          "PHYSICAL_KEYS": 0
+        }
+      }
+    ],
+    "canaries": {
+      "SLEEPCAN.APP": {
+        "stack_bytes": 512,
+        "global_bytes": 1024,
+        "PSRAM_bytes": 4096,
+        "log": [
+          "SLEEPCAN READY hold=0 stack=512 globals=1024 psram=4096 waits=15926 us=6810021 expired=0",
+          "SLEEPCAN RESUME n=1 hold=0 gap_us=2499020 waits=21128 us=9035132 expired_before=0 expired_after=1 memory=PASS",
+          "SLEEPCAN RESUME n=2 hold=0 gap_us=2495722 waits=29736 us=12791753 expired_before=1 expired_after=1 memory=PASS",
+          "SLEEPCAN PASS code=0 hold=0 uart_errors=0"
+        ]
+      },
+      "SLEEPHLD.APP": {
+        "stack_bytes": 512,
+        "global_bytes": 1024,
+        "PSRAM_bytes": 4096,
+        "log": [
+          "SLEEPCAN READY hold=1 stack=512 globals=1024 psram=4096 waits=29882 us=12858061 expired=1",
+          "SLEEPCAN RESUME n=1 hold=1 gap_us=1934191 waits=29882 us=12858061 expired_before=1 expired_after=1 memory=PASS",
+          "SLEEPCAN RESUME n=2 hold=1 gap_us=1925723 waits=29882 us=12858061 expired_before=1 expired_after=1 memory=PASS",
+          "SLEEPCAN PASS code=0 hold=1 uart_errors=0"
+        ]
+      }
+    },
+    "rtc": {
+      "old-M3-before-install": {
+        "samples": 13,
+        "equal_to_hardware_counter": 13,
+        "boot_body_metadata_byte_identity": "PASS"
+      },
+      "new-M3-before-sleep": {
+        "samples": 13,
+        "equal_to_hardware_counter": 13,
+        "boot_body_metadata_byte_identity": "PASS"
+      },
+      "new-M3-after-sleep": {
+        "samples": 13,
+        "equal_to_hardware_counter": 13,
+        "boot_body_metadata_byte_identity": "PASS"
+      }
+    },
+    "calculator_state_unchanged": true,
+    "calculator_state_sha256": {
+      "dump": "251cfe99ea8a0df6dab552d92563a3a1043869dab202439021470cb494441b85",
+      "pwd": "8f9a038d9e7ce3f98cb4f1fd38d65a8acf3e941243554a626346b2da46d02db2",
+      "reg": "7065ecbadd66945fd7d52b2fbcf3779bcddceae27ac3d9fa43bf3d5303f7cc7f",
+      "stk": "00c927b56dd930c2131dfd3e81e104078cfc4d7a739fadd6362253cb3e341f85"
+    },
+    "update_transient_counter_increments": {
+      "I2C_TIMEOUTS": 0,
+      "I2C_ABORTS": 59,
+      "IO_I2C_RESETS": 59,
+      "IO_ERRORS": 0,
+      "M3_SLEEP_ERRORS": 0
+    },
+    "update_transient_explanation": "M3 is unavailable during BIOSUPD; all 59 I2C aborts/resets occurred during that update, none during the seven sleep/wake cycles",
+    "final_status": {
+      "BUILD": "DB3AF53C",
+      "ACTUAL": "A2F351AD",
+      "IMAGE": "1818184",
+      "BOOTS": "40",
+      "SYS_HZ": "125000000",
+      "PERI_HZ": "48000000",
+      "UI": "CALCULATOR",
+      "SERVICE": "CLOSED",
+      "RUNTIME": "NONE",
+      "KBD": "OK",
+      "PHYSICAL_KEYS": "0",
+      "CRASH": "NONE",
+      "M3_SLEEP_SUPPORTED": "1",
+      "M3_SLEEP_WANTED": "0",
+      "M3_SLEEP_ACK": "0",
+      "M3_SLEEP_WFI": "0",
+      "M3_SLEEP_ERRORS": "0"
+    },
+    "temporary_folder": "/M3SL19",
+    "temporary_folder_removed": true,
+    "CDC_closed": true,
+    "lease_released": true,
+    "previous_firmware_backup": false,
+    "previous_firmware_restore": false,
+    "controller_recovery": [
+      "Initial stale CDC path failed before opening a device or changing it",
+      "After successful Pico Flash and readback, USB re-enumeration check ran too soon; continued from that exact new image with no repeat Pico Flash"
+    ],
+    "receipt_path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-m3-sleep-20261119/hardware-final-v2/state.json",
+    "receipt_sha256": "b99be2ba602baed3b3c379e4f3f61364fcad5f7ee99fc73d26e64bd9aee1b29b",
+    "transcripts": {
+      "SLEEPCAN.APP-0-asleep.txt": "7bdbbbee945238966d571bbd33a01f0d8db2492f51951487fa41510c8b4fa5bc",
+      "old-M3-before-install.txt": "21f4188d889911182749e38c7e6111f5014f0150bb8a2b6a7cfc849f52bc221d",
+      "SLEEPCAN.APP-0-awake.txt": "7c710882584421aefcc1d631c5b03eaf9578ea11a71da64a89e3ff1fb89263f6",
+      "calculator-2-awake.txt": "036afa9757ff055fe19ede3f9d8651872871657577bf6d56f61a791ec4b6225d",
+      "M3-install-wire.txt": "1661ecaf4fd167e333247e2cb6dee8dafe625a237eb4b22ef220f85f983163f4",
+      "SLEEPHLD.APP-1-asleep.txt": "1ed707eb2a6416fcac701ea880a2b089139a05925b4c9b8d6efda0a4c06101fc",
+      "ROM-identity.txt": "783087d7ae72f86b7e9121114d0267749ccc1da8f7d39507dd64d1cc882bf2cf",
+      "new-M3-after-sleep.txt": "8ece186d0ef8c3372b5aa6587d473b3e90f9afcd1dd7f8f925bd65a0bfe10743",
+      "calculator-1-asleep.txt": "52f5009d7ff944f78c3754e06e90d16293bd14fc4743aa43f3373535f9896369",
+      "SLEEPCAN.APP-1-awake.txt": "2b946e1e6631af00bb62e7a21df0f8faf4fbe83245464483e37bce502ec65564",
+      "new-BIOS-capability.txt": "92c6b0d93ae3322e50e9f91f19874dd0e8c533374bda3fa373787f7b0b98fbf1",
+      "SLEEPHLD.APP-1-awake.txt": "5c3ce99ed800e04dff1e43ece80b7d47496fb534aaec452b26d39b935757a77d",
+      "calculator-2-asleep.txt": "05d7e6a79a94cb80e5d02d295a9b7ee37ad4cc0add5ad5cca653591f1735f297",
+      "SLEEPCAN.APP-wire.txt": "f81d1c3d8c740ca320ef7ff995e80543f7dfeb5fa17b4a2e3b427d6b9a284308",
+      "new-M3-before-sleep.txt": "f8e4d699e0264014cc8b1da270e9f63530983111cb9328ed7325e9c232270ee7",
+      "Pico-load-verify.txt": "2efad2d7d30fd04dc3c01c328851a2399d8fb727e5b263bf44cb51fd22921966",
+      "old-BIOS-compatible.txt": "09678088c3ace673bec241a0828c14c32e6b0a1874a2c8e62efbd7ff496df086",
+      "SLEEPCAN.APP-1-asleep.txt": "cde090a641b9d72d5f75b3b45b4af6c8834991165e62f55fccb78698d9b58b96",
+      "calculator-0-awake.txt": "18961dccaec8fc3c8cfdd77a0da39a16f48c797bbc6e9fb46a56745c8bb50e60",
+      "calculator-0-asleep.txt": "24339f692671d37fee5b8a655734abeb08ab19f1395f22fcb1738d8bc6015404",
+      "SLEEPHLD.APP-0-awake.txt": "50ca0bcf01cdf041e2557ada139639aa0625f11f65ac97c185a09241a582d3ec",
+      "SLEEPHLD.APP-0-asleep.txt": "d87c34e284cf2bd073144f15c5ec446f263ca73c56fc54dd98616881d40f798d",
+      "SLEEPHLD.APP-wire.txt": "7095f6f4386e15263c1f7e10980c7b5449fa9a0a4664e307eb7fdf216c5ee2a2",
+      "calculator-1-awake.txt": "249300f57228e1b05d2ba89a4bc1c12098ddad928b47f5cb0fa81bc068d4525e"
+    },
+    "controllers": {
+      "installation_package_sha256": "fcb9b298e654891927407e572aa3ee9b3dce70e53ac9d9a26a00454425701af9",
+      "resume_package_sha256": "82c297fb87ab4d62d295208e2c9e0571c6047ede615e4de146696d536f211c03"
+    }
+  }
 }
