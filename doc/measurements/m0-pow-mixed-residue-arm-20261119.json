@@ -1,0 +1,122 @@
+{
+  "status": "PASS_ARM_CANDIDATE_NOT_WCET",
+  "elf_sha256": "0281f15266d2ad99a18ea77fdab6fd67a924ce948652d5e57154f9256b08a597",
+  "source_sha256": "25b29e87a647830a4b19a01a2d39587bfe418128621936a8c9bd021300bec7b5",
+  "fixture_sha256": "44751b2bfff9deb7f2dab83fc13df60b210f5ba43f413a0642ad6162186e24ee",
+  "instructions_are_not_cycles": true,
+  "maximum_observed_stack_write_bytes": 19608,
+  "cases": [
+    {
+      "required_width": 16000,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 5057311
+    },
+    {
+      "required_width": 16000,
+      "comparator": "existing_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19016,
+      "instructions": 4562560
+    },
+    {
+      "required_width": 16000,
+      "comparator": "mixed_arm",
+      "forced_mode": "binary_minus",
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 8263687
+    },
+    {
+      "required_width": 16000,
+      "comparator": "mixed_arm",
+      "forced_mode": "binary_plus",
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 8248279
+    },
+    {
+      "required_width": 16000,
+      "comparator": "mixed_arm",
+      "forced_mode": "odd_pair",
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 10144838
+    },
+    {
+      "required_width": 16000,
+      "comparator": "mixed_arm",
+      "forced_mode": "triple",
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 8081758
+    },
+    {
+      "required_width": 49152,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": null
+    },
+    {
+      "required_width": 49152,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": null
+    },
+    {
+      "required_width": 49153,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": 70248866
+    },
+    {
+      "required_width": 49153,
+      "comparator": "existing_arm",
+      "forced_mode": null,
+      "result": 0,
+      "deepest_stack_write_bytes": 524,
+      "instructions": 3653
+    },
+    {
+      "required_width": 73727,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": null
+    },
+    {
+      "required_width": 88415,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 1,
+      "deepest_stack_write_bytes": 19608,
+      "instructions": null
+    },
+    {
+      "required_width": 88416,
+      "comparator": "mixed_arm",
+      "forced_mode": null,
+      "result": 0,
+      "deepest_stack_write_bytes": 19084,
+      "instructions": 2222
+    },
+    {
+      "required_width": 88416,
+      "comparator": "existing_arm",
+      "forced_mode": null,
+      "result": 0,
+      "deepest_stack_write_bytes": 524,
+      "instructions": 1565
+    }
+  ]
+}

@@ -1,0 +1,847 @@
+{
+  "status": "PASS_CANDIDATE_NOT_FULL_DOMAIN",
+  "mpfr": "4.2.2",
+  "counts": {
+    "pair_and_capacity_checks": 2390,
+    "ring_operations": 9072,
+    "signed_residue_reconstructions": 4308,
+    "accepted_modes": 3905,
+    "pow_boundaries": 640,
+    "ties": 4,
+    "declined_modes": 25
+  },
+  "scratch_budget_bytes": 18432,
+  "cases": [
+    {
+      "required_width": 16000,
+      "gap": 34,
+      "x": "3fefffffffffffe0",
+      "y": "4074e00000000000",
+      "midpoint_lower": "3fefffffffffd63f",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 1000,
+          "scratch_bytes": 6000,
+          "product_bound": 169571,
+          "observed_products": 169571,
+          "observed_columns": 3860,
+          "host_ms": 0.0412
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 501,
+          "scratch_bytes": 4008,
+          "product_bound": 276394,
+          "observed_products": 276394,
+          "observed_columns": 5725,
+          "host_ms": 0.0545
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 500,
+          "scratch_bytes": 4008,
+          "product_bound": 275642,
+          "observed_products": 275642,
+          "observed_columns": 5722,
+          "host_ms": 0.0532
+        },
+        "odd_pair": {
+          "result": 1,
+          "selected": "odd_pair",
+          "window_words": 501,
+          "scratch_bytes": 4016,
+          "product_bound": 339144,
+          "observed_products": 339144,
+          "observed_columns": 6728,
+          "host_ms": 0.0639
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 334,
+          "scratch_bytes": 3350,
+          "product_bound": 263206,
+          "observed_products": 263206,
+          "observed_columns": 7261,
+          "host_ms": 0.0629
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 1000,
+          "scratch_bytes": 6000,
+          "product_bound": 169571,
+          "observed_products": 169571,
+          "observed_columns": 3860,
+          "host_ms": 0.0312
+        }
+      },
+      "existing": {
+        "result": 1,
+        "host_ms": 0.0623
+      }
+    },
+    {
+      "required_width": 49152,
+      "gap": 50,
+      "x": "3fefffffffffffe0",
+      "y": "4090040000000000",
+      "midpoint_lower": "3fefffffffff7fdf",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 3072,
+          "scratch_bytes": 18432,
+          "product_bound": 1583610,
+          "observed_products": 1583610,
+          "observed_columns": 12282,
+          "host_ms": 0.2105
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 1537,
+          "scratch_bytes": 12296,
+          "product_bound": 2568957,
+          "observed_products": 2568957,
+          "observed_columns": 15357,
+          "host_ms": 0.3328
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 1536,
+          "scratch_bytes": 12296,
+          "product_bound": 2568183,
+          "observed_products": 2568183,
+          "observed_columns": 15355,
+          "host_ms": 0.3432
+        },
+        "odd_pair": {
+          "result": 1,
+          "selected": "odd_pair",
+          "window_words": 1537,
+          "scratch_bytes": 12304,
+          "product_bound": 3158016,
+          "observed_products": 3158016,
+          "observed_columns": 18434,
+          "host_ms": 0.4247
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1025,
+          "scratch_bytes": 10260,
+          "product_bound": 2440704,
+          "observed_products": 2440704,
+          "observed_columns": 18945,
+          "host_ms": 0.3669
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 3072,
+          "scratch_bytes": 18432,
+          "product_bound": 1583610,
+          "observed_products": 1583610,
+          "observed_columns": 12282,
+          "host_ms": 0.192
+        }
+      },
+      "existing": {
+        "result": 1,
+        "host_ms": 0.4602
+      }
+    },
+    {
+      "required_width": 49152,
+      "gap": 38,
+      "x": "3fefffffffffffc0",
+      "y": "bfed500000000000",
+      "midpoint_lower": "3ff000000000001c",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 3072,
+          "scratch_bytes": 18432,
+          "product_bound": 3200616,
+          "observed_products": 3141845,
+          "observed_columns": 11038,
+          "host_ms": 0.8031
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 1537,
+          "scratch_bytes": 12296,
+          "product_bound": 4918085,
+          "observed_products": 4887503,
+          "observed_columns": 21761,
+          "host_ms": 1.1245
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 1536,
+          "scratch_bytes": 12296,
+          "product_bound": 4915233,
+          "observed_products": 4884666,
+          "observed_columns": 20223,
+          "host_ms": 1.1811
+        },
+        "odd_pair": {
+          "result": 1,
+          "selected": "odd_pair",
+          "window_words": 1537,
+          "scratch_bytes": 12304,
+          "product_bound": 5875958,
+          "observed_products": 5842736,
+          "observed_columns": 24838,
+          "host_ms": 1.4722
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1025,
+          "scratch_bytes": 10260,
+          "product_bound": 4929549,
+          "observed_products": 4890036,
+          "observed_columns": 28996,
+          "host_ms": 1.1133
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "binary",
+          "window_words": 3072,
+          "scratch_bytes": 18432,
+          "product_bound": 3200616,
+          "observed_products": 3141845,
+          "observed_columns": 11038,
+          "host_ms": 0.7551
+        }
+      },
+      "existing": {
+        "result": 1,
+        "host_ms": 3.3309
+      }
+    },
+    {
+      "required_width": 49153,
+      "gap": 49,
+      "x": "3fefffffffffffe0",
+      "y": "4090040000000000",
+      "midpoint_lower": "3fefffffffff7fdf",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.002
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 1537,
+          "scratch_bytes": 12296,
+          "product_bound": 2568957,
+          "observed_products": 2568957,
+          "observed_columns": 15357,
+          "host_ms": 0.329
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 1537,
+          "scratch_bytes": 12304,
+          "product_bound": 2568957,
+          "observed_products": 2568957,
+          "observed_columns": 15357,
+          "host_ms": 0.3156
+        },
+        "odd_pair": {
+          "result": 1,
+          "selected": "odd_pair",
+          "window_words": 1537,
+          "scratch_bytes": 12304,
+          "product_bound": 3158016,
+          "observed_products": 3158016,
+          "observed_columns": 18434,
+          "host_ms": 0.4205
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1025,
+          "scratch_bytes": 10260,
+          "product_bound": 2440704,
+          "observed_products": 2440704,
+          "observed_columns": 18945,
+          "host_ms": 0.3411
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1025,
+          "scratch_bytes": 10260,
+          "product_bound": 2440704,
+          "observed_products": 2440704,
+          "observed_columns": 18945,
+          "host_ms": 0.3212
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 65536,
+      "gap": 41,
+      "x": "3feffffffffff800",
+      "y": "bffc980000000000",
+      "midpoint_lower": "3ff0000000000725",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0023
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 2049,
+          "scratch_bytes": 16392,
+          "product_bound": 8496945,
+          "observed_products": 8389757,
+          "observed_columns": 30711,
+          "host_ms": 1.9328
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 2048,
+          "scratch_bytes": 16392,
+          "product_bound": 8493307,
+          "observed_products": 8386181,
+          "observed_columns": 28659,
+          "host_ms": 1.8887
+        },
+        "odd_pair": {
+          "result": 1,
+          "selected": "odd_pair",
+          "window_words": 2049,
+          "scratch_bytes": 16400,
+          "product_bound": 10019876,
+          "observed_products": 9859616,
+          "observed_columns": 34812,
+          "host_ms": 2.2911
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1366,
+          "scratch_bytes": 13670,
+          "product_bound": 8767171,
+          "observed_products": 8722543,
+          "observed_columns": 40976,
+          "host_ms": 1.8606
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 2048,
+          "scratch_bytes": 16392,
+          "product_bound": 8493307,
+          "observed_products": 8386181,
+          "observed_columns": 28659,
+          "host_ms": 1.8939
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 73696,
+      "gap": 34,
+      "x": "3fefffffffffffe0",
+      "y": "4098000000000000",
+      "midpoint_lower": "3fefffffffff3fff",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0018
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 2304,
+          "scratch_bytes": 18432,
+          "product_bound": 5755404,
+          "observed_products": 5755404,
+          "observed_columns": 18427,
+          "host_ms": 0.6904
+        },
+        "binary_plus": {
+          "result": 1,
+          "selected": "binary_plus",
+          "window_words": 2303,
+          "scratch_bytes": 18432,
+          "product_bound": 5751948,
+          "observed_products": 5751948,
+          "observed_columns": 18424,
+          "host_ms": 0.7107
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1536,
+          "scratch_bytes": 15370,
+          "product_bound": 5461650,
+          "observed_products": 5461650,
+          "observed_columns": 23801,
+          "host_ms": 0.6623
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1536,
+          "scratch_bytes": 15370,
+          "product_bound": 5461650,
+          "observed_products": 5461650,
+          "observed_columns": 23801,
+          "host_ms": 0.659
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 73727,
+      "gap": 49,
+      "x": "3feffffffffffff0",
+      "y": "c0255c0000000000",
+      "midpoint_lower": "3ff0000000000054",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0018
+        },
+        "binary_minus": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 2304,
+          "scratch_bytes": 18432,
+          "product_bound": 6957124,
+          "observed_products": 6926358,
+          "observed_columns": 33125,
+          "host_ms": 1.1478
+        },
+        "binary_plus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1536,
+          "scratch_bytes": 15370,
+          "product_bound": 7103312,
+          "observed_products": 7071793,
+          "observed_columns": 41027,
+          "host_ms": 1.2393
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "binary_minus",
+          "window_words": 2304,
+          "scratch_bytes": 18432,
+          "product_bound": 6957124,
+          "observed_products": 6926358,
+          "observed_columns": 33125,
+          "host_ms": 1.1434
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 73728,
+      "gap": 50,
+      "x": "3fefffffffffffe0",
+      "y": "4098040000000000",
+      "midpoint_lower": "3fefffffffff3fdf",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0019
+        },
+        "binary_minus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0018
+        },
+        "binary_plus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1537,
+          "scratch_bytes": 15380,
+          "product_bound": 5479707,
+          "observed_products": 5479707,
+          "observed_columns": 28426,
+          "host_ms": 0.6852
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1537,
+          "scratch_bytes": 15380,
+          "product_bound": 5479707,
+          "observed_products": 5479707,
+          "observed_columns": 28426,
+          "host_ms": 0.7116
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 80000,
+      "gap": 79,
+      "x": "3feffffffffffe00",
+      "y": "c002cc0000000000",
+      "midpoint_lower": "3ff0000000000259",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0022
+        },
+        "binary_minus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0018
+        },
+        "binary_plus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1667,
+          "scratch_bytes": 16680,
+          "product_bound": 13269092,
+          "observed_products": 13219949,
+          "observed_columns": 47613,
+          "host_ms": 2.6901
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1667,
+          "scratch_bytes": 16680,
+          "product_bound": 13269092,
+          "observed_products": 13219949,
+          "observed_columns": 47613,
+          "host_ms": 2.7847
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0006
+      }
+    },
+    {
+      "required_width": 88415,
+      "gap": 51,
+      "x": "3fefffffffffffe0",
+      "y": "409ccc0000000000",
+      "midpoint_lower": "3fefffffffff199f",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0024
+        },
+        "binary_minus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0022
+        },
+        "binary_plus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0022
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0022
+        },
+        "triple": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1842,
+          "scratch_bytes": 18430,
+          "product_bound": 7882536,
+          "observed_products": 7882536,
+          "observed_columns": 41156,
+          "host_ms": 1.0306
+        },
+        "automatic": {
+          "result": 1,
+          "selected": "triple",
+          "window_words": 1842,
+          "scratch_bytes": 18430,
+          "product_bound": 7882536,
+          "observed_products": 7882536,
+          "observed_columns": 41156,
+          "host_ms": 0.9277
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0005
+      }
+    },
+    {
+      "required_width": 88416,
+      "gap": 52,
+      "x": "3fefffffffffff00",
+      "y": "c02c5c0000000000",
+      "midpoint_lower": "3ff0000000000716",
+      "expected": 1,
+      "methods": {
+        "binary": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0019
+        },
+        "binary_minus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        },
+        "binary_plus": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "odd_pair": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "triple": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0016
+        },
+        "automatic": {
+          "result": 0,
+          "selected": null,
+          "window_words": 0,
+          "scratch_bytes": 0,
+          "product_bound": 0,
+          "observed_products": 0,
+          "observed_columns": 0,
+          "host_ms": 0.0017
+        }
+      },
+      "existing": {
+        "result": 0,
+        "host_ms": 0.0005
+      }
+    }
+  ],
+  "capacities": {
+    "binary": 49152,
+    "binary_minus": 73727,
+    "binary_plus": 73696,
+    "odd_pair": 73695,
+    "triple": 88415
+  },
+  "coverage_at_production_gap": {
+    "binary": 65450,
+    "binary_minus": 90025,
+    "binary_plus": 89994,
+    "odd_pair": 89993,
+    "triple": 104713
+  },
+  "practical_all_input_bound_established": false,
+  "fixture_sha256": "44751b2bfff9deb7f2dab83fc13df60b210f5ba43f413a0642ad6162186e24ee",
+  "source_sha256": "25b29e87a647830a4b19a01a2d39587bfe418128621936a8c9bd021300bec7b5"
+}
