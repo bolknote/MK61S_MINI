@@ -1,6 +1,7 @@
 #include "mk61_ai_model.hpp"
 #include "mk61_ai_math.hpp"
 #include "mk61_ai_attention.hpp"
+#include "mk61_ai_exact_fp32.hpp"
 #include "mk61_ai_kv_stream.hpp"
 #include "mk61_ai_kernels.h"
 #include "mk61_ai_linear.hpp"
@@ -11,6 +12,8 @@
 #include <cstring>
 
 namespace mk61ai {
+#include "mk61_ai_attention.inc"
+
 namespace {
 struct FeedForwardActivation {
   float *gate;
@@ -1176,6 +1179,8 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
   ++position_;
   return ModelStatus::OK;
 }
+#include "mk61_ai_prefill.inc"
+
 const char *model_status_text(ModelStatus s) {
   static const char *const names[] = {"OK",
                                       "model I/O error",

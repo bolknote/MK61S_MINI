@@ -5,6 +5,7 @@
 #include "ai_m3.hpp"
 #include "ai_presentation.hpp"
 #include "mk61_ai_perf.hpp"
+#include "mk61_ai_attention.hpp"
 #include "mk61_ai_long_bench.hpp"
 #include "mk61_ai_linear.hpp"
 #include "mk61_ai_kernels.h"
@@ -624,7 +625,7 @@ struct UI {
   unsigned long_perf(const char *directory);
   unsigned request_bench(const char *directory);
 #if defined(PICO_ON_DEVICE)
-  unsigned parameter_perf(const char *directory, bool overlap_only);
+  unsigned parameter_perf(const char *directory, bool overlap_only, bool attention_trial = false);
   unsigned request_perf(const char *directory);
 #endif
   void sample_memory();
@@ -2363,6 +2364,7 @@ AI_COLD_CODE unsigned UI::bench() {
        config_size!=8) return 3;
     if (!std::memcmp(config_text,"AIREAD1\n",8)) return parameter_perf(directory, false);
     if (!std::memcmp(config_text,"AIREAD2\n",8)) return parameter_perf(directory, true);
+    if (!std::memcmp(config_text,"AIREAD3\n",8)) return parameter_perf(directory, true, true);
     return 3;
   }
 #endif

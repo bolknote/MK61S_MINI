@@ -1,4 +1,5 @@
 #include "mk61_ai_model.hpp"
+#include "mk61_ai_kernels.h"
 #include "mk61_ai_worker_fixture.hpp"
 #include <algorithm>
 #include <cassert>
@@ -22,6 +23,7 @@ struct Runtime {
     bool fail;
   } job{};
   bool pending = false, busy = false, refuse = false;
+  bool refuse_cpu = false;
   bool cache_pending=false,refuse_cache=false,fail_cache=false;
   block_io::ReadSpan cache_spans[16];unsigned cache_count=0,cache_batches=0;
   int fail_cache_after = -1;
@@ -136,21 +138,31 @@ struct Runtime {
       auto &r = *static_cast<Runtime *>(p);r.owner();
       if (r.pending) ++r.overlapped;
       if (r.cache_pending) ++r.cache_overlapped;
-      return r.cpu.submit(fn, job);
+      return !r.refuse_cpu && r.cpu.submit(fn, job);
     };
     e.join = [](void *p) { static_cast<Runtime *>(p)->cpu.join(); };
     model.execution(e);
   }
-  ModelStatus forward(std::uint16_t token, Arithmetic arithmetic, std::uint16_t &best,
-                      float *logits = nullptr, bool output = true,
-                      bool (*allowed)(void *, std::uint16_t) = nullptr) {
-    const auto result = model.forward(token, output, best, [](void *p) {
-      auto &r = *static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending && r.busy);
-      return r.cancel_after < 0 || r.cancel_after-- > 0;
-    }, this, arithmetic, logits, allowed, this);
+  static bool service(void *p) {
+    auto &r=*static_cast<Runtime *>(p);r.owner();assert(!r.pending && !r.cache_pending && r.busy);
+    return r.cancel_after < 0 || r.cancel_after-- > 0;
+  }
+  void check_idle() const {
     assert(!busy && !pending && !cache_pending && began == finished && cpu.submitted == cpu.joined);
     for (unsigned i = 0; i < 8; ++i)
       assert(workspace[workspace.size() - 8 + i] == UINT64_C(0xb00f61a1b00f61a1));
+  }
+  ModelStatus forward(std::uint16_t token, Arithmetic arithmetic, std::uint16_t &best,
+                      float *logits = nullptr, bool output = true,
+                      bool (*allowed)(void *, std::uint16_t) = nullptr) {
+    const auto result=model.forward(token,output,best,service,this,arithmetic,logits,allowed,this);
+    check_idle();
+    return result;
+  }
+  ModelStatus pair(const std::uint16_t (&tokens)[2],float *extra,std::size_t bytes,
+                   std::uint32_t *checksums=nullptr) {
+    const auto result=model.prefill_pair(tokens,extra,bytes,Arithmetic::INT8,service,this,checksums);
+    check_idle();
     return result;
   }
 };
@@ -160,6 +172,94 @@ bool sparse(void *p, std::uint16_t id) {
   auto &r = *static_cast<Runtime *>(p);char text[2049];unsigned used = 0;
   assert(r.model.decode(id, text, sizeof(text), used) == ModelStatus::OK);
   return id % 37 == 0;
+}
+void check_pair_prefill(const std::vector<std::uint8_t> &package,bool lut,
+                        const std::uint16_t *tokens,unsigned count) {
+  Runtime control(package,28,true,lut), candidate(package,28,true,lut);
+  auto &c=control.model;
+  auto &b=candidate.model;
+  const auto cfg=c.config();
+  if(cfg.hidden!=128 || cfg.heads!=4 || cfg.kv_heads!=2 || cfg.head_dim!=32 ||
+     cfg.context<512) return;
+  std::vector<float> left_params(c.parameter_cache_bytes()/4),right_params(b.parameter_cache_bytes()/4);
+  assert(c.cache_parameters(left_params.data(),left_params.size()*4)==ModelStatus::OK);
+  assert(b.cache_parameters(right_params.data(),right_params.size()*4)==ModelStatus::OK);
+  auto ex=c.execution();ex.parallel_softmax=true;c.execution(ex);
+  ex=candidate.model.execution();ex.parallel_softmax=true;b.execution(ex);
+  const auto extra_bytes=b.prefill_pair_workspace_bytes(Arithmetic::INT8);
+  const unsigned lookup=std::max(16U*cfg.intermediate,lut?4U*unsigned(sizeof(mk61ai_lut8x32)):0U);
+  assert(extra_bytes==std::max(8U*cfg.context,(lookup+15U)&~15U));
+  std::vector<float> extra(extra_bytes/4+4,1234.0f);
+  std::uint16_t best=0;
+  constexpr unsigned seed_rows=16,stride=512;
+  for(unsigned i=0;i<seed_rows;++i)
+    assert(control.forward(tokens[i%count],Arithmetic::INT8,best,nullptr,false)==ModelStatus::OK);
+  const auto seed=control.cache;
+  auto prepare=[&](unsigned position) {
+    std::fill(control.cache.begin(),control.cache.end(),0);
+    for(unsigned layer=0;layer<cfg.layers;++layer) for(unsigned row=0;row<position;++row) {
+      const unsigned base=layer*cfg.context*stride;
+      std::memcpy(control.cache.data()+base+row*stride,seed.data()+base+(row%seed_rows)*stride,stride);
+    }
+    candidate.cache=control.cache;
+    assert(c.diagnostic_position(position) && b.diagnostic_position(position));
+  };
+  const std::uint16_t ids[]{tokens[0],tokens[1]};
+  std::vector<float> first_logits(cfg.vocab),second_logits(cfg.vocab);
+  auto compare=[&](unsigned p) {
+    std::uint32_t actual[2],expected[2];
+    std::uint32_t bytes=0;
+    for(unsigned i=0;i<2;++i) {
+      assert(control.forward(ids[i],Arithmetic::INT8,best,nullptr,false)==ModelStatus::OK);
+      expected[i]=c.compute_metrics().checksum;
+      bytes+=c.compute_metrics().attention_read_bytes;
+    }
+    assert(candidate.pair(ids,extra.data(),extra_bytes,actual)==ModelStatus::OK);
+    assert(!std::memcmp(actual,expected,sizeof(actual)) && c.position()==p+2 && b.position()==p+2);
+    assert(control.cache==candidate.cache);
+    assert(b.compute_metrics().attention_read_bytes==cfg.layers*4*(p+2)*128);
+    assert(b.compute_metrics().attention_read_bytes<bytes);
+    assert(b.compute_metrics().checksum==expected[1]);
+    assert(std::all_of(extra.end()-4,extra.end(),[](float v){return v==1234.0f;}));
+    if(p+2<cfg.context) {
+      std::uint16_t a=0,d=0;
+      assert(control.forward(tokens[2],Arithmetic::INT8,a,first_logits.data())==ModelStatus::OK);
+      assert(candidate.forward(tokens[2],Arithmetic::INT8,d,second_logits.data())==ModelStatus::OK);
+      assert(a==d && !std::memcmp(first_logits.data(),second_logits.data(),cfg.vocab*sizeof(float)));
+      assert(control.cache==candidate.cache);
+    }
+  };
+  for(auto kernel:{AttentionKernel::REFERENCE,AttentionKernel::WEIGHTED,AttentionKernel::BOTH}) {
+    ex.attention_kernel=kernel;b.execution(ex);
+    for(unsigned p:{0U,15U,126U,127U,510U,cfg.context-2}) {
+      prepare(p);
+      compare(p);
+    }
+  }
+  prepare(127);
+  candidate.refuse=candidate.refuse_cache=candidate.refuse_cpu=true;
+  compare(127);
+  candidate.refuse=candidate.refuse_cache=candidate.refuse_cpu=false;
+  for(int fault=0;fault<3;++fault) {
+    prepare(127);
+    if(fault==0) candidate.cancel_after=80;
+    if(fault==1) candidate.fail_finish_after=0;
+    if(fault==2) candidate.fail_cache_after=1;
+    std::uint32_t out[]{1,2};
+    assert(candidate.pair(ids,extra.data(),extra_bytes,out)==
+           (fault==0?ModelStatus::CANCELLED:ModelStatus::IO));
+    assert(b.position()==127 && out[0]==1 && out[1]==2);
+    for(unsigned layer=0;layer<cfg.layers;++layer) {
+      const auto at=layer*cfg.context*stride;
+      assert(!std::memcmp(control.cache.data()+at,candidate.cache.data()+at,127*stride));
+    }
+    candidate.cancel_after=candidate.fail_finish_after=candidate.fail_cache_after=-1;
+    compare(127);
+  }
+  assert(b.diagnostic_position(cfg.context-1));
+  assert(candidate.pair(ids,extra.data(),extra_bytes)==ModelStatus::CONTEXT);
+  assert(candidate.pair(ids,extra.data(),extra_bytes-1)==ModelStatus::MEMORY);
+  std::puts("pair prefill: exact per-token digests, full KV and next logits; DMA/worker refusal, cancel and retry PASS");
 }
 }
 int main(int argc, char **argv) {
@@ -182,6 +282,7 @@ int main(int argc, char **argv) {
   }
   std::uint16_t tokens[64];unsigned count = 0;
   assert(control.model.encode("Задача: вычисли синус и проверь результат.", tokens, 64, count) == ModelStatus::OK && count > 2);
+  check_pair_prefill(packed,argc==3,tokens,count);
   const auto vocab = control.model.config().vocab;
   std::vector<float> a(vocab), b(vocab);std::uint16_t left = 0, right = 0;
   unsigned comparisons = 0;

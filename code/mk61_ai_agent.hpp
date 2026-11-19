@@ -26,6 +26,12 @@ struct Inference {
   ModelStatus (*step)(void *, std::uint16_t, bool, std::uint16_t &,
                       bool (*)(void *), void *, Arithmetic,
                       bool (*)(void *, std::uint16_t), void *) = nullptr;
+  // Independent context so a scalar tracer can wrap step without changing
+  // the object that owns the optional pair backend.
+  void *pair_context = nullptr;
+  std::size_t (*pair_workspace)(void *, Arithmetic) = nullptr;
+  ModelStatus (*pair_step)(void *, const std::uint16_t (&)[2], void *, std::size_t,
+                           Arithmetic, bool (*)(void *), void *) = nullptr;
   const ModelConfig &config() const { return configuration(context); }
   unsigned position() const { return cursor(context); }
   void reset() { seek(context, 0); }
@@ -51,6 +57,7 @@ public:
   static constexpr unsigned PROMPT_BYTES = 4096;
   struct Metrics {
     std::uint64_t prefill_us = 0, decode_us = 0, tool_us = 0;
+    std::uint32_t prefill_pairs = 0;
     std::uint32_t max_tick_us = 0, prefill_tokens = 0, decode_tokens = 0,
                   reused_tokens = 0, output_tokens = 0, output_token_hash = 0;
   };

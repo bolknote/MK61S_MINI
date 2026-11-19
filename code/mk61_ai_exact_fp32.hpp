@@ -28,6 +28,45 @@ inline __attribute__((always_inline)) float product(float a,float b) {
 }
 }
 namespace mk61ai::exact_fp32 {
+// Keep the product rounded before adding it. This normalizes the common
+// one-bit cancellation inline; deeper cancellation still uses CLZ.
+inline __attribute__((always_inline)) float attention_sum(float a,float b) {
+  std::uint32_t x,y;std::memcpy(&x,&a,4);std::memcpy(&y,&b,4);
+  unsigned ex=(x>>23)&255,ey=(y>>23)&255;
+  if(ex-1U>=254 || ey-1U>=254) return a+b;
+  if((x<<1)<(y<<1)) {
+    const auto bits=x;x=y;y=bits;
+    const auto exponent=ex;ex=ey;ey=exponent;
+  }
+  const unsigned gap=ex-ey;
+  // Even at a power of two, the smaller operand is strictly below the
+  // halfway point to the closer neighbour when the exponent gap is >=26.
+  if(gap>=26) {
+    float result;std::memcpy(&result,&x,4);return result;
+  }
+  constexpr std::uint32_t hidden=1U<<26,mask=hidden-8;
+  std::uint32_t u=((x<<3)&mask)|hidden,v=((y<<3)&mask)|hidden;
+  if(gap) v=(v>>gap)|((v<<(32-gap))!=0);
+  if((x^y)&0x80000000U) {
+    u-=v;
+    if(!u)return 0.0f;
+    if(u<hidden) {
+      const unsigned shift=u>=hidden/2?1U:unsigned(__builtin_clz(u))-5U;
+      u<<=shift;ex-=shift;
+    }
+  } else {
+    u+=v;
+    if(u>=2*hidden){u=(u>>1)|(u&1);++ex;}
+  }
+  if(ex-1U>=254)return a+b;
+  // Three low bits are guard, round and sticky. Add the rounding carry
+  // to the mantissa so a rollover carries directly into the exponent.
+  const std::uint32_t encoded=((ex-1U)<<23)+((u+3U+((u>>3)&1U))>>3);
+  if(encoded>=0x7f800000U)return a+b;
+  const std::uint32_t bits=encoded|(x&0x80000000U);
+  float result;std::memcpy(&result,&bits,4);return result;
+}
+
 #if defined(PICO_ON_DEVICE)
 inline __attribute__((section(".ai_fp32_extension"),noinline)) float sum(float a,float b)
 #else

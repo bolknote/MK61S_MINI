@@ -1,4 +1,4 @@
-AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_only) {
+AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_only, bool attention_trial) {
   using namespace mk61ai::long_bench;
   constexpr unsigned rounds = 4;
   constexpr unsigned lengths[] = {128, 256, 512};
@@ -42,14 +42,30 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_onl
   struct AttentionSample {
     u32 attention_us = 0, io_us = 0;
   };
+  struct PrefillSample {
+    u32 us = 0, kv_bytes = 0, kv_reads = 0, weight_prefetch_bytes = 0;
+    u32 weight_io_us = 0, softmax_jobs = 0;
+  };
+  struct Trial {
+    u32 magic = 0x31545441U, stage = 0, kernel = 0, variants = 1;
+    u32 micro_us[2][2][rounds]{}; // QK / PV, reference / candidate
+    u32 micro_matches = 0;
+    u32 prefill_start = 384, prefill_count = 8, extra_bytes = 0;
+    PrefillSample prefill[2][2]{};
+    u32 prompt_digest[8]{}, prompt_kv[8]{};
+    u32 psram_burst = 0;
+  };
   struct {
     Result timings;
     AttentionSample attention[4][2][rounds]; // Short, then 128, 256 and 512.
+    Trial trial;
   } report_data;
   static_assert(sizeof(Result) == 1664);
-  static_assert(sizeof(report_data) == 1920);
+  static_assert(offsetof(decltype(report_data),trial)==1920 && sizeof(Trial)==260);
   auto &report = report_data.timings;
-  report.bytes = overlap_only ? sizeof(report_data) : sizeof(report);
+  auto &trial=report_data.trial;
+  report.bytes = attention_trial ? sizeof(report_data) :
+      overlap_only ? offsetof(decltype(report_data),trial) : sizeof(report);
   for (unsigned i = 0; i < 3; ++i) report.long_cases[i].context = lengths[i];
 
   char result_path[128];
@@ -94,11 +110,78 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_onl
   const auto io_before = io_worker::statistics();
   report.hz = ai_clock::hz();
   cancel = false;
+  if(ok && attention_trial) {
+    // The old flag uses a different 16-byte PIO program at the same SCK.
+    // Clock/divider alone cannot distinguish it from the release profile.
+    ok=psram::diagnostic_read_burst(64) &&
+       psram::diagnostic_read_clock(ai_psram_read_clock::default_burst_divider);
+    if(ok)trial.psram_burst=64;
+  }
 
+  // Use saved K/V data and the same worker as the model. Do not run the
+  // candidate on the full decode when neither inner loop is faster.
+  auto micro=[&] {
+    trial.stage=1;
+    constexpr unsigned size=16,width=32,repetitions=24;
+    struct Matrix { float elements[size*width]; };
+    std::unique_ptr<Matrix> matrix(new (std::nothrow) Matrix);
+    if(!matrix)return false;
+    float query[2][width],scores[2][size],values[2][width],expected[2][width];
+    for(unsigned lane=0;lane<2;++lane)
+      if(!cache.read(128+lane*row_bytes,query[lane],width*sizeof(float))) return false;
+    for(unsigned lane=0;lane<2;++lane) for(unsigned i=0;i<size;++i)
+      scores[lane][i]=0.25f+float((3*i+lane)%size)*0.0625f;
+    for(unsigned kind=0;kind<2;++kind) {
+      for(unsigned row=0;row<size;++row)
+        if(!cache.read(row*row_bytes+kind*256,matrix->elements+row*width,width*sizeof(float))) return false;
+      const unsigned output_count=kind?width:size;
+      for(unsigned round=0;round<rounds;++round) {
+        for(unsigned side=0;side<2;++side) {
+          const unsigned variant=side^(round&1);
+          auto e=production;
+          e.attention_kernel=variant?AttentionKernel::BOTH:AttentionKernel::REFERENCE;
+          auto &time=trial.micro_us[kind][variant][round];
+          for(unsigned n=0;n<repetitions;++n) {
+            for(unsigned lane=0;lane<2;++lane)
+              std::memcpy(values[lane],query[lane],sizeof(values[lane]));
+            AttentionBatch jobs[]{
+              {kind?nullptr:query[0],matrix->elements,kind?scores[0]:nullptr,values[0],size,width,0.176776692f,256.0f},
+              {kind?nullptr:query[1],matrix->elements,kind?scores[1]:nullptr,values[1],size,width,0.176776692f,304.0f}};
+            if(!pump())return false;
+            ComputeMetrics metrics{};
+            const auto start=call(MK61_SERVICE_MICROS);
+            attention_pair(jobs,2,e,metrics);
+            time+=call(MK61_SERVICE_MICROS)-start;
+            if(metrics.attention_worker_jobs!=1) return false;
+            for(unsigned lane=0;lane<2;++lane) {
+              const unsigned bytes=output_count*sizeof(float);
+              if(!n && !side)std::memcpy(expected[lane],values[lane],bytes);
+              else if(std::memcmp(expected[lane],values[lane],bytes))return false;
+              else if(side) trial.micro_matches+=output_count;
+            }
+          }
+        }
+      }
+    }
+    auto wins=[&](unsigned kind) {
+      u32 a[rounds],b[rounds];
+      std::copy_n(trial.micro_us[kind][0],rounds,a);
+      std::copy_n(trial.micro_us[kind][1],rounds,b);
+      std::sort(a,a+rounds);std::sort(b,b+rounds);
+      return 100ULL*(b[1]+b[2])<=95ULL*(a[1]+a[2]);
+    };
+    const bool qk=wins(0),pv=wins(1);
+    trial.kernel=unsigned(qk?(pv?AttentionKernel::BOTH:AttentionKernel::QUERY):
+                            (pv?AttentionKernel::WEIGHTED:AttentionKernel::REFERENCE));
+    trial.variants=trial.kernel?2:1;
+    trial.stage=2;
+    return true;
+  };
   auto select_mode = [&](bool enabled) {
     auto execution = production;
     execution.parallel_softmax = overlap_only || enabled;
-    if (overlap_only) execution.overlap_kv = enabled;
+    if (overlap_only) execution.overlap_kv = attention_trial || enabled;
+    if (attention_trial && enabled) execution.attention_kernel=AttentionKernel(trial.kernel);
     model.execution(execution);
     if (!overlap_only && !enabled) {
       model.clear_parameter_cache();
@@ -177,22 +260,75 @@ AI_COLD_CODE unsigned UI::parameter_perf(const char *directory, bool overlap_onl
     }
     return report.short_samples[mode][round].softmax_jobs == 0;
   };
+  auto measure_prefill=[&](unsigned mode,unsigned round) {
+    auto &result=trial.prefill[mode][round];
+    auto e=production;
+    e.overlap_kv=e.parallel_softmax=true;
+    e.attention_kernel=AttentionKernel(trial.kernel);
+    model.execution(e);
+    if(!model.diagnostic_position(trial.prefill_start)) return false;
+    const auto required=model.prefill_pair_workspace_bytes(Arithmetic::INT8);
+    trial.extra_bytes=required;
+    std::unique_ptr<float[]> extra(mode && required?new (std::nothrow) float[required/sizeof(float)]:nullptr);
+    if(!required || (mode && !extra)) {status=ModelStatus::MEMORY;return false;}
+    for(unsigned i=0;i<trial.prefill_count;) {
+      const auto started=call(MK61_SERVICE_MICROS);
+      u32 digest[2]{};
+      const unsigned used=mode?2:1;
+      const unsigned position=trial.prefill_start+i;
+      const std::uint16_t a=input(ids,count,position);
+      if(mode) {
+        const std::uint16_t pair[]{a,input(ids,count,position+1)};
+        status=model.prefill_pair(pair,extra.get(),required,Arithmetic::INT8,service,this,digest);
+      } else {
+        std::uint16_t unused=0;
+        status=model.forward(a,false,unused,service,this,Arithmetic::INT8);
+        digest[0]=model.compute_metrics().checksum;
+      }
+      result.us+=call(MK61_SERVICE_MICROS)-started;
+      if(status!=ModelStatus::OK || model.position()!=position+used) return false;
+      const auto &m=model.compute_metrics();
+      result.kv_bytes+=m.attention_read_bytes;
+      result.kv_reads+=m.attention_read_transactions;
+      result.weight_prefetch_bytes+=m.prefetched_bytes;
+      result.weight_io_us+=m.read_us+m.wait_us;
+      result.softmax_jobs+=m.softmax_worker_jobs;
+      for(unsigned j=0;j<used;++j) {
+        u32 row=0;
+        if(!kv_hash(position+j,row))return false;
+        if(!mode && !round) {
+          trial.prompt_digest[i+j]=digest[j];
+          trial.prompt_kv[i+j]=row;
+        } else if(trial.prompt_digest[i+j]!=digest[j] || trial.prompt_kv[i+j]!=row) return false;
+      }
+      i+=used;
+    }
+    return result.softmax_jobs==trial.prefill_count*cfg.layers*cfg.kv_heads;
+  };
 
   // Longest first so every shorter pair still sees the original KV prefix.
+  if(ok && attention_trial)ok=micro();
+  const unsigned variants=attention_trial?trial.variants:2;
+  const unsigned full_rounds=attention_trial?2:rounds;
   for (unsigned remaining = 3; ok && remaining; --remaining) {
     auto &result = report.long_cases[remaining - 1];
     report.stage = result.context;
     std::snprintf(s.feedback, sizeof(s.feedback), "Context %u; Esc: stop", unsigned(result.context));
     dirty = true;
-    for (unsigned round = 0; ok && round < rounds; ++round) {
-      const unsigned first = round & 1U;
-      ok = measure_long(remaining - 1, first, round) && measure_long(remaining - 1, first ^ 1U, round);
-    }
+    for (unsigned round = 0; ok && round < full_rounds; ++round)
+      for(unsigned side=0;ok && side<variants;++side)
+        ok = measure_long(remaining - 1, variants==2?side^(round&1U):0U, round);
+    if(attention_trial)break;
   }
   if (ok) report.stage = 1;
-  for (unsigned round = 0; ok && round < rounds; ++round) {
-    const unsigned first = round & 1U;
-    ok = measure_short(first, round) && measure_short(first ^ 1U, round);
+  for (unsigned round = 0; ok && round < full_rounds; ++round)
+    for(unsigned side=0;ok && side<variants;++side)
+      ok = measure_short(variants==2?side^(round&1U):0U,round);
+  if(ok && attention_trial) {
+    trial.stage=3;
+    if(ok)ok=measure_prefill(0,0) && measure_prefill(1,0) &&
+             measure_prefill(1,1) && measure_prefill(0,1);
+    if(ok)trial.stage=4;
   }
   if (ok) report.stage = 2;
 

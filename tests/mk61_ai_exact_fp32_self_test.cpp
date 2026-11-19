@@ -9,9 +9,10 @@ float real(std::uint32_t x) {float f;std::memcpy(&f,&x,4);return f;}
 unsigned long pairs=0;
 void check(std::uint32_t x,std::uint32_t y) {
   volatile float a=real(x),b=real(y);
-  const float want[]={__aeabi_fmul(a,b),__aeabi_fadd(a,b)};
-  const float got[]={mk61ai::exact_fp32::product(a,b),mk61ai::exact_fp32::sum(a,b)};
-  for(unsigned op=0;op<2;++op) {
+  const float want[]={__aeabi_fmul(a,b),__aeabi_fadd(a,b),__aeabi_fadd(a,b)};
+  const float got[]={mk61ai::exact_fp32::product(a,b),mk61ai::exact_fp32::sum(a,b),
+                     mk61ai::exact_fp32::attention_sum(a,b)};
+  for(unsigned op=0;op<3;++op) {
     if(std::isnan(want[op])&&std::isnan(got[op]))continue;
     if(bits(want[op])!=bits(got[op])) {
       std::printf("mismatch op=%u x=%08x y=%08x want=%08x got=%08x\n",op,x,y,bits(want[op]),bits(got[op]));

@@ -227,6 +227,14 @@ SECTIONS {
            "AI FP32 helpers overlap AI math")
     ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= 0x101fe000,
            "AI math overlaps device settings")
+    .ai_attention_fast_extension 0x101b6000 : {
+        *(.ai_attention_fast_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.ai_math_extension) + SIZEOF(.ai_math_extension) <= ADDR(.ai_attention_fast_extension),
+           "AI math overlaps the width-32 attention kernel")
+    ASSERT(ADDR(.ai_attention_fast_extension) + SIZEOF(.ai_attention_fast_extension) <= 0x101b8000,
+           "Width-32 attention overlaps LCD code")
     /* Keep display planning outside the main image's fixed math boundary. */
     .lcd_color_code 0x101b8000 : {
         *(.lcd_color_code.*)
@@ -243,5 +251,11 @@ SECTIONS {
     } > FLASH
     ASSERT(ADDR(.audio_setup_code) + SIZEOF(.audio_setup_code) <= 0x101ba000,
            "LCD and audio setup code exceed their 8 KiB slot")
+    .ai_prefill_extension 0x101ba000 : {
+        *(.ai_prefill_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(ADDR(.ai_prefill_extension) + SIZEOF(.ai_prefill_extension) <= 0x101c0000,
+           "Paired AI prefill exceeds its flash slot")
 }
 INSERT AFTER .flash_end;

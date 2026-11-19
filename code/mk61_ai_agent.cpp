@@ -145,6 +145,15 @@ Inference local_inference(Model &m) {
          bool (*allowed)(void *, std::uint16_t), void *policy) {
         return static_cast<Model *>(p)->forward(t, output, best, service, raw,
                                                 mode, nullptr, allowed, policy);
+      },
+      &m,
+      [](void *p, Arithmetic mode) -> std::size_t {
+        const auto &model=*static_cast<Model *>(p);
+        return model.execution().pair_prefill?model.prefill_pair_workspace_bytes(mode):0;
+      },
+      [](void *p, const std::uint16_t (&ids)[2], void *workspace, std::size_t bytes,
+         Arithmetic mode, bool (*service)(void *), void *raw) {
+        return static_cast<Model *>(p)->prefill_pair(ids,workspace,bytes,mode,service,raw);
       }};
 }
 Agent::Agent(Session &s, Store store, Model &m, Executor executor)
@@ -801,6 +810,29 @@ void Agent::tick(bool (*service)(void *), void *context) {
     tick_direct(callback, &pump);
     return;
   }
+  auto finish_forward = [&](ModelStatus status, std::uint32_t elapsed, unsigned count) {
+    if (phase_ == Phase::PREFILL || phase_ == Phase::HEADER) {
+      metrics_.prefill_us += elapsed;
+      if (status == ModelStatus::OK)
+        metrics_.prefill_tokens += count;
+    } else {
+      metrics_.decode_us += elapsed;
+      if (status == ModelStatus::OK)
+        metrics_.decode_tokens += count;
+    }
+    if (status == ModelStatus::CANCELLED) {
+      resume_ = phase_;
+      phase_ = Phase::IDLE;
+      s_.state = RunState::PAUSED;
+      checkpoint();
+      return false;
+    }
+    if (status != ModelStatus::OK) {
+      fail(model_status_text(status));
+      return false;
+    }
+    return true;
+  };
   auto forwarded = [&](std::uint16_t token, bool output) {
     std::uint16_t candidate = 0;
     auto allowed = [](void *raw, std::uint16_t id) {
@@ -830,32 +862,33 @@ void Agent::tick(bool (*service)(void *), void *context) {
         model_.forward(token, output, candidate, callback, &pump, arithmetic_,
                        output ? +allowed : nullptr, this);
     const auto elapsed = micros_ ? micros_(clock_context_) - before : 0;
-    if (phase_ == Phase::PREFILL || phase_ == Phase::HEADER) {
-      metrics_.prefill_us += elapsed;
-      if (status == ModelStatus::OK)
-        ++metrics_.prefill_tokens;
-    } else {
-      metrics_.decode_us += elapsed;
-      if (status == ModelStatus::OK)
-        ++metrics_.decode_tokens;
-    }
-    if (status == ModelStatus::CANCELLED) {
-      resume_ = phase_;
-      phase_ = Phase::IDLE;
-      s_.state = RunState::PAUSED;
-      checkpoint();
-      return false;
-    }
-    if (status != ModelStatus::OK) {
-      fail(model_status_text(status));
-      return false;
-    }
+    if (!finish_forward(status, elapsed, 1)) return false;
     next_ = candidate;
     return true;
   };
   if (phase_ == Phase::PREFILL) {
     if ((restore_prefix_ || save_prefix_) && tick_prefix(callback, &pump))
       return;
+    // Preserve the exact snapshot boundary and keep the classifier call
+    // for the last input token. Lack of optional SRAM is a scalar fallback.
+    if (model_.pair_workspace && model_.pair_step && prefilled_ + 2 < prompt_count_ &&
+        !(save_prefix_ && prefilled_ + 1 == system_tokens_)) {
+      const auto bytes = model_.pair_workspace(model_.pair_context,arithmetic_);
+      if (bytes) {
+        std::unique_ptr<float[]> extra(new (std::nothrow) float[bytes / sizeof(float)]);
+        if (extra) {
+          const std::uint16_t ids[]{tokens_[prefilled_],tokens_[prefilled_+1]};
+          const auto before=micros_?micros_(clock_context_):0;
+          const auto status=model_.pair_step(model_.pair_context,ids,extra.get(),bytes,arithmetic_,callback,&pump);
+          const auto elapsed=micros_?micros_(clock_context_)-before:0;
+          if(finish_forward(status,elapsed,2)) {
+            prefilled_+=2;
+            ++metrics_.prefill_pairs;
+          }
+          return;
+        }
+      }
+    }
     if (forwarded(tokens_[prefilled_], prefilled_ + 1 == prompt_count_)) {
       if (++prefilled_ == prompt_count_)
         phase_ = Phase::DECODE;

@@ -30,6 +30,7 @@ enum class ModelStatus : std::uint8_t {
 };
 enum class Arithmetic : std::uint8_t { FLOAT32, INT8, LUT_INT8, LUT_FLOAT32 };
 enum class LinearKernel : std::uint8_t { REFERENCE, FLASH_CODE, SRAM };
+enum class AttentionKernel : std::uint8_t { REFERENCE, WEIGHTED, QUERY, BOTH };
 struct LinearBatch;
 struct ComputeExecution {
   // submit publishes one bounded SRAM-only job; join completes it before any
@@ -56,6 +57,8 @@ struct ComputeExecution {
   bool (*remote_submit)(void *, LinearBatch *) = nullptr;
   bool (*remote_join)(void *) = nullptr;
   unsigned tile_rows = 8; // 24 reuses8-row buffers; 28 also fits28 hidden-width rows.
+  AttentionKernel attention_kernel = AttentionKernel::REFERENCE;
+  bool pair_prefill = false;
 };
 struct ComputeMetrics {
   std::uint32_t rows = 0, skipped_rows = 0, worker_jobs = 0, worker_rows = 0;
@@ -140,6 +143,13 @@ public:
                       float *logits = nullptr,
                       bool (*allowed)(void *, std::uint16_t) = nullptr,
                       void *policy = nullptr);
+  // Two known input tokens (no classifier output). The optional second
+  // workspace is caller-owned SRAM. On failure neither position advances.
+  std::size_t prefill_pair_workspace_bytes(Arithmetic arithmetic) const;
+  ModelStatus prefill_pair(const std::uint16_t (&tokens)[2], void *extra,
+                           std::size_t bytes, Arithmetic arithmetic,
+                           bool (*service)(void *) = nullptr, void *context = nullptr,
+                           std::uint32_t *checksums = nullptr);
 
 private:
   friend class Tokenizer;
