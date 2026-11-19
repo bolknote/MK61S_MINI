@@ -74,15 +74,23 @@ class SurfaceProofTest(unittest.TestCase):
 
     def test_kronecker_product_and_truncation(self):
         grid = surface.FixedInterval(48)
-        layout = surface.Series(5, grid)
-        left = [a-2*b+3 for a, b in layout.indices]
-        right = [3*a+b-3 for a, b in layout.indices]
-        seen = {}
-        for (i, j), a in zip(layout.indices, left):
-            for (k, l), b in zip(layout.indices, right):
-                seen[i+k, j+l] = seen.get((i+k, j+l), 0)+a*b
-        obtained = layout.multiply(list(map(grid.rational, left)), list(map(grid.rational, right)))
-        self.assertEqual(obtained, [grid.rational(seen[k]) for k in layout.indices])
+        for cut in (5, (3, 6), (7, 3)):
+            layout = surface.Series(cut, grid)
+            left = [a-2*b+3 for a, b in layout.indices]
+            right = [3*a+b-3 for a, b in layout.indices]
+            seen = {}
+            for (i, j), a in zip(layout.indices, left):
+                for (k, l), b in zip(layout.indices, right):
+                    seen[i+k, j+l] = seen.get((i+k, j+l), 0)+a*b
+            obtained = layout.multiply(list(map(grid.rational, left)), list(map(grid.rational, right)))
+            self.assertEqual(obtained, [grid.rational(seen[k]) for k in layout.indices])
+
+    def test_tensor_replays_on_the_same_rectangle(self):
+        row = dict(FIXTURE, block=FIXTURE['block']+[4], gap_bits=16300,
+                   tensor_shifts=[45, 44], terms=[8, 9])
+        surface.verify_block(row)
+        with self.assertRaisesRegex(ValueError, 'invalid tensor degree'):
+            surface.verify_block(dict(row, terms=[1, 9]))
 
     def test_parity_covers_negative_and_positive_integer_coordinates(self):
         degree, period = 4, 8

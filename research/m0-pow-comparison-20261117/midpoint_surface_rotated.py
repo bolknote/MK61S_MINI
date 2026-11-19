@@ -20,7 +20,6 @@ from midpoint_surface import verify_interval_margin
 
 Q = 1 << 52
 GAP = 900
-STRIP = Fraction(1, 1 << GAP)
 IDENTITY = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 SCHEMA = 'pow-rotated-newton-surface-v1'
 
@@ -47,25 +46,29 @@ def log_center(grid, exponent, coefficient, unit, ln2):
 class Geometry:
     # On a block I,J are integers in [-half,half), u=I/half, v=J/half.
     # The exponent grid is p=2**52*abs(y), with no parity restriction.
-    def __init__(self, block, degree, work_bits, origin=None):
-        require(isinstance(block, (tuple, list)) and len(block) == 5
+    def __init__(self, block, degree, work_bits, origin=None, gap=GAP):
+        require(isinstance(block, (tuple, list)) and len(block) in (5,6)
                 and all(type(v) is int for v in block), 'invalid block')
-        ex, bx, em, bm, width = block
-        require(-1022 <= ex <= 1023 and -1022 <= em <= 1023 and 4 <= width <= 48
-                and 0 <= bx < 1 << (52-width) and 0 <= bm < 1 << (52-width),
+        ex, bx, em, bm, x_width = block[:5]
+        m_width = block[-1]
+        require(-1022 <= ex <= 1023 and -1022 <= em <= 1023 and 4 <= x_width <= 48
+                and 4 <= m_width <= 48 and 0 <= bx < 1 << (52-x_width)
+                and 0 <= bm < 1 << (52-m_width),
                 'block is outside a normal binade')
-        require(type(degree) is int and 1 <= degree <= 9
-                and type(work_bits) is int and 32 <= work_bits <= 384,
+        require(type(degree) is int and 1 <= degree <= 12
+                and type(work_bits) is int and 32 <= work_bits <= 512,
                 'unsupported polynomial degree or precision')
+        require(type(gap) is int and GAP <= gap <= 16365, 'unsupported gap')
         self.degree = degree
-        self.half = h = 1 << (width-1)
-        self.max_radius_shift = 50-width
-        self.relative = (Fraction(h, Q+(2*bx+1)*h), Fraction(2*h, 2*(Q+(2*bm+1)*h)+1))
+        self.halves = hx, hm = 1 << (x_width-1), 1 << (m_width-1)
+        self.radius_shifts = 50-x_width, 50-m_width
+        self.max_radius_shift = min(self.radius_shifts)
+        self.relative = (Fraction(hx, Q+(2*bx+1)*hx), Fraction(2*hm, 2*(Q+(2*bm+1)*hm)+1))
         self.signs = (1 if ex >= 0 else -1, 1 if em >= 0 else -1)
         self.grid = grid = FixedInterval(work_bits+72*degree+96)
         ln2 = grid.log(2, 1)
-        self.log_x = log_center(grid, ex, Q+(2*bx+1)*h, Q, ln2)
-        self.log_m = log_center(grid, em, 2*(Q+(2*bm+1)*h)+1, 2*Q, ln2)
+        self.log_x = log_center(grid, ex, Q+(2*bx+1)*hx, Q, ln2)
+        self.log_m = log_center(grid, em, 2*(Q+(2*bm+1)*hm)+1, 2*Q, ln2)
         require(self.log_x[0] > 0 and self.log_m[0] > 0, 'logarithm sign is undecided')
         f0 = grid.divide(grid.scale(self.log_m, Q), self.log_x)
         if origin is None:
@@ -79,11 +82,12 @@ class Geometry:
         self.linear = (add(f0, grid.rational(-origin)), fu, fv)
         require(max(map(abs, self.linear[0])) <= 2*grid.unit,
                 'shift is too far from the true centre')
+        strip = Fraction(1, 1 << gap)
         result = self.circle_error(1)
-        require(result is not None and result[0] > STRIP,
+        require(result is not None and result[0] > strip,
                 'opposite-sign logarithms or the denominator are not separated')
         self.real_min_log, self.real_remainder = result
-        self.vertical = Q*STRIP/self.real_min_log
+        self.vertical = Q*strip/self.real_min_log
 
     def log_coefficient(self, axis, n):
         value = self.signs[axis]*(-1)**(n-1)*self.relative[axis]**n/n
@@ -91,7 +95,8 @@ class Geometry:
 
     def circle_error(self, radius):
         """Bound F-F(0)-F_u*u-F_v*v on the complex bidisc."""
-        a, b = (v*radius for v in self.relative)
+        radii = (radius,radius) if isinstance(radius,int) else radius
+        a, b = (v*r for v,r in zip(self.relative,radii))
         if max(a, b) >= Fraction(1, 2):
             return None
         dx, dm = a/(1-a), b/(1-b)
@@ -110,12 +115,13 @@ class Geometry:
     def linear_form_bounds(self, transform, radius, remainder):
         z, du, dv = self.linear
         unit = self.grid.unit
-        h = self.half*unit
+        rx, rm = (radius,radius) if isinstance(radius,int) else radius
+        hx, hm = (h*unit for h in self.halves)
         result = []
         for a, b, c in transform:
-            linear = max(abs(a*h+c*d) for d in du)+max(abs(b*h+c*d) for d in dv)
+            linear = rx*max(abs(a*hx+c*d) for d in du)+rm*max(abs(b*hm+c*d) for d in dv)
             center = abs(c)*max(map(abs, z))
-            result.append(Fraction(center+radius*linear, unit)+abs(c)*remainder)
+            result.append(Fraction(center+linear, unit)+abs(c)*remainder)
         return tuple(result)
 
     def tail_parameters(self, transform, shift):
@@ -168,6 +174,41 @@ class Geometry:
         terms, negative_shift = min(candidates)
         return -negative_shift, terms
 
+    def tensor_bound(self, transform, shifts):
+        require(isinstance(shifts,(tuple,list)) and len(shifts)==2
+                and all(type(s) is int and 1 <= s <= limit
+                        for s,limit in zip(shifts,self.radius_shifts)), 'invalid tensor radius')
+        radii = tuple(1 << s for s in shifts)
+        result = self.circle_error(radii)
+        require(result is not None, 'complex logarithm denominator may vanish')
+        caps = self.linear_form_bounds(transform,radii,result[1])
+        return (ceil(max(caps))+self.degree)**self.degree
+
+    def tensor_tail(self, transform, shifts, terms):
+        require(isinstance(terms,(tuple,list)) and len(terms)==2
+                and all(type(n) is int and 2 <= n <= 128 for n in terms), 'invalid tensor degree')
+        cap = self.tensor_bound(transform,shifts)
+        # Outside the retained rectangle, a union bound on the two
+        # geometric tails costs at most four in each direction.
+        series_error = sum(Fraction(4*cap,1 << (s*n)) for s,n in zip(shifts,terms))
+        velocity = max(abs(row[2]) for row in transform)*self.vertical
+        real = self.linear_form_bounds(transform,1,self.real_remainder)
+        return series_error+self.degree*velocity*(ceil(max(real)+velocity)+self.degree)**(self.degree-1)
+
+    def choose_tensor(self, transform, work_bits):
+        options = []
+        for sx,sm in product(*(range(1,end+1) for end in self.radius_shifts)):
+            try:
+                cap = self.tensor_bound(transform,(sx,sm)).bit_length()+work_bits+4
+            except ValueError:
+                continue
+            terms = max(2,-(-cap//sx)),max(2,-(-cap//sm))
+            if max(terms) <= 128:
+                options.append((terms[0]*terms[1],(sx,sm),terms))
+        require(options,'no usable tensor radii and truncation')
+        _, shifts, terms = min(options)
+        return shifts, terms
+
 
 def determinant(lines):
     (a, b, c), (d, e, f), (g, h, i) = lines
@@ -187,10 +228,10 @@ def adapt(geometry):
     from flint import fmpz_mat
 
     scale = 1 << 20
-    h = geometry.half*scale
+    hx, hm = (h*scale for h in geometry.halves)
     _, du, dv = geometry.linear
     denominator = 2*geometry.grid.unit
-    base = ((h, 0, 0), (0, h, 0), (sum(du)*scale//denominator, sum(dv)*scale//denominator,
+    base = ((hx, 0, 0), (0, hm, 0), (sum(du)*scale//denominator, sum(dv)*scale//denominator,
                                   ceil(max(1, geometry.real_remainder)*scale)))
     _, transform = fmpz_mat(base).lll(transform=True)
     return checked_transform(tuple(tuple(int(transform[i, j]) for j in range(3)) for i in range(3)))
@@ -198,13 +239,17 @@ def adapt(geometry):
 
 class Series:
     def __init__(self, terms, grid):
-        self.terms = terms
         self.grid = grid
-        self.indices = exponents(terms-1, 2)
+        if isinstance(terms,int):
+            self.x_terms = self.m_terms = terms
+            self.indices = exponents(terms-1, 2)
+        else:
+            self.x_terms,self.m_terms = terms
+            self.indices = tuple(product(range(self.x_terms),range(self.m_terms)))
         self.locations = {e: i for i, e in enumerate(self.indices)}
         # Two degrees of at most terms-1 add without carrying from j
         # into i in this Kronecker encoding.
-        stride = 2*terms-1
+        stride = 2*self.m_terms-1
         self.flat = tuple(i*stride+j for i, j in self.indices)
         self.length = max(self.flat)+1
 
@@ -217,10 +262,10 @@ class Series:
 
     def basis(self, geometry, transform):
         g = self.grid
-        x = [geometry.log_x]+[geometry.log_coefficient(0, n) for n in range(1, self.terms)]
-        m = [geometry.log_m]+[geometry.log_coefficient(1, n) for n in range(1, self.terms)]
+        x = [geometry.log_x]+[geometry.log_coefficient(0, n) for n in range(1, self.x_terms)]
+        m = [geometry.log_m]+[geometry.log_coefficient(1, n) for n in range(1, self.m_terms)]
         inverse = [g.divide(g.rational(1), x[0])]
-        for n in range(1, self.terms):
+        for n in range(1, self.x_terms):
             bound = (0, 0)
             for j in range(1, n+1):
                 bound = add(bound, g.multiply(x[j], inverse[n-j]))
@@ -231,8 +276,8 @@ class Series:
         for a, b, c in transform:
             series = [g.scale(v, c) for v in offset]
             k, l = self.locations[1, 0], self.locations[0, 1]
-            series[k] = add(series[k], g.rational(a*geometry.half))
-            series[l] = add(series[l], g.rational(b*geometry.half))
+            series[k] = add(series[k], g.rational(a*geometry.halves[0]))
+            series[l] = add(series[l], g.rational(b*geometry.halves[1]))
             linear.append(series)
         # B_n(L) = B_{n-1}(L)*(L-(n-1))/n. Every product in
         # this basis is integer-valued at integral I,J,p.
@@ -307,7 +352,7 @@ def integer_interval(bounds, unit):
 
 
 def verify_block(row):
-    geometry = Geometry(row['block'], row['degree'], row['work_bits'], row['origin'])
+    geometry = Geometry(row['block'], row['degree'], row['work_bits'], row['origin'], row.get('gap_bits',GAP))
     transform = checked_transform(row['transform'])
     validate = row['polynomials']
     rank = len(exponents(geometry.degree, 3))
@@ -317,7 +362,10 @@ def verify_block(row):
                     for poly in validate), 'invalid integer polynomials')
     mode = row.get('mode', 'zero')
     require(mode in ('zero', 'nonintegral'), 'unknown polynomial proof mode')
-    tail = geometry.tails(transform, row['radius_shift'], row['terms'])
+    if 'tensor_shifts' in row:
+        tail = geometry.tensor_tail(transform,row['tensor_shifts'],row['terms'])
+    else:
+        tail = geometry.tails(transform, row['radius_shift'], row['terms'])
     grid = geometry.grid
     columns = Series(row['terms'], grid).basis(geometry, transform)
     tail_units = ceil(tail*grid.unit)
@@ -333,13 +381,34 @@ def verify_block(row):
                 'polynomials share a modular zero')
 
 
-def generate_block(block, degree, work_bits, rotated, delta, free_center=False):
-    from flint import fmpz_mat
+def reduce_lattice(lattice, delta):
+    try:
+        from fpylll import IntegerMatrix, LLL, ReductionError
+    except ImportError:
+        from flint import fmpz_mat
 
-    geometry = Geometry(block, degree, work_bits)
+        return fmpz_mat(lattice).lll(delta=delta), 'flint'
+    matrix = IntegerMatrix.from_matrix(lattice)
+    try:
+        LLL.reduction(matrix, delta=delta, method='fast', float_type='ld')
+        return matrix, 'fpylll-fast'
+    except (ReductionError, ValueError):
+        LLL.reduction(matrix, delta=delta, method='wrapper')
+        return matrix, 'fpylll-wrapper'
+
+
+def generate_block(block, degree, work_bits, rotated, delta, free_center=False, gap=GAP, tensor=False):
+    geometry = Geometry(block, degree, work_bits, gap=gap)
     rank = len(exponents(degree, 3))
     transform = adapt(geometry) if rotated else IDENTITY
-    shift, terms = geometry.choose_geometry(transform, work_bits)
+    if tensor:
+        shifts, terms = geometry.choose_tensor(transform,work_bits)
+        layout = {'tensor_shifts':shifts}
+        tail = geometry.tensor_tail(transform,shifts,terms)
+    else:
+        shift, terms = geometry.choose_geometry(transform,work_bits)
+        layout = {'radius_shift':shift}
+        tail = geometry.tails(transform,shift,terms)
     grid = geometry.grid
     start = process_time()
     columns = Series(terms, grid).basis(geometry, transform)
@@ -353,9 +422,9 @@ def generate_block(block, degree, work_bits, rotated, delta, free_center=False):
     lattice = [[((lo+hi)*scale)//(2*grid.unit) for lo, hi in series[start_column:]]
                + [penalty*(i == j) for j in range(dimension)] for i, series in enumerate(basis_rows)]
     start = process_time()
-    reduced = fmpz_mat(lattice).lll(delta=delta)
+    reduced, backend = reduce_lattice(lattice,delta)
     lll = process_time()-start
-    tail_units = ceil(geometry.tails(transform, shift, terms)*grid.unit)
+    tail_units = ceil(tail*grid.unit)
     small = []
     mode = 'zero'
     selected = None
@@ -377,34 +446,37 @@ def generate_block(block, degree, work_bits, rotated, delta, free_center=False):
     if selected is None:
         selected = excludes_residues(degree, small)
     closest = min(row_norms)
-    result = dict(terms=terms, radius_shift=shift, rank=rank, transform=transform,
+    result = dict(terms=terms, rank=rank, transform=transform, backend=backend, **layout,
                   expansion_cpu_s=expansion, reduction_cpu_s=lll, small_polynomials=len(small),
                   smallest_row_log2_floor=closest.bit_length()-1-work_bits if closest else None)
     if selected:
         result['proof'] = dict(block=block, degree=degree, work_bits=work_bits,
                                origin=geometry.origin, transform=transform,
-                               radius_shift=shift, terms=terms, mode=mode, polynomials=selected)
+                               terms=terms, mode=mode, polynomials=selected, gap_bits=gap, **layout)
     return result
 
 
-def sample_blocks(width, count, seed, inverse):
+def sample_blocks(width, count, seed, inverse, midpoint_width=None):
     # The same physical locations are used across block widths. The
     # positive control rectangle is [3,3.25) x [5,5.5). The inverse
     # case uses midpoints in [5/32,3/16), so log(m)/log(x) is negative.
     rng = Random(seed)
     blocks = set()
-    require(4 <= width <= 48 and 1 <= count <= 1 << (2*(49-width)), 'invalid sample size')
+    wm = width if midpoint_width is None else midpoint_width
+    require(4 <= width <= 48 and 4 <= wm <= 48 and 1 <= count <= 1 << (98-width-wm),
+            'invalid sample size')
     while len(blocks) < count:
         x = ((Q//2)+rng.randrange(Q//8)) >> width
-        m = ((Q//4)+rng.randrange(Q//8 if not inverse else Q//4)) >> width
-        blocks.add((1, x, -3 if inverse else 2, m, width))
+        m = ((Q//4)+rng.randrange(Q//8 if not inverse else Q//4)) >> wm
+        block = (1,x,-3 if inverse else 2,m,width)
+        blocks.add(block if midpoint_width is None else block+(wm,))
     return sorted(blocks)
 
 
 def run_block(request):
-    block, degree, work_bits, rotated, delta, free_center = request
+    block, *options = request
     start = process_time()
-    result = generate_block(block, degree, work_bits, rotated, delta, free_center)
+    result = generate_block(block, *options)
     return dict(block=block, generator_cpu_s=process_time()-start, **result)
 
 
@@ -436,6 +508,9 @@ def main():
     modes = parser.add_subparsers(dest='mode', required=True)
     sample = modes.add_parser('sample')
     sample.add_argument('--width', type=int, required=True)
+    sample.add_argument('--midpoint-width', type=int)
+    sample.add_argument('--tensor', action='store_true')
+    sample.add_argument('--gap-bits', type=int, default=GAP)
     sample.add_argument('--degree', type=int, required=True)
     sample.add_argument('--work-bits', type=int, default=128)
     sample.add_argument('--samples', type=int, default=4)
@@ -462,32 +537,39 @@ def main():
         blocks = [tuple(row['block']) for row in cases]
         require(len(set(blocks)) == len(blocks)
                 and blocks == sample_blocks(report['width'], report['samples'],
-                                            report['seed'], report['inverse']),
+                                            report['seed'], report['inverse'], report.get('midpoint_width')),
                 'duplicate, missing or outside pilot blocks')
         proofs = [row['proof'] for row in cases if 'proof' in row]
         require(all(row['proof']['block'] == row['block'] for row in cases if 'proof' in row),
                 'a proof has moved to the wrong block')
+        gap_bits = report.get('gap_bits',GAP)
+        require(all(proof.get('gap_bits',GAP) == gap_bits for proof in proofs), 'proof gap changed')
         start = perf_counter()
         timing = batch(replay_block, proofs, args.workers, args.flint_products)
         complete = len(proofs) == len(cases)
         print(json.dumps(dict(status='PILOT_VERIFIED' if complete else 'PILOT_INCOMPLETE',
                               verified_blocks=len(proofs), requested_blocks=len(cases),
-                              base_midpoint_pairs=len(proofs) << (2*report['width']),
+                              gap_bits=gap_bits,
+                              base_midpoint_pairs=len(proofs) << (report['width']+(report.get('midpoint_width')
+                                                                                 or report['width'])),
                               verification_cpu_s=timing, wall_s=perf_counter()-start)))
         return 0 if complete else 2
     require(0.25 < args.delta < 1.0, 'invalid LLL delta')
-    blocks = sample_blocks(args.width, args.samples, args.seed, args.inverse)
-    requests = [(block, args.degree, args.work_bits, not args.plain, args.delta, args.free_center)
+    blocks = sample_blocks(args.width,args.samples,args.seed,args.inverse,args.midpoint_width)
+    requests = [(block, args.degree, args.work_bits, not args.plain, args.delta, args.free_center,
+                 args.gap_bits,args.tensor)
                 for block in blocks]
     start = perf_counter()
     cases = batch(run_block, requests, args.workers, args.flint_products)
     report = dict(schema=SCHEMA, width=args.width, degree=args.degree, work_bits=args.work_bits,
+                  midpoint_width=args.midpoint_width,tensor=args.tensor,gap_bits=args.gap_bits,
                   samples=args.samples, seed=args.seed, inverse=args.inverse, rotated=not args.plain,
                   delta=args.delta, free_center=args.free_center, wall_s=perf_counter()-start, cases=cases)
     with open_report(args.output, 'x') as stream:
         json.dump(report, stream, separators=(',', ':'))
         stream.write('\n')
     print(json.dumps(dict(width=args.width, degree=args.degree, inverse=args.inverse,
+                          midpoint_width=args.midpoint_width,tensor=args.tensor,gap_bits=args.gap_bits,
                           rotated=not args.plain, free_center=args.free_center,
                           proved=sum('proof' in row for row in cases),
                           small=[row['small_polynomials'] for row in cases],
