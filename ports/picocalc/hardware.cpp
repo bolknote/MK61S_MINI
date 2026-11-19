@@ -89,6 +89,14 @@ void Keyboard::record_battery_fault(u8 phase,int count,const u8* reply,u64 now) 
 bool Keyboard::poll(KeyEvent& event) {
     const u64 now = time_us_64();
     if(io_phase_) {
+        if(io_phase_==10 && pending_) {
+            // An APP/SD pause can outlive the BIOS register selection. Probe
+            // again before reading; the requested state is reconciled next.
+            if(now-selected_at_>=900000) {
+                if(request_register(BIOS_SLEEP_REG,9,now)) {pending_=false;++selection_restarts_;}
+            } else if(now>=due_ && io_worker::request_i2c(true,nullptr,2)) pending_=false;
+            return false;
+        }
         if((io_phase_==4 || io_phase_==6 || io_phase_==8) && pending_ && now>=due_) {
             // Southbridge discards an unconsumed register selection after1s.
             // An SD operation may keep feeding the watchdog while core0's
@@ -102,6 +110,14 @@ bool Keyboard::poll(KeyEvent& event) {
         int count;u8 response[2]{};
         if(!io_worker::take_i2c(count,response)) return false;
         const u8 phase=io_phase_;io_phase_=0;
+        if(phase==9 || phase==11) {
+            if(count==(phase==9?1:2)) { pending_=true;io_phase_=10;due_=now+16000; }
+            else bios_sleep_.reply(now,-1,response);
+            return false;
+        }
+        if(phase==10) {
+            pending_=false;bios_sleep_.reply(now,count,response);return false;
+        }
         if(phase==1) {
             if(count==1) { pending_=true;due_=now+16000; }
             else { online_=false;battery_.power_status=0;++errors_;due_=now+100000; }
@@ -140,6 +156,17 @@ bool Keyboard::poll(KeyEvent& event) {
         event={response[0],response[1]};
         if(idle_ && !event.state) due_=now+64000;
         return event.state!=0;
+    }
+    if(online_ && !pending_) {
+        const auto op=bios_sleep_.next(now);
+        if(op!=BiosSleep::NONE) {
+            const u8 message[2]={(u8)(BIOS_SLEEP_REG|(op==BiosSleep::PROBE?0:0x80)),
+                (u8)(op==BiosSleep::ENTER?BIOS_SLEEP_ENTER:BIOS_SLEEP_LEAVE)};
+            if(io_worker::request_i2c(false,message,op==BiosSleep::PROBE?1:2)) {
+                selected_reg_=BIOS_SLEEP_REG;selected_at_=now;io_phase_=op==BiosSleep::PROBE?9:11;
+            }
+            return false;
+        }
     }
     if(!idle_ && online_ && !pending_ && now>=battery_due_) {
         const u8 reg=0x0B;

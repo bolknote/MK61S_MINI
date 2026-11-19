@@ -54,6 +54,8 @@ python3 "$root/tests/picocalc_uf2_self_test.py"
 python3 "$root/tests/picocalc_seal_self_test.py"
 python3 "$root/tests/picocalc_flash_boundary_self_test.py"
 python3 "$root/tests/picocalc_keyboard_poll_self_test.py"
+python3 "$root/tests/picocalc_bios_sleep_self_test.py"
+python3 "$root/tests/picocalc_sleep_canary_self_test.py"
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     -I"$root/ports/picocalc" -I"$root/code" \
     "$root/tests/picocalc_ai_flash_clock_self_test.cpp" -o "$build_dir/ai-flash-clock"

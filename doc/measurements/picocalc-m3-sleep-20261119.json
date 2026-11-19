@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "date": "2026-11-19",
+  "status": "HOST_ARM_PASS_HARDWARE_PENDING",
+  "feature": "Coordinated ordinary M3/Pico sleep retaining Pico RAM and application state",
+  "protocol": {
+    "i2c_register": "0x10",
+    "status_tag": "0xD0",
+    "enter": "0xA5",
+    "leave": "0x5A",
+    "renewal_ms": 500,
+    "lease_ms": 2000,
+    "persistent_settings": false
+  },
+  "mode": "Cortex-M3 SLEEP/WFI with clocks/peripherals and Pico power retained",
+  "module_or_uart_active_blocks_wait": true,
+  "old_bios_behavior": "read-only capability discovery; normal previous sleep behavior",
+  "physical_hardware_test": false,
+  "electrical_power_measured": false,
+  "hardware_pending_reason": "Coordinator confirmation and exclusive device handoff pending",
+  "pico": {
+    "build": "DB3AF53C",
+    "crc": "A2F351AD",
+    "image": 1818184,
+    "sys_hz": 125000000,
+    "peri_hz": 48000000,
+    "spi_hz": 24000000,
+    "bin_sha256": "88064122d5489cbc720b0b5246a54aa8bb31ee197fc1e260c418846f6687c6f9",
+    "uf2_sha256": "bf537d8048347fd68ae514ba26f004a6150383d50abf331e6d0ef5fdbb2968a4",
+    "baseline_build": "30A03457",
+    "baseline_crc32": "3CF491EC",
+    "psram_burst_bytes": 64
+  },
+  "m3": {
+    "body_sha256": "57a58f6ff1f2472f2bd61e2b1b0c1fa78edc977b8e66c7629a2571753f6c5756",
+    "body_bytes": 30428,
+    "body_crc32": "EB126AAD",
+    "boot_sha256": "5440fa62bfd40fd2ea7e66205f4692510e3a92ec7ca8c07ed4bb54f6d179b175",
+    "date_address": "0x20000008",
+    "time_address": "0x200006ec",
+    "calendar_address": "0x200005e8",
+    "elf_sha256": "07c049c6ed5904c2c12058dcb8ca67e30d02d5618f4f7c0d3a3219381ee503a3",
+    "flash_delta_bytes": 432,
+    "ram_delta_bytes": 20
+  },
+  "host_tests": {
+    "actual_M3_C_ASan_UBSan": "PASS",
+    "actual_Keyboard_poll_ASan_UBSan": "PASS",
+    "battery_poll": "PASS",
+    "keyboard_poll": "PASS",
+    "power_button_and_kernel_retention": "PASS",
+    "boot_update_faults_and_package": "PASS",
+    "canary_fault_injection": "PASS",
+    "stale_I2C_selection_after_APP_pause": "PASS: previous candidate reproduced failure, new candidate reselects before read",
+    "archived_sources_byte_exact_rebuild": "PASS"
+  },
+  "arm_sleep": {
+    "status": "PASS",
+    "elf_sha256": "07c049c6ed5904c2c12058dcb8ca67e30d02d5618f4f7c0d3a3219381ee503a3",
+    "physical_io": false,
+    "electrical_power_measured": false,
+    "timer_wake_modeled": true,
+    "WFI_instructions_executed": 3,
+    "peripheral_or_power_reset_clock_writes": 0,
+    "cases": [
+      "linked Cortex-M3 code",
+      "tagged enter/leave",
+      "module/transport guard",
+      "lease renewal/expiry/wrap",
+      "TIM2 pending rollover accounting",
+      "masked IRQ/basepri/faultmask preserved",
+      "deep sleep modes rejected",
+      "pending interrupt immediate return",
+      "stack preserved"
+    ]
+  },
+  "arm_boot": {
+    "core": "CORTEX_M3_UPDATE_FAULT_MODEL_PASS",
+    "boot": {
+      "valid": "PASS",
+      "invalid": "PASS",
+      "forced": "PASS",
+      "resident_entry": "PASS"
+    },
+    "physical_io": false,
+    "physical_timing": false,
+    "flash_and_uart_peripherals_modeled": true
+  },
+  "arm_rtc": {
+    "status": "PASS",
+    "physical_io": false,
+    "hardware_timing": false,
+    "elf_sha256": "07c049c6ed5904c2c12058dcb8ca67e30d02d5618f4f7c0d3a3219381ee503a3",
+    "initial": {
+      "instructions": 123,
+      "counter_reads": 6
+    },
+    "unchanged_second": {
+      "instructions": 14,
+      "counter_reads": 0
+    },
+    "leap_midnight": {
+      "instructions": 293,
+      "counter_reads": 6
+    },
+    "cases": [
+      "real HAL calendar rollover",
+      "leap day",
+      "year change",
+      "second during refresh",
+      "latched alarm preserved",
+      "sleep-sized counter jump",
+      "no SECIE enabled",
+      "stack preserved",
+      "early SECF then counter update without another flag"
+    ]
+  },
+  "hil_package_sha256": "601cae418f19ff61b8c9af5ec4e27b39880b43a66fbd07027327013b9ac62b37",
+  "planned_hardware_tests": [
+    "old M3 byte identity",
+    "new Pico complete Flash readback",
+    "old BIOS unsupported fallback",
+    "new M3 one install and full byte identity",
+    "3 calculator sleep/wake cycles",
+    "2 APP stack/global/PSRAM cycles and missing heartbeat expiry",
+    "2 APP cycles with loaded M3 module blocking WFI",
+    "final identities and no new I2C errors",
+    "cleanup"
+  ],
+  "limitations": [
+    "No electrical current or battery lifetime measurement",
+    "WFI telemetry records attempts and elapsed TIM2 time, not instantaneous electrical power",
+    "Long power-button hold remains full power-off and does not retain Pico RAM",
+    "Resident M3 modules and active transfers inhibit M3 WFI"
+  ]
+}

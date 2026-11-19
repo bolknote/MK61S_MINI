@@ -7,6 +7,7 @@
 #include "lcd_chain.hpp"
 #include "lcd_color.hpp"
 #include "lcd_index4_pairs.hpp"
+#include "bios_sleep.hpp"
 #include <atomic>
 
 namespace picocalc {
@@ -21,7 +22,8 @@ public:
     void init();
     bool poll(KeyEvent& event);
     void backlight(u8 lcd = 240, u8 keys = 40);
-    void idle(bool enabled) { idle_ = enabled; }
+    void idle(bool enabled) { idle_ = enabled;bios_sleep_.idle(enabled); }
+    const BiosSleep& bios_sleep() const { return bios_sleep_; }
     void clock_changed();
     bool transaction_pending() const { return pending_ || io_phase_; }
     u64 next_poll() const { return due_; }
@@ -39,6 +41,7 @@ private:
     u8 io_phase_ = 0;
     u64 due_ = 0,battery_due_ = 0,power_due_ = 0;
     BatteryStatus battery_;
+    BiosSleep bios_sleep_;
     u32 battery_errors_=0;
     u32 errors_ = 0;
     int lcd_backlight_ = -1, key_backlight_ = -1;

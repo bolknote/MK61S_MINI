@@ -13,6 +13,7 @@ poll_start = "bool Keyboard::request_register(" if "bool Keyboard::request_regis
 poll = source[source.index(poll_start):source.index("void Keyboard::clock_changed(")]
 fixture = r'''
 #include "battery.hpp"
+#include "bios_sleep.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -47,7 +48,8 @@ bool request_i2c(bool read,const u8* bytes,unsigned length) {
         if(bus.fail_power) {bus.fail_power=false;bus.result=-1;return true;}
         if(bus.native) bus.last=bus.raw_power;
         // Old Southbridge leaves the previous payload for unsupported regs.
-    } else assert(false);
+    } else if(bus.reg==BIOS_SLEEP_REG) {bus.reply[0]=0xDE;bus.last=0xAD;}
+    else assert(false);
     bus.reply[1]=bus.last;return true;
 }
 bool take_i2c(int& result,u8* bytes) {
@@ -91,7 +93,7 @@ int main() {
     assert(!fresh.online() && !fresh.battery().power_supported());
     bus.native=false;advance(fresh,22000,true); // Old BIOS after a controller restart.
     assert(fresh.online() && !fresh.battery().power_supported());
-    for(const u8 reg:bus.selected) assert(reg==1 || reg==9 || reg==0x0B || reg==BIOS_POWER_REG);
+    for(const u8 reg:bus.selected) assert(reg==1 || reg==9 || reg==0x0B || reg==BIOS_POWER_REG || reg==BIOS_SLEEP_REG);
     std::puts("Pico power poll: actual production async poll, stale old-BIOS replies, discovery, DONE, I2C errors/recovery and BIOS restart PASS");
 }
 '''.replace("@KEYBOARD@", keyboard).replace("@POLL@", poll)

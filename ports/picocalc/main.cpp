@@ -373,6 +373,9 @@ void report(unsigned math_failures) {
         (unsigned long)clock_get_hz(clk_sys), (unsigned long)clock_get_hz(clk_peri), sleep_clocks.pll_mask(),
         (unsigned long)sleep_clocks.entries(), (unsigned long)sleep_clocks.battery_entries(),
         (unsigned long)clocks_hw->sleep_en0,(unsigned long)clocks_hw->sleep_en1,sleep_applied,(unsigned long)power.button_presses());
+    const auto& m3_sleep=keyboard.bios_sleep();
+    std::printf("M3_SLEEP_SUPPORTED=%d M3_SLEEP_WANTED=%u M3_SLEEP_ACK=%u M3_SLEEP_WFI=%u M3_SLEEP_ERRORS=%lu\n",
+        m3_sleep.supported(),m3_sleep.wanted(),m3_sleep.requested(),m3_sleep.slept(),(unsigned long)m3_sleep.errors());
     const auto date=picocalc::clock::get();
     std::printf("RUNTIME=%s USB_SCREEN=%s SCREEN_FRAMES=%lu SCREEN_ERRORS=%lu SLEEP=%u RTC=%04d-%02d-%02dT%02d:%02d:%02d RTC_SET=%u RTC_PPM=%d\n",
         services.runtime_name(),remote_screen.attached()?"ATTACHED":remote_screen.enabled()?"OFFER":"OFF",
