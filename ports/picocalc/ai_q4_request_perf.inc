@@ -1,4 +1,4 @@
-AI_COLD_CODE unsigned UI::request_perf(const char *directory) {
+AI_COLD_CODE unsigned UI::request_perf(const char *directory, bool fast_request) {
   if (!host.diagnostic_directory) return 3;
   char path[160], text[1025];
   auto read_text = [&](const char *leaf) {
@@ -37,7 +37,7 @@ AI_COLD_CODE unsigned UI::request_perf(const char *directory) {
   const unsigned read_hz = divider ? psram::statistics().hz : 0;
   bool began = false;
   if (divider == 346 && read_hz == 33294797) {
-    configure_execution();
+    configure_execution(fast_request);
     agent.arithmetic(arithmetic);
     began = agent.start(prefix[0] ? prefix : nullptr);
   }
@@ -77,11 +77,14 @@ AI_COLD_CODE unsigned UI::request_perf(const char *directory) {
   if (!write_metrics(path)) return 3;
   const int size = std::snprintf(text, sizeof(text),
       "{\"version\":2,\"began\":%s,\"passed\":%s,\"stable\":%s,\"state\":%u,\"elapsed_us\":%lu,"
+      "\"attention_kernel\":%u,\"pair_prefill\":%s,"
       "\"hz\":%u,\"end_hz\":%u,\"psram_hz\":%lu,\"divider256\":%u,\"end_divider256\":%u,\"idle_hz\":%u,"
       "\"psram_errors\":%lu,\"burst_retries\":%lu,\"tail_timeouts\":%lu,\"i2c_timeouts\":%lu,\"i2c_aborts\":%lu,"
       "\"commands\":%u,\"program_crc\":%lu,\"x\":%.12g,\"model\":\"%s\",\"weights_psram\":%lu,\"kv_psram\":%lu}\n",
       began ? "true" : "false", passed ? "true" : "false", stable ? "true" : "false", unsigned(s.state),
-      (unsigned long)elapsed, hz, end_hz, (unsigned long)read_hz, divider, end_divider, idle_hz,
+      (unsigned long)elapsed, unsigned(model.execution().attention_kernel),
+      model.execution().pair_prefill?"true":"false", hz, end_hz,
+      (unsigned long)read_hz, divider, end_divider, idle_hz,
       (unsigned long)psram_faults, (unsigned long)burst_retries, (unsigned long)tail_timeouts,
       (unsigned long)i2c_timeouts, (unsigned long)i2c_aborts,
       unsigned(s.program.size), (unsigned long)program_fingerprint(s.program), agent.last_result().x, model_tag,

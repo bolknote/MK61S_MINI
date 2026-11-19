@@ -541,7 +541,7 @@ struct UI {
     u.psram_writes += n;
     return u.cache.write(at, out, n);
   }
-  void configure_execution() {
+  void configure_execution(bool fast_request = false) {
     ComputeExecution e{};
     e.context = this;e.kernel = linear_kernel;e.filter_head = filter_head;
     e.tile_rows = benchmarking && m3_core ? 64 : 28;
@@ -585,6 +585,11 @@ struct UI {
       e.remote_submit = [](void *, LinearBatch *b) { return ai_m3::submit(b); };
       e.remote_join = [](void *) { return ai_m3::join(); };
     } else ai_m3::close();
+    if ((!benchmarking || fast_request) && !m3_core && arithmetic == Arithmetic::INT8 &&
+        e.kernel == LinearKernel::SRAM && e.submit && e.join) {
+      e.attention_kernel = AttentionKernel::BOTH;
+      e.pair_prefill = true;
+    }
     model.execution(e);
     agent.prefix_io(cache_prefix && !e.remote_submit ? prefix_io : nullptr, this);
   }
@@ -626,7 +631,7 @@ struct UI {
   unsigned request_bench(const char *directory);
 #if defined(PICO_ON_DEVICE)
   unsigned parameter_perf(const char *directory, bool overlap_only, bool attention_trial = false);
-  unsigned request_perf(const char *directory);
+  unsigned request_perf(const char *directory, bool fast_request);
 #endif
   void sample_memory();
   void begin_measurements();
@@ -675,7 +680,7 @@ bool UI::write_metrics(const char *path) {
   const auto buffers = shared_memory::buffer_statistics();
   const int n = std::snprintf(
       json, sizeof(json),
-      "{\"schema\":2,\"device\":%s,\"prefill_tokens\":%lu,\"prefill_us\":%llu,"
+      "{\"schema\":2,\"device\":%s,\"prefill_tokens\":%lu,\"prefill_us\":%llu,\"prefill_pairs\":%lu,"
       "\"decode_tokens\":%lu,\"output_tokens\":%lu,\"decode_us\":%llu,\"reused_tokens\":%lu,\"tool_"
       "us\":%llu,\"max_tick_us\":%lu,\"service_gap_us\":%lu,\"heap_capacity\":%"
       "lu,\"sampled_heap_peak\":%lu,\"stack_high_water\":%lu,\"psram_used\":%"
@@ -683,7 +688,8 @@ bool UI::write_metrics(const char *path) {
       "us\":%lu,\"prefix_loaded\":%lu,\"prefix_read_us\":%lu,\"prefix_write_us\":%lu,"
       "\"output_token_hash\":%lu}\n",
       heap_capacity ? "true" : "false", (unsigned long)m.prefill_tokens,
-      (unsigned long long)m.prefill_us, (unsigned long)m.decode_tokens, (unsigned long)m.output_tokens,
+      (unsigned long long)m.prefill_us, (unsigned long)m.prefill_pairs,
+      (unsigned long)m.decode_tokens, (unsigned long)m.output_tokens,
       (unsigned long long)m.decode_us, (unsigned long)m.reused_tokens,
       (unsigned long long)m.tool_us, (unsigned long)m.max_tick_us,
       (unsigned long)service_gap, (unsigned long)heap_capacity,
@@ -2246,14 +2252,20 @@ void UI::key(unsigned wire) {
 void UI::tick() {
   if (agent.active()) {
     const unsigned before_position=model.position();
+    const auto before_pairs=agent.metrics().prefill_pairs;
     agent.tick(service, this);
-    if(model.position()==before_position+1) {
+    const auto after_position=model.position();
+    const unsigned stepped=after_position==before_position+1?1U:
+        after_position==before_position+2 &&
+        agent.metrics().prefill_pairs!=before_pairs?2U:0U;
+    if(stepped) {
       const auto &m=model.compute_metrics();
       profile_attention_us+=m.attention_us;profile_attention_io_us+=m.attention_io_us;
       profile_attention_jobs+=m.attention_worker_jobs;
       profile_read_us+=m.read_us;profile_matmul_us+=m.matmul_us;profile_wait_us+=m.wait_us;
-      ++profile_steps;
-      if((profile_steps%32)==0 || !agent.active()) {
+      const auto previous_steps=profile_steps;
+      profile_steps+=stepped;
+      if(profile_steps/32!=previous_steps/32 || !agent.active()) {
         char progress[200];const auto &a=agent.metrics();
         const int n=std::snprintf(progress,sizeof(progress),
           "AI_CHAT_PROGRESS position=%u prompt=%u prefill_us=%llu decode_us=%llu attention_us=%llu io_us=%llu\r\n",
@@ -2355,8 +2367,10 @@ AI_COLD_CODE unsigned UI::bench() {
   std::snprintf(config_path, sizeof(config_path), "%s/REQUEST.CFG", directory);
   if (files::exists(config_path)) {
     if (!files::read_text(config_path, config_text, sizeof(config_text) - 1, config_size) ||
-        config_size != 9 || std::memcmp(config_text, "AIMODEL2\n", 9)) return 3;
-    return request_perf(directory);
+        config_size != 9) return 3;
+    if (!std::memcmp(config_text, "AIMODEL2\n", 9)) return request_perf(directory, false);
+    if (!std::memcmp(config_text, "AIMODEL3\n", 9)) return request_perf(directory, true);
+    return 3;
   }
   std::snprintf(config_path,sizeof(config_path),"%s/READ.CFG",directory);
   if(files::exists(config_path)) {
