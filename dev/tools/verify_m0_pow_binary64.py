@@ -430,6 +430,25 @@ def scale_grid_spans(box, limit):
     return None
 
 
+def check_entire_leaf(box, certificate):
+    from midpoint_entire_surface import encoding_spans, verify
+
+    if not isinstance(certificate,dict) or 'block' not in certificate:
+        raise InvalidProof('invalid entire-surface leaf')
+    x, m = encoding_spans(certificate['block'])
+    q_shift = certificate.get('q_shift')
+    if (not x[0] <= box.x[0] < box.x[1] <= x[1] or not m[0] <= box.m[0] < box.m[1] <= m[1]
+            or type(q_shift) is not int):
+        raise InvalidProof('entire-surface certificate does not cover its box')
+    # Check the finest dyadic grid left after projecting the strip.
+    # Greater positive encodings have a spacing that is a multiple of it.
+    first, stop = candidate_y(box, 192, enclosures(box, 192))
+    if first < stop and q_shift < -dyadic(first)[1]:
+        raise InvalidProof('entire-surface certificate does not cover its exponent grid')
+    verify(certificate)
+    return 'entire'
+
+
 def check_leaf(box, row, mixed=False):
     if row == ['open']:
         return 'open'
@@ -475,16 +494,22 @@ def check_leaf(box, row, mixed=False):
         spans = scale_grid_spans(box, SCALE_GRID_LEAF_LIMIT)
         if spans is not None and scale_grid_excludes(*spans, precision):
             return 'scale-grid'
+    if len(row) == 2 and row[0] == 'entire':
+        return check_entire_leaf(box,row[1])
     raise InvalidProof(f'leaf {row!r} does not prove its box: {box.describe()}')
 
 
 def read_record(stream):
-    line = stream.readline(4097)
-    if not line or len(line) > 4096 or not line.endswith('\n'):
+    # Block certificates can carry several integer polynomials inline.
+    limit = 1 << 20
+    line = stream.readline(limit+1)
+    if not line or len(line) > limit or not line.endswith('\n'):
         raise InvalidProof('missing, truncated or oversized proof record')
     row = json.loads(line)
     if not isinstance(row, list) or not row or type(row[0]) is not str:
         raise InvalidProof('expected a proof record array')
+    if row[0] != 'entire' and len(line) > 4096:
+        raise InvalidProof('oversized proof record')
     return row
 
 
@@ -748,6 +773,9 @@ def main():
             print(json.dumps(dict(status='SEARCH_OUTPUT', **result), sort_keys=True))
             return 2 if result['open_boxes'] else 0
         check_model(args.mixed_residue)
+        if args.mode == 'verify' and args.flint_products:
+            from midpoint_grid import use_flint_products
+            use_flint_products()
         with open_proof(args.proof, 'r') as stream:
             if args.mode == 'listed-boundaries':
                 report = verify_listed_boundaries(stream, args.mixed_residue)

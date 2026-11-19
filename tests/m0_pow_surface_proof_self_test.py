@@ -2,6 +2,7 @@
 """Independent replay, arithmetic and coverage tests for the pow surface pilot."""
 
 from copy import deepcopy
+from io import StringIO
 from itertools import product
 import json
 from math import factorial, prod
@@ -15,7 +16,10 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 RESEARCH = ROOT/'research/m0-pow-comparison-20261117'
 sys.path.insert(0, str(RESEARCH))
+sys.path.insert(0, str(ROOT/'dev/tools'))
 import midpoint_surface_rotated as surface
+import midpoint_entire_surface as entire
+import verify_m0_pow_binary64 as full_proof
 
 
 FIXTURE = dict(
@@ -26,6 +30,15 @@ FIXTURE = dict(
     polynomials=[[0, 77963855125861519336, -72818519389621400197, -31210129335725555749,
                   -233510677030735584, 217470827669423545, -202532755626099247,
                   93282411394665296, -86874842173526775, -37264284383867899]],
+)
+ENTIRE_FIXTURE = dict(
+    block=[1, 163999181102444, 2, 104454274707880, 4, 4],
+    degree=2, work_bits=116, q_shift=52, shear=4, mesh=8,
+    transform=[[-4, -5, 3], [2, 2, -1], [-1, -1, 1]],
+    radius_shift=[42, 42], terms=[5, 5],
+    polynomials=[[0, -31172865051341687850, -5362806563909542684, -77963855125861519336,
+                  37264284383867899, 6407569221138521, 1101777317987741, 93282411394665296,
+                  16039849361312039, 233510677030735584]],
 )
 
 
@@ -117,6 +130,51 @@ class SurfaceProofTest(unittest.TestCase):
             path.write_text(json.dumps(report))
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
             self.assertEqual(json.loads(result.stdout)['status'], 'PILOT_VERIFIED')
+
+    def test_entire_certificate_is_checked_inside_full_partition(self):
+        x, m = entire.encoding_spans(ENTIRE_FIXTURE['block'])
+        box = full_proof.Box(x, (full_proof.Y_MIN, full_proof.Y_MAX), m, False)
+        text = ''.join(json.dumps(record)+'\n' for record in
+                       ([full_proof.SCHEMA], ['entire', ENTIRE_FIXTURE]))
+        counts, opened = full_proof.verify_partition(StringIO(text), (box,))
+        self.assertEqual(counts, {'entire': 1})
+        self.assertIsNone(opened)
+        for outside in (full_proof.Box((x[0]-1,x[1]), box.y, m, False),
+                        full_proof.Box(x, box.y, (m[0],m[1]+1), False)):
+            with self.assertRaisesRegex(ValueError, 'does not cover'):
+                full_proof.check_leaf(outside, ['entire', ENTIRE_FIXTURE])
+        with self.assertRaisesRegex(ValueError, 'does not cover its exponent grid'):
+            full_proof.check_leaf(box, ['entire', dict(ENTIRE_FIXTURE, q_shift=51)])
+        for malformed in (dict(ENTIRE_FIXTURE, polynomials=[[1]+[0]*9]),
+                          dict(ENTIRE_FIXTURE, terms=[1,5]), dict(ENTIRE_FIXTURE, mesh=7)):
+            with self.assertRaises(ValueError):
+                entire.verify(malformed)
+
+    def test_entire_polynomial_bands_allow_more_than_one_integer(self):
+        powers = surface.exponents(1,3)
+        variable = [int(p == (1,0,0)) for p in powers]
+        translated = [2]+variable[1:]
+        self.assertEqual(entire.exclude_bands(1, [(variable,-2,1),(translated,4,4)], 7), [0,1])
+        self.assertIsNone(entire.exclude_bands(1, [(variable,-2,2),(translated,4,4)], 7))
+
+    def test_entire_certificate_cannot_exclude_a_true_tie(self):
+        n = 210001
+        x, m = bits(float(n*n)), bits(float(n*n*n-1))
+        block = [(x >> 52)-1023, (x & (surface.Q-1)) >> 4,
+                 (m >> 52)-1023, (m & (surface.Q-1)) >> 4, 4, 4]
+        polynomial = [int(p == (0,1,0)) for p in surface.exponents(2,3)]
+        geom = entire.Entire(block,2,116,52,4)
+        radii, terms = geom.choose_terms(surface.IDENTITY,True)
+        row = dict(ENTIRE_FIXTURE,block=block,transform=surface.IDENTITY,
+                   radius_shift=radii,terms=terms,polynomials=[polynomial])
+        with self.assertRaisesRegex(ValueError, 'integer solutions not excluded'):
+            entire.verify(row)
+
+    def test_entire_record_can_hold_wide_polynomials(self):
+        record = ['entire',dict(ENTIRE_FIXTURE, padding=' '*5000)]
+        self.assertEqual(full_proof.read_record(StringIO(json.dumps(record)+'\n')),record)
+        with self.assertRaisesRegex(ValueError, 'oversized'):
+            full_proof.read_record(StringIO(json.dumps(['gap',' '*5000])+'\n'))
 
 
 if __name__ == '__main__':

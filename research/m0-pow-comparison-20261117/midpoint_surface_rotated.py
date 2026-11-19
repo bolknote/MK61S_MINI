@@ -279,10 +279,14 @@ class Series:
             series[k] = add(series[k], g.rational(a*geometry.halves[0]))
             series[l] = add(series[l], g.rational(b*geometry.halves[1]))
             linear.append(series)
+        return self.newton_basis(linear, geometry.degree)
+
+    def newton_basis(self, linear, degree):
+        g = self.grid
         # B_n(L) = B_{n-1}(L)*(L-(n-1))/n. Every product in
         # this basis is integer-valued at integral I,J,p.
         polynomials = {(0, 0, 0): [g.rational(1)]+[(0, 0)]*(len(self.indices)-1)}
-        for powers in exponents(geometry.degree, 3)[1:]:
+        for powers in exponents(degree, 3)[1:]:
             axis = next(i for i, n in enumerate(powers) if n)
             n = powers[axis]
             previous = list(powers)
@@ -292,7 +296,7 @@ class Series:
             factor[0] = add(factor[0], g.rational(1-n))
             multiplied = factor if sum(powers) == 1 else self.multiply(old, factor)
             polynomials[powers] = [(lo//n, -(-hi//n)) for lo, hi in multiplied]
-        return tuple(polynomials[powers] for powers in exponents(geometry.degree, 3))
+        return tuple(polynomials[powers] for powers in exponents(degree, 3))
 
 
 @lru_cache(maxsize=8)
