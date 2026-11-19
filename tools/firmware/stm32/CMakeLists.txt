@@ -292,9 +292,9 @@ target_link_options(resident PRIVATE
   "LINKER:--wrap=USBD_LL_DevDisconnected")
 
 if(MK61_ENABLE_LTO)
-  # APPs reach resident code only through public C tables. Keep per-function
-  # and data sections through the LTO link; no resident symbols are exported.
-  target_link_options(resident PRIVATE -ffunction-sections -fdata-sections)
+  # Group LTO-generated functions so the assembler can shorten nearby branches.
+  # Separate data sections still let the linker discard unused constants.
+  target_link_options(resident PRIVATE -fdata-sections)
 endif()
 
 set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS

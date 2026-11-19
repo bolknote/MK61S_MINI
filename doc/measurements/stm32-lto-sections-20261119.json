@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-19",
+  "baseline_head": "1e3beb88e23d305e147e94fa60284e577016cd85",
+  "source_date_epoch": 1793448000,
+  "toolchain": "xPack GNU Arm 14.2.1-1.1",
+  "measurement": "Sizes of CRC-sealed resident images from matching release cases. Both targets keep function and data sections during source compilation. The LTO link keeps data sections and allows the assembler to group functions.",
+  "flash_columns": [
+    "release_case",
+    "before_bytes",
+    "after_bytes",
+    "saved_bytes",
+    "free_after_bytes"
+  ],
+  "flash": [
+    ["f401-capability-a00-usb", 242776, 242152, 624, 19992],
+    ["f401-capability-ws-graphics", 238520, 237896, 624, 24248],
+    ["f401-capability-ws-usb", 248996, 248340, 656, 13804],
+    ["f401-capability-ws-usb-graphics", 251204, 250548, 656, 11596],
+    ["f401-product-a00", 221644, 221084, 560, 41060],
+    ["f401-product-classic-v2", 255976, 255288, 688, 6856],
+    ["f401-product-classic-v3", 255996, 255308, 688, 6836],
+    ["f401-product-mini-v2-a00", 221696, 221136, 560, 41008],
+    ["f401-product-ws0010", 229412, 228836, 576, 33308],
+    ["f411-40th", 375992, 375352, 640, 148936],
+    ["f411-classic-v2", 375916, 375276, 640, 149012],
+    ["f411-classic-v3", 386368, 385696, 672, 138592],
+    ["f411-classic-v3-usb-screen", 389316, 388628, 688, 135660],
+    ["f411-lcd1602-a00", 330020, 329412, 608, 194876],
+    ["f411-lcd1602-a00-no-lto", 348812, 348812, 0, 175476],
+    ["f411-lcd1602-a00-usb-screen", 368336, 367648, 688, 156640],
+    ["f411-lcd1602-a02", 329912, 329288, 624, 195000],
+    ["f411-mini-v2-a00", 330056, 329448, 608, 194840],
+    ["f411-mini-v2-a02", 329932, 329324, 608, 194964],
+    ["f411-oled1602-ws0010", 366436, 365780, 656, 158508],
+    ["f411-oled1602-ws0010-graphics-wbmp", 354148, 353508, 640, 170780],
+    ["f411-oled1602-ws0010-graphics-wbmp-markdown", 366436, 365780, 656, 158508],
+    ["f411-oled1602-ws0010-no-graphics", 347044, 346404, 640, 177884],
+    ["f411-oled1602-ws0010-usb-screen", 387096, 386408, 688, 137880],
+    ["f411-oled1602-ws0010-usb-screen-no-graphics", 385256, 384552, 704, 139736],
+    ["f411-stop-classic-v3-uc1609", 386368, 385696, 672, 138592],
+    ["f411-stop-ws0010", 366436, 365780, 656, 158508]
+  ],
+  "f401_product_classic_v3": {
+    "before_sha256": "9fe1ec1217409954cc1e449e7bc1cfd553a59b8ce091cd97a1fc7c58c6639231",
+    "after_sha256": "00045cf15a6a9fbc248c947b13df60ecdcc7238616a2ccdcf2838b42ede2ff1d",
+    "text_linker_fill_bytes": [346, 12],
+    "short_b_instructions": [3066, 3267],
+    "wide_b_instructions": [493, 292]
+  },
+  "cortex_m4": {
+    "method": "Paired Classic V3 release ELFs on Unicorn 2.1.4 Cortex-M4. Counts are executed guest instructions. Physical Flash timing was not measured.",
+    "f401_identical_outputs_and_instructions": {
+      "enable": 1855677,
+      "steps": [1818400, 1817428, 1749977, 1750963, 1780514, 1818558],
+      "save_context": 3675,
+      "restore_context": 3483,
+      "keys": {
+        "cases": 120,
+        "instructions": 7433
+      },
+      "asm": {
+        "cases": 4,
+        "instructions": 187741
+      },
+      "glyphs": {
+        "cases": 561,
+        "instructions": 31653
+      }
+    },
+    "f411": {
+      "f411-classic-v3": {
+        "enable": [882019, 882019],
+        "step_instruction_deltas": [0, 0, 0, 0, 0, 0],
+        "matching_snapshots": 6
+      },
+      "f411-classic-v3-usb-screen": {
+        "enable": [882048, 882048],
+        "step_instruction_deltas": [0, 0, 0, 0, 0, 0],
+        "matching_snapshots": 6
+      }
+    }
+  },
+  "checks": [
+    "Nine F401 matrix cases, sixteen F411 release cases and two F411 USB suspend cases passed their release gates. Static RAM and the maximum compiler-reported stack frame matched each baseline.",
+    "The F411 build without LTO reproduced its sealed baseline image byte for byte.",
+    "Removing symbols and debug sections from a copy of each release ELF reproduced all 27 sealed images byte for byte.",
+    "All eleven packaged System APPs were byte-identical in each of the five F401 product profiles. F401 Classic V3 executed TERMINAL and CLOCK at all three tested relocation addresses."
+  ]
+}

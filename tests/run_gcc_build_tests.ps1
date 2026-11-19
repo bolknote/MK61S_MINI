@@ -223,9 +223,13 @@ Assert-True ($cmakeText -match
     'canonical F401 build does not consume its selected Flash budget'
 Assert-True ($cmakeText -match '-P "\$\{CMAKE_CURRENT_SOURCE_DIR\}/check-flash\.cmake"') `
     'canonical F401 build does not invoke the shared Flash budget gate'
-Assert-True ($cmakeText -match
-    '(?s)if\(MK61_ENABLE_LTO\).*?target_link_options\(resident PRIVATE -ffunction-sections -fdata-sections\)') `
-    'LTO build does not retain per-function/data garbage collection'
+Assert-True ($cmakeText -match 'target_compile_options\(user_settings INTERFACE[^)]*-ffunction-sections\s+-fdata-sections') `
+    'resident compilation must keep separate function and data sections'
+Assert-True ($cmakeText -match 'target_link_options\(user_settings INTERFACE[^)]*LINKER:--gc-sections') `
+    'resident linking must discard unused input sections'
+Assert-True ($cmakeText -match 'if\(MK61_ENABLE_LTO\)[^)]*target_link_options\(resident PRIVATE[^)]*\s-fdata-sections\b' -and
+    $cmakeText -notmatch 'target_link_options\((?:resident|user_settings)\s+[^)]*-ffunction-sections\b') `
+    'resident LTO must group functions and keep separate data sections'
 Assert-True ($cmakeText -match 'MK61_NATIVE_RUNTIME=1') `
     'canonical F401 build does not select the owned runtime'
 Assert-True ($cmakeText -match 'USBD_CLASS_USER_STRING_DESC=0') `
