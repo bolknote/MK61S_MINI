@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Independent replay, arithmetic and coverage tests for the pow surface pilot."""
+
+from copy import deepcopy
+from itertools import product
+import json
+from math import factorial, prod
+from pathlib import Path
+import struct
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+RESEARCH = ROOT/'research/m0-pow-comparison-20261117'
+sys.path.insert(0, str(RESEARCH))
+import midpoint_surface_rotated as surface
+
+
+FIXTURE = dict(
+    block=[1, 163999181102444, 2, 104454274707880, 4],
+    degree=2, work_bits=128, origin=6651981437187463,
+    transform=[[1, -1, 1], [2, -1, 2], [-2, 2, -3]],
+    radius_shift=46, terms=6, mode='nonintegral',
+    polynomials=[[0, 77963855125861519336, -72818519389621400197, -31210129335725555749,
+                  -233510677030735584, 217470827669423545, -202532755626099247,
+                  93282411394665296, -86874842173526775, -37264284383867899]],
+)
+
+
+def bits(value):
+    return struct.unpack('>Q', struct.pack('>d', value))[0]
+
+
+def generalized_binomial(n, k):
+    return prod(n-j for j in range(k))//factorial(k)
+
+
+class SurfaceProofTest(unittest.TestCase):
+    def test_exact_replay_and_tampering(self):
+        surface.verify_block(FIXTURE)
+        for key, value in (('transform', ((2, 0, 0), (0, 1, 0), (0, 0, 1))),
+                           ('origin', FIXTURE['origin']+3),
+                           ('polynomials', [[1]+[0]*9]),
+                           ('terms', 2)):
+            corrupted = deepcopy(FIXTURE)
+            corrupted[key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                surface.verify_block(corrupted)
+
+    def test_ambiguous_logarithms_are_not_accepted(self):
+        around_one = [0, 0, 2, 0, 4]
+        with self.assertRaises(ValueError):
+            surface.Geometry(around_one, 2, 128)
+
+    def test_true_midpoint_is_not_excluded(self):
+        n = 210001
+        x, m = n*n, n*n*n
+        self.assertEqual(m.bit_length(), 54)
+        self.assertEqual(m % 2, 1)
+        bx, bm = bits(float(x)), bits(float(m-1))
+        x_exp, m_exp = (bx >> 52)-1023, (bm >> 52)-1023
+        block = [x_exp, (bx & (surface.Q-1)) >> 4, m_exp, (bm & (surface.Q-1)) >> 4, 4]
+        geometry = surface.Geometry(block, 2, 128)
+        # At this triple x**(3/2) is exactly the odd integer midpoint m.
+        # The declared nonintegral polynomial is p-origin.
+        poly = [int(p == (0, 0, 1)) for p in surface.exponents(2, 3)]
+        radius, terms = geometry.choose_geometry(surface.IDENTITY, 128)
+        with self.assertRaisesRegex(ValueError, 'contains an integer'):
+            surface.verify_block(dict(block=block, degree=2, work_bits=128, origin=geometry.origin,
+                                      transform=surface.IDENTITY, radius_shift=radius, terms=terms,
+                                      mode='nonintegral', polynomials=[poly]))
+
+    def test_kronecker_product_and_truncation(self):
+        grid = surface.FixedInterval(48)
+        layout = surface.Series(5, grid)
+        left = [a-2*b+3 for a, b in layout.indices]
+        right = [3*a+b-3 for a, b in layout.indices]
+        seen = {}
+        for (i, j), a in zip(layout.indices, left):
+            for (k, l), b in zip(layout.indices, right):
+                seen[i+k, j+l] = seen.get((i+k, j+l), 0)+a*b
+        obtained = layout.multiply(list(map(grid.rational, left)), list(map(grid.rational, right)))
+        self.assertEqual(obtained, [grid.rational(seen[k]) for k in layout.indices])
+
+    def test_parity_covers_negative_and_positive_integer_coordinates(self):
+        degree, period = 4, 8
+        _, masks = surface.parity_masks(degree)
+        for coords in product((-9, -8, -7, -4, -1, 0, 1, 3, 7, 8, 9), repeat=3):
+            i, j, k = (t % period for t in coords)
+            bit = 1 << ((i*period+j)*period+k)
+            for powers, mask in zip(surface.exponents(degree, 3), masks):
+                expected = prod(generalized_binomial(n, d) for n, d in zip(coords, powers)) & 1
+                self.assertEqual(bool(mask & bit), bool(expected))
+
+    def test_incomplete_pilot_is_not_a_pass(self):
+        report = dict(schema=surface.SCHEMA, width=4, samples=1, seed=2040, inverse=False,
+                      cases=[dict(block=FIXTURE['block'])])
+        with TemporaryDirectory() as temp:
+            path = Path(temp)/'report.json'
+            path.write_text(json.dumps(report))
+            cmd = [sys.executable, '-B', '-S', str(RESEARCH/'midpoint_surface_rotated.py'),
+                   'verify', str(path)]
+            result = subprocess.run(cmd, check=False, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertEqual(json.loads(result.stdout)['status'], 'PILOT_INCOMPLETE')
+            report['cases'][0]['proof'] = FIXTURE
+            path.write_text(json.dumps(report))
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            self.assertEqual(json.loads(result.stdout)['status'], 'PILOT_VERIFIED')
+
+
+if __name__ == '__main__':
+    unittest.main()
