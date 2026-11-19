@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT/'dev/tools'
 sys.path.insert(0, str(TOOLS))
 import verify_m0_pow_binary64 as proof
+import midpoint_scale_grid as scale_grid
 
 
 def bits(value):
@@ -124,6 +125,51 @@ class ArithmeticTest(unittest.TestCase):
                         proof.Box(box.x, (bits(16)+1, bits(16)+2), box.m, True)):
             with self.assertRaises(proof.InvalidProof):
                 proof.check_leaf(outside, ['origin'])
+
+    def test_scale_grid_maps_binades_and_subnormals(self):
+        x = bits(3.125)
+        m = bits(5.25)
+        generic = proof.Box((x,x+8), (proof.Y_MIN,proof.Y_MAX), (m,m+8), False)
+        expected = ((0x19000000000000,0x19000000000008),
+                    (0x2a000000000001,0x2a000000000010))
+        for x_delta, m_delta, negative in ((0,0,False), (-1022,1020,True), (790,-700,True)):
+            xs, ms = x+(x_delta << 52), m+(m_delta << 52)
+            box = proof.Box((xs,xs+8), generic.y, (ms,ms+8), negative)
+            self.assertEqual(proof.scale_grid_spans(box, 128), expected)
+            self.assertEqual(proof.check_leaf(box, ['scale-grid',512]), 'scale-grid')
+        self.assertEqual(proof.significand_span((3,4)), (3 << 51, (3 << 51)+1))
+        self.assertEqual(proof.significand_span((2,3), midpoint=True), (5 << 51, (5 << 51)+1))
+        self.assertIsNone(proof.significand_span((3,5)))
+        self.assertIsNone(proof.significand_span((1,3), midpoint=True))
+        tie = single(2, 1075, 0, inverse=True)
+        self.assertEqual(proof.check_leaf(tie, ['scale-grid',512]), 'scale-grid')
+        self.assertEqual(proof.analyze((generic,False,False)), ['scale-grid',512])
+
+    def test_scale_grid_floor_count(self):
+        rng = Random(97)
+        for _ in range(2048):
+            modulus = rng.randrange(1,257)
+            count = rng.randrange(128)
+            step, start = (rng.randrange(-1024,1025) for _ in range(2))
+            radius = rng.randrange((modulus+1)//2)
+            terms = [start+i*step for i in range(count)]
+            self.assertEqual(scale_grid.floor_sum(count,modulus,step,start),
+                             sum(z//modulus for z in terms))
+            self.assertEqual(scale_grid.near_count(count,modulus,step,start,radius),
+                             sum((z+radius) % modulus <= 2*radius for z in terms))
+
+    def test_scale_grid_exact_normalized_equalities_and_incomplete_block(self):
+        for a, b, count in ((1,1,2*scale_grid.P_LIMIT-1), (3,1,1), (1,3,0),
+                            (81,27,1), (25,625,1), (27,81,0), (3,5,0)):
+            a <<= 53-a.bit_length()
+            b <<= 54-b.bit_length()
+            self.assertEqual(scale_grid.normalized_equalities(a,b), count)
+            x_check = scale_grid.BaseCheck(a,512)
+            self.assertEqual(x_check.separated(b,scale_grid.log2_approx(b,1<<53,512))[1], 0)
+        low_precision = scale_grid.check_block(0x19000000000000,0x19000000000001,
+                                              0x2a000000000000,0x2a000000000001,182,1)
+        self.assertEqual(low_precision['status'], 'INCOMPLETE_BLOCK')
+        self.assertGreater(low_precision['first_open'][2], 0)
 
 
 class PartitionTest(unittest.TestCase):

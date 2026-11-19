@@ -19,6 +19,7 @@ from time import monotonic
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT/'research/m0-pow-comparison-20261117'))
 from midpoint_grid import FixedInterval
+import midpoint_scale_grid
 
 SCHEMA = 'mk61-rp2040-pow-no-stream-v1'
 MIXED_SCHEMA = 'mk61-rp2040-pow-mixed-residue-v1'
@@ -35,6 +36,7 @@ FRACTION_MASK = SIGNIFICAND-1
 AXES = ('x', 'y', 'm')
 # 512 in PowerBounds<512> counts 16-bit words, not bits.
 EXACT_BITS = 8192
+SCALE_GRID_LEAF_LIMIT = 1 << 24
 SOURCES = (
     'code/native_eabi_m0.S', 'code/native_eabi_m0.hpp', 'code/native_eabi_m0_cr.cpp',
     'code/native_eabi_m0_cr_shim.inc', 'code/native_eabi_m0_cr_types.hpp',
@@ -42,7 +44,7 @@ SOURCES = (
     *(f'code/{path.name}' for path in sorted((ROOT/'code').glob('native_eabi_m0_pow_*.inc'))),
     *(f'third_party/core_math/pow/{name}' for name in ('pow.c', 'pow.h', 'dint.h', 'qint.h')),
 )
-SOURCE_FINGERPRINT = '1e1f5bedd7b8a481f75854c7255505f7c1d44e2994ce44ed5dce1ee5f040430e'
+SOURCE_FINGERPRINT = '265c2cabfa68b08a0e25eb8a749c9531fdac4948e437e84744f0e6ee74602162'
 LAYER_SOURCES = tuple(f'research/m0-pow-comparison-20261117/{name}.py' for name in (
     'midpoint_grid', 'midpoint_binade', 'midpoint_layer'))
 LAYER_FINGERPRINT = '485c5a67e31e11f11e6b851e58a04b3ac84b046bb832bc9e3367735af9e17cae'
@@ -120,6 +122,12 @@ def check_model(mixed=False):
             and Fraction(1, (1 << 52)+1) > Fraction(1, 1 << 53)
             and 1075*ln2_hi < large/(1 << 53)):
         raise InvalidProof('the arithmetic reduction of the two exponent cutoffs failed')
+    if (midpoint_scale_grid.GAP != GAP
+            or midpoint_scale_grid.BASE_UNIT != SIGNIFICAND
+            or midpoint_scale_grid.MIDPOINT_UNIT != 2*SIGNIFICAND
+            or midpoint_scale_grid.DENOMINATOR_SHIFT != -dyadic(Y_MIN)[1]
+            or midpoint_scale_grid.P_LIMIT != large*midpoint_scale_grid.Q):
+        raise InvalidProof('the normalized scale grid does not match the proof domain')
 
 
 def dyadic(bits, midpoint=False):
@@ -400,6 +408,28 @@ def mixed_width(box, coarse):
     return max(0, width+k+2-GAP)
 
 
+def significand_span(span, midpoint=False):
+    """Enclose normalized significands in a span contained in a single binade."""
+    a, e = dyadic(span[0], midpoint)
+    b, f = dyadic(span[1]-1, midpoint)
+    if a.bit_length()+e != b.bit_length()+f:
+        return None
+    width = 54 if midpoint else 53
+    return a << (width-a.bit_length()), (b << (width-b.bit_length()))+1
+
+
+@lru_cache(maxsize=2048)
+def scale_grid_excludes(x_span, m_span, precision):
+    return not midpoint_scale_grid.check_block(*x_span, *m_span, precision, 1)['open']
+
+
+def scale_grid_spans(box, limit):
+    x, m = significand_span(box.x), significand_span(box.m, midpoint=True)
+    if x and m and (x[1]-x[0])*(m[1]-m[0]) <= limit:
+        return x, m
+    return None
+
+
 def check_leaf(box, row, mixed=False):
     if row == ['open']:
         return 'open'
@@ -436,6 +466,15 @@ def check_leaf(box, row, mixed=False):
             raise InvalidProof('invalid integer affine coefficients')
         if affine_excludes(affine_geometry(box, precision), denominator, a, b):
             return 'affine'
+    if len(row) == 2 and row[0] == 'scale-grid':
+        precision = row[1]
+        minimum = midpoint_scale_grid.MIN_PRECISION
+        maximum = midpoint_scale_grid.MAX_PRECISION
+        if type(precision) is not int or not minimum <= precision <= maximum:
+            raise InvalidProof('invalid scale-grid precision')
+        spans = scale_grid_spans(box, SCALE_GRID_LEAF_LIMIT)
+        if spans is not None and scale_grid_excludes(*spans, precision):
+            return 'scale-grid'
     raise InvalidProof(f'leaf {row!r} does not prove its box: {box.describe()}')
 
 
@@ -559,6 +598,12 @@ def analyze(request):
     row = try_affine(box)
     if row is not None:
         return row
+    # An exact modular leaf can close a narrow significand block even
+    # when the exponent interval still contains many possible encodings.
+    if box.y[1]-box.y[0] >= 1 << 16:
+        spans = scale_grid_spans(box, 1024)
+        if spans is not None and scale_grid_excludes(*spans, 512):
+            return ['scale-grid', 512]
     split = choose_split(box)
     if split is not None:
         axis, cut = split
