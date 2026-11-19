@@ -121,3 +121,11 @@ MK61_SOFT_PCS double mk61_m0_exp(double x) {
   }
   return real((U(k+1022)<<52)+(q>>10)+U(tail>65536));
 }
+
+__attribute__((section(".ai_attention_fast_extension"),optimize("O2")))
+MK61_SOFT_PCS float mk61_m0_exp_ai(float x) {
+  const auto encoded=mk61ai::exp32_negative(bits(x),[](unsigned index) {
+    return exp_center_scale[8*index][1];
+  });
+  return encoded ? single(encoded) : float(mk61_m0_exp(double(x)));
+}

@@ -51,7 +51,13 @@ float __not_in_flash_func(sub)(float a,float b){return binary<1>(a,b);}
 float __not_in_flash_func(mul)(float a,float b){return binary<2>(a,b);}
 float __not_in_flash_func(div)(float a,float b){return binary<3>(a,b);}
 float __not_in_flash_func(sqrt)(float a){return mk61_m0_sqrtf(a);}
-float __not_in_flash_func(exp)(float a){return float(mk61_m0_exp(double(a)));}
+float __not_in_flash_func(exp)(float a){
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  return mk61_m0_exp_ai(a);
+#else
+  return float(mk61_m0_exp(double(a)));
+#endif
+}
 }
 namespace mk61ai {
 __attribute__((section(".ai_fp32_extension")))

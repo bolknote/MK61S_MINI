@@ -3,6 +3,7 @@
 // No allocation, errno/fenv, division instructions, 64-bit multiply
 // instructions, or dependency on compiler runtime archives.
 #include "native_eabi_m0.hpp"
+#include "mk61_ai_exp32.hpp"
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
 #include <float.h>
 #if defined(__arm__) || defined(__thumb__)

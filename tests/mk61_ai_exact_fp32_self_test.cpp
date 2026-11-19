@@ -1,4 +1,5 @@
 #include "mk61_ai_exact_fp32.hpp"
+#include "mk61_ai_exp32.hpp"
 #include "native_eabi_m0.hpp"
 #include <cassert>
 #include <cmath>
@@ -22,6 +23,29 @@ void check(std::uint32_t x,std::uint32_t y) {
   }
   ++pairs;
 }
+void check_exp32() {
+  std::uint32_t table[64];
+  for(unsigned i=0;i<64;++i)
+    table[i]=std::uint32_t(std::ldexp(std::exp2(double(i)/64),30));
+  const auto scale=[&](unsigned i){return table[i];};
+  using mk61ai::exp32_negative;
+  assert(exp32_negative(0,scale)==0x3f800000U);
+  assert(exp32_negative(0xb3000000U,scale)==0x3f800000U);
+  assert(!exp32_negative(0xb3000001U,scale)); // Ambiguous at the midpoint below one.
+  assert(!exp32_negative(0xc2a00001U,scale));
+  assert(!exp32_negative(0x3f800000U,scale));
+  std::mt19937 rng(0x619032U);
+  unsigned accepted=0;
+  for(unsigned i=0;i<100000;++i) {
+    const std::uint32_t input=0xb3000000U+rng()%0x0fa00001U;
+    const auto result=exp32_negative(input,scale);
+    if(!result) continue;
+    assert(result==bits(float(std::exp(double(real(input))))));
+    ++accepted;
+  }
+  assert(accepted>65000 && accepted<99000);
+  std::printf("FP32 negative exponential: %u decided intervals and boundary fallbacks PASS\n",accepted);
+}
 int main() {
   const std::uint32_t edges[]={0,0x80000000,1,0x7fffff,0x800000,0x800001,0x3f000000,0x3f7fffff,0x3f800000,0x3f800001,0x40000000,0x7f7fffff,0x7f800000,0xff800000,0x7fc01234,0x7f800001};
   for(auto x:edges)for(auto y:edges)check(x,y);
@@ -36,4 +60,5 @@ int main() {
     check(x,0x80000000U|x);check(x,0x80000000U|(x+1));check(x,0x80000000U|(x-1));
   }
   std::printf("Exact FP32 multiply/add vs production M0 EABI: %lu operand pairs, signed zero/subnormal/nonfinite/boundaries/ties/cancellation PASS\n",pairs);
+  check_exp32();
 }

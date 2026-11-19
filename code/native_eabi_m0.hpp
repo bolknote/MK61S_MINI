@@ -47,6 +47,9 @@ MK61_SOFT_PCS double mk61_m0_cr_exp(double);
 MK61_SOFT_PCS double mk61_m0_cr_pow(double,double);
 MK61_SOFT_PCS double mk61_m0_pow_fast(double,double);
 MK61_SOFT_PCS double mk61_m0_exp(double);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+MK61_SOFT_PCS float mk61_m0_exp_ai(float);
+#endif
 uint64_t mk61_m0_mul_q62(uint64_t,uint64_t);
 uint32_t mk61_m0_math_udiv32(uint32_t,uint32_t);
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
