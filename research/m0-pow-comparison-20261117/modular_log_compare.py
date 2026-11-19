@@ -49,18 +49,23 @@ def operands(x, y, lower):
     return a, ae, b, be, p, q
 
 
-def log_form(x, y, lower):
-    a, ae, b, be, p, q = operands(x, y, lower)
-
+def midpoint_equal(a, ae, b, be, p, q):
     # Exact ties need bounded odd powers. Coprime p and q force the
     # odd coefficients to be powers of one integer c with c >= 3.
-    if ae*p == be*q:
-        if a == b == 1:
-            return None
-        if 0 < p <= 34 and q <= 32 and a > 1 and b > 1:
-            left, right, _, _ = common_factors((a, p), (b, q))
-            if not left and not right:
-                return None
+    if ae*p != be*q:
+        return False
+    if a == b == 1:
+        return True
+    if 0 < p <= 34 and q <= 32 and a > 1 and b > 1:
+        left, right, _, _ = common_factors((a, p), (b, q))
+        return not left and not right
+    return False
+
+
+def log_form(x, y, lower):
+    a, ae, b, be, p, q = operands(x, y, lower)
+    if midpoint_equal(a, ae, b, be, p, q):
+        return None
 
     aj, bj = a.bit_length(), b.bit_length()
     width = max(aj, bj)
