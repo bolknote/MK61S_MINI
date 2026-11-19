@@ -1,6 +1,6 @@
 #if defined(PICO_ON_DEVICE)
 #define MK61_ATTENTION_CODE __attribute__((section(".ai_attention_extension"),noinline))
-#define MK61_ATTENTION_FAST __attribute__((section(".ai_attention_fast_extension"),noinline,optimize("O2")))
+#define MK61_ATTENTION_FAST __attribute__((section(".time_critical.mk61ai_attention_width32"),noinline,optimize("O2")))
 #else
 #define MK61_ATTENTION_CODE
 #define MK61_ATTENTION_FAST
@@ -41,7 +41,7 @@ MK61_ATTENTION_FAST void AttentionBatch::run_width32(void *raw) {
       const auto *row=b.values+t*32;
       for(unsigned j=0;j<32;++j)
         dot=exact_fp32::attention_sum(dot,exact_fp32::attention_product(exact_fp32::ProductOperand(b.query[j]),row[j]));
-      b.output[t]=exact_fp32::product(dot,b.scale);
+      b.output[t]=exact_fp32::attention_product_full(dot,b.scale);
     }
   } else {
     for(unsigned t=0;t<b.rows;++t) {

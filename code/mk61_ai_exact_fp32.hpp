@@ -39,12 +39,21 @@ struct ProductOperand {
   }
 };
 
+#if defined(PICO_ON_DEVICE)
+static __attribute__((section(".ai_attention_extension"),noinline)) float attention_product_full(float a,float b)
+#else
+inline float attention_product_full(float a,float b)
+#endif
+{
+  return product(a,b);
+}
+
 inline __attribute__((always_inline)) float attention_product(const ProductOperand &a,float b) {
   const ProductOperand rhs(b);
   // The leading bit of the rounded mantissa supplies one exponent unit.
   const unsigned exponent=a.exponent+rhs.exponent-128U;
   if(a.exponent-1U>=254 || rhs.exponent-1U>=254 || exponent>=252)
-    return product(a.value,b);
+    return attention_product_full(a.value,b);
 
   const std::uint32_t cross=a.high*rhs.low+a.low*rhs.high;
   const std::uint32_t coarse=a.high*rhs.high+(cross>>8);
