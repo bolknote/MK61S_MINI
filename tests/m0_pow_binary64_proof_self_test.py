@@ -79,6 +79,28 @@ class ArithmeticTest(unittest.TestCase):
             with self.assertRaises(proof.InvalidProof):
                 proof.check_leaf(unbounded, [kind])
 
+    def test_mixed_width_boundary_uses_actual_alignment(self):
+        inside = single(1+2.0**-52, 2000, 363 << 52, inverse=True)
+        outside = single(1+2.0**-52, 2000, 362 << 52, inverse=True)
+        self.assertGreater(proof.powers_width(inside)[0], 104713)
+        self.assertEqual(proof.mixed_width(inside, proof.powers_width(inside)), 88415)
+        self.assertEqual(proof.mixed_width(outside, proof.powers_width(outside)), 88416)
+        self.assertEqual(proof.check_leaf(inside, ['mixed-residue'], True), 'mixed-residue')
+        for box, mixed in ((inside, False), (outside, True)):
+            with self.assertRaises(proof.InvalidProof):
+                proof.check_leaf(box, ['mixed-residue'], mixed)
+
+    def test_mixed_width_covers_non_singleton_base_and_boundary(self):
+        x, y, lower = bits(1+2.0**-52), bits(1975), bits(1.5)
+        large = proof.Box((x,x+32), (y,y+1), (lower,lower+32), False)
+        self.assertGreater(proof.powers_width(large)[0], proof.RESIDUE_BITS+proof.GAP)
+        self.assertEqual(proof.check_leaf(large, ['mixed-residue'], True), 'mixed-residue')
+        for i in range(32):
+            for j in range(32):
+                point = proof.Box((x+i,x+i+1), large.y, (lower+j,lower+j+1), False)
+                self.assertLessEqual(proof.mixed_width(point, proof.powers_width(point)),
+                                     proof.mixed_width(large, proof.powers_width(large)))
+
     def test_affine_integer_exclusion_and_rejected_tie(self):
         x, m = bits(3.125), bits(5.25)
         box = proof.Box((x, x+128), (bits(1), bits(2)), (m, m+128), False)
@@ -136,6 +158,26 @@ class PartitionTest(unittest.TestCase):
         counts, missing = proof.verify_partition(StringIO(continued.getvalue()), proof.roots())
         self.assertIsNotNone(missing)
         self.assertGreater(counts['open'], 0)
+
+    def test_mixed_schema_has_separate_verification(self):
+        source, mixed = StringIO(), StringIO()
+        proof.search(source, 20, 60, True)
+        proof.search(mixed, 20, 60, True, previous=StringIO(source.getvalue()), mixed=True)
+        with self.assertRaises(proof.InvalidProof):
+            proof.verify_partition(StringIO(mixed.getvalue()), proof.roots())
+        counts, first = proof.verify_partition(StringIO(mixed.getvalue()), proof.roots(), True)
+        self.assertIsNotNone(first)
+        self.assertGreater(counts['open'], 0)
+        proof.check_model(mixed=True)
+
+    def test_listed_boundaries_are_not_a_full_partition(self):
+        result = proof.verify_listed_boundaries(StringIO('4000000000000000 c090cc0000000000 '
+                                                         '0000000000000000\n'), True)
+        self.assertEqual(result['status'], 'PASS_LISTED_BOUNDARIES')
+        self.assertEqual(result['counts'], {'powers': 1})
+        with self.assertRaises(proof.InvalidProof):
+            proof.verify_listed_boundaries(StringIO('3ff0000000000000 3ff0000000000000 '
+                                                   '0000000000000000\n'), True)
 
     def test_cli_distinguishes_incomplete_and_out_of_scope(self):
         def run(path):

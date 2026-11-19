@@ -21,8 +21,10 @@ sys.path.insert(0, str(ROOT/'research/m0-pow-comparison-20261117'))
 from midpoint_grid import FixedInterval
 
 SCHEMA = 'mk61-rp2040-pow-no-stream-v1'
+MIXED_SCHEMA = 'mk61-rp2040-pow-mixed-residue-v1'
 GAP = 16300
 RESIDUE_BITS = 49152
+MIXED_BITS = 88415
 ONE = 0x3ff0000000000000
 INF = 0x7ff0000000000000
 Y_MIN = 0x3bf0000000000000           # 2**-64
@@ -45,6 +47,8 @@ LAYER_SOURCES = tuple(f'research/m0-pow-comparison-20261117/{name}.py' for name 
     'midpoint_grid', 'midpoint_binade', 'midpoint_layer'))
 LAYER_FINGERPRINT = '485c5a67e31e11f11e6b851e58a04b3ac84b046bb832bc9e3367735af9e17cae'
 INTERVAL_SHA256 = '09371512c50964956257eb2a9bee71089da81ac2fd130bb768a273288218841d'
+MIXED_SOURCE = 'research/m0-pow-comparison-20261117/mixed_residue.hpp'
+MIXED_SOURCE_SHA256 = '25b29e87a647830a4b19a01a2d39587bfe418128621936a8c9bd021300bec7b5'
 
 
 class InvalidProof(ValueError):
@@ -86,7 +90,7 @@ def fingerprint(paths):
     return manifest.hexdigest()
 
 
-def check_model():
+def check_model(mixed=False):
     from certify_m0_pow_log_side import arithmetic
     from certify_m0_pow_residue import BITS
 
@@ -98,6 +102,12 @@ def check_model():
         raise InvalidProof('the directed interval arithmetic has changed')
     if RESIDUE_BITS != BITS or arithmetic()['unresolved_gap'] != f'2^-{GAP}':
         raise InvalidProof('the cutoff or residue capacity does not match the proof model')
+    if mixed:
+        from certify_m0_pow_mixed_residue import BUDGET_WORDS, certify
+        capacity = certify(BUDGET_WORDS)['modes']['triple']['guaranteed_width']
+        source_hash = sha256((ROOT/MIXED_SOURCE).read_bytes()).hexdigest()
+        if capacity != MIXED_BITS or source_hash != MIXED_SOURCE_SHA256:
+            raise InvalidProof('the mixed-residue prototype does not match the proof model')
     grid, (_, ln2_hi) = log_grid(128)
     ln2_hi = Fraction(ln2_hi, grid.unit)
     tiny, large = dyadic_scale(1, dyadic(Y_MIN)), dyadic_scale(1, dyadic(Y_MAX))
@@ -361,7 +371,36 @@ def powers_width(box):
     return (left+right if box.negative_y else max(left, right)), k
 
 
-def check_leaf(box, row):
+def scale_bounds(span, midpoint=False):
+    """Lower bound on the odd scale and upper bound on log2 of the value."""
+    first, last = span[0], span[1]-1
+    if first == last:
+        a, scale = dyadic(first, True) if midpoint else odd_dyadic(first)
+        return scale, scale+(a.bit_length() if a > 1 else 0)
+    _, bottom_scale = dyadic(first, midpoint)
+    a, top_scale = dyadic(last, midpoint)
+    return bottom_scale, top_scale+a.bit_length()
+
+
+def mixed_width(box, coarse):
+    """Bound the prototype's N+k+2-gap, conditional on log side declining."""
+    width, k = coarse
+    if box.y[1]-box.y[0] == 1:
+        odd, scale = odd_dyadic(box.y[0])
+        p = odd << max(scale, 0)
+        q = 1 << k
+        xe, xlog = scale_bounds(box.x)
+        me, mlog = scale_bounds(box.m, midpoint=True)
+        if box.negative_y:
+            # A nonnegative scale returns the exact sign immediately.
+            aligned_width = max(0, -p*xe-q*me)
+        else:
+            aligned_width = min(p*xlog, q*mlog)-min(p*xe, q*me)
+        width = min(width, aligned_width)
+    return max(0, width+k+2-GAP)
+
+
+def check_leaf(box, row, mixed=False):
     if row == ['open']:
         return 'open'
     if row == ['q116']:
@@ -380,6 +419,8 @@ def check_leaf(box, row):
         # 2**(-scale), hence the inverse width is at most the sum above.
         if row == ['residue'] and width+2+k <= GAP+RESIDUE_BITS:
             return 'residue'
+    if mixed and row == ['mixed-residue'] and mixed_width(box, powers_width(box)) <= MIXED_BITS:
+        return 'mixed-residue'
     if len(row) == 2 and row[0] in ('gap', 'y-grid'):
         precision = row[1]
         if type(precision) is not int or not 96 <= precision <= 65536:
@@ -415,8 +456,8 @@ def split_record(box, row):
     return box.split(row[1], int(row[2], 16))
 
 
-def verify_partition(stream, domain):
-    if read_record(stream) != [SCHEMA]:
+def verify_partition(stream, domain, mixed=False):
+    if read_record(stream) != [MIXED_SCHEMA if mixed else SCHEMA]:
         raise InvalidProof('wrong proof schema; a partial-run receipt is not a proof')
     stack = list(reversed(domain))
     counts, first_open = Counter(), None
@@ -426,7 +467,7 @@ def verify_partition(stream, domain):
         if row[0] == 'split':
             stack.extend(reversed(split_record(box, row)))
         else:
-            rule = check_leaf(box, row)
+            rule = check_leaf(box, row, mixed)
             counts[rule] += 1
             if rule == 'open' and first_open is None:
                 first_open = box.describe()
@@ -465,7 +506,7 @@ def verify_q116(layer, edge, workers, flint):
         raise InvalidProof('q116 layer did not replay completely')
 
 
-def try_leaf(box, precision, reuse_layer):
+def try_leaf(box, precision, reuse_layer, mixed=False):
     if reuse_layer and box.y[1] <= Y_NEXT:
         return ['q116']
     width, k = powers_width(box)
@@ -473,6 +514,8 @@ def try_leaf(box, precision, reuse_layer):
         return ['powers']
     if width+2+k <= GAP+RESIDUE_BITS:
         return ['residue']
+    if mixed and mixed_width(box, (width,k)) <= MIXED_BITS:
+        return ['mixed-residue']
     if origin_covered(box):
         return ['origin']
     logs = enclosures(box, precision)
@@ -509,8 +552,8 @@ def choose_split(box):
 
 
 def analyze(request):
-    box, reuse_layer = request
-    row = try_leaf(box, 128, reuse_layer)
+    box, reuse_layer, mixed = request
+    row = try_leaf(box, 128, reuse_layer, mixed)
     if row is not None:
         return row
     row = try_affine(box)
@@ -521,19 +564,20 @@ def analyze(request):
         axis, cut = split
         return ['split', axis, f'{cut:016x}']
     for precision in (256, 1024, 4096, 16448, 32832, 65536):
-        row = try_leaf(box, precision, reuse_layer)
+        row = try_leaf(box, precision, reuse_layer, mixed)
         if row is not None:
             return row
     return ['open']
 
 
-def search_frontier(previous, domain):
+def search_frontier(previous, domain, schema):
     forest = [[] for _ in domain]
     initial = [(0, box, node) for box, node in zip(domain, forest)]
     if previous is None:
         return forest, deque(initial)
-    if read_record(previous) != [SCHEMA]:
-        raise InvalidProof('cannot resume from a different proof schema')
+    heading = read_record(previous)
+    if heading not in ([schema], [SCHEMA]):
+        raise InvalidProof('cannot resume from an incompatible proof schema')
     pending, stack = [], list(reversed(initial))
     while stack:
         depth, box, node = stack.pop()
@@ -553,8 +597,9 @@ def search_frontier(previous, domain):
     return forest, deque(sorted(pending, key=lambda item: item[0]))
 
 
-def search(stream, budget, seconds, reuse_layer, workers=1, previous=None):
-    forest, queue = search_frontier(previous, roots())
+def search(stream, budget, seconds, reuse_layer, workers=1, previous=None, mixed=False):
+    schema = MIXED_SCHEMA if mixed else SCHEMA
+    forest, queue = search_frontier(previous, roots(), schema)
     checked, stuck, new_closed = 0, 0, Counter()
     start = monotonic()
     context = ProcessPoolExecutor(max_workers=workers) if workers > 1 else nullcontext()
@@ -562,7 +607,7 @@ def search(stream, budget, seconds, reuse_layer, workers=1, previous=None):
         while queue and checked < budget and monotonic()-start < seconds:
             size = min(len(queue), budget-checked, 128*workers if pool else 1)
             chunk = [queue.popleft() for _ in range(size)]
-            requests = [(box, reuse_layer) for _, box, _ in chunk]
+            requests = [(box, reuse_layer, mixed) for _, box, _ in chunk]
             rows = pool.map(analyze, requests, chunksize=16) if pool else map(analyze, requests)
             for (depth, box, node), row in zip(chunk, rows):
                 checked += 1
@@ -576,7 +621,7 @@ def search(stream, budget, seconds, reuse_layer, workers=1, previous=None):
                     stuck += 1
                 else:
                     new_closed[row[0]] += 1
-    print(json.dumps([SCHEMA]), file=stream)
+    print(json.dumps([schema]), file=stream)
     stack = list(reversed(forest))
     while stack:
         node = stack.pop()
@@ -590,6 +635,33 @@ def open_proof(path, mode):
     if path.suffix == '.gz':
         return gzip.open(path, mode+'t', encoding='ascii')
     return path.open(mode, encoding='ascii')
+
+
+def verify_listed_boundaries(stream, mixed):
+    counts, first_open, maximum_exact_bits = Counter(), None, 0
+    for line in stream:
+        if not re.fullmatch(r'[0-9a-f]{16} [0-9a-f]{16} [0-9a-f]{16}\n', line):
+            raise InvalidProof('expected hexadecimal x, signed y and lower encodings')
+        x, signed_y, lower = (int(v, 16) for v in line.split())
+        y = signed_y & ((1 << 63)-1)
+        if not (0 < x < INF and x != ONE and Y_MIN <= y < Y_MAX and 0 <= lower < INF):
+            raise InvalidProof('listed boundary outside the proof domain')
+        box = Box((x,x+1), (y,y+1), (lower,lower+1), bool(signed_y >> 63))
+        width, _ = powers_width(box)
+        for precision in (128, 256, 1024, 4096, 16448):
+            row = try_leaf(box, precision, False, mixed)
+            if row is not None:
+                kind = check_leaf(box, row, mixed)
+                if kind == 'powers':
+                    maximum_exact_bits = max(width, maximum_exact_bits)
+                counts[kind] += 1
+                break
+        else:
+            counts['open'] += 1
+            if first_open is None:
+                first_open = box.describe()
+    return dict(status='INCOMPLETE_LIST' if first_open is not None else 'PASS_LISTED_BOUNDARIES',
+                counts=counts, first_open=first_open, maximum_exact_bits=maximum_exact_bits)
 
 
 def main():
@@ -608,11 +680,16 @@ def main():
     solve.add_argument('--workers', type=int, default=1)
     solve.add_argument('--continue-from', type=Path)
     solve.add_argument('--reuse-q116', action='store_true', help='defer that layer to its checkpoints')
+    listed = modes.add_parser('listed-boundaries', help='check a list of individual midpoint comparisons')
+    listed.add_argument('proof', type=Path)
+    for mode in (verify, solve, listed):
+        mode.add_argument('--mixed-residue', action='store_true',
+                          help='prove coverage using the 88415-bit research prototype')
     args = parser.parse_args()
     try:
         if not __debug__:
             raise InvalidProof('Python assertions must be enabled')
-        if args.workers < 1:
+        if args.mode != 'listed-boundaries' and args.workers < 1:
             parser.error('expected positive workers')
         if args.mode == 'search':
             if args.nodes < 1 or not 0 < args.seconds < float('inf'):
@@ -621,17 +698,26 @@ def main():
             # Only the verifier can issue a source-bound PASS_NO_STREAM.
             prior = open_proof(args.continue_from, 'r') if args.continue_from else nullcontext()
             with prior as previous, open_proof(args.proof, 'x') as stream:
-                result = search(stream, args.nodes, args.seconds, args.reuse_q116, args.workers, previous)
+                result = search(stream, args.nodes, args.seconds, args.reuse_q116,
+                                args.workers, previous, args.mixed_residue)
             print(json.dumps(dict(status='SEARCH_OUTPUT', **result), sort_keys=True))
             return 2 if result['open_boxes'] else 0
-        check_model()
+        check_model(args.mixed_residue)
         with open_proof(args.proof, 'r') as stream:
-            counts, first_open = verify_partition(stream, roots())
+            if args.mode == 'listed-boundaries':
+                report = verify_listed_boundaries(stream, args.mixed_residue)
+                print(json.dumps(report, sort_keys=True))
+                return 2 if report['first_open'] is not None else 0
+            counts, first_open = verify_partition(stream, roots(), args.mixed_residue)
         if first_open is None and counts.get('q116'):
             verify_q116(args.q116_layer, args.q116_edge, args.workers, args.flint_products)
-        status = 'INCOMPLETE' if first_open is not None else 'PASS_NO_STREAM'
+        status = 'PASS_MIXED_RESIDUE' if args.mixed_residue else 'PASS_NO_STREAM'
+        if first_open is not None:
+            status = 'INCOMPLETE'
         print(json.dumps(dict(status=status, leaf_counts=counts, first_open=first_open,
-                              source_fingerprint=SOURCE_FINGERPRINT), sort_keys=True))
+                              source_fingerprint=SOURCE_FINGERPRINT,
+                              **({'residue_bits': MIXED_BITS, 'prototype_sha256': MIXED_SOURCE_SHA256}
+                                 if args.mixed_residue else {})), sort_keys=True))
         return 2 if first_open is not None else 0
     except (ValueError, OSError, EOFError, AssertionError) as error:
         print(f'INVALID: {error}', file=sys.stderr)
