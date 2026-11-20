@@ -262,9 +262,12 @@ bool persist_crash() {
   if(!crash_available() || (retained.crash.capture_flags & crash_dump_format::PERSISTED_TO_C5) || !files::ready()) return false;
   char report[1536];const unsigned size=crash_report(report,sizeof(report));
   if(!size) return false;
+  static constexpr char report_directory[] = "/System/Diagnostics";
+  if(!files::exists("/System") && !files::mkdir("/System")) return false;
+  if(!files::exists(report_directory) && !files::mkdir(report_directory)) return false;
   for(unsigned suffix=0;suffix<100;++suffix) {
     char path[100];
-    std::snprintf(path,sizeof(path),"/crash-picocalc-%08lX-%lu-%u.txt",
+    std::snprintf(path,sizeof(path),"%s/crash-picocalc-%08lX-%lu-%u.txt",report_directory,
         (unsigned long)retained.crash.build_id,(unsigned long)retained.crash.sequence,suffix);
     if(files::exists(path)) continue;
     if(!files::write_text(path,report,size)) return false;
