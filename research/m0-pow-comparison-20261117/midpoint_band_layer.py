@@ -292,13 +292,13 @@ def archive_range(path, prefix, count):
     return first, stop
 
 
-def verify_archive(path, prefix, count, plan, first, stop, pool, workers):
+def verify_archive(path, prefix, count, plan, first, stop, pool, workers, gap=GAP):
     checked = Counter()
     with gzip.open(path, 'rt') as stream:
         header = prefix + [first, stop, count]
         require(json.loads(stream.readline()) == header, 'certificate does not match the full plan')
         work = record_batches(stream, tasks(plan, first, stop))
-        for result in bounded_map(pool, verify_rows, work, workers):
+        for result in bounded_map(pool, partial(verify_rows,gap=gap), work, workers):
             checked.update(result)
     return checked
 
@@ -313,11 +313,12 @@ def verify_bundle(args, plan, prefix, count, start):
     with ProcessPoolExecutor(max_workers=args.workers, initializer=use_flint_products
                              if args.flint_products else None) as pool:
         for (first, stop), path in archives:
-            checked.update(verify_archive(path, prefix, count, plan, first, stop, pool, args.workers))
+            checked.update(verify_archive(path,prefix,count,plan,first,stop,pool,args.workers,args.gap))
     status = 'INCOMPLETE' if checked['open'] else 'VERIFIED_BINADES' if selected else 'VERIFIED_Q115'
     bases = sum(1 << min(52, e+1074) for e in selected) if selected else INF-1
-    print(json.dumps(dict(status=status, seconds=round(monotonic()-start,3), binades=sorted(selected),
-                          bases=bases, roots=sum(hi-lo for lo,hi in required), leaves=checked, plan_sha256=prefix[-1])))
+    print(json.dumps(dict(status=status,seconds=round(monotonic()-start,3),binades=sorted(selected),
+                          bases=bases,roots=sum(hi-lo for lo,hi in required),leaves=checked,
+                          gap_bits=args.gap,plan_sha256=prefix[-1])))
     return 2 if checked['open'] else 0
 
 
@@ -326,6 +327,7 @@ def main():
     parser.add_argument('mode', choices=('plan','generate','verify','verify-bundle'))
     parser.add_argument('files', type=Path, nargs='*')
     parser.add_argument('--width', type=int, default=38)
+    parser.add_argument('--gap', type=int, choices=(*INTERVAL_GAPS,GAP), default=GAP)
     parser.add_argument('--first', type=int, default=0)
     parser.add_argument('--stop', type=int)
     parser.add_argument('--workers', type=int, default=1)
@@ -335,11 +337,11 @@ def main():
     parser.add_argument('--binade', type=int, action='append', default=[])
     args = parser.parse_args()
     start = monotonic()
-    plan = list(spans(args.width))
+    plan = list(spans(args.width,gap=args.gap))
     count = sum((b-a) >> w for _,_,w,a,b in plan)
     plan_hash = sha256(json.dumps(plan,separators=(',',':')).encode()).hexdigest()
     if args.mode == 'plan':
-        print(json.dumps(dict(gap_bits=GAP,shift=SHIFT,width=args.width,roots=count,binades=len(plan),
+        print(json.dumps(dict(gap_bits=args.gap,shift=SHIFT,width=args.width,roots=count,binades=len(plan),
                              pruned=2*(INF-1)-sum(b-a for _,_,_,a,b in plan),plan_sha256=plan_hash)))
         return
     require(args.workers > 0, 'positive worker count required')
@@ -358,7 +360,7 @@ def main():
             with gzip.open(path,'xt',compresslevel=3) as stream:
                 print(json.dumps(prefix+[args.first,stop,count]),file=stream)
                 roots = tasks(plan, args.first, stop)
-                generate = partial(generate_block,flatter=args.flatter,inverse=args.inverse)
+                generate = partial(generate_block,flatter=args.flatter,inverse=args.inverse,gap=args.gap)
                 for index,rows in enumerate(bounded_map(pool,generate,roots,args.workers),1):
                     print(json.dumps(rows,separators=(',',':')),file=stream)
                     checked.update(row[1] for row in rows)
@@ -366,11 +368,11 @@ def main():
                         stream.flush()
                         print(f'{index}/{stop-args.first} roots',dict(checked), file=sys.stderr,flush=True)
         else:
-            checked.update(verify_archive(path,prefix,count,plan,args.first,stop,pool,args.workers))
+            checked.update(verify_archive(path,prefix,count,plan,args.first,stop,pool,args.workers,args.gap))
     status = ('INCOMPLETE' if checked['open'] else 'GENERATED' if args.mode == 'generate'
               else 'VERIFIED_Q115' if args.first == 0 and stop == count else 'VERIFIED_RANGE')
     print(json.dumps(dict(status=status,seconds=round(monotonic()-start,3),first=args.first,
-                          stop=stop,total_roots=count,leaves=checked,plan_sha256=plan_hash)))
+                          stop=stop,total_roots=count,leaves=checked,gap_bits=args.gap,plan_sha256=plan_hash)))
     return 2 if status == 'INCOMPLETE' else 0
 
 
