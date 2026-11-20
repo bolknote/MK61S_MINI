@@ -10,6 +10,7 @@ from fractions import Fraction
 from functools import lru_cache
 import gzip
 from hashlib import sha256
+from itertools import islice
 import json
 from pathlib import Path
 import re
@@ -518,23 +519,29 @@ def split_record(box, row):
     return box.split(row[1], int(row[2], 16))
 
 
-def verify_partition(stream, domain, mixed=False):
-    if read_record(stream) != [MIXED_SCHEMA if mixed else SCHEMA]:
-        raise InvalidProof('wrong proof schema; a partial-run receipt is not a proof')
+def partition_rows(stream, domain):
+    """Read the complete partition body in the verifier's preorder."""
     stack = list(reversed(domain))
-    counts, first_open = Counter(), None
     while stack:
         box = stack.pop()
         row = read_record(stream)
         if row[0] == 'split':
             stack.extend(reversed(split_record(box, row)))
-        else:
+        yield box, row
+    if stream.read(1):
+        raise InvalidProof('unexpected records after all proof roots')
+
+
+def verify_partition(stream, domain, mixed=False):
+    if read_record(stream) != [MIXED_SCHEMA if mixed else SCHEMA]:
+        raise InvalidProof('wrong proof schema; a partial-run receipt is not a proof')
+    counts, first_open = Counter(), None
+    for box, row in partition_rows(stream, domain):
+        if row[0] != 'split':
             rule = check_leaf(box, row, mixed)
             counts[rule] += 1
             if rule == 'open' and first_open is None:
                 first_open = box.describe()
-    if stream.read(1):
-        raise InvalidProof('unexpected records after all proof roots')
     return counts, first_open
 
 
@@ -613,7 +620,7 @@ def choose_split(box):
     return axis, boundary if lo < boundary < hi else cut
 
 
-def analyze(request):
+def try_frontier_leaf(request):
     box, reuse_layer, mixed = request
     row = try_leaf(box, 128, reuse_layer, mixed)
     if row is not None:
@@ -627,6 +634,14 @@ def analyze(request):
         spans = scale_grid_spans(box, 1024)
         if spans is not None and scale_grid_excludes(*spans, 512):
             return ['scale-grid', 512]
+    return None
+
+
+def analyze(request):
+    box, reuse_layer, mixed = request
+    row = try_frontier_leaf(request)
+    if row is not None:
+        return row
     split = choose_split(box)
     if split is not None:
         axis, cut = split
@@ -636,6 +651,31 @@ def analyze(request):
         if row is not None:
             return row
     return ['open']
+
+
+def close_frontier(previous, stream, domain, reuse_layer, workers=1, mixed=False):
+    """Try to close each original open leaf, keeping the partition geometry."""
+    schema = MIXED_SCHEMA if mixed else SCHEMA
+    if read_record(previous) != [schema]:
+        raise InvalidProof('cannot close an incompatible proof schema')
+    start = monotonic()
+    print(json.dumps([schema]), file=stream)
+    records = partition_rows(previous, domain)
+    counts, visited = Counter(), 0
+    context = ProcessPoolExecutor(max_workers=workers) if workers > 1 else nullcontext()
+    with context as pool:
+        while chunk := list(islice(records, max(4096, 128*workers))):
+            requests = [(box, reuse_layer, mixed) for box, row in chunk if row == ['open']]
+            visited += len(requests)
+            replacements = (pool.map(try_frontier_leaf, requests, chunksize=64)
+                            if pool else map(try_frontier_leaf, requests))
+            for _, row in chunk:
+                if row == ['open']:
+                    row = next(replacements) or row
+                    counts[row[0]] += 1
+                print(json.dumps(row, separators=(',', ':')), file=stream)
+    return dict(visited=visited, open_boxes=counts.pop('open', 0), newly_closed=counts,
+                elapsed_s=round(monotonic()-start, 2))
 
 
 def search_frontier(previous, domain, schema):
@@ -748,9 +788,14 @@ def main():
     solve.add_argument('--workers', type=int, default=1)
     solve.add_argument('--continue-from', type=Path)
     solve.add_argument('--reuse-q116', action='store_true', help='defer that layer to its checkpoints')
+    close = modes.add_parser('close-frontier', help='try to close existing open leaves without splitting')
+    close.add_argument('prior', type=Path)
+    close.add_argument('proof', type=Path)
+    close.add_argument('--workers', type=int, default=1)
+    close.add_argument('--reuse-q116', action='store_true', help='defer that layer to its checkpoints')
     listed = modes.add_parser('listed-boundaries', help='check a list of individual midpoint comparisons')
     listed.add_argument('proof', type=Path)
-    for mode in (verify, solve, listed):
+    for mode in (verify, solve, close, listed):
         mode.add_argument('--mixed-residue', action='store_true',
                           help='prove coverage using the 88415-bit research prototype')
     args = parser.parse_args()
@@ -759,6 +804,12 @@ def main():
             raise InvalidProof('Python assertions must be enabled')
         if args.mode != 'listed-boundaries' and args.workers < 1:
             parser.error('expected positive workers')
+        if args.mode == 'close-frontier':
+            with open_proof(args.prior, 'r') as previous, open_proof(args.proof, 'x') as stream:
+                result = close_frontier(previous, stream, roots(), args.reuse_q116,
+                                        args.workers, args.mixed_residue)
+            print(json.dumps(dict(status='CLOSE_OUTPUT', **result), sort_keys=True))
+            return 2 if result['open_boxes'] else 0
         if args.mode == 'search':
             if args.nodes < 1 or not 0 < args.seconds < float('inf'):
                 parser.error('expected positive finite search limits')

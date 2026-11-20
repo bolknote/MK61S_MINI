@@ -3,6 +3,7 @@
 
 import argparse
 from fractions import Fraction as F
+from math import ceil
 from pathlib import Path
 import json,hashlib,re
 p=argparse.ArgumentParser(description=__doc__);p.add_argument('--json',type=Path,required=True);a=p.parse_args()
@@ -52,9 +53,31 @@ for p in [512,1024]:
  assert 1-residual-exp_width>F(1,2)
  assert 1/(1-residual)+exp_width<2
  assert exp_width<F(1,1<<54)
+ # Track the upper recurrences in integer units of u, through the first
+ # term at most one unit. The mantissa starts at t<=tmax and uses z<=zmax.
+ log_iterations, power_units = 0, ceil(tmax/u)
+ while power_units > 1:
+  log_iterations+=1
+  power_units=ceil(power_units*zmax)
+ # ceil(ceil(v)/n) = ceil(v/n) for integral n>=1, so the
+ # two upward roundings in exp_endpoint add less than one ulp per term.
+ exp_iterations, term_units = 0, 1<<p
+ while term_units > 1:
+  exp_iterations+=1
+  term_units=ceil(F(7*term_units,20*exp_iterations))
+ assert 0<max(log_iterations,exp_iterations)<p+16
+ words=p//16+4
+ # Two products initialize t^2 and two advance each log power.
+ # Each of the two exp endpoints needs two products per term.
+ wide_products=2+2*log_iterations+4*exp_iterations
  bits=0
  while exp_width<F(1,1<<bits):bits+=1
- rows.append(dict(bits=p,log_width_units=log_units,q_width=str(q_width),residual_bound=str(residual),residual_bound_float=float(residual),relative_final_width_bound=str(exp_width*2),conservative_relative_bits=bits-2))
+ rows.append(dict(bits=p,log_width_units=log_units,q_width=str(q_width),residual_bound=str(residual),residual_bound_float=float(residual),relative_final_width_bound=str(exp_width*2),conservative_relative_bits=bits-2,
+                  max_log_series_iterations=log_iterations,
+                  max_exp_series_iterations_per_endpoint=exp_iterations,
+                  max_wide_products=wide_products,
+                  max_limb_products_in_wide_products=words*words*wide_products,
+                  max_limb_divisions=words*(wide_products-2)))
 r=dict(status='PASS',header_sha256=hashlib.sha256(text.encode()).hexdigest(),rows=rows,
  tiny_exponent_rounds_to_one={'maximum_abs_exponent_exclusive':'2^-64', 'log_abs_bound':745,
     'negative_displacement_bound':str(tiny_y_t), 'positive_displacement_bound':str(tiny_y_t/(1-tiny_y_t))},
@@ -63,4 +86,4 @@ r=dict(status='PASS',header_sha256=hashlib.sha256(text.encode()).hexdigest(),row
  conditional_rounding='Directed integer endpoints enclose the positive magnitude. A result is returned only when both endpoints round to the same binary64; a false return is preserved when undecided.',
  boundary_argument='For x=a*2^e with a odd and y=b/2^k with b odd, a dyadic result requires a perfect 2^k-th root and e divisible by 2^k. Nontrivial a has k<=5; an exact/midpoint odd significand has <=54 bits. Negative y requires a=1. The prototype tests these conditions with exact integer roots and capped products.',
  scope='Elementary rational bounds for the experimental fixed-point algorithm, not a machine-checked proof of the C++ implementation and not an all-input totality proof. A fixed maximum precision still does not establish all-input totality.')
-a.json.parent.mkdir(parents=True,exist_ok=True);a.json.write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({"status":r['status'],"rows":[{k:v for k,v in q.items() if k in ['bits','residual_bound_float','conservative_relative_bits']} for q in rows]},indent=2))
+a.json.parent.mkdir(parents=True,exist_ok=True);a.json.write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({"status":r['status'],"rows":[{k:v for k,v in q.items() if k=='bits' or k.startswith('max_') or k in ['residual_bound_float','conservative_relative_bits']} for q in rows]},indent=2))

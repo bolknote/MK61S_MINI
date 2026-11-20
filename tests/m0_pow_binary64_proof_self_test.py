@@ -37,6 +37,22 @@ def single(x, magnitude, lower, inverse=False):
 
 
 class ArithmeticTest(unittest.TestCase):
+    def test_x87_double_rounding_witness(self):
+        x, y, lower = 0x3fe1d06cac4007f7, 0x3fb2999bb0510100, 0x3feeaaae1482004e
+        precision = 256
+        xl, xh = proof.log_point(x, precision, False)
+        ml, mh = proof.log_point(lower, precision, True)
+        exponent = real(y)
+        gap_lo = (exponent*xl-mh)/(1 << precision)
+        gap_hi = (exponent*xh-ml)/(1 << precision)
+        self.assertGreater(gap_lo, Fraction(1, 1 << 116))
+        self.assertLess(gap_hi, Fraction(1, 1 << 115))
+        self.assertEqual(lower & 1, 0)
+        self.assertEqual(real(lower, True).denominator, 1 << 54)
+        # The midpoint is in [1/2,1) and exactly representable at p=64.
+        # exp(gap)-1 < 2*gap, so rounding at p=64 lands at that midpoint.
+        self.assertLess(2*gap_hi, Fraction(1, 1 << 65))
+
     def test_exact_midpoints_at_all_transitions(self):
         for field in range(1, 2048):
             lower = (field << 52)-1
@@ -204,6 +220,24 @@ class PartitionTest(unittest.TestCase):
         counts, missing = proof.verify_partition(StringIO(continued.getvalue()), proof.roots())
         self.assertIsNotNone(missing)
         self.assertGreater(counts['open'], 0)
+
+    def test_close_frontier_keeps_the_original_partition(self):
+        box = proof.Box((bits(1.25), bits(1.5)), (bits(1.5), bits(1.75)),
+                        (bits(0.5), bits(2)), False)
+        split = ['split', 'm', f'{bits(1.25):016x}']
+        previous = stream(split, ['open'], ['open'])
+        result = StringIO()
+        report = proof.close_frontier(previous, result, (box,), False)
+        self.assertEqual(report['visited'], 2)
+        self.assertEqual(report['newly_closed'], {'gap': 1})
+        self.assertEqual(report['open_boxes'], 1)
+        result.seek(0)
+        self.assertEqual(json.loads(result.readline()), [proof.SCHEMA])
+        self.assertEqual(json.loads(result.readline()), split)
+        result.seek(0)
+        counts, first = proof.verify_partition(result, (box,))
+        self.assertEqual(counts, {'gap': 1, 'open': 1})
+        self.assertEqual(first['m'][0], split[-1])
 
     def test_mixed_schema_has_separate_verification(self):
         source, mixed = StringIO(), StringIO()

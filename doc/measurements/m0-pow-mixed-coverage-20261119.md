@@ -46,6 +46,21 @@ SHA-256 сжатой контрольной точки
 [Проверяющая программа](../../dev/tools/verify_m0_pow_binary64.py),
 [правила полного покрытия](m0-pow-binary64-proof-20261119.md).
 
+### Повторный проход по исходным листьям
+
+Режим `close-frontier` проверяет все открытые листья с сохранением
+исходных границ разбиения. Проход посетил 1 817 728 листьев за
+28,05 с на восьми процессах. Независимый `verify` принял
+394 255 новых закрытых листьев, в том числе 392 366 по зазору,
+1 882 по размеру точных степеней и 7 по штатному остатку.
+Открыты **1 423 473 исходных области**. Ещё четыре листа ссылаются
+на отдельный сертификат `q116`. Итоговый статус `INCOMPLETE`.
+
+Проверенная контрольная точка сохранена на сервере в
+`/home/user/m0-pow-frontier-close-20261120.btavkt/frontier.jsonl.gz`.
+SHA-256 сжатого файла
+`cd6aa573cc93972a6d199d4c072cda04b3f59a3ef037aeea99ab737e529a13b3`.
+
 ## Поиск контрпримера в корпусе CORE-MATH
 
 Направленный MPFR 4.2.2 проверил 1 003 177 пар закреплённого файла
@@ -109,6 +124,9 @@ src=research/m0-pow-comparison-20261117
 python3 -B -S "$tool" search "$run_dir/frontier.jsonl.gz" \
     --continue-from "$prior_frontier" --mixed-residue --reuse-q116 --workers 8 --nodes 1400000 --seconds 75
 python3 -B -S "$tool" verify "$run_dir/frontier.jsonl.gz" --mixed-residue
+python3 -B -S "$tool" close-frontier "$run_dir/frontier.jsonl.gz" \
+    "$run_dir/closed-frontier.jsonl.gz" --mixed-residue --workers 8
+python3 -B -S "$tool" verify "$run_dir/closed-frontier.jsonl.gz" --mixed-residue
 python3 -B -S tests/m0_pow_binary64_proof_self_test.py
 cc -O3 -std=c11 -Wall -Wextra -Werror "$src/search_wide_residue.c" \
     $(pkg-config --cflags --libs mpfr gmp) -o "$run_dir/search_wide_residue"
