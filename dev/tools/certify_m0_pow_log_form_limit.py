@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify limits of two- and three-log formulas on the dyadic pow witness."""
+"""Verify numerical limits of logarithmic estimates for binary64 pow."""
 
 import argparse
 from fractions import Fraction as F
@@ -17,6 +17,7 @@ from certify_m0_pow_log_side import GAP, ROOT
 
 
 KIT = 'https://arxiv.org/pdf/2205.08899v3'
+TORUS = 'https://arxiv.org/html/2610.28079v1#S11'
 MIN_K = 3
 MIN_L = 5
 MIN_SIDE = 4
@@ -88,6 +89,31 @@ def other_plane_limit(coefficient, raw_exponent, gap_bits):
     return int(w_lower//LN2_HI)
 
 
+def torus_single_slope_limit():
+    """Evaluate the necessary exponent derived from (11.14) and (11.16)."""
+    # The diagonal jet-space volume gives K*(w0/v)^2*theta <= 1.
+    # In (11.14), A > theta and A > 1/(nu*(1-eta)). Use the
+    # maximum of eta^3*(1-eta) at eta=3/4, and c2^2=2*ln(2)^2/9.
+    max_collision_factor = F(27, 256*6)*F(2, 9)*LN2_HI**2
+    minimum_radius = 4  # R = 4*K*(1+abs(ln(x))+abs(ln(m))), K >= 1.
+    necessary_nu = minimum_radius**2/max_collision_factor
+    require(necessary_nu > 8192, 'single-slope collision cost')
+
+    # At the firmware gap, |xi-p/q| = 2^-GAP/abs(ln(x)). The
+    # requested q^-4 estimate has constant 2^-constant_bits.
+    require(1074*LN2_HI < 1 << 10, 'binary64 base logarithm bound')
+    maximum_gap_nu = F(GAP+10, 2)  # q >= 4, so log2(q) >= 2.
+    constant_bits = GAP-53-4*116
+    maximum_ratio_nu = 4+F(constant_bits, 2)
+    require(max(maximum_gap_nu, maximum_ratio_nu) < 8192,
+            'single-slope costs do not exclude the target')
+    return dict(source=TORUS, minimum_denominator=4,
+                necessary_exponent_strictly_above=int(necessary_nu),
+                firmware_gap_exponent_upper=str(maximum_gap_nu),
+                requested_ratio_exponent_upper=str(maximum_ratio_nu),
+                requested_ratio_constant_bits=constant_bits)
+
+
 def certify():
     previous = certify_laurent()
     witness = previous['witness']
@@ -116,7 +142,8 @@ def certify():
                 witness=witness, normalized_scale_coefficient=scale,
                 laurent_1_and_2_gap_bits_excluded_through=two,
                 laurent_other_planes_gap_bits_excluded_through=other_plane,
-                kit_theorem_2_1=dict(source=KIT, **three))
+                kit_theorem_2_1=dict(source=KIT, **three),
+                torus_single_slope=torus_single_slope_limit())
 
 
 def main():
