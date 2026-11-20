@@ -1,0 +1,369 @@
+{
+  "status": "INCOMPLETE_BINARY64",
+  "gap_bits": 16300,
+  "normalized_x": [
+    6755399441055744,
+    6764195534077952
+  ],
+  "normalized_m": [
+    11258999068426241,
+    11276591254470656
+  ],
+  "projection": {
+    "precisions": [
+      168,
+      256
+    ],
+    "exact_relaxed_projection": true,
+    "surviving_binade_range": [
+      -12,
+      11
+    ],
+    "positive": 100349307041521555,
+    "negative": 100357311650910677
+  },
+  "row_pilot": {
+    "host_cpu": "Intel Xeon 6740P",
+    "search_workers": 92,
+    "exact_replay_workers": 24,
+    "search_wall_s": 36.014,
+    "calibration_wall_s": 1.275,
+    "replay_wall_s": 150.04,
+    "replay_cpu_s": 881.038,
+    "segments": 23858,
+    "midpoints": 211106232532992,
+    "archive_directory": "/home/user/m0-pow-exp-row-20261120.WMq6ke",
+    "monolithic_control_row_runs": {
+      "OPEN": 27,
+      "TIMEOUT": 15
+    },
+    "rows": [
+      {
+        "exponent": -12,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 149.985,
+        "verify_cpu_s": 149.857,
+        "x_scale": 1023,
+        "midpoint_scale": 0,
+        "y_negative": false,
+        "file": "band--12.jsonl.gz",
+        "sha256": "3d09c521ac15bb4ddb72f1bda50269c7cbcd4754e0d94e488ae8aa511430f9f2"
+      },
+      {
+        "exponent": -11,
+        "verified_tiles": 2049,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 54.694,
+        "verify_cpu_s": 54.689,
+        "x_scale": 1023,
+        "midpoint_scale": -1,
+        "y_negative": true,
+        "file": "band--11.jsonl.gz",
+        "sha256": "f248e9dda4991a9671b6bb4de7a7724ca0d3411e5492da96c699e76bef0e031e"
+      },
+      {
+        "exponent": -10,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 53.537,
+        "verify_cpu_s": 53.524,
+        "x_scale": 1023,
+        "midpoint_scale": 1,
+        "y_negative": false,
+        "file": "band--10.jsonl.gz",
+        "sha256": "a252666e1f4a98d6def3af6ed6d598d1448f55e91a94d2900c01d0ea2d534eeb"
+      },
+      {
+        "exponent": -9,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 52.689,
+        "verify_cpu_s": 52.677,
+        "x_scale": 1023,
+        "midpoint_scale": 2,
+        "y_negative": false,
+        "file": "band--09.jsonl.gz",
+        "sha256": "507a75cce1fee0428943e817198ec6876b5b1bde811f8124755450723505b186"
+      },
+      {
+        "exponent": -8,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 52.742,
+        "verify_cpu_s": 52.726,
+        "x_scale": 1023,
+        "midpoint_scale": 4,
+        "y_negative": false,
+        "file": "band--08.jsonl.gz",
+        "sha256": "0168ac45c2a2e2e318ed8090b253bb511417ebd0da8bb993de436c1ef792ab09"
+      },
+      {
+        "exponent": -7,
+        "verified_tiles": 534,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 43.293,
+        "verify_cpu_s": 43.279,
+        "x_scale": 1023,
+        "midpoint_scale": 8,
+        "y_negative": false,
+        "file": "band--07.jsonl.gz",
+        "sha256": "5fbca0635145da33c7a672fcb5bbf1192bbe64e03e858300beb7b952006945c7"
+      },
+      {
+        "exponent": -6,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 39.772,
+        "verify_cpu_s": 39.768,
+        "x_scale": 1023,
+        "midpoint_scale": 16,
+        "y_negative": false,
+        "file": "band--06.jsonl.gz",
+        "sha256": "d79ee4a73512a07238ad60455b6b2a9d570b6e04114ba26448c138b900cdc455"
+      },
+      {
+        "exponent": -5,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 39.556,
+        "verify_cpu_s": 39.533,
+        "x_scale": 1023,
+        "midpoint_scale": 32,
+        "y_negative": false,
+        "file": "band--05.jsonl.gz",
+        "sha256": "8201e66c83fa3415e508f6fd139136a71738a910c0fb801b492af73dc87c6b18"
+      },
+      {
+        "exponent": -4,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.529,
+        "verify_cpu_s": 14.528,
+        "x_scale": 1023,
+        "midpoint_scale": 64,
+        "y_negative": false,
+        "file": "band--04.jsonl.gz",
+        "sha256": "af282468f6bae72140e69e1af00c02f5de614930ef209bda5907f4f6bc556626"
+      },
+      {
+        "exponent": -3,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.053,
+        "verify_cpu_s": 14.053,
+        "x_scale": 1023,
+        "midpoint_scale": 128,
+        "y_negative": false,
+        "file": "band--03.jsonl.gz",
+        "sha256": "d9a96f18a86b01da166954cfe43eba811f230d0a3ba51fb3016086ca488012ce"
+      },
+      {
+        "exponent": -2,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.043,
+        "verify_cpu_s": 14.041,
+        "x_scale": 1023,
+        "midpoint_scale": 256,
+        "y_negative": false,
+        "file": "band--02.jsonl.gz",
+        "sha256": "a60aad788c191f2044ce6af192b5d4ce48f55e55b8e41ba58e7c2387e170c217"
+      },
+      {
+        "exponent": -1,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 13.989,
+        "verify_cpu_s": 13.988,
+        "x_scale": 1023,
+        "midpoint_scale": 512,
+        "y_negative": false,
+        "file": "band--01.jsonl.gz",
+        "sha256": "44adc95481bb14eeffadb275a0e9b74efd9744d69d4af86a36c903b697304b30"
+      },
+      {
+        "exponent": 0,
+        "verified_tiles": 128,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 11.815,
+        "verify_cpu_s": 11.814,
+        "x_scale": -1022,
+        "midpoint_scale": 1022,
+        "y_negative": true,
+        "file": "band-+00.jsonl.gz",
+        "sha256": "04f911310019bafd856f90d64d93f34cfa06f02ddaff8e44a15728214c692863"
+      },
+      {
+        "exponent": 1,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 53.522,
+        "verify_cpu_s": 53.511,
+        "x_scale": 0,
+        "midpoint_scale": 1,
+        "y_negative": false,
+        "file": "band-+01.jsonl.gz",
+        "sha256": "65309557bf7fe7ace10f3b6c82e52c96d72be273aac1765208a122b30244a3b8"
+      },
+      {
+        "exponent": 2,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 53.005,
+        "verify_cpu_s": 53.002,
+        "x_scale": 0,
+        "midpoint_scale": 3,
+        "y_negative": false,
+        "file": "band-+02.jsonl.gz",
+        "sha256": "30b40c2a4be2b357979a2874e52163fce355371fe3b7712bee8dec25a1e08c85"
+      },
+      {
+        "exponent": 3,
+        "verified_tiles": 2048,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 52.525,
+        "verify_cpu_s": 52.508,
+        "x_scale": 0,
+        "midpoint_scale": 5,
+        "y_negative": false,
+        "file": "band-+03.jsonl.gz",
+        "sha256": "82dab723ee52e3099a6096e1255743e30f2cd39d9457e32a7a70a4840a0f8efd"
+      },
+      {
+        "exponent": 4,
+        "verified_tiles": 516,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 41.336,
+        "verify_cpu_s": 41.32,
+        "x_scale": 0,
+        "midpoint_scale": 10,
+        "y_negative": false,
+        "file": "band-+04.jsonl.gz",
+        "sha256": "e31398a9c30ebccc6530d6bcdf2f1d15aacdd10ff5b77a7a39cf4fc19683ccec"
+      },
+      {
+        "exponent": 5,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 39.851,
+        "verify_cpu_s": 39.839,
+        "x_scale": 0,
+        "midpoint_scale": 19,
+        "y_negative": false,
+        "file": "band-+05.jsonl.gz",
+        "sha256": "30efba0a39094bb45a5438846c1579e7bed3e2b45c165b59f812da4511ddbb32"
+      },
+      {
+        "exponent": 6,
+        "verified_tiles": 531,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 15.764,
+        "verify_cpu_s": 15.764,
+        "x_scale": 0,
+        "midpoint_scale": 38,
+        "y_negative": false,
+        "file": "band-+06.jsonl.gz",
+        "sha256": "ce02401d8ae7532e5cc6fe01b4760313391365820cf2b22f4ff78fdffebe5385"
+      },
+      {
+        "exponent": 7,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.275,
+        "verify_cpu_s": 14.273,
+        "x_scale": 0,
+        "midpoint_scale": 75,
+        "y_negative": false,
+        "file": "band-+07.jsonl.gz",
+        "sha256": "9036923d48dcae42a5c8f44405a155ba6fce582b2f3edad3e64b00eacc09128c"
+      },
+      {
+        "exponent": 8,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.559,
+        "verify_cpu_s": 14.551,
+        "x_scale": 0,
+        "midpoint_scale": 150,
+        "y_negative": false,
+        "file": "band-+08.jsonl.gz",
+        "sha256": "87f4128a39a48e4ee4e4eee71d7927047bffbba261297afc7eb2c021a8a58461"
+      },
+      {
+        "exponent": 9,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.58,
+        "verify_cpu_s": 14.579,
+        "x_scale": 0,
+        "midpoint_scale": 300,
+        "y_negative": false,
+        "file": "band-+09.jsonl.gz",
+        "sha256": "ee582fea2e16ce4f5e72c7f2118046354a5c23883f8f441cda712bf2300bd919"
+      },
+      {
+        "exponent": 10,
+        "verified_tiles": 512,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 14.531,
+        "verify_cpu_s": 14.53,
+        "x_scale": 0,
+        "midpoint_scale": 599,
+        "y_negative": false,
+        "file": "band-+10.jsonl.gz",
+        "sha256": "c6ab2f6c1b3f12b121f04f78127c449c70333f472df5e4a1c73610d06de6ea0a"
+      },
+      {
+        "exponent": 11,
+        "verified_tiles": 132,
+        "verified_m": 8796093022208,
+        "verify_wall_s": 12.685,
+        "verify_cpu_s": 12.684,
+        "x_scale": -1,
+        "midpoint_scale": 850,
+        "y_negative": true,
+        "file": "band-+11.jsonl.gz",
+        "sha256": "19f3a48d6dff67bb346f325a3132348c588c3e8d779296ced9b9e9c130ebf5eb"
+      }
+    ]
+  },
+  "rectangle_pilot": {
+    "y_binade": -12,
+    "results": {
+      "OPEN": 76,
+      "EXCLUDED": 6,
+      "TIMEOUT": 3
+    },
+    "selected": [
+      {
+        "block": [
+          1023,
+          140737488355328,
+          0,
+          2097152,
+          4,
+          29
+        ],
+        "q_shift": 64,
+        "degree": 4,
+        "sha256": "f183d29977147da4601ff90f68508b40be86db7faaecc3c1a3716d58a1951e89",
+        "file": "midpoint-control-rectangle-w4-29.json.gz"
+      },
+      {
+        "block": [
+          1023,
+          549755813888,
+          0,
+          16777216,
+          12,
+          26
+        ],
+        "q_shift": 64,
+        "degree": 10,
+        "sha256": "f16ead8f1892711107e8841e06f80496539769432dd6ad2eec793861b5dd0bf5",
+        "file": "midpoint-control-rectangle-w12-26.json.gz"
+      }
+    ]
+  }
+}

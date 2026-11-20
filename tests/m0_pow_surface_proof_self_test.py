@@ -2,6 +2,7 @@
 """Independent replay, arithmetic and coverage tests for the pow surface pilot."""
 
 from copy import deepcopy
+from fractions import Fraction
 from io import StringIO
 from itertools import product
 import json
@@ -19,7 +20,9 @@ sys.path.insert(0, str(RESEARCH))
 sys.path.insert(0, str(ROOT/'dev/tools'))
 import midpoint_surface_rotated as surface
 import midpoint_entire_surface as entire
+import midpoint_exponential_row as exponential
 import midpoint_scale_grid as scales
+import midpoint_scale_projection as projection
 import verify_m0_pow_binary64 as full_proof
 
 
@@ -55,6 +58,20 @@ DIAGONAL_FIXTURE = dict(
                   -64065117072972, 62686024397, -61336619, 25396599593693,
                   -24850155126, -10067861798705]],
 )
+EXPONENTIAL_FIXTURE = dict(
+    row=[1023, 0, -12, 6755399441055744, 11258999068426241, 11258999202643967],
+    proof=dict(degree=5, work_bits=112, shift=29, terms=17, prime=0,
+               transform=[[-173, 799], [5266, -24321]],
+               polynomials=[[0, -955927323124053527160034, 2915584540930064912221162,
+                             -740323418406702012731481, -3101677824333120553185125,
+                             962675020428271331543677, 543691892343335518844592,
+                             -4085876533921561207732518, -2123812570186776756813739,
+                             -166790216837145243745753, -148278368538597723696,
+                             -1131483396017322501221, -60204454098531754183,
+                             133391274277944502688, -7863850059823725928, -48631219716165,
+                             -893295094149574, -13751568261745725, -144287707290580267,
+                             -145568844776544002, -66545359353283494]]),
+)
 
 
 def bits(value):
@@ -66,6 +83,48 @@ def generalized_binomial(n, k):
 
 
 class SurfaceProofTest(unittest.TestCase):
+    def test_directed_projection_at_binary64_boundaries(self):
+        for value in (Fraction(1, 1 << 64), Fraction(1)-Fraction(1, 1 << 54),
+                      Fraction(1), Fraction(1)+Fraction(1, 1 << 55),
+                      Fraction(3, 2), Fraction(1 << 63)-1, Fraction(1 << 63)):
+            with self.subTest(value=value):
+                ceil_bits = full_proof.ceil_binary64(value)
+                exact = full_proof.dyadic_scale(1, full_proof.dyadic(ceil_bits)) == value
+                self.assertEqual(projection.ratio_encoding(*value.as_integer_ratio(), True), ceil_bits)
+                self.assertEqual(projection.ratio_encoding(*value.as_integer_ratio(), False),
+                                 ceil_bits-int(not exact))
+
+    def test_exponential_row_replay_and_coverage(self):
+        report = deepcopy(EXPONENTIAL_FIXTURE)
+        geometry = exponential.verify_row(report)
+        self.assertEqual(geometry.p_span, (5801692477012993, 5801692786955009))
+        self.assertEqual(exponential.verify_cover(report['row'], [report]), 1)
+        with self.assertRaisesRegex(ValueError, 'gap, overlap'):
+            exponential.verify_cover(report['row'], [report, report])
+        expected = report['row'].copy()
+        expected[-1] += 2
+        with self.assertRaisesRegex(ValueError, 'incomplete row cover'):
+            exponential.verify_cover(expected, [report])
+        report['proof']['polynomials'] = [[1]+[0]*20]
+        with self.assertRaisesRegex(ValueError, 'integer in the range'):
+            exponential.verify_row(report)
+
+    def test_exponential_row_contains_a_true_midpoint(self):
+        # (n*n)**(3/2) is the midpoint n**3 between adjacent binary64 values.
+        n = 210001
+        x = n*n
+        m = n**3
+        x_exp = x.bit_length()-1
+        base = x << (52-x_exp)
+        fields = [x_exp,53,0,base,m-(1<<23),m+(1<<23)]
+        geometry = exponential.ExponentialRow(exponential.read_row(fields),1,64)
+        self.assertLessEqual(geometry.p_span[0], 3 << 51)
+        self.assertGreaterEqual(geometry.p_span[1], 3 << 51)
+        proof = dict(degree=1,work_bits=64,transform=[[1,0],[0,1]],
+                     terms=10,shift=10,prime=0,polynomials=[[0,1,0]])
+        with self.assertRaisesRegex(ValueError, 'integer in the range'):
+            exponential.verify_row(dict(row=fields,proof=proof))
+
     def test_exact_replay_and_tampering(self):
         surface.verify_block(FIXTURE)
         for key, value in (('transform', ((2, 0, 0), (0, 1, 0), (0, 0, 1))),

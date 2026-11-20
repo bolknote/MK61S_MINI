@@ -71,12 +71,61 @@ def bound_shape(degree, real_or_disk):
             for size in real_or_disk]
 
 
-class Geometry:
+class CurveBounds:
+    def sizes(self, transform, radius, curvature):
+        unit = self.grid.unit
+        constant = Fraction(max(map(abs,self.offset)), unit)
+        return tuple(abs(b)*(constant+curvature) + radius*max(abs(a*self.half+b*Fraction(s,unit))
+                       for s in self.slope) for a,b in transform)
+
+    def tail(self, transform, shift, terms):
+        require(type(shift) is int and 1 <= shift <= 52 and type(terms) is int
+                and 2 <= terms <= 1024, 'invalid series cutoff')
+        radius = 1 << shift
+        curvature = self.curvature(radius)
+        disk = bound_shape(self.degree, self.sizes(transform,radius,curvature))
+        choices = self.sizes(transform, 1, self.real_curvature)
+        movement = tuple(abs(b)*self.vertical for _,b in transform)
+        real = bound_shape(self.degree, [size+move for size,move in zip(choices,movement)])
+        scale = Fraction(2, 1 << (shift*terms))
+        result = []
+        for i,j in powers(self.degree):
+            if i == j == 0:
+                result.append(0)
+                continue
+            a = disk[0][i]*disk[1][j]*scale
+            b = (movement[0]*real[0][i-1]*real[1][j] if i else 0)
+            c = (movement[1]*real[0][i]*real[1][j-1] if j else 0)
+            result.append(ceil((a+b+c)*self.grid.unit))
+        return result
+
+    def choose(self, transform, work_bits):
+        options = []
+        for shift in range(1, 53):
+            try:
+                radius = 1 << shift
+                curvature = self.curvature(radius)
+            except ValueError:
+                break
+            disk = bound_shape(self.degree, self.sizes(transform, radius, curvature))
+            bound = ceil(max(disk[0][i]*disk[1][j] for i,j in powers(self.degree)))
+            # Bounding the disk term is enough to pick a candidate shape.
+            # The checker also adds the vertical error before accepting it.
+            terms = max(2, -(-(bound.bit_length()+work_bits+3)//shift))
+            if terms <= 1024:
+                options.append((terms,-shift))
+        require(options, 'no usable complex disk for this lattice')
+        terms, shift = min(options)
+        return -shift, terms
+
+
+class Geometry(CurveBounds):
     def __init__(self, block, degree, work_bits, origin=None):
         require(block.width >= 1, 'a singleton needs the direct rule')
         require(type(degree) is int and 1 <= degree <= 48
                 and type(work_bits) is int and 32 <= work_bits <= 2400, 'invalid search shape')
         self.degree = degree
+        self.work_bits = work_bits
         self.block = block
         self.grid, log2 = log_grid(work_bits + 72*degree + 128)
         grid = self.grid
@@ -113,51 +162,8 @@ class Geometry:
         # C/(L+h) = C/L - C*h/L**2 + C*h**2/(L**2*(L+h)).
         return c*(tail+delta*delta/low)/log_low**2, low
 
-    def sizes(self, transform, radius, curvature):
-        unit = self.grid.unit
-        constant = Fraction(max(map(abs,self.offset)), unit)
-        return tuple(abs(b)*(constant+curvature) + radius*max(abs(a*self.half+b*Fraction(s,unit))
-                       for s in self.slope) for a,b in transform)
-
-    def tail(self, transform, shift, terms):
-        require(type(shift) is int and 1 <= shift <= 52 and type(terms) is int
-                and 2 <= terms <= 1024, 'invalid series cutoff')
-        radius = 1 << shift
-        curvature,_ = self.disk(radius)
-        disk = bound_shape(self.degree, self.sizes(transform,radius,curvature))
-        choices = self.sizes(transform, 1, self.real_curvature)
-        movement = tuple(abs(b)*self.vertical for _,b in transform)
-        real = bound_shape(self.degree, [size+move for size,move in zip(choices,movement)])
-        scale = Fraction(2, 1 << (shift*terms))
-        result = []
-        for i,j in powers(self.degree):
-            if i == j == 0:
-                result.append(0)
-                continue
-            a = disk[0][i]*disk[1][j]*scale
-            b = (movement[0]*real[0][i-1]*real[1][j] if i else 0)
-            c = (movement[1]*real[0][i]*real[1][j-1] if j else 0)
-            result.append(ceil((a+b+c)*self.grid.unit))
-        return result
-
-    def choose(self, transform, work_bits):
-        options = []
-        for shift in range(1, 53):
-            try:
-                radius = 1 << shift
-                curvature, _ = self.disk(radius)
-            except ValueError:
-                break
-            disk = bound_shape(self.degree, self.sizes(transform, radius, curvature))
-            bound = ceil(max(disk[0][i]*disk[1][j] for i,j in powers(self.degree)))
-            # Bounding the disk term is enough to pick a candidate shape.
-            # The checker also adds the vertical error before accepting it.
-            terms = max(2, -(-(bound.bit_length()+work_bits+3)//shift))
-            if terms <= 1024:
-                options.append((terms,-shift))
-        require(options, 'no usable complex disk for this lattice')
-        terms, shift = min(options)
-        return -shift, terms
+    def curvature(self, radius):
+        return self.disk(radius)[0]
 
 
 def checked_transform(matrix):
@@ -192,10 +198,16 @@ def exact_columns(geometry, transform, terms):
             v = add(v,grid.multiply(x[i],quotient[k-i]))
         quotient.append(grid.divide(grid.scale(v,-1),x[0]))
     quotient[0] = add(quotient[0], grid.rational(-geometry.origin))
+    return exact_newton_columns(geometry, transform, quotient)
+
+
+def exact_newton_columns(geometry, transform, series_offset):
+    grid = geometry.grid
+    terms = len(series_offset)
     one = [grid.rational(1)]+[(0,0)]*(terms-1)
     basis = []
     for a,b in transform:
-        series = [grid.scale(v,b) for v in quotient]
+        series = [grid.scale(v,b) for v in series_offset]
         series[1] = add(series[1],grid.rational(a*geometry.half.numerator,geometry.half.denominator))
         row = [one, series]
         for k in range(2, geometry.degree+1):
@@ -221,6 +233,12 @@ def arb_columns(geometry, transform, terms, free):
     var = arb_series([0,1],prec=terms)
     a = geometry.relative
     offset = c/(x0+(1+var*(arb(a.numerator)/a.denominator)).log())-geometry.origin
+    return arb_newton_columns(geometry, transform, terms, free, var, offset)
+
+
+def arb_newton_columns(geometry, transform, terms, free, var, offset):
+    from flint import arb, arb_series
+
     half = arb(geometry.half.numerator)/geometry.half.denominator
     basis = []
     for a,b in transform:
@@ -230,7 +248,7 @@ def arb_columns(geometry, transform, terms, free):
             row.append(row[-1]*(series-k)/(k+1))
         basis.append(row)
     result = []
-    scale = 1 << (geometry.grid.precision-72*geometry.degree-128)
+    scale = 1 << geometry.work_bits
     for i,j in powers(geometry.degree)[free:]:
         column = basis[0][i]*basis[1][j]*scale
         result.append([int(column[k].mid().floor().fmpz()) for k in range(free,terms)])
@@ -272,6 +290,10 @@ def no_modular_roots(degree, polynomials, prime):
 def verify_proof(block, proof):
     require(isinstance(proof,dict), 'invalid proof row')
     geo = Geometry(block,proof['degree'],proof['work_bits'],proof['origin'])
+    verify_curve(geo, proof, exact_columns)
+
+
+def verify_curve(geo, proof, columns):
     transform = checked_transform(proof['transform'])
     terms = proof['terms']
     errors = geo.tail(transform,proof['shift'],terms)
@@ -280,7 +302,7 @@ def verify_proof(block, proof):
     require(isinstance(polys,list) and 1 <= len(polys) <= n and all(isinstance(p,list) and len(p)==n
             and any(p) and all(type(c) is int and abs(c).bit_length() <= 2400 for c in p)
             for p in polys), 'invalid integer polynomials')
-    exact = exact_columns(geo,transform,terms)
+    exact = columns(geo,transform,terms)
     intervals = [signed_interval(poly,exact,errors,geo.grid.unit) for poly in polys]
     if proof['prime'] == 0:
         require(len(polys)==1 and intervals[0][0]>intervals[0][1], 'integer in the range')
@@ -294,15 +316,23 @@ def search_block(job):
     start = process_time()
     block = read_block(fields)
     geo = Geometry(block,degree,work_bits)
+    result = search_curve(geo,free,arb_columns,exact_columns)
+    if result['proof']:
+        result['proof']['origin'] = geo.origin
+    return dict(block=fields,cpu=round(process_time()-start,6),**result)
+
+
+def search_curve(geo, free, approximate_columns, checked_columns, reducer=reduce_lattice):
+    degree, work_bits = geo.degree, geo.work_bits
     matrix = adapt(geo)
     shift,terms = geo.choose(matrix,work_bits)
     scale = 1 << work_bits
-    columns = arb_columns(geo,matrix,terms,free)
+    columns = approximate_columns(geo,matrix,terms,free)
     size,rank = terms-free,len(columns)
     penalty = terms+4
     lattice = [row+[penalty*(i==j) for j in range(rank)] for i,row in enumerate(columns)]
     launched = process_time()
-    reduced, backend = reduce_lattice(lattice,0.98)
+    reduced, backend = reducer(lattice,0.98)
     reduction = process_time()-launched
     short = []
     smallest = None
@@ -315,7 +345,7 @@ def search_block(job):
     polys = []
     prime = 0
     if short:
-        exact = exact_columns(geo,matrix,terms)
+        exact = checked_columns(geo,matrix,terms)
         errors = geo.tail(matrix,shift,terms)
         for poly in short:
             result = signed_interval(poly,exact,errors,geo.grid.unit,True)
@@ -334,10 +364,10 @@ def search_block(job):
                 proof = no_modular_roots(degree,polys,prime)
                 if proof:
                     break
-    cert = dict(degree=degree,work_bits=work_bits,transform=matrix,origin=geo.origin,
+    cert = dict(degree=degree,work_bits=work_bits,transform=matrix,
                 shift=shift,terms=terms,prime=prime,polynomials=proof) if proof else None
-    return dict(block=fields,degree=degree,work_bits=work_bits,free_center=bool(free),terms=terms,
-                rank=rank,backend=backend,cpu=round(process_time()-start,6),lll_cpu=round(reduction,6),
+    return dict(degree=degree,work_bits=work_bits,free_center=bool(free),terms=terms,
+                rank=rank,backend=backend,lll_cpu=round(reduction,6),
                 best_log2=(smallest.bit_length()-1-work_bits) if smallest else None,
                 integer_polynomials=len(polys),proof=cert)
 
