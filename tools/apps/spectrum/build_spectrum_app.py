@@ -133,7 +133,7 @@ def main():
             command += ["--handled-magic", "T8", "--define", "Z80_TIMEX_IO"]
         if profile in (1,3):
             command += ["--define", "Z80_NO_WAIT_STATES"]
-        if profile in (2,4,5):
+        if profile in (2,3,4,5):
             # Keeping parameters intact produces a smaller Thumb-1 image.
             command.append("--no-ipa-sra")
         subprocess.run(command, check=True)

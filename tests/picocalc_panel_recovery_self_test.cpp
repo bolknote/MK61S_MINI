@@ -159,7 +159,7 @@ u32 crc32(const u8* bytes,unsigned size,void (*progress)()) {
 }
 }
 void Panel::start_scanline(const u16* pixels,unsigned count) { controller.pixels(pixels,count); }
-bool Panel::finish_scanline() {
+bool Panel::finish_scanline(bool) {
     if(controller.fail_completion) { controller.fail_completion=false;return false; }
     return true;
 }
@@ -168,7 +168,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32&,bool color) {
     for(unsigned i=0;i<stream_.count;++i) {
         const auto block=lcd::Stream::prepare(rect,i,scanlines,[&](unsigned row,u16* out) {
             if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
-            else lcd::shell_scanline(previous_,rect,row,previous_theme_,out);
+            else lcd::shell_scanline(previous_bytes(),rect,row,previous_theme_,out);
         });
         controller.pixels(scanlines,block.count);
         if(!finish_scanline()) return false;
@@ -390,6 +390,17 @@ void color_session(bool chain) {
     require(panel.color(MK61_COLOR_PRESENT,&band)==1 && controller.pending,"INDEX4 palette-only redraw");
     controller.run();
     require(controller.visible_row(band.y+1)[319]==0x9ABC,"single-page INDEX4 uses the new palette");
+    std::array<u8,480> narrow{};
+    for(unsigned i=0;i<narrow.size();++i) narrow[i]=u8(i*37);
+    band.x=260;band.y=96;band.width=60;band.height=16;
+    band.pixels=narrow.data();band.pixel_bytes=narrow.size();
+    for(unsigned i=0;i<16;++i) band.palette[i]=u16(i*71);
+    require(panel.color(MK61_COLOR_PRESENT,&band)==1 && controller.pending,"narrow INDEX4 window accepted");
+    controller.run();
+    require(panel.strips()==(chain?1:16),"960 pixels fit in one DMA transfer");
+    for(unsigned y=0;y<band.height;++y) for(unsigned x=0;x<band.width;++x)
+        require(controller.visible_row(band.y+y)[band.x+x]==lcd::color_pixel(band,x,y),
+                "contiguous DMA rows retain their pixels and stride");
     require(panel.color(MK61_COLOR_END)==1,"single-page INDEX4 ended");
     mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
     require(controller.visible(mono),"complete mono snapshot restored after color");

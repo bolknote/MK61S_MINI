@@ -39,6 +39,10 @@ enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
        VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
 typedef struct { unsigned next;uint32_t guard_us;bool clear,ready; } raster_output;
 #if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_PENTAGON
+enum { WIDE_PACKED_ROWS=24, WIDE_PACKED_BYTES=WIDE_PACKED_ROWS*SPECTRUM_WIDE_WIDTH/2 };
+_Static_assert(2*WIDE_PACKED_BYTES<=SPECTRUM_VIDEO_WORK_BYTES,"Wide split windows overlap the disk cache");
+#endif
 typedef struct {
     uint32_t guard_us;
     uint16_t background,patch_offset;
@@ -46,7 +50,8 @@ typedef struct {
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
     uint32_t ready_guard_us;
-    bool clipped,compare_wide;
+    bool clipped,compare_wide,gap_right;
+    spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS];
 #endif
     spectrum_video_damage patches[SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_STRIPS:3];
     mk61_service_color_frame part;
@@ -196,16 +201,20 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
     out->clipped=tracked && (out->pages || out->transaction) && !out->clear &&
         out->valid[page] && !(changes->repaint&mask);
     out->compare_wide=mode==SPECTRUM_VIDEO_WIDE && out->transaction && out->valid[0] && !out->clear && !out->clipped;
-    if(out->clipped && mode==SPECTRUM_VIDEO_WIDE && ((out->saved.frames^machine.frames)&16) &&
-       !spectrum_pentagon_flash(&machine,work,changes->strips[page])) return false;
     out->packed=false;
+    out->gap_right=false;
     if(out->clipped) {
         memcpy(out->patches,changes->strips[page],strips*sizeof(*out->patches));
+        if(mode==SPECTRUM_VIDEO_WIDE) {
+            if((out->saved.frames^machine.frames)&16) {
+                if(!spectrum_pentagon_flash(&machine,work,out->patches,out->gaps)) return false;
+            } else memset(out->gaps,0,sizeof(out->gaps));
+        }
         unsigned rows=0;
         for(unsigned i=0;i<strips;++i) rows+=out->patches[i].bottom-out->patches[i].top;
         // Small updates fit in SRAM with a bounded number of scattered reads.
         // Larger ones use the batched native snapshot and keep their clipping.
-        out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?24u:16u);
+        out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?WIDE_PACKED_ROWS:16u);
     }
     out->saved.io=external.handle && !out->packed?&bank_memory.io:NULL;
     out->saved.address=RASTER_BASE;
@@ -270,13 +279,16 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
     }
     const unsigned strips=SPECTRUM_HAS_PENTAGON && out->mode==SPECTRUM_VIDEO_WIDE?SPECTRUM_WIDE_STRIPS:3;
     if(out->next<strips) {
-        if(!out->ready) {
-            const spectrum_video_damage* d=&out->patches[out->next];
+        const spectrum_video_damage* d=&out->patches[out->next];
 #if SPECTRUM_HAS_PENTAGON
-            const bool clipped=!timex && out->clipped;
+        const bool clipped=!timex && out->clipped;
+        const bool wide=out->mode==SPECTRUM_VIDEO_WIDE && out->transaction;
+        const spectrum_wide_gap* gap=&out->gaps[out->next];
+        const bool split=wide && out->packed && gap->right;
 #else
-            const bool clipped=false;
+        const bool clipped=false;
 #endif
+        if(!out->ready) {
             if((out->packed || clipped) && !d->bottom) goto next_strip;
             if(out->packed) {
                 if(timex) spectrum_timex_frame(&out->saved,out->mode,out->next,d,work+out->patch_offset,&out->part);
@@ -290,10 +302,15 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
 #endif
             }
 #if SPECTRUM_HAS_PENTAGON
-            if(out->mode==SPECTRUM_VIDEO_WIDE && out->transaction) {
-                const int result=spectrum_pentagon_wide_update(&bank_memory.io,WIDE_REFERENCE,work,&out->part,out->compare_wide);
-                if(!result) goto next_strip;
-                if(result<0) return false;
+            if(wide) {
+                // Write the combined patch to the PSRAM reference once. The
+                // LCD skips the gap, whose pixels are identical in both frames.
+                if(!out->gap_right) {
+                    const int result=spectrum_pentagon_wide_update(&bank_memory.io,WIDE_REFERENCE,work,&out->part,out->compare_wide);
+                    if(!result) goto next_strip;
+                    if(result<0) return false;
+                }
+                if(split) spectrum_pentagon_wide_window(&out->part,gap,out->gap_right,work+WIDE_PACKED_BYTES);
             }
 #endif
             if(out->clear) {out->part.format&=~MK61_COLOR_PRESERVE_OUTSIDE;out->part.background=out->background;}
@@ -308,6 +325,13 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
         }
         const uint32_t status=color(MK61_COLOR_PRESENT,&out->part);
         if(status!=1) return status==2;
+#if SPECTRUM_HAS_PENTAGON
+        if(split) {
+            if(!out->gap_right) {out->gap_right=true;out->ready=false;return true;}
+            out->gap_right=false;
+            out->patch_offset+=10*damage_cells(d);
+        } else
+#endif
         if(out->packed) out->patch_offset+=out->part.pixel_bytes+out->part.tile_bytes;
 next_strip:
         out->ready=out->clear=false;

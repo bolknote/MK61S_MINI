@@ -20,7 +20,11 @@ void spectrum_timex_patch(const spectrum*,const spectrum_video_snapshot*,unsigne
                           const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_timex_frame(const spectrum_video_snapshot*,unsigned mode,unsigned strip,
                           const spectrum_video_damage*,uint8_t* pixels,mk61_service_color_frame*);
-bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS]);
+// Column interval that can be omitted between two dirty regions in a Wide strip.
+typedef struct { uint8_t left,right; } spectrum_wide_gap;
+bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS],
+                             spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS]);
+void spectrum_pentagon_wide_window(mk61_service_color_frame*,const spectrum_wide_gap*,bool right,uint8_t* pixels);
 bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,uint8_t* pixels);
 void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage*,const uint8_t*,
                              mk61_service_color_frame*);

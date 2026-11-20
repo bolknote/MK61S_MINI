@@ -214,35 +214,39 @@ int main(){sd_test();events();pixels();qpi_completion();qpi_read_commands();slee
  std::array<uint8_t,BYTES> frame{};
  for(unsigned i=0;i<BYTES;++i)frame[i]=(uint8_t)(i*73+i/11);
  for(unsigned width:{1U,7U,8U,24U,319U,320U})for(unsigned height:{1U,2U,3U,4U,5U,319U,320U})
-  for(unsigned delay=1;delay<=7;++delay) {
+  for(unsigned depth:{2U,3U}) for(unsigned delay=1;delay<=7;++delay) {
    Rect rect{0,0,(uint16_t)width,(uint16_t)height};Stream stream;stream.reset(rect);
-   std::array<uint16_t,STRIP_ROWS*WIDTH+2> a,b;a.fill(0xA77A);b.fill(0xA77A);
-   auto prepare=[&](unsigned i){stream.segments[i]=Stream::prepare(frame.data(),rect,i,i&1?b.data()+1:a.data()+1);};
+   std::array<std::array<uint16_t,STRIP_ROWS*WIDTH+2>,3> buffers;
+   for(auto& buffer:buffers) buffer.fill(0xA77A);
+   auto prepare=[&](unsigned i){
+    stream.segments[i]=Stream::prepare(frame.data(),rect,i,buffers[i%depth].data()+1);
+   };
    unsigned prepared=stream.count<2?stream.count:2;
    for(unsigned i=0;i<prepared;++i)prepare(i);
    unsigned loaded=0,transferred=0,tick=0;bool stopped=false;
+   Segment active{};
    while(transferred<width*height || !stopped) {
     assert(++tick<100000);
-    if(!stopped) {
-     const auto segment=stream.segments[loaded++];
-     if(!segment.count || !segment.source) stopped=true;
-     else {
-      const auto* source=(const uint16_t*)segment.source;
-      for(unsigned n=0;n<segment.count;++n) {
-       const unsigned x=(transferred+n)%width,y=(transferred+n)/width;
-       const bool ink=frame[y*STRIDE+x/8]&(0x80U>>(x%8));
-       assert(source[n]==(ink?0xFFFF:0));
-      }
-      transferred+=segment.count;
+    if(active.source) {
+     const auto* source=(const uint16_t*)active.source;
+     for(unsigned n=0;n<active.count;++n) {
+      const unsigned x=(transferred+n)%width,y=(transferred+n)/width;
+      const bool ink=frame[y*STRIDE+x/8]&(0x80U>>(x%8));
+      assert(source[n]==(ink?0xFFFF:0));
      }
+     transferred+=active.count;
+     active={};
+    } else if(!stopped) {
+     active=stream.segments[loaded++];
+     if(!active.count || !active.source) stopped=true;
     }
-    // Delay the producer beyond both prepared strips: the null descriptor
-    // must stop, and resuming at the drained wire cursor must not duplicate it.
-    if(tick%delay==0 && prepared<stream.count && loaded>=prepared) prepare(prepared++);
+    // A slot remains in use after its descriptor has been loaded. Delay
+    // the producer until the chain stops and check the drained wire cursor.
+    if(tick%delay==0 && prepared<stream.count && loaded+depth-2>=prepared) prepare(prepared++);
     const unsigned next=Stream::next(transferred,width);
     if(stopped && next<prepared && loaded>=next+1) {loaded=next;stopped=false;}
    }
    assert(transferred==width*height && loaded==stream.count+1);
-   assert(a.front()==0xA77A && a.back()==0xA77A && b.front()==0xA77A && b.back()==0xA77A);
+   for(const auto& buffer:buffers) assert(buffer.front()==0xA77A && buffer.back()==0xA77A);
   }
  std::puts("CMD25, UART events/clocks, RGB565 bounded streaming DMA/null-stop/resume and QPI tests PASS");}

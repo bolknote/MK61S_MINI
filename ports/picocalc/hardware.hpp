@@ -98,7 +98,8 @@ public:
     unsigned scroll_offset() const { return scroll_.offset; }
 private:
     static constexpr unsigned GRAM_ROWS=480;
-    u8 previous_[Screen::BYTES] = {};
+    alignas(4) u16 previous_[Screen::BYTES/sizeof(u16)] = {};
+    u8* previous_bytes() { return reinterpret_cast<u8*>(previous_); }
     lcd::ShellTheme previous_theme_{};
     bool valid_ = false;
     u32 spi_hz_ = 0;
@@ -149,7 +150,7 @@ private:
     bool transfer_fill(u16 color,unsigned width,unsigned height);
     void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
-    bool finish_scanline();
+    bool finish_scanline(bool service_io=false);
     void transfer();
     void transfer_color();
     void transfer_color_scroll();

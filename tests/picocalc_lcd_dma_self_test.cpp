@@ -81,8 +81,13 @@ void wait_for_progress();
 }
 namespace dma_support {
 void enable_irq(unsigned) {}
-bool wait(unsigned first,int second) {
-    assert(first==0 && second==1);while(channels[0].busy) progress();return true;
+bool wait(unsigned first,int second,void (*service)()) {
+    assert(first==0 && second==1);
+    while(channels[0].busy) {
+        if(service) service();
+        else progress();
+    }
+    return true;
 }
 }
 void Panel::abort_dma() { channels[0].busy=channels[1].busy=false;dma_irq_ready_=false;++aborts; }
@@ -112,6 +117,12 @@ int main() {
     audio_active=true;max_service_gap=0;last_service=now;
     assert(panel.transfer_fill(0x1234,320,320));
     assert(max_service_gap<=50 && max_service_gap>0);
+    const unsigned service_before=services;
+    wire.clear();std::array<u16,960> window{};
+    for(unsigned i=0;i<window.size();++i) window[i]=(u16)(i*13);
+    panel.start_scanline(window.data(),window.size());
+    assert(panel.finish_scanline(true) && services>service_before && max_service_gap<=50);
+    assert(wire==std::vector<u16>(window.begin(),window.end()));
     audio_active=false;max_service_gap=0;last_service=now;
     assert(panel.transfer_fill(0x1234,320,320));
     assert(max_service_gap==1000);

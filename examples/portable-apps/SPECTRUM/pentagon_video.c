@@ -1,7 +1,8 @@
 #include "ui.h"
 #include <string.h>
 
-enum { COLOR_WIDTH=256, COLOR_LINES=64, WIDE_WIDTH=SPECTRUM_WIDE_WIDTH, WIDE_COLUMNS=48 };
+enum { COLOR_WIDTH=256, COLOR_LINES=64, WIDE_WIDTH=SPECTRUM_WIDE_WIDTH, WIDE_COLUMNS=48,
+       WIDE_GROUP_PIXELS=20 };
 _Static_assert(WIDE_WIDTH*SPECTRUM_WIDE_STRIP_ROWS/2+WIDE_COLUMNS*SPECTRUM_WIDE_STRIP_ROWS/8+512
     <=SPECTRUM_VIDEO_WORK_BYTES,"Wide strip overlaps the disk cache");
 
@@ -277,7 +278,14 @@ static bool wide_strip(const spectrum* s,const spectrum_video_snapshot* saved,un
     return true;
 }
 
-bool spectrum_pentagon_flash(const spectrum* s,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS]) {
+bool spectrum_pentagon_flash(const spectrum* s,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS],
+                             spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS]) {
+    uint16_t columns[SPECTRUM_WIDE_STRIPS];
+    for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
+        const spectrum_video_damage* d=&strips[strip];
+        // The write tracker already enclosed all RAM writes in this range.
+        columns[strip]=(uint16_t)((1u<<d->right)-(1u<<d->left));
+    }
     const unsigned bank=(s->memory->paging&8)?7:5;
     for(unsigned area=0;area<sizeof(wide_areas)/sizeof(*wide_areas);++area) {
         const wide_area* a=&wide_areas[area];
@@ -288,11 +296,26 @@ bool spectrum_pentagon_flash(const spectrum* s,uint8_t* work,spectrum_video_dama
             uint8_t attrs[WIDE_COLUMNS];
             const unsigned offset=row*4,y=a->first+row;
             wide_row(attrs,work+offset,work+bytes+offset);
-            spectrum_video_damage* d=&strips[y/SPECTRUM_WIDE_STRIP_ROWS];
-            for(unsigned x=0;x<WIDE_COLUMNS;x+=3)
-                if((attrs[x]|attrs[x+1]|attrs[x+2])&128)
-                    spectrum_video_include_cell(d,x/3,y%SPECTRUM_WIDE_STRIP_ROWS,8);
+            const unsigned strip=y/SPECTRUM_WIDE_STRIP_ROWS;
+            for(unsigned x=0;x<WIDE_COLUMNS;x+=3) {
+                if(!((attrs[x]|attrs[x+1]|attrs[x+2])&128)) continue;
+                const unsigned column=x/3;
+                columns[strip]|=(uint16_t)(1u<<column);
+                spectrum_video_include_cell(&strips[strip],column,y%SPECTRUM_WIDE_STRIP_ROWS,8);
+            }
         }
+    }
+    for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
+        const spectrum_video_damage* d=&strips[strip];
+        unsigned left=0,right=0,previous=d->left;
+        for(unsigned x=previous+1;x<d->right;++x) {
+            if(!(columns[strip]&(1u<<x))) continue;
+            if(x-previous-1>right-left) {left=previous+1;right=x;}
+            previous=x;
+        }
+        // Require enough skipped RGB565 data to pay for one extra window.
+        const unsigned saved=(right-left)*(d->bottom-d->top)*WIDE_GROUP_PIXELS*2;
+        gaps[strip]=saved>=1920?(spectrum_wide_gap){left,right}:(spectrum_wide_gap){0};
     }
     return true;
 }
@@ -347,11 +370,25 @@ static void index4_frame(const uint8_t* pixels,mk61_service_color_frame* frame) 
 void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage* d,const uint8_t* pixels,
                              mk61_service_color_frame* f) {
     index4_frame(pixels,f);
-    const unsigned unit=mode==SPECTRUM_VIDEO_WIDE?20:8;
+    const unsigned unit=mode==SPECTRUM_VIDEO_WIDE?WIDE_GROUP_PIXELS:8;
     f->x=unit*d->left+(mode==SPECTRUM_VIDEO_WIDE?0:32);
     f->y=d->top+(mode==SPECTRUM_VIDEO_WIDE?8+strip*SPECTRUM_WIDE_STRIP_ROWS:64+strip*COLOR_LINES);
     f->width=unit*(d->right-d->left);f->height=d->bottom-d->top;
     f->pixel_bytes=f->width*f->height/2;
+}
+
+void spectrum_pentagon_wide_window(mk61_service_color_frame* frame,const spectrum_wide_gap* gap,bool right,
+                                   uint8_t* pixels) {
+    const unsigned first=frame->x/WIDE_GROUP_PIXELS;
+    const unsigned pitch=frame->width/2;
+    const unsigned skip=right?(gap->right-first)*(WIDE_GROUP_PIXELS/2):0;
+    const unsigned bytes=right?pitch-skip:(gap->left-first)*(WIDE_GROUP_PIXELS/2);
+    for(unsigned y=0;y<frame->height;++y)
+        memcpy(pixels+y*bytes,frame->pixels+y*pitch+skip,bytes);
+    frame->x+=2*skip;
+    frame->width=2*bytes;
+    frame->pixels=pixels;
+    frame->pixel_bytes=bytes*frame->height;
 }
 
 void spectrum_pentagon_clip(unsigned mode,const spectrum_video_damage* d,uint8_t* pixels,mk61_service_color_frame* f) {

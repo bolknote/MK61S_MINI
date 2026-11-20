@@ -547,6 +547,11 @@ static void extended_frames(void) {
     const unsigned wide_pixel=8192+1; // The second cell of the central image.
     const uint8_t value=255;
     assert(spectrum_bank_write(&bank_memory,7,wide_pixel,&value,1));
+    const uint8_t flash=0xc7;
+    for(unsigned bank=4;bank<=6;bank+=2) {
+        assert(spectrum_bank_write(&bank_memory,bank,0x1000+24,&flash,1));
+        assert(spectrum_bank_write(&bank_memory,bank,0x1000+15,&flash,1));
+    }
     video_output diff={.clear=true};
     const unsigned updates[]={7,1,1,1,0,7,0};
     for(unsigned i=0;i<sizeof(updates)/sizeof(*updates);++i) {
@@ -560,6 +565,22 @@ static void extended_frames(void) {
         if(updates[i]==1) assert(last_strip.x==60 && last_strip.y==72 && last_strip.width==20 && last_strip.height==1);
     }
     puts("Wide bank changes: one clipped rectangle, no traffic for equal banks, reference recovery after LCD fault PASS");
+    state.frames=diff.saved.frames^16;
+    const unsigned before=video_calls;
+    video_begin(&diff,SPECTRUM_VIDEO_WIDE);
+    assert(video_present(&diff,canvas) && diff.packed);
+    assert(video_present(&diff,canvas) && diff.gap_right && video_calls==before+1);
+    assert(last_strip.x==0 && last_strip.y==8 && last_strip.width==20 && last_strip.height==8);
+    video_busy_once=true;
+    assert(video_present(&diff,canvas) && diff.ready && diff.gap_right && video_calls==before+1);
+    assert(video_present(&diff,canvas) && !diff.gap_right && video_calls==before+2);
+    assert(last_strip.x==300 && last_strip.y==8 && last_strip.width==20 && last_strip.height==8);
+    for(unsigned row=0;row<8;++row)
+        assert(!memcmp(last_strip.pixels+row*10,psram+WIDE_REFERENCE+row*160+150,10));
+    assert(diff.patch_offset==1280);
+    for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
+    assert(!diff.active && diff.valid[0] && video_calls==before+2);
+    puts("Wide FLASH: two disjoint windows, retry while busy and combined PSRAM reference PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     {

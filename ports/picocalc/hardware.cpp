@@ -259,7 +259,7 @@ bool Panel::flush(const Screen& screen) {
     // The retained BASIC/APP image is usually identical. Avoid walking all
     // dirty tiles at every UI poll while a chess search is computing.
     const auto& theme=screen.color_theme();
-    if(valid_ && previous_theme_.same(theme) && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return true;
+    if(valid_ && previous_theme_.same(theme) && std::memcmp(previous_bytes(),screen.data(),Screen::BYTES)==0) return true;
     diagnostics::Scope measure(diagnostics::Point::LCD);
     const auto region=screen.scroll_region();
     bool force=!valid_;
@@ -269,10 +269,10 @@ bool Panel::flush(const Screen& screen) {
     const bool scroll_safe=region.valid() && theme.scroll_safe(region.top,region.height) &&
         previous_theme_.scroll_safe(region.top,region.height);
     if(!scroll_safe && scroll_.offset) {scroll_={region,0};force=true;}
-    const int delta=force || !scroll_safe?0:lcd::Scroll::find(previous_,screen.data(),region);
+    const int delta=force || !scroll_safe?0:lcd::Scroll::find(previous_bytes(),screen.data(),region);
     pending_scroll_rows_=delta<0?-delta:delta;
-    if(delta) scroll_.rotate(previous_,delta);
-    lcd::plan_shell(update_,previous_,screen.data(),previous_theme_,theme,force);
+    if(delta) scroll_.rotate(previous_bytes(),delta);
+    lcd::plan_shell(update_,previous_bytes(),screen.data(),previous_theme_,theme,force);
     if(!update_.count && !delta) {previous_theme_=theme;return true;}
     std::memcpy(previous_,screen.data(),Screen::BYTES);
     previous_theme_=theme;
@@ -502,7 +502,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || color_frame_.background!=frame->background);
     lcd::plan_color(update_,color_frame_,*frame,force);
     if(!update_.count && !color_clear_) return 1;
-    lcd::copy_color(color_frame_,*frame,previous_);
+    lcd::copy_color(color_frame_,*frame,previous_bytes());
     if(pages_active_) pages_snapshot_=pages_transfer_=pages_write_;
     palette_dirty_=false;
     color_active_=true;valid_=false;
@@ -567,19 +567,28 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     // Small dirty windows keep the scalar path and its existing service cadence.
     const bool indexed_pairs=color && lcd::Index4Pairs::supports(color_frame_.format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
+    // The worker owns the snapshot until this window drains. Its unused tail
+    // can hold a third strip without growing the foreground SRAM allocation.
+    constexpr unsigned strip_pixels=sizeof(scanlines)/sizeof(*scanlines);
+    const unsigned depth=indexed_pairs && stream_.count>2 &&
+        color_frame_.pixel_bytes+color_frame_.tile_bytes<=sizeof(previous_)-sizeof(scanlines)?3:2;
+    u16* const buffers[]={scanlines,chained_scanlines,previous_+Screen::BYTES/sizeof(u16)-strip_pixels};
+    unsigned slot=0;
+    const auto service=[] { io_worker::service(); };
     const auto descriptor=[&](unsigned index) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
-        const auto next=lcd::Stream::prepare(rect,index,index&1?chained_scanlines:scanlines,
+        const auto next=lcd::Stream::prepare(rect,index,buffers[slot],
             [&](unsigned row,u16* out) {
-                if(color) {
-                    if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,[] {io_worker::service();});
-                    else lcd::color_scanline(color_frame_,rect,row,out,color_palette_,[] {io_worker::service();});
-                    // Pixel expansion is CPU work too: keep M3 transport
-                    // serviced between rows, not only between 3-row strips.
-                    io_worker::service();
+                if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,service);
+                else if(color) {
+                    lcd::color_scanline(color_frame_,rect,row,out,color_palette_,service);
+                    // Unlike the paired path, a short scalar row may finish
+                    // without reaching a transport service point.
+                    service();
                 }
-                else lcd::shell_scanline(previous_,rect,row,previous_theme_,out);
+                else lcd::shell_scanline(previous_bytes(),rect,row,previous_theme_,out);
             });
+        if(++slot==depth) slot=0;
         // Count first, trigger address last; a DMA race can only cause a
         // harmless null/zero-count stop, subsequently resumed at the wire cursor.
         stream_.segments[index].count=next.count;__dmb();
@@ -601,7 +610,6 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     dma_channel_set_trans_count((unsigned)dma_rx_,total,false);__dmb();
     dma_start_channel_mask((1U<<dma_rx_) | (1U<<dma_control_));
     const u64 limit=time_us_64()+1000000;
-    const auto service=[] { io_worker::service(); };
     const auto loaded=[&] {
         return (dma_hw->ch[dma_control_].read_addr-(uintptr_t)stream_.segments)/sizeof(lcd::Segment);
     };
@@ -618,8 +626,9 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
         }
     };
     while(prepared<stream_.count) {
-        // Loading descriptor N means N-1 finished: strip N-2 is now reusable.
-        if(loaded()>=prepared) {
+        // A slot is reusable once DMA has loaded the descriptor that follows
+        // its previous contents. The third slot starts free while DMA runs.
+        if(loaded()+depth-2>=prepared) {
             descriptor(prepared++);resume();
         } else {
             resume();
@@ -639,10 +648,10 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     while(spi_is_busy(spi1)) tight_loop_contents();
     return true;
 }
-bool Panel::finish_scanline() {
+bool Panel::finish_scanline(bool service_io) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     if(!dma()) return true;
-    if(!dma_support::wait((unsigned)dma_tx_,dma_rx_)) return false;
+    if(!dma_support::wait((unsigned)dma_tx_,dma_rx_,service_io?io_worker::wait_for_progress:nullptr)) return false;
     while(spi_is_busy(spi1)) tight_loop_contents();
     return true;
 }
@@ -715,12 +724,12 @@ void Panel::transfer() {
         if(chained_dma()) {
             ok=transfer_chain(rect,pauses);strips+=stream_.count;
         } else {
-          lcd::shell_scanline(previous_,rect,0,previous_theme_,scanlines);
+          lcd::shell_scanline(previous_bytes(),rect,0,previous_theme_,scanlines);
           start_scanline(scanlines,rect.width);
           for(unsigned row=1;row<=rect.height;++row) {
             // Convert the next row while DMA sends the other buffer. Neither
             // the snapshot nor an in-flight scanline is modified by core 0.
-            if(row<rect.height) lcd::shell_scanline(previous_,rect,row,previous_theme_,scanlines+(row&1)*Screen::WIDTH);
+            if(row<rect.height) lcd::shell_scanline(previous_bytes(),rect,row,previous_theme_,scanlines+(row&1)*Screen::WIDTH);
             if(!finish_scanline()) { ok=false;break; }
             if(row<rect.height) start_scanline(scanlines+(row&1)*Screen::WIDTH,rect.width);
             io_worker::service();
@@ -750,7 +759,7 @@ void Panel::transfer() {
     completed_input(time_us_64());
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
-    frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_),[] {io_worker::service();}),std::memory_order_relaxed);
+    frame_crc_.store(dma_support::crc32(previous_bytes(),sizeof(previous_),[] {io_worker::service();}),std::memory_order_relaxed);
     }
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
@@ -790,23 +799,32 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
     spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     const bool indexed_pairs=lcd::Index4Pairs::supports(color_frame_.format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
-    const auto prepare=[&](unsigned row) {
+    const auto prepare=[&](unsigned row,u16* out,void (*progress)()=nullptr) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
-        u16* out=scanlines+(row&1U)*Screen::WIDTH;
         if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
-        else if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out);
-        else lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+        else if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,progress);
+        else lcd::color_scanline(color_frame_,rect,row,out,color_palette_,progress);
     };
     bool ok=true;
+    const unsigned pixels=rect.width*rect.height;
     if(MK61_PICOCALC_LCD_COLOR_CHAIN && background) {
         ok=transfer_fill(color_frame_.background,rect.width,rect.height);
         strips+=dma()?1:rect.height;
+    } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && dma() && pixels<=sizeof(scanlines)/sizeof(*scanlines)) {
+        const auto service=[] { io_worker::service(); };
+        for(unsigned row=0;row<rect.height;++row) {
+            prepare(row,scanlines+row*rect.width,service);
+            if(!indexed_pairs) service();
+        }
+        start_scanline(scanlines,pixels);
+        ok=finish_scanline(true);
+        ++strips;
     } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && chained_dma()) {
         ok=transfer_chain(rect,pauses,true);strips+=stream_.count;
     } else {
-        prepare(0);start_scanline(scanlines,rect.width);
+        prepare(0,scanlines);start_scanline(scanlines,rect.width);
         for(unsigned row=1;row<=rect.height;++row) {
-            if(row<rect.height) prepare(row);
+            if(row<rect.height) prepare(row,scanlines+(row&1U)*Screen::WIDTH);
             if(!finish_scanline()) { ok=false;break; }
             if(row<rect.height) start_scanline(scanlines+(row&1U)*Screen::WIDTH,rect.width);
             io_worker::service();
@@ -845,7 +863,7 @@ void Panel::transfer_color() {
     last_rectangles_.store(windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
-    const u32 crc=dma_support::crc32(previous_,color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();});
+    const u32 crc=dma_support::crc32(previous_bytes(),color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();});
     frame_crc_.store(crc,std::memory_order_relaxed);
     // Full TILE1 OSD updates leave completed guest strips available after
     // pause. Pentagon wide strips use TILE1 with PRESERVE_OUTSIDE.
