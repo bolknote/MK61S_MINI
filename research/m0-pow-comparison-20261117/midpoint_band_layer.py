@@ -6,7 +6,7 @@ from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import astuple
 from fractions import Fraction
-from functools import lru_cache
+from functools import lru_cache, partial
 import gzip
 from hashlib import sha256
 from itertools import islice
@@ -156,19 +156,40 @@ def direct_excludes(block):
     return True
 
 
-def generate_block(block):
+def generate_block(block, flatter=None, inverse=False):
     fields = list(astuple(block))
     if block.width <= 8:
         return [[fields, 'direct' if direct_excludes(block) else 'open']]
     degree, work_bits = shape(block.width)
-    job = (fields, degree, work_bits, 1)
-    result = find_polynomial(job)
-    if result['proof'] is not None:
-        return [[fields, 'polynomial', result['proof']]]
+    proof = None
+    if flatter or inverse:
+        from midpoint_exponential_row import flatter_reducer
+        from midpoint_rotated_band import Geometry, arb_columns, exact_columns, search_curve
+        from midpoint_surface_rotated import reduce_lattice
+
+        reducer = partial(flatter_reducer,flatter) if flatter else reduce_lattice
+        if inverse:
+            from midpoint_band_inverse import generate
+            try:
+                proof = generate(block,degree,work_bits,reducer)['proof']
+            except ValueError:
+                pass
+        if proof is None:
+            shapes = ((degree-2,work_bits+16),(degree,work_bits)) if block.width >= 38 else ((degree,work_bits),)
+            for d,bits in shapes:
+                geo = Geometry(block,d,bits)
+                proof = search_curve(geo,1,arb_columns,exact_columns,reducer)['proof']
+                if proof:
+                    proof['origin'] = geo.origin
+                    break
+    else:
+        proof = find_polynomial((fields,degree,work_bits,1))['proof']
+    if proof:
+        return [[fields,'polynomial',proof]]
     half = 1 << (block.width-1)
     left = Block(block.midpoint, block.binade, block.first, block.width-1, block.shift)
     right = Block(block.midpoint, block.binade, block.first+half, block.width-1, block.shift)
-    return generate_block(left)+generate_block(right)
+    return generate_block(left,flatter,inverse)+generate_block(right,flatter,inverse)
 
 
 def verify_rows(job):
@@ -183,7 +204,11 @@ def verify_rows(job):
                 and piece.first == position and position+(1 << piece.width) <= stop,
                 'gap, overlap or wrong root in coverage')
         if row[1] == 'polynomial' and len(row) == 3:
-            verify_proof(piece, row[2])
+            if isinstance(row[2],dict) and row[2].get('chart') == 'inverse':
+                from midpoint_band_inverse import verify_proof as verify_inverse
+                verify_inverse(piece,row[2])
+            else:
+                verify_proof(piece,row[2])
         elif row[1:] == ['direct']:
             require(piece.width <= 8 and direct_excludes(piece), 'direct leaf does not exclude its block')
         else:
@@ -267,6 +292,8 @@ def main():
     parser.add_argument('--stop', type=int)
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--flint-products', action='store_true')
+    parser.add_argument('--flatter',type=Path)
+    parser.add_argument('--inverse',action='store_true')
     parser.add_argument('--binade', type=int, action='append', default=[])
     args = parser.parse_args()
     start = monotonic()
@@ -293,7 +320,8 @@ def main():
             with gzip.open(path,'xt',compresslevel=3) as stream:
                 print(json.dumps(prefix+[args.first,stop,count]),file=stream)
                 roots = tasks(plan, args.first, stop)
-                for index,rows in enumerate(bounded_map(pool,generate_block,roots,args.workers),1):
+                generate = partial(generate_block,flatter=args.flatter,inverse=args.inverse)
+                for index,rows in enumerate(bounded_map(pool,generate,roots,args.workers),1):
                     print(json.dumps(rows,separators=(',',':')),file=stream)
                     checked.update(row[1] for row in rows)
                     if index % 512 == 0:

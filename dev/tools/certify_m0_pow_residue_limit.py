@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 """Prove a width obstruction to sign recovery from aligned pow residues."""
 
+from fractions import Fraction
 import json
 
 
 GAP = 16300
 ODD_BITS = 53
+MAX_P = (1 << 53)-1
 
 
 def minimum_width(k, maximum_y_shift):
     """Lower bound for the comparator's width formula after common factors."""
     q = 1 << k
-    p = q >> maximum_y_shift
+    p = min(q >> maximum_y_shift,MAX_P)
     return ODD_BITS*(q-p)+k+2-GAP
 
 
 def certify():
+    ln2_lower = sum(Fraction(2,(2*j+1)*3**(2*j+1)) for j in range(8))
+    ln2_upper = ln2_lower+Fraction(9,4*17*3**17)
+    assert Fraction(1,2) < ln2_lower < ln2_upper and 1074*ln2_upper < 745
+
     # For |y| <= 2**-11 both sides of any candidate are positive and m
     # is strictly inside (1/2,2). The nearest unnormalised midpoint to
     # either end is separated by much more than the guard, so its odd

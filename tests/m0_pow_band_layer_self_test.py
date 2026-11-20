@@ -11,6 +11,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'research/m0-pow-comparison-20261117'))
 import midpoint_band_layer as layer
+import midpoint_band_inverse as inverse
 import midpoint_rotated_band as band
 
 
@@ -27,6 +28,22 @@ def linear_proof(block):
 
 
 class BandProofTest(unittest.TestCase):
+    def test_inverse_certificate_and_cover(self):
+        block = band.Block(layer.ONE-1,-600,0,24,layer.SHIFT)
+        proof = dict(chart='inverse',degree=4,work_bits=112,shift=31,terms=13,prime=0,
+                     transform=[[3716,-11],[-87495,259]],
+                     polynomials=[[0,102624408032082134173,459995905841152943411,
+                                   14346698162893261089,31628233725122333648,-53959220913547984882,
+                                   -434668577493808120,-3094912361237427123,3531232667092129035,
+                                   -2855731903834975502,700564350209,12069903468116,183066106680705,
+                                   2001575612267235,-5532765971179591]])
+        self.assertEqual(layer.verify_rows((block,[[list(astuple(block)),'polynomial',proof]])),
+                         {'polynomial':1})
+        with self.assertRaisesRegex(ValueError, 'integer in the range'):
+            inverse.verify_proof(block,dict(proof,polynomials=[[1]+[0]*14]))
+        with self.assertRaisesRegex(ValueError, 'q115'):
+            inverse.verify_proof(replace(block,shift=114),proof)
+
     def test_nonintegral_band_and_scratch_values(self):
         block = band.Block(layer.ONE, -900, 0, 4, layer.SHIFT)
         proof = linear_proof(block)
