@@ -647,6 +647,15 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
       } pending{package_};
       const bool prefetch = execution_.prefetch && package_.read_begin && package_.read_finish;
       auto stamp = [&]() { return execution_.micros ? execution_.micros(execution_.context) : 0U; };
+      auto finish_read = [&]() {
+        if (!pending.active) return true;
+        const auto started = stamp();
+        const bool complete = pending.finish();
+        compute_metrics_.wait_us += stamp() - started;
+        if (!complete) status = ModelStatus::IO;
+        return complete;
+      };
+      const bool publish_logits = head && (allowed || logits);
       LinearBatch shape{};
       shape.arithmetic = arithmetic;
       shape.columns = t.cols; shape.bits = t.bits; shape.grid = t.grid;
@@ -794,22 +803,17 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
           }
         }
         compute_metrics_.matmul_us += stamp() - matmul_started;
-        if (pending.active) {
-          const auto wait_started = stamp();
-          const bool complete = pending.finish();
-          compute_metrics_.wait_us += stamp() - wait_started;
-          if (!complete) {
-            status = ModelStatus::IO;
-            return false;
-          }
-        }
         if (first.status != ModelStatus::OK ||
             (submitted && second.status != ModelStatus::OK) ||
             (remote && third.status != ModelStatus::OK)) {
           status = first.status != ModelStatus::OK ? first.status :
                    submitted && second.status != ModelStatus::OK ? second.status : third.status;
+          finish_read();
           return false;
         }
+        // Policy callbacks can read PSRAM. Also drain DMA before writing
+        // caller-owned logits so a failed read does not publish this tile.
+        if (publish_logits && !finish_read()) return false;
         compute_metrics_.rows += count;
         if(use_lut8)compute_metrics_.lut8_rows+=count;
         if (head) {
@@ -834,6 +838,9 @@ ModelStatus Model::forward(std::uint16_t token, bool output,
             output[j] = value;
           }
         }
+        // The next DMA writes a different tile. Hashing, greedy selection
+        // and copying into the workspace can use the current results now.
+        if (!finish_read()) return false;
         if (!prefetch && !load(next, false)) return false;
         current ^= 1;
       }
