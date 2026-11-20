@@ -1,13 +1,13 @@
-# Local MK-61 programming agent experiment
+# Kon-Tiki 3M for MK-61
 
 The target executes its model and calculator tools on PicoCalc. B200 is used
 for training and host evaluation. This experiment does not modify or control
 the ongoing TinyTalk conversational training in another task.
 
-The first proposed custom architecture was a 4.39M GQA decoder. The user then
-requested a Russian pretrained foundation before training begins. The current
-candidate is [akanemind/Flourish-3M](https://huggingface.co/akanemind/Flourish-3M),
-revision `33b38dfec202c39c3698f7f2d1a9933a34a2de1a`.
+Kon-Tiki 3M is the model trained in this project for programming the MK-61.
+Training started from the Russian pretrained checkpoint
+[akanemind/Flourish-3M](https://huggingface.co/akanemind/Flourish-3M) at revision
+`33b38dfec202c39c3698f7f2d1a9933a34a2de1a`.
 
 ## Completed native Q4 versus mixed-bit comparison
 

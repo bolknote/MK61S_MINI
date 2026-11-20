@@ -14,6 +14,8 @@ namespace {
 using Text = std::string_view;
 constexpr unsigned bad = 0xff, constant = 0x10, pi = 0x11;
 constexpr unsigned neg = 0x20, pow10 = 0x21, power = 0x44;
+constexpr unsigned max_depth = 12;
+constexpr Text step_markers[] = {" затем ", " потом ", " после этого ", " после чего ", " далее "};
 #if defined(PICO_ON_DEVICE)
 namespace numeric = compact_math;
 #else
@@ -55,16 +57,25 @@ bool suffix(Text &text, Text value) {
   text = trim(text);
   return true;
 }
-bool clause(Text &text, Text value) {
+bool clause(Text &text, Text value, bool allow_step = false) {
   auto rest = text;
   if (!suffix(rest, value) || rest.empty())
     return false;
+  bool step = false;
+  if (allow_step) {
+    for (auto marker : step_markers) {
+      marker.remove_suffix(1);
+      if (suffix(rest, marker)) { step = true; break; }
+    }
+  }
+  const bool joined = suffix(rest, " и") || suffix(rest, " а");
+  if (rest.empty()) return false;
   if (Text(".!?;,").find(rest.back()) != Text::npos)
     rest.remove_suffix(1);
-  else if (!suffix(rest, " и"))
+  else if (!joined && !step)
     return false;
   text = trim(rest);
-  return true;
+  return !text.empty();
 }
 bool normalize(const char *source, char (&out)[1025]) {
   unsigned n = 0, depth = 0;
@@ -93,7 +104,7 @@ bool normalize(const char *source, char (&out)[1025]) {
       out[n++] = char(a);
       out[n++] = char(b);
     } else if (a >= 0x20 && a < 0x7f) {
-      if (a == '(' && ++depth > 12) return false;
+      if (a == '(' && ++depth > max_depth) return false;
       if (a == ')') {
         if (!depth) return false;
         --depth;
@@ -137,6 +148,32 @@ bool group(Text &text) {
     }
   }
   return false;
+}
+
+// Split only on an explicit sequencing phrase outside parentheses. Punctuation
+// alone also appears in conditions such as the named roles of an exponent.
+bool split_step(Text text, Text &head, Text &tail) {
+  std::size_t at = Text::npos, after = 0;
+  for (auto marker : step_markers) {
+    const auto found = at_top(text, marker);
+    if (found < at) {
+      at = found;
+      after = at + marker.size();
+    }
+  }
+  if (at == Text::npos) return false;
+  head = trim(slice(text, 0, at));
+  suffix(head, " а") || suffix(head, " и");
+  if (!head.empty() && head.back() == ',') head.remove_suffix(1);
+  head = sentence(head);
+  tail = trim(slice(text, after));
+  prefix(tail, ":");
+  return true;
+}
+
+bool value_word(Text &text) {
+  return prefix(text, "значение ") || prefix(text, "значения ") || prefix(text, "значению ") ||
+         prefix(text, "число ") || prefix(text, "числа ");
 }
 unsigned reg(Text text) {
   if (!(prefix(text, "r") || prefix(text, "р"))) return bad;
@@ -220,14 +257,24 @@ constexpr Word unary[] = {
     {"арктангенс ", 0x27}, {"арктангенса ", 0x27}, {"синус ", 0x28}, {"синуса ", 0x28},
     {"косинус ", 0x29}, {"косинуса ", 0x29}, {"тангенс ", 0x2a}, {"тангенса ", 0x2a},
     {"квадратный корень ", 0x2b}, {"квадратного корня ", 0x2b},
-    {"корень ", 0x2b}, {"квадрат ", 0x2c}, {"квадрата ", 0x2c},
+    {"корень ", 0x2b}, {"корня ", 0x2b}, {"квадрат ", 0x2c}, {"квадрата ", 0x2c},
     {"обратная величина ", 0x2d}, {"обратной величины ", 0x2d},
-    {"обратную величину ", 0x2d}, {"обратное число ", 0x2d},
-    {"абсолютная величина ", 0x2e}, {"абсолютную величину ", 0x2e},
-    {"модуль ", 0x2e}, {"модуля ", 0x2e}, {"знак ", 0x2f},
-    {"целая часть с отсечением к нулю ", 0x30}, {"целая часть ", 0x30},
+    {"обратную величину ", 0x2d}, {"обратное число ", 0x2d}, {"обратного числа ", 0x2d},
+    {"абсолютная величина ", 0x2e}, {"абсолютную величину ", 0x2e}, {"абсолютной величины ", 0x2e},
+    {"модуль ", 0x2e}, {"модуля ", 0x2e}, {"знак ", 0x2f}, {"знака ", 0x2f},
+    {"целая часть с отсечением к нулю ", 0x30}, {"целой части с отсечением к нулю ", 0x30},
+    {"целую часть с отсечением к нулю ", 0x30}, {"целая часть ", 0x30},
+    {"целой части ", 0x30}, {"целую часть ", 0x30},
     {"дробная часть с сохранением знака ", 0x31}, {"дробная часть с исходным знаком ", 0x31},
-    {"дробная часть ", 0x31},
+    {"дробная часть ", 0x31}, {"дробной части ", 0x31}, {"дробную часть ", 0x31},
+};
+
+constexpr Text prior_values[] = {
+    "результат", "результата", "результату", "предыдущий результат", "предыдущего результата",
+    "полученный результат", "полученного результата", "полученному результату", "этот результат",
+    "этого результата", "это число", "это значение", "полученное", "полученного", "полученное число",
+    "полученное значение", "полученного значения", "полученному значению", "найденного значения",
+    "найденной величины", "его", "ее", "него", "нее", "нему",
 };
 
 struct Parser {
@@ -235,20 +282,30 @@ struct Parser {
   Node nodes[31]{};
   unsigned count = 0, previous = bad, references = 0;
 
+  struct Position { unsigned count, references; std::uint8_t literals; };
+  Position position() const { return {count, references, result.literal_count}; }
+  void restore(Position pos) {
+    count = pos.count;
+    references = pos.references;
+    result.literal_count = pos.literals;
+  }
+  unsigned prior() {
+    ++references;
+    return previous;
+  }
+
   unsigned node(unsigned op, unsigned a = bad, unsigned b = bad) {
     if (count == sizeof(nodes) / sizeof(*nodes)) return bad;
     nodes[count] = {std::uint8_t(op), std::uint8_t(a), std::uint8_t(b)};
     return count++;
   }
   unsigned leaf(Text text) {
-    if (text == "полученный результат") {
-      ++references;
-      return previous;
-    }
+    for (auto name : prior_values)
+      if (text == name) return prior();
     if (text == "пи" || text == "число пи" || text == "π") return node(pi);
-    prefix(text, "значение ") || prefix(text, "значения ") || prefix(text, "значению ") ||
-        prefix(text, "число ") || prefix(text, "числа ");
-    prefix(text, "из ") || prefix(text, "регистра ") || prefix(text, "регистре ") || prefix(text, "регистр ");
+    value_word(text);
+    prefix(text, "из ");
+    prefix(text, "регистра ") || prefix(text, "регистре ") || prefix(text, "регистр ");
     if (const auto r = reg(text); r != bad) return node(r);
     char value[24]{};
     if (!number(text, value)) return bad;
@@ -261,19 +318,24 @@ struct Parser {
     }
     return node(constant, index);
   }
-  unsigned operand(Text text, unsigned depth) {
-    if (group(text)) return expression(text, depth + 1);
+  unsigned operand(Text text, unsigned depth, bool bare_unary = true) {
+    if (depth > max_depth || text.empty()) return bad;
     auto inner = text;
-    if ((prefix(inner, "значение ") || prefix(inner, "значения ") || prefix(inner, "значению ") ||
-         prefix(inner, "число ") || prefix(inner, "числа ")) && group(inner))
+    if (group(inner) || (value_word(inner) && group(inner)))
       return expression(inner, depth + 1);
     for (const auto &name : unary) {
       inner = text;
-      if (!prefix(inner, name.spelling) || !group(inner)) continue;
-      const auto child = expression(inner, depth + 1);
+      if (!prefix(inner, name.spelling)) continue;
+      prefix(inner, "от ") || prefix(inner, "из ") || prefix(inner, "у ") || prefix(inner, "к ");
+      const bool grouped = group(inner);
+      if (!grouped && !bare_unary) continue;
+      const auto child = grouped ? expression(inner, depth + 1) : operand(inner, depth + 1);
       return child == bad ? bad : node(name.op, child);
     }
-    return leaf(text);
+    const auto atom = leaf(text);
+    if (atom != bad || !bare_unary || !prefix(text, "минус ")) return atom;
+    const auto child = operand(text, depth + 1);
+    return child == bad ? bad : node(neg, child);
   }
   unsigned join(unsigned op, unsigned a, unsigned b) {
     if (a == bad || b == bad) return bad;
@@ -285,8 +347,9 @@ struct Parser {
   unsigned expression(Text t, unsigned depth);
   unsigned arithmetic(Text &text, unsigned precedence, unsigned depth);
   unsigned arithmetic_operand(Text &text, unsigned depth);
-  bool serialize(unsigned index) {
-    if (index >= count || result.size >= sizeof(result.body)) return false;
+  unsigned step(Text t);
+  bool serialize(unsigned index, unsigned depth = 0) {
+    if (index >= count || depth > max_depth || result.size >= sizeof(result.body)) return false;
     const auto n = nodes[index];
     result.body[result.size++] = n.op;
     if (n.op < 15) result.registers |= 1U << n.op;
@@ -294,7 +357,8 @@ struct Parser {
       if (result.size >= sizeof(result.body)) return false;
       result.body[result.size++] = n.left;
     }
-    return (n.op < neg || serialize(n.left)) && (n.op < 0x40 || serialize(n.right));
+    return (n.op < neg || serialize(n.left, depth + 1)) &&
+           (n.op < 0x40 || serialize(n.right, depth + 1));
   }
 };
 
@@ -332,7 +396,7 @@ unsigned Parser::arithmetic_operand(Text &text, unsigned depth) {
 }
 
 unsigned Parser::arithmetic(Text &text, unsigned precedence, unsigned depth) {
-  if (text.empty() || depth > 12) return bad;
+  if (text.empty() || depth > max_depth) return bad;
   auto left = arithmetic_operand(text, depth);
   constexpr Text operators = "+-*/^";
   while (left != bad && !text.empty()) {
@@ -372,7 +436,7 @@ unsigned Parser::labels(Text text, unsigned depth) {
 }
 
 unsigned Parser::expression(Text text, unsigned depth) {
-  if (text.empty() || depth > 12) return bad;
+  if (text.empty() || depth > max_depth) return bad;
   auto part = text;
   if (group(part)) return expression(part, depth + 1);
   if (slice(text, 0, Text("основание ").size()) == "основание " ||
@@ -382,25 +446,18 @@ unsigned Parser::expression(Text text, unsigned depth) {
   const bool absolute = suffix(part, " по модулю");
   if (absolute || suffix(part, " с противоположным знаком")) {
     const unsigned op = absolute ? 0x2e : neg;
-    const auto inner = operand(part, depth);
+    const auto inner = operand(part, depth, false);
     return inner == bad ? bad : node(op, inner);
   }
-  if (prefix(part, "минус ") && group(part)) {
-    const auto inner = expression(part, depth + 1);
-    return inner == bad ? bad : node(neg, inner);
-  }
-  for (const auto &name : unary) {
-    part = text;
-    if (!prefix(part, name.spelling)) continue;
-    prefix(part, "от ") || prefix(part, "из ") || prefix(part, "у ") || prefix(part, "к ");
-    const unsigned saved_count = count, saved_refs = references, saved_literals = result.literal_count;
+  if ((prefix(part, "возведи ") || prefix(part, "возведите ")) && suffix(part, " в квадрат")) {
     const auto inner = operand(part, depth);
-    if (inner != bad) return node(name.op, inner);
-    count = saved_count;
-    references = saved_refs;
-    result.literal_count = saved_literals;
-    break;
+    return inner == bad ? bad : node(0x2c, inner);
   }
+  const auto start = position();
+  const auto single = operand(text, depth);
+  if (single != bad) return single;
+  restore(start);
+
   for (const auto &rule : binary) {
     part = text;
     if (!prefix(part, rule.start)) continue;
@@ -408,29 +465,78 @@ unsigned Parser::expression(Text text, unsigned depth) {
     Text first, second;
     if (!split(part, rule.delimiter, first, second)) continue;
     if (rule.op == power) prefix(second, "равную ");
-    const unsigned saved_count = count, saved_refs = references, saved_literals = result.literal_count;
-    const unsigned left = operand(rule.reverse ? second : first, depth);
+    // Named/imperative operators delimit their operands. Bare infix phrases
+    // leave scope unclear when an operand is an unparenthesized unary term.
+    const bool delimited = !rule.start.empty();
+    const unsigned left = operand(rule.reverse ? second : first, depth, delimited);
     if (left != bad) {
-      const auto right = operand(rule.reverse ? first : second, depth);
+      const auto right = operand(rule.reverse ? first : second, depth, delimited);
       if (right != bad) return join(rule.op, left, right);
     }
-    count = saved_count;
-    references = saved_refs;
-    result.literal_count = saved_literals;
+    restore(start);
   }
-  const unsigned saved_count = count, saved_refs = references, saved_literals = result.literal_count;
-  if (const auto atom = leaf(text); atom != bad) return atom;
   const auto symbolic = arithmetic(text, 1, depth);
   if (symbolic != bad && text.empty()) return symbolic;
-  count = saved_count;
-  references = saved_refs;
-  result.literal_count = saved_literals;
+  restore(start);
+  return bad;
+}
+
+Text evaluation(Text text) {
+  prefix(text, "еще раз ");
+  if (slice(text, 0, Text("найди степень. ").size()) == "найди степень. ") return text;
+  constexpr Text verbs[] = {"вычисли", "вычислите", "посчитай", "посчитайте", "найди", "найдите",
+                            "определи", "возьми", "возьмите", "извлеки"};
+  for (auto verb : verbs) {
+    if (slice(text, 0, verb.size()) == verb && text.size() > verb.size() &&
+        (text[verb.size()] == ' ' || text[verb.size()] == ':')) {
+      text = trim(slice(text, verb.size()));
+      prefix(text, ":");
+      prefix(text, "еще раз ");
+      break;
+    }
+  }
+  return text;
+}
+
+unsigned Parser::step(Text text) {
+  text = evaluation(sentence(text));
+  prefix(text, "x=") || prefix(text, "x =") || prefix(text, "х=") || prefix(text, "х =");
+  const auto start = position();
+  const auto root = expression(text, 0);
+  if (root != bad || previous == bad) return root;
+  restore(start);
+
+  auto action = text;
+  prefix(action, "его ") || prefix(action, "ее ");
+  for (const auto &name : unary) {
+    if (action == slice(name.spelling, 0, name.spelling.size() - 1))
+      return node(name.op, prior());
+  }
+  if (action == "возведи в квадрат" || action == "возведите в квадрат")
+    return node(0x2c, prior());
+  if (action == "смени знак" || action == "смените знак" || action == "поменяй знак")
+    return node(neg, prior());
+
+  constexpr Word updates[] = {
+      {"прибавь к результату ", 0x40}, {"прибавь к нему ", 0x40},
+      {"прибавь ", 0x40}, {"добавь ", 0x40}, {"вычти ", 0x41},
+      {"умножь на ", 0x42}, {"раздели на ", 0x43}, {"возведи в степень ", power},
+  };
+  for (const auto &update : updates) {
+    auto arg = text;
+    if (!prefix(arg, update.spelling)) continue;
+    const auto right = operand(arg, 0);
+    if (right != bad) return join(update.op, prior(), right);
+    restore(start);
+  }
   return bad;
 }
 
 constexpr Text stores[] = {"тот же результат запиши", "запиши ответ", "запиши результат",
                            "итог сохрани", "итог запиши", "сохрани результат", "оставь результат",
-                           "результат запиши", "запиши", "сохрани", "ответ нужен в x и"};
+                           "полученный результат сохрани", "полученный результат запиши",
+                           "результат запиши", "результат сохрани", "ответ сохрани", "ответ запиши",
+                           "результат положи", "запиши", "сохрани", "ответ нужен в x и"};
 unsigned destination(Text &text) {
   constexpr Text into = " в ";
   const auto at = text.rfind(into);
@@ -442,7 +548,7 @@ unsigned destination(Text &text) {
   auto front = trim(slice(text, 0, at));
   for (auto store : stores) {
     auto expr = front;
-    if (clause(expr, store)) {
+    if (clause(expr, store, true)) {
       text = expr;
       return place;
     }
@@ -468,7 +574,7 @@ double decimal(const char *text) {
   return (negative ? -result : result) / scale;
 }
 double value(const DirectTask &spec, const Example &input, unsigned &at, double scale, unsigned depth = 0) {
-  if (at >= spec.size || depth > 12) return NAN;
+  if (at >= spec.size || depth > max_depth) return NAN;
   const unsigned op = spec.body[at++];
   if (op < 15) return input.inputs & (1U << op) ? input.values[op] : 0;
   if (op == constant) {
@@ -494,7 +600,7 @@ double value(const DirectTask &spec, const Example &input, unsigned &at, double 
   case 0x2c: return a * a;
   case 0x2d: return a != 0 ? 1 / a : NAN;
   case 0x2e: return std::fabs(a);
-  case 0x2f: return a < 0 ? -1 : 1;
+  case 0x2f: return (a > 0) - (a < 0);
   case 0x30:
   case 0x31: {
     // The calculator helper canonicalizes a truncated zero.
@@ -533,40 +639,38 @@ bool parse_direct_task(const char *source, unsigned angle, DirectTask &out) {
       break;
     }
   }
-  clause(task, "после вычисления остановись") || clause(task, "остановись");
+  clause(task, "что получится") || clause(task, "сколько выйдет");
+  clause(task, "после вычисления остановись", true) || clause(task, "остановись", true);
   clause(task, "остальные регистры памяти сохрани") || clause(task, "остальные регистры сохрани");
-  parser.result.body[parser.result.size++] = std::uint8_t(destination(task));
+  const bool preserve_all = clause(task, "память сохрани");
+  const auto store = destination(task);
+  if (preserve_all && store != bad) return false;
+  parser.result.body[parser.result.size++] = std::uint8_t(store);
   clause(task, "результат оставь в x") || clause(task, "результат оставь в х") ||
       clause(task, "результат должен остаться в x") || clause(task, "ответ нужен в x");
   task = sentence(task);
   constexpr Text introductions[] = {
       "нужна программа мк-61 для следующего вычисления: ", "мне нужно вычислить это выражение: ",
-      "составь программу мк-61: ", "напиши программу для мк-61: ", "какое значение даст ",
-      "посчитай, пожалуйста: ", "найди, чему равна ", "чему равно ", "сколько будет ",
-      "что получится, если ", "вычисли: ", "вычисли ", "найди: ", "посчитай: ", "посчитай ",
-      "определи ",
+      "составь программу мк-61: ", "составь программу для мк-61: ", "составьте программу для мк-61: ",
+      "напиши программу для мк-61: ", "какое значение даст ", "посчитай, пожалуйста: ",
+      "найди, чему равна ", "чему равно ", "чему равен ", "сколько будет ", "что получится, если ",
   };
-  const bool chain = prefix(task, "сначала вычисли: ");
-  if (!chain) {
-    for (auto intro : introductions)
-      if (prefix(task, intro)) break;
-    if (slice(task, 0, Text("найди степень. ").size()) != "найди степень. ") prefix(task, "найди ");
-  }
-  const Text next = ". затем вычисли: ";
+  for (auto intro : introductions)
+    if (prefix(task, intro)) break;
+  prefix(task, "сначала ") || prefix(task, "сперва ");
   for (unsigned step = 0; step < 12; ++step) {
-    const auto at = chain ? at_top(task, next) : Text::npos;
-    auto section = sentence(at == Text::npos ? task : slice(task, 0, at));
-    prefix(section, "x=") || prefix(section, "x =") || prefix(section, "х=") || prefix(section, "х =");
+    Text section, next;
+    const bool more = split_step(task, section, next);
     parser.references = 0;
-    const auto root = parser.expression(section, 0);
+    const auto root = parser.step(more ? section : task);
     if (root == bad || parser.references != unsigned(step != 0)) return false;
-    if (at == Text::npos) {
+    if (!more) {
       if (!parser.serialize(root)) return false;
       out = parser.result;
       return true;
     }
     parser.previous = root;
-    task = trim(slice(task, at + next.size()));
+    task = next;
   }
   return false;
 }

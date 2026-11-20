@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstring>
 #include <fstream>
+#include <initializer_list>
 #include <iterator>
 #include <map>
 #include <string>
@@ -122,6 +123,35 @@ void direct_cases() {
   finish();
   assert(s.state == RunState::NEEDS_INPUT && s.program.version == version && !agent.take_direct_fallback());
 
+  const auto solve = [&](const char *task, std::initializer_list<const char *> checks) {
+    s = {};
+    s.id = 31;
+    assert(set_task(s, task, false));
+    unsigned index = 0;
+    for (const char *check : checks) {
+      assert(parse_example(check, e) && set_example(s, index++, e));
+    }
+    assert(agent.start_direct());
+    finish();
+    assert(s.state == RunState::FINISHED && all_passed(s) && !agent.take_direct_fallback());
+  };
+  solve("Вычисли квадрат модуля числа из регистра R5. Итог сохрани в R2.",
+        {"R5=-3.5 => X=12.25 R2=12.25"});
+  const std::uint8_t nested[] = {0x65, 0x31, 0x22, 0x42, 0x50};
+  assert(s.program.size == sizeof(nested) && !std::memcmp(s.program.bytes, nested, sizeof(nested)));
+  solve("Сначала возьми квадрат от R1, затем найди знак полученного значения. "
+        "После этого прибавь к нему 7 и потом раздели на 2. Затем запиши результат в RE.",
+        {"R1=0 => X=3.5 RE=3.5", "R1=-2 => X=4 RE=4"});
+  solve("Арктангенс знака целой части R0 в градусах.",
+        {"R0=0.004399 => X=0 ANGLE=DEG", "R0=-0.75 => X=0 ANGLE=DEG",
+         "R0=2 => X=45 ANGLE=DEG", "R0=-2 => X=-45 ANGLE=DEG", "R0=0 => X=0 ANGLE=DEG"});
+
+  for (const char *ambiguous : {"Вычисли модуль R1 плюс R2.",
+                                "Сначала возьми R1, затем косинус R2.",
+                                "Вычисли квадрат R1. Затем запиши в R5. Потом прибавь 3."}) {
+    assert(set_task(s, ambiguous, false));
+    assert(!agent.start_direct());
+  }
   std::puts("Direct SPEC: real ROM, pause, checked replacement, preservation and fallback PASS");
 }
 // A valid Qwen layout can have a Q width larger than both hidden and FFN.

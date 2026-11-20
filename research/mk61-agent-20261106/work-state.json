@@ -1,6 +1,6 @@
 {
   "objective": "Evaluate a Russian small model for local PicoCalc MK-61 programming with bounded calculator tools",
-  "phase": "review_utility_training_complete",
+  "phase": "short_path_comparison_complete",
   "candidate": "akanemind/Flourish-3M",
   "revision": "33b38dfec202c39c3698f7f2d1a9933a34a2de1a",
   "artifacts": ".build/mk61-agent-20261106",
@@ -297,7 +297,7 @@
   "final_model_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/composition-v1/server-results/export/selected-budget/manifest.json",
   "final_export": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/codec-qat-v1/server-results/export",
   "selected_model": "composition-v1 small",
-  "completed_training_runs": 119,
+  "completed_training_runs": 120,
   "final_verification": {
     "integration_tests_passed": 13,
     "q4_reload_exact_models": [
@@ -855,7 +855,7 @@
   },
   "completed_training_runs_before_native": 21,
   "historical_optimizer_updates_before_native": 51600,
-  "total_accounted_optimizer_updates_lower_bound": 409358,
+  "total_accounted_optimizer_updates_lower_bound": 422085,
   "new_exports_native_device_execution_measured": false,
   "interrupted_warmup_runs": 2,
   "interrupted_warmup_extra_updates_not_fully_counted": true,
@@ -23943,5 +23943,41 @@
         "abstained": 52
       }
     }
+  },
+  "latest_short_path_comparison": {
+    "complete": true,
+    "optimizer_updates": 0,
+    "report": "/Users/bolk/Projects/MK61S_MINI/research/mk61-agent-20261106/SPEC_SHORT_PATH_RESULTS.md",
+    "full_cycle": {
+      "episodes": 512,
+      "completed": 306,
+      "repairs": 120,
+      "correct_starts_completed": 186,
+      "accepted_false_DONE": 10,
+      "false_DONE_claims": 573,
+      "corruption": 5,
+      "overflows": 113,
+      "refusals": 66
+    },
+    "short_path": {
+      "episodes": 512,
+      "completed": 360,
+      "repairs": 159,
+      "correct_starts_completed": 201,
+      "accepted_false_DONE": 10,
+      "false_DONE_claims": 368,
+      "corruption": 5,
+      "overflows": 82,
+      "refusals": 49
+    }
+  },
+  "latest_kon_tiki_paired_composition_training": {
+    "directory": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/kon-tiki-paired-compositions-v1",
+    "complete": true,
+    "ledger_accounted": true,
+    "phase": "complete",
+    "optimizer_updates": 12727,
+    "report": "/Users/bolk/Projects/MK61S_MINI/.build/mk61-agent-20261106/kon-tiki-paired-compositions-v1/KON_TIKI_PAIRED_COMPOSITIONS_RESULTS.md",
+    "candidate_step": 4239
   }
 }
