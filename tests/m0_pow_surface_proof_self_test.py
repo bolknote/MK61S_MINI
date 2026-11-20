@@ -22,6 +22,7 @@ import midpoint_surface_rotated as surface
 import midpoint_entire_surface as entire
 import midpoint_exponential_row as exponential
 import midpoint_scale_grid as scales
+import midpoint_scale_lattice as scale_lattice
 import midpoint_scale_projection as projection
 import verify_m0_pow_binary64 as full_proof
 
@@ -72,6 +73,20 @@ EXPONENTIAL_FIXTURE = dict(
                              -893295094149574, -13751568261745725, -144287707290580267,
                              -145568844776544002, -66545359353283494]]),
 )
+SCALE_LATTICE_FIXTURE = dict(
+    block=[6755399441055744, 6755399441055759, 11258999068426241, 11258999068426271,
+           45, 4503599627370496, 9007199254740991],
+    degree=3, work_bits=144, prime=0, shifts=[48, 48], terms=[8, 8],
+    transform=[[1,0,0,0], [0,1,0,0], [15554091,-97213,6306641,-10781274],
+               [274887,-1718,111457,-190537]],
+    polynomials=[[0, -361864967026088830115726595226875606, -41492902633886486249602828692573494022,
+                  2747203073460371652211784258668397781, 19615490819631663746499955232685655902,
+                  0, 0, 0, 0, 0, -716631016744248956920817650, -1030159379789113837856349716404948870,
+                  18205963204980607546792238115928057, 42486568661908964710585884118668172,
+                  425998250277953948500679808493899681, 0, 0, 0, 0, 0, 0, 0, 0, 0, 254598481584,
+                  0, 0, 0, 0, 0, -102972023016, -143551003528554926410, 2536970821752354078,
+                  5920432981108597714, 89043218949787897716]],
+)
 
 
 def bits(value):
@@ -83,6 +98,47 @@ def generalized_binomial(n, k):
 
 
 class SurfaceProofTest(unittest.TestCase):
+    def test_all_scale_signed_polynomial_packing(self):
+        big = (1 << 600)-1
+        first = [-big,0,big,-1]
+        second = [big,big,-big,0,1]
+        want = [0]*10
+        for i,a in enumerate(first):
+            for j,b in enumerate(second):
+                want[i+j] += a*b
+        self.assertEqual(scale_lattice.packed_convolve(first,second,10),want)
+        self.assertEqual(scale_lattice.packed_convolve(first,second,3),want[:3])
+
+    def test_all_scale_certificate_and_missing_coverage(self):
+        certificate = SCALE_LATTICE_FIXTURE
+        scale_lattice.verify(certificate)
+        tampered = deepcopy(certificate)
+        tampered['polynomials'] = [[1]+[0]*(len(certificate['polynomials'][0])-1)]
+        with self.assertRaises(ValueError):
+            scale_lattice.verify(tampered)
+        cover = dict(rectangle=certificate['block'][:4],projection_bits=168)
+        with self.assertRaisesRegex(ValueError, 'missing exponent binades'):
+            scale_lattice.verify_cover(dict(cover,bands=[]))
+        with self.assertRaisesRegex(ValueError, 'incomplete numerator cover'):
+            missing = dict(binade=7,negative=False,certificates=[])
+            scale_lattice.verify_cover(dict(cover,bands=[missing]))
+
+    def test_all_scale_certificate_keeps_true_tie(self):
+        n = 210001
+        x,m = n*n,n**3
+        a = x << (53-x.bit_length())
+        p = 3 << 51
+        block = [a-1,a+1,m-2,m+2,52,p-1,p+1]
+        geometry = scale_lattice.Geometry(block,1,64)
+        self.assertLessEqual(geometry.offset[0],0)
+        self.assertGreaterEqual(geometry.offset[1],0)
+        transform = [[int(i == j) for j in range(4)] for i in range(4)]
+        # The exact value of the last transformed coordinate at the tie is zero.
+        with self.assertRaisesRegex(ValueError, 'possible integer point'):
+            scale_lattice.verify(dict(block=block,degree=1,work_bits=64,prime=11,
+                                      transform=transform,shifts=[8,8],terms=[8,8],
+                                      polynomials=[[0,1,0,0,0]]))
+
     def test_directed_projection_at_binary64_boundaries(self):
         for value in (Fraction(1, 1 << 64), Fraction(1)-Fraction(1, 1 << 54),
                       Fraction(1), Fraction(1)+Fraction(1, 1 << 55),
