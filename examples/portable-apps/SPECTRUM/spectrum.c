@@ -429,7 +429,22 @@ static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
         const unsigned page=address>>14;
         // Pentagon adds video bytes in the two upper planes and in banks
         // 4/6. Timex always reads the internal RAM of windows $4000/$6000.
-        if(page==1 || (spectrum_is_pentagon(s) && page==3)) raster_until(s,cycles+1);
+        if(page!=1 && !(spectrum_is_pentagon(s) && page==3)) return;
+#if SPECTRUM_HAS_TIMEX
+        if((spectrum_timex_mode(s)&3)==SPECTRUM_VIDEO_HICOLOR) {
+            // Each byte in either plane belongs to exactly one beam cell.
+            // Only latch it before a write if the beam has reached it and
+            // capture has not yet recorded it. Port writes still latch all
+            // affected cells before changing mode or palette.
+            const unsigned offset=address&8191;
+            if(offset>=SPECTRUM_BITMAP_BYTES) return;
+            const unsigned row=((offset&0x1800)>>5)|((offset&0xe0)>>2)|((offset>>8)&7);
+            const unsigned column=offset&31;
+            const uint32_t sample=s->frame_origin+ula_48_start(s)+1+row*224+column*4;
+            if(s->video_cell>row*32+column || (int32_t)(cycles-sample)<0) return;
+        }
+#endif
+        beam_until(s,cycles+1);
         return;
     }
 #endif

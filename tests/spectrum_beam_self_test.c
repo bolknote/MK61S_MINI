@@ -100,11 +100,36 @@ int main(void) {
     unsigned mode=SPECTRUM_VIDEO_HICOLOR;
     spectrum_beam_begin(&machine,mode,strip,&mode,save_strip);
     spectrum_run(&machine,SPECTRUM_FRAME_TSTATES-machine.frame_tstates);
-    assert(strips==24 && machine.frames==1);
+    assert(strips==192/SPECTRUM_BEAM_ROWS && machine.frames==1);
     assert(spectrum_timex_mode(&machine)==SPECTRUM_VIDEO_HIRES);
     check_line(0,40,spectrum_color(10));
     check_line(180,320,spectrum_color(2));
     puts("Timex retains HiColor and HiRes on the same scanline after a port FF write PASS");
+
+    spectrum_init(&machine,ram,rom);
+    machine.extensions=SPECTRUM_TIMEX;
+    machine.cpu.port_out(&machine.cpu,0x00ff,SPECTRUM_VIDEO_HICOLOR);
+    memset(ram,0xff,32);
+    memset(ram+8192,0x42,32);
+    strips=0;
+    spectrum_beam_begin(&machine,mode,strip,&mode,save_strip);
+    const uint32_t sample=14336;
+    // Change the second cell before its sample. The first cell still uses
+    // its old colour when the attribute store coincides with the sample.
+    machine.cpu.before_store(&machine,0x6001,sample);
+    ram[8193]=0x46;
+    assert(machine.video_cell==0);
+    machine.cpu.before_store(&machine,0x6000,sample);
+    ram[8192]=0x46;
+    assert(machine.video_cell==1);
+    machine.cpu.before_store(&machine,0x4000,sample+4);
+    ram[0]=0;
+    assert(machine.video_cell==1);
+    machine.cpu.halted=true;
+    spectrum_run(&machine,SPECTRUM_FRAME_TSTATES);
+    check_line(0,10,spectrum_color(10));
+    check_line(10,20,spectrum_color(14));
+    puts("Timex skips writes to future or already captured beam cells, including plane aliases PASS");
 #endif
     return 0;
 }

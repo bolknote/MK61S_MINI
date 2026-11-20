@@ -610,7 +610,9 @@ static void extended_frames(void) {
         uint32_t keyboard_deadline=micros_now+100000;
         uint32_t deadline=micros_now+2000-guest_time_us(spectrum_frame_cycles(&state));
         const char* error=NULL;
-        raster_output raster={.next=7,.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
+        const raster_output fresh={.guard_us=VIDEO_INITIAL_GUARD_US,.submit_guard_us=RASTER_SUBMIT_GUARD_US};
+        raster_output raster=fresh;
+        raster.next=7;raster.clear=true;
         video_output idle={0};
         const unsigned operations=video_psram_ops,calls=video_calls;
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
@@ -619,25 +621,40 @@ static void extended_frames(void) {
         video_busy_once=true;video_submit_us=4900;
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
         assert(raster.next==RASTER_IDLE && video_psram_ops==operations+1 && video_calls==calls+1);
-        assert(raster.guard_us>=6900 && last_strip.y==256 && last_strip.height==32);
-        puts("Raster strips wait for CPU slack and reuse the prepared strip after LCD busy: PASS");
+        assert(raster.guard_us==fresh.guard_us && raster.submit_guard_us>=5900 &&
+               last_strip.y==256 && last_strip.height==32);
+        raster=fresh;raster.next=7;raster.selected=raster.ready=true;
+        deadline=micros_now+3200-guest_time_us(spectrum_frame_cycles(&state));
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
+        assert(raster.next==RASTER_IDLE && video_psram_ops==operations+1 && video_calls==calls+2);
+        puts("Raster prepared strips use their own pacing budget and survive LCD busy: PASS");
         memset(psram+RASTER_BASE,0,SPECTRUM_RASTER_PACKED_BYTES);
         memset(psram+WIDE_REFERENCE,0,SPECTRUM_RASTER_PACKED_BYTES);
-        raster=(raster_output){.valid=true,.bank=1};
+        raster=fresh;raster.valid=true;raster.bank=1;
         const unsigned previously_shown=video_calls;
-        for(unsigned i=0;i<=SPECTRUM_RASTER_STRIPS;++i) assert(raster_present(canvas,&raster));
+        for(unsigned i=0;i<2+2*SPECTRUM_RASTER_STRIPS && raster.next<RASTER_IDLE;++i)
+            assert(raster_present(canvas,&raster));
         assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown);
-        raster=(raster_output){.valid=true,.bank=0};
+        raster=fresh;raster.valid=true;
         psram[raster_address(&raster,0,4)]^=128;
-        for(unsigned i=0;i<=SPECTRUM_RASTER_STRIPS;++i) assert(raster_present(canvas,&raster));
+        for(unsigned i=0;i<2+2*SPECTRUM_RASTER_STRIPS && raster.next<RASTER_IDLE;++i)
+            assert(raster_present(canvas,&raster));
         assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown+1);
         assert(last_strip.y==160 && last_strip.height==32);
-        raster=(raster_output){.valid=true,.bank=1};
+        raster=fresh;raster.valid=true;raster.bank=1;
         const unsigned previous_begins=video_scroll_begins;
         video_fail_once=true;
-        for(unsigned i=0;i<2*(SPECTRUM_RASTER_STRIPS+1);++i) assert(raster_present(canvas,&raster));
+        for(unsigned i=0;i<2*(2+2*SPECTRUM_RASTER_STRIPS) && raster.next<RASTER_IDLE;++i)
+            assert(raster_present(canvas,&raster));
         assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown+2+SPECTRUM_RASTER_STRIPS);
         assert(video_scroll_begins==previous_begins+1);
+        raster=fresh;raster.valid=raster.selected=true;raster.next=4;
+        memset(canvas,0,SPECTRUM_RASTER_PACKED_STRIP_BYTES);canvas[2]=42;
+        assert(raster_store(&raster,4,canvas));
+        assert(raster.signatures[0][4]!=raster.signatures[1][4]);
+        const unsigned before_read=video_psram_ops;
+        assert(raster_present(canvas,&raster) && raster.ready && video_psram_ops==before_read+1);
+        assert(raster_present(canvas,&raster) && raster.next==5 && !raster.ready);
         puts("Raster skips identical packed strips and repaints after a failed LCD commit: PASS");
     }
     video_test=false;external=0;active_machine=NULL;free(psram);psram=NULL;
@@ -646,6 +663,35 @@ static void extended_frames(void) {
 
 #endif
 #if SPECTRUM_HAS_TIMEX_2068
+static void timex_raster_pack(void) {
+    _Alignas(4) uint8_t raw[TIMEX_STRIP_BYTES];
+    uint8_t packed[sizeof(raw)],decoded[sizeof(raw)];
+    uint32_t colors[SPECTRUM_BEAM_ROWS];
+    uint16_t flat;
+    memset(raw,0x49,sizeof(raw));
+    assert(raster_pack(raw,packed,colors,&flat)==10 && packed[0]==255 && packed[5]==255);
+    assert(flat==UINT16_MAX && colors[0]==0x49494949u && colors[SPECTRUM_BEAM_ROWS-1]==colors[0]);
+    assert(raster_unpack(packed,10,decoded) && !memcmp(raw,decoded,sizeof(raw)));
+    for(unsigned i=128;i<sizeof(raw);++i) raw[i]=(uint8_t)(i/36);
+    const unsigned bytes=raster_pack(raw,packed,colors,&flat);
+    assert(bytes<sizeof(raw) && raster_unpack(packed,bytes,decoded));
+    assert(!memcmp(raw,decoded,sizeof(raw)) && !raster_unpack(packed,bytes-1,decoded));
+    for(unsigned i=0;i<sizeof(raw);++i) raw[i]=(uint8_t)i;
+    assert(raster_pack(raw,packed,colors,&flat)==sizeof(raw) && !flat);
+    raster_output raster={.bank=1};
+    memset(raster.flat,0xff,sizeof(raster.flat));
+    for(unsigned row=0;row<192;++row) {
+        raster.colors[0][row]=row;
+        raster.colors[1][row]=raster_row(row+3);
+    }
+    assert(raster_shift(&raster)==3);
+    assert(raster_same_row(&raster,191,2));
+    raster.flat[0][0]&=~4u;
+    assert(!raster_same_row(&raster,191,2));
+    memcpy(raster.colors[1],raster.colors[0],sizeof(raster.colors[0]));
+    assert(!raster_shift(&raster));
+    puts("Timex Raster packing, exact row reuse and wrapped scroll positions: PASS");
+}
 static void timex_audio_prefill(void) {
     static uint8_t ram[SPECTRUM_RAM_BYTES],rom[SPECTRUM_ROM_BYTES]={0x76};
     spectrum state;
@@ -798,7 +844,10 @@ int main(int argc,char** argv) {
     save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
     test_flow=getenv("SPECTRUM_TEST_FLOW")!=NULL;
 #if SPECTRUM_HAS_TIMEX_2068
-    if(test_flow && opened_name && !strcmp(opened_name,"BOOT.DCK")) timex_audio_prefill();
+    if(test_flow && opened_name && !strcmp(opened_name,"BOOT.DCK")) {
+        timex_raster_pack();
+        timex_audio_prefill();
+    }
 #endif
 #if SPECTRUM_APP_PROFILE
     if(test_flow) {
