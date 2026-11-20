@@ -219,10 +219,10 @@ def exact_newton_columns(geometry, transform, series_offset):
             basis[0][i] if i else basis[1][j] for i,j in powers(geometry.degree)]
 
 
-def arb_columns(geometry, transform, terms, free):
+def arb_columns(geometry, transform, terms, free, extra_bits=0):
     from flint import arb, arb_series, ctx
 
-    ctx.prec, ctx.cap = geometry.grid.precision, terms
+    ctx.prec, ctx.cap = geometry.grid.precision+extra_bits, terms
     block = geometry.block
     c = geometry.center
     x0 = (arb(c.numerator)/(c.denominator*block.base)).log() + block.binade*arb(2).log()
@@ -233,10 +233,10 @@ def arb_columns(geometry, transform, terms, free):
     var = arb_series([0,1],prec=terms)
     a = geometry.relative
     offset = c/(x0+(1+var*(arb(a.numerator)/a.denominator)).log())-geometry.origin
-    return arb_newton_columns(geometry, transform, terms, free, var, offset)
+    return arb_newton_columns(geometry, transform, terms, free, var, offset, extra_bits)
 
 
-def arb_newton_columns(geometry, transform, terms, free, var, offset):
+def arb_newton_columns(geometry, transform, terms, free, var, offset, extra_bits=0):
     from flint import arb, arb_series
 
     half = arb(geometry.half.numerator)/geometry.half.denominator
@@ -248,7 +248,7 @@ def arb_newton_columns(geometry, transform, terms, free, var, offset):
             row.append(row[-1]*(series-k)/(k+1))
         basis.append(row)
     result = []
-    scale = 1 << geometry.work_bits
+    scale = 1 << (geometry.work_bits+extra_bits)
     for i,j in powers(geometry.degree)[free:]:
         column = basis[0][i]*basis[1][j]*scale
         result.append([int(column[k].mid().floor().fmpz()) for k in range(free,terms)])
@@ -341,6 +341,14 @@ def search_curve(geo, free, approximate_columns, checked_columns, reducer=reduce
         smallest = error if smallest is None else min(error,smallest)
         if error < scale:
             short.append([0]*free+[int(reduced[i,size+k])//penalty for k in range(rank)])
+    cert,count = certify_candidates(geo,matrix,shift,terms,short,checked_columns)
+    return dict(degree=degree,work_bits=work_bits,free_center=bool(free),terms=terms,
+                rank=rank,backend=backend,lll_cpu=round(reduction,6),
+                best_log2=(smallest.bit_length()-1-work_bits) if smallest else None,
+                integer_polynomials=count,proof=cert)
+
+
+def certify_candidates(geo, matrix, shift, terms, short, checked_columns):
     proof = None
     polys = []
     prime = 0
@@ -361,15 +369,12 @@ def search_curve(geo, free, approximate_columns, checked_columns, reducer=reduce
                     polys.append(poly)
         if proof is None and polys:
             for prime in (2,53,59,61,67):
-                proof = no_modular_roots(degree,polys,prime)
+                proof = no_modular_roots(geo.degree,polys,prime)
                 if proof:
                     break
-    cert = dict(degree=degree,work_bits=work_bits,transform=matrix,
+    cert = dict(degree=geo.degree,work_bits=geo.work_bits,transform=matrix,
                 shift=shift,terms=terms,prime=prime,polynomials=proof) if proof else None
-    return dict(degree=degree,work_bits=work_bits,free_center=bool(free),terms=terms,
-                rank=rank,backend=backend,lll_cpu=round(reduction,6),
-                best_log2=(smallest.bit_length()-1-work_bits) if smallest else None,
-                integer_polynomials=len(polys),proof=cert)
+    return cert,len(polys)
 
 
 def run(job):

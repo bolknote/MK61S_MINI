@@ -10,7 +10,7 @@ SECTIONS {
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
     /* Diagnostic-only arm/fire records use an otherwise empty Flash gap.
-     * No math slot address is moved. */
+     * No math slot is moved. */
     .audio_alarm_diagnostics 0x10148000 : {
         *(.audio_alarm_diagnostics)
         *(.audio_alarm_diagnostics.*)
@@ -21,6 +21,7 @@ SECTIONS {
            "M0 math overlaps audio alarm diagnostics")
     ASSERT(ADDR(.audio_alarm_diagnostics) + SIZEOF(.audio_alarm_diagnostics) <= 0x1014d000,
            "Audio diagnostics exceed existing Flash gap")
+    /* Cold input telemetry uses the end of that gap, without moving math. */
     .input_diagnostics 0x1014d000 : {
         *(.input_diagnostics)
         *(.input_diagnostics_data)
