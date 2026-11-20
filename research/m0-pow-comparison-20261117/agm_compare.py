@@ -4,8 +4,9 @@
 import argparse
 from fractions import Fraction
 from functools import cache, lru_cache
+from itertools import product
 import json
-from math import ceil
+from math import isqrt
 
 from midpoint_grid import FixedInterval, ceil_div
 from modular_log_compare import midpoint_equal, operands
@@ -14,15 +15,10 @@ from radical_compare import Directed, Dyadic
 
 MIN_PRECISION = 64
 GAP_OVERHEAD = 78
-LOG_BASES = (
-    ((1, 0), (0, 1)),
-    ((1, 0), (1, 1)),
-    ((1, 0), (2, 1)),
-    ((1, 1), (0, 1)),
-    ((1, 1), (1, 2)),
-    ((1, 2), (0, 1)),
-    ((2, 1), (1, 1)),
-)
+IDENTITY = ((1, 0), (0, 1))
+BASIS_LIMIT = 16
+SEPARATION_GRID = FixedInterval(96)
+SEPARATION_LN2 = SEPARATION_GRID.log(2, 1)
 
 
 def settings(precision):
@@ -103,61 +99,108 @@ def side(x, y, lower, precision):
     return 0
 
 
+def separation_log(value):
+    """Enclose a positive rational's logarithm on SEPARATION_GRID."""
+    exponent = value.numerator.bit_length()-value.denominator.bit_length()
+    if value < Fraction(2)**exponent:
+        exponent -= 1
+    reduced = value/Fraction(2)**exponent
+    lo, hi = SEPARATION_GRID.log(reduced.numerator, reduced.denominator)
+    ln2_lo, ln2_hi = SEPARATION_GRID.scale(SEPARATION_LN2, exponent)
+    return (Fraction(lo+ln2_lo, SEPARATION_GRID.unit),
+            Fraction(hi+ln2_hi, SEPARATION_GRID.unit))
+
+
+def separation_root(value, upper):
+    """Directed square root of a positive rational on SEPARATION_GRID."""
+    unit = SEPARATION_GRID.unit
+    scaled = value.numerator*unit*unit
+    root = isqrt(scaled//value.denominator)
+    return Fraction(root+int(upper and root*root*value.denominator < scaled), unit)
+
+
+@cache
+def laurent_parameters(rho):
+    mu = Fraction(5, 8)
+    sigma = (1+2*mu-mu*mu)/2
+    log_lo, log_hi = separation_log(Fraction(rho))
+    return mu, sigma, log_lo, log_hi, sigma*log_lo, sigma*log_hi
+
+
+def laurent_gap(a1, a2, b, shift, rho):
+    """Upper bound -log2(|Delta|) using Laurent's Theorem 2 for D=1."""
+    mu, sigma, log_lo, log_hi, lam_lo, lam_hi = laurent_parameters(rho)
+    ln2_lo, ln2_hi = (Fraction(n, SEPARATION_GRID.unit) for n in SEPARATION_LN2)
+    a = a1*a2
+    assert min(a1, a2) >= 1 and a >= lam_hi**2 and lam_lo > 0
+    h = max(separation_log(b*lam_hi)[1]+Fraction(181, 100), lam_hi, ln2_hi/2)
+    H = (h+log_lo)/lam_hi
+    s = separation_root(1+1/(4*H**2), True)
+    omega, theta = 2*(1+s), s+1/(2*H)
+    numerator = 8*lam_hi*separation_root(separation_root(omega**5*theta, True), True)
+    radical = (omega**2/9+numerator/(3*separation_root(a*H, False))
+               +4*(1/a1+1/a2)*lam_hi*omega/(3*H))
+    C = mu/(lam_lo**3*sigma)*(omega/6+separation_root(radical, True)/2)**2
+    C_prime = separation_root(C*sigma*omega*theta/(lam_lo**3*mu), True)
+    t = h+log_hi
+    loss = C*t*t*a+separation_root(omega*theta, True)*t+separation_log(C_prime*t*t*a)[1]
+    assert loss > 0
+    # Divide Lambda by q <= 2**shift. Use a strict integer bound.
+    return shift+int(loss/ln2_lo)+1
+
+
+def separation_cell(lo, hi, denominator, shift, rho, bases, rows):
+    unit = SEPARATION_GRID.unit
+    limit = 746*unit
+    # One grid ulp covers 2**-192 when passing to the near-midpoint case.
+    x_log = min(limit, ceil_div((limit+1)*denominator, lo))
+    m_log = min(limit, ceil_div(hi*x_log, denominator)+1)
+    ln2_hi = SEPARATION_LN2[1]
+    x_height = min(limit, x_log+53*ln2_hi)
+    m_height = min(limit, m_log+54*ln2_hi)
+    parameters = {}
+    for u, v in rows:
+        distance = max(abs(u*denominator-v*lo), abs(u*denominator-v*hi))
+        ell = min(ceil_div(distance*x_log, denominator)+v, u*x_log+v*m_log)
+        height = min(u*x_height+v*m_height, ell+(53*u+54*v)*ln2_hi)
+        parameters[u, v] = (max(unit, 2*height+(rho-1)*ell), distance)
+
+    # Every candidate is a unimodular basis. Minimize the height product.
+    first, second = min(bases, key=lambda basis: parameters[basis[0]][0]*parameters[basis[1]][0])
+    A1, d1 = parameters[first]
+    A2, d2 = parameters[second]
+    a1, a2 = Fraction(A1, unit), Fraction(A2, unit)
+    scale = Fraction(1 << shift, denominator)
+    # The other row gives each coefficient, and the denominators in b are crossed.
+    return laurent_gap(a1, a2, scale*(d2/a2+d1/a1), shift, rho)
+
+
 @cache
 def separation_by_exponent():
-    """Cover each active binade using Laurent's Corollary 2 and short changes of basis."""
-    grid = FixedInterval(96)
-    ln2 = grid.log(2, 1)
-    ln2_lo, ln2_hi = (Fraction(value, grid.unit) for value in ln2)
-    epsilon = Fraction(1, 1 << 192)
-    assert 1075*ln2_hi < 746
-    assert all(u*z-v*w == 1 and (u+w)*(1 << 116)*epsilon < Fraction(1, 1 << 54)
-               for (u, v), (w, z) in LOG_BASES)
+    """Cover all active binades with the two-logarithm separation theorem."""
+    bases = tuple(((u, v), (w, z)) for u, v, w, z in product(range(BASIS_LIMIT+1), repeat=4)
+                  if u*z-v*w == 1)
+    rows = sorted({row for basis in bases for row in basis})
+    assert IDENTITY in bases and 1075*SEPARATION_LN2[1] < 746*SEPARATION_GRID.unit
+    # With two nonzero terms of the same sign, the inverse basis change
+    # would force ell_m <= 2*BASIS_LIMIT*q*2**-192.
+    assert 2*BASIS_LIMIT < 1 << (192-116-54)
+    # A zero coefficient forces a one-log form with height <= 2*BASIS_LIMIT*746.
+    assert 2*BASIS_LIMIT*746*SEPARATION_GRID.unit < (35000-116)*SEPARATION_LN2[0]
     assert 2*(1075*(1 << 63)+1076) < 1 << 75
     assert 2*3*(1 << 75) < 1 << GAP_OVERHEAD
 
-    def loss_bits(height, coefficients, shift):
-        # Crossed denominators in Laurent's b'. Account separately for
-        # a coefficient vanishing after the integral basis change.
-        a, b = height
-        u, v = coefficients
-        b0 = (u/b+v/a)*(1 << shift)
-        b0_exp = b0.numerator.bit_length()-b0.denominator.bit_length()
-        if b0 < Fraction(2)**b0_exp:
-            b0_exp -= 1
-        scaled = b0/Fraction(2)**b0_exp
-        assert 1 <= scaled < 2
-        unit_log = ln2_hi if b0_exp >= 0 else ln2_lo
-        log_b0 = b0_exp*unit_log+Fraction(grid.log(scaled.numerator, scaled.denominator)[1], grid.unit)
-        h = max(30, log_b0+Fraction(19, 50))
-        loss = max(Fraction(179, 10)*h*h*a*b, a, b)
-        return max(192, shift+int(loss/ln2_lo)+1)
-
-    def bound(lo, hi, shift, bases):
-        x_log = min(746, (746+epsilon)/lo)
-        m_log = min(746, 746*hi+epsilon)
-        x_height = min(746, ceil(x_log+53*ln2_hi))
-        m_height = min(746, ceil(m_log+54*ln2_hi))
-        choices = []
-        for basis in bases:
-            distance = tuple(max(abs(u-v*lo), abs(u-v*hi)) for u, v in basis)
-            height = tuple(min(u*x_height+v*m_height,
-                               ceil(d*x_log+v*epsilon+(53*u+54*v)*ln2_hi))
-                           for (u, v), d in zip(basis, distance))
-            # The second row's slope gives the first coefficient of the form.
-            choices.append(loss_bits(height, distance[::-1], shift))
-        return min(choices)
-
-    rows = []
+    bounds = []
     for exponent in range(-64, 63):
         shift = max(0, 52-exponent)
-        cells = 32 if -8 <= exponent <= 5 else 1
+        cells = 128 if -6 <= exponent <= 5 else 1
+        rho = 8 if -10 <= exponent <= 10 else 24
         step = Fraction(2)**exponent/cells
-        bases = LOG_BASES if cells > 1 else LOG_BASES[:1]
-        bits = max(bound(i*step, (i+1)*step, shift, bases) for i in range(cells, 2*cells))
-        rows.append((exponent, bits))
-    assert len(rows) == 127
-    return tuple(rows)
+        band_bases, band_rows = (bases, rows) if cells > 1 else ((IDENTITY,), IDENTITY)
+        bits = max(separation_cell(i*step.numerator, (i+1)*step.numerator, step.denominator,
+                                   shift, rho, band_bases, band_rows) for i in range(cells, 2*cells))
+        bounds.append((exponent, max(35000, bits)))
+    return tuple(bounds)
 
 
 def exact_side(x, y, lower):

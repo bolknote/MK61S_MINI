@@ -89,11 +89,15 @@ class AgmCompare(unittest.TestCase):
                 self.assertLessEqual(2*true_hi/pi_lo, Fraction(hi, 1 << precision))
 
     def test_budget_and_mpfr_extremes(self):
-        self.assertEqual(len(agm.separation_by_exponent()), 127)
+        self.assertEqual([exponent for exponent, _ in agm.separation_by_exponent()],
+                         list(range(-64, 63)))
         budget = agm.uniform_work()
-        self.assertEqual(budget['gap_bits'], 4027268937)
-        self.assertEqual(budget['maximum_square_roots_per_pass'], 252)
-        self.assertEqual(budget['maximum_square_roots_all_passes'], 4204)
+        self.assertEqual(budget['gap_bits'], 568469355)
+        self.assertEqual(budget['worst_y_binade_exponent'], 0)
+        self.assertEqual(budget['bytes_per_significand'], 71058685)
+        self.assertEqual(budget['maximum_square_roots_per_pass'], 236)
+        self.assertEqual(budget['maximum_square_roots_all_passes'], 3692)
+        self.assertFalse(budget['practical_rp2040_bound_established'])
         oracle = Oracle()
         for x, y, lower in MIDPOINTS:
             self.assertFalse(check(oracle, x, y, oracle.reference('pow', x, y), lower, 192))
