@@ -27,6 +27,10 @@ def absolute(span):
     return span if span[0] > 0 else (-span[1], -span[0])
 
 
+def sign_of(span):
+    return 1 if span[0] > 0 else -1
+
+
 def divide_integer(interval, n):
     return interval[0]//n, -(-interval[1]//n)
 
@@ -67,8 +71,24 @@ def encoding_spans(block):
     return (x,x+(1 << wx)), (m,m+(1 << wm))
 
 
+def contains_box(block, x, m, chart):
+    xb,mb = encoding_spans(block)
+    if not xb[0] <= x[0] < x[1] <= xb[1] or not m[0] < m[1]:
+        return False
+    if chart != 'diagonal':
+        return mb[0] <= m[0] < m[1] <= mb[1]
+    x_center,m_center = sum(xb)//2,sum(mb)//2
+    half = m_center-mb[0]
+    # The certificate controls differences of mantissa indices. Opposite
+    # corners are the extrema of (m-m_center)-(x-x_center).
+    return (-half <= m[0]-m_center-(x[1]-1-x_center)
+            and m[1]-1-m_center-(x[0]-x_center) < half)
+
+
 class Entire:
     """Enclose the image of the discrete midpoint test on [-1,1]^2."""
+
+    max_scaled_radius = 16
 
     def __init__(self, block, degree, work_bits, shift=52, shear=0):
         ex,bx,em,bm,wx,wm = decode_block(block)
@@ -153,7 +173,7 @@ class Entire:
         candidates = []
         for sx in range(1,54):
             rx = 1 << sx
-            if rx*self.eta > 16:
+            if rx*self.eta > self.max_scaled_radius:
                 break
             for sy in range(1,54) if tensor else (sx,):
                 ry = 1 << sy
@@ -188,7 +208,7 @@ class Entire:
                     and 2 <= terms <= 256, 'invalid truncation')
         sx,sy = shifts if tensor else (shifts,shifts)
         rx,ry = 1 << sx,1 << sy
-        require(rx*self.eta <= 16 and rx*ry*abs(self.exp_xy) <= 16,
+        require(rx*self.eta <= self.max_scaled_radius and rx*ry*abs(self.exp_xy) <= 16,
                 'complex radius exceeds the supported scaling')
         cap = ceil(max(self.bounds(transform,rx,ry)))+self.degree
         if tensor:
@@ -213,6 +233,95 @@ class Entire:
         return checked_transform([[int(transform[i,j]) for j in range(3)] for i in range(3)])
 
 
+class MantissaChart(Entire):
+    """Use an affine base mantissa and let the midpoint center track it."""
+
+    max_scaled_radius = Fraction(1, 2)
+
+    def __init__(self, block, degree, work_bits, shift, diagonal=False):
+        ex,bx,em,bm,wx,wm = decode_block(block)
+        require(type(degree) is int and 1 <= degree <= 32
+                and type(work_bits) is int and 16 <= work_bits <= 768
+                and type(shift) is int and -10 <= shift <= 116, 'invalid proof parameters')
+        self.degree = degree
+        self.work_bits = work_bits
+        grid = self.grid = FixedInterval(work_bits+56*degree+96)
+        unit = grid.unit
+        ln2 = grid.log(2, 1)
+        self.x_half = hx = 1 << (wx-1)
+        hm = 1 << (wm-1)
+        self.x_center = a = Q+(2*bx+1)*hx
+        b = 2*(Q+(2*bm+1)*hm)+1
+        self.eta = Fraction(hx,a)
+
+        def log(a, d, e):
+            return add(grid.scale(ln2,e),grid.log(a,d))
+
+        self.lx = lx = log(a,Q,ex)
+        lm = log(b,2*Q,em)
+        sign = 1 if (lx[0] > 0) == (lm[0] > 0) else -1
+        q = Fraction(2)**shift
+        proj = grid.multiply(interval_fraction(grid,q),grid.divide(absolute(lm),absolute(lx)))
+        p0 = sum(proj)//(2*unit)
+        x_span = log(a-hx,Q,ex)[0], log(a+hx-1,Q,ex)[1]
+        m_low,m_high = b-2*hm,b+2*(hm-1)
+        if diagonal:
+            m_low -= 2*hx
+            m_high += 2*(hx-1)
+        require(2*Q <= m_low <= m_high < 4*Q,'midpoint band crosses a binade')
+        m_span = log(m_low,2*Q,em)[0],log(m_high,2*Q,em)[1]
+        guard = 1 << max(0,grid.precision-GAP)
+        require(absolute(m_span)[0] > guard, 'midpoint logarithm is inside the guard')
+        theta = add(grid.multiply(interval_fraction(grid,sign*p0/q),lx),grid.scale(lm,-1))
+        if diagonal:
+            # B=b+2*(A-a)+2*T, |T|<=hm. Bound log((B/b)/(A/a))
+            # directly so movement along the band does not inflate it.
+            radius = Fraction(abs(2*a-b)*hx+2*a*hm,b*(a-hx))
+            require(radius < 1,'diagonal span reaches the logarithmic pole')
+            margin = Fraction(max(map(abs,theta))+guard,unit)+radius/(1-radius)
+        else:
+            dx = add(x_span,grid.scale(lx,-1))
+            dm = add(m_span,grid.scale(lm,-1))
+            residual = add(add(dm,grid.scale(dx,-1)),grid.scale(theta,-1))
+            margin = Fraction(max(map(abs,residual))+guard,unit)
+        self.y_half = ceil(q*margin/Fraction(absolute(x_span)[0],unit))
+        require(self.y_half > 0,'empty projection')
+
+        # L(u)=lx+log(1+eta*u). For p_c=s*q+(p0-s*q)*lx/L(u),
+        # s*p_c*L(u)/q = s*p0*lx/q+log(1+eta*u) identically.
+        self.alpha = p0-sign*q
+        self.rate = sign*self.y_half/q
+        self.exp_xy = self.eta*self.rate
+        self.c0 = grid.multiply(interval_fraction(grid,self.rate),lx)
+        self.beta = grid.multiply(grid.rational(b,2),exp_near_zero(grid,theta))
+        self.constant = add(self.beta,grid.rational(-b,2))
+        self.linear = (grid.multiply(self.beta,interval_fraction(grid,self.eta)),
+                       grid.multiply(self.beta,self.c0))
+        d1 = grid.divide(interval_fraction(grid,-self.alpha*self.eta*sign_of(lx)),absolute(lx))
+        self.y_slope = Fraction(sum(d1),2*unit)
+        self.y_slope_error = Fraction(d1[1]-d1[0],2*unit)
+        self.vertical = Fraction(1,1 << (GAP-54))
+
+    def bounds(self, transform, rx, ry):
+        unit = self.grid.unit
+        r = rx*self.eta
+        require(0 <= r <= self.max_scaled_radius,'mantissa radius reaches the logarithmic pole')
+        delta = r/(1-r)
+        floor = Fraction(absolute(self.lx)[0],unit)
+        require(floor > delta,'mantissa radius reaches a zero of the denominator')
+        p_error = (rx*self.y_slope_error + abs(self.alpha)*
+                   (r*r/(2*(1-r)*floor)+delta*delta/(floor*(floor-delta))))
+        error_rate = ry*abs(self.rate)*delta
+        z = ry*Fraction(max(map(abs,self.c0)),unit)+error_rate
+        m_error = Fraction(self.beta[1],unit)*((1+r)*z*z*exp_upper(z)/2+error_rate+r*z)
+        mx,my = self.linear
+        constant = Fraction(max(map(abs,self.constant)),unit)
+        ax = self.x_center*self.eta
+        return tuple(abs(c)*constant + rx*max(abs(a*ax+b*self.y_slope+c*Fraction(v,unit)) for v in mx)
+                     + ry*max(abs(b*self.y_half+c*Fraction(v,unit)) for v in my)
+                     + abs(b)*p_error+abs(c)*m_error for a,b,c in transform)
+
+
 def taylor_exp(grid, coefficients, terms):
     terms_list = [grid.rational(1)]
     for j in range(1,terms):
@@ -223,9 +332,58 @@ def taylor_exp(grid, coefficients, terms):
     return terms_list
 
 
+def mantissa_coordinates(geometry, series):
+    grid = geometry.grid
+    nx,ny = series.x_terms,series.m_terms
+    lx = geometry.lx
+    log = [(0,0)]+[interval_fraction(grid,(-1)**(i+1)*geometry.eta**i/i) for i in range(1,nx)]
+    fixed_rate = interval_fraction(grid,geometry.rate)
+    rate = [geometry.c0]+[grid.multiply(fixed_rate,v) for v in log[1:]]
+    inv_sign = sign_of(lx)
+    abs_lx = absolute(lx)
+    alpha = interval_fraction(grid,geometry.alpha)
+    delta_p = [(0,0)]
+    for i in range(1,nx):
+        c = grid.multiply(alpha,log[i])
+        for j in range(1,i):
+            c = add(c,grid.multiply(log[j],delta_p[i-j]))
+        delta_p.append(grid.divide(grid.scale(c,-inv_sign),abs_lx))
+
+    # Expand exp(v*rate(u)) one coefficient of v at a time.
+    exp_v = [[grid.rational(1)]+[(0,0)]*(nx-1)]
+    for j in range(1,ny):
+        prev = exp_v[-1]
+        row = []
+        for i in range(nx):
+            c = (0,0)
+            for k in range(i+1):
+                c = add(c,grid.multiply(prev[i-k],rate[k]))
+            row.append(divide_integer(c,j))
+        exp_v.append(row)
+    scaled_eta = interval_fraction(grid,geometry.eta)
+    base = [(0,0)]*len(series.indices)
+    exponent = base.copy()
+    base[series.locations[1,0]] = grid.rational(geometry.x_half)
+    exponent[series.locations[0,1]] = grid.rational(geometry.y_half)
+    for i in range(1,nx):
+        exponent[series.locations[i,0]] = delta_p[i]
+    midpoint = []
+    for i,j in series.indices:
+        c = exp_v[j][i]
+        if i:
+            c = add(c,grid.multiply(scaled_eta,exp_v[j][i-1]))
+        midpoint.append(grid.multiply(c,geometry.beta) if (i,j) != (0,0) else geometry.constant)
+    return base,exponent,midpoint
+
+
 def basis(geometry, transform, terms):
     grid = geometry.grid
     series = Series(terms, grid)
+    if isinstance(geometry,MantissaChart):
+        base,exponent,midpoint = mantissa_coordinates(geometry,series)
+        linear = [[add(add(grid.scale(x,a),grid.scale(y,b)),grid.scale(m,c))
+                   for x,y,m in zip(base,exponent,midpoint)] for a,b,c in transform]
+        return series.newton_basis(linear,geometry.degree)
     origin = series.locations[0,0]
     at_y = series.locations[0,1]
     linear = []
@@ -414,7 +572,7 @@ def verify(row):
     fields = {'block','degree','work_bits','q_shift','shear','transform','radius_shift','terms','polynomials'}
     require(__debug__ and isinstance(row,dict) and fields <= row.keys(),
             'invalid entire-surface certificate')
-    geom = Entire(row['block'],row['degree'],row['work_bits'],row['q_shift'],row['shear'])
+    geom = geometry(row['block'],row['degree'],row['work_bits'],row['q_shift'],row['shear'],row.get('chart'))
     transform = checked_transform(row['transform'])
     rank = len(exponents(geom.degree,3))
     polynomials = row['polynomials']
@@ -455,9 +613,16 @@ def reduce(lattice, delta, flatter):
     return reduced,'flatter'
 
 
+def geometry(block, degree, work_bits, shift, shear, chart):
+    if chart is None:
+        return Entire(block,degree,work_bits,shift,shear)
+    require(chart in ('mantissa','diagonal') and shear == 0,'invalid surface chart')
+    return MantissaChart(block,degree,work_bits,shift,chart == 'diagonal')
+
+
 def generate(block, degree, work_bits, delta, shift=52, shear=4,
-             bands=False, tensor=False, mesh=0, flatter=None):
-    geom = Entire(block,degree,work_bits,shift,shear)
+             bands=False, tensor=False, mesh=0, flatter=None, chart=None):
+    geom = geometry(block,degree,work_bits,shift,shear,chart)
     transform = geom.adapt()
     radius, terms = geom.choose_terms(transform,tensor)
     start = process_time()
@@ -513,6 +678,8 @@ def generate(block, degree, work_bits, delta, shift=52, shear=4,
                 break
     result = dict(block=block,degree=degree,work_bits=work_bits,q_shift=shift,
                   transform=transform,radius_shift=radius,terms=terms,shear=shear)
+    if chart is not None:
+        result['chart'] = chart
     if mesh:
         result['mesh'] = mesh
     if selected:
@@ -538,6 +705,9 @@ def main():
     parser.add_argument('--inverse',action='store_true')
     parser.add_argument('--q-shift',type=int,default=52)
     parser.add_argument('--shear',type=int,default=4)
+    charts = parser.add_mutually_exclusive_group()
+    charts.add_argument('--mantissa-chart',dest='chart',action='store_const',const='mantissa')
+    charts.add_argument('--diagonal-chart',dest='chart',action='store_const',const='diagonal')
     parser.add_argument('--bands',action='store_true')
     parser.add_argument('--tensor',action='store_true')
     parser.add_argument('--mesh',type=int,choices=(0,8,16,32),default=0)
@@ -560,8 +730,8 @@ def main():
         print('VERIFIED_BLOCK')
         return 0
     block = args.block or sample_blocks(args.width,1,args.seed,args.inverse,args.midpoint_width)[0]
-    report = generate(block,args.degree,args.work,args.delta,args.q_shift,args.shear,
-                      args.bands,args.tensor,args.mesh,args.flatter)
+    report = generate(block,args.degree,args.work,args.delta,args.q_shift,
+                      0 if args.chart else args.shear,args.bands,args.tensor,args.mesh,args.flatter,args.chart)
     print(json.dumps(report),flush=True)
     return 0 if 'polynomials' in report['result'] else 2
 

@@ -86,6 +86,62 @@ def near_count(n, modulus, step, start, radius):
             - floor_sum(n, modulus, step, start-radius-1))
 
 
+def clipped_floor_sum(n, modulus, step, start, height):
+    """Sum floors clipped to [0,height] over an exact integer progression."""
+    if step < 0:
+        start += (n-1)*step
+        step = -step
+    if step == 0:
+        return n*min(height,max(0,start//modulus))
+    first = min(n,max(0,-(start//step)))
+    stop = min(n,max(first,-((start-height*modulus)//step)))
+    return floor_sum(stop-first,modulus,step,start+first*step)+(n-stop)*height
+
+
+def scale_solutions(n, denominator, lower, upper, m_scales):
+    """Count (p,f) with lower(p) <= denominator*f <= upper(p)."""
+    start,stop = m_scales
+    lo_step,lo_origin = lower
+    hi_step,hi_origin = upper
+    adjust = (1-start)*denominator
+    height = stop-start
+    return (clipped_floor_sum(n,denominator,hi_step,hi_origin+adjust,height)
+            - clipped_floor_sum(n,denominator,lo_step,lo_origin+adjust-1,height))
+
+
+def project_scales(x_first, x_stop, m_first, m_stop, precision,
+                   x_exponents=(-1074,1024), m_exponents=(-1075,1024), y_exponents=(-64,63)):
+    """Exclude an entire rectangle on exact y and scale grids using endpoint logs."""
+    require(__debug__ and 128 <= precision <= MAX_PRECISION, 'invalid projected precision')
+    require(BASE_UNIT <= x_first < x_stop <= 2*BASE_UNIT, 'invalid base significand span')
+    require(MIDPOINT_UNIT <= m_first < m_stop <= 2*MIDPOINT_UNIT,
+            'invalid midpoint significand span')
+    require(-1074 <= x_exponents[0] < x_exponents[1] <= 1024
+            and -1075 <= m_exponents[0] < m_exponents[1] <= 1024
+            and -64 <= y_exponents[0] < y_exponents[1] <= 63, 'invalid projected exponent span')
+    started = monotonic()
+    unit = 1 << precision
+    u = (log2_approx(x_first,BASE_UNIT,precision), log2_approx(x_stop-1,BASE_UNIT,precision)+2)
+    v = (log2_approx(m_first,MIDPOINT_UNIT,precision), log2_approx(m_stop-1,MIDPOINT_UNIT,precision)+2)
+    n = BASE_UNIT
+    totals = [0]*(y_exponents[1]-y_exponents[0])
+    for i,shift in enumerate(range(*y_exponents)):
+        scale = 1 << max(shift-52,0)
+        q = 1 << max(52-shift,0)
+        denominator = q*unit
+        # The guard, multiplied by q*unit/ln(2), is below one unit.
+        lower,upper = -q*v[1]-1,-q*v[0]+1
+        for e in range(*x_exponents):
+            a,b = (scale*(e*unit+edge) for edge in u)
+            for lo,hi in ((a,b),(-b,-a)):
+                totals[i] += scale_solutions(n,denominator,(lo,lo*n+lower),(hi,hi*n+upper),m_exponents)
+    total = sum(totals)
+    return dict(status='VERIFIED_BLOCK' if total == 0 else 'OPEN_PROJECTION',
+                x=[x_first,x_stop], m=[m_first,m_stop], precision=precision, gap_bits=GAP,
+                x_exponents=x_exponents, m_exponents=m_exponents, y_exponents=y_exponents,
+                candidates=total, by_y_exponent=totals, elapsed_s=round(monotonic()-started,3))
+
+
 def odd_part(coefficient):
     return coefficient//(coefficient & -coefficient)
 
@@ -197,15 +253,23 @@ def main():
         parser.add_argument(name, type=lambda v: int(v, 0))
     parser.add_argument('--precision', type=int, default=512)
     parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--project-scales',action='store_true')
+    parser.add_argument('--x-exponents',type=int,nargs=2,default=(-1074,1024))
+    parser.add_argument('--m-exponents',type=int,nargs=2,default=(-1075,1024))
+    parser.add_argument('--y-exponents',type=int,nargs=2,default=(-64,63))
     args = parser.parse_args()
     if not __debug__:
         parser.error('Python assertions must be enabled')
     try:
-        result = check_block(**vars(args))
+        spans = args.x_first,args.x_stop,args.m_first,args.m_stop,args.precision
+        if args.project_scales:
+            result = project_scales(*spans,args.x_exponents,args.m_exponents,args.y_exponents)
+        else:
+            result = check_block(*spans,args.workers)
     except ValueError as error:
         parser.error(str(error))
     print(json.dumps(result, sort_keys=True))
-    return 2 if result['open'] else 0
+    return 0 if result['status'] == 'VERIFIED_BLOCK' else 2
 
 
 if __name__ == '__main__':

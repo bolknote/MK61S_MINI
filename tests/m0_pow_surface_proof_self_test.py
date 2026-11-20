@@ -19,6 +19,7 @@ sys.path.insert(0, str(RESEARCH))
 sys.path.insert(0, str(ROOT/'dev/tools'))
 import midpoint_surface_rotated as surface
 import midpoint_entire_surface as entire
+import midpoint_scale_grid as scales
 import verify_m0_pow_binary64 as full_proof
 
 
@@ -39,6 +40,20 @@ ENTIRE_FIXTURE = dict(
     polynomials=[[0, -31172865051341687850, -5362806563909542684, -77963855125861519336,
                   37264284383867899, 6407569221138521, 1101777317987741, 93282411394665296,
                   16039849361312039, 233510677030735584]],
+)
+MANTISSA_FIXTURE = dict(
+    ENTIRE_FIXTURE, chart='mantissa', shear=0,
+    transform=[[-4, -5, 3], [3, 3, -2], [-2, -3, 2]],
+    polynomials=[[0, 7986828887797239997, -6733985887797764799, 9080828889658286008,
+                  102454665322413640, -87422435044737209, 74595745592534104,
+                  116386932893537536, -99310549196724643, 132213775777744719]],
+)
+DIAGONAL_FIXTURE = dict(
+    MANTISSA_FIXTURE, block=[1022, 0, 1023, 1, 5, 4], chart='diagonal',
+    transform=[[0, 1, 0], [1, 0, 0], [-1, -708, 1]], radius_shift=[43, 36], terms=[5, 6],
+    polynomials=[[0, 1601036784504775588, -1566603569850711, -634698384434921066,
+                  -64065117072972, 62686024397, -61336619, 25396599593693,
+                  -24850155126, -10067861798705]],
 )
 
 
@@ -149,6 +164,53 @@ class SurfaceProofTest(unittest.TestCase):
                           dict(ENTIRE_FIXTURE, terms=[1,5]), dict(ENTIRE_FIXTURE, mesh=7)):
             with self.assertRaises(ValueError):
                 entire.verify(malformed)
+
+    def test_mantissa_chart_uses_the_same_exponent_coverage_check(self):
+        x,m = entire.encoding_spans(MANTISSA_FIXTURE['block'])
+        for negative in (False,True):
+            box = full_proof.Box(x,(full_proof.Y_MIN,full_proof.Y_MAX),m,negative)
+            self.assertEqual(full_proof.check_leaf(box,['entire',MANTISSA_FIXTURE]),'entire')
+        with self.assertRaisesRegex(ValueError,'invalid surface chart'):
+            entire.verify(dict(MANTISSA_FIXTURE,shear=4))
+        with self.assertRaisesRegex(ValueError,'integer solutions not excluded'):
+            entire.verify(dict(MANTISSA_FIXTURE,polynomials=[[1]+[0]*9]))
+        positive = full_proof.Box(x,(full_proof.Y_MIN,full_proof.Y_MAX),m,False)
+        with self.assertRaisesRegex(ValueError,'does not cover its exponent grid'):
+            full_proof.check_leaf(positive,['entire',dict(MANTISSA_FIXTURE,q_shift=51)])
+
+    def test_diagonal_coverage_uses_both_opposite_corners(self):
+        x,m = entire.encoding_spans(DIAGONAL_FIXTURE['block'])
+        x_first = x[0]
+        m_first = m[0]-16
+        y = (full_proof.Y_MIN,full_proof.Y_MAX)
+        row = ['entire',DIAGONAL_FIXTURE]
+        covered = full_proof.Box((x_first,x_first+4),y,(m_first+3,m_first+16),False)
+        self.assertEqual(full_proof.check_leaf(covered,row),'entire')
+        for outside in ((m_first+2,m_first+16),(m_first+3,m_first+17)):
+            box = full_proof.Box(covered.x,y,outside,False)
+            with self.assertRaisesRegex(ValueError,'does not cover its box'):
+                full_proof.check_leaf(box,row)
+        invalid = dict(DIAGONAL_FIXTURE,block=[1022,0,1023,0,5,4])
+        with self.assertRaisesRegex(ValueError,'crosses a binade'):
+            entire.verify(invalid)
+
+    def test_scale_projection_includes_closed_endpoints_and_both_signs(self):
+        for lo_step,hi_step,origin in product(range(-4,5),range(-4,5),range(-4,5)):
+            n,denominator = 7,5
+            lower = (lo_step,origin-60)
+            upper = (hi_step,origin+1)
+            bounds = (-9,5)
+            expected = sum(lower[0]*p+lower[1] <= denominator*f <= upper[0]*p+upper[1]
+                           for p in range(n) for f in range(*bounds))
+            self.assertEqual(scales.scale_solutions(n,denominator,lower,upper,bounds),expected)
+
+        # The underflow midpoint 2^-1075 is attained for x=2 and y=-1075.
+        a,b = scales.BASE_UNIT,scales.MIDPOINT_UNIT
+        tie = scales.project_scales(a,a+1,b,b+1,168,(1,2),(-1075,-1074),(10,11))
+        self.assertEqual(tie['candidates'],1)
+        self.assertEqual(tie['status'],'OPEN_PROJECTION')
+        excluded = scales.project_scales(a,a+1,b,b+1,168,(1,2),(-1075,-1074),(9,10))
+        self.assertEqual(excluded['status'],'VERIFIED_BLOCK')
 
     def test_entire_polynomial_bands_allow_more_than_one_integer(self):
         powers = surface.exponents(1,3)

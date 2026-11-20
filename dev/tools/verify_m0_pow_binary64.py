@@ -431,14 +431,12 @@ def scale_grid_spans(box, limit):
 
 
 def check_entire_leaf(box, certificate):
-    from midpoint_entire_surface import encoding_spans, verify
+    from midpoint_entire_surface import contains_box, verify
 
     if not isinstance(certificate,dict) or 'block' not in certificate:
         raise InvalidProof('invalid entire-surface leaf')
-    x, m = encoding_spans(certificate['block'])
     q_shift = certificate.get('q_shift')
-    if (not x[0] <= box.x[0] < box.x[1] <= x[1] or not m[0] <= box.m[0] < box.m[1] <= m[1]
-            or type(q_shift) is not int):
+    if type(q_shift) is not int or not contains_box(certificate['block'],box.x,box.m,certificate.get('chart')):
         raise InvalidProof('entire-surface certificate does not cover its box')
     # Check the finest dyadic grid left after projecting the strip.
     # Greater positive encodings have a spacing that is a multiple of it.
