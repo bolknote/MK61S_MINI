@@ -120,7 +120,7 @@ class CurveBounds:
 
 
 class Geometry(CurveBounds):
-    def __init__(self, block, degree, work_bits, origin=None):
+    def __init__(self, block, degree, work_bits, origin=None, gap=GAP):
         require(block.width >= 1, 'a singleton needs the direct rule')
         require(type(degree) is int and 1 <= degree <= 48
                 and type(work_bits) is int and 32 <= work_bits <= 2400, 'invalid search shape')
@@ -148,7 +148,7 @@ class Geometry(CurveBounds):
         linear_log = grid.rational(self.sign*self.relative.numerator, self.relative.denominator)
         self.slope = grid.scale(grid.divide(grid.multiply(value,linear_log),self.log_x), -1)
         self.real_curvature, self.real_log = self.disk(1)
-        self.vertical = Fraction(1 << block.shift, 1 << GAP) / self.real_log
+        self.vertical = Fraction(1 << block.shift, 1 << gap) / self.real_log
 
     def disk(self, radius):
         a = self.relative*radius
@@ -287,9 +287,9 @@ def no_modular_roots(degree, polynomials, prime):
     return None
 
 
-def verify_proof(block, proof):
+def verify_proof(block, proof, gap=GAP):
     require(isinstance(proof,dict), 'invalid proof row')
-    geo = Geometry(block,proof['degree'],proof['work_bits'],proof['origin'])
+    geo = Geometry(block,proof['degree'],proof['work_bits'],proof['origin'],gap)
     verify_curve(geo, proof, exact_columns)
 
 

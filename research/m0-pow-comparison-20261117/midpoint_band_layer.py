@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate and replay complete coverage for the first layer above |y|=2^-63."""
+"""Generate and replay complete midpoint coverage in a small-exponent binade."""
 
 import argparse
 from collections import Counter
@@ -11,6 +11,7 @@ import gzip
 from hashlib import sha256
 from itertools import islice
 import json
+from math import floor
 from pathlib import Path
 import sys
 from time import monotonic
@@ -28,36 +29,73 @@ PRECISION = 144
 MIN_P = 1 << 52
 MAX_P = 2*MIN_P-1
 MIDPOINTS = (ONE-1, ONE)
+INTERVAL_GAPS = {480:512, 900:1024}
 
 
-def verify_reduction():
+def verify_reduction(shift=SHIFT, gap=GAP):
+    require(type(shift) is int and 105 <= shift <= 116, 'outside the small-exponent plan')
+    require(type(gap) is int and gap in (*INTERVAL_GAPS,GAP), 'outside the certified gap range')
     # Positive finite x, excluding x=1, satisfies abs(ln(x)) <= 1074*ln(2).
     grid, (_, log2_hi) = log_grid(PRECISION)
     max_log = Fraction(1074*log2_hi, grid.unit)
-    cut = Fraction(1, 1 << GAP)
-    limit = Fraction(MAX_P, 1 << SHIFT)*max_log+cut
-    require(limit < min(Fraction(3, 1 << 54), Fraction(3, (1 << 53)+3)),
-            'more rounding midpoints enter the layer')
-    # The two other midpoints nearest 1 are 1-3*2^-54 and 1+3*2^-53.
-    # Use -ln(1-a)>=a and ln(1+a)>=a/(1+a).
+    cut = Fraction(1, 1 << gap)
+    limit = Fraction(MAX_P, 1 << shift)*max_log+cut
+    require(limit < Fraction(1, 3), 'rounding midpoints may leave (1/2, 2)')
     require(cut < min(Fraction(1, 1 << 54), Fraction(1, (1 << 53)+1)),
             'opposite logarithmic signs may enter the strip')
-    require(Fraction(MIN_P, 1 << SHIFT) == Fraction(1, 1 << 63)
-            and Fraction(MAX_P+1, 1 << SHIFT) == Fraction(1, 1 << 62)
-            and PRECISION+SHIFT < GAP, 'wrong exponent grid or directed unit')
+    require(MIN_P == 1 << 52 and MAX_P+1 == 1 << 53
+            and PRECISION+shift < gap, 'wrong exponent grid or directed unit')
+    # Below one the odd distances are (2j-1)*2^-54, above one
+    # (2j-1)*2^-53. Use -ln(1-a)>=a and ln(1+a)>=a/(1+a).
+    down = (floor(limit*(1 << 54))+1)//2
+    up = (floor(limit/(1-limit)*(1 << 53))+1)//2
+    midpoints = tuple(range(ONE-1, ONE-1-down, -1))+tuple(range(ONE, ONE+up))
+    require(shift != SHIFT or midpoints == MIDPOINTS, 'q115 midpoint reduction changed')
+    return midpoints
 
 
-@lru_cache(maxsize=2)
-def scaled_target(midpoint):
+def verify_early_interval(shift, gap=900):
+    """Check the existing 512/1024-bit interval model for this exponent binade."""
+    terminal = INTERVAL_GAPS[gap]
+    verify_reduction(shift,gap)
+    max_y = Fraction(MAX_P,1 << shift)
+    result = {}
+    for precision in range(512,terminal+1,512):
+        unit = Fraction(1,1 << precision)
+        log_units = 12*(precision+16)+4+1074
+        require((745+log_units*unit)*MAX_P < (1 << 64),'unscaled logarithm may overflow')
+        # The multiplication by the mantissa is exact. The subsequent
+        # right shift makes the width at most |y|*log_width + 2 units.
+        q_width = (log_units*max_y+2)*unit
+        endpoint_width = (4*(precision+16)+2)*unit
+        argument = 745*max_y+q_width
+        require(argument < Fraction(1,1 << 20),'the reduction index may be nonzero')
+        relative_width = 4*(q_width+endpoint_width)
+        if precision == terminal:
+            require(0 < relative_width < 1
+                    and relative_width/(1-relative_width) < Fraction(1,1 << gap),
+                    'an undecided rounding could exceed the certified logarithmic gap')
+        require((Fraction(1,3)+unit)**2+unit < Fraction(1,8),'log series contraction changed')
+        argument_bits = 20
+        while argument < Fraction(1,1 << (argument_bits+1)):
+            argument_bits += 1
+        log_terms = -(-precision//3)
+        exp_terms = -(-precision//argument_bits)
+        result[precision] = 2+2*log_terms+4*exp_terms
+    return result
+
+
+@lru_cache(maxsize=1024)
+def scaled_target(midpoint, shift):
     lo, hi = absolute(log_point(midpoint, PRECISION, True))
     # One unit covers Q*2^-GAP after scaling by 2^PRECISION.
-    return (lo << SHIFT)-1, (hi << SHIFT)+1
+    return (lo << shift)-1, (hi << shift)+1
 
 
 def sides(block, index):
     x = block.encoding+index
     lo, hi = absolute(log_point(x, PRECISION, False))
-    target_lo, target_hi = scaled_target(block.midpoint)
+    target_lo, target_hi = scaled_target(block.midpoint,block.shift)
     below, above = MAX_P*hi < target_lo, MIN_P*lo > target_hi
     return (below, above) if block.binade >= 0 else (above, below)
 
@@ -94,14 +132,14 @@ def margin(block):
     return lo, max(lo, hi)
 
 
-def spans(width):
-    verify_reduction()
+def spans(width, shift=SHIFT, gap=GAP):
+    midpoints = verify_reduction(shift,gap)
     require(type(width) is int and 1 <= width <= 52, 'invalid root block width')
-    for m in MIDPOINTS:
+    for m in midpoints:
         overall = 0
         for e in range(-1074, 1024):
             bits = min(52, e+1074)
-            whole = Block(m, e, 0, bits, SHIFT)
+            whole = Block(m, e, 0, bits, shift)
             overall += whole.base
             lo, hi = margin(whole)
             if lo == hi:
@@ -120,13 +158,13 @@ def indexed_spans(plan):
         position = end
 
 
-def tasks(plan, first, last):
+def tasks(plan, first, last, shift=SHIFT):
     for begin, end, m, e, width, start in indexed_spans(plan):
         if begin >= last:
             return
         low, high = max(begin, first), min(end, last)
         for index in range(low, high):
-            yield Block(m, e, start + ((index-begin) << width), width, SHIFT)
+            yield Block(m, e, start + ((index-begin) << width), width, shift)
 
 
 def shape(width):
@@ -137,18 +175,18 @@ def shape(width):
     raise ValueError('unsupported proof width')
 
 
-def direct_excludes(block):
+def direct_excludes(block, gap=GAP):
     for index in range(block.first, block.first+(1 << block.width)):
         if any(sides(block,index)):
             continue
         x = block.encoding + index
-        for precision in (192, GAP+128):
+        for precision in (192, gap+128):
             lo,hi = absolute(log_point(x,precision,False))
             require(lo > 0, 'the candidate denominator does not exclude zero')
             mlo,mhi = absolute(log_point(block.midpoint,precision,True))
-            error = 1 << max(0,precision+SHIFT-GAP)
-            first = max(MIN_P,-(-((mlo << SHIFT)-error)//hi))
-            last = min(MAX_P,((mhi << SHIFT)+error)//lo)
+            error = 1 << max(0,precision+block.shift-gap)
+            first = max(MIN_P,-(-((mlo << block.shift)-error)//hi))
+            last = min(MAX_P,((mhi << block.shift)+error)//lo)
             if first > last:
                 break
         else:
@@ -156,13 +194,13 @@ def direct_excludes(block):
     return True
 
 
-def generate_block(block, flatter=None, inverse=False):
+def generate_block(block, flatter=None, inverse=False, gap=GAP):
     fields = list(astuple(block))
     if block.width <= 8:
-        return [[fields, 'direct' if direct_excludes(block) else 'open']]
+        return [[fields, 'direct' if direct_excludes(block,gap) else 'open']]
     degree, work_bits = shape(block.width)
     proof = None
-    if flatter or inverse:
+    if flatter or inverse or gap != GAP:
         from midpoint_exponential_row import flatter_reducer
         from midpoint_rotated_band import Geometry, arb_columns, exact_columns, search_curve
         from midpoint_surface_rotated import reduce_lattice
@@ -171,13 +209,13 @@ def generate_block(block, flatter=None, inverse=False):
         if inverse:
             from midpoint_band_inverse import generate
             try:
-                proof = generate(block,degree,work_bits,reducer)['proof']
+                proof = generate(block,degree,work_bits,reducer,gap)['proof']
             except ValueError:
                 pass
         if proof is None:
             shapes = ((degree-2,work_bits+16),(degree,work_bits)) if block.width >= 38 else ((degree,work_bits),)
             for d,bits in shapes:
-                geo = Geometry(block,d,bits)
+                geo = Geometry(block,d,bits,gap=gap)
                 proof = search_curve(geo,1,arb_columns,exact_columns,reducer)['proof']
                 if proof:
                     proof['origin'] = geo.origin
@@ -189,10 +227,10 @@ def generate_block(block, flatter=None, inverse=False):
     half = 1 << (block.width-1)
     left = Block(block.midpoint, block.binade, block.first, block.width-1, block.shift)
     right = Block(block.midpoint, block.binade, block.first+half, block.width-1, block.shift)
-    return generate_block(left,flatter,inverse)+generate_block(right,flatter,inverse)
+    return generate_block(left,flatter,inverse,gap)+generate_block(right,flatter,inverse,gap)
 
 
-def verify_rows(job):
+def verify_rows(job, gap=GAP):
     root, records = job
     position = root.first
     stop = position+(1 << root.width)
@@ -206,11 +244,11 @@ def verify_rows(job):
         if row[1] == 'polynomial' and len(row) == 3:
             if isinstance(row[2],dict) and row[2].get('chart') == 'inverse':
                 from midpoint_band_inverse import verify_proof as verify_inverse
-                verify_inverse(piece,row[2])
+                verify_inverse(piece,row[2],gap)
             else:
-                verify_proof(piece,row[2])
+                verify_proof(piece,row[2],gap)
         elif row[1:] == ['direct']:
-            require(piece.width <= 8 and direct_excludes(piece), 'direct leaf does not exclude its block')
+            require(piece.width <= 8 and direct_excludes(piece,gap), 'direct leaf does not exclude its block')
         else:
             require(row[1:] == ['open'], 'invalid layer rule')
         counts[row[1]] += 1

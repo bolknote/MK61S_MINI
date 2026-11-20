@@ -31,6 +31,11 @@ ONE = 0x3ff0000000000000
 INF = 0x7ff0000000000000
 Y_MIN = 0x3bf0000000000000           # 2**-64
 Y_NEXT = 0x3c00000000000000          # 2**-63
+Y_AFTER_Q115 = 0x3c10000000000000    # 2**-62
+BAND_RANGES = {
+    'q115': (115,Y_NEXT,Y_AFTER_Q115),
+    'q114': (114,Y_AFTER_Q115,0x3c20000000000000),
+}
 Y_MAX = 0x43e0000000000000           # 2**63, excluded
 SIGNIFICAND = 1 << 52
 FRACTION_MASK = SIGNIFICAND-1
@@ -455,6 +460,11 @@ def check_leaf(box, row, mixed=False):
         if box.y[1] > Y_NEXT:
             raise InvalidProof('q116 cannot certify a box outside 2**-64 <= |y| < 2**-63')
         return 'q116'
+    if len(row) == 1 and row[0] in BAND_RANGES:
+        _, first, stop = BAND_RANGES[row[0]]
+        if not first <= box.y[0] < box.y[1] <= stop:
+            raise InvalidProof(f'{row[0]} cannot certify a box outside its exponent binade')
+        return row[0]
     if row == ['origin'] and origin_covered(box):
         check_origin_theorem()
         return 'origin'
@@ -575,9 +585,27 @@ def verify_q116(layer, edge, workers, flint):
         raise InvalidProof('q116 layer did not replay completely')
 
 
-def try_leaf(box, precision, reuse_layer, mixed=False):
+def verify_band(label, directory, workers, flint):
+    if directory is None or not directory.is_dir():
+        raise InvalidProof(f'{label} requires the original archive directory')
+    from midpoint_band_run import GAP as band_gap, verify_complete
+    from midpoint_grid import verify_interval_policy
+
+    shift, first, stop = BAND_RANGES[label]
+    if (band_gap != GAP or dyadic(first) != (SIGNIFICAND,-shift)
+            or dyadic(stop-1) != (2*SIGNIFICAND-1,-shift)):
+        raise InvalidProof(f'the {label} layer does not match the proof domain')
+    verify_interval_policy()
+    verify_complete(directory,42,shift,workers,flint)
+
+
+def try_leaf(box, precision, reuse_layer, mixed=False, reuse_bands=()):
     if reuse_layer and box.y[1] <= Y_NEXT:
         return ['q116']
+    for label in reuse_bands:
+        _, first, stop = BAND_RANGES[label]
+        if first <= box.y[0] < box.y[1] <= stop:
+            return [label]
     width, k = powers_width(box)
     if width <= EXACT_BITS:
         return ['powers']
@@ -595,9 +623,14 @@ def try_leaf(box, precision, reuse_layer, mixed=False):
     return None
 
 
-def choose_split(box):
+def choose_split(box, reuse_bands=()):
     if box.y[0] < Y_NEXT < box.y[1]:
         return 'y', Y_NEXT
+    for label in reuse_bands:
+        _, first, stop = BAND_RANGES[label]
+        for cut in (first,stop):
+            if box.y[0] < cut < box.y[1]:
+                return 'y', cut
     xlog, mlog = enclosures(box, 128)
     possible_lo, possible_hi = candidate_y(box, 128, (xlog, mlog))
     if box.y[0] < possible_lo < box.y[1]:
@@ -621,8 +654,8 @@ def choose_split(box):
 
 
 def try_frontier_leaf(request):
-    box, reuse_layer, mixed = request
-    row = try_leaf(box, 128, reuse_layer, mixed)
+    box, reuse_layer, mixed, reuse_bands = request
+    row = try_leaf(box, 128, reuse_layer, mixed, reuse_bands)
     if row is not None:
         return row
     row = try_affine(box)
@@ -638,22 +671,22 @@ def try_frontier_leaf(request):
 
 
 def analyze(request):
-    box, reuse_layer, mixed = request
+    box, reuse_layer, mixed, reuse_bands = request
     row = try_frontier_leaf(request)
     if row is not None:
         return row
-    split = choose_split(box)
+    split = choose_split(box,reuse_bands)
     if split is not None:
         axis, cut = split
         return ['split', axis, f'{cut:016x}']
     for precision in (256, 1024, 4096, 16448, 32832, 65536):
-        row = try_leaf(box, precision, reuse_layer, mixed)
+        row = try_leaf(box, precision, reuse_layer, mixed, reuse_bands)
         if row is not None:
             return row
     return ['open']
 
 
-def close_frontier(previous, stream, domain, reuse_layer, workers=1, mixed=False):
+def close_frontier(previous, stream, domain, reuse_layer, workers=1, mixed=False, reuse_bands=()):
     """Try to close each original open leaf, keeping the partition geometry."""
     schema = MIXED_SCHEMA if mixed else SCHEMA
     if read_record(previous) != [schema]:
@@ -665,7 +698,7 @@ def close_frontier(previous, stream, domain, reuse_layer, workers=1, mixed=False
     context = ProcessPoolExecutor(max_workers=workers) if workers > 1 else nullcontext()
     with context as pool:
         while chunk := list(islice(records, max(4096, 128*workers))):
-            requests = [(box, reuse_layer, mixed) for box, row in chunk if row == ['open']]
+            requests = [(box, reuse_layer, mixed, reuse_bands) for box, row in chunk if row == ['open']]
             visited += len(requests)
             replacements = (pool.map(try_frontier_leaf, requests, chunksize=64)
                             if pool else map(try_frontier_leaf, requests))
@@ -705,7 +738,7 @@ def search_frontier(previous, domain, schema):
     return forest, deque(sorted(pending, key=lambda item: item[0]))
 
 
-def search(stream, budget, seconds, reuse_layer, workers=1, previous=None, mixed=False):
+def search(stream, budget, seconds, reuse_layer, workers=1, previous=None, mixed=False, reuse_bands=()):
     schema = MIXED_SCHEMA if mixed else SCHEMA
     forest, queue = search_frontier(previous, roots(), schema)
     checked, stuck, new_closed = 0, 0, Counter()
@@ -715,7 +748,7 @@ def search(stream, budget, seconds, reuse_layer, workers=1, previous=None, mixed
         while queue and checked < budget and monotonic()-start < seconds:
             size = min(len(queue), budget-checked, 128*workers if pool else 1)
             chunk = [queue.popleft() for _ in range(size)]
-            requests = [(box, reuse_layer, mixed) for _, box, _ in chunk]
+            requests = [(box, reuse_layer, mixed, reuse_bands) for _, box, _ in chunk]
             rows = pool.map(analyze, requests, chunksize=16) if pool else map(analyze, requests)
             for (depth, box, node), row in zip(chunk, rows):
                 checked += 1
@@ -779,6 +812,8 @@ def main():
     verify.add_argument('proof', type=Path)
     verify.add_argument('--q116-layer', type=Path)
     verify.add_argument('--q116-edge', type=Path)
+    for label in BAND_RANGES:
+        verify.add_argument(f'--{label}-layer', type=Path, help=f'directory with the original {label} archives')
     verify.add_argument('--workers', type=int, default=8)
     verify.add_argument('--flint-products', action='store_true')
     solve = modes.add_parser('search', help='start a bounded proof search from all binary64 roots')
@@ -793,6 +828,10 @@ def main():
     close.add_argument('proof', type=Path)
     close.add_argument('--workers', type=int, default=1)
     close.add_argument('--reuse-q116', action='store_true', help='defer that layer to its checkpoints')
+    for mode in (solve, close):
+        for label in BAND_RANGES:
+            mode.add_argument(f'--reuse-{label}', dest='reuse_bands', action='append_const',
+                              const=label, default=[], help=f'defer {label} to its archives')
     listed = modes.add_parser('listed-boundaries', help='check a list of individual midpoint comparisons')
     listed.add_argument('proof', type=Path)
     for mode in (verify, solve, close, listed):
@@ -807,7 +846,7 @@ def main():
         if args.mode == 'close-frontier':
             with open_proof(args.prior, 'r') as previous, open_proof(args.proof, 'x') as stream:
                 result = close_frontier(previous, stream, roots(), args.reuse_q116,
-                                        args.workers, args.mixed_residue)
+                                        args.workers, args.mixed_residue, args.reuse_bands)
             print(json.dumps(dict(status='CLOSE_OUTPUT', **result), sort_keys=True))
             return 2 if result['open_boxes'] else 0
         if args.mode == 'search':
@@ -818,7 +857,7 @@ def main():
             prior = open_proof(args.continue_from, 'r') if args.continue_from else nullcontext()
             with prior as previous, open_proof(args.proof, 'x') as stream:
                 result = search(stream, args.nodes, args.seconds, args.reuse_q116,
-                                args.workers, previous, args.mixed_residue)
+                                args.workers, previous, args.mixed_residue, args.reuse_bands)
             print(json.dumps(dict(status='SEARCH_OUTPUT', **result), sort_keys=True))
             return 2 if result['open_boxes'] else 0
         check_model(args.mixed_residue)
@@ -833,6 +872,10 @@ def main():
             counts, first_open = verify_partition(stream, roots(), args.mixed_residue)
         if first_open is None and counts.get('q116'):
             verify_q116(args.q116_layer, args.q116_edge, args.workers, args.flint_products)
+        if first_open is None:
+            for label in BAND_RANGES:
+                if counts.get(label):
+                    verify_band(label,getattr(args,f'{label}_layer'),args.workers,args.flint_products)
         status = 'PASS_MIXED_RESIDUE' if args.mixed_residue else 'PASS_NO_STREAM'
         if first_open is not None:
             status = 'INCOMPLETE'

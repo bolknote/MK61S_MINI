@@ -2,16 +2,20 @@
 """Check exact midpoint-band certificates, true ties and coverage rejection."""
 
 from dataclasses import astuple, replace
+import gzip
 from pathlib import Path
 import struct
 import sys
+from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'research/m0-pow-comparison-20261117'))
 import midpoint_band_layer as layer
 import midpoint_band_inverse as inverse
+import midpoint_band_run as runner
 import midpoint_rotated_band as band
 
 
@@ -38,6 +42,8 @@ class BandProofTest(unittest.TestCase):
                                    -2855731903834975502,700564350209,12069903468116,183066106680705,
                                    2001575612267235,-5532765971179591]])
         self.assertEqual(layer.verify_rows((block,[[list(astuple(block)),'polynomial',proof]])),
+                         {'polynomial':1})
+        self.assertEqual(layer.verify_rows((block,[[list(astuple(block)),'polynomial',proof]]),900),
                          {'polynomial':1})
         with self.assertRaisesRegex(ValueError, 'integer in the range'):
             inverse.verify_proof(block,dict(proof,polynomials=[[1]+[0]*14]))
@@ -77,6 +83,25 @@ class BandProofTest(unittest.TestCase):
             self.assertTrue(lo == 0 or layer.sides(root, lo-1)[0])
             self.assertTrue(hi == root.base or layer.sides(root, hi)[1])
 
+    def test_full_plan_grid_and_archive_compatibility(self):
+        plan, header, total = runner.plan_data(42,115)
+        self.assertEqual(header,[layer.SCHEMA,16300,42,
+                        '983e49f4eaf3afe7d349ee09983578f307f72d07de793d927c55dfa31f5d2c6e'])
+        self.assertEqual(total,1_339_778)
+        self.assertEqual(runner.plan_data(42,115,900),(plan,header,total))
+        self.assertEqual(runner.plan_data(42,115,480),(plan,header,total))
+        self.assertEqual(layer.verify_early_interval(115),{512:384,1024:766})
+        self.assertEqual(layer.verify_early_interval(115,480),{512:384})
+        plan, header, total = runner.plan_data(42,114)
+        self.assertEqual({m-layer.ONE for m,*_ in plan},{-3,-2,-1,0})
+        self.assertEqual(total,2_301_369)
+        self.assertEqual(layer.verify_early_interval(114),{512:388,1024:770})
+        self.assertEqual(layer.verify_early_interval(114,480),{512:388})
+        self.assertNotEqual(header[0],layer.SCHEMA)
+        self.assertEqual(next(layer.tasks(plan,0,1,114)).shift,114)
+        with self.assertRaises(ValueError):
+            layer.verify_reduction(104)
+
     def test_partition_checks_gaps_overlap_and_open_leaves(self):
         root = band.Block(layer.ONE, -900, 0, 4, layer.SHIFT)
         left = list(astuple(replace(root, width=3)))
@@ -100,6 +125,32 @@ class BandProofTest(unittest.TestCase):
             last, = layer.tasks(plan, hi-1, hi)
             self.assertEqual(first.binade, -739)
             self.assertEqual(last.first-first.first, (hi-lo-1) << 38)
+
+    def test_resumable_archive_requires_exact_coverage_and_content(self):
+        self.assertEqual(list(runner.missing_ranges([(7,8),(3,4)],0,10,2)),
+                         [(0,2),(2,3),(4,6),(6,7),(8,10)])
+        for coverage in ([(1,6),(4,8)],[(0,11)]):
+            with self.assertRaises(ValueError):
+                list(runner.missing_ranges(coverage,0,10,3))
+        plan = ((layer.ONE,-900,2,0,8),)
+        prefix = [layer.SCHEMA,layer.GAP,2,'test-plan']
+        roots = [list(astuple(root)) for root in layer.tasks(plan,0,2)]
+        with TemporaryDirectory() as tmp, patch.object(runner,'plan_data',return_value=(plan,prefix,2)):
+            directory = Path(tmp)
+            paths = [directory/runner.archive_name(i,i+1) for i in range(2)]
+            runner.save_archive(paths[0],prefix+[0,1,2],{0:[[roots[0],'direct']]})
+            with self.assertRaisesRegex(ValueError,'entire layer'):
+                runner.verify_complete(directory,2,115,1,False)
+            runner.save_archive(paths[1],prefix+[1,2,2],{0:[[roots[1],'open']]})
+            with self.assertRaisesRegex(ValueError,'unresolved'):
+                runner.verify_complete(directory,2,115,1,False)
+            paths[1].unlink()
+            runner.save_archive(paths[1],prefix+[1,2,2],{0:[[roots[1],'direct']]})
+            self.assertEqual(runner.verify_complete(directory,2,115,1,False),(2,{'direct':2}))
+            with gzip.open(paths[1],'at') as out:
+                out.write('[]\n')
+            with self.assertRaisesRegex(ValueError,'unexpected rows'):
+                runner.verify_complete(directory,2,115,1,False)
 
 
 if __name__ == '__main__':

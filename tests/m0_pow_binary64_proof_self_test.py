@@ -159,7 +159,7 @@ class ArithmeticTest(unittest.TestCase):
         self.assertIsNone(proof.significand_span((1,3), midpoint=True))
         tie = single(2, 1075, 0, inverse=True)
         self.assertEqual(proof.check_leaf(tie, ['scale-grid',512]), 'scale-grid')
-        self.assertEqual(proof.analyze((generic,False,False)), ['scale-grid',512])
+        self.assertEqual(proof.analyze((generic,False,False,())), ['scale-grid',512])
 
     def test_scale_grid_floor_count(self):
         rng = Random(97)
@@ -189,6 +189,26 @@ class ArithmeticTest(unittest.TestCase):
 
 
 class PartitionTest(unittest.TestCase):
+    def test_small_layers_scope_and_search_handoff(self):
+        root = proof.roots()[0]
+        _, above_q116 = root.split('y',proof.Y_NEXT)
+        inside, above_q115 = above_q116.split('y',proof.Y_AFTER_Q115)
+        self.assertEqual(proof.choose_split(above_q116,('q115',)),('y',proof.Y_AFTER_Q115))
+        self.assertEqual(proof.analyze((inside,True,False,('q115',))),['q115'])
+        counts, first = proof.verify_partition(stream(['q115']), (inside,))
+        self.assertEqual(counts,{'q115':1})
+        self.assertIsNone(first)
+        for outside in (root,above_q116,above_q115):
+            with self.assertRaisesRegex(proof.InvalidProof,'outside'):
+                proof.check_leaf(outside,['q115'])
+        _, _, after_q114 = proof.BAND_RANGES['q114']
+        q114, _ = above_q115.split('y',after_q114)
+        self.assertEqual(proof.analyze((q114,True,False,('q115','q114'))),['q114'])
+        with self.assertRaisesRegex(proof.InvalidProof,'outside'):
+            proof.check_leaf(inside,['q114'])
+        with self.assertRaisesRegex(proof.InvalidProof,'original archive directory'):
+            proof.verify_band('q115',None,1,False)
+
     def test_fixed_roots(self):
         domain = proof.roots()
         self.assertEqual([(b.negative_y, b.x) for b in domain], [

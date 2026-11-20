@@ -19,7 +19,7 @@ from midpoint_surface_rotated import reduce_lattice
 
 
 class Inverse(CurveBounds):
-    def __init__(self, block, degree, work_bits):
+    def __init__(self, block, degree, work_bits, gap=GAP):
         require(block.shift == SHIFT and block.width > 0,'expected a nonsingleton q115 block')
         require(type(degree) is int and 1 <= degree <= 48 and type(work_bits) is int
                 and 32 <= work_bits <= 2400,'invalid search shape')
@@ -34,10 +34,11 @@ class Inverse(CurveBounds):
         last = first+(1 << block.width)-1
         xl,xh = log_point(first,grid.precision,False),log_point(last,grid.precision,False)
         low,high = absolute((xl[0],xh[1]))
-        require(low > 0 and grid.precision+SHIFT < GAP,'base log or scaled strip is not separated')
+        require(low > 0 and SHIFT < gap,'base log or scaled strip is not separated')
         self.target = grid.scale(absolute(log_point(block.midpoint,grid.precision,True)),1 << SHIFT)
-        p_low = max(MIN_P,ceil_div(self.target[0]-1,high))
-        p_high = min(MAX_P,(self.target[1]+1)//low)
+        error = 1 << max(0,grid.precision+SHIFT-gap)
+        p_low = max(MIN_P,ceil_div(self.target[0]-error,high))
+        p_high = min(MAX_P,(self.target[1]+error)//low)
         require(p_low < p_high,'empty or singleton numerator projection')
         self.numerator_span = p_low,p_high
         self.p = (p_low+p_high)//2
@@ -57,7 +58,7 @@ class Inverse(CurveBounds):
         self.offset = add(self.amplitude,grid.rational(-self.origin))
         self.slope = grid.multiply(self.amplitude,self.exponent_coefficient(1))
         self.real_curvature = self.curvature(1)
-        self.vertical = Fraction(1 << (54+SHIFT-52),1 << GAP)
+        self.vertical = Fraction(1 << (54+SHIFT-52),1 << gap)
 
     def exponent_coefficient(self, degree):
         ratio = (-self.relative)**degree
@@ -93,17 +94,17 @@ def approx_columns(geo, transform, terms, free):
     return arb_newton_columns(geo,transform,terms,free,t,a)
 
 
-def generate(block, degree, work_bits, reducer):
-    geo = Inverse(block,degree,work_bits)
+def generate(block, degree, work_bits, reducer, gap=GAP):
+    geo = Inverse(block,degree,work_bits,gap)
     result = search_curve(geo,1,approx_columns,exact_columns,reducer)
     if result['proof']:
         result['proof']['chart'] = 'inverse'
     return result
 
 
-def verify_proof(block, proof):
+def verify_proof(block, proof, gap=GAP):
     require(isinstance(proof,dict) and proof.get('chart') == 'inverse','wrong inverse certificate chart')
-    geo = Inverse(block,proof['degree'],proof['work_bits'])
+    geo = Inverse(block,proof['degree'],proof['work_bits'],gap)
     verify_curve(geo,proof,exact_columns)
 
 
