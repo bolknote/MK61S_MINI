@@ -411,7 +411,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     }
     if(operation==MK61_COLOR_PALETTE64) return color_palette((const u16*)payload);
     if(operation==MK61_COLOR_AVAILABLE) return 1;
-    if(operation==MK61_COLOR_FORMATS) return (2u<<MK61_COLOR_CELL565)-1;
+    if(operation==MK61_COLOR_FORMATS) return (2u<<MK61_COLOR_RGB565)-1;
     if(operation==MK61_COLOR_PAGES_BEGIN_V2) {
         if(!payload || pages_active_ || color_active_ || color_scroll_.open || color_inverted_) return 0;
         mk61_service_color_pages r;std::memcpy(&r,payload,sizeof(r));
@@ -810,6 +810,13 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
     if(MK61_PICOCALC_LCD_COLOR_CHAIN && background) {
         ok=transfer_fill(color_frame_.background,rect.width,rect.height);
         strips+=dma()?1:rect.height;
+    } else if(!background && dma() && (color_frame_.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_RGB565 &&
+              rect.x==color_frame_.x && rect.width==color_frame_.width) {
+        // The panel owns an aligned copy of the little-endian RGB565 words.
+        // A whole-width window can go directly to the pixel DMA channel.
+        start_scanline(previous_+(rect.y-color_frame_.y)*rect.width,pixels);
+        ok=finish_scanline(true);
+        ++strips;
     } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && dma() && pixels<=sizeof(scanlines)/sizeof(*scanlines)) {
         const auto service=[] { io_worker::service(); };
         for(unsigned row=0;row<rect.height;++row) {

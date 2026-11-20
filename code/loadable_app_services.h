@@ -329,7 +329,9 @@ enum mk61_color_format {
   MK61_COLOR_TILE8,
   /* MSB-first bitmap, with two little-endian RGB565 colors (paper, ink)
    * per group of 8 pixels on every scanline. Width must be divisible by 8. */
-  MK61_COLOR_CELL565
+  MK61_COLOR_CELL565,
+  /* Tightly packed little-endian RGB565 rows; no tiles or palette. */
+  MK61_COLOR_RGB565
 };
 #define MK61_COLOR_SNAPSHOT_BYTES 12800U
 /* With CAP_TEXT_COLORS, rectangle updates can retain pixels outside the

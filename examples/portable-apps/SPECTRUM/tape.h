@@ -48,4 +48,18 @@ bool spectrum_tape_ear(void*,const z80*);
 bool spectrum_tape_choice(spectrum_tape*,unsigned option,char* label,unsigned capacity);
 bool spectrum_tape_choose(spectrum_tape*,unsigned option,uint32_t cycles);
 
+#if SPECTRUM_HAS_TAPE_RECORD
+typedef struct {
+    void* context;
+    bool (*write)(void*,uint32_t,const uint8_t*,uint32_t);
+    uint32_t capacity,size,edge,bytes;
+    uint16_t pilot;
+    uint8_t stage,half,bits,value,checksum;
+    bool have_edge,level,fault;
+    uint8_t data[128];
+} spectrum_tape_recorder;
+void spectrum_tape_mic(void*,uint32_t cycles,bool level);
+void spectrum_tape_record_finish(spectrum_tape_recorder*);
+#endif
+
 #endif

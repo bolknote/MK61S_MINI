@@ -16,10 +16,28 @@ static unsigned ula_line(unsigned y) {
     return ((y&192)<<5)|((y&7)<<8)|((y&56)<<2);
 }
 
+static void hires_shades(unsigned pair,uint16_t shades[9]) {
+    const unsigned ink=spectrum_color(pair),paper=spectrum_color(pair^7);
+    for(unsigned i=0;i<=8;++i) {
+        const unsigned rb=((ink&0xf81f)*i+(paper&0xf81f)*(8-i))>>3;
+        const unsigned g=((ink&0x07e0)*i+(paper&0x07e0)*(8-i))>>3;
+        shades[i]=(uint16_t)((rb&0xf81f)|(g&0x07e0));
+    }
+}
+
 static bool video_read(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,
                        unsigned offset,uint8_t* out,unsigned size) {
     if(saved && saved->io) return saved->io->read(saved->io->context,
         saved->address+(bank&1)*SPECTRUM_BANK_BYTES+offset,out,size);
+#if SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_PENTAGON
+    // Consecutive beam rows use different slices of the same 1 KiB pages.
+    // Fill the cache once instead of opening a PSRAM transaction per slice.
+    if(s->beam_io && bank!=5 && (offset&1023)+size<=1024) {
+        const uint8_t* page=spectrum_memory_external_byte(s->memory,bank*SPECTRUM_BANK_BYTES+offset,false);
+        if(!page) return false;
+        memcpy(out,page,size);return true;
+    }
+#endif
     if(s->memory) return spectrum_bank_read(s->memory,bank,offset,out,size);
     memcpy(out,s->ram+offset,size);return true;
 }
@@ -43,13 +61,8 @@ bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectr
     saved->ulaplus=(s->extensions&SPECTRUM_ULAPLUS) && s->ulaplus_mode;
     if(timex && mode==SPECTRUM_VIDEO_HIRES) {
         const unsigned pair=(s->timex_mode>>3)&7;
-        const unsigned ink=spectrum_color(pair),paper=spectrum_color(pair^7);
-        saved->border=(uint16_t)paper;
-        for(unsigned i=0;i<=8;++i) {
-            const unsigned rb=((ink&0xf81f)*i+(paper&0xf81f)*(8-i))>>3;
-            const unsigned g=((ink&0x07e0)*i+(paper&0x07e0)*(8-i))>>3;
-            saved->palette[i]=(uint16_t)((rb&0xf81f)|(g&0x07e0));
-        }
+        saved->border=spectrum_color(pair^7);
+        hires_shades(pair,saved->palette);
     } else if(timex)
         for(unsigned i=0;i<(saved->ulaplus?64u:16u);++i) saved->palette[i]=spectrum_palette(s,i);
     if(!saved->io) return true;
@@ -434,6 +447,75 @@ int spectrum_pentagon_wide_update(const spectrum_memory_io* io,uint32_t referenc
     for(unsigned y=0;y<frame->height;++y,at+=PITCH)
         if(!io->write(io->context,at,(uint8_t*)frame->pixels+y*bytes,bytes)) return -1;
     return 1;
+}
+#endif
+
+#if SPECTRUM_HAS_BEAM_VIDEO
+#if SPECTRUM_HAS_TIMEX
+static void store_rgb565(uint8_t* out,uint16_t color) {
+    out[0]=(uint8_t)color;out[1]=(uint8_t)(color>>8);
+}
+static void timex_beam(const spectrum* s,unsigned y,unsigned first,unsigned last,uint8_t* pixels) {
+    const uint8_t* screen=s->memory?s->memory->cache:s->ram;
+    const unsigned mode=spectrum_timex_mode(s),row=ula_line(y);
+    pixels+=4*first;
+    if(mode==SPECTRUM_VIDEO_HIRES) {
+        const unsigned kind=128|((s->timex_mode>>3)&7);
+        for(unsigned x=first;x<last;++x,pixels+=4) {
+            pixels[0]=screen[row+x];pixels[1]=(uint8_t)kind;
+            pixels[2]=screen[8192+row+x];pixels[3]=0;
+        }
+        return;
+    }
+    if(mode==1) screen+=8192;
+    const unsigned attrs=mode==SPECTRUM_VIDEO_HICOLOR?8192+row:6144+(y>>3)*32;
+    const bool plus=(s->extensions&SPECTRUM_ULAPLUS) && s->ulaplus_mode;
+    // Both Timex modes span the same beam time. Use a common ten LCD
+    // pixels per four guest T-states, including after a port FF write.
+    for(unsigned x=first;x<last;++x,pixels+=4) {
+        const unsigned a=screen[attrs+x],bits=screen[row+x];
+        const unsigned group=plus?(a>>6)*16:(a&64)>>3;
+        unsigned ink=group+(a&7),paper=group+((a>>3)&7);
+        if(plus) {ink=s->ulaplus_palette[ink];paper=s->ulaplus_palette[paper+8];}
+        else if((a&128) && (s->frames&16)) {unsigned swap=ink;ink=paper;paper=swap;}
+        pixels[0]=(uint8_t)bits;pixels[1]=(uint8_t)plus;
+        pixels[2]=(uint8_t)paper;pixels[3]=(uint8_t)ink;
+    }
+}
+void spectrum_timex_beam_expand(uint8_t* pixels) {
+    static const uint8_t masks[]={128,128,64,32,16,8,8,4,2,1};
+    unsigned last_kind=0;
+    uint16_t shades[9];
+    for(unsigned i=32*SPECTRUM_BEAM_ROWS;i--;) {
+        const unsigned bits=pixels[4*i],kind=pixels[4*i+1];
+        const unsigned other=pixels[4*i+2],ink_code=pixels[4*i+3];
+        uint8_t* out=pixels+20*i;
+        if(kind&128) {
+            if(kind!=last_kind) {hires_shades(kind&7,shades);last_kind=kind;}
+            const uint32_t coverage[]={hires_coverage(bits),hires_coverage(other)};
+            for(unsigned plane=0;plane<2;++plane)
+                for(int shift=16;shift>=0;shift-=4,out+=2)
+                    store_rgb565(out,shades[(coverage[plane]>>shift)&15]);
+        } else {
+            const uint16_t ink=kind?spectrum_ulaplus_color(ink_code):spectrum_color(ink_code);
+            const uint16_t paper=kind?spectrum_ulaplus_color(other):spectrum_color(other);
+            for(unsigned p=0;p<sizeof(masks);++p,out+=2) store_rgb565(out,bits&masks[p]?ink:paper);
+        }
+    }
+}
+#endif
+
+bool spectrum_beam_span(const spectrum* s,unsigned mode,unsigned y,unsigned first,unsigned last,uint8_t* pixels) {
+#if SPECTRUM_HAS_PENTAGON
+    const unsigned rows=mode==SPECTRUM_VIDEO_WIDE?SPECTRUM_WIDE_STRIP_ROWS:COLOR_LINES;
+    const unsigned group=mode==SPECTRUM_VIDEO_WIDE?WIDE_GROUP_PIXELS:8;
+    const unsigned local=y%rows;
+    const spectrum_video_damage damage={first,last,local,local+1};
+    return spectrum_pentagon_patch(s,mode,y/rows,&damage,pixels+first*group/2);
+#else
+    (void)mode;timex_beam(s,y,first,last,pixels);
+    return true;
+#endif
 }
 #endif
 

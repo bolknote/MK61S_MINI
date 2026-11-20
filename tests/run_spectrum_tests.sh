@@ -81,6 +81,14 @@ if [[ -n "${SPECTRUM_TIMEX_ROMS:-}" ]]; then
     timex_roms=("$SPECTRUM_TIMEX_ROMS/tc2068-0.rom" "$SPECTRUM_TIMEX_ROMS/tc2068-1.rom")
 fi
 "$build/timex2068" "${timex_roms[@]}"
+for profile in 7 8; do
+    clang -std=c11 -O2 -Wall -Wextra -Werror "${flags[@]}" -DSPECTRUM_APP_PROFILE="$profile" \
+        -I"$root/sdk/portable/include" -I"$root/code" \
+        "$root/tests/spectrum_beam_self_test.c" "$app/pentagon_video.c" "$app/spectrum.c" \
+        "$app/memory.c" "$app/mapper.c" "$app/peripherals.c" "$app/spi.c" "$app/fdc.c" \
+        "$root/third_party/z80/z80.c" "$root/third_party/emu2149/emu2149.c" -o "$build/beam"
+    "$build/beam"
+done
 if [[ -n "${SPECTRUM_DEVICE_ASSETS:-}" ]]; then
     python3 - "$root" "$SPECTRUM_DEVICE_ASSETS" "$build/app-assets" <<'PY'
 import sys, shutil

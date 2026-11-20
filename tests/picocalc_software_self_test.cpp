@@ -330,7 +330,14 @@ void picocalc_software_test(const char* preview_path) {
     crash_dump_format::Record crash{};assert(diagnostics::crash_copy(crash));
     assert(crash.stacked_pc==0x20001022 && crash.r11==11 && crash.runtime_detail==61);
     assert((crash.capture_flags & 19)==19 && crash_dump_format::valid(crash));
+    char report_name[96];
+    std::snprintf(report_name,sizeof(report_name),"crash-picocalc-%08lX-%lu-0.txt",
+        (unsigned long)crash.build_id,(unsigned long)crash.sequence);
+    const std::string root_report = std::string("/") + report_name;
+    const std::string system_report = std::string("/System/Diagnostics/") + report_name;
     assert(diagnostics::persist_crash());
+    assert(files::exists(system_report.c_str()) && !files::exists(root_report.c_str()));
+    assert(!diagnostics::persist_crash());
     diagnostics::initialize(0x22,true,test_clock);
     assert(diagnostics::crash_copy(crash) && crash.rcc_csr_after_reboot==0x22 &&
         diagnostics::watchdog_status().boot_was_watchdog && diagnostics::watchdog_status().previous_reloads==1);

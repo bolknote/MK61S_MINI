@@ -123,7 +123,8 @@ def main():
         base_command += ["--source", str(ROOT / source)]
     profiles = (("SPECTRUM", 1, args.build_dir), ("SINCLAIR", 2, args.build_dir / "sinclair"),
                 ("ZXVIDEO", 3, args.build_dir / "zxvideo"), ("TIMEX", 4, args.build_dir / "timex"),
-                ("TX2068", 5, args.build_dir / "tx2068"))
+                ("TX2068", 5, args.build_dir / "tx2068"), ("ZXTAPE", 6, args.build_dir / "zxtape"),
+                ("PENRASTR", 7, args.build_dir / "penrastr"), ("TIMRASTR", 8, args.build_dir / "timrastr"))
     for name, profile, directory in profiles:
         command = base_command + ["--name", name, "--define", f"SPECTRUM_APP_PROFILE={profile}",
                                   "--output-dir", str(directory)]
@@ -131,9 +132,9 @@ def main():
             command += ["--handled-magic", "Z1"]
         if name == "TX2068":
             command += ["--handled-magic", "T8", "--define", "Z80_TIMEX_IO"]
-        if profile in (1,3):
+        if profile in (1,3,7):
             command += ["--define", "Z80_NO_WAIT_STATES"]
-        if profile in (2,3,4,5):
+        if profile>=2:
             # Keeping parameters intact produces a smaller Thumb-1 image.
             command.append("--no-ipa-sra")
         subprocess.run(command, check=True)
@@ -172,7 +173,9 @@ def main():
     report = json.loads((args.build_dir / "SPECTRUM.json").read_text())
     report["sources"] = SOURCES
     report["app_sha256"] = hashlib.sha256((args.output_dir / "SPECTRUM.APP").read_bytes()).hexdigest()
-    for key, (name, _, directory) in zip(("sinclair_app", "video_app", "timex_app", "timex2068_app"), profiles[1:]):
+    keys=("sinclair_app", "video_app", "timex_app", "timex2068_app", "tape_app",
+          "pentagon_raster_app", "timex_raster_app")
+    for key, (name, _, directory) in zip(keys, profiles[1:]):
         report[key] = json.loads((directory / f"{name}.json").read_text())
         report[key]["app_sha256"] = hashlib.sha256((args.output_dir / f"{name}.APP").read_bytes()).hexdigest()
     inputs = sorted(set(SOURCES) | {

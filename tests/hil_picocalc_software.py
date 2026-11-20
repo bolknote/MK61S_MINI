@@ -247,7 +247,10 @@ def main():
         passed('external UI font selection and settings survive a real warm reset')
         if args.fault_tests:
             assert 'CRASH=NONE' in p.command('crash show'),'existing crash must be reviewed before injecting another'
-            old_crashes=set(re.findall(r'(?m)^f\t\d+(?: B)?\t(crash-picocalc-[^\r\n]+)',p.command('ls /')))
+            diagnostics_dir='/System/Diagnostics'
+            crash_pattern=r'(?m)^f\t\d+(?: B)?\t(crash-picocalc-[^\r\n]+)'
+            old_crashes=set(re.findall(crash_pattern,p.command('ls '+diagnostics_dir)))
+            old_root_crashes=set(re.findall(crash_pattern,p.command('ls /')))
             for name,hang in (('FAULT',False),('HANG',True)):
                 binary=build_app(name,'tests/picocalc_fault_probe.c',
                     ['#define PICO_SOFTWARE_HANG '+str(int(hang))])
@@ -262,9 +265,10 @@ def main():
                     assert 'EXCEPTION=HardFault' in crash and 'CRC=OK' in crash and 'R4=0000002C' in crash,crash
                     assert 'ERROR' not in p.command('crash save '+args.directory+'/fault.txt')
                     assert b'EXCEPTION=HardFault' in read_file(p,args.directory+'/fault.txt')
-                    new_crashes=set(re.findall(r'(?m)^f\t\d+(?: B)?\t(crash-picocalc-[^\r\n]+)',p.command('ls /')))-old_crashes
+                    new_crashes=set(re.findall(crash_pattern,p.command('ls '+diagnostics_dir)))-old_crashes
                     assert len(new_crashes)==1,('automatic SD crash report missing',new_crashes)
-                    auto_path='/'+new_crashes.pop();auto_report=read_file(p,auto_path)
+                    assert set(re.findall(crash_pattern,p.command('ls /')))==old_root_crashes
+                    auto_path=diagnostics_dir+'/'+new_crashes.pop();auto_report=read_file(p,auto_path)
                     assert b'EXCEPTION=HardFault' in auto_report and b'CRC=OK' in auto_report
                     fault_reports[name]['automatic_sd_path']=auto_path
                     fault_reports[name]['automatic_sd_sha256']=hashlib.sha256(auto_report).hexdigest()

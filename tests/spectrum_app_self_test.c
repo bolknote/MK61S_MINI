@@ -26,7 +26,7 @@ static unsigned hicolor_updates,hicolor_marker;
 static bool test_flow;
 static const char* preferences_phase;
 static bool preferences_error;
-static unsigned video_calls,video_shows,video_origin,video_psram_ops;
+static unsigned video_calls,video_shows,video_origin,video_psram_ops,video_scroll_begins;
 static uint32_t video_submit_us,video_capture_delay_us;
 static bool video_test,video_pages,video_scroll,video_fail_once,video_busy_once,video_page_failed;
 static mk61_service_color_frame last_strip;
@@ -262,6 +262,7 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
             if(a==MK61_COLOR_SCROLL_BEGIN) {
                 const mk61_service_color_scroll* scroll=payload;
                 assert(c==sizeof(*scroll) && scroll->height==320 && !scroll->offset);
+                ++video_scroll_begins;
                 return video_scroll?1:3;
             }
             if(a==MK61_COLOR_SCROLL_END) {
@@ -598,9 +599,27 @@ static void extended_frames(void) {
         deadline=micros_now;
         video_busy_once=true;video_submit_us=4900;
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,&raster,&idle,canvas,&error) && !error);
-        assert(raster.next==8 && video_psram_ops==operations+1 && video_calls==calls+1);
+        assert(raster.next==RASTER_IDLE && video_psram_ops==operations+1 && video_calls==calls+1);
         assert(raster.guard_us>=6900 && last_strip.y==256 && last_strip.height==32);
         puts("Raster strips wait for CPU slack and reuse the prepared strip after LCD busy: PASS");
+        memset(psram+RASTER_BASE,0,SPECTRUM_RASTER_PACKED_BYTES);
+        memset(psram+WIDE_REFERENCE,0,SPECTRUM_RASTER_PACKED_BYTES);
+        raster=(raster_output){.valid=true,.bank=1};
+        const unsigned previously_shown=video_calls;
+        for(unsigned i=0;i<=SPECTRUM_RASTER_STRIPS;++i) assert(raster_present(canvas,&raster));
+        assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown);
+        raster=(raster_output){.valid=true,.bank=0};
+        psram[raster_address(&raster,0,4)]^=128;
+        for(unsigned i=0;i<=SPECTRUM_RASTER_STRIPS;++i) assert(raster_present(canvas,&raster));
+        assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown+1);
+        assert(last_strip.y==160 && last_strip.height==32);
+        raster=(raster_output){.valid=true,.bank=1};
+        const unsigned previous_begins=video_scroll_begins;
+        video_fail_once=true;
+        for(unsigned i=0;i<2*(SPECTRUM_RASTER_STRIPS+1);++i) assert(raster_present(canvas,&raster));
+        assert(raster.next==RASTER_IDLE && raster.valid && video_calls==previously_shown+2+SPECTRUM_RASTER_STRIPS);
+        assert(video_scroll_begins==previous_begins+1);
+        puts("Raster skips identical packed strips and repaints after a failed LCD commit: PASS");
     }
     video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
     puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");
@@ -620,7 +639,7 @@ static void timex_audio_prefill(void) {
         const uint32_t before=(uint32_t)state.cpu.cyc;
         const uint32_t cycles=(run?1:4)*SPECTRUM_TS2068_FRAME_TSTATES;
         const uint32_t timeline=state.sound.time;
-        prime_audio();
+        prime_audio(false);
         assert((uint32_t)state.cpu.cyc-before==cycles);
         assert(atomic_load(&state.sound.produced)-timeline==(cycles*125u+125u)/126u);
         assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
@@ -638,7 +657,7 @@ static void bounded_audio_prefill(void) {
     rom[0]=0x76; // HALT: one quiet guest frame is available immediately.
     state.cpu.cyc=UINT32_MAX-99;
     spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
-    prime_audio();
+    prime_audio(false);
     assert((uint32_t)(state.cpu.cyc-(UINT32_MAX-99U))==SPECTRUM_FRAME_TSTATES);
     assert(atomic_load(&state.sound.produced)==(uint32_t)state.cpu.cyc);
     assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
@@ -646,7 +665,7 @@ static void bounded_audio_prefill(void) {
     const uint8_t loop[]={0x3e,0x10,0xd3,0xfe,0xee,0x10,0x18,0xfa};
     memcpy(rom,loop,sizeof(loop));spectrum_reset(&state);
     spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
-    prime_audio();
+    prime_audio(false);
     const unsigned events=atomic_load(&state.sound.write);
     assert(events>SPECTRUM_SOUND_QUEUE_EVENTS/2 && events<SPECTRUM_SOUND_QUEUE_EVENTS);
     assert(state.cpu.cyc<SPECTRUM_FRAME_TSTATES && !atomic_load(&state.sound.clock_running));
@@ -662,7 +681,7 @@ static void bounded_audio_prefill(void) {
     spectrum_attach_memory(&state,&banks);
     for(unsigned expected=4;expected<=5;++expected) {
         spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
-        prime_audio();
+        prime_audio(false);
         assert(state.frames==expected && state.cpu.cyc==expected*SPECTRUM_128_FRAME_TSTATES);
         assert(!banks.fault && !atomic_load(&state.sound.clock_running));
     }

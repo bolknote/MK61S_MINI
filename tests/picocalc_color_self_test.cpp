@@ -173,8 +173,34 @@ static void per_scanline_colors() {
     invalid.width=15;assert(!valid_color(invalid));
     invalid=frame;invalid.tile_bytes=8;assert(!valid_color(invalid));
 }
+static void native_rgb565() {
+    uint8_t data[2*17*8]{},storage[sizeof(data)]{};
+    mk61_service_color_frame next{},old{};
+    next.pixels=data;next.pixel_bytes=sizeof(data);
+    next.x=7;next.y=16;next.width=17;next.height=8;
+    next.format=MK61_COLOR_RGB565|MK61_COLOR_PRESERVE_OUTSIDE;
+    assert(valid_color(next));
+    copy_color(old,next,storage);
+    Update update;
+    // Palette changes have no effect on native little-endian pixels.
+    next.palette[0]=0xffff;
+    plan_color(update,old,next,false);
+    assert(!update.count);
+    data[sizeof(data)-2]=0x87;data[sizeof(data)-1]=0x65;
+    plan_color(update,old,next,false);
+    assert(update.count==1 && update.bytes==16);
+    const Rect r=update.rectangles[0];
+    assert(r.x==23 && r.y==16 && r.width==1 && r.height==8);
+    uint16_t line[3]={0xaaaa,0,0xbbbb};
+    color_scanline(next,r,7,line+1);
+    assert(line[1]==0x6587 && line[0]==0xaaaa && line[2]==0xbbbb);
+    --next.pixel_bytes;
+    assert(!valid_color(next));
+}
+
 int main() {
     per_scanline_colors();
+    native_rgb565();
     bounded_expansion();
     indexed_pairs();
     aligned_and_unaligned_tiles();

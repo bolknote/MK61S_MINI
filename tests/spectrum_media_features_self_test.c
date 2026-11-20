@@ -102,6 +102,77 @@ static void tape_test(void) {
     assert(!spectrum_tape_ear(&tape,&machine.cpu) && !tape.playing && !tape.fault);
 }
 
+static void rom_save_block(uint8_t flag,const uint8_t* data,unsigned size) {
+    const unsigned at=0x9000;
+    memcpy(ram+at-0x4000,data,size);
+    machine.cpu.pc=0x04c2; // Original SA-BYTES routine used by BASIC SAVE.
+    machine.cpu.de=(uint16_t)size;machine.cpu.ix=at;machine.cpu.a=flag;
+    machine.cpu.sp=0xbffe;machine.cpu.halted=false;
+    ram[0x7ffe]=0;ram[0x7fff]=0x80;ram[0x4000]=0x76;
+    for(unsigned step=0;!machine.cpu.halted && step<16000;++step) spectrum_run(&machine,2048);
+    assert(machine.cpu.halted && machine.cpu.pc==0x8001);
+}
+static void tape_record_test(void) {
+    uint8_t saved[1024],data[149];
+    for(unsigned i=0;i<sizeof(data);++i) data[i]=(uint8_t)(37*i);
+    const uint8_t header[]={3,'T','A','P','E',' ',' ',' ',' ',' ',' ',sizeof(data),0,0,144,0,0};
+    bytes storage={saved,sizeof(saved)};
+    spectrum_tape_recorder recorder={.context=&storage,.write=write_bytes,.capacity=sizeof(saved)};
+    spectrum_init(&machine,ram,rom);
+    machine.mic_context=&recorder;machine.mic=spectrum_tape_mic;
+    rom_save_block(0,header,sizeof(header));
+    rom_save_block(255,data,sizeof(data)); // Includes a full PSRAM write buffer and an unaligned tail.
+    spectrum_tape_record_finish(&recorder);
+    assert(!recorder.fault && recorder.size==sizeof(header)+sizeof(data)+8);
+    assert(saved[0]==sizeof(header)+2 && !saved[1] && !saved[2] && !memcmp(saved+3,header,sizeof(header)));
+    const unsigned next=sizeof(header)+4;
+    assert(saved[next]==sizeof(data)+2 && !saved[next+1] && saved[next+2]==255);
+    assert(!memcmp(saved+next+3,data,sizeof(data)));
+    uint8_t checksum=0;for(unsigned i=2;i<next;++i) checksum^=saved[i];assert(!checksum);
+    for(unsigned i=next+2;i<recorder.size;++i) checksum^=saved[i];assert(!checksum);
+    const spectrum_source source={&storage,recorder.size,read_bytes};
+    spectrum_tape playback={0};
+    assert(spectrum_tape_open(&playback,&source,false)==SPECTRUM_OK);
+    puts("Original ROM SAVE writes playable TAP header and data blocks from MIC timing: PASS");
+}
+
+static void run_basic_frames(unsigned count) {
+    while(count--) spectrum_run(&machine,SPECTRUM_FRAME_TSTATES);
+}
+static void basic_key(unsigned key) {
+    uint8_t keys[32]={0};keys[key/8]=(uint8_t)(1u<<(key&7));
+    spectrum_keyboard(&machine,keys);run_basic_frames(5);
+    keys[key/8]=0;spectrum_keyboard(&machine,keys);run_basic_frames(5);
+}
+static void basic_keys(const char* keys) {
+    for(;*keys;++keys) basic_key((unsigned char)*keys);
+}
+static void basic_save_load_test(void) {
+    uint8_t tap[128];bytes storage={tap,sizeof(tap)};
+    spectrum_init(&machine,ram,rom);run_basic_frames(250);
+    // The 48K editor expands P to PRINT, S to SAVE and J to LOAD in K mode.
+    basic_keys("10p\"x\"\r");
+    spectrum_tape_recorder recorder={.context=&storage,.write=write_bytes,.capacity=sizeof(tap)};
+    machine.mic_context=&recorder;machine.mic=spectrum_tape_mic;
+    basic_keys("s\"pico\"\r");
+    run_basic_frames(35);basic_key('x');run_basic_frames(500);
+    spectrum_tape_record_finish(&recorder);
+    const uint8_t line[]={0,10,5,0,0xf5,'"','x','"',13};
+    assert(!recorder.fault && recorder.size==34);
+    assert(!memcmp(tap+4,"pico      ",10) && !memcmp(tap+24,line,sizeof(line)));
+
+    spectrum_init(&machine,ram,rom);run_basic_frames(250);
+    spectrum_tape playback={0};
+    const spectrum_source source={&storage,recorder.size,read_bytes};
+    assert(spectrum_tape_open(&playback,&source,false)==SPECTRUM_OK);
+    machine.ear_context=&playback;machine.ear=spectrum_tape_ear;
+    playback.playing=true;
+    basic_keys("j\"\"\r");run_basic_frames(550);
+    const unsigned prog=(ram[0x1c53]|(ram[0x1c54]<<8))-0x4000;
+    assert(prog<=sizeof(ram)-sizeof(line) && !memcmp(ram+prog,line,sizeof(line)));
+    puts("48K BASIC keyboard SAVE and LOAD round-trip of a tokenized program PASS");
+}
+
 static void generalized_and_select_test(void) {
     /* Jump to selection 2, using a negative offset. Two pilot repeats,
      * then 3 two-bit symbols (same, forced low, forced high). */
@@ -708,7 +779,7 @@ int main(int argc,char** argv) {
     assert(argc==4);
     FILE* file=fopen(argv[1],"rb");assert(file);
     assert(fread(rom,1,sizeof(rom),file)==sizeof(rom));fclose(file);
-    tape_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
+    tape_test();tape_record_test();basic_save_load_test();generalized_and_select_test();csw_zrle_test();compressed_page_test();
     contention_test();raster_test();raster_128_test();
     for(unsigned model=0;model<3;++model) snapshot_test(model);
     sinclair128(argv[2],argv[3]);timex_hicolor();timex_hires();

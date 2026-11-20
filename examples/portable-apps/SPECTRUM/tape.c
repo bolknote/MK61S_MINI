@@ -571,3 +571,61 @@ bool spectrum_tape_ear(void* context,const z80* cpu) {
     machine->cpu.port_span=tape_port_span;
     return tape->level;
 }
+
+#if SPECTRUM_HAS_TAPE_RECORD
+enum { RECORD_LEADER,RECORD_SYNC,RECORD_DATA };
+
+static bool record_write(spectrum_tape_recorder* r,uint32_t offset,const uint8_t* bytes,uint32_t count) {
+    if(r->write(r->context,offset,bytes,count)) return true;
+    r->fault=true;
+    return false;
+}
+
+void spectrum_tape_record_finish(spectrum_tape_recorder* r) {
+    if(r->stage==RECORD_DATA && !r->fault && r->bytes>=2 && !r->checksum && !r->bits && !r->half) {
+        const unsigned tail=r->bytes%sizeof(r->data);
+        const uint8_t length[]={(uint8_t)r->bytes,(uint8_t)(r->bytes>>8)};
+        if((!tail || record_write(r,r->size+2+r->bytes-tail,r->data,tail)) &&
+           record_write(r,r->size,length,sizeof(length))) r->size+=2+r->bytes;
+    }
+    r->bytes=r->pilot=0;
+    r->stage=r->bits=r->half=r->checksum=r->value=0;
+}
+
+void spectrum_tape_mic(void* context,uint32_t cycles,bool level) {
+    spectrum_tape_recorder* r=context;
+    if(level==r->level || r->fault) return;
+    r->level=level;
+    const uint32_t width=cycles-r->edge;
+    r->edge=cycles;
+    if(!r->have_edge) {r->have_edge=true;return;}
+    if(r->stage==RECORD_DATA) {
+        // The ROM emits two equal half waves per bit (855 or 1710 T).
+        const unsigned pulse=width>=780 && width<=920?1:width>=1550 && width<=1880?2:0;
+        if(pulse && !r->half) {r->half=(uint8_t)pulse;return;}
+        if(pulse && pulse==r->half) {
+            r->half=0;
+            r->value=(uint8_t)((r->value<<1)|(pulse-1));
+            if(++r->bits!=8) return;
+            r->bits=0;
+            if(r->bytes==UINT16_MAX || r->size+2+r->bytes>=r->capacity) {r->fault=true;return;}
+            r->data[r->bytes++%sizeof(r->data)]=r->value;
+            r->checksum^=r->value;
+            if(r->bytes%sizeof(r->data)==0)
+                record_write(r,r->size+2+r->bytes-sizeof(r->data),r->data,sizeof(r->data));
+            return;
+        }
+        // The ROM's trailing transition is about 946 T after the last bit.
+        // Short glitches and mismatched halves invalidate an incomplete block.
+        if(pulse || width<925) r->bits=1;
+        spectrum_tape_record_finish(r);
+    } else if(r->stage==RECORD_SYNC) {
+        if(width>=690 && width<=780) {r->stage=RECORD_DATA;return;}
+        r->stage=RECORD_LEADER;r->pilot=0;
+    }
+    if(width>=2000 && width<=2330) {
+        if(r->pilot<256) ++r->pilot;
+    } else if(r->pilot==256 && width>=590 && width<=720) r->stage=RECORD_SYNC;
+    else r->pilot=0;
+}
+#endif

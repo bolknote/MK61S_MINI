@@ -284,12 +284,13 @@ static const uint16_t spectrum_colors[16]={
     0,0x0019,0xc800,0xc819,0x0660,0x0679,0xce60,0xce79,
     0,0x001f,0xf800,0xf81f,0x07e0,0x07ff,0xffe0,0xffff
 };
-static uint16_t ulaplus_color(unsigned grb) {
+uint16_t spectrum_ulaplus_color(unsigned grb) {
     const unsigned r=(grb>>2)&7,g=(grb>>5)&7;
     const unsigned blue=grb&3,b=(blue<<1)|(blue?1:0);
     return (uint16_t)((((r<<2)|(r>>1))<<11)|(((g<<3)|g)<<5)|((b<<2)|(b>>1)));
 }
-#if SPECTRUM_HAS_RASTER && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_RASTER_ENABLED && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_RASTER
 enum { RASTER_START=ULA_CONTENTION_START+1-32*224-16,
        RASTER_128_START=ULA_128_CONTENTION_START+1-32*228-16,
        RASTER_COLUMNS=40, RASTER_ROWS=256,
@@ -315,7 +316,7 @@ static bool raster_shadow_row(spectrum* s,unsigned bitmap,unsigned attributes,ui
 
 /* Store each bitmap, two latched color codes and a ULAplus mode bit.
  * The codes already account for the palette at this point on the beam. */
-static void raster_until(spectrum* s,uint32_t cycles) {
+static void raster_classic_until(spectrum* s,uint32_t cycles) {
     const bool sinclair128=spectrum_is_128(s);
     const unsigned line_cycles=sinclair128?228:224;
     const int32_t elapsed=(int32_t)(cycles-s->frame_origin-(sinclair128?RASTER_128_START:RASTER_START));
@@ -375,8 +376,63 @@ static void raster_until(spectrum* s,uint32_t cycles) {
     }
     s->video_cell=end;
 }
+#endif
+#if SPECTRUM_HAS_BEAM_VIDEO
+static void beam_until(spectrum* s,uint32_t cycles) {
+    const unsigned mode=s->beam_mode;
+    const bool wide=mode==SPECTRUM_VIDEO_WIDE;
+    // The Wide bitmap extends the standard Pentagon picture by 64 lines
+    // above, 48 below and 64 guest pixels at each horizontal edge.
+    const unsigned start=wide?17988u-64*224-32:spectrum_is_pentagon(s)?17988u:ula_48_start(s)+1;
+    const int32_t elapsed=(int32_t)(cycles-s->frame_origin-start);
+    if(elapsed<=0 || !s->video_bytes || s->beam_geometry_changed) return;
+    const unsigned columns=wide?16:32,stride=spectrum_beam_row_bytes(mode);
+    const unsigned height=spectrum_beam_height(mode),ticks=wide?12:4;
+    unsigned end=height*columns;
+    if((unsigned)elapsed<height*224) {
+        const unsigned line=ula_line((unsigned)elapsed),through=(unsigned)elapsed-224*line;
+        const unsigned column=(through+ticks-1)/ticks;
+        end=line*columns+(column<columns?column:columns);
+    }
+    if(end<=s->video_cell) return;
+    for(unsigned cell=s->video_cell;cell<end;) {
+        const unsigned row=cell/columns,first=cell%columns;
+        const unsigned last=end-cell<columns-first?first+end-cell:columns;
+        uint8_t* pixels=s->video_bytes+stride*(row%SPECTRUM_BEAM_ROWS);
+        s->beam_io=true;
+        const unsigned loads=SPECTRUM_HAS_PENTAGON?s->memory->loads:0;
+        const bool ok=spectrum_beam_span(s,mode,row,first,last,pixels) &&
+           (last!=columns || (row+1)%SPECTRUM_BEAM_ROWS ||
+            s->video_store(s->video_context,row/SPECTRUM_BEAM_ROWS,s->video_bytes));
+        s->beam_io=false;
+        if(SPECTRUM_HAS_PENTAGON && s->memory->loads!=loads) spectrum_refresh_map(s);
+        if(!ok) {
+            s->video_bytes=NULL;return;
+        }
+        cell+=last-first;
+    }
+    s->video_cell=end;
+}
+#endif
+static void raster_until(spectrum* s,uint32_t cycles) {
+#if SPECTRUM_HAS_BEAM_VIDEO
+    if(s->beam_mode) {beam_until(s,cycles);return;}
+#endif
+#if SPECTRUM_HAS_RASTER
+    raster_classic_until(s,cycles);
+#endif
+}
 static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
     spectrum* s=context;
+#if SPECTRUM_HAS_BEAM_VIDEO
+    if(s->beam_mode) {
+        const unsigned page=address>>14;
+        // Pentagon adds video bytes in the two upper planes and in banks
+        // 4/6. Timex always reads the internal RAM of windows $4000/$6000.
+        if(page==1 || (spectrum_is_pentagon(s) && page==3)) raster_until(s,cycles+1);
+        return;
+    }
+#endif
     if((address&16383)>=SPECTRUM_BITMAP_BYTES+SPECTRUM_ATTRIBUTE_BYTES) return;
     const bool sinclair128=spectrum_is_128(s);
     const unsigned paging=sinclair128?s->memory->paging:0,screen=(paging&8)?7:5;
@@ -385,25 +441,37 @@ static void before_video_store(void* context,uint16_t address,uint32_t cycles) {
 }
 void spectrum_raster_begin(spectrum* s,uint8_t* buffer,void* context,
                            bool (*store)(void*,unsigned,const uint8_t*)) {
+#if SPECTRUM_HAS_BEAM_VIDEO
+    s->beam_mode=0;s->beam_geometry_changed=false;
+#endif
     s->video_context=context;s->video_bytes=store?buffer:NULL;s->video_store=store;s->video_cell=0;
     s->cpu.before_store=s->video_bytes?before_video_store:NULL;
 }
+#if SPECTRUM_HAS_BEAM_VIDEO
+void spectrum_beam_begin(spectrum* s,unsigned mode,uint8_t* buffer,void* context,
+                         bool (*store)(void*,unsigned,const uint8_t*)) {
+    spectrum_raster_begin(s,buffer,context,store);
+    s->beam_mode=(uint8_t)mode;
+}
+#endif
 void spectrum_raster_end(spectrum* s) {
     s->video_bytes=NULL;s->cpu.before_store=NULL;
 }
+#if SPECTRUM_HAS_RASTER
 void spectrum_raster_expand(uint8_t* strip) {
     uint8_t modes[RASTER_CELLS/8];
     memcpy(modes,strip+3*RASTER_CELLS,sizeof(modes));
     for(unsigned i=RASTER_CELLS;i--;) {
         const bool plus=(modes[i/8]>>(i&7))&1;
         const uint8_t* codes=strip+RASTER_CELLS+2*i;
-        const uint16_t paper=plus?ulaplus_color(codes[0]):spectrum_colors[codes[0]&15];
-        const uint16_t ink=plus?ulaplus_color(codes[1]):spectrum_colors[codes[1]&15];
+        const uint16_t paper=plus?spectrum_ulaplus_color(codes[0]):spectrum_colors[codes[0]&15];
+        const uint16_t ink=plus?spectrum_ulaplus_color(codes[1]):spectrum_colors[codes[1]&15];
         uint8_t* pair=strip+RASTER_CELLS+4*i;
         pair[0]=(uint8_t)paper;pair[1]=(uint8_t)(paper>>8);
         pair[2]=(uint8_t)ink;pair[3]=(uint8_t)(ink>>8);
     }
 }
+#endif
 #else
 void spectrum_raster_begin(spectrum* s,uint8_t* b,void* c,bool (*store)(void*,unsigned,const uint8_t*)) {
     (void)s;(void)b;(void)c;(void)store;
@@ -415,7 +483,13 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     spectrum* s=cpu->userdata;
     if(!(s->extensions&SPECTRUM_TURBOSOUND)) s->sound.selected=0;
     if(!SPECTRUM_HAS_TIMEX_2068 && spectrum_disk_out(s,port,value)) return;
-    if(port==0xEFF7 && s->memory && spectrum_is_pentagon(s)) { (void)spectrum_memory_control(s->memory,value);spectrum_refresh_map(s); }
+    if(port==0xEFF7 && s->memory && spectrum_is_pentagon(s)) {
+        (void)spectrum_memory_control(s->memory,value);
+#if SPECTRUM_HAS_BEAM_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(s->video_bytes && s->beam_mode && s->beam_mode!=spectrum_pentagon_video_mode(s)) s->beam_geometry_changed=true;
+#endif
+        spectrum_refresh_map(s);
+    }
 #if SPECTRUM_HAS_TIMEX_2068
     switch((uint8_t)port) {
     case 0xf4:
@@ -433,13 +507,16 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
         }
 #endif
         s->border=value&7;
+#if SPECTRUM_HAS_TAPE_RECORD
+        if(s->mic) s->mic(s->mic_context,cpu->io_at,(value&8)!=0);
+#endif
         if(s->beeper!=((value>>4)&1)) spectrum_sound_write(s,2,0,(value>>4)&1);
         s->beeper=(value>>4)&1;
     }
     if(s->memory && !(port&0x8002) && (spectrum_is_pentagon(s) || spectrum_is_128(s))) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         const unsigned previous=s->memory->paging;
-        if(SPECTRUM_HAS_RASTER && s->video_bytes && !s->memory->locked && ((previous^value)&8))
+        if(SPECTRUM_RASTER_ENABLED && s->video_bytes && !s->memory->locked && ((previous^value)&8))
             raster_until(s,cpu->io_at);
 #endif
         (void)spectrum_memory_page(s->memory,value);
@@ -450,6 +527,9 @@ static void port_out(z80* cpu,uint16_t port,uint8_t value) {
     }
     if(SPECTRUM_HAS_TIMEX && (s->extensions&SPECTRUM_TIMEX) && (port&255)==255) {
         const unsigned previous=s->timex_mode;
+#if SPECTRUM_HAS_BEAM_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(s->video_bytes && s->beam_mode && ((previous^value)&63)) raster_until(s,cpu->io_at);
+#endif
         s->timex_mode=value;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         const unsigned changed=previous^value;
@@ -748,7 +828,7 @@ void spectrum_video8(const spectrum* s,uint8_t bitmap[6144],uint8_t tiles[1536])
 }
 uint16_t spectrum_palette(const spectrum* s,unsigned index) {
     if(!((s->extensions&SPECTRUM_ULAPLUS) && s->ulaplus_mode)) return spectrum_color(index&15);
-    return ulaplus_color(s->ulaplus_palette[index&63]);
+    return spectrum_ulaplus_color(s->ulaplus_palette[index&63]);
 }
 uint16_t spectrum_border(const spectrum* s) {
     if(spectrum_timex_mode(s)==SPECTRUM_VIDEO_HIRES) return spectrum_color(7^((s->timex_mode>>3)&7));

@@ -11,14 +11,18 @@
 #ifndef SPECTRUM_APP_PROFILE
 #define SPECTRUM_APP_PROFILE 0
 #endif
-#define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1 && SPECTRUM_APP_PROFILE!=3)
-#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==1 || SPECTRUM_APP_PROFILE==3)
-#define SPECTRUM_HAS_EXTENDED_VIDEO (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE>=3)
+#define SPECTRUM_HAS_SINCLAIR (SPECTRUM_APP_PROFILE!=1 && SPECTRUM_APP_PROFILE!=3 && SPECTRUM_APP_PROFILE!=7)
+#define SPECTRUM_HAS_PENTAGON (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==1 || SPECTRUM_APP_PROFILE==3 || SPECTRUM_APP_PROFILE==7)
+#define SPECTRUM_HAS_FAST_VIDEO (SPECTRUM_APP_PROFILE==0 || (SPECTRUM_APP_PROFILE>=3 && SPECTRUM_APP_PROFILE<=5))
+#define SPECTRUM_HAS_EXTENDED_VIDEO (SPECTRUM_HAS_FAST_VIDEO || SPECTRUM_APP_PROFILE>=7)
 #define SPECTRUM_HAS_PREFERENCES (SPECTRUM_APP_PROFILE<3)
 #define SPECTRUM_HAS_TIMEX (SPECTRUM_HAS_SINCLAIR && SPECTRUM_HAS_EXTENDED_VIDEO)
 #define SPECTRUM_HAS_TIMEX_2068 (SPECTRUM_APP_PROFILE==5)
 #define SPECTRUM_HAS_PENTAGON_VIDEO (SPECTRUM_HAS_PENTAGON && SPECTRUM_HAS_EXTENDED_VIDEO)
 #define SPECTRUM_HAS_RASTER (SPECTRUM_APP_PROFILE==0 || SPECTRUM_APP_PROFILE==2)
+#define SPECTRUM_HAS_BEAM_VIDEO (SPECTRUM_HAS_TIMEX_2068 || SPECTRUM_APP_PROFILE>=7)
+#define SPECTRUM_RASTER_ENABLED (SPECTRUM_HAS_RASTER || SPECTRUM_HAS_BEAM_VIDEO)
+#define SPECTRUM_HAS_TAPE_RECORD (SPECTRUM_APP_PROFILE<=1 || SPECTRUM_HAS_TIMEX_2068 || SPECTRUM_APP_PROFILE==6)
 
 #define SPECTRUM_RAM_BYTES 49152U
 #define SPECTRUM_ROM_BYTES 16384U
@@ -42,6 +46,13 @@
 enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_HIRES=6, SPECTRUM_VIDEO_WIDE=64 };
 enum { SPECTRUM_WIDE_WIDTH=320, SPECTRUM_WIDE_HEIGHT=304,
        SPECTRUM_WIDE_STRIP_ROWS=48, SPECTRUM_WIDE_STRIPS=7 };
+enum { SPECTRUM_BEAM_ROWS=8, SPECTRUM_BEAM_FRAME_BYTES=SPECTRUM_HAS_PENTAGON?
+       SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:4*32*192 };
+static inline unsigned spectrum_beam_width(unsigned mode) { return mode==SPECTRUM_VIDEO_16C?256:320; }
+static inline unsigned spectrum_beam_height(unsigned mode) { return mode==SPECTRUM_VIDEO_WIDE?304:192; }
+static inline unsigned spectrum_beam_row_bytes(unsigned mode) {
+    return SPECTRUM_HAS_PENTAGON?spectrum_beam_width(mode)/2:4*32;
+}
 typedef struct { uint8_t left,right,top,bottom; } spectrum_video_damage;
 typedef struct {
     spectrum_video_damage strips[3];
@@ -83,6 +94,10 @@ typedef struct spectrum {
     spectrum_disk disk;
     void* ear_context;
     bool (*ear)(void*,const z80*);
+#if SPECTRUM_HAS_TAPE_RECORD
+    void* mic_context;
+    void (*mic)(void*,uint32_t,bool);
+#endif
     void* video_context;
     uint8_t* video_bytes;
     bool (*video_store)(void*,unsigned,const uint8_t*);
@@ -91,6 +106,10 @@ typedef struct spectrum {
     spectrum_pentagon_changes* pentagon_video;
 #endif
     uint16_t video_cell;
+#if SPECTRUM_HAS_BEAM_VIDEO
+    uint8_t beam_mode;
+    bool beam_geometry_changed,beam_io;
+#endif
     uint8_t extensions,joystick_mode,sound_chip,sound_layout;
     uint8_t ulaplus_select,ulaplus_mode,timex_mode,ulaplus_palette[64];
 #if SPECTRUM_HAS_TIMEX_2068
@@ -163,6 +182,13 @@ void spectrum_pentagon_watch(spectrum*,spectrum_pentagon_changes*);
 uint32_t spectrum_frame_cycles(const spectrum*);
 uint32_t spectrum_run(spectrum*,uint32_t tstates);
 void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
+#if SPECTRUM_HAS_BEAM_VIDEO
+void spectrum_beam_begin(spectrum*,unsigned,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
+bool spectrum_beam_span(const spectrum*,unsigned mode,unsigned row,unsigned first,unsigned last,uint8_t* pixels);
+#if SPECTRUM_HAS_TIMEX
+void spectrum_timex_beam_expand(uint8_t* pixels);
+#endif
+#endif
 void spectrum_raster_end(spectrum*);
 /* Expand a stored strip in a SPECTRUM_RASTER_STRIP_BYTES buffer for LCD. */
 void spectrum_raster_expand(uint8_t*);
@@ -171,6 +197,7 @@ uint8_t spectrum_port_in(spectrum*,uint16_t port);
 void spectrum_video(const spectrum*,uint8_t bitmap[6144],uint8_t tiles[768]);
 void spectrum_video8(const spectrum*,uint8_t bitmap[6144],uint8_t tiles[1536]);
 uint16_t spectrum_color(unsigned index);
+uint16_t spectrum_ulaplus_color(unsigned grb);
 uint16_t spectrum_palette(const spectrum*,unsigned index);
 uint16_t spectrum_border(const spectrum*);
 /* 48K SNA and Z80 v1/v2/v3. File suffix selects the format; no heuristics.

@@ -18,6 +18,9 @@ inline bool valid_color(const mk61_service_color_frame& f) {
     if(format==MK61_COLOR_INDEX4) {
         pixels=((f.width+1U)/2)*f.height;
         if(f.tiles || f.tile_bytes) return false;
+    } else if(format==MK61_COLOR_RGB565) {
+        pixels=2U*f.width*f.height;
+        if(f.tiles || f.tile_bytes) return false;
     } else if(format==MK61_COLOR_TILE1 || format==MK61_COLOR_TILE8) {
         if((f.width|f.height)&7U || !f.tiles) return false;
         pixels=f.width*f.height/8;tiles=f.width*f.height/64*(format==MK61_COLOR_TILE8?2:1);
@@ -59,6 +62,7 @@ MK61_LCD_COLOR_CODE(dirty) inline bool cell565_dirty(const mk61_service_color_fr
 }
 inline uint16_t color_pixel(const mk61_service_color_frame& f,unsigned x,unsigned y,const uint16_t* palette64=nullptr) {
     unsigned index;const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
+    if(format==MK61_COLOR_RGB565) return cell_color(f.pixels+2*(y*f.width+x));
     if(format==MK61_COLOR_CELL565) {
         const unsigned cell=y*(f.width/8)+x/8;
         return cell_color(f.tiles+cell*4+(f.pixels[cell]&(128U>>(x&7))?2:0));
@@ -82,6 +86,16 @@ __attribute__((always_inline))
 inline void color_scanline(const mk61_service_color_frame& f,const Rect& r,unsigned row,uint16_t* out,
                            const uint16_t* palette64=nullptr,void (*progress)()=nullptr) {
     const unsigned format=f.format&~MK61_COLOR_PRESERVE_OUTSIDE;
+    if(format==MK61_COLOR_RGB565) {
+        const auto* pixels=f.pixels+2*((r.y-f.y+row)*f.width+r.x-f.x);
+        for(unsigned x=0;x<r.width;) {
+            const unsigned n=progress && r.width-x>64?64:r.width-x;
+            for(unsigned i=0;i<n;++i) out[x+i]=cell_color(pixels+2*(x+i));
+            x+=n;
+            if(progress) progress();
+        }
+        return;
+    }
     if(format==MK61_COLOR_CELL565) {
         if(!progress) cell565_scanline(f,r,row,out);
         else for(unsigned x=0;x<r.width;x+=64) {
@@ -160,7 +174,8 @@ MK61_LCD_COLOR_CODE(plan) inline void plan_color(Update& u,const mk61_service_co
     // commands, DMA setup and row service cost about 2048 pixel-data bytes.
     constexpr unsigned WINDOW_BYTES=2048;
     const unsigned format=next.format&~MK61_COLOR_PRESERVE_OUTSIDE;
-    if(force || !same_color_view(old,next) || std::memcmp(old.palette,next.palette,sizeof(old.palette))) {
+    if(force || !same_color_view(old,next) ||
+       (format!=MK61_COLOR_RGB565 && std::memcmp(old.palette,next.palette,sizeof(old.palette)))) {
         u.rectangles[0]={next.x,next.y,next.width,next.height};u.count=1;
     } else {
         // An unchanged frame needs no tile walk. The bulk comparison also
@@ -211,10 +226,13 @@ MK61_LCD_COLOR_CODE(plan) inline void plan_color(Update& u,const mk61_service_co
                 } else if(format==MK61_COLOR_CELL565) {
                     dirty=cell565_dirty(old,next,x,y,rows);
                 } else {
-                    const unsigned stride=(next.width+1U)/2;
-                    const unsigned bytes=(next.width-x<8?(next.width-x+1U)/2:4);
+                    const bool rgb=format==MK61_COLOR_RGB565;
+                    const unsigned stride=rgb?2U*next.width:(next.width+1U)/2;
+                    const unsigned column=rgb?2*x:x/2;
+                    const unsigned width=next.width-x<8?next.width-x:8;
+                    const unsigned bytes=rgb?2*width:(width+1U)/2;
                     for(unsigned row=0;row<rows && !dirty;++row)
-                        dirty=std::memcmp(old.pixels+(y+row)*stride+x/2,next.pixels+(y+row)*stride+x/2,bytes)!=0;
+                        dirty=std::memcmp(old.pixels+(y+row)*stride+column,next.pixels+(y+row)*stride+column,bytes)!=0;
                 }
                 if(dirty) {
                     if(first!=next.width && (x-last)*rows*2>WINDOW_BYTES) {

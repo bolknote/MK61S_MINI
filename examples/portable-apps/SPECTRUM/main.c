@@ -29,16 +29,24 @@ static bool started;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static spectrum_tape* tape;
 static char* tape_path;
+#if SPECTRUM_HAS_TAPE_RECORD
+static spectrum_tape_recorder* recording;
+#endif
 #endif
 static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
 enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-enum { RASTER_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
-       2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
-       VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:0),
-       VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000 };
-typedef struct { unsigned next;uint32_t guard_us;bool clear,ready; } raster_output;
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+enum { TAPE_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES,
+       RASTER_BASE=TAPE_BASE+2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
+       VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:
+                                         SPECTRUM_HAS_RASTER?SPECTRUM_RASTER_PACKED_BYTES:0),
+       VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000, RASTER_IDLE=255 };
+typedef struct {
+    uint32_t guard_us;
+    uint8_t next,bank,mode;
+    bool clear,ready,selected,transaction,valid,repainted;
+} raster_output;
+#if SPECTRUM_HAS_FAST_VIDEO
 #if SPECTRUM_HAS_PENTAGON
 enum { WIDE_PACKED_ROWS=24, WIDE_PACKED_BYTES=WIDE_PACKED_ROWS*SPECTRUM_WIDE_WIDTH/2 };
 _Static_assert(2*WIDE_PACKED_BYTES<=SPECTRUM_VIDEO_WORK_BYTES,"Wide split windows overlap the disk cache");
@@ -60,7 +68,7 @@ typedef struct {
 #endif
 static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
 #endif
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if (SPECTRUM_HAS_PENTAGON || SPECTRUM_RASTER_ENABLED) && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static bool pacing_video_io;
 #endif
 static bool banked_buffers;
@@ -74,7 +82,9 @@ static mk61_app_flow* app_flow;
 static spectrum_preferences preferences;
 static bool preferences_dirty;
 static bool exact_raster;
-enum { DEFAULT_MODEL=SPECTRUM_HAS_TIMEX_2068?SPECTRUM_TS2068:SPECTRUM_APP_PROFILE==3?SPECTRUM_P1024:SPECTRUM_APP_PROFILE==4?SPECTRUM_48:
+enum { DEFAULT_MODEL=SPECTRUM_HAS_TIMEX_2068?SPECTRUM_TS2068:
+       (SPECTRUM_APP_PROFILE==3 || SPECTRUM_APP_PROFILE==7)?SPECTRUM_P1024:
+       (SPECTRUM_APP_PROFILE==4 || SPECTRUM_APP_PROFILE==8)?SPECTRUM_48:
        SPECTRUM_HAS_PENTAGON?SPECTRUM_P512:SPECTRUM_128 };
 
 static bool model_available(unsigned model) {
@@ -110,10 +120,14 @@ static bool external_transfer(bool write,uint32_t offset,uint8_t* bytes,uint32_t
             mk61_app_buffer_read(services,external.handle,offset,bytes,n);
         if(!ok) return false;
         offset+=n;bytes+=n;length-=n;
-#if SPECTRUM_HAS_PENTAGON && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if (SPECTRUM_HAS_PENTAGON || SPECTRUM_RASTER_ENABLED) && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // The pacing loop services input between video steps. Avoid re-running
         // the foreground service for each individual read and write of a strip.
-        if(!pacing_video_io)
+        if(!pacing_video_io
+#if SPECTRUM_HAS_BEAM_VIDEO
+            && !machine.beam_io
+#endif
+            )
 #endif
             mk61_api->service();
     }
@@ -126,35 +140,99 @@ static bool external_write(void* context,uint32_t at,const uint8_t* in,uint32_t 
     (void)context;return external_transfer(true,at,(uint8_t*)in,n);
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-#if SPECTRUM_HAS_RASTER
+#if SPECTRUM_RASTER_ENABLED
+_Static_assert(SPECTRUM_RASTER_PACKED_BYTES<=2*SPECTRUM_BANK_BYTES,"Raster banks overlap");
+_Static_assert(2*SPECTRUM_RASTER_PACKED_STRIP_BYTES<=SPECTRUM_VIDEO_WORK_BYTES,"Raster comparison exceeds the workspace");
+_Static_assert(4*SPECTRUM_WIDE_WIDTH*SPECTRUM_BEAM_ROWS<=SPECTRUM_VIDEO_WORK_BYTES,"Beam comparison exceeds the workspace");
+static unsigned raster_strip_bytes(const raster_output* output) {
+    return SPECTRUM_HAS_BEAM_VIDEO && output->mode?spectrum_beam_row_bytes(output->mode)*SPECTRUM_BEAM_ROWS:
+        SPECTRUM_RASTER_PACKED_STRIP_BYTES;
+}
+static uint32_t raster_address(const raster_output* output,unsigned bank,unsigned strip) {
+    if(SPECTRUM_HAS_BEAM_VIDEO && output->mode) {
+        // Keep both beam captures in the tail of the unused tape slot.
+        const uint32_t base=TAPE_BASE+((uintptr_t)tape->index_context^1u)*SPECTRUM_TAPE_SLOT_BYTES+
+            SPECTRUM_TAPE_SLOT_BYTES-2*SPECTRUM_BEAM_FRAME_BYTES;
+        return base+bank*SPECTRUM_BEAM_FRAME_BYTES+strip*raster_strip_bytes(output);
+    }
+    return (bank?WIDE_REFERENCE:RASTER_BASE)+strip*SPECTRUM_RASTER_PACKED_STRIP_BYTES;
+}
 /* The raster buffer is live during a Z80 bus callback. Keep the transfer
  * bounded and avoid re-entering the guest while the beam is being caught up. */
 static bool raster_store(void* context,unsigned strip,const uint8_t* data) {
-    (void)context;
-    const uint32_t at=RASTER_BASE+strip*SPECTRUM_RASTER_PACKED_STRIP_BYTES;
-    return external_write(NULL,at,data,SPECTRUM_RASTER_PACKED_STRIP_BYTES);
+    const raster_output* output=context;
+    const uint32_t at=raster_address(output,output->bank,strip);
+    return external_write(NULL,at,data,raster_strip_bytes(output));
 }
 static bool raster_present(uint8_t* buffer,raster_output* raster) {
+    const bool beam=SPECTRUM_HAS_BEAM_VIDEO && raster->mode;
+    const unsigned strips=beam?spectrum_beam_height(raster->mode)/SPECTRUM_BEAM_ROWS:SPECTRUM_RASTER_STRIPS;
+    if(!raster->selected) {
+        mk61_service_color_scroll scroll={0,320,0,0};
+        const unsigned status=services->call(MK61_SERVICE_COLOR_DISPLAY,
+            MK61_COLOR_SCROLL_BEGIN,0,sizeof(scroll),&scroll);
+        if(status==2) return true;
+        raster->transaction=status!=0;
+        raster->selected=true;
+        if(status==3) raster->clear=true;
+        if(status!=1) raster->valid=false;
+    }
+    if(raster->next==strips) {
+        if(raster->transaction) {
+            const unsigned status=color(MK61_COLOR_SCROLL_END,NULL);
+            if(status==2) return true;
+            if(!status) {
+                if(raster->repainted) return false;
+                // A failed end leaves the original mapping open for repaint.
+                raster->next=0;raster->valid=false;
+                raster->clear=raster->repainted=true;
+                return true;
+            }
+        }
+        raster->valid=raster->transaction;
+        raster->next=RASTER_IDLE;
+        return true;
+    }
     if(!raster->ready) {
-        const uint32_t at=RASTER_BASE+raster->next*SPECTRUM_RASTER_PACKED_STRIP_BYTES;
-        if(!external_read(NULL,at,buffer,SPECTRUM_RASTER_PACKED_STRIP_BYTES)) return false;
-        spectrum_raster_expand(buffer);
+        const unsigned bytes=raster_strip_bytes(raster);
+        if(!external_read(NULL,raster_address(raster,raster->bank,raster->next),buffer,bytes)) return false;
+        // Compare against the last accepted raster frame. Keep both captures
+        // until the LCD commits, so a failed transfer can repaint every row.
+        if(raster->valid) {
+            if(!external_read(NULL,raster_address(raster,raster->bank^1u,raster->next),buffer+bytes,bytes)) return false;
+            if(!memcmp(buffer,buffer+bytes,bytes)) {++raster->next;return true;}
+        }
+        if(SPECTRUM_HAS_RASTER && !beam) spectrum_raster_expand(buffer);
+#if SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_TIMEX
+        if(beam) spectrum_timex_beam_expand(buffer);
+#endif
         raster->ready=true;
     }
     mk61_service_color_frame part={0};
-    part.width=320;part.height=SPECTRUM_RASTER_STRIP_ROWS;
-    part.y=32+raster->next*SPECTRUM_RASTER_STRIP_ROWS;
-    part.pixels=buffer;part.pixel_bytes=SPECTRUM_RASTER_STRIP_BYTES/5;
-    part.tiles=buffer+part.pixel_bytes;part.tile_bytes=part.pixel_bytes*4;
-    part.background=spectrum_border(&machine);
-    part.format=MK61_COLOR_CELL565|(raster->clear?0:MK61_COLOR_PRESERVE_OUTSIDE);
+    part.pixels=buffer;
+    if(beam) {
+        part.width=spectrum_beam_width(raster->mode);part.x=(320-part.width)/2;
+        part.height=SPECTRUM_BEAM_ROWS;
+        part.y=(320-spectrum_beam_height(raster->mode))/2+raster->next*SPECTRUM_BEAM_ROWS;
+        part.pixel_bytes=SPECTRUM_HAS_PENTAGON?raster_strip_bytes(raster):2*part.width*part.height;
+        part.format=SPECTRUM_HAS_PENTAGON?MK61_COLOR_INDEX4:MK61_COLOR_RGB565;
+        if(SPECTRUM_HAS_PENTAGON) for(unsigned i=0;i<16;++i) part.palette[i]=spectrum_color(i);
+    } else {
+        part.width=320;part.height=SPECTRUM_RASTER_STRIP_ROWS;
+        part.y=32+raster->next*SPECTRUM_RASTER_STRIP_ROWS;
+        part.pixel_bytes=SPECTRUM_RASTER_STRIP_BYTES/5;
+        part.tiles=buffer+part.pixel_bytes;part.tile_bytes=part.pixel_bytes*4;
+        part.format=MK61_COLOR_CELL565;
+    }
+    part.background=beam && spectrum_is_pentagon(&machine)?0:spectrum_border(&machine);
+    if(!raster->clear) part.format|=MK61_COLOR_PRESERVE_OUTSIDE;
     const unsigned result=color(MK61_COLOR_PRESENT,&part);
     if(result==1) {raster->clear=raster->ready=false;++raster->next;}
     return result!=0;
 }
 #endif
 
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_FAST_VIDEO
 static uint32_t video_page(unsigned operation,unsigned page) {
     return services->call(MK61_SERVICE_COLOR_DISPLAY,operation,0,sizeof(page),&page);
 }
@@ -486,6 +564,9 @@ static __attribute__((noinline)) uint32_t file_call(unsigned op,const char* path
     return services->call(MK61_SERVICE_FILE_BYTES,op,0,sizeof(r),&r);
 }
 static bool switch_to_app(const char* name,unsigned model,uint32_t file_id,const char* path) {
+#if SPECTRUM_HAS_TAPE_RECORD && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    if(recording && recording->write) {message("Save or discard the TAP\nrecording first");return false;}
+#endif
     if(!app_flow) return false;
     uint32_t partner=file_call(MK61_FILE_BYTES_ID,name,NULL,0,0);
     if(!partner) {
@@ -667,7 +748,7 @@ static bool select_model(unsigned model) {
     stop_tape();
     spectrum_attach_memory(&machine,&bank_memory);
     if(model==SPECTRUM_48) machine.pentagon=false;
-    if(SPECTRUM_HAS_TIMEX && SPECTRUM_APP_PROFILE==4) machine.extensions|=SPECTRUM_TIMEX;
+    if(SPECTRUM_HAS_TIMEX && (SPECTRUM_APP_PROFILE==4 || SPECTRUM_APP_PROFILE==8)) machine.extensions|=SPECTRUM_TIMEX;
     spectrum_disk_reset(&machine);started=false;return true;
 }
 /* SD publication borrows the cache lease while the guest is paused. */
@@ -793,13 +874,11 @@ static void mount_media(unsigned mode) {
 }
 
 static bool tape_index_read(void* context,uint32_t offset,uint8_t* out,uint32_t n) {
-    const uint32_t base=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
-        (uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
+    const uint32_t base=TAPE_BASE+(uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
     return external_read(NULL,base+offset,out,n);
 }
 static bool tape_index_write(void* context,uint32_t offset,const uint8_t* in,uint32_t n) {
-    const uint32_t base=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES+
-        (uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
+    const uint32_t base=TAPE_BASE+(uintptr_t)context*SPECTRUM_TAPE_SLOT_BYTES;
     return external_write(NULL,base+offset,in,n);
 }
 
@@ -821,6 +900,9 @@ static enum spectrum_error read_tape(const spectrum_source* source,bool tzx) {
     return error;
 }
 static bool mount_tape(void) {
+#if SPECTRUM_HAS_TAPE_RECORD && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    if(recording->write) {message("Save or discard the TAP\nrecording first");return false;}
+#endif
     mk61_service_file_info info;
     if(!file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info)) || info.directory) return false;
     spectrum_source source={snapshot_path,info.size,read_source};
@@ -842,10 +924,63 @@ static void tape_ready(void) {
     message("Tape ready\nUse LOAD \"\" in BASIC");
 }
 
-static void tape_menu(void) {
+#if SPECTRUM_HAS_TAPE_RECORD
+static void end_tape_record(void) {
+    machine.mic=NULL;
+    recording->write=NULL;
+}
+static int read_tape_record(void* context,uint32_t offset,uint8_t* output,uint32_t size) {
+    return tape_index_read(context,offset,output,size);
+}
+static bool record_tape(mk61_service_lease* workspace) {
+    if(!recording->write) {
+        if(!external.handle || !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_FILE_WRITE_SOURCE)) {
+            message("TAP recording requires PSRAM\nand file writing");return true;
+        }
+        stop_tape();
+        *recording=(spectrum_tape_recorder){.context=(void*)((uintptr_t)tape->index_context^1u),
+            .write=tape_index_write,.capacity=SPECTRUM_TAPE_SLOT_BYTES-
+                (SPECTRUM_HAS_BEAM_VIDEO?2*SPECTRUM_BEAM_FRAME_BYTES:0)};
+        machine.mic_context=recording;machine.mic=spectrum_tape_mic;
+        message("Recording TAP\nUse SAVE in BASIC");
+        return true;
+    }
+    machine.mic=NULL;
+    spectrum_tape_record_finish(recording);
+    if(!recording->size) {
+        message(recording->fault?"TAP recording failed":"No complete tape block");
+        end_tape_record();return true;
+    }
+    for(unsigned i=1;i<=9999;++i) {
+        mk61_service_file_info info;
+        mk61_app_snprintf(services,snapshot_path,256,"TAPE%04u.TAP",i);
+        if(file_call(MK61_FILE_BYTES_STAT,snapshot_path,&info,0,sizeof(info))) continue;
+        if(!cache_workspace(workspace,true)) {message("Cannot save TAP");return true;}
+        mk61_service_write_source request={snapshot_path,recording->context,read_tape_record,recording->size,0};
+        const bool saved=services->call(MK61_SERVICE_FILE_BYTES,MK61_FILE_BYTES_WRITE_SOURCE,0,sizeof(request),&request)!=0;
+        if(saved) end_tape_record();
+        if(!cache_workspace(workspace,false)) return false;
+        if(saved) status_event("SP STATE=TAP_SAVED\n");
+        message(saved?snapshot_path:"Cannot save TAP");
+        return true;
+    }
+    message("No free TAP name");return true;
+}
+#endif
+
+static bool tape_menu(mk61_service_lease* workspace) {
+    (void)workspace;
     unsigned selected=0;
-    const char* labels[]={"Open TAP / TZX",tape->playing?"Stop":"Play","Rewind","Eject","Back"};
-    switch(menu_pick("Tape",labels,5,&selected,true,NULL)) {
+    const char* labels[]={"Open TAP / TZX",tape->playing?"Stop":"Play","Rewind","Eject",
+#if SPECTRUM_HAS_TAPE_RECORD
+        recording->write?"Save recording":"Record TAP",recording->write?"Discard recording":"Back",
+#endif
+        "Back"};
+    unsigned count=sizeof(labels)/sizeof(*labels);
+#if SPECTRUM_HAS_TAPE_RECORD
+    if(!recording->write) --count;
+#endif
+    switch(menu_pick("Tape",labels,count,&selected,true,NULL)) {
     case 0:
         if(choose_file(FILE_TAPE) && mount_tape()) tape_ready();
         break;
@@ -858,7 +993,12 @@ static void tape_menu(void) {
     case 3:
         tape->source.read=NULL;tape->playing=false;tape->choices=0;machine.ear=NULL;
         break;
+#if SPECTRUM_HAS_TAPE_RECORD
+    case 4: return record_tape(workspace);
+    case 5: if(recording->write) end_tape_record();break;
+#endif
     }
+    return true;
 }
 static bool tape_select(void) {
     const unsigned count=tape->choices<10?tape->choices:10;
@@ -975,9 +1115,11 @@ static bool settings(mk61_service_lease* workspace) {
         static const char* const joysticks[]={"Joystick: Timex 1","Joystick: Timex 2","Joystick: Sinclair 1"};
         const char* labels[]={joysticks[machine.joystick_mode],
             machine.sound_chip==SPECTRUM_YM?"Sound chip: YM2149":"Sound chip: AY-3-8912",
-            layouts[machine.sound_layout],enabled&SPECTRUM_ULAPLUS?"ULAplus: On":"ULAplus: Off","Back"};
-        const unsigned back=4;
-        const char actions[]="jcs4 ";
+            layouts[machine.sound_layout],enabled&SPECTRUM_ULAPLUS?"ULAplus: On":"ULAplus: Off",
+            exact_raster?"Raster: On":"Raster: Off","Back"};
+        const unsigned back=(color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_RGB565))?5:4;
+        if(back==4) labels[4]="Back";
+        const char actions[]="jcs4r ";
 #else
         static const char* const joysticks[]={"Joystick: Kempston","Joystick: Sinclair 1","Joystick: Sinclair 2"};
         const bool readonly=machine.disk.mode==1?machine.disk.fdc.io.readonly:machine.disk.spi.io.readonly;
@@ -1116,13 +1258,13 @@ static uint32_t guest_time_us(uint32_t cycles) {
 }
 static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t* deadline
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-#if SPECTRUM_HAS_RASTER
+#if SPECTRUM_RASTER_ENABLED
                        ,raster_output* raster
 #endif
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_FAST_VIDEO
                        ,video_output* video
 #endif
-#if SPECTRUM_HAS_RASTER || SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_RASTER_ENABLED || SPECTRUM_HAS_FAST_VIDEO
                        ,uint8_t* work,const char** error
 #endif
 #endif
@@ -1164,18 +1306,21 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
         // The resident millisecond delay already busy-pumps services.
         // Pump directly so it cannot carry us to the next millisecond.
         now=pacing_clock_us();
-#if SPECTRUM_HAS_RASTER && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_RASTER_ENABLED && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // Z80 has already published the frame. Spend its remaining wall
         // time on PSRAM, strip expansion and LCD submission.
-        if(raster && raster->next<SPECTRUM_RASTER_STRIPS && (int32_t)(target-now)>(int32_t)raster->guard_us) {
+        if(raster && raster->next<RASTER_IDLE && (int32_t)(target-now)>(int32_t)raster->guard_us) {
             const uint32_t start=now;
-            if(!raster_present(work,raster)) {*error="Raster output failed";return false;}
+            pacing_video_io=true;
+            const bool ok=raster_present(work,raster);
+            pacing_video_io=false;
+            if(!ok) {*error="Raster output failed";return false;}
             now=pacing_clock_us();
             const uint32_t needed=now-start+2000;
             if(needed>raster->guard_us && needed<target-start) raster->guard_us=needed;
         }
 #endif
-#if SPECTRUM_HAS_EXTENDED_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+#if SPECTRUM_HAS_FAST_VIDEO && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // Z80 has produced this frame's sound events. Fit capture and strip
         // work here, using the longest observed step plus the service guard.
         if(video->active || video->pending) {
@@ -1222,7 +1367,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
     return true;
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-static __attribute__((noinline)) void prime_audio(void) {
+static __attribute__((noinline)) void prime_audio(bool beam) {
     // Generate real guest events before PWM. Wide needs time for its
     // initial video snapshot. The original 128K and 2068 ROMs need more
     // lead across the RAM test, paging, and the first complete screen.
@@ -1235,7 +1380,10 @@ static __attribute__((noinline)) void prime_audio(void) {
     const bool cold128=sinclair128 && !machine.cpu.cyc && !machine.cpu.pc;
     const bool wide=SPECTRUM_HAS_PENTAGON && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_WIDE;
     const bool cold2068=SPECTRUM_HAS_TIMEX_2068 && !machine.cpu.cyc && !machine.cpu.pc;
-    const uint32_t end=(uint32_t)machine.cpu.cyc+(cold128 || cold2068?4*frame:wide?2*spectrum_frame_cycles(&machine):frame);
+    const uint32_t ahead=cold128 || cold2068?4*frame:
+        SPECTRUM_HAS_BEAM_VIDEO && beam?3*spectrum_frame_cycles(&machine):
+        wide?2*spectrum_frame_cycles(&machine):frame;
+    const uint32_t end=(uint32_t)machine.cpu.cyc+ahead;
     int32_t left;
     while((left=(int32_t)(end-(uint32_t)machine.cpu.cyc))>0 &&
           !(machine.memory && machine.memory->fault) && !tape->fault && !tape->choices) {
@@ -1300,13 +1448,16 @@ static __attribute__((noinline)) void emulate_session(void) {
         message("No audio stream");return;
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    const bool raster=exact_raster && raster_available() &&
-        (color(MK61_COLOR_FORMATS,NULL)&(1u<<MK61_COLOR_CELL565));
+    const bool raster=(SPECTRUM_HAS_BEAM_VIDEO?external.handle && (!SPECTRUM_HAS_FAST_VIDEO || exact_raster):
+                       exact_raster && raster_available()) &&
+        (color(MK61_COLOR_FORMATS,NULL)&(1u<<(SPECTRUM_HAS_BEAM_VIDEO?
+             (SPECTRUM_HAS_PENTAGON?MK61_COLOR_INDEX4:MK61_COLOR_RGB565):MK61_COLOR_CELL565)));
     if(audio_mode==2 && (SPECTRUM_HAS_TIMEX_2068 || spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
-       (!machine.pentagon && (raster || tape->playing)))) prime_audio();
+       (!machine.pentagon && (raster || tape->playing)))) prime_audio(raster);
     spectrum_hicolor_changes changes;
-    if(SPECTRUM_HAS_TIMEX && (machine.extensions&SPECTRUM_TIMEX)) spectrum_hicolor_watch(&machine,&changes);
-#if SPECTRUM_HAS_PENTAGON
+    if(SPECTRUM_HAS_FAST_VIDEO && SPECTRUM_HAS_TIMEX && !raster && (machine.extensions&SPECTRUM_TIMEX))
+        spectrum_hicolor_watch(&machine,&changes);
+#if SPECTRUM_HAS_PENTAGON && SPECTRUM_HAS_FAST_VIDEO
     spectrum_pentagon_changes pentagon_changes;
     if(SPECTRUM_HAS_PENTAGON_VIDEO && spectrum_is_pentagon(&machine) && machine.memory && machine.memory->extended)
         spectrum_pentagon_watch(&machine,&pentagon_changes);
@@ -1330,14 +1481,15 @@ static __attribute__((noinline)) void emulate_session(void) {
         (machine.extensions&SPECTRUM_TIMEX)?spectrum_frame_cycles(&machine):0;
 #endif
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_FAST_VIDEO
     video_output video={.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
 #if SPECTRUM_HAS_PENTAGON
     video.ready_guard_us=VIDEO_READY_GUARD_US;
 #endif
 #endif
-#if SPECTRUM_HAS_RASTER
-    raster_output output={.next=SPECTRUM_RASTER_STRIPS,.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
+#if SPECTRUM_RASTER_ENABLED
+    raster_output output={.next=RASTER_IDLE,
+        .guard_us=SPECTRUM_HAS_BEAM_VIDEO?VIDEO_READY_GUARD_US:VIDEO_INITIAL_GUARD_US,.clear=true};
 #endif
 #endif
     for(;;) {
@@ -1365,6 +1517,9 @@ static __attribute__((noinline)) void emulate_session(void) {
         if(machine.memory && machine.memory->fault) goto memory_error;
         if(needs_extended_video()) {error="Open this game in\nZXVIDEO.APP";break;}
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(SPECTRUM_HAS_BEAM_VIDEO && !SPECTRUM_HAS_FAST_VIDEO && !raster && spectrum_video_mode(&machine)) {
+            error="Raster video requires\nupdated firmware";break;
+        }
         if(tape && tape->fault) {tape->fault=false;error="Tape read failed";break;}
         if(tape->choices) break;
         if(raster && machine.cpu.before_store && !machine.video_bytes) goto memory_error;
@@ -1376,20 +1531,40 @@ static __attribute__((noinline)) void emulate_session(void) {
         // next frame's first CPU/audio slice free of display conversion.
         {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-#if SPECTRUM_HAS_RASTER
+#if SPECTRUM_RASTER_ENABLED
             if(raster) {
-                // Capture a full frame after audio has produced its first
-                // frame, and only when LCD has accepted the previous one.
                 if(machine.video_bytes) {
                     spectrum_raster_end(&machine);
+#if SPECTRUM_HAS_BEAM_VIDEO
+                    if(machine.beam_geometry_changed) {
+                        output.valid=false;output.clear=true;
+                        goto paced;
+                    }
+#endif
                     output.next=0;
-                } else if(output.next==SPECTRUM_RASTER_STRIPS) {
-                    spectrum_raster_begin(&machine,scratch.pixels,NULL,raster_store);
+                    output.selected=output.repainted=false;
+                    goto paced;
                 }
-                goto paced;
+                // Capture again only when the previous frame is committed.
+                if(output.next!=RASTER_IDLE) goto paced;
+#if SPECTRUM_HAS_BEAM_VIDEO
+                const unsigned mode=SPECTRUM_HAS_PENTAGON?spectrum_pentagon_video_mode(&machine):SPECTRUM_VIDEO_HICOLOR;
+                if(mode) {
+                    if(output.mode!=mode) {output.valid=false;output.clear=true;}
+                    output.mode=(uint8_t)mode;
+                    output.bank^=1u;
+                    spectrum_beam_begin(&machine,mode,scratch.pixels,&output,raster_store);
+                    goto paced;
+                }
+                output.valid=false;output.clear=true;
+#else
+                    output.bank^=1u;
+                    spectrum_raster_begin(&machine,scratch.pixels,&output,raster_store);
+                    goto paced;
+#endif
             }
 #endif
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_FAST_VIDEO
             if(!SPECTRUM_HAS_PENTAGON && video.active) goto paced;
             video.pending=spectrum_video_mode(&machine);
             if(video.active || video.pending) goto paced;
@@ -1411,13 +1586,13 @@ static __attribute__((noinline)) void emulate_session(void) {
 paced:
         if(!pace_frame(blocked,&keyboard_deadline,&deadline
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-#if SPECTRUM_HAS_RASTER
+#if SPECTRUM_RASTER_ENABLED
                        ,raster?&output:NULL
 #endif
-#if SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_HAS_FAST_VIDEO
                        ,&video
 #endif
-#if SPECTRUM_HAS_RASTER || SPECTRUM_HAS_EXTENDED_VIDEO
+#if SPECTRUM_RASTER_ENABLED || SPECTRUM_HAS_FAST_VIDEO
                        ,scratch.pixels,&error
 #endif
 #endif
@@ -1468,6 +1643,10 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
     char mounted_path[256];
     spectrum_tape mounted_tape={0};
     tape_path=mounted_path;tape=&mounted_tape;
+#if SPECTRUM_HAS_TAPE_RECORD
+    spectrum_tape_recorder recorder={0};
+    recording=&recorder;
+#endif
 #endif
     directory=paths[0];snapshot_path=paths[1];floppy.path=paths[2];sd_card.path=paths[3];
     opened_file=file_id;
@@ -1593,7 +1772,12 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
 #endif
         const int choice=menu_pick(root_title,labels,ROOT_COUNT,&root_selected,false,hotkeys);
         const int c=choice<0?'q':choice==0?13:hotkeys[choice];
-        if(escape(c) || c=='q' || c=='Q' || c==0x90) break;
+        if(escape(c) || c=='q' || c=='Q' || c==0x90) {
+#if SPECTRUM_HAS_TAPE_RECORD && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(recording->write) {message("Save or discard the TAP\nrecording first");continue;}
+#endif
+            break;
+        }
         if(c=='h' || c=='H') { help();continue; }
         if(!SPECTRUM_HAS_TIMEX_2068 && c=='v') {
             const bool pentagon=spectrum_is_pentagon(&machine);
@@ -1604,7 +1788,7 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
         }
         if(c=='p' || c=='P') { if(!settings(&ram)) break;continue; }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-        if(c=='l') { tape_menu();continue; }
+        if(c=='l') { if(!tape_menu(&ram)) break;continue; }
         if(c=='s') { if(!save_snapshot(&ram)) break;continue; }
 #endif
         if(!SPECTRUM_HAS_TIMEX_2068 && (c=='d' || c=='D')) { mount_media(SPECTRUM_DISK_BETA);continue; }
@@ -1669,7 +1853,12 @@ static __attribute__((noinline)) int app_run(uint32_t file_id,unsigned initial_m
             started=true;
         } else continue;
         emulate();
-        if(!started) break;
+        if(!started) {
+#if SPECTRUM_HAS_TAPE_RECORD && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+            if(recording->write) {message("Save or discard the TAP\nrecording first");continue;}
+#endif
+            break;
+        }
     }
 done:
     color(MK61_COLOR_END,NULL);mk61_api->graphics_end();
