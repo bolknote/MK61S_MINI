@@ -673,7 +673,14 @@ static void bounded_audio_prefill(void) {
     spectrum_tape empty={0};
     active_machine=&state;tape=&empty;
     spectrum_init(&state,ram,rom);
-    rom[0]=0x76; // HALT: one quiet guest frame is available immediately.
+    rom[0]=0x76;
+    spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
+    prime_audio(false);
+    assert(state.frames==4 && state.cpu.cyc==4*SPECTRUM_FRAME_TSTATES);
+    assert(atomic_load(&state.sound.produced)==(uint32_t)state.cpu.cyc);
+    assert(!atomic_load(&state.sound.clock_running) && !atomic_load(&state.sound.write));
+
+    spectrum_reset(&state);
     state.cpu.cyc=UINT32_MAX-99;
     spectrum_sound_begin(&state,NULL,NULL);spectrum_sound_clock(&state,false);
     prime_audio(false);
@@ -708,7 +715,7 @@ static void bounded_audio_prefill(void) {
     puts("Sinclair 128K M3 prefill: four cold guest frames, one on resume PASS");
 #endif
     active_machine=NULL;tape=NULL;
-    puts("48K M3 prefill: real guest frame, clock wrap and bounded dense event queue PASS");
+    puts("48K M3 prefill: four cold frames, clock wrap on resume and bounded dense event queue PASS");
 }
 static void preferences_scenario(const char* filename) {
     const action_item save_script[]={

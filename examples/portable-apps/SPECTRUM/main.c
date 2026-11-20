@@ -1394,7 +1394,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static __attribute__((noinline)) void prime_audio(bool beam) {
     // Generate real guest events before PWM. Wide needs time for its
-    // initial video snapshot. The original 128K and 2068 ROMs need more
+    // initial video snapshot. The original Sinclair and 2068 ROMs need more
     // lead across the RAM test, paging, and the first complete screen.
     // Each 512T slice fits in the free half of the queue even with two
     // events per OUT, so it never waits on gated audio.
@@ -1402,10 +1402,10 @@ static __attribute__((noinline)) void prime_audio(bool beam) {
     const bool sinclair128=spectrum_is_128(&machine);
     const uint32_t frame=SPECTRUM_HAS_TIMEX_2068?spectrum_frame_cycles(&machine):
         sinclair128?SPECTRUM_128_FRAME_TSTATES:SPECTRUM_FRAME_TSTATES;
-    const bool cold128=sinclair128 && !machine.cpu.cyc && !machine.cpu.pc;
+    const bool cold_sinclair=SPECTRUM_HAS_SINCLAIR && !machine.pentagon && !machine.cpu.cyc && !machine.cpu.pc;
     const bool wide=SPECTRUM_HAS_PENTAGON && spectrum_video_mode(&machine)==SPECTRUM_VIDEO_WIDE;
     const bool cold2068=SPECTRUM_HAS_TIMEX_2068 && !machine.cpu.cyc && !machine.cpu.pc;
-    const uint32_t ahead=cold128 || cold2068?4*frame:
+    const uint32_t ahead=cold_sinclair || cold2068?4*frame:
         SPECTRUM_HAS_BEAM_VIDEO && beam?3*spectrum_frame_cycles(&machine):
         wide?2*spectrum_frame_cycles(&machine):frame;
     const uint32_t end=(uint32_t)machine.cpu.cyc+ahead;
@@ -1478,7 +1478,8 @@ static __attribute__((noinline)) void emulate_session(void) {
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<(SPECTRUM_HAS_BEAM_VIDEO?
              (SPECTRUM_HAS_PENTAGON?MK61_COLOR_INDEX4:MK61_COLOR_RGB565):MK61_COLOR_CELL565)));
     if(audio_mode==2 && (SPECTRUM_HAS_TIMEX_2068 || spectrum_is_128(&machine) || spectrum_video_mode(&machine) ||
-       (!machine.pentagon && (raster || tape->playing)))) prime_audio(raster);
+       (!machine.pentagon && (raster || tape->playing ||
+          (SPECTRUM_HAS_SINCLAIR && !machine.cpu.cyc && !machine.cpu.pc))))) prime_audio(raster);
     spectrum_hicolor_changes changes;
     if(SPECTRUM_HAS_FAST_VIDEO && SPECTRUM_HAS_TIMEX && !raster && (machine.extensions&SPECTRUM_TIMEX))
         spectrum_hicolor_watch(&machine,&changes);
