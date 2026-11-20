@@ -172,6 +172,7 @@ PY
     for selected in DEMO.sna DEMO128.sna OPEN.Z80 ZX0001.SZX BLANK.trd OPEN.SCL GAMES.img; do
         SPECTRUM_OPEN_FILE="$selected" "$build/app" "$build/app-assets"
     done
+    SPECTRUM_SPLIT_PSRAM=1 SPECTRUM_OPEN_FILE=OPEN.Z80 "$build/app" "$build/app-assets"
     SPECTRUM_OPEN_FILE=DEMO128.sna SPECTRUM_SAVE_OPEN_FILE=1 "$build/app" "$build/app-assets"
     for selected in missing unsupported.tap BROKEN.z80; do
         SPECTRUM_OPEN_FILE="$selected" SPECTRUM_OPEN_ERROR=1 "$build/app" "$build/app-assets"

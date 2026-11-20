@@ -37,6 +37,7 @@ static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
 enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { TAPE_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES,
+       EXTERNAL_HEAD_BYTES=2u*1024u*1024u,
        RASTER_BASE=TAPE_BASE+2*SPECTRUM_TAPE_SLOT_BYTES, WIDE_REFERENCE=RASTER_BASE+2*SPECTRUM_BANK_BYTES,
        VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:
                                          SPECTRUM_HAS_RASTER?SPECTRUM_RASTER_PACKED_BYTES:0),
@@ -73,7 +74,11 @@ static bool pacing_video_io;
 #endif
 static bool banked_buffers;
 static spectrum_memory bank_memory;
-static mk61_service_buffer external;
+static uint32_t external;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+static uint32_t external_tail;
+_Static_assert(TAPE_BASE<=EXTERNAL_HEAD_BYTES,"Guest RAM and disk must fit in the first lease");
+#endif
 typedef struct { char* path;bool scl; } mounted_media;
 static mounted_media floppy,sd_card;
 static spectrum_ui osd;
@@ -112,14 +117,22 @@ static void reset_machine(void) {
     spectrum_reset(&machine);
 }
 
-static bool external_transfer(bool write,uint32_t offset,uint8_t* bytes,uint32_t length) {
+static __attribute__((noinline)) bool external_transfer(unsigned operation,uint32_t offset,uint8_t* bytes,uint32_t length) {
     spectrum_sound_publish_before_io(&machine);
     while(length) {
-        const uint32_t n=length<4096?length:4096;
-        const uint32_t ok=write?mk61_app_buffer_write(services,external.handle,offset,bytes,n):
-            mk61_app_buffer_read(services,external.handle,offset,bytes,n);
-        if(!ok) return false;
-        offset+=n;bytes+=n;length-=n;
+        mk61_service_buffer io=mk61_app_buffer_request();
+        io.handle=external;io.offset=offset;io.data=bytes;
+        io.size=length<4096?length:4096;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        if(external_tail) {
+            if(offset>=EXTERNAL_HEAD_BYTES) {
+                io.offset-=EXTERNAL_HEAD_BYTES;io.handle=external_tail;
+            } else if(io.size>EXTERNAL_HEAD_BYTES-offset) io.size=EXTERNAL_HEAD_BYTES-offset;
+        }
+#endif
+        if(!mk61_app_buffer_call(services,operation,&io)) return false;
+        offset+=io.size;length-=io.size;
+        if(bytes) bytes+=io.size;
 #if (SPECTRUM_HAS_PENTAGON || SPECTRUM_RASTER_ENABLED) && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
         // The pacing loop services input between video steps. Avoid re-running
         // the foreground service for each individual read and write of a strip.
@@ -134,10 +147,10 @@ static bool external_transfer(bool write,uint32_t offset,uint8_t* bytes,uint32_t
     return true;
 }
 static bool external_read(void* context,uint32_t at,uint8_t* out,uint32_t n) {
-    (void)context;return external_transfer(false,at,out,n);
+    (void)context;return external_transfer(MK61_BUFFER_READ,at,out,n);
 }
 static bool external_write(void* context,uint32_t at,const uint8_t* in,uint32_t n) {
-    (void)context;return external_transfer(true,at,(uint8_t*)in,n);
+    (void)context;return external_transfer(MK61_BUFFER_WRITE,at,(uint8_t*)in,n);
 }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 #if SPECTRUM_RASTER_ENABLED
@@ -252,7 +265,7 @@ static bool timex_capture(video_output* out,uint8_t* work) {
         for(unsigned i=0;i<3;++i) cells+=damage_cells(&changes->strips[i]);
         out->packed=cells<=SPECTRUM_VIDEO_WORK_BYTES/5;
     }
-    out->saved.io=external.handle && !out->packed?&bank_memory.io:NULL;
+    out->saved.io=external && !out->packed?&bank_memory.io:NULL;
     out->saved.address=RASTER_BASE;
     if(!spectrum_video_capture(&machine,out->mode,work,&out->saved)) return false;
     if(out->packed) {
@@ -294,7 +307,7 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         // Larger ones use the batched native snapshot and keep their clipping.
         out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?WIDE_PACKED_ROWS:16u);
     }
-    out->saved.io=external.handle && !out->packed?&bank_memory.io:NULL;
+    out->saved.io=external && !out->packed?&bank_memory.io:NULL;
     out->saved.address=RASTER_BASE;
     if(!spectrum_video_capture(&machine,mode,work,&out->saved)) return false;
     if(out->packed) {
@@ -337,7 +350,7 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
     const bool timex=SPECTRUM_HAS_SINCLAIR && (!SPECTRUM_HAS_PENTAGON ||
         out->mode==SPECTRUM_VIDEO_HICOLOR || out->mode==SPECTRUM_VIDEO_HIRES);
     if(!out->selected) {
-        if(!pages && external.handle && (!SPECTRUM_HAS_PENTAGON || !out->repainted)) {
+        if(!pages && external && (!SPECTRUM_HAS_PENTAGON || !out->repainted)) {
             // Keep the origin fixed and validate reuse after any LCD error.
             mk61_service_color_scroll scroll={0,320,0,0};
             const unsigned status=services->call(MK61_SERVICE_COLOR_DISPLAY,
@@ -449,13 +462,7 @@ fallback:
 #endif
 #endif
 static bool external_clear(void* context,uint32_t at,uint32_t length) {
-    (void)context;
-    while(length) {
-        mk61_service_buffer r=mk61_app_buffer_request();r.handle=external.handle;r.offset=at;r.size=length<4096?length:4096;
-        if(!mk61_app_buffer_call(services,MK61_BUFFER_FILL,&r)) return false;
-        at+=r.size;length-=r.size;mk61_api->service();
-    }
-    return true;
+    (void)context;return external_transfer(MK61_BUFFER_FILL,at,NULL,length);
 }
 static void sound_yield(void* context) { (void)context;mk61_api->service(); }
 
@@ -720,6 +727,24 @@ static __attribute__((noinline)) bool load_banked_roms(bool pentagon) {
     }
     return true;
 }
+static uint32_t acquire_psram(unsigned bytes) {
+    mk61_service_buffer lease;
+    return mk61_app_buffer_acquire(services,bytes,MK61_BUFFER_EXTERNAL,&lease)?lease.handle:0;
+}
+static bool acquire_external(unsigned bytes) {
+    external=acquire_psram(bytes);
+    if(external) return true;
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    // The editor may hold a small document in the middle of PSRAM. After
+    // disposable caches are reclaimed, the two holes can fit the same layout.
+    const uint32_t tail=acquire_psram(bytes-EXTERNAL_HEAD_BYTES);
+    if(!tail) return false;
+    external=acquire_psram(EXTERNAL_HEAD_BYTES);
+    if(external) {external_tail=tail;return true;}
+    mk61_app_buffer_release(services,tail);
+#endif
+    return false;
+}
 static bool select_model(unsigned model) {
     if(!model_available(model)) return false;
 #if SPECTRUM_HAS_TIMEX_2068
@@ -738,7 +763,7 @@ static bool select_model(unsigned model) {
 #else
         SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES;
 #endif
-    if(!external.handle && !mk61_app_buffer_acquire(services,external_bytes,MK61_BUFFER_EXTERNAL,&external)) {
+    if(!external && !acquire_external(external_bytes)) {
         message("PSRAM required");return false;
     }
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
@@ -890,7 +915,7 @@ static enum spectrum_error read_tape(const spectrum_source* source,bool tzx) {
        (uintptr_t)canvas.pixels%_Alignof(spectrum_tape)) return SPECTRUM_IO;
     spectrum_tape* candidate=(spectrum_tape*)canvas.pixels;
     *candidate=(spectrum_tape){0};
-    if(external.handle && tzx) {
+    if(external && tzx) {
         candidate->index_read=tape_index_read;candidate->index_write=tape_index_write;
         candidate->index_context=(void*)((uintptr_t)tape->index_context^1u);
         candidate->decode_scratch=canvas.pixels+sizeof(*candidate);
@@ -934,7 +959,7 @@ static int read_tape_record(void* context,uint32_t offset,uint8_t* output,uint32
 }
 static bool record_tape(mk61_service_lease* workspace) {
     if(!recording->write) {
-        if(!external.handle || !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_FILE_WRITE_SOURCE)) {
+        if(!external || !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_FILE_WRITE_SOURCE)) {
             message("TAP recording requires PSRAM\nand file writing");return true;
         }
         stop_tape();
@@ -1103,7 +1128,7 @@ static bool load_szx(const spectrum_source* source,uint32_t file_id) {
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static bool raster_available(void) {
     return SPECTRUM_HAS_RASTER && !spectrum_is_pentagon(&machine) &&
-        !(machine.extensions&SPECTRUM_TIMEX) && external.handle;
+        !(machine.extensions&SPECTRUM_TIMEX) && external;
 }
 #endif
 static bool settings(mk61_service_lease* workspace) {
@@ -1448,7 +1473,7 @@ static __attribute__((noinline)) void emulate_session(void) {
         message("No audio stream");return;
     }
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
-    const bool raster=(SPECTRUM_HAS_BEAM_VIDEO?external.handle && (!SPECTRUM_HAS_FAST_VIDEO || exact_raster):
+    const bool raster=(SPECTRUM_HAS_BEAM_VIDEO?external && (!SPECTRUM_HAS_FAST_VIDEO || exact_raster):
                        exact_raster && raster_available()) &&
         (color(MK61_COLOR_FORMATS,NULL)&(1u<<(SPECTRUM_HAS_BEAM_VIDEO?
              (SPECTRUM_HAS_PENTAGON?MK61_COLOR_INDEX4:MK61_COLOR_RGB565):MK61_COLOR_CELL565)));
@@ -1867,7 +1892,10 @@ done:
         for(unsigned i=0;i<2;++i) if(sram[i].handle) mk61_app_buffer_release(services,sram[i].handle);
     }
     if(ram.data) services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_WORKSPACE,MK61_SERVICE_OWNER_APP,0,&ram);
-    if(external.handle) mk61_app_buffer_release(services,external.handle);
+#if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+    if(external_tail) {mk61_app_buffer_release(services,external_tail);external_tail=0;}
+#endif
+    if(external) {mk61_app_buffer_release(services,external);external=0;}
     return 0;
 }
 static int run_app(uint32_t file_id,unsigned initial_model) {

@@ -35,6 +35,9 @@ static unsigned open_keys,open_path_calls,selected_reads;
 static unsigned snapshots_written;
 static unsigned preferences_writes;
 static uint8_t canvas[12800],*psram;
+static uint8_t* psram_tail;
+static unsigned psram_tail_bytes;
+static bool split_psram;
 static uint8_t* direct_sram[3];
 static uint8_t* workspace;
 static unsigned psram_bytes,action;
@@ -142,22 +145,30 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
                 }
                 assert(false);
             }
+            if(split_psram && r->size>EXTERNAL_HEAD_BYTES) {
+                if(r->size>4u*1024u*1024u) return 0;
+                assert(!psram_tail);psram_tail_bytes=r->size;
+                psram_tail=calloc(1,r->size);assert(psram_tail);r->handle=5;return 1;
+            }
             assert(!psram);psram_bytes=r->size;psram=calloc(1,r->size);assert(psram);r->handle=1;return 1;
         }
         if(r->handle>=2 && r->handle<=4) {
             assert(a==MK61_BUFFER_RELEASE && !generator.sample);
             free(direct_sram[r->handle-2]);direct_sram[r->handle-2]=NULL;return 1;
         }
-        assert(r->handle==1 && psram);
-        if(a==MK61_BUFFER_RELEASE) { free(psram);psram=NULL;return 1; }
-        assert(r->offset<=psram_bytes && r->size<=psram_bytes-r->offset);
-        if(video_test && r->offset>=RASTER_BASE) {
+        assert(r->handle==1 || r->handle==5);
+        uint8_t** memory=r->handle==5?&psram_tail:&psram;
+        const unsigned size=r->handle==5?psram_tail_bytes:psram_bytes;
+        assert(*memory);
+        if(a==MK61_BUFFER_RELEASE) { free(*memory);*memory=NULL;return 1; }
+        assert(r->offset<=size && r->size<=size-r->offset);
+        if(video_test && r->offset+(r->handle==5?EXTERNAL_HEAD_BYTES:0)>=RASTER_BASE) {
             ++video_psram_ops;
             if(a==MK61_BUFFER_WRITE) {micros_now+=video_capture_delay_us;video_capture_delay_us=0;}
         }
-        if(a==MK61_BUFFER_READ) memcpy(r->data,psram+r->offset,r->size);
-        else if(a==MK61_BUFFER_WRITE) memcpy(psram+r->offset,r->data,r->size);
-        else if(a==MK61_BUFFER_FILL) memset(psram+r->offset,0,r->size);
+        if(a==MK61_BUFFER_READ) memcpy(r->data,*memory+r->offset,r->size);
+        else if(a==MK61_BUFFER_WRITE) memcpy(*memory+r->offset,r->data,r->size);
+        else if(a==MK61_BUFFER_FILL) memset(*memory+r->offset,0,r->size);
         else assert(false);
         return 1;
     }
@@ -365,6 +376,14 @@ static uint32_t call(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload)
         assert(!b && !c && payload && a<=128 && !machine.sound.clock_running);
         if(a==sizeof("SP STATE=PLAYING\n")-1 && !memcmp(payload,"SP STATE=PLAYING\n",a)) {
             assert(generator.sample);++play_events;
+            if(split_psram) {
+                const uint8_t bytes[]={1,2,3,4,5};
+                uint8_t readback[sizeof(bytes)];
+                assert(external_write(NULL,EXTERNAL_HEAD_BYTES-2,bytes,sizeof(bytes)));
+                assert(!memcmp(psram+EXTERNAL_HEAD_BYTES-2,bytes,2) && !memcmp(psram_tail,bytes+2,3));
+                assert(external_read(NULL,EXTERNAL_HEAD_BYTES-2,readback,sizeof(readback)));
+                assert(!memcmp(readback,bytes,sizeof(bytes)));
+            }
         } else if(a==sizeof("SP STATE=PAUSED\n")-1 && !memcmp(payload,"SP STATE=PAUSED\n",a)) {
             assert(!generator.sample);++pause_events;
         } else {
@@ -393,7 +412,7 @@ static void extended_frames(void) {
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
     uint8_t* tails[]={fixed+15360,fixed+31744};
     uint8_t* runs[]={slots,slots+8192,slots+10240,slots+14336};
-    external.handle=1;psram_bytes=VIDEO_CAPTURE_END;
+    external=1;psram_bytes=VIDEO_CAPTURE_END;
     psram=calloc(1,psram_bytes);assert(psram);
     memset(&state,0,sizeof(state));state.ram=fixed;state.rom=rom;
     assert(spectrum_memory_init_fragmented(&bank_memory,fixed,fixed+16384,tails,runs,64,io));
@@ -621,7 +640,7 @@ static void extended_frames(void) {
         assert(video_scroll_begins==previous_begins+1);
         puts("Raster skips identical packed strips and repaints after a failed LCD commit: PASS");
     }
-    video_test=false;external.handle=0;active_machine=NULL;free(psram);psram=NULL;
+    video_test=false;external=0;active_machine=NULL;free(psram);psram=NULL;
     puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");
 }
 
@@ -674,7 +693,7 @@ static void bounded_audio_prefill(void) {
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
     uint8_t* tails[]={ram+15360,ram+31744};
     uint8_t* runs[]={ram+32768,ram+40960,ram+43008,ram+47104};
-    external.handle=1;psram_bytes=SPECTRUM_ROM_BASE+2*SPECTRUM_ROM_BYTES;
+    external=1;psram_bytes=SPECTRUM_ROM_BASE+2*SPECTRUM_ROM_BYTES;
     psram=calloc(1,psram_bytes);assert(psram);
     psram[SPECTRUM_ROM_BASE]=0x76;
     assert(spectrum_memory_init_fragmented(&banks,ram,ram+16384,tails,runs,8,io));
@@ -685,7 +704,7 @@ static void bounded_audio_prefill(void) {
         assert(state.frames==expected && state.cpu.cyc==expected*SPECTRUM_128_FRAME_TSTATES);
         assert(!banks.fault && !atomic_load(&state.sound.clock_running));
     }
-    external.handle=0;free(psram);psram=NULL;
+    external=0;free(psram);psram=NULL;
     puts("Sinclair 128K M3 prefill: four cold guest frames, one on resume PASS");
 #endif
     active_machine=NULL;tape=NULL;
@@ -766,6 +785,7 @@ int main(int argc,char** argv) {
     remove(settings_path);
     legacy_lcd=getenv("SPECTRUM_LEGACY_LCD")!=NULL;
     remote_audio=getenv("SPECTRUM_REMOTE_AUDIO")!=NULL;
+    split_psram=getenv("SPECTRUM_SPLIT_PSRAM")!=NULL;
     opened_name=getenv("SPECTRUM_OPEN_FILE");open_error=getenv("SPECTRUM_OPEN_ERROR")!=NULL;
     hicolor_sequence=SPECTRUM_APP_PROFILE==4 && opened_name && !strcmp(opened_name,"HICOLOR.SZX");
     save_opened_game=getenv("SPECTRUM_SAVE_OPEN_FILE")!=NULL;
@@ -803,6 +823,11 @@ int main(int argc,char** argv) {
     assert(mk61_app_open_file(UINT32_MAX)==MK61_APP_INVALID_FILE);
     assert(!(opened_name?mk61_app_open_file(42):(uint32_t)spectrum_app_main()));
     assert(!psram && !workspace && !generator.sample);
+    if(split_psram) {
+        assert(!psram_tail && psram_bytes==EXTERNAL_HEAD_BYTES &&
+               psram_tail_bytes==VIDEO_CAPTURE_END-EXTERNAL_HEAD_BYTES);
+        puts("Actual APP with a four-MiB PSRAM gap limit: boot, cross-lease I/O and cleanup PASS");
+    }
     assert(play_events==audio_opens && pause_events==audio_closes);
     char picker_path[256]=".";
     directory=picker_path;
