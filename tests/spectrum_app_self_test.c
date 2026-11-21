@@ -671,11 +671,15 @@ static void timex_raster_pack(void) {
     memset(raw,0x49,sizeof(raw));
     assert(raster_pack(raw,packed,colors,&flat)==10 && packed[0]==255 && packed[5]==255);
     assert(flat==UINT16_MAX && colors[0]==0x49494949u && colors[SPECTRUM_BEAM_ROWS-1]==colors[0]);
-    assert(raster_unpack(packed,10,decoded) && !memcmp(raw,decoded,sizeof(raw)));
+    assert(raster_unpack(packed,10,decoded,0,SPECTRUM_BEAM_ROWS) && !memcmp(raw,decoded,sizeof(raw)));
     for(unsigned i=128;i<sizeof(raw);++i) raw[i]=(uint8_t)(i/36);
     const unsigned bytes=raster_pack(raw,packed,colors,&flat);
-    assert(bytes<sizeof(raw) && raster_unpack(packed,bytes,decoded));
-    assert(!memcmp(raw,decoded,sizeof(raw)) && !raster_unpack(packed,bytes-1,decoded));
+    assert(bytes<sizeof(raw) && raster_unpack(packed,bytes,decoded,0,SPECTRUM_BEAM_ROWS));
+    assert(!memcmp(raw,decoded,sizeof(raw)) && !raster_unpack(packed,bytes-1,decoded,0,SPECTRUM_BEAM_ROWS));
+    memset(decoded,0x83,sizeof(decoded));
+    assert(raster_unpack(packed,bytes,decoded,3,2));
+    assert(decoded[3*TIMEX_ROW_BYTES-1]==0x83 && decoded[5*TIMEX_ROW_BYTES]==0x83);
+    assert(!memcmp(raw+3*TIMEX_ROW_BYTES,decoded+3*TIMEX_ROW_BYTES,2*TIMEX_ROW_BYTES));
     for(unsigned i=0;i<sizeof(raw);++i) raw[i]=(uint8_t)i;
     assert(raster_pack(raw,packed,colors,&flat)==sizeof(raw) && !flat);
     raster_output raster={.bank=1};
@@ -690,6 +694,12 @@ static void timex_raster_pack(void) {
     assert(!raster_same_row(&raster,191,2));
     memcpy(raster.colors[1],raster.colors[0],sizeof(raster.colors[0]));
     assert(!raster_shift(&raster));
+    memset(raster.flat,0xff,sizeof(raster.flat));
+    for(unsigned row=0;row<192;++row) {
+        raster.colors[0][row]=row%8;
+        raster.colors[1][row]=(row+3)%8;
+    }
+    assert(raster_shift(&raster)==3);
     puts("Timex Raster packing, exact row reuse and wrapped scroll positions: PASS");
 }
 static void timex_audio_prefill(void) {

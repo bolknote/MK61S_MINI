@@ -482,11 +482,11 @@ static void timex_beam(const spectrum* s,unsigned y,unsigned first,unsigned last
         pixels[2]=(uint8_t)paper;pixels[3]=(uint8_t)ink;
     }
 }
-void spectrum_timex_beam_expand(uint8_t* pixels) {
+void spectrum_timex_beam_expand(uint8_t* pixels,unsigned rows) {
     static const uint8_t masks[]={128,128,64,32,16,8,8,4,2,1};
     unsigned last_kind=0;
     uint16_t shades[9];
-    for(unsigned i=32*SPECTRUM_BEAM_ROWS;i--;) {
+    for(unsigned i=32*rows;i--;) {
         const unsigned bits=pixels[4*i],kind=pixels[4*i+1];
         const unsigned other=pixels[4*i+2],ink_code=pixels[4*i+3];
         uint8_t* out=pixels+20*i;

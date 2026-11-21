@@ -56,6 +56,9 @@ Upstream and pinned revision are recorded in `UPSTREAM`; `LICENSE` is unmodified
   INT/NMI/EI use normal execution. Spectrum caps batches at frame/IRQ and
   run boundaries and disables them for synchronous audio. R, flags, WZ,
   final-iteration timing and address wrap match individual instructions.
+- Timex batches adjacent identical PUSH instructions through writable SRAM
+  pages. Both stack writes retain bus contention. Pending interrupts, opcode
+  aliases, page boundaries and raster write observers use scalar execution.
 
 CPU instructions, flags and timings otherwise follow upstream. Timings are
 instruction based; memory contention and ULA bus effects are outside this core.

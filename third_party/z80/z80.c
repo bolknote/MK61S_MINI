@@ -498,7 +498,9 @@ static uint32_t dec_memory_end(z80* z,uint32_t time) {
   time+=1+z->wait(z->userdata,time);
   return time+3+z->wait(z->userdata,time);
 }
+#endif
 
+#if defined(MK61_TARGET_PICOCALC) || defined(Z80_TIMEX_IO)
 static const uint8_t* repeat_code(const z80* z,unsigned length) {
   const unsigned pc=z->pc,offset=pc&1023;
   if(z->m1 || z->nmi_pending || z->iff_delay || (z->int_pending && z->iff1) ||
@@ -506,7 +508,48 @@ static const uint8_t* repeat_code(const z80* z,unsigned length) {
   const uint8_t* page=z->read_pages[pc>>10];
   return page?page+offset:NULL;
 }
+#endif
 
+#if defined(Z80_TIMEX_IO)
+/* Generated screen writers can put an entire row on the stack. Batch
+ * adjacent PUSH instructions through the direct maps, with both timed
+ * writes intact. Raster hooks still use the ordinary per-write path. */
+static __attribute__((noinline)) void repeat_push(z80* z,unsigned budget,uint8_t opcode,uint16_t value) {
+  if(z->before_store || budget<22) return;
+  const uint8_t* code=repeat_code(z,2);
+  if(!code || code[0]!=opcode || code[1]!=opcode) return;
+  const unsigned last=(uint16_t)(z->sp-1),available=(last&1023)+1;
+  uint8_t* page=z->write_pages[last>>10];
+  if(!page) return;
+  unsigned count=budget/11,code_left=1024-(z->pc&1023);
+  if(count>available/2) count=available/2;
+  if(count>code_left) count=code_left;
+  if(count<2) return;
+  uint8_t* dst=page+available;
+  if((uintptr_t)(dst-2*count)<(uintptr_t)(code+count) && (uintptr_t)dst>(uintptr_t)code) return;
+
+  const uint32_t start=(uint32_t)z->cyc;
+  const bool timed=bus_timed(z),contended=timed && (last&z->contention_mask)==0x4000;
+  unsigned done=0,elapsed=0;
+  while(done<count && code[done]==opcode) {
+    unsigned duration=11;
+    if(contended) {
+      const uint32_t high=start+elapsed+5;
+      const unsigned delay=z->wait(z->userdata,high);
+      duration+=delay+z->wait(z->userdata,high+3+delay);
+    }
+    if(duration>budget-elapsed) break;
+    *--dst=(uint8_t)(value>>8);*--dst=(uint8_t)value;
+    elapsed+=duration;++done;
+  }
+  if(!done) return;
+  z->pc+=done;z->sp-=2*done;z->cyc+=elapsed;
+  z->r=(z->r&128)|((z->r+done)&127);
+  if(timed) z->bus=(uint32_t)z->cyc;
+}
+#endif
+
+#if defined(MK61_TARGET_PICOCALC)
 /* DJNZ -2 has no data accesses. Leave its final iteration to the
  * interpreter and keep the refresh register exact. */
 static void repeat_djnz(z80* z,unsigned budget) {
@@ -991,14 +1034,8 @@ void exec_opcode(z80* const z, uint8_t opcode) {
 }
 
 #if defined(__GNUC__) && !defined(__clang__)
-#if defined(Z80_TIMEX_IO)
-/* TS2068 BASIC polls through a full NTSC frame without HALT. Keep the
- * timed dispatcher fast in this APP, which has room for the larger code. */
-__attribute__((optimize("O2")))
-#else
 /* Keep the bus-timed and ordinary paths within the PicoCalc APP slot. */
 __attribute__((optimize("Os")))
-#endif
 #endif
 static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) {
   const unsigned long before=z->cyc;
@@ -1259,10 +1296,19 @@ static uint32_t execute(z80* z,uint32_t cycles,const bool* stop,uint8_t opcode) 
   case 0xE7: case 0xEF: case 0xF7: case 0xFF:
     idle_bus(z,ir(z),1);call(z,opcode&0x38);break;
 
+#if defined(Z80_TIMEX_IO)
+  case 0xC5: case 0xD5: case 0xE5: case 0xF5: {
+    const uint16_t value=opcode==0xF5?(z->a<<8)|get_f(z):*register_pair(z,opcode);
+    push(z,value);
+    const uint32_t elapsed=(uint32_t)(z->cyc-before);
+    if(elapsed<cycles) repeat_push(z,cycles-elapsed,opcode,value);
+  } break;
+#else
   case 0xC5: push(z,get_bc(z)); break;
   case 0xD5: push(z,get_de(z)); break;
   case 0xE5: push(z,get_hl(z)); break;
   case 0xF5: push(z,(z->a<<8)|get_f(z)); break;
+#endif
 
   case 0xC1: set_bc(z, popw(z)); break; // pop bc
   case 0xD1: set_de(z, popw(z)); break; // pop de

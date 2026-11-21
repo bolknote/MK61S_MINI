@@ -185,7 +185,58 @@ static void original(const char* home,const char* exrom) {
     }
     puts("Original TS2068/TC2068 HOME and EXROM boot, tape waveform load and handoff to LROS cartridge PASS");
 }
+static unsigned stack_wait(void* context,uint32_t at) {
+    (void)context;
+    const unsigned phase=at&7;
+    return phase<6?6-phase:0;
+}
+static void stack_watch(void* context,uint16_t address,uint32_t at) {
+    (void)address;(void)at;
+    ++*(unsigned*)context;
+}
+static void stack_batches(void) {
+    static uint8_t ram[2][65536];
+    static const uint8_t push[]={0xc5,0xd5,0xe5,0xf5};
+    for(unsigned opcode=0;opcode<sizeof(push);++opcode) for(unsigned test=0;test<10;++test) {
+        const uint16_t pc=test==3?0x83fa:0x8000;
+        z80 cpu[2]={0};
+        unsigned writes[2]={0};
+        for(unsigned core=0;core<2;++core) {
+            memset(ram[core],0,sizeof(ram[core]));
+            memset(ram[core]+pc,push[opcode],40);
+            ram[core][pc+40]=0x76;
+            z80* z=&cpu[core];z80_init(z);
+            z->pc=pc;z->sp=test==1?0xbffc:test==2?0x9020:0x6400;
+            z->bc=0x591a;z->de=0x37c8;z->hl=0xa73d;z->a=0x92;z->f=0xc5;
+            z->r=0xf7;z->cyc=test==4?UINT32_MAX-39:0;
+            z->i=test==5?0x40:0x9c;
+            z->wait=test==1?NULL:stack_wait;
+            if(test==6) {z->before_store=stack_watch;z->userdata=&writes[core];}
+            if(test==7) z->iff_delay=1;
+            if(test==8) {z->nmi_pending=true;ram[core][0x66]=0x76;}
+            if(test==9) {
+                z->int_pending=z->iff1=true;
+                z->interrupt_mode=1;ram[core][0x38]=0x76;
+            }
+            for(unsigned page=0;page<64;++page) {
+                z->read_pages[page]=ram[core]+1024*page;
+                z->write_pages[page]=ram[core]+1024*page;
+            }
+            if(test==2) z->write_pages[36]=ram[core]+0x8000; // Push may overwrite the next instruction.
+        }
+        const unsigned budget=test==0?74:180;
+        const uint32_t elapsed=z80_run(&cpu[0],budget,NULL);
+        const unsigned long start=cpu[1].cyc;
+        while((uint32_t)(cpu[1].cyc-start)<budget && !cpu[1].halted) z80_step(&cpu[1]);
+        assert(elapsed==(uint32_t)(cpu[1].cyc-start) && cpu[0].bus==cpu[1].bus);
+        assert(cpu[0].pc==cpu[1].pc && cpu[0].sp==cpu[1].sp && cpu[0].r==cpu[1].r);
+        assert(cpu[0].f==cpu[1].f && cpu[0].iff1==cpu[1].iff1 && writes[0]==writes[1]);
+        assert(!memcmp(ram[0],ram[1],sizeof(ram[0])));
+    }
+    puts("Timex Z80 PUSH batches preserve contention, observers, paging and cycle wrap PASS");
+}
 int main(int argc,char** argv) {
+    stack_batches();
     paging();timing(false);timing(true);
     puts("Timex PAL/NTSC frame length, ULA contention, INT inhibit, AY ports/joystick, audio clock wrap PASS");
     if(argc==3) original(argv[1],argv[2]);

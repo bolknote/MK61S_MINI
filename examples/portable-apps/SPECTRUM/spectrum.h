@@ -186,7 +186,7 @@ void spectrum_raster_begin(spectrum*,uint8_t*,void*,bool (*)(void*,unsigned,cons
 void spectrum_beam_begin(spectrum*,unsigned,uint8_t*,void*,bool (*)(void*,unsigned,const uint8_t*));
 bool spectrum_beam_span(const spectrum*,unsigned mode,unsigned row,unsigned first,unsigned last,uint8_t* pixels);
 #if SPECTRUM_HAS_TIMEX
-void spectrum_timex_beam_expand(uint8_t* pixels);
+void spectrum_timex_beam_expand(uint8_t* pixels,unsigned rows);
 #endif
 #endif
 void spectrum_raster_end(spectrum*);

@@ -187,7 +187,7 @@ static uint32_t raster_address(const raster_output* output,unsigned bank,unsigne
     return (bank?WIDE_REFERENCE:RASTER_BASE)+strip*SPECTRUM_RASTER_PACKED_STRIP_BYTES;
 }
 #if SPECTRUM_HAS_TIMEX_2068
-enum { TIMEX_STRIP_BYTES=4*32*SPECTRUM_BEAM_ROWS };
+enum { TIMEX_ROW_BYTES=4*32,TIMEX_STRIP_BYTES=TIMEX_ROW_BYTES*SPECTRUM_BEAM_ROWS };
 static unsigned raster_pack(const uint8_t* src,uint8_t* packed,uint32_t* colors,uint16_t* flat) {
     const uint8_t* aligned=__builtin_assume_aligned(src,4);
     unsigned in=0,out=0;
@@ -213,14 +213,19 @@ static unsigned raster_pack(const uint8_t* src,uint8_t* packed,uint32_t* colors,
     }
     return in==TIMEX_STRIP_BYTES/4?out:TIMEX_STRIP_BYTES;
 }
-static bool raster_unpack(const uint8_t* packed,unsigned bytes,uint8_t* raw) {
+static bool raster_unpack(const uint8_t* packed,unsigned bytes,uint8_t* raw,unsigned first,unsigned rows) {
+    const unsigned from=first*TIMEX_ROW_BYTES,until=from+rows*TIMEX_ROW_BYTES;
     unsigned out=0;
     for(unsigned in=0;in+5<=bytes;in+=5) {
         const unsigned end=out+4u*(packed[in]+1u);
         if(end>TIMEX_STRIP_BYTES) return false;
-        uint32_t cell;
-        __builtin_memcpy(&cell,packed+in+1,4);
-        for(;out<end;out+=4) __builtin_memcpy(raw+out,&cell,4);
+        if(end>from && out<until) {
+            uint32_t cell;
+            __builtin_memcpy(&cell,packed+in+1,4);
+            const unsigned stop=end<until?end:until;
+            for(unsigned dst=out<from?from:out;dst<stop;dst+=4) __builtin_memcpy(raw+dst,&cell,4);
+        }
+        out=end;
     }
     return out==TIMEX_STRIP_BYTES && bytes%5==0;
 }
@@ -239,10 +244,13 @@ static unsigned raster_matches(const raster_output* r,unsigned shift) {
 }
 static unsigned raster_shift(const raster_output* r) {
     unsigned best=raster_matches(r,0)+4,shift=0;
-    for(int delta=-24;delta<=24;++delta) {
-        if(!delta) continue;
-        const unsigned offset=delta<0?192+delta:delta,score=raster_matches(r,offset);
-        if(score>best) {best=score;shift=offset;}
+    // Prefer the nearest equally good match for repeating stripes.
+    for(unsigned distance=1;distance<=24;++distance) {
+        for(unsigned side=0;side<2;++side) {
+            const unsigned offset=side?192-distance:distance;
+            const unsigned score=raster_matches(r,offset);
+            if(score>best) {best=score;shift=offset;}
+        }
     }
     return shift;
 }
@@ -313,6 +321,28 @@ static __attribute__((noinline)) bool raster_present(uint8_t* buffer,raster_outp
         return true;
     }
     if(!raster->ready) {
+#if SPECTRUM_HAS_TIMEX_2068
+        raster->first=0;raster->height=SPECTRUM_BEAM_ROWS;
+        if(raster->valid && raster->shift) {
+            // Several complete strips can already be present in GRAM.
+            // Skip them together and expand only the damaged rows.
+            while(raster->next<raster->captured) {
+                const unsigned first=raster->next*SPECTRUM_BEAM_ROWS;
+                unsigned top=SPECTRUM_BEAM_ROWS,bottom=0;
+                for(unsigned line=0;line<SPECTRUM_BEAM_ROWS;++line)
+                    if(!raster_same_row(raster,first+line,raster_row(first+line+raster->shift))) {
+                        if(top==SPECTRUM_BEAM_ROWS) top=line;
+                        bottom=line+1;
+                    }
+                if(bottom) {
+                    raster->first=(uint8_t)top;raster->height=(uint8_t)(bottom-top);
+                    break;
+                }
+                ++raster->next;
+            }
+            if(raster->next==raster->captured) return true;
+        }
+#endif
         // Compare against the last accepted raster frame. Keep both captures
         // until the LCD commits, so a failed transfer can repaint every row.
         const unsigned strip=raster->next;
@@ -321,23 +351,8 @@ static __attribute__((noinline)) bool raster_present(uint8_t* buffer,raster_outp
         bool compare=raster->valid && raster->signatures[0][strip]==raster->signatures[1][strip];
 #if SPECTRUM_HAS_TIMEX_2068
         bytes=raster->sizes[raster->bank][strip];
-        compare=compare && raster->sizes[0][strip]==raster->sizes[1][strip];
+        compare=compare && !raster->shift && raster->sizes[0][strip]==raster->sizes[1][strip];
         if(bytes<TIMEX_STRIP_BYTES) packed+=TIMEX_STRIP_BYTES;
-        raster->first=0;raster->height=SPECTRUM_BEAM_ROWS;
-        if(raster->valid && raster->shift) {
-            // Reuse a row only when both captures prove all its cells
-            // identical. Any other row is repainted at the new origin.
-            const unsigned first=strip*SPECTRUM_BEAM_ROWS;
-            unsigned top=SPECTRUM_BEAM_ROWS,bottom=0;
-            for(unsigned line=0;line<SPECTRUM_BEAM_ROWS;++line)
-                if(!raster_same_row(raster,first+line,raster_row(first+line+raster->shift))) {
-                    if(top==SPECTRUM_BEAM_ROWS) top=line;
-                    bottom=line+1;
-                }
-            if(!bottom) {++raster->next;return true;}
-            raster->first=(uint8_t)top;raster->height=(uint8_t)(bottom-top);
-            compare=false;
-        }
 #endif
         if(!external_read(NULL,raster_address(raster,raster->bank,strip),packed,bytes)) return false;
         if(compare) {
@@ -345,12 +360,12 @@ static __attribute__((noinline)) bool raster_present(uint8_t* buffer,raster_outp
             if(!memcmp(packed,packed+bytes,bytes)) {++raster->next;return true;}
         }
 #if SPECTRUM_HAS_TIMEX_2068
-        if(packed!=buffer && !raster_unpack(packed,bytes,buffer)) return false;
+        if(packed!=buffer && !raster_unpack(packed,bytes,buffer,raster->first,raster->height)) return false;
+        spectrum_timex_beam_expand(buffer+TIMEX_ROW_BYTES*raster->first,raster->height);
+#elif SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_TIMEX
+        spectrum_timex_beam_expand(buffer,SPECTRUM_BEAM_ROWS);
 #endif
         if(SPECTRUM_HAS_RASTER) spectrum_raster_expand(buffer);
-#if SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_TIMEX
-        spectrum_timex_beam_expand(buffer);
-#endif
         raster->ready=true;
         return true;
     }
@@ -363,7 +378,7 @@ static __attribute__((noinline)) bool raster_present(uint8_t* buffer,raster_outp
         part.y=(SPECTRUM_HAS_PENTAGON?(320-spectrum_beam_height(raster->mode))/2:64)+
             raster->next*SPECTRUM_BEAM_ROWS;
 #if SPECTRUM_HAS_TIMEX_2068
-        part.pixels+=raster->first*640;
+        part.pixels+=TIMEX_ROW_BYTES*raster->first;
         part.y+=raster->first;part.height=raster->height;
 #endif
         part.pixel_bytes=SPECTRUM_HAS_PENTAGON?raster_strip_bytes(raster):2*part.width*part.height;
@@ -1744,6 +1759,7 @@ static __attribute__((noinline)) void emulate_session(void) {
                         goto paced;
                     }
                 }
+                if(SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_TIMEX) goto paced;
                 // Capture again only when the previous frame is committed.
                 if(output.next!=RASTER_IDLE) goto paced;
 #if SPECTRUM_HAS_BEAM_VIDEO
@@ -1755,13 +1771,6 @@ static __attribute__((noinline)) void emulate_session(void) {
                         output.strips=(uint8_t)(spectrum_beam_height(mode)/SPECTRUM_BEAM_ROWS);
                     }
                     output.bank^=1u;
-                    if(SPECTRUM_HAS_TIMEX) {
-                        output.next=output.captured=0;
-                        output.selected=output.repainted=false;
-#if SPECTRUM_HAS_TIMEX_2068
-                        output.shift=RASTER_IDLE;
-#endif
-                    }
                     spectrum_beam_begin(&machine,mode,capture,&output,raster_store);
                     goto paced;
                 }
@@ -1806,6 +1815,19 @@ paced:
 #endif
 #endif
                        )) goto done;
+#if SPECTRUM_HAS_BEAM_VIDEO && SPECTRUM_HAS_TIMEX && !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
+        // END may have become ready during the pacing wait. Arm the next
+        // capture before its first instruction can touch either plane.
+        if(raster && output.next==RASTER_IDLE) {
+            output.bank^=1u;
+            output.next=output.captured=0;
+            output.selected=output.repainted=false;
+#if SPECTRUM_HAS_TIMEX_2068
+            output.shift=RASTER_IDLE;
+#endif
+            spectrum_beam_begin(&machine,SPECTRUM_VIDEO_HICOLOR,capture,&output,raster_store);
+        }
+#endif
         after_pace=true;
     }
     goto done;

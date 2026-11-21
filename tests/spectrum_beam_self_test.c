@@ -14,7 +14,7 @@ static bool save_strip(void* context,unsigned index,const uint8_t* bytes) {
     if(!index) {
         memcpy(first_strip,bytes,spectrum_beam_row_bytes(mode)*SPECTRUM_BEAM_ROWS);
 #if SPECTRUM_HAS_TIMEX
-        spectrum_timex_beam_expand(first_strip);
+        spectrum_timex_beam_expand(first_strip,SPECTRUM_BEAM_ROWS);
 #endif
     }
     return true;
