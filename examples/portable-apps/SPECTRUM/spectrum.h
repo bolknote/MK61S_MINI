@@ -130,7 +130,7 @@ static inline bool spectrum_is_128(const spectrum* s) {
     return SPECTRUM_HAS_SINCLAIR && !SPECTRUM_HAS_TIMEX_2068 && s->memory && s->memory->banks==8;
 }
 static inline bool spectrum_is_pentagon(const spectrum* s) {
-    return SPECTRUM_APP_PROFILE==1 || (SPECTRUM_HAS_PENTAGON && s->pentagon);
+    return SPECTRUM_HAS_PENTAGON && (!SPECTRUM_HAS_SINCLAIR || s->pentagon);
 }
 static inline unsigned spectrum_model(const spectrum* s) {
 #if SPECTRUM_HAS_TIMEX_2068

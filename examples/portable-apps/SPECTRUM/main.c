@@ -81,7 +81,7 @@ typedef struct {
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
     uint32_t ready_guard_us,capture_guard_us;
-    bool clipped,gap_right;
+    bool clipped,gap_right,prefetched;
     spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS];
 #endif
     spectrum_video_damage patches[SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_STRIPS:3];
@@ -521,6 +521,23 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
     out->background=out->saved.border;
     return true;
 }
+
+static void prefetch_wide(video_output* out) {
+    if(out->prefetched || out->pending!=SPECTRUM_VIDEO_WIDE || !out->saved.previous) return;
+    const unsigned page=(bank_memory.paging>>3)&1;
+    const uint32_t address=page?WIDE_REFERENCE:RASTER_BASE;
+    const spectrum_pentagon_changes* changes=machine.pentagon_video;
+    if(address!=out->saved.previous || !changes || changes->mode!=SPECTRUM_VIDEO_WIDE ||
+       (changes->repaint&(1u<<page))) return;
+    for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip)
+        if(changes->strips[page][strip].bottom) return;
+
+    // The resident owns the remaining strips. Latch the intact alternate
+    // snapshot now, while this guest frame still selects it.
+    out->saved.previous=out->saved.address;out->saved.address=address;
+    out->saved.previous_frames=out->saved.frames;out->saved.frames=machine.frames;
+    out->pending=0;out->prefetched=true;
+}
 #endif
 static __attribute__((noinline)) void video_begin(video_output* out,unsigned mode) {
     if(mode!=out->mode) {
@@ -562,6 +579,12 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
                 if(SPECTRUM_HAS_PENTAGON) out->valid[0]=0;
                 out->clear=true;
             }
+#if SPECTRUM_HAS_PENTAGON
+            if(out->prefetched) {
+                out->prefetched=false;
+                if(status==1) {out->selected=true;return true;}
+            }
+#endif
         }
         out->selected=true;
         if(timex) return timex_capture(out,work);
@@ -629,19 +652,31 @@ next_strip:
         out->page^=1;
     } else if(out->transaction) {
         const unsigned status=color(MK61_COLOR_SCROLL_END,NULL);
-        if(status==2) return true;
+        if(status==2) {
+#if SPECTRUM_HAS_PENTAGON
+            prefetch_wide(out);
+#endif
+            return true;
+        }
         if(!status) {
             if(out->repainted) return false;
             out->clear=out->repainted=true;out->next=0;
             if(SPECTRUM_HAS_PENTAGON) out->valid[0]=0;
 #if SPECTRUM_HAS_PENTAGON
-            out->selected=false;
+            out->prefetched=out->selected=false;
             return true;
 #else
             return timex_capture(out,work);
 #endif
         }
         if(SPECTRUM_HAS_PENTAGON && !timex) out->valid[0]=1;
+#if SPECTRUM_HAS_PENTAGON
+        if(out->prefetched) {
+            out->selected=out->transaction=out->repainted=false;
+            out->next=0;
+            return true;
+        }
+#endif
     }
     out->active=out->transaction=false;return true;
 fallback:
@@ -1540,7 +1575,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
             uint32_t* guard=&video->guard_us;
             uint32_t margin=2000;
 #if SPECTRUM_HAS_PENTAGON
-            if(machine.pentagon) {
+            if(spectrum_is_pentagon(&machine)) {
                 const bool wide=video->mode==SPECTRUM_VIDEO_WIDE;
                 if(!mode && !video->selected && wide) guard=&video->capture_guard_us;
                 // Ending a Wide frame checks the last DMA and publishes the
@@ -1554,12 +1589,12 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #endif
             if((int32_t)(target-now)>(int32_t)*guard) {
                 const uint32_t start=now;
-                const bool cold=SPECTRUM_HAS_PENTAGON && machine.pentagon &&
+                const bool cold=spectrum_is_pentagon(&machine) &&
                     (mode?mode!=video->mode:!video->selected && !video->valid[video->page]);
                 if(mode) {video->pending=0;video_begin(video,mode);}
                 else {
 #if SPECTRUM_HAS_PENTAGON
-                    pacing_video_io=machine.pentagon;
+                    pacing_video_io=spectrum_is_pentagon(&machine);
 #endif
                     const bool ok=video_present(video,work);
 #if SPECTRUM_HAS_PENTAGON
@@ -1571,7 +1606,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
                 const uint32_t duration=now-start+margin;
                 // Learn from steps that fit their slot. A long overrun must
                 // leave the already captured strips a chance to reach the LCD.
-                const bool fits=!SPECTRUM_HAS_PENTAGON || !machine.pentagon || duration<target-start;
+                const bool fits=!spectrum_is_pentagon(&machine) || duration<target-start;
                 if(!cold && fits && duration>*guard) *guard=duration;
             }
         }
