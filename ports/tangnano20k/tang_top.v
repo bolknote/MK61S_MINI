@@ -16,9 +16,10 @@ module tang_top #(
     inout wire [31:0] IO_sdram_dq
 );
     wire clk, memory_clk, locked;
-    localparam PLL_INPUT_DIVIDER = CLOCK_HZ == 96000000 ? 8 : CLOCK_HZ == 27000000 ? 1 :
+    localparam PLL_INPUT_DIVIDER = CLOCK_HZ == 96000000 || CLOCK_HZ == 102000000 ? 8 : CLOCK_HZ == 27000000 ? 1 :
                                    CLOCK_HZ == 54000000 || CLOCK_HZ == 81000000 ? 0 : 2;
-    localparam PLL_FEEDBACK = CLOCK_HZ == 99000000 ? 10 : CLOCK_HZ == 96000000 ? 31 : CLOCK_HZ == 90000000 ? 9 :
+    localparam PLL_FEEDBACK = CLOCK_HZ == 108000000 ? 11 : CLOCK_HZ == 102000000 ? 33 :
+                             CLOCK_HZ == 99000000 ? 10 : CLOCK_HZ == 96000000 ? 31 : CLOCK_HZ == 90000000 ? 9 :
                              CLOCK_HZ == 72000000 ? 7 :
                              CLOCK_HZ == 63000000 ? 6 : CLOCK_HZ == 45000000 ? 4 :
                              CLOCK_HZ == 36000000 ? 3 : CLOCK_HZ == 81000000 ? 2 : 1;
@@ -56,7 +57,7 @@ module tang_top #(
     wire [63:0] test_dot_activations;
     wire [PREFILL_LANES-1:0] dot_ready;
     wire [PREFILL_LANES*15-1:0] dot_results;
-    wire model_start, model_reset, model_output, model_busy, model_done, model_req, model_wr, model_dot;
+    wire model_start, model_reset, model_output, model_busy, model_done, model_req, model_wr, model_burst, model_dot;
     wire [31:0] model_result, model_checksum, model_cycles, model_data, model_weights;
     wire [PREFILL_LANES*64-1:0] model_activations;
     wire [PREFILL_LANES*32-1:0] model_checksums;
@@ -92,7 +93,8 @@ module tang_top #(
         .allowed_count(model_allowed), .seek_position(model_seek),
         .status(model_status), .outcome(model_result), .checksum(model_checksum), .cycles(model_cycles),
         .position_checksums(model_checksums),
-        .memory_request(model_req), .memory_write(model_wr), .memory_address(model_addr), .memory_data(model_data),
+        .memory_request(model_req), .memory_write(model_wr), .memory_burst(model_burst),
+        .memory_address(model_addr), .memory_data(model_data),
         .memory_complete(complete && model_busy), .memory_result(data_out),
         .dot_valid(model_dot), .dot_weights(model_weights), .dot_activations(model_activations),
         .dot_ready(dot_ready[0] && model_busy), .dot_results(dot_results)
@@ -107,6 +109,7 @@ module tang_top #(
     assign model_cycles = 0;
     assign model_req = 0;
     assign model_wr = 0;
+    assign model_burst = 0;
     assign model_addr = 0;
     assign model_data = 0;
     assign model_dot = 0;
@@ -125,7 +128,8 @@ module tang_top #(
     end endgenerate
     tang_sdram #(.CLOCK_HZ(CLOCK_HZ), .CLOCK_DIVIDE(SDRAM_DIVIDER)) memory (
         .clk(clk), .memory_clk(memory_clk), .resetn(resetn), .request(model_busy ? model_req : link_req),
-        .write(model_busy ? model_wr : link_wr), .address(model_busy ? model_addr : link_addr),
+        .write(model_busy ? model_wr : link_wr), .read_burst(model_busy && model_burst),
+        .address(model_busy ? model_addr : link_addr),
         .data_in(model_busy ? model_data : link_data), .data_out(data_out), .complete(complete),
         .sd_clk(O_sdram_clk), .sd_cke(O_sdram_cke), .sd_cs_n(O_sdram_cs_n),
         .sd_ras_n(O_sdram_ras_n), .sd_cas_n(O_sdram_cas_n), .sd_we_n(O_sdram_wen_n),

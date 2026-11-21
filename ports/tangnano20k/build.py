@@ -50,7 +50,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
         "GW2AR-LV18QN88C8/I7", "--vopt", "family=GW2A-18C", "--vopt", f"cst={HERE / 'tang.cst'}",
         "--freq", str(clock), "--report", "timing.json"]
     if seed is None and prefill_lanes == 6:
-        seed = 2
+        seed = 3 if clock == 102 and divider == 3 else 2
     if seed is not None:
         routing += ["--seed", str(seed)]
     run("nextpnr-himbaechel", routing, "route.log")
@@ -65,13 +65,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tools", type=Path, required=True, help="OSS CAD Suite bin directory")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--clock", type=int, choices=(27, 36, 45, 54, 63, 72, 81, 90, 96, 99), default=36)
+    parser.add_argument("--clock", type=int, choices=(27, 36, 45, 54, 63, 72, 81, 90, 96, 99, 102, 108), default=36)
     parser.add_argument("--phase", type=int, choices=range(16), default=8)
     memory_clock = parser.add_mutually_exclusive_group()
     memory_clock.add_argument("--half-sdram-clock", action="store_true", help="Run SDRAM at half the fabric clock")
     memory_clock.add_argument("--sdram-divider", type=int, choices=(1, 2, 3))
     parser.add_argument("--prefill-lanes", type=int, choices=(1, 2, 4, 6), default=4)
-    parser.add_argument("--seed", type=int, help="Placement seed (defaults to 2 for six prefill lanes)")
+    parser.add_argument("--seed", type=int, help="Override the placement seed")
     parser.add_argument("--hardfloat", type=Path, help="Berkeley HardFloat Release 1 root to include the transformer sequencer")
     args = parser.parse_args()
     build(args.tools.resolve(), args.output.resolve(), args.clock, args.phase,

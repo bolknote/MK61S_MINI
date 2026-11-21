@@ -6,7 +6,7 @@ module tang_uart #(
     input wire [7:0] tx_data,
     input wire push,
     output wire [7:0] rx_data,
-    output wire rx_ready,
+    output reg rx_ready,
     output reg tx = 1,
     output wire tx_busy
 );
@@ -44,7 +44,9 @@ module tang_uart #(
     reg [7:0] fifo [0:31];
     reg [5:0] write_pos, read_pos;
     wire full = (write_pos ^ 6'h20) == read_pos;
-    assign rx_ready = write_pos != read_pos;
+    wire enqueue = rx_enable && rx_state == 10 && rx_count == 0 && sync[1] && !full;
+    wire dequeue = pop && rx_ready;
+    wire [5:0] next_read = read_pos + 1'b1;
     assign rx_data = fifo[read_pos[4:0]];
 
     always @(posedge clk) begin
@@ -54,8 +56,15 @@ module tang_uart #(
             rx_state <= 0;
             read_pos <= 0;
             write_pos <= 0;
+            rx_ready <= 0;
         end else begin
-            if (pop && rx_ready) read_pos <= read_pos + 1'b1;
+            if (enqueue) begin
+                fifo[write_pos[4:0]] <= rx_shift;
+                write_pos <= write_pos + 1'b1;
+            end
+            if (dequeue) read_pos <= next_read;
+            if (enqueue) rx_ready <= 1;
+            else if (dequeue) rx_ready <= next_read != write_pos;
             if (!rx_enable) begin
                 rx_state <= 0;
             end else if (rx_state == 0) begin
@@ -71,10 +80,6 @@ module tang_uart #(
                     rx_state <= sync[1] ? 0 : 2;
                 end else if (rx_state == 10) begin
                     rx_state <= 0;
-                    if (sync[1] && !full) begin
-                        fifo[write_pos[4:0]] <= rx_shift;
-                        write_pos <= write_pos + 1'b1;
-                    end
                 end else begin
                     rx_shift <= {sync[1], rx_shift[7:1]};
                     rx_state <= rx_state + 1'b1;

@@ -5,7 +5,7 @@ module tang_sdram #(
     parameter CLOCK_DIVIDE = 1
 ) (
     input wire clk, memory_clk, resetn,
-    input wire request, write,
+    input wire request, write, read_burst,
     input wire [20:0] address,
     input wire [31:0] data_in,
     output reg [31:0] data_out,
@@ -35,7 +35,7 @@ module tang_sdram #(
     reg [3:0] cycles;
     reg [7:0] column;
     reg [20:0] pending_address;
-    reg writing, output_enable;
+    reg writing, streaming, output_enable;
     reg [31:0] drive_data, sampled_data;
     reg [31:0] line [0:7];
     reg [17:0] line_address;
@@ -113,12 +113,13 @@ module tang_sdram #(
                         pending_address <= address;
                         column <= address[7:0];
                         writing <= write;
+                        streaming <= read_burst && !write && address[2:0] == 0;
                         drive_data <= data_in;
                         state <= LOOKUP;
                     end
                 end
                 LOOKUP: begin
-                    if (!writing && line_valid && line_address == pending_address[20:3]) begin
+                    if (!writing && !streaming && line_valid && line_address == pending_address[20:3]) begin
                         data_out <= line[column[2:0]];
                         complete <= 1;
                         state <= COMPLETE;
@@ -139,10 +140,19 @@ module tang_sdram #(
                         command <= writing ? WRITE : READ;
                         sd_addr <= {1'b1, 2'b00, column[7:3], writing ? column[2:0] : 3'b0};
                     end
-                    if (!writing && cycles >= FIRST_READ) line[cycles - FIRST_READ] <= read_port;
+                    if (!writing && cycles >= FIRST_READ) begin
+                        line[cycles - FIRST_READ] <= read_port;
+                        // An aligned streaming caller consumes each beat as
+                        // it arrives. Word reads still return once per request.
+                        if (streaming) begin
+                            data_out <= read_port;
+                            complete <= 1;
+                        end
+                    end
                     if (writing ? cycles == COLUMN_DELAY + 4'd3 : cycles == FIRST_READ + 4'd7) begin
                         if (!writing) begin
-                            data_out <= column[2:0] == 7 ? read_port : line[column[2:0]];
+                            if (!streaming)
+                                data_out <= column[2:0] == 7 ? read_port : line[column[2:0]];
                             line_valid <= 1;
                         end
                         complete <= 1;
