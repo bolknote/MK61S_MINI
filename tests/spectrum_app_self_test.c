@@ -570,6 +570,16 @@ static void extended_frames(void) {
             assert(restarting.capture_guard_us>=10000 && restarting.guard_us==VIDEO_INITIAL_GUARD_US);
         }
     }
+    {
+        video_output finishing={.guard_us=VIDEO_INITIAL_GUARD_US,.ready_guard_us=WIDE_SUBMIT_GUARD_US,.mode=SPECTRUM_VIDEO_WIDE,
+            .next=SPECTRUM_WIDE_STRIPS,.active=true,.selected=true,.transaction=true};
+        uint8_t blocked[32]={0};
+        uint32_t deadline=micros_now+1600-guest_time_us(spectrum_frame_cycles(&machine));
+        uint32_t keyboard_deadline=micros_now+100000;
+        const char* error=NULL;
+        assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&finishing,canvas,&error) && !error);
+        assert(!finishing.active && finishing.valid[0]);
+    }
     puts("Cold capture and live display-bank change at 20.480 ms guest cadence: PASS");
     color(MK61_COLOR_END,NULL);
     spectrum_reset(&state);

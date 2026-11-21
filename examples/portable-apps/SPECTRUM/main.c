@@ -25,6 +25,8 @@ static spectrum* active_machine;
 typedef struct {
     spectrum_memory banks;
     uint8_t current_keys[32],last_keys[32];
+    spectrum_ui ui;
+    uint8_t *guest[2],*tails[2],*runs[4];
 } spectrum_app_state;
 static spectrum_app_state* active_app;
 #define app_keys (active_app->current_keys)
@@ -40,7 +42,9 @@ static char* tape_path;
 static spectrum_tape_recorder* recording;
 #endif
 #endif
-static uint8_t *guest_blocks[2],*bank_tails[2],*page_runs[4];
+#define guest_blocks (active_app->guest)
+#define bank_tails (active_app->tails)
+#define page_runs (active_app->runs)
 enum { WORK_CACHE_BYTES=8192 };
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 enum { TAPE_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES,
@@ -49,6 +53,7 @@ enum { TAPE_BASE=SPECTRUM_EXTERNAL_BYTES+SPECTRUM_TRD_BYTES,
        VIDEO_CAPTURE_END=WIDE_REFERENCE+(SPECTRUM_HAS_PENTAGON_VIDEO?SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:
                                          SPECTRUM_HAS_RASTER?SPECTRUM_RASTER_PACKED_BYTES:0),
        VIDEO_INITIAL_GUARD_US=5500, VIDEO_READY_GUARD_US=3000,
+       WIDE_SUBMIT_GUARD_US=1000,
        RASTER_SUBMIT_GUARD_US=1400, RASTER_IDLE=255,
        RASTER_MAX_STRIPS=SPECTRUM_HAS_BEAM_VIDEO?
            (SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_HEIGHT:192)/SPECTRUM_BEAM_ROWS:SPECTRUM_RASTER_STRIPS };
@@ -97,7 +102,7 @@ _Static_assert(TAPE_BASE<=EXTERNAL_HEAD_BYTES,"Guest RAM and disk must fit in th
 #endif
 typedef struct { char* path;bool scl; } mounted_media;
 static mounted_media floppy,sd_card;
-static spectrum_ui osd;
+#define osd (active_app->ui)
 static unsigned root_selected;
 static mk61_app_flow* app_flow;
 static spectrum_preferences preferences;
@@ -528,7 +533,10 @@ static __attribute__((noinline)) void video_begin(video_output* out,unsigned mod
             }
         }
         out->clear=!SPECTRUM_HAS_PENTAGON || !out->pages;out->mode=mode;
-        if(SPECTRUM_HAS_PENTAGON) out->valid[0]=out->valid[1]=0;
+#if SPECTRUM_HAS_PENTAGON
+        out->valid[0]=out->valid[1]=0;
+        out->ready_guard_us=mode==SPECTRUM_VIDEO_WIDE?WIDE_SUBMIT_GUARD_US:VIDEO_READY_GUARD_US;
+#endif
     }
     if(!mode) return;
     out->next=0;out->ready=out->selected=out->repainted=false;out->active=true;
@@ -1530,14 +1538,18 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
         if(video->active || video->pending) {
             const unsigned mode=video->active?0:video->pending;
             uint32_t* guard=&video->guard_us;
+            uint32_t margin=2000;
 #if SPECTRUM_HAS_PENTAGON
-            // A full conversion can raise its guard without delaying
-            // the submission of strips that are already packed.
             if(machine.pentagon) {
-                if(!mode && !video->selected && video->mode==SPECTRUM_VIDEO_WIDE)
-                    guard=&video->capture_guard_us;
-                else if(mode?mode==video->mode:video->selected && (video->packed || video->ready))
+                const bool wide=video->mode==SPECTRUM_VIDEO_WIDE;
+                if(!mode && !video->selected && wide) guard=&video->capture_guard_us;
+                // Ending a Wide frame checks the last DMA and publishes the
+                // origin. It needs the same short window as a prepared strip.
+                else if(mode?mode==video->mode:video->selected &&
+                    (video->packed || video->ready || video->next==SPECTRUM_WIDE_STRIPS)) {
                     guard=&video->ready_guard_us;
+                    if(wide) margin=500;
+                }
             }
 #endif
             if((int32_t)(target-now)>(int32_t)*guard) {
@@ -1556,7 +1568,7 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
                     if(!ok) {*error="Color output failed";return false;}
                 }
                 now=pacing_clock_us();
-                const uint32_t duration=now-start+2000;
+                const uint32_t duration=now-start+margin;
                 // Learn from steps that fit their slot. A long overrun must
                 // leave the already captured strips a chance to reach the LCD.
                 const bool fits=!SPECTRUM_HAS_PENTAGON || !machine.pentagon || duration<target-start;
