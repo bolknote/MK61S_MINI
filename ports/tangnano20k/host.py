@@ -18,9 +18,9 @@ import zlib
 BAUD = 1_000_000
 SDRAM_BYTES = 8 * 1024 * 1024
 CONTEXT = 1024
-PUT, GET, CRC, DOT, ID, FORWARD, RESET = range(1, 8)
+MAX_PREFILL_LANES = 6
+PUT, GET, CRC, DOT, ID, FORWARD, RESET, PREFILL = range(1, 9)
 HEADER = struct.Struct("<BBHI")
-REPLY = struct.Struct("<BIII")
 
 
 class Link:
@@ -52,7 +52,7 @@ class Link:
         del self.buffer[:count]
         return value
 
-    def call(self, opcode, addr=0, data=b"", timeout=5, corrupt=False, expect_status=0):
+    def call(self, opcode, addr=0, data=b"", timeout=5, corrupt=False, expect_status=0, reply_words=3):
         if len(data) > 1024:
             raise ValueError("Tang packet length exceeds 1024 bytes")
         self.sequence = (self.sequence + 1) & 255
@@ -66,16 +66,29 @@ class Link:
                 break
             previous = current
         header = self._receive(HEADER.size, deadline)
-        if HEADER.unpack(header) != (opcode | 0x80, self.sequence, REPLY.size, 0):
+        code, sequence, length, address = HEADER.unpack(header)
+        words, extra = divmod(length-1, 4)
+        if ((code, sequence, address) != (opcode | 0x80, self.sequence, 0)
+                or extra or not 3 <= words <= MAX_PREFILL_LANES + 2):
             raise ValueError(f"Invalid Tang reply header {header.hex()}")
-        reply = self._receive(REPLY.size, deadline)
+        reply = self._receive(length, deadline)
         checksum, = struct.unpack("<I", self._receive(4, deadline))
         if checksum != zlib.crc32(header + reply):
             raise ValueError("Tang reply CRC mismatch")
-        status, *values = REPLY.unpack(reply)
+        status, *values = struct.unpack(f"<B{words}I", reply)
         if status != expect_status:
             raise ValueError(f"Tang command {opcode} status {status}, expected {expect_status}, detail {values}")
+        if words != reply_words:
+            raise ValueError(f"Tang command {opcode} returned {words} words, expected {reply_words}")
         return tuple(values)
+
+    def prefill(self, tokens, output_logits=False):
+        count = len(tokens)
+        if not 1 <= count <= MAX_PREFILL_LANES or any(not 0 <= token <= 0xffff for token in tokens):
+            raise ValueError("Tang prefill expects one to six 16-bit token IDs")
+        outcome, last_checksum, cycles, *prefix_checksums = self.call(
+            PREFILL, int(output_logits), struct.pack(f"<{count}H", *tokens), timeout=10, reply_words=count+2)
+        return outcome, (*prefix_checksums, last_checksum), cycles
 
     def write(self, addr, contents):
         if addr & 3 or len(contents) & 3 or addr + len(contents) > SDRAM_BYTES:
@@ -144,15 +157,22 @@ def smoke_test(link):
                 exact_dsp_vectors=len(vectors), invalid_crc_rejected=True)
 
 
-def generate(link, tokens, count):
+def generate(link, tokens, count, batch_size=1):
     _, hz, _ = link.call(ID)
     link.call(RESET)
     prefill_cycles = 0
     position = 0
-    for token in tokens[:-1]:
-        _, _, cycles = link.call(FORWARD, token)
+    prefix = tokens[:-1]
+    for start in range(0, len(prefix), batch_size):
+        batch = prefix[start:start+batch_size]
+        if len(batch) == 1:
+            packed, _, cycles = link.call(FORWARD, batch[0])
+        else:
+            packed, _, cycles = link.prefill(batch)
         prefill_cycles += cycles
-        position += 1
+        position += len(batch)
+        if packed >> 16 != position:
+            raise ValueError(f"Tang returned position {packed >> 16}, expected {position}")
 
     token = tokens[-1]
     generated = []
@@ -177,6 +197,7 @@ def main():
     inference = commands.add_parser("run", help="Decode from a sequence of token IDs")
     inference.add_argument("tokens", nargs="+", type=int)
     inference.add_argument("--generate", type=int, default=1, metavar="COUNT")
+    inference.add_argument("--batch-size", type=int, choices=range(1, MAX_PREFILL_LANES+1), default=1)
     args = parser.parse_args()
     if args.command == "run" and (any(not 0 <= token <= 0xffff for token in args.tokens)
                                   or not 1 <= args.generate <= CONTEXT - len(args.tokens) + 1):
@@ -192,7 +213,7 @@ def main():
             print(json.dumps(dict(bytes=len(contents), crc32=f"{zlib.crc32(contents):08x}",
                                   seconds=time.perf_counter() - start), indent=2))
         elif args.command == "run":
-            print(json.dumps(generate(link, args.tokens, args.generate), indent=2))
+            print(json.dumps(generate(link, args.tokens, args.generate, args.batch_size), indent=2))
 
 
 if __name__ == "__main__":

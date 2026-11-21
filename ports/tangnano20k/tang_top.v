@@ -1,6 +1,9 @@
 module tang_top #(
     parameter CLOCK_HZ = 27000000,
-    parameter SDR_PHASE = "1000"
+    parameter SDR_PHASE = "1000",
+    parameter HALF_SDRAM_CLOCK = 0,
+    parameter SDRAM_DIVIDER = HALF_SDRAM_CLOCK ? 2 : 1,
+    parameter PREFILL_LANES = 4
 ) (
     input wire clock27, host_rx,
     output wire host_tx, led_n,
@@ -13,9 +16,10 @@ module tang_top #(
     inout wire [31:0] IO_sdram_dq
 );
     wire clk, memory_clk, locked;
-    localparam PLL_INPUT_DIVIDER = CLOCK_HZ == 27000000 ? 1 :
+    localparam PLL_INPUT_DIVIDER = CLOCK_HZ == 96000000 ? 8 : CLOCK_HZ == 27000000 ? 1 :
                                    CLOCK_HZ == 54000000 || CLOCK_HZ == 81000000 ? 0 : 2;
-    localparam PLL_FEEDBACK = CLOCK_HZ == 99000000 ? 10 : CLOCK_HZ == 72000000 ? 7 :
+    localparam PLL_FEEDBACK = CLOCK_HZ == 99000000 ? 10 : CLOCK_HZ == 96000000 ? 31 : CLOCK_HZ == 90000000 ? 9 :
+                             CLOCK_HZ == 72000000 ? 7 :
                              CLOCK_HZ == 63000000 ? 6 : CLOCK_HZ == 45000000 ? 4 :
                              CLOCK_HZ == 36000000 ? 3 : CLOCK_HZ == 81000000 ? 2 : 1;
     localparam PLL_OUTPUT_DIVIDER = CLOCK_HZ == 27000000 ? 32 : CLOCK_HZ >= 63000000 ? 8 : 16;
@@ -46,38 +50,43 @@ module tang_top #(
         .tx(pico_tx), .tx_busy(pico_busy)
     );
 
-    wire link_req, link_wr, complete, test_dot_valid, dot_ready;
+    wire link_req, link_wr, complete, test_dot_valid;
     wire [20:0] link_addr;
     wire [31:0] link_data, data_out, test_dot_weights;
     wire [63:0] test_dot_activations;
-    wire signed [14:0] dot_result;
+    wire [PREFILL_LANES-1:0] dot_ready;
+    wire [PREFILL_LANES*15-1:0] dot_results;
     wire model_start, model_reset, model_output, model_busy, model_done, model_req, model_wr, model_dot;
     wire [31:0] model_result, model_checksum, model_cycles, model_data, model_weights;
-    wire [63:0] model_activations;
+    wire [PREFILL_LANES*64-1:0] model_activations;
+    wire [PREFILL_LANES*32-1:0] model_checksums;
     wire [20:0] model_addr;
     wire [7:0] model_status;
-    wire [15:0] model_token;
-    tang_link_control #(.CLOCK_HZ(CLOCK_HZ)) transport (
+    wire [PREFILL_LANES*16-1:0] model_tokens;
+    wire [2:0] model_count;
+    tang_link_control #(.CLOCK_HZ(CLOCK_HZ), .PREFILL_LANES(PREFILL_LANES)) transport (
         .clk(clk), .resetn(resetn), .host_input(host_byte), .pico_input(pico_byte),
         .host_available(host_ready), .pico_available(pico_ready), .host_tx_busy(host_busy), .pico_tx_busy(pico_busy),
         .host_pop(host_pop), .pico_pop(pico_pop), .host_push(host_push), .pico_push(pico_push),
         .serial_output(outgoing), .memory_request(link_req), .memory_write(link_wr),
         .memory_address(link_addr), .memory_data(link_data), .memory_complete(complete && !model_busy), .memory_result(data_out),
         .dot_valid(test_dot_valid), .dot_weights(test_dot_weights), .dot_activations(test_dot_activations),
-        .dot_ready(dot_ready && !model_busy), .dot_result(dot_result), .model_start(model_start), .model_reset(model_reset),
-        .model_token(model_token), .model_output(model_output),
+        .dot_ready(dot_ready[0] && !model_busy), .dot_result(dot_results[14:0]),
+        .model_start(model_start), .model_reset(model_reset),
+        .model_tokens(model_tokens), .model_count(model_count), .model_output(model_output),
         .model_done(model_done), .model_status(model_status), .model_result(model_result),
-        .model_checksum(model_checksum), .model_cycles(model_cycles)
+        .model_checksum(model_checksum), .model_checksums(model_checksums), .model_cycles(model_cycles)
     );
 `ifdef TANG_MODEL
-    tang_model model (
+    tang_model #(.PREFILL_LANES(PREFILL_LANES)) model (
         .clk(clk), .resetn(resetn), .start(model_start), .rewind(model_reset),
-        .token(model_token), .output_logits(model_output), .busy(model_busy), .done(model_done),
+        .tokens(model_tokens), .token_count(model_count), .output_logits(model_output), .busy(model_busy), .done(model_done),
         .status(model_status), .outcome(model_result), .checksum(model_checksum), .cycles(model_cycles),
+        .position_checksums(model_checksums),
         .memory_request(model_req), .memory_write(model_wr), .memory_address(model_addr), .memory_data(model_data),
         .memory_complete(complete && model_busy), .memory_result(data_out),
         .dot_valid(model_dot), .dot_weights(model_weights), .dot_activations(model_activations),
-        .dot_ready(dot_ready && model_busy), .dot_result(dot_result)
+        .dot_ready(dot_ready[0] && model_busy), .dot_results(dot_results)
     );
 `else
     assign model_busy = 0;
@@ -85,6 +94,7 @@ module tang_top #(
     assign model_status = 3;
     assign model_result = 0;
     assign model_checksum = 0;
+    assign model_checksums = 0;
     assign model_cycles = 0;
     assign model_req = 0;
     assign model_wr = 0;
@@ -94,12 +104,17 @@ module tang_top #(
     assign model_weights = 0;
     assign model_activations = 0;
 `endif
-    tang_q4_dot dot (
-        .clk(clk), .resetn(resetn), .valid(model_busy ? model_dot : test_dot_valid),
-        .weights(model_busy ? model_weights : test_dot_weights),
-        .activations(model_busy ? model_activations : test_dot_activations), .ready(dot_ready), .sum(dot_result)
-    );
-    tang_sdram #(.CLOCK_HZ(CLOCK_HZ)) memory (
+    wire [31:0] dot_weights = model_busy ? model_weights : test_dot_weights;
+    genvar p;
+    generate for (p=0; p<PREFILL_LANES; p=p+1) begin: position_dot
+        wire valid = p == 0 && !model_busy ? test_dot_valid : model_dot;
+        wire [63:0] activation = p == 0 && !model_busy ? test_dot_activations : model_activations[p*64 +: 64];
+        tang_q4_dot dot (
+            .clk(clk), .resetn(resetn), .valid(valid), .weights(dot_weights), .activations(activation),
+            .ready(dot_ready[p]), .sum(dot_results[p*15 +: 15])
+        );
+    end endgenerate
+    tang_sdram #(.CLOCK_HZ(CLOCK_HZ), .CLOCK_DIVIDE(SDRAM_DIVIDER)) memory (
         .clk(clk), .memory_clk(memory_clk), .resetn(resetn), .request(model_busy ? model_req : link_req),
         .write(model_busy ? model_wr : link_wr), .address(model_busy ? model_addr : link_addr),
         .data_in(model_busy ? model_data : link_data), .data_out(data_out), .complete(complete),

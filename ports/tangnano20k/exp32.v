@@ -11,11 +11,16 @@ module tang_exp32 (
     localparam IDLE=0, BIN_OPERANDS=1, BIN_MUL=2, REDUCE_OPERANDS=3, REDUCE_MUL=4,
         REDUCED=5, TERM_OPERANDS=6, TERM_MUL=7, TERM_ADD=8, SCALE_OPERANDS=9,
         SCALE_MUL=10, NORMALIZE=11, PACK=12, RETURN=13, MUL_CROSS=14, MUL_LOW=15,
-        MUL_HIGH=16, PACK_PREPARE=17, PACK_SHIFT=18, PACK_STICKY=19, PACK_ROUND=20;
+        MUL_HIGH=16, PACK_PREPARE=17, PACK_SHIFT=18, PACK_STICKY=19, PACK_ROUND=20,
+        INPUT_SHIFT=21, BIN_ROUND=22;
     reg [4:0] stage, after_multiply;
     reg sign;
+    reg [23:0] input_significand;
+    reg [5:0] input_shift;
+    reg shift_right, tiny_input;
     reg [63:0] magnitude;
     reg signed [14:0] bin;
+    reg [14:0] positive_bin;
     reg signed [63:0] remainder, polynomial;
     reg [2:0] term;
     reg signed [63:0] multiplier_a, multiplier_b;
@@ -27,6 +32,7 @@ module tang_exp32 (
     reg signed [63:0] product_high, low_high, high_low;
     reg signed [64:0] cross_product;
     reg [32:0] middle;
+    reg [63:0] high_without_carry;
     reg signed [127:0] product;
     reg signed [9:0] power;
     reg [63:0] normalized;
@@ -39,19 +45,6 @@ module tang_exp32 (
     reg [56:0] scale_table [0:63];
     initial $readmemh("exp2.hex", scale_table);
     assign complete = stage == RETURN;
-
-    function [63:0] fixed_abs;
-        input [30:0] x;
-        integer shift;
-        reg [63:0] mantissa;
-        begin
-            shift = integer'(x[30:23]) - 95;
-            mantissa = {40'b0, 1'b1, x[22:0]};
-            if (x[30:23] == 0 || shift < -63) fixed_abs = 0;
-            else if (shift < 0) fixed_abs = mantissa >> -shift;
-            else fixed_abs = mantissa << shift;
-        end
-    endfunction
 
     function signed [63:0] coefficient;
         input [2:0] index;
@@ -78,10 +71,22 @@ module tang_exp32 (
                               value[31] ? 32'b0 : 32'h7f800000;
                     stage <= RETURN;
                 end else begin
-                    magnitude <= fixed_abs(value[30:0]);
+                    input_significand <= {1'b1,value[22:0]};
+                    // The magnitude is a 24-bit significand shifted by
+                    // exponent - 95. Inputs below that range truncate to zero.
+                    shift_right <= value[30:23] < 8'd95;
+                    tiny_input <= value[30:23] < 8'd72;
+                    input_shift <= value[30:23] < 8'd95 ?
+                                   6'd31 - value[28:23] : value[28:23] - 6'd31;
                     sign <= value[31];
-                    stage <= BIN_OPERANDS;
+                    stage <= INPUT_SHIFT;
                 end
+            end
+            INPUT_SHIFT: begin
+                magnitude <= tiny_input ? 64'b0 :
+                             shift_right ? {40'b0,input_significand >> input_shift} :
+                             {40'b0,input_significand} << input_shift;
+                stage <= BIN_OPERANDS;
             end
             BIN_OPERANDS: begin
                 multiplier_a <= magnitude >> 35;
@@ -93,7 +98,7 @@ module tang_exp32 (
                 product_high <= a_high * b_high;
                 low_high <= a_low * b_high;
                 high_low <= a_high * b_low;
-                after_multiply <= stage + 1'b1;
+                after_multiply <= stage == BIN_MUL ? BIN_ROUND : stage + 1'b1;
                 stage <= MUL_CROSS;
             end
             MUL_CROSS: begin
@@ -102,16 +107,21 @@ module tang_exp32 (
             end
             MUL_LOW: begin
                 middle <= {1'b0,product_low[63:32]} + {1'b0,cross_product[31:0]};
+                high_without_carry <= product_high + (cross_product >>> 32);
                 stage <= MUL_HIGH;
             end
             MUL_HIGH: begin
-                product <= {product_high + (cross_product >>> 32) + $signed({1'b0,middle[32]}),
+                product <= {high_without_carry + {63'b0,middle[32]},
                             middle[31:0], product_low[31:0]};
                 stage <= after_multiply;
             end
+            BIN_ROUND: begin
+                positive_bin <= rounded_bin;
+                stage <= REDUCE_OPERANDS;
+            end
             REDUCE_OPERANDS: begin
-                bin <= sign ? -$signed(rounded_bin[14:0]) : $signed(rounded_bin[14:0]);
-                multiplier_a <= rounded_bin;
+                bin <= sign ? -$signed(positive_bin) : $signed(positive_bin);
+                multiplier_a <= {49'b0,positive_bin};
                 multiplier_b <= LN2_BY64;
                 stage <= REDUCE_MUL;
             end
