@@ -62,14 +62,22 @@ module tang_link_control #(
     reg write_shape, read_shape, range_shape, dot_shape, empty_payload, forward_shape, prefill_shape, seek_shape;
     localparam NO_BYTE_LIMIT = CLOCK_HZ / 10;
     reg [23:0] no_byte_ticks;
+    reg byte_ready, received_pico;
+    reg [7:0] byte_in;
 
     wire receiving = state <= CHECKSUM;
     wire use_pico = state == SEEK ? !host_available && pico_available : selected_pico;
-    wire byte_ready = use_pico ? pico_available : host_available;
-    wire [7:0] byte_in = use_pico ? pico_input : host_input;
+    wire accept_byte = resetn && receiving && !byte_ready && (use_pico ? pico_available : host_available);
     wire tx_valid = state == SEND && !(selected_pico ? pico_tx_busy : host_tx_busy);
-    assign host_pop = receiving && !use_pico && byte_ready;
-    assign pico_pop = receiving && use_pico && byte_ready;
+    assign host_pop = accept_byte && !use_pico;
+    assign pico_pop = accept_byte && use_pico;
+    always @(posedge clk) begin
+        byte_ready <= accept_byte;
+        if (accept_byte) begin
+            byte_in <= use_pico ? pico_input : host_input;
+            received_pico <= use_pico;
+        end
+    end
     assign host_push = tx_valid && !selected_pico;
     assign pico_push = tx_valid && selected_pico;
     assign dot_valid = state == START_DOT;
@@ -146,7 +154,7 @@ module tang_link_control #(
             else no_byte_ticks <= no_byte_ticks + 1'b1;
             case (state)
                 SEEK: if (byte_ready && byte_in == 8'ha5) begin
-                    selected_pico <= use_pico;
+                    selected_pico <= received_pico;
                     state <= SYNC;
                 end
                 SYNC: if (byte_ready) begin

@@ -3,7 +3,8 @@ module tang_top #(
     parameter SDR_PHASE = "1000",
     parameter HALF_SDRAM_CLOCK = 0,
     parameter SDRAM_DIVIDER = HALF_SDRAM_CLOCK ? 2 : 1,
-    parameter PREFILL_LANES = 4
+    parameter PREFILL_LANES = 4,
+    parameter DSP_CLOCK_HZ = 0
 ) (
     input wire clock27, host_rx,
     output wire host_tx, led_n,
@@ -31,8 +32,9 @@ module tang_top #(
         .RESET(1'b0), .RESET_P(1'b0), .CLKFB(1'b0), .FBDSEL(6'b0),
         .IDSEL(6'b0), .ODSEL(6'b0), .PSDA(4'b0), .DUTYDA(4'b0), .FDLY(4'b0)
     );
+    wire dsp_locked;
     reg [7:0] reset_pipe = 0;
-    always @(posedge clk) reset_pipe <= locked ? {reset_pipe[6:0], 1'b1} : 0;
+    always @(posedge clk) reset_pipe <= locked && dsp_locked ? {reset_pipe[6:0], 1'b1} : 0;
     wire resetn = reset_pipe[7];
 
     wire [7:0] host_byte, pico_byte, outgoing;
@@ -57,6 +59,8 @@ module tang_top #(
     wire [63:0] test_dot_activations;
     wire [PREFILL_LANES-1:0] dot_ready;
     wire [PREFILL_LANES*15-1:0] dot_results;
+    wire diagnostic_ready;
+    wire [14:0] diagnostic_result;
     wire model_start, model_reset, model_output, model_busy, model_done, model_req, model_wr, model_burst, model_dot;
     wire [31:0] model_result, model_checksum, model_cycles, model_data, model_weights;
     wire [PREFILL_LANES*64-1:0] model_activations;
@@ -67,6 +71,10 @@ module tang_top #(
     wire [2:0] model_count;
     wire [4:0] model_allowed;
     wire [10:0] model_seek;
+    wire [5:0] dot_activation_index;
+    wire quantized_write;
+    wire [$clog2(PREFILL_LANES*64)-1:0] quantized_address;
+    wire [63:0] quantized_data;
 `ifdef TANG_MODEL
     localparam MODEL_ENABLED = 1;
 `else
@@ -79,7 +87,7 @@ module tang_top #(
         .serial_output(outgoing), .memory_request(link_req), .memory_write(link_wr),
         .memory_address(link_addr), .memory_data(link_data), .memory_complete(complete && !model_busy), .memory_result(data_out),
         .dot_valid(test_dot_valid), .dot_weights(test_dot_weights), .dot_activations(test_dot_activations),
-        .dot_ready(dot_ready[0] && !model_busy), .dot_result(dot_results[14:0]),
+        .dot_ready(diagnostic_ready), .dot_result(diagnostic_result),
         .model_start(model_start), .model_reset(model_reset),
         .model_tokens(model_tokens), .model_count(model_count), .model_output(model_output),
         .model_allowed(model_allowed), .model_seek(model_seek),
@@ -97,6 +105,8 @@ module tang_top #(
         .memory_address(model_addr), .memory_data(model_data),
         .memory_complete(complete && model_busy), .memory_result(data_out),
         .dot_valid(model_dot), .dot_weights(model_weights), .dot_activations(model_activations),
+        .dot_activation_index(dot_activation_index), .activation_write(quantized_write),
+        .activation_write_index(quantized_address), .activation_write_data(quantized_data),
         .dot_ready(dot_ready[0] && model_busy), .dot_results(dot_results)
     );
 `else
@@ -115,16 +125,46 @@ module tang_top #(
     assign model_dot = 0;
     assign model_weights = 0;
     assign model_activations = 0;
+    assign dot_activation_index = 0;
+    assign quantized_write = 0;
+    assign quantized_address = 0;
+    assign quantized_data = 0;
 `endif
     wire [31:0] dot_weights = model_busy ? model_weights : test_dot_weights;
     genvar p;
-    generate for (p=0; p<PREFILL_LANES; p=p+1) begin: position_dot
-        wire valid = p == 0 && !model_busy ? test_dot_valid : model_dot;
-        wire [63:0] activation = p == 0 && !model_busy ? test_dot_activations : model_activations[p*64 +: 64];
-        tang_q4_dot dot (
-            .clk(clk), .resetn(resetn), .valid(valid), .weights(dot_weights), .activations(activation),
-            .ready(dot_ready[p]), .sum(dot_results[p*15 +: 15])
+    generate if (DSP_CLOCK_HZ != 0) begin: separate_dsp
+        localparam INPUT_DIVIDE = DSP_CLOCK_HZ == 252000000 || DSP_CLOCK_HZ == 198000000 ? 2 : 0;
+        localparam FEEDBACK = DSP_CLOCK_HZ == 252000000 ? 27 : DSP_CLOCK_HZ == 270000000 ? 9 :
+                              DSP_CLOCK_HZ == 216000000 ? 7 : DSP_CLOCK_HZ == 243000000 ? 8 :
+                              DSP_CLOCK_HZ == 198000000 ? 21 : 6;
+        wire fast_clk;
+        rPLL #(.FCLKIN("27"), .IDIV_SEL(INPUT_DIVIDE), .FBDIV_SEL(FEEDBACK), .ODIV_SEL(4), .DEVICE("GW2A-18C")) fast_pll (
+            .CLKIN(clock27), .CLKOUT(fast_clk), .CLKOUTP(), .LOCK(dsp_locked), .RESET(1'b0),
+            .RESET_P(1'b0), .CLKFB(1'b0), .FBDSEL(6'b0), .IDSEL(6'b0), .ODSEL(6'b0), .PSDA(4'b0),
+            .DUTYDA(4'b0), .FDLY(4'b0)
         );
+        reg [7:0] fast_reset_pipe = 0;
+        always @(posedge fast_clk) fast_reset_pipe <= locked && dsp_locked ? {fast_reset_pipe[6:0], 1'b1} : 0;
+        if (PREFILL_LANES > 1) assign dot_ready[PREFILL_LANES-1:1] = 0;
+        tang_dot_cdc #(.LANES(PREFILL_LANES)) dot (
+            .clk(clk), .resetn(resetn), .fast_clk(fast_clk), .fast_resetn(fast_reset_pipe[7]),
+            .write_activation(quantized_write), .write_address(quantized_address), .write_data(quantized_data),
+            .request(model_dot), .test(test_dot_valid && !model_busy), .weights(dot_weights),
+            .read_address(dot_activation_index), .test_activations(test_dot_activations),
+            .ready(dot_ready[0]), .test_ready(diagnostic_ready), .sums(dot_results), .test_sum(diagnostic_result)
+        );
+    end else begin: direct_dsp
+        assign dsp_locked = 1;
+        assign diagnostic_ready = dot_ready[0] && !model_busy;
+        assign diagnostic_result = dot_results[14:0];
+        for (p=0; p<PREFILL_LANES; p=p+1) begin: position_dot
+            wire valid = p == 0 && !model_busy ? test_dot_valid : model_dot;
+            wire [63:0] activation = p == 0 && !model_busy ? test_dot_activations : model_activations[p*64 +: 64];
+            tang_q4_dot dot (
+                .clk(clk), .resetn(resetn), .valid(valid), .weights(dot_weights), .activations(activation),
+                .ready(dot_ready[p]), .sum(dot_results[p*15 +: 15])
+            );
+        end
     end endgenerate
     tang_sdram #(.CLOCK_HZ(CLOCK_HZ), .CLOCK_DIVIDE(SDRAM_DIVIDER)) memory (
         .clk(clk), .memory_clk(memory_clk), .resetn(resetn), .request(model_busy ? model_req : link_req),

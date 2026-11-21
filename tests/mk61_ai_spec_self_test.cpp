@@ -234,8 +234,29 @@ int main(int argc,char **argv) {
       Disk cold_disk; Session cold_session;
       cold_session.id=1;
       assert(set_task(cold_session,task.c_str(),false));
-      Observed cold{&model,{}};
-      Agent restarted(cold_session,cold_disk.store(),cold.inference());
+      struct Batched : Observed {
+        unsigned headers = 0;
+      } batched{{&model,{}}};
+      auto inference = batched.inference();
+      inference.batch_capacity = [](void *) { return 3U; };
+      inference.batch_step = [](void *p, const std::uint16_t *tokens, unsigned count,
+                                 Arithmetic mode, bool (*service)(void *), void *context) {
+        auto &self = *static_cast<Batched *>(static_cast<Observed *>(p));
+        auto &model = *self.model;
+        const auto start = model.position();
+        for (unsigned i = 0; i < count; ++i) {
+          std::uint16_t unused;
+          const auto status = model.forward(tokens[i], false, unused, service, context, mode);
+          if (status != ModelStatus::OK) {
+            model.rewind(start);
+            return status;
+          }
+        }
+        if (count == 3 && std::equal(tokens, tokens + count, SpecProtocol::HEADER))
+          ++self.headers;
+        return ModelStatus::OK;
+      };
+      Agent restarted(cold_session,cold_disk.store(),inference);
       restarted.spec_protocol(true);
       restarted.default_angle(angle);
       restarted.arithmetic(arithmetic);
@@ -245,7 +266,7 @@ int main(int argc,char **argv) {
       assert(!restarted.active());
       assert(snapshot.restored==1 && snapshot.saved==1);
       assert(restarted.reused_prefix()==count && restarted.metrics().prefill_tokens==493-count);
-      assert(cold.tokens==expected && model.position()==golden_position);
+      assert(batched.headers == 1 && batched.tokens==expected && model.position()==golden_position);
       assert(restarted.metrics().output_token_hash==agent.metrics().output_token_hash);
       const auto stride = model.cache_bytes()/model.config().layers;
       const auto live = golden_position * (stride/model.config().context);

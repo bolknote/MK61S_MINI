@@ -597,7 +597,7 @@ struct UI {
       e.pair_prefill = true;
     }
     model.execution(e);
-    agent.prefix_io(cache_prefix && !e.remote_submit && !tang_selected ? prefix_io : nullptr, this);
+    agent.prefix_io(cache_prefix && !e.remote_submit ? prefix_io : nullptr, this);
   }
   void detach_tang() {
     if (tang_selected) agent.use_inference(local_inference(model));
@@ -718,6 +718,17 @@ AI_COLD_CODE ModelStatus UI::prefix_io(void *raw, const std::uint16_t *tokens,
                                       unsigned count, unsigned angle, Arithmetic mode,
                                       bool save, bool (*service)(void *), void *context) {
   auto &ui = *static_cast<UI *>(raw);
+  if (ui.tang_selected) {
+    const auto started = ui.call(MK61_SERVICE_MICROS);
+    const auto status = ui.tang.prefix(tokens, count, save, service, context);
+    const auto elapsed = ui.call(MK61_SERVICE_MICROS) - started;
+    if (save) ui.prefix_write_us += elapsed;
+    else {
+      ui.prefix_read_us += elapsed;
+      if (status == ModelStatus::OK) ui.prefix_loaded += count;
+    }
+    return status;
+  }
   const char *const names[] = {"/AI/SYSDEG.KV", "/AI/SYSRAD.KV", "/AI/SYSGRD.KV"};
   if (angle >= 3)
     return ModelStatus::FORMAT;

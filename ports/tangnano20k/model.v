@@ -18,13 +18,17 @@ module tang_model #(
     output reg [31:0] cycles,
     output wire memory_request, memory_write,
     output wire memory_burst,
-    output reg [20:0] memory_address,
+    output wire [20:0] memory_address,
     output reg [31:0] memory_data,
     input wire memory_complete,
     input wire [31:0] memory_result,
     output reg dot_valid,
     output reg [31:0] dot_weights,
     output wire [PREFILL_LANES*64-1:0] dot_activations,
+    output reg [5:0] dot_activation_index,
+    output wire activation_write,
+    output wire [$clog2(PREFILL_LANES*64)-1:0] activation_write_index,
+    output wire [63:0] activation_write_data,
     input wire dot_ready,
     input wire [PREFILL_LANES*15-1:0] dot_results
 );
@@ -38,34 +42,28 @@ module tang_model #(
         QUANT_MAX_READ=33, QUANT_MAX_UPDATE=34, QUANT_SCALE=35, QUANT_READ=36,
         QUANT_DIVIDE=37, QUANT_STORE=38, MATRIX_WORD=39, MATRIX_STREAM=40,
         QUANT_PREPARE=41, QUANT_ALIGN=42,
-        MATRIX_CONVERT=43, MATRIX_WEIGHT=44, MATRIX_ACTIVATION=45,
-        MATRIX_ACCUMULATE=46, MATRIX_ADVANCE=47, MATRIX_NEXT_ROW=48,
+        MATRIX_SCALE_START=43, MATRIX_SCALE_WAIT=44, MATRIX_ADVANCE=47, MATRIX_NEXT_ROW=48,
         ROPE_READ=49, ROPE_SAVE=50, ROPE_COS=51, ROPE_SIN=52, ROPE_LC=53,
         ROPE_RS=54, ROPE_LEFT=55, ROPE_RC=56, ROPE_LS=57, ROPE_RIGHT=58, ROPE_STORE=59, ROPE_NEXT=60,
         KV_READ=61, KV_WORD=62, KV_NEXT=63,
-        ATT_Q=64, ATT_K=65, ATT_PRODUCT=66, ATT_ACCUMULATE=67, ATT_NEXT=68, ATT_SCORE=69, ATT_SCORE_NEXT=70,
-        SOFTMAX_READ=71, SOFTMAX_SUB=72, SOFTMAX_EXP=73, SOFTMAX_STORE=74,
-        SOFTMAX_ACCUMULATE=75, SOFTMAX_NEXT=76,
-        VALUE_SCORE=77, VALUE_WEIGHT=78, VALUE_START=79, VALUE_RESULT_READ=80, VALUE_STREAM=81,
-        VALUE_STORE=84,
         ADD_READ=86, ADD_RESULT=87, ADD_WRITE=88, ADD_NEXT=89,
         SILU_READ=90, SILU_EXP=91, SILU_ADD=92, SILU_DIVIDE=93, SILU_PRODUCT=94, SILU_STORE=95,
         CHECK_TOKENS=96, MATRIX_NEXT_LANE=97, READ_PAIR_FIRST=98, READ_PAIR_SECOND=99,
-        READ_RAM_RESULT=100, READ_PAIR_RESULT=101, ATT_PREFETCH=102,
+        READ_RAM_RESULT=100, READ_PAIR_RESULT=101,
         EMBED_ADDRESS=104, KV_ADDRESS=105, CHECK_LAYOUT=106, BEST_COMPARE=107, BEST_COMMIT=108,
         QUANT_MAX_COMMIT=109, ADVANCE_POSITION=110, ADVANCE_INSTRUCTION=111, FINISH=112,
         CHECK_TOKEN_RANGE=113, ALLOWED_READ=114, ALLOWED_TOKEN=115,
-        ALLOWED_OFFSET=116, ALLOWED_ROW=117, VALUE_RESULT_NEXT=118, VALUE_RESULT_WAIT=119;
+        ALLOWED_OFFSET=116, ALLOWED_ROW=117,
+        ATT_TILE_BEGIN=120, ATT_TILE_READ=121, ATT_TILE_COPY=122, ATT_TILE_START=123, ATT_TILE_WAIT=124,
+        ATT_OUT_READ=125, ATT_OUT_WRITE=126, ATT_OUT_NEXT=127;
     localparam [2:0] FADD=0, FSUB=1, FMUL=2, FDIV=3, FSQRT=4, I2F=5, FEXP=6;
     localparam [31:0] ONE=32'h3f800000, NEG_MAX=32'hff7fffff;
-    localparam [31:0] INV_SQRT_32=32'h3e3504f3;
-    localparam [11:0] SCORES=1536;
     // Last 64 bytes of SDRAM, beyond all supported model and KV allocations.
     localparam [20:0] ALLOWED_ADDRESS=21'h1ffff0;
     localparam LANE_BITS = PREFILL_LANES <= 2 ? 1 : $clog2(PREFILL_LANES);
     localparam VECTOR_ADDR_BITS = $clog2(PREFILL_LANES*1536);
 
-    localparam STATE_COUNT = VALUE_RESULT_WAIT + 1;
+    localparam STATE_COUNT = ATT_OUT_NEXT + 1;
     // Decode the continuation when a sub-operation starts. A returning SDRAM
     // word or FP result can then select its next state without a binary decoder.
     reg [STATE_COUNT-1:0] state, continuation;
@@ -78,7 +76,7 @@ module tang_model #(
     reg [2:0] field;
     reg [20:0] pc, cursor, embedding_offset;
     reg [8:0] instructions_left;
-    reg [10:0] next_position, position, time_index;
+    reg [10:0] next_position, position;
     reg [PREFILL_LANES*16-1:0] input_tokens;
     reg [15:0] checked_token;
     reg [20:0] embedding_offsets [0:PREFILL_LANES-1];
@@ -95,14 +93,16 @@ module tang_model #(
     reg [20:0] row_offset;
     reg [11:0] i, group_offset;
     reg [5:0] group_number;
-    reg [2:0] head;
+    reg [1:0] head;
+    reg [LANE_BITS-1:0] tile_first_lane;
+    reg [9:0] tile_first_position;
+    reg tile_pair;
+    reg [20:0] external_address;
     reg [2:0] matrix_words, dot_groups;
     reg [31:0] accumulator, factor, max_value, left_value, right_value, cosine, sine;
     reg [31:0] candidate_key, maximum_key;
     reg candidate_is_larger, magnitude_is_larger;
     reg [31:0] ext_word;
-    reg [31:0] prefetched_word;
-    reg prefetch_pending, prefetch_ready;
     wire signed [16:0] integer_sum [0:PREFILL_LANES-1];
     reg [31:0] matrix_accumulator [0:PREFILL_LANES-1];
     reg [31:0] lane_checksums [0:PREFILL_LANES-1];
@@ -125,88 +125,93 @@ module tang_model #(
     wire [15:0] input_token = input_tokens[lane*16 +: 16];
     wire [15:0] allowed_token = allowed_index[0] ? ext_word[31:16] : ext_word[15:0];
     wire [20:0] rotary_cos = address + {5'b0,position,i[3:0],1'b0};
-    wire [20:0] attention_key = address + {3'b0,time_index,1'b0,head[1],5'b0};
-    wire [20:0] attention_value = address + {3'b0,time_index,1'b1,head[1],5'b0};
-    wire [11:0] source_head = source + {4'b0,head,5'b0};
     wire [4:0] next_coordinate = i[4:0]+1'b1;
-    wire [11:0] output_coordinate = destination + {4'b0,head,i[4:0]};
+    wire [11:0] output_coordinate = destination + {5'b0,head,i[4:0]};
     wire [3:0] embed_code = ext_word[4*i[2:0] +: 4] ^ 4'h8;
     wire [31:0] magnitude = {1'b0,vector_word[30:0]};
     wire [31:0] group_max = magnitude_is_larger ? magnitude : max_value;
 
     // Each position needs 1536 words of vectors. A single read port is enough
     // with two reads for rotary, residual addition and SiLU, and fits six lanes.
-    // Attention processes one position at a time and shares the score buffer.
     (* ram_style="block" *) reg [31:0] scratch [0:PREFILL_LANES*1536-1];
-    (* ram_style="block" *) reg [31:0] scores [0:1023];
     reg [11:0] ram_address, pair_address;
-    reg [31:0] vector_read, score_read, vector_word, first_operand, score_word, write_value;
+    reg [31:0] vector_read, vector_word, first_operand, write_value;
     wire [LANE_BITS+1:0] lane_segment = {1'b0,lane,1'b0} + {{2{1'b0}},lane};
     wire [LANE_BITS+1:0] segment = lane_segment + {{LANE_BITS{1'b0}},ram_address[10:9]};
     wire [VECTOR_ADDR_BITS-1:0] vector_address = {segment,ram_address[8:0]};
-    wire score_access = ram_address >= SCORES;
-    wire [9:0] score_index = {~ram_address[9],ram_address[8:0]};
     always @(posedge clk) begin
-        if (state[WRITE_RAM] && !score_access) scratch[vector_address] <= write_value;
+        if (state[WRITE_RAM]) scratch[vector_address] <= write_value;
         else vector_read <= scratch[vector_address];
-        if (state[WRITE_RAM] && score_access) scores[score_index] <= write_value;
-        else score_read <= scores[score_index];
         vector_word <= vector_read;
-        score_word <= score_read;
     end
 
     reg [31:0] fp_a, fp_b;
     reg [2:0] fp_operation;
-    wire fp_complete;
-    wire [31:0] fp_value;
-    // The query dot product feeds its sum back in order. Each coordinate of V
-    // has its own accumulator, and all 32 sums are written before the next
-    // time step reads them. Products and add results retire in address order.
-    (* ram_style="block" *) reg [31:0] value_accumulators [0:31];
-    reg [31:0] value_read, value_word, product_read, product_word;
-    reg [5:0] value_fetched;
-    reg [4:0] value_product_index, value_store_index;
-    reg [1:0] value_product_valid;
-    reg add_pending;
-    wire value_request = state[VALUE_STREAM] && value_fetched < 32;
-    wire value_input = value_request && memory_complete;
-    wire value_product_done;
-    wire [31:0] value_product;
-    wire attention_add_complete;
-    wire [31:0] attention_sum;
-    wire add_ready = !add_pending || attention_add_complete;
-    wire value_add = value_product_valid[1];
-    wire query_add = add_ready && state[ATT_ACCUMULATE];
-    wire value_retire = state[VALUE_STREAM] && attention_add_complete;
-    wire [31:0] attention_base = value_add ? (time_index == 0 ? 32'b0 : value_word) :
-                                 (add_pending ? attention_sum : accumulator);
-    always @(posedge clk) begin
-        value_product_valid <= resetn ? {value_product_valid[0],value_product_done} : 0;
-        if (value_product_done || state[VALUE_RESULT_READ])
-            value_read <= value_accumulators[value_product_done ? value_product_index : i[4:0]];
-        value_word <= value_read;
-        if (value_product_done) product_read <= value_product;
-        product_word <= product_read;
-        if (value_retire) value_accumulators[value_store_index] <= attention_sum;
-    end
-    tang_fp32 fp(.clk(clk), .resetn(resetn), .start(state[FP_START]),
-                 .operation(fp_operation), .a(fp_a), .b(fp_b), .complete(fp_complete), .result(fp_value),
-                 .add_start(query_add || value_add), .add_a(attention_base),
-                 .add_b(value_add ? product_word : fp_value),
-                 .add_complete(attention_add_complete), .add_value(attention_sum),
-                 .mul_start(value_input), .mul_a(factor), .mul_b(memory_result),
-                 .mul_complete(value_product_done), .mul_value(value_product));
+    wire fp_complete, tile_done, tile_request, tile_burst;
+    wire [31:0] fp_value, tile_result;
+    wire [20:0] tile_address;
+    wire tile_scalar, tile_mul, tile_add, mul_complete, add_complete;
+    wire [2:0] tile_operation;
+    wire [31:0] tile_a, tile_b, mul_a, mul_b, add_a, add_b, mul_value, add_value;
+    wire [6:0] tile_index = {lane != tile_first_lane,head[0],i[4:0]};
+
+    tang_attention attention (
+        .clk(clk), .resetn(resetn), .start(state[ATT_TILE_START]),
+        .key_base(address + {15'b0,head[1],5'b0}),
+        .first_position(tile_first_position), .pair(tile_pair),
+        .query_write(state[ATT_TILE_COPY]), .query_index(tile_index), .query_data(vector_word),
+        .result_read(state[ATT_OUT_READ]), .result_index(tile_index), .result(tile_result), .done(tile_done),
+        .memory_request(tile_request), .memory_burst(tile_burst), .memory_address(tile_address),
+        .memory_complete(memory_complete), .memory_data(memory_result),
+        .scalar_start(tile_scalar), .scalar_operation(tile_operation), .scalar_a(tile_a), .scalar_b(tile_b),
+        .scalar_complete(fp_complete), .scalar_value(fp_value),
+        .mul_start(tile_mul), .mul_a(mul_a), .mul_b(mul_b), .mul_complete(mul_complete), .mul_value(mul_value),
+        .add_start(tile_add), .add_a(add_a), .add_b(add_b), .add_complete(add_complete), .add_value(add_value)
+    );
+
+    wire matrix_scaling = state[MATRIX_SCALE_START] || state[MATRIX_SCALE_WAIT];
+    wire scale_done, scale_mul, scale_add;
+    wire [31:0] scale_mul_a, scale_mul_b, scale_add_a, scale_add_b, matrix_value;
+    wire [LANE_BITS-1:0] scale_activation_lane, scale_previous_lane;
+    wire [PREFILL_LANES*17-1:0] packed_integer_sums;
+    genvar dot_lane;
+    generate for (dot_lane=0;dot_lane<PREFILL_LANES;dot_lane=dot_lane+1) begin: pack_sums
+        assign packed_integer_sums[17*dot_lane+:17] = integer_sum[dot_lane];
+    end endgenerate
+    tang_matrix_scale #(.LANES(PREFILL_LANES)) scale (
+        .clk(clk), .resetn(resetn), .start(state[MATRIX_SCALE_START]),
+        .first_lane(lane), .last_lane(last_lane), .integer_sums(packed_integer_sums), .weight_scale(ext_word),
+        .activation_lane(scale_activation_lane), .previous_lane(scale_previous_lane),
+        .activation_scale(act_scale[{scale_activation_lane,group_number[3:0]}]),
+        .previous_sum(group_number == 0 ? 32'b0 : matrix_accumulator[scale_previous_lane]),
+        .result_lane(lane), .result(matrix_value), .done(scale_done),
+        .mul_start(scale_mul), .mul_a(scale_mul_a), .mul_b(scale_mul_b),
+        .mul_complete(mul_complete), .mul_value(mul_value),
+        .add_start(scale_add), .add_a(scale_add_a), .add_b(scale_add_b),
+        .add_complete(add_complete), .add_value(add_value)
+    );
+
+    tang_fp32 fp(.clk(clk), .resetn(resetn), .start(state[FP_START] || tile_scalar),
+                 .operation(tile_scalar ? tile_operation : fp_operation),
+                 .a(tile_scalar ? tile_a : fp_a), .b(tile_scalar ? tile_b : fp_b),
+                 .complete(fp_complete), .result(fp_value),
+                 .add_start(tile_add || scale_add), .add_a(matrix_scaling ? scale_add_a : add_a),
+                 .add_b(matrix_scaling ? scale_add_b : add_b),
+                 .add_complete(add_complete), .add_value(add_value),
+                 .mul_start(tile_mul || scale_mul), .mul_a(matrix_scaling ? scale_mul_a : mul_a),
+                 .mul_b(matrix_scaling ? scale_mul_b : mul_b),
+                 .mul_complete(mul_complete), .mul_value(mul_value));
 
     assign busy = !state[IDLE];
     assign outcome = {5'b0,next_position,best_token};
     assign checksum = lane_checksums[last_lane];
-    assign memory_request = prefetch_pending || value_request || state[READ_EXT] || state[WRITE_EXT] ||
+    assign memory_request = tile_request || state[READ_EXT] || state[WRITE_EXT] ||
                             (state[MATRIX_STREAM] && matrix_words < 5);
     assign memory_write = state[WRITE_EXT];
-    // Aligned V vectors consist of four complete eight-word SDRAM bursts.
-    assign memory_burst = value_request && value_fetched[2:0] == 0 && memory_address[2:0] == 0;
+    assign memory_address = state[ATT_TILE_WAIT] ? tile_address : external_address;
+    assign memory_burst = tile_burst;
     wire launch_dot = state[MATRIX_STREAM] && memory_complete && matrix_words < 4;
-    wire hash_start = state[MATRIX_ADVANCE] && last_group && fp_value[30:23] != 8'hff;
+    wire hash_start = state[MATRIX_ADVANCE] && last_group && matrix_value[30:23] != 8'hff;
 
     // These flags are consumed after the current element's RAM or FP stage.
     always @(posedge clk) begin
@@ -231,8 +236,14 @@ module tang_model #(
     // The quantized activations read in parallel with the weight register.
     always @(posedge clk) begin
         dot_valid <= resetn && launch_dot;
-        if (launch_dot) dot_weights <= memory_result;
+        if (launch_dot) begin
+            dot_weights <= memory_result;
+            dot_activation_index <= {group_number[3:0],matrix_words[1:0]};
+        end
     end
+    assign activation_write = state[QUANT_STORE] && i[2:0] == 7;
+    assign activation_write_index = {lane,group_number[3:0],i[4:3]};
+    assign activation_write_data = pack_next;
     genvar p;
     generate for (p=0; p<PREFILL_LANES; p=p+1) begin: prefill_lane
         (* ram_style="block" *) reg [63:0] quantized [0:47];
@@ -256,22 +267,14 @@ module tang_model #(
     task read_ext;
         input [20:0] word_address;
         input [7:0] next_state;
-        begin memory_address <= word_address; continuation <= state_bit(next_state); state <= state_bit(READ_EXT); end
+        begin external_address <= word_address; continuation <= state_bit(next_state); state <= state_bit(READ_EXT); end
     endtask
     task write_ext;
         input [20:0] word_address;
         input [31:0] word_value;
         input [7:0] next_state;
-        begin memory_address <= word_address; memory_data <= word_value;
+        begin external_address <= word_address; memory_data <= word_value;
               continuation <= state_bit(next_state); state <= state_bit(WRITE_EXT); end
-    endtask
-    task prefetch_next_attention_word;
-        begin
-            if (i != 31) begin
-                memory_address <= memory_address + 1'b1;
-                prefetch_pending <= 1;
-            end
-        end
     endtask
     task read_ram;
         input [11:0] word_address;
@@ -309,28 +312,14 @@ module tang_model #(
             state <= state_bit(IDLE);
             next_position <= 0;
             cycles <= 0;
-            prefetch_pending <= 0;
-            prefetch_ready <= 0;
             hash_valid <= 0;
-            add_pending <= 0;
         end else begin
             if (busy) cycles <= cycles + 1'b1;
-            if (add_pending && attention_add_complete) begin
-                add_pending <= 0;
-                accumulator <= attention_sum;
-            end
-            if (query_add) add_pending <= 1;
-            if (value_input) begin
-                value_fetched <= value_fetched + 1'b1;
-                memory_address <= memory_address + 1'b1;
-            end
-            if (value_product_done) value_product_index <= value_product_index + 1'b1;
-            if (value_retire) value_store_index <= value_store_index + 1'b1;
             // Update each checksum while the sequencer writes the row and
             // starts the next one. The DSP sees only registered operands.
             hash_valid <= {hash_valid[0],hash_start};
             if (hash_start) begin
-                hash_input <= lane_checksums[lane] ^ fp_value;
+                hash_input <= lane_checksums[lane] ^ matrix_value;
                 hash_input_lane <= lane;
             end
             if (hash_valid[0]) begin
@@ -338,11 +327,6 @@ module tang_model #(
                 hash_output_lane <= hash_input_lane;
             end
             if (hash_valid[1]) lane_checksums[hash_output_lane] <= hash_output;
-            if (prefetch_pending && memory_complete) begin
-                prefetched_word <= memory_result;
-                prefetch_pending <= 0;
-                prefetch_ready <= 1;
-            end
             (* parallel_case *) case (1'b1)
                 state[IDLE]: if (rewind) begin
                         if (seek_position <= next_position) next_position <= seek_position;
@@ -424,7 +408,7 @@ module tang_model #(
                 state[EXECUTE]: begin
                     i <= 0; group_offset <= 0; group_number <= 0; row <= 0; head <= 0;
                     masked_head <= opcode == 9 && allowed_rows != 0;
-                    time_index <= 0; accumulator <= 0; cursor <= address; max_value <= 0;
+                    accumulator <= 0; cursor <= address; max_value <= 0;
                     position <= lane_position;
                     if (descriptor[0][8] && !want_logits) state <= state_bit(ADVANCE_INSTRUCTION);
                     else if (descriptor[0][8] && lane != last_lane) lane <= last_lane;
@@ -434,7 +418,7 @@ module tang_model #(
                         3,9: state <= state_bit(QUANT_MAX_READ);
                         4: state <= state_bit(ROPE_READ);
                         5: state <= state_bit(KV_ADDRESS);
-                        6: begin max_value <= NEG_MAX; state <= state_bit(ATT_Q); end
+                        6: state <= state_bit(ATT_TILE_BEGIN);
                         7: state <= state_bit(ADD_READ);
                         8: state <= state_bit(SILU_READ);
                         10: begin next_position <= next_position+{8'b0,batch_count}; finish(0); end
@@ -530,7 +514,7 @@ module tang_model #(
                 state[ALLOWED_OFFSET]: begin row_offset <= row*21'd20; state <= state_bit(ALLOWED_ROW); end
                 state[ALLOWED_ROW]: begin cursor <= address+row_offset; group_number <= 0; state <= state_bit(MATRIX_WORD); end
                 state[MATRIX_WORD]: begin
-                    memory_address <= cursor;
+                    external_address <= cursor;
                     matrix_words <= 0;
                     dot_groups <= 0;
                     state <= state_bit(MATRIX_STREAM);
@@ -539,29 +523,26 @@ module tang_model #(
                     // Launch the next read as the previous word enters the DSP
                     // pipeline. The fifth word is the FP32 weight scale.
                     if (memory_complete) begin
-                        memory_address <= memory_address + 1'b1;
+                        external_address <= external_address + 1'b1;
                         matrix_words <= matrix_words + 1'b1;
                         if (matrix_words == 4) ext_word <= memory_result;
                     end
                     if (dot_ready) dot_groups <= dot_groups + 1'b1;
-                    if (matrix_words == 5 && dot_groups == 4) state <= state_bit(MATRIX_CONVERT);
+                    if (matrix_words == 5 && dot_groups == 4) state <= state_bit(MATRIX_SCALE_START);
                 end
-                state[MATRIX_CONVERT]: calculate(I2F,{{15{integer_sum[lane][16]}},integer_sum[lane]},0,MATRIX_WEIGHT);
-                state[MATRIX_WEIGHT]: calculate(FMUL,fp_value,ext_word,MATRIX_ACTIVATION);
-                state[MATRIX_ACTIVATION]: calculate(FMUL,fp_value,act_scale[{lane,group_number[3:0]}],MATRIX_ACCUMULATE);
-                state[MATRIX_ACCUMULATE]: calculate(FADD,group_number == 0 ? 32'b0 : matrix_accumulator[lane],
-                                             fp_value,MATRIX_ADVANCE);
+                state[MATRIX_SCALE_START]: state <= state_bit(MATRIX_SCALE_WAIT);
+                state[MATRIX_SCALE_WAIT]: if (scale_done) state <= state_bit(MATRIX_ADVANCE);
                 state[MATRIX_ADVANCE]: begin
                     if (!last_group) begin
-                        matrix_accumulator[lane] <= fp_value;
+                        matrix_accumulator[lane] <= matrix_value;
                         state <= state_bit(MATRIX_NEXT_LANE);
-                    end else if (fp_value[30:23] == 255) finish(6);
+                    end else if (matrix_value[30:23] == 255) finish(6);
                     else begin
                         if (opcode == 9) begin
-                            candidate_key <= ordered(fp_value);
+                            candidate_key <= ordered(matrix_value);
                             maximum_key <= ordered(max_value);
                             state <= state_bit(BEST_COMPARE);
-                        end else put_ram(destination+row[11:0],fp_value,MATRIX_NEXT_LANE);
+                        end else put_ram(destination+row[11:0],matrix_value,MATRIX_NEXT_LANE);
                     end
                 end
                 state[MATRIX_NEXT_LANE]: begin
@@ -570,7 +551,7 @@ module tang_model #(
                         cursor <= cursor+21'd5;
                         if (last_group) state <= state_bit(MATRIX_NEXT_ROW);
                         else begin group_number <= group_number+1'b1; state <= state_bit(MATRIX_WORD); end
-                    end else begin lane <= lane+1'b1; state <= state_bit(MATRIX_CONVERT); end
+                    end else begin lane <= lane+1'b1; state <= state_bit(MATRIX_ADVANCE); end
                 end
                 state[MATRIX_NEXT_ROW]: if (masked_head) begin
                         if (allowed_index+5'd1 == allowed_rows) state <= state_bit(ADVANCE_INSTRUCTION);
@@ -603,76 +584,70 @@ module tang_model #(
                 state[KV_NEXT]: if (last_element) state <= state_bit(ADVANCE_POSITION);
                     else begin i <= i+1'b1; state <= state_bit(KV_READ); end
 
-                state[ATT_Q]: read_ram(source_head,ATT_K);
-                state[ATT_K]: read_ext(attention_key,ATT_PRODUCT);
-                state[ATT_PREFETCH]: if (prefetch_ready) begin
-                    ext_word <= prefetched_word;
-                    prefetch_ready <= 0;
-                    state <= state_bit(ATT_PRODUCT);
-                end
-                state[ATT_PRODUCT]: begin
-                    prefetch_next_attention_word();
-                    // The next query coordinate can come out of SRAM while
-                    // the current product is multiplied and accumulated.
-                    if (i != 31) ram_address <= ram_address + 1'b1;
-                    calculate(FMUL,vector_word,ext_word,ATT_ACCUMULATE);
-                end
-                state[ATT_ACCUMULATE]: if (add_ready) begin
-                    if (i == 31) state <= state_bit(ATT_NEXT);
-                    else begin i <= i+1'b1; state <= state_bit(ATT_PREFETCH); end
-                end
-                state[ATT_NEXT]: if (attention_add_complete) calculate(FMUL,attention_sum,INV_SQRT_32,ATT_SCORE);
-                state[ATT_SCORE]: begin
-                    candidate_key <= ordered(fp_value);
-                    maximum_key <= ordered(max_value);
-                    state <= state_bit(BEST_COMPARE);
-                end
                 state[BEST_COMPARE]: begin
                     candidate_is_larger <= candidate_key > maximum_key;
                     state <= state_bit(BEST_COMMIT);
                 end
                 state[BEST_COMMIT]: begin
-                    if (candidate_is_larger) begin
-                        max_value <= fp_value;
-                        if (opcode == 9) best_token <= row;
+                    if (candidate_is_larger) begin max_value <= matrix_value; best_token <= row; end
+                    state <= state_bit(MATRIX_NEXT_LANE);
+                end
+
+                state[ATT_TILE_BEGIN]: begin
+                    tile_first_lane <= lane;
+                    tile_first_position <= lane_position[9:0];
+                    tile_pair <= lane != last_lane;
+                    state <= state_bit(ATT_TILE_READ);
+                end
+                state[ATT_TILE_READ]: read_ram(source+{5'b0,head,i[4:0]},ATT_TILE_COPY);
+                state[ATT_TILE_COPY]: begin
+                    if (i != 31) begin
+                        i <= i+1'b1;
+                        state <= state_bit(ATT_TILE_READ);
+                    end else begin
+                        i <= 0;
+                        if (!head[0]) begin
+                            head[0] <= 1;
+                            state <= state_bit(ATT_TILE_READ);
+                        end else if (tile_pair && lane == tile_first_lane) begin
+                            lane <= lane+1'b1;
+                            head[0] <= 0;
+                            state <= state_bit(ATT_TILE_READ);
+                        end else state <= state_bit(ATT_TILE_START);
                     end
-                    if (opcode == 9) state <= state_bit(MATRIX_NEXT_LANE);
-                    else put_ram(SCORES+{1'b0,time_index},fp_value,ATT_SCORE_NEXT);
                 end
-                state[ATT_SCORE_NEXT]: begin
-                    i <= 0; accumulator <= 0;
-                    if (time_index == position) begin time_index <= 0; state <= state_bit(SOFTMAX_READ); end
-                    else begin time_index <= time_index+1'b1; state <= state_bit(ATT_Q); end
+                state[ATT_TILE_START]: begin
+                    lane <= tile_first_lane;
+                    head[0] <= 0;
+                    state <= state_bit(ATT_TILE_WAIT);
                 end
-                state[SOFTMAX_READ]: read_ram(SCORES+{1'b0,time_index},SOFTMAX_SUB);
-                state[SOFTMAX_SUB]: calculate(FSUB,score_word,max_value,SOFTMAX_EXP);
-                state[SOFTMAX_EXP]: calculate(FEXP,fp_value,0,SOFTMAX_STORE);
-                state[SOFTMAX_STORE]: put_ram(SCORES+{1'b0,time_index},fp_value,SOFTMAX_ACCUMULATE);
-                state[SOFTMAX_ACCUMULATE]: calculate(FADD,accumulator,fp_value,SOFTMAX_NEXT);
-                state[SOFTMAX_NEXT]: begin
-                    accumulator <= fp_value;
-                    if (time_index == position) begin time_index <= 0; state <= state_bit(VALUE_SCORE); end
-                    else begin time_index <= time_index+1'b1; state <= state_bit(SOFTMAX_READ); end
+                state[ATT_TILE_WAIT]: if (tile_done) state <= state_bit(ATT_OUT_READ);
+                state[ATT_OUT_READ]: state <= state_bit(ATT_OUT_WRITE);
+                state[ATT_OUT_WRITE]: put_ram(output_coordinate,tile_result,ATT_OUT_NEXT);
+                state[ATT_OUT_NEXT]: begin
+                    if (i != 31) begin
+                        i <= i+1'b1;
+                        state <= state_bit(ATT_OUT_READ);
+                    end else begin
+                        i <= 0;
+                        if (!head[0]) begin
+                            head[0] <= 1;
+                            state <= state_bit(ATT_OUT_READ);
+                        end else if (tile_pair && lane == tile_first_lane) begin
+                            lane <= lane+1'b1;
+                            head[0] <= 0;
+                            state <= state_bit(ATT_OUT_READ);
+                        end else if (!head[1]) begin
+                            lane <= tile_first_lane;
+                            head <= 2;
+                            state <= state_bit(ATT_TILE_BEGIN);
+                        end else if (lane != last_lane) begin
+                            lane <= lane+1'b1;
+                            head <= 0;
+                            state <= state_bit(ATT_TILE_BEGIN);
+                        end else state <= state_bit(ADVANCE_INSTRUCTION);
+                    end
                 end
-                state[VALUE_SCORE]: read_ram(SCORES+{1'b0,time_index},VALUE_WEIGHT);
-                state[VALUE_WEIGHT]: calculate(FDIV,score_word,accumulator,VALUE_START);
-                state[VALUE_START]: begin
-                    factor <= fp_value;
-                    memory_address <= attention_value;
-                    value_fetched <= 0; value_product_index <= 0; value_store_index <= 0;
-                    state <= state_bit(VALUE_STREAM);
-                end
-                state[VALUE_STREAM]: if (value_retire && value_store_index == 31) begin
-                    if (time_index != position) begin time_index <= time_index+1'b1; state <= state_bit(VALUE_SCORE); end
-                    else begin i <= 0; state <= state_bit(VALUE_RESULT_READ); end
-                end
-                state[VALUE_RESULT_READ]: state <= state_bit(VALUE_RESULT_WAIT);
-                state[VALUE_RESULT_WAIT]: state <= state_bit(VALUE_STORE);
-                state[VALUE_STORE]: put_ram(output_coordinate,value_word,VALUE_RESULT_NEXT);
-                state[VALUE_RESULT_NEXT]: if (i != 31) begin i <= i+1'b1; state <= state_bit(VALUE_RESULT_READ); end
-                    else if (head == 3) state <= state_bit(ADVANCE_POSITION);
-                    else begin head <= head+1'b1; time_index <= 0; i <= 0; accumulator <= 0;
-                               max_value <= NEG_MAX; state <= state_bit(ATT_Q); end
 
                 state[ADD_READ]: read_pair(destination+i,source+i,ADD_RESULT);
                 state[ADD_RESULT]: calculate(FADD,first_operand,vector_word,ADD_WRITE);

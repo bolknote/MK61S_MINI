@@ -12,6 +12,8 @@ public:
                            bool (*service)(void *), void *);
   void close();
   bool online() const;
+  mk61ai::ModelStatus prefix(const std::uint16_t *tokens, unsigned count, bool save,
+                            bool (*service)(void *), void *);
   mk61ai::Inference inference();
 
 private:

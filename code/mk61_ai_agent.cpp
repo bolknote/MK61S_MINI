@@ -915,6 +915,19 @@ void Agent::tick(bool (*service)(void *), void *context) {
     return;
   }
   if (phase_ == Phase::HEADER) {
+    // The first three SPEC header tokens have no classifier output. Keep the
+    // fourth separate so it uses the same grammar mask as scalar generation.
+    if (header_at_ < 2 && model_.batch_capacity && model_.batch_step) {
+      const auto count = std::min(3U - header_at_, model_.batch_capacity(model_.context));
+      if (count > 1) {
+        const auto before = micros_ ? micros_(clock_context_) : 0;
+        const auto status = model_.batch_step(model_.context, SpecProtocol::HEADER + header_at_,
+                                              count, arithmetic_, callback, &pump);
+        if (finish_forward(status, micros_ ? micros_(clock_context_) - before : 0, count))
+          header_at_ += count;
+        return;
+      }
+    }
     if (forwarded(SpecProtocol::HEADER[header_at_], header_at_ == 3)) {
       if (++header_at_ == 4) phase_ = Phase::DECODE;
     }

@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 
 
 def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, prefill_lanes=4, seed=None,
-          sdram_divider=None):
+          sdram_divider=None, dsp_clock=None):
     output.mkdir(parents=True, exist_ok=True)
 
     def run(tool, args, log):
@@ -23,6 +23,8 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
             completed.check_returncode()
 
     rtl = [HERE / file for file in ("uart.v", "link.v", "sdram.v", "q4_dot.v", "tang_top.v")]
+    if dsp_clock:
+        rtl += [HERE / "dot_cdc.v"]
     flags = ""
     if hardfloat:
         source = hardfloat / "source"
@@ -35,7 +37,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
         rtl += [source / file for file in (
             "HardFloat_primitives.v", "HardFloat_rawFN.v", "RISCV/HardFloat_specialize.v",
             "isSigNaNRecFN.v", "mulRecFN.v")]
-        rtl += [HERE / file for file in ("fp_add.v", "fp_divsqrt.v", "fp32.v", "exp32.v", "model.v")]
+        rtl += [HERE / file for file in ("fp_add.v", "fp_divsqrt.v", "fp32.v", "exp32.v", "attention.v", "matrix_scale.v", "model.v")]
         with localcontext() as context:
             context.prec = 90
             table = [round(Decimal(2) ** (Decimal(i) / 64) * (1 << 55)) for i in range(64)]
@@ -44,7 +46,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
     divider = sdram_divider or (2 if half_sdram_clock else 1)
     run("yosys", ["-Q", "-T", "-p", f'read_verilog -sv {flags} {sources}; chparam -set CLOCK_HZ {clock*1000000} '
         f'-set SDR_PHASE "{phase:04b}" -set SDRAM_DIVIDER {divider} '
-        f'-set PREFILL_LANES {prefill_lanes} tang_top; '
+        f'-set PREFILL_LANES {prefill_lanes} -set DSP_CLOCK_HZ {(dsp_clock or 0)*1000000} tang_top; '
         'synth_gowin -family gw2a -top tang_top -json tang.json'], "synth.log")
     routing = ["--json", "tang.json", "--write", "tang-routed.json", "--device",
         "GW2AR-LV18QN88C8/I7", "--vopt", "family=GW2A-18C", "--vopt", f"cst={HERE / 'tang.cst'}",
@@ -53,6 +55,12 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
         seed = 3 if clock == 102 and divider == 3 else 2
     if seed is not None:
         routing += ["--seed", str(seed)]
+    if dsp_clock:
+        (output / "clocks.py").write_text(
+            f'ctx.addClock(ctx.cells["pll"].ports["CLKOUT"].net.name, {clock})\n'
+            f'ctx.addClock(ctx.cells["separate_dsp.fast_pll"].ports["CLKOUT"].net.name, {dsp_clock})\n'
+        )
+        routing += ["--pre-pack", "clocks.py"]
     run("nextpnr-himbaechel", routing, "route.log")
     run("gowin_pack", ["-d", "GW2A-18C", "-o", "tang.fs", "tang-routed.json"], "pack.log")
     for line in (output / "route.log").read_text().splitlines():
@@ -72,11 +80,12 @@ def main():
     memory_clock.add_argument("--sdram-divider", type=int, choices=(1, 2, 3))
     parser.add_argument("--prefill-lanes", type=int, choices=(1, 2, 4, 6), default=4)
     parser.add_argument("--seed", type=int, help="Override the placement seed")
+    parser.add_argument("--dsp-clock", type=int, choices=(189, 198, 216, 243, 252, 270))
     parser.add_argument("--hardfloat", type=Path, help="Berkeley HardFloat Release 1 root to include the transformer sequencer")
     args = parser.parse_args()
     build(args.tools.resolve(), args.output.resolve(), args.clock, args.phase,
           args.hardfloat.resolve() if args.hardfloat else None, args.half_sdram_clock, args.prefill_lanes, args.seed,
-          args.sdram_divider)
+          args.sdram_divider, args.dsp_clock)
 
 
 if __name__ == "__main__":

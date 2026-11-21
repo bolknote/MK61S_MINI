@@ -23,8 +23,13 @@ namespace {
 constexpr unsigned GPIO = 28, CONTEXT = 1024, MAX_LANES = 6, MAX_ALLOWED = 24;
 constexpr std::uint32_t ALLOWED_ADDRESS = 0x7fffc0, MAX_IMAGE_BYTES = 0x220000;
 constexpr std::uint32_t PACKAGE_MAGIC = 0x314b544d; // "MTK1" in little endian
+constexpr std::uint32_t PREFIX_ADDRESS = 0x7fe000, PREFIX_MAGIC = 0x31504b54;
+constexpr unsigned KV_BYTES_PER_POSITION = 512, MAX_LAYERS = 10;
+constexpr unsigned PREFIX_HEADER_BYTES = 16 + 4 * MAX_LAYERS;
+static_assert(MAX_IMAGE_BYTES + MAX_LAYERS * CONTEXT * KV_BYTES_PER_POSITION < PREFIX_ADDRESS);
+static_assert(PREFIX_ADDRESS + PREFIX_HEADER_BYTES + CONTEXT * 2 < ALLOWED_ADDRESS);
 constexpr char image_path[] = "/AI/MODEL.TNG";
-enum Command : std::uint8_t { PUT = 1, CRC = 3, FORWARD = 6, PREFILL = 8, SEEK = 9, FEATURES = 10 };
+enum Command : std::uint8_t { PUT = 1, GET = 2, CRC = 3, FORWARD = 6, PREFILL = 8, SEEK = 9, FEATURES = 10 };
 
 std::uint32_t word(const std::uint8_t *p) {
   return std::uint32_t(p[0]) | std::uint32_t(p[1]) << 8 |
@@ -188,6 +193,7 @@ struct Backend::State {
   Model &local;
   Wire wire;
   std::uint16_t history[CONTEXT];
+  std::uint32_t image_crc = 0;
   unsigned position = 0, remote_position = 0, lanes = 0;
 
   bool seek(unsigned n) {
@@ -207,7 +213,7 @@ struct Backend::State {
         !files::read_range(image_path, size, block, 16, got) || got != 16 ||
         word(block) != PACKAGE_MAGIC || word(block + 4) != package_crc ||
         word(block + 8) != package_bytes) return ModelStatus::FORMAT;
-    const auto expected = word(block + 12);
+    image_crc = word(block + 12);
     std::uint32_t result[3];
     if (!pump.poll()) return ModelStatus::CANCELLED;
     if (!wire.open() || !wire.call(FEATURES, 0, nullptr, 0, 3, result, 25000, pump) ||
@@ -216,7 +222,7 @@ struct Backend::State {
     lanes = result[1];
     auto verify = [&]() {
       std::uint8_t length[4]; write_word(length, size);
-      return wire.call(CRC, 0, length, 4, 3, result, 4000000, pump) && result[0] == expected;
+      return wire.call(CRC, 0, length, 4, 3, result, 4000000, pump) && result[0] == image_crc;
     };
     if (!verify()) {
       for (unsigned offset = 0; offset < size;) {
@@ -230,7 +236,83 @@ struct Backend::State {
       if (!verify()) return ModelStatus::IO;
     }
     if (!pump.poll()) return ModelStatus::CANCELLED;
-    if (!wire.call(SEEK, 0, nullptr, 0, 3, result, 25000, pump) || result[0]) return ModelStatus::IO;
+    // Seeking to capacity reports the current boundary and preserves resident KV.
+    if (!wire.call(SEEK, CONTEXT, nullptr, 0, 3, result, 25000, pump) || result[0] > CONTEXT)
+      return ModelStatus::IO;
+    remote_position = result[0];
+    return pump.cancelled ? ModelStatus::CANCELLED : ModelStatus::OK;
+  }
+
+  ModelStatus prefix(const std::uint16_t *tokens, unsigned count, bool save, Pump &pump) {
+    const unsigned layers = local.config().layers;
+    if (!wire.ready() || !count || count >= CONTEXT || remote_position < count ||
+        !layers || layers > MAX_LAYERS)
+      return ModelStatus::FORMAT;
+    if (save && (position != count || !std::equal(tokens, tokens + count, history)))
+      return ModelStatus::FORMAT;
+    auto failure = [&] { return pump.cancelled ? ModelStatus::CANCELLED : ModelStatus::IO; };
+    std::uint32_t result[3];
+    auto get = [&](unsigned address) {
+      return pump.poll() && wire.call(GET, address, nullptr, 0, 3, result, 25000, pump);
+    };
+    auto put = [&](unsigned address, const std::uint8_t *data, unsigned bytes) {
+      return pump.poll() && wire.call(PUT, address, data, bytes, 3, result, 25000, pump) && result[0] == bytes;
+    };
+    auto token_word = [&](unsigned index) {
+      return std::uint32_t(tokens[index]) |
+             (index + 1 < count ? std::uint32_t(tokens[index + 1]) << 16 : 0);
+    };
+    std::uint8_t header[PREFIX_HEADER_BYTES]{};
+    write_word(header + 4, image_crc);
+    write_word(header + 8, count);
+    write_word(header + 12, layers);
+    if (!save) {
+      for (unsigned offset = 0; offset < 16; offset += 4) {
+        if (!get(PREFIX_ADDRESS + offset)) return failure();
+        if (result[0] != (offset == 0 ? PREFIX_MAGIC : word(header + offset))) return ModelStatus::FORMAT;
+      }
+      for (unsigned index = 0; index < count; index += 2) {
+        if (!get(PREFIX_ADDRESS + PREFIX_HEADER_BYTES + index * 2)) return failure();
+        if (result[0] != token_word(index)) return ModelStatus::FORMAT;
+      }
+    }
+    // Validate the live KV spans in addition to the token list. Another client
+    // can reuse the same model and cursor with different input.
+    std::uint8_t length[4];
+    write_word(length, count * KV_BYTES_PER_POSITION);
+    for (unsigned layer = 0; layer < layers; ++layer) {
+      const unsigned address = MAX_IMAGE_BYTES + layer * CONTEXT * KV_BYTES_PER_POSITION;
+      if (!pump.poll() || !wire.call(CRC, address, length, 4, 3, result, 4000000, pump)) return failure();
+      const auto checksum = result[0];
+      if (save) {
+        write_word(header + 16 + layer * 4, checksum);
+      } else {
+        if (!get(PREFIX_ADDRESS + 16 + layer * 4)) return failure();
+        if (result[0] != checksum) return ModelStatus::FORMAT;
+      }
+    }
+    if (save) {
+      if (!put(PREFIX_ADDRESS, header, sizeof(header))) return failure();
+      std::uint8_t block[256];
+      const unsigned padded = (count + 1) & ~1U;
+      for (unsigned index = 0; index < padded;) {
+        const unsigned words = std::min((padded - index) / 2, unsigned(sizeof(block) / 4));
+        for (unsigned j = 0; j < words; ++j) write_word(block + j * 4, token_word(index + j * 2));
+        if (!put(PREFIX_ADDRESS + PREFIX_HEADER_BYTES + index * 2, block, words * 4)) return failure();
+        index += words * 2;
+      }
+      // Publish only after both the metadata and all token IDs are present.
+      write_word(header, PREFIX_MAGIC);
+      if (!put(PREFIX_ADDRESS, header, 4)) return failure();
+    } else {
+      if (!pump.poll() || !wire.call(SEEK, count, nullptr, 0, 3, result, 25000, pump)) return failure();
+      remote_position = result[0];
+      if (remote_position != count) return ModelStatus::FORMAT;
+      if (!pump.cancelled) {
+        std::copy_n(tokens, count, history);
+        position = count;
+      }
+    }
     return pump.cancelled ? ModelStatus::CANCELLED : ModelStatus::OK;
   }
 
@@ -319,6 +401,16 @@ struct Backend::State {};
 Backend::Backend(Model &local) : local_(local) {}
 Backend::~Backend() = default;
 void Backend::close() { state_.reset(); }
+ModelStatus Backend::prefix(const std::uint16_t *tokens, unsigned count, bool save,
+                            bool (*service)(void *), void *context) {
+#if defined(PICO_ON_DEVICE)
+  if (!state_) return ModelStatus::FORMAT;
+  Pump pump{service, context};
+  return state_->prefix(tokens, count, save, pump);
+#else
+  return ModelStatus::FORMAT;
+#endif
+}
 bool Backend::online() const {
 #if defined(PICO_ON_DEVICE)
   return state_ && state_->wire.ready();
