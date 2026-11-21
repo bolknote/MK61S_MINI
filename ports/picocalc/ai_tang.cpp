@@ -22,7 +22,7 @@ using namespace mk61ai;
 namespace {
 constexpr unsigned GPIO = 28, CONTEXT = 1024, MAX_LANES = 6, MAX_ALLOWED = 24;
 constexpr std::uint32_t ALLOWED_ADDRESS = 0x7fffc0, MAX_IMAGE_BYTES = 0x220000;
-constexpr std::uint32_t PACKAGE_MAGIC = 0x314b544d; // MKT1
+constexpr std::uint32_t PACKAGE_MAGIC = 0x314b544d; // "MTK1" in little endian
 constexpr char image_path[] = "/AI/MODEL.TNG";
 enum Command : std::uint8_t { PUT = 1, CRC = 3, FORWARD = 6, PREFILL = 8, SEEK = 9, FEATURES = 10 };
 

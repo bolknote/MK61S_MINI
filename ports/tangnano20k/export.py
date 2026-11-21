@@ -13,6 +13,7 @@ EMBED, NORM, MATRIX, ROTARY, STORE_KV, ATTENTION, ADD, SILU, CLASSIFIER, HALT = 
 X, N, Q, K, V, A, O, GATE, UP, SCORES = 0, 128, 256, 384, 448, 512, 640, 768, 1152, 1536
 CACHE_BASE = 0x220000
 HEAD_OPERATION = 0x100
+PACKAGE_MAGIC = 0x314B544D  # Matches the FEATURES reply and the PicoCalc loader.
 
 
 def nibble_group(data):
@@ -110,7 +111,7 @@ def main():
     args.image.parent.mkdir(parents=True, exist_ok=True)
     if args.picocalc:
         header_crc, = struct.unpack_from("<I", source, 124)
-        image.extend(struct.pack("<4sIII", b"MKT1", header_crc, len(source), zlib.crc32(image)))
+        image.extend(struct.pack("<4I", PACKAGE_MAGIC, header_crc, len(source), zlib.crc32(image)))
     args.image.write_bytes(image)
     if not args.picocalc:
         args.image.with_suffix(".json").write_text(json.dumps(metadata, indent=2)+"\n")
