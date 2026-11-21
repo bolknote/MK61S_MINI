@@ -68,8 +68,8 @@ typedef struct {
     uint8_t mode,next,page,valid[2],pending;
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
-    uint32_t ready_guard_us;
-    bool clipped,compare_wide,gap_right;
+    uint32_t ready_guard_us,capture_guard_us;
+    bool clipped,gap_right;
     spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS];
 #endif
     spectrum_video_damage patches[SPECTRUM_HAS_PENTAGON?SPECTRUM_WIDE_STRIPS:3];
@@ -466,7 +466,6 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
     const bool tracked=changes && changes->mode==mode;
     out->clipped=tracked && (out->pages || out->transaction) && !out->clear &&
         out->valid[page] && !(changes->repaint&mask);
-    out->compare_wide=mode==SPECTRUM_VIDEO_WIDE && out->transaction && out->valid[0] && !out->clear && !out->clipped;
     out->packed=false;
     out->gap_right=false;
     if(out->clipped) {
@@ -482,15 +481,26 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         // Larger ones use the batched native snapshot and keep their clipping.
         out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?WIDE_PACKED_ROWS:16u);
     }
+    const uint32_t shown=out->saved.address;
+    out->saved.previous=0;
+    if(mode==SPECTRUM_VIDEO_WIDE) {
+        if(out->transaction && out->valid[0] && !out->clear && !out->clipped) {
+            out->saved.previous=shown;
+            out->saved.previous_frames=out->saved.frames;
+        }
+        // Keep the last displayed native snapshot while preparing the next.
+        // Sparse updates are latched directly into the displayed snapshot.
+        if(!out->packed) out->saved.address=shown==RASTER_BASE?WIDE_REFERENCE:RASTER_BASE;
+    } else out->saved.address=RASTER_BASE;
     out->saved.io=external && !out->packed?&bank_memory.io:NULL;
-    out->saved.address=RASTER_BASE;
     if(!spectrum_video_capture(&machine,mode,work,&out->saved)) return false;
     if(out->packed) {
         out->patch_offset=0;
         const unsigned unit=mode==SPECTRUM_VIDEO_WIDE?10:4;
         for(unsigned i=0;i<strips;++i) {
             const unsigned cells=damage_cells(&out->patches[i]);
-            if(cells && !spectrum_pentagon_patch(&machine,mode,i,&out->patches[i],work)) return false;
+            if(cells && !spectrum_pentagon_patch(&machine,mode,i,&out->patches[i],work,out->saved.address))
+                return false;
             work+=unit*cells;
         }
     }
@@ -520,6 +530,10 @@ static __attribute__((noinline)) void video_begin(video_output* out,unsigned mod
     out->next=0;out->ready=out->selected=out->repainted=false;out->active=true;
 }
 
+#if SPECTRUM_APP_PROFILE==3 && defined(__GNUC__) && !defined(__clang__)
+// GCC produces a smaller Thumb image here with -Os than with -Oz.
+__attribute__((optimize("Os")))
+#endif
 static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* work) {
     const bool pages=SPECTRUM_HAS_PENTAGON && out->pages;
     const bool timex=SPECTRUM_HAS_SINCLAIR && (!SPECTRUM_HAS_PENTAGON ||
@@ -563,21 +577,13 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
 #endif
             } else {
                 if(!spectrum_video_snapshot_strip(&machine,&out->saved,out->mode,out->next,work,&out->part)) return false;
+                if(SPECTRUM_HAS_PENTAGON && !out->part.height) goto next_strip;
 #if SPECTRUM_HAS_PENTAGON
                 if(clipped) spectrum_pentagon_clip(out->mode,d,work,&out->part);
 #endif
             }
 #if SPECTRUM_HAS_PENTAGON
-            if(wide) {
-                // Write the combined patch to the PSRAM reference once. The
-                // LCD skips the gap, whose pixels are identical in both frames.
-                if(!out->gap_right) {
-                    const int result=spectrum_pentagon_wide_update(&bank_memory.io,WIDE_REFERENCE,work,&out->part,out->compare_wide);
-                    if(!result) goto next_strip;
-                    if(result<0) return false;
-                }
-                if(split) spectrum_pentagon_wide_window(&out->part,gap,out->gap_right,work+WIDE_PACKED_BYTES);
-            }
+            if(split) spectrum_pentagon_wide_window(&out->part,gap,out->gap_right,work+WIDE_PACKED_BYTES);
 #endif
             if(out->clear) {out->part.format&=~MK61_COLOR_PRESERVE_OUTSIDE;out->part.background=out->background;}
             out->ready=true;
@@ -1523,8 +1529,12 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
 #if SPECTRUM_HAS_PENTAGON
             // A full conversion can raise its guard without delaying
             // the submission of strips that are already packed.
-            if(machine.pentagon && (mode?mode==video->mode:video->selected && (video->packed || video->ready)))
-                guard=&video->ready_guard_us;
+            if(machine.pentagon) {
+                if(!mode && !video->selected && video->mode==SPECTRUM_VIDEO_WIDE)
+                    guard=&video->capture_guard_us;
+                else if(mode?mode==video->mode:video->selected && (video->packed || video->ready))
+                    guard=&video->ready_guard_us;
+            }
 #endif
             if((int32_t)(target-now)>(int32_t)*guard) {
                 const uint32_t start=now;
@@ -1680,6 +1690,7 @@ static __attribute__((noinline)) void emulate_session(void) {
     video_output video={.guard_us=VIDEO_INITIAL_GUARD_US,.clear=true};
 #if SPECTRUM_HAS_PENTAGON
     video.ready_guard_us=VIDEO_READY_GUARD_US;
+    video.capture_guard_us=VIDEO_INITIAL_GUARD_US;
 #endif
 #endif
 #if SPECTRUM_RASTER_ENABLED

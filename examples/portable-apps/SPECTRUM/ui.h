@@ -6,6 +6,9 @@ enum { SPECTRUM_VIDEO_WORK_BYTES=10240 };
 typedef struct {
     const spectrum_memory_io* io;
     uint32_t address,frames;
+#if SPECTRUM_HAS_PENTAGON
+    uint32_t previous,previous_frames;
+#endif
     uint16_t border;
     bool ulaplus;
     uint16_t palette[64];
@@ -25,12 +28,11 @@ typedef struct { uint8_t left,right; } spectrum_wide_gap;
 bool spectrum_pentagon_flash(const spectrum*,uint8_t* work,spectrum_video_damage strips[SPECTRUM_WIDE_STRIPS],
                              spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS]);
 void spectrum_pentagon_wide_window(mk61_service_color_frame*,const spectrum_wide_gap*,bool right,uint8_t* pixels);
-bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,uint8_t* pixels);
+bool spectrum_pentagon_patch(const spectrum*,unsigned mode,unsigned strip,const spectrum_video_damage*,
+                            uint8_t* pixels,uint32_t wide_reference);
 void spectrum_pentagon_frame(unsigned mode,unsigned strip,const spectrum_video_damage*,const uint8_t*,
                              mk61_service_color_frame*);
 void spectrum_pentagon_clip(unsigned mode,const spectrum_video_damage*,uint8_t*,mk61_service_color_frame*);
-int spectrum_pentagon_wide_update(const spectrum_memory_io*,uint32_t reference,uint8_t* work,
-                                  mk61_service_color_frame*,bool compare);
 typedef struct {
     const mk61_app_services* api;
     const uint8_t* font;

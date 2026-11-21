@@ -443,14 +443,18 @@ static void wide_scanlines(void) {
             assert(spectrum_video_strip(&machine,64,strip,lcd,&frame));
             assert(frame.width==320 && frame.height==rows && frame.y==8+first);
             assert((frame.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_INDEX4);
-            assert(wide_reads<=54); // three areas, two planes, eight phases and attributes
+            assert(wide_reads<=6); // two attribute spans and up to four pages of bitmap
+            assert(spectrum_memory_page(&memory,screen?0:8));
+            machine.frames^=16;
             assert(spectrum_video_snapshot_strip(&machine,&snapshot,SPECTRUM_VIDEO_WIDE,strip,frozen,&saved));
             assert(frame.pixel_bytes==saved.pixel_bytes && !memcmp(lcd,frozen,frame.pixel_bytes));
+            machine.frames^=16;
+            assert(spectrum_memory_page(&memory,screen?8:0));
             const spectrum_video_damage damage={2,14,13,rows<21?rows:21};
             spectrum_pentagon_clip(SPECTRUM_VIDEO_WIDE,&damage,frozen,&saved);
             assert(saved.x==40 && saved.width==240 && saved.y==21+first);
             uint8_t patch[120*8];
-            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_WIDE,strip,&damage,patch));
+            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_WIDE,strip,&damage,patch,0));
             assert(saved.pixel_bytes==120*(damage.bottom-13u));
             assert(!memcmp(patch,frozen,saved.pixel_bytes));
             for(unsigned line=0;line<rows;++line) {
@@ -486,22 +490,23 @@ static void wide_scanlines(void) {
     const uint8_t flash=0xc7;
     // The lower plane's unscanned columns must not dirty the LCD.
     assert(spectrum_bank_write(&memory,6,0x1000,&flash,1));
-    assert(spectrum_bank_write(&memory,6,0x1000+224+24,&flash,1));
-    assert(spectrum_bank_write(&memory,7,0x3800+31,&flash,1));
+    assert(spectrum_bank_write(&memory,7,0x1800+32+24,&flash,1));
+    assert(spectrum_bank_write(&memory,7,0x3800+64+31,&flash,1));
     spectrum_video_damage dirty[SPECTRUM_WIDE_STRIPS]={0};
     spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS];
     uint8_t strip_work[2*sizeof(attrs)];
     assert(spectrum_pentagon_flash(&machine,strip_work,dirty,gaps));
+    const unsigned active_strip=64/SPECTRUM_WIDE_STRIP_ROWS;
     for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip) {
-        if(strip==1) assert(dirty[strip].left==0 && dirty[strip].right==14 &&
+        if(strip==active_strip) assert(dirty[strip].left==0 && dirty[strip].right==14 &&
                             dirty[strip].top==8 && dirty[strip].bottom==24);
         else assert(!dirty[strip].bottom && !gaps[strip].right);
     }
-    assert(gaps[1].left==1 && gaps[1].right==13);
+    assert(gaps[active_strip].left==1 && gaps[active_strip].right==13);
     memset(dirty,0,sizeof(dirty));
-    spectrum_video_include_cell(&dirty[1],6,0,1);
+    spectrum_video_include_cell(&dirty[active_strip],6,0,1);
     assert(spectrum_pentagon_flash(&machine,strip_work,dirty,gaps));
-    assert(gaps[1].left==7 && gaps[1].right==13); // Leave the guest's write inside the left window.
+    assert(gaps[active_strip].left==7 && gaps[active_strip].right==13); // Keep the guest's write in the left window.
 }
 
 static void sinclair128(const char* rom0,const char* rom1) {
@@ -767,7 +772,7 @@ static void snapshot_test(unsigned model) {
             const spectrum_video_damage damage={0,5,0,13};
             spectrum_pentagon_clip(SPECTRUM_VIDEO_16C,&damage,lcd,&frame);
             uint8_t patch[20*13];
-            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_16C,strip,&damage,patch));
+            assert(spectrum_pentagon_patch(&machine,SPECTRUM_VIDEO_16C,strip,&damage,patch,0));
             assert(frame.pixel_bytes==sizeof(patch) && !memcmp(patch,lcd,sizeof(patch)));
         }
         assert(!spectrum_video_strip(&machine,64,SPECTRUM_WIDE_STRIPS,lcd,&frame));

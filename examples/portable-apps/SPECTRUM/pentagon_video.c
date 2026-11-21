@@ -2,9 +2,12 @@
 #include <string.h>
 
 enum { COLOR_WIDTH=256, COLOR_LINES=64, WIDE_WIDTH=SPECTRUM_WIDE_WIDTH, WIDE_COLUMNS=48,
-       WIDE_GROUP_PIXELS=20 };
-_Static_assert(WIDE_WIDTH*SPECTRUM_WIDE_STRIP_ROWS/2+WIDE_COLUMNS*SPECTRUM_WIDE_STRIP_ROWS/8+512
+       WIDE_GROUP_PIXELS=20, WIDE_PLANE_BLOCK_BYTES=2048, WIDE_NATIVE_GROUP=9*WIDE_COLUMNS,
+       WIDE_NATIVE_ROW_BYTES=WIDE_NATIVE_GROUP/8 };
+_Static_assert(WIDE_WIDTH*SPECTRUM_WIDE_STRIP_ROWS/2+2*WIDE_NATIVE_ROW_BYTES*SPECTRUM_WIDE_STRIP_ROWS
     <=SPECTRUM_VIDEO_WORK_BYTES,"Wide strip overlaps the disk cache");
+_Static_assert(64*WIDE_NATIVE_ROW_BYTES+2*WIDE_PLANE_BLOCK_BYTES<=SPECTRUM_VIDEO_WORK_BYTES,"Wide capture exceeds the workspace");
+_Static_assert(64%SPECTRUM_WIDE_STRIP_ROWS==0 && SPECTRUM_WIDE_HEIGHT%8==0,"Wide strips must follow ULA blocks");
 
 unsigned spectrum_video_mode(const spectrum* s) {
     const unsigned mode=spectrum_pentagon_video_mode(s);
@@ -53,6 +56,9 @@ static bool capture_range(const spectrum* s,const spectrum_video_snapshot* saved
     }
     return true;
 }
+#if SPECTRUM_HAS_PENTAGON
+static bool wide_capture(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,uint8_t* work);
+#endif
 
 bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectrum_video_snapshot* saved) {
     const unsigned bank=s->memory && (s->memory->paging&8)?7:5;
@@ -66,17 +72,9 @@ bool spectrum_video_capture(const spectrum* s,unsigned mode,uint8_t* work,spectr
     } else if(timex)
         for(unsigned i=0;i<(saved->ulaplus?64u:16u);++i) saved->palette[i]=spectrum_palette(s,i);
     if(!saved->io) return true;
-    if(SPECTRUM_HAS_PENTAGON && mode==SPECTRUM_VIDEO_WIDE) {
-        // The middle uses a standard display file in each plane. The
-        // upper and lower bands use their own pixel and attribute ranges.
-        for(unsigned plane=0;plane<16384;plane+=8192)
-            if(!capture_range(s,saved,bank,plane,6912,work) ||
-               !capture_range(s,saved,bank-1,plane,2048,work) ||
-               !capture_range(s,saved,bank-1,plane+0x1000,256,work) ||
-               !capture_range(s,saved,bank-1,plane+0x1300,192,work) ||
-               !capture_range(s,saved,bank-1,plane+0x1800,2048,work)) return false;
-        return true;
-    }
+#if SPECTRUM_HAS_PENTAGON
+    if(mode==SPECTRUM_VIDEO_WIDE) return wide_capture(s,saved,bank,work);
+#endif
     if(!SPECTRUM_HAS_PENTAGON || timex)
         return capture_range(s,saved,bank,0,14336,work);
     for(unsigned page=bank-1;page<=bank;++page) {
@@ -203,11 +201,6 @@ static bool color_strip(const spectrum* s,const spectrum_video_snapshot* saved,u
     return true;
 }
 
-static bool wide_planes(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,unsigned offset,unsigned cells,uint8_t* source) {
-    return video_read(s,saved,bank,offset,source,cells*32) &&
-           video_read(s,saved,bank,8192+offset,source+256,cells*32);
-}
-
 static void wide_row(uint8_t row[WIDE_COLUMNS],const uint8_t* low,const uint8_t* high) {
     memcpy(row,low+24,8);
     memcpy(row+8,high,32);
@@ -254,39 +247,99 @@ static const wide_area* wide_area_at(unsigned y) {
 
 static void wide_attributes(uint8_t* attrs,unsigned count,bool flash) {
     for(unsigned i=0;i<count;++i) {
-        const unsigned a=attrs[i],bright=(a&64)>>3;
-        unsigned ink=(a&7)|bright,paper=((a>>3)&7)|bright;
-        if((a&128) && flash) {const unsigned t=ink;ink=paper;paper=t;}
-        attrs[i]=(uint8_t)(paper<<4|ink);
+        const unsigned a=attrs[i];
+        // Repeat BRIGHT in both INDEX4 colors and swap them during FLASH.
+        unsigned packed=(a&7)|((a&0x78)<<1)|((a&0x40)>>3);
+        if(flash && (a&0x80)) packed=(packed>>4)|(packed<<4);
+        attrs[i]=(uint8_t)packed;
     }
 }
 
-static bool wide_strip(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,unsigned first,unsigned rows,uint8_t* pixels) {
-    uint8_t* attrs=pixels+WIDE_WIDTH*rows/2;
-    uint8_t* planes=attrs+WIDE_COLUMNS*(SPECTRUM_WIDE_STRIP_ROWS/8);
-    for(unsigned line=0;line<rows;) {
-        const unsigned y=first+line;
-        const wide_area* area=wide_area_at(y);
-        const unsigned row=y-area->first,page=bank-area->outer;
-        const unsigned boundary=64-(row&63);
-        const unsigned lines=rows-line<boundary?rows-line:boundary;
-        const unsigned cells=lines/8;
-        const unsigned attr_offset=area->attribute+(row/8)*32;
-        if(!wide_planes(s,saved,page,attr_offset,cells,planes))return false;
-        for(unsigned i=0;i<cells;++i)wide_row(attrs+i*WIDE_COLUMNS,planes+i*32,planes+256+i*32);
-        wide_attributes(attrs,cells*WIDE_COLUMNS,(saved->frames&16)!=0);
+static bool wide_native(const spectrum* s,unsigned bank,unsigned first,unsigned rows,uint8_t* raw,uint8_t* low) {
+    uint8_t* high=low+WIDE_PLANE_BLOCK_BYTES;
+    const wide_area* area=wide_area_at(first);
+    const unsigned row=first-area->first,page=bank-area->outer,cells=rows/8;
+    const unsigned attr_offset=area->attribute+row*4;
+    if(!video_read(s,NULL,page,attr_offset,low,cells*32) ||
+       !video_read(s,NULL,page,8192+attr_offset,high,cells*32)) return false;
+    for(unsigned i=0;i<cells;++i) wide_row(raw+i*WIDE_NATIVE_GROUP,low+i*32,high+i*32);
+    const unsigned bitmap=area->bitmap+ula_line(row&~63u);
+    if(!video_read(s,NULL,page,bitmap,low,WIDE_PLANE_BLOCK_BYTES) ||
+       !video_read(s,NULL,page,8192+bitmap,high,WIDE_PLANE_BLOCK_BYTES)) return false;
+    for(unsigned cell=0;cell<cells;++cell,raw+=WIDE_NATIVE_GROUP) {
+        for(unsigned line=0;line<8;++line) {
+            const unsigned at=(row&56)*4+cell*32+line*256;
+            wide_row(raw+(line+1)*WIDE_COLUMNS,low+at,high+at);
+        }
+    }
+    return true;
+}
 
-        const unsigned bitmap=ula_line(row)+area->bitmap;
-        // Gather each ULA phase in two reads and expand rows only once.
-        for(unsigned phase=0;phase<8;++phase) {
-            if(!wide_planes(s,saved,page,bitmap+phase*256,cells,planes))return false;
-            for(unsigned cell=0;cell<cells;++cell) {
-                uint8_t bits[WIDE_COLUMNS];
-                wide_row(bits,planes+cell*32,planes+256+cell*32);
-                wide_pixels(pixels+(line+phase+8*cell)*(WIDE_WIDTH/2),bits,attrs+cell*WIDE_COLUMNS,WIDE_COLUMNS);
+static bool wide_capture(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,uint8_t* work) {
+    // Freeze the two planes in display row order in 64-line chunks.
+    // Each eight-row group stores 48 attributes and eight 48-byte rows.
+    for(unsigned first=0;first<SPECTRUM_WIDE_HEIGHT;first+=64) {
+        const unsigned remaining=SPECTRUM_WIDE_HEIGHT-first,rows=remaining<64?remaining:64;
+        if(!wide_native(s,bank,first,rows,work,work+64*WIDE_NATIVE_ROW_BYTES) ||
+           !saved->io->write(saved->io->context,saved->address+first*WIDE_NATIVE_ROW_BYTES,
+                            work,rows*WIDE_NATIVE_ROW_BYTES)) return false;
+    }
+    return true;
+}
+
+static __attribute__((noinline)) bool wide_read_live(const spectrum* s,unsigned bank,unsigned first,unsigned rows,uint8_t* raw) {
+    uint8_t planes[2*WIDE_PLANE_BLOCK_BYTES];
+    return wide_native(s,bank,first,rows,raw,planes);
+}
+
+static void wide_damage(spectrum_video_damage* damage,unsigned line,const uint8_t* pixels,const uint8_t* previous) {
+    enum { CELL=10 };
+    unsigned left=0,right=WIDE_WIDTH/(2*CELL);
+    while(left<right && !memcmp(pixels+left*CELL,previous+left*CELL,CELL)) ++left;
+    if(left==right) return;
+    while(right>left+1 && !memcmp(pixels+(right-1)*CELL,previous+(right-1)*CELL,CELL)) --right;
+    spectrum_video_include_cell(damage,left,line,1);
+    spectrum_video_include_cell(damage,right-1,line,1);
+}
+static bool wide_strip(const spectrum* s,const spectrum_video_snapshot* saved,unsigned bank,unsigned first,
+                       unsigned rows,uint8_t* pixels,mk61_service_color_frame* frame) {
+    uint8_t* raw=pixels+WIDE_WIDTH*rows/2;
+    const unsigned offset=first*WIDE_NATIVE_ROW_BYTES,bytes=rows*WIDE_NATIVE_ROW_BYTES;
+    uint8_t* previous=NULL;
+    if(saved->io) {
+        if(!saved->io->read(saved->io->context,saved->address+offset,raw,bytes)) return false;
+        if(saved->previous) {
+            previous=raw+bytes;
+            if(!saved->io->read(saved->io->context,saved->previous+offset,previous,bytes)) return false;
+            if(!((saved->frames^saved->previous_frames)&16) && !memcmp(raw,previous,bytes)) {
+                frame->height=0;return true;
             }
         }
-        line+=lines;
+    } else if(SPECTRUM_APP_PROFILE==3 || !wide_read_live(s,bank,first,rows,raw)) {
+        // The dedicated Pentagon APP requires PSRAM at startup. Its
+        // small updates already have their own packed SRAM path.
+        return false;
+    }
+    spectrum_video_damage damage={0};
+    uint8_t* target=pixels;
+    for(unsigned cell=0;cell<rows/8;++cell,raw+=WIDE_NATIVE_GROUP) {
+        wide_attributes(raw,WIDE_COLUMNS,(saved->frames&16)!=0);
+        if(previous) wide_attributes(previous,WIDE_COLUMNS,(saved->previous_frames&16)!=0);
+        const bool colors_same=previous && !memcmp(raw,previous,WIDE_COLUMNS);
+        for(unsigned line=0;line<8;++line,target+=WIDE_WIDTH/2) {
+            const unsigned at=(line+1)*WIDE_COLUMNS;
+            wide_pixels(target,raw+at,raw,WIDE_COLUMNS);
+            if(previous && (!colors_same || memcmp(raw+at,previous+at,WIDE_COLUMNS))) {
+                uint8_t old[WIDE_WIDTH/2];
+                wide_pixels(old,previous+at,previous,WIDE_COLUMNS);
+                wide_damage(&damage,cell*8+line,target,old);
+            }
+        }
+        if(previous) previous+=WIDE_NATIVE_GROUP;
+    }
+    if(previous) {
+        if(!damage.bottom) frame->height=0;
+        else spectrum_pentagon_clip(SPECTRUM_VIDEO_WIDE,&damage,pixels,frame);
     }
     return true;
 }
@@ -345,7 +398,7 @@ static bool wide_live_cells(const spectrum* s,unsigned bank,unsigned offset,unsi
 }
 
 bool spectrum_pentagon_patch(const spectrum* s,unsigned mode,unsigned strip,const spectrum_video_damage* d,
-                            uint8_t* pixels) {
+                            uint8_t* pixels,uint32_t wide_reference) {
     const unsigned bank=(s->memory->paging&8)?7:5,cols=d->right-d->left;
     if(mode==SPECTRUM_VIDEO_16C) {
         uint8_t row[32];
@@ -362,11 +415,15 @@ bool spectrum_pentagon_patch(const spectrum* s,unsigned mode,unsigned strip,cons
         for(unsigned y=d->top;y<d->bottom;++y,pixels+=10*cols) {
             const wide_area* area=wide_area_at(first+y);
             const unsigned row=first+y-area->first,page=bank-area->outer;
+            const uint32_t group=wide_reference+((first+y)/8)*WIDE_NATIVE_GROUP+x;
+            const spectrum_memory_io* io=&s->memory->io;
             if(y==d->top || !(row&7)) {
                 if(!wide_live_cells(s,page,area->attribute+(row/8)*32,x,columns,attrs)) return false;
+                if(wide_reference && !io->write(io->context,group,attrs,columns)) return false;
                 wide_attributes(attrs,columns,(s->frames&16)!=0);
             }
             if(!wide_live_cells(s,page,area->bitmap+ula_line(row),x,columns,bits)) return false;
+            if(wide_reference && !io->write(io->context,group+((y&7)+1)*WIDE_COLUMNS,bits,columns)) return false;
             wide_pixels(pixels,bits,attrs,columns);
         }
     }
@@ -414,40 +471,6 @@ void spectrum_pentagon_clip(unsigned mode,const spectrum_video_damage* d,uint8_t
     f->width=2*bytes;f->height=rows;f->pixel_bytes=bytes*rows;
 }
 
-int spectrum_pentagon_wide_update(const spectrum_memory_io* io,uint32_t reference,uint8_t* work,
-                                  mk61_service_color_frame* frame,bool compare) {
-    enum { PITCH=WIDE_WIDTH/2, CELL=10 };
-    if(compare) {
-        spectrum_video_damage damage={0};
-        uint8_t* const previous=work+frame->pixel_bytes;
-        const unsigned capacity=(SPECTRUM_VIDEO_WORK_BYTES-frame->pixel_bytes)/PITCH;
-        const uint32_t start=reference+(frame->y-8)*PITCH;
-        for(unsigned y=0;y<frame->height;) {
-            const unsigned remaining=frame->height-y,rows=remaining<capacity?remaining:capacity;
-            if(!io->read(io->context,start+y*PITCH,previous,rows*PITCH)) return -1;
-            for(unsigned row=0;row<rows;++row) {
-                const uint8_t* a=work+(y+row)*PITCH,*b=previous+row*PITCH;
-                if(!memcmp(a,b,PITCH)) continue;
-                unsigned left=0,right=PITCH/CELL;
-                while(!memcmp(a+left*CELL,b+left*CELL,CELL)) ++left;
-                while(right>left+1 && !memcmp(a+(right-1)*CELL,b+(right-1)*CELL,CELL)) --right;
-                spectrum_video_include_cell(&damage,left,y+row,1);
-                spectrum_video_include_cell(&damage,right-1,y+row,1);
-            }
-            y+=rows;
-        }
-        if(!damage.bottom) return 0;
-        spectrum_pentagon_clip(SPECTRUM_VIDEO_WIDE,&damage,work,frame);
-    }
-    // Each accepted rectangle contributes to the next bank comparison.
-    // The pacing loop only reuses the reference after LCD commit succeeds.
-    uint32_t at=reference+(frame->y-8)*PITCH+frame->x/2;
-    const unsigned bytes=frame->width/2;
-    if(bytes==PITCH) return io->write(io->context,at,(uint8_t*)frame->pixels,frame->pixel_bytes)?1:-1;
-    for(unsigned y=0;y<frame->height;++y,at+=PITCH)
-        if(!io->write(io->context,at,(uint8_t*)frame->pixels+y*bytes,bytes)) return -1;
-    return 1;
-}
 #endif
 
 #if SPECTRUM_HAS_BEAM_VIDEO
@@ -511,7 +534,7 @@ bool spectrum_beam_span(const spectrum* s,unsigned mode,unsigned y,unsigned firs
     const unsigned group=mode==SPECTRUM_VIDEO_WIDE?WIDE_GROUP_PIXELS:8;
     const unsigned local=y%rows;
     const spectrum_video_damage damage={first,last,local,local+1};
-    return spectrum_pentagon_patch(s,mode,y/rows,&damage,pixels+first*group/2);
+    return spectrum_pentagon_patch(s,mode,y/rows,&damage,pixels+first*group/2,0);
 #else
     (void)mode;timex_beam(s,y,first,last,pixels);
     return true;
@@ -542,7 +565,7 @@ bool spectrum_video_snapshot_strip(const spectrum* s,const spectrum_video_snapsh
     const unsigned rows=strip+1==SPECTRUM_WIDE_STRIPS?SPECTRUM_WIDE_HEIGHT-first:SPECTRUM_WIDE_STRIP_ROWS;
     frame->y=8+first;frame->width=WIDE_WIDTH;frame->height=rows;
     frame->pixel_bytes=WIDE_WIDTH*rows/2;
-    return wide_strip(s,saved,bank,first,rows,pixels);
+    return wide_strip(s,saved,bank,first,rows,pixels,frame);
 #else
     return false;
 #endif

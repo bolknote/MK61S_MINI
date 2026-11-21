@@ -422,8 +422,11 @@ static void extended_frames(void) {
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,&pentagon);
     state.cpu.port_out(&state.cpu,0xeff7,SPECTRUM_VIDEO_16C|4);
     state.cpu.port_out(&state.cpu,0x7ffd,4);
-    video_test=true;video_output out={.guard_us=VIDEO_INITIAL_GUARD_US};
-    const unsigned expected[]={3,6,6,7,14,14,21,22,25,25,26,29,30,31,34,37,41};
+    video_test=true;video_output out={.guard_us=VIDEO_INITIAL_GUARD_US,.capture_guard_us=VIDEO_INITIAL_GUARD_US};
+    const unsigned two_wide=2*SPECTRUM_WIDE_STRIPS;
+    const unsigned expected[]={3,6,6,7,7+SPECTRUM_WIDE_STRIPS,7+SPECTRUM_WIDE_STRIPS,
+        7+two_wide,8+two_wide,11+two_wide,11+two_wide,12+two_wide,15+two_wide,
+        16+two_wide,17+two_wide,20+two_wide,23+two_wide,27+two_wide};
     for(unsigned turn=0;turn<sizeof(expected)/sizeof(*expected);++turn) {
         const unsigned mode=turn<4 || turn==16?SPECTRUM_VIDEO_16C:
             turn<8?SPECTRUM_VIDEO_WIDE:SPECTRUM_VIDEO_HICOLOR;
@@ -484,12 +487,13 @@ static void extended_frames(void) {
                 assert(video_present(&out,canvas) && out.next==1);
                 video_page_failed=true;
             }
-            for(unsigned budget=20;out.active && budget;--budget) assert(video_present(&out,canvas));
+            for(unsigned budget=2*(SPECTRUM_WIDE_STRIPS+4);out.active && budget;--budget)
+                assert(video_present(&out,canvas));
         }
         assert(!out.active && video_calls==expected[turn]);
         if(turn==2 || turn==3 || turn==5 || turn==9 || turn==10 || turn==12 || turn==13)
             assert(video_psram_ops==io_before);
-        if(turn==7) assert(video_psram_ops==io_before+1); // Keep the sent Wide row in PSRAM.
+        if(turn==7) assert(video_psram_ops==io_before+2); // Native bitmap and attributes.
         if(turn==3) assert(pentagon.strips[0][0].bottom==1 && !pentagon.strips[1][0].bottom);
         if(turn==14 || turn==15) assert(!out.packed && video_psram_ops>io_before);
         if(turn==13) {
@@ -526,7 +530,8 @@ static void extended_frames(void) {
         const unsigned mode=i?SPECTRUM_VIDEO_WIDE:SPECTRUM_VIDEO_16C;
         state.cpu.port_out(&state.cpu,0xeff7,mode|4);
         color(MK61_COLOR_END,NULL);
-        video_output restarting={.guard_us=VIDEO_INITIAL_GUARD_US,.pending=mode,.clear=true};
+        video_output restarting={.guard_us=VIDEO_INITIAL_GUARD_US,.capture_guard_us=VIDEO_INITIAL_GUARD_US,
+            .pending=mode,.clear=true};
         restarting.ready_guard_us=VIDEO_READY_GUARD_US;
         uint8_t blocked[32]={0};
         uint32_t deadline=micros_now,keyboard_deadline=micros_now+100000;
@@ -554,6 +559,14 @@ static void extended_frames(void) {
         assert(restarting.guard_us==VIDEO_INITIAL_GUARD_US && !video_capture_delay_us);
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         assert(!restarting.active && (i?video_calls<=prior+strips:video_calls==prior+strips));
+        if(i) {
+            state.cpu.port_out(&state.cpu,0x7ffd,state.memory->paging^8);
+            restarting.pending=mode;
+            video_capture_delay_us=8000;
+            assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
+            assert(!restarting.active && !video_capture_delay_us);
+            assert(restarting.capture_guard_us>=10000 && restarting.guard_us==VIDEO_INITIAL_GUARD_US);
+        }
     }
     puts("Cold capture and live display-bank change at 20.480 ms guest cadence: PASS");
     color(MK61_COLOR_END,NULL);
@@ -573,7 +586,7 @@ static void extended_frames(void) {
         assert(spectrum_bank_write(&bank_memory,bank,0x1000+15,&flash,1));
     }
     video_output diff={.clear=true};
-    const unsigned updates[]={7,1,1,1,0,7,0};
+    const unsigned updates[]={SPECTRUM_WIDE_STRIPS,1,1,1,0,SPECTRUM_WIDE_STRIPS,0};
     for(unsigned i=0;i<sizeof(updates)/sizeof(*updates);++i) {
         if(i==3) guest_store(&state,0x4000+wide_pixel,value);
         else state.cpu.port_out(&state.cpu,0x7ffd,(i==1 || i==4 || i==6)?0x18:0x10);
@@ -595,8 +608,13 @@ static void extended_frames(void) {
     assert(video_present(&diff,canvas) && diff.ready && diff.gap_right && video_calls==before+1);
     assert(video_present(&diff,canvas) && !diff.gap_right && video_calls==before+2);
     assert(last_strip.x==300 && last_strip.y==8 && last_strip.width==20 && last_strip.height==8);
+    uint8_t frozen[SPECTRUM_VIDEO_WORK_BYTES];
+    mk61_service_color_frame reference;
+    spectrum_video_snapshot saved=diff.saved;
+    saved.io=&bank_memory.io;saved.previous=0;
+    assert(spectrum_video_snapshot_strip(&state,&saved,SPECTRUM_VIDEO_WIDE,0,frozen,&reference));
     for(unsigned row=0;row<8;++row)
-        assert(!memcmp(last_strip.pixels+row*10,psram+WIDE_REFERENCE+row*160+150,10));
+        assert(!memcmp(last_strip.pixels+row*10,frozen+row*160+150,10));
     assert(diff.patch_offset==1280);
     for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
     assert(!diff.active && diff.valid[0] && video_calls==before+2);
