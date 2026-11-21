@@ -19,6 +19,7 @@ module tang_model #(
     output reg [31:0] cycles,
     output wire memory_request, memory_write,
     output wire memory_burst,
+    output wire [4:0] memory_read_extra,
     output wire [20:0] memory_address,
     output reg [31:0] memory_data,
     input wire memory_complete,
@@ -217,6 +218,9 @@ module tang_model #(
     assign memory_write = state[WRITE_EXT];
     assign memory_address = state[ATT_TILE_WAIT] ? tile_address : external_address;
     assign memory_burst = tile_burst;
+    // A head's 32 K/V coordinates are aligned and contiguous. A Q4 group
+    // holds four packed words followed by one FP32 scale.
+    assign memory_read_extra = tile_request ? 5'd31 : state[MATRIX_STREAM] ? 5'd4 : 5'd0;
     wire launch_dot = state[MATRIX_STREAM] && memory_complete && matrix_words < 4;
     wire hash_start = state[MATRIX_ADVANCE] && last_group && matrix_value[30:23] != 8'hff;
 

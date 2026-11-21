@@ -4,7 +4,8 @@ module tang_top #(
     parameter HALF_SDRAM_CLOCK = 0,
     parameter SDRAM_DIVIDER = HALF_SDRAM_CLOCK ? 2 : 1,
     parameter PREFILL_LANES = 4,
-    parameter DSP_CLOCK_HZ = 0
+    parameter DSP_CLOCK_HZ = 0,
+    parameter SDRAM_FROM_DSP = 0
 ) (
     input wire clock27, host_rx,
     output wire host_tx, led_n,
@@ -66,6 +67,7 @@ module tang_top #(
     wire [PREFILL_LANES*64-1:0] model_activations;
     wire [PREFILL_LANES*32-1:0] model_checksums;
     wire [20:0] model_addr;
+    wire [4:0] model_read_extra;
     wire [7:0] model_status;
     wire model_verify_pair;
     wire [4:0] model_allowed_second;
@@ -106,6 +108,7 @@ module tang_top #(
         .status(model_status), .outcome(model_result), .checksum(model_checksum), .cycles(model_cycles),
         .position_checksums(model_checksums), .first_prediction(model_first_prediction),
         .memory_request(model_req), .memory_write(model_wr), .memory_burst(model_burst),
+        .memory_read_extra(model_read_extra),
         .memory_address(model_addr), .memory_data(model_data),
         .memory_complete(complete && model_busy), .memory_result(data_out),
         .dot_valid(model_dot), .dot_weights(model_weights), .dot_activations(model_activations),
@@ -125,6 +128,7 @@ module tang_top #(
     assign model_req = 0;
     assign model_wr = 0;
     assign model_burst = 0;
+    assign model_read_extra = 0;
     assign model_addr = 0;
     assign model_data = 0;
     assign model_dot = 0;
@@ -136,6 +140,7 @@ module tang_top #(
     assign quantized_data = 0;
 `endif
     wire [31:0] dot_weights = model_busy ? model_weights : test_dot_weights;
+    wire divided_dsp_clk;
     genvar p;
     generate if (DSP_CLOCK_HZ != 0) begin: separate_dsp
         localparam INPUT_DIVIDE = DSP_CLOCK_HZ == 252000000 || DSP_CLOCK_HZ == 198000000 ? 2 : 0;
@@ -144,7 +149,8 @@ module tang_top #(
                               DSP_CLOCK_HZ == 198000000 ? 21 : DSP_CLOCK_HZ == 162000000 ? 5 : 6;
         wire fast_clk;
         rPLL #(.FCLKIN("27"), .IDIV_SEL(INPUT_DIVIDE), .FBDIV_SEL(FEEDBACK), .ODIV_SEL(4), .DEVICE("GW2A-18C")) fast_pll (
-            .CLKIN(clock27), .CLKOUT(fast_clk), .CLKOUTP(), .LOCK(dsp_locked), .RESET(1'b0),
+            .CLKIN(clock27), .CLKOUT(fast_clk), .CLKOUTP(), .CLKOUTD3(divided_dsp_clk),
+            .LOCK(dsp_locked), .RESET(1'b0),
             .RESET_P(1'b0), .CLKFB(1'b0), .FBDSEL(6'b0), .IDSEL(6'b0), .ODSEL(6'b0), .PSDA(4'b0),
             .DUTYDA(4'b0), .FDLY(4'b0)
         );
@@ -160,6 +166,7 @@ module tang_top #(
         );
     end else begin: direct_dsp
         assign dsp_locked = 1;
+        assign divided_dsp_clk = 0;
         assign diagnostic_ready = dot_ready[0] && !model_busy;
         assign diagnostic_result = dot_results[14:0];
         for (p=0; p<PREFILL_LANES; p=p+1) begin: position_dot
@@ -171,13 +178,45 @@ module tang_top #(
             );
         end
     end endgenerate
-    tang_sdram #(.CLOCK_HZ(CLOCK_HZ), .CLOCK_DIVIDE(SDRAM_DIVIDER)) memory (
-        .clk(clk), .memory_clk(memory_clk), .resetn(resetn), .request(model_busy ? model_req : link_req),
-        .write(model_busy ? model_wr : link_wr), .read_burst(model_busy && model_burst),
-        .address(model_busy ? model_addr : link_addr),
-        .data_in(model_busy ? model_data : link_data), .data_out(data_out), .complete(complete),
-        .sd_clk(O_sdram_clk), .sd_cke(O_sdram_cke), .sd_cs_n(O_sdram_cs_n),
-        .sd_ras_n(O_sdram_ras_n), .sd_cas_n(O_sdram_cas_n), .sd_we_n(O_sdram_wen_n),
-        .sd_addr(O_sdram_addr), .sd_bank(O_sdram_ba), .sd_mask(O_sdram_dqm), .sd_dq(IO_sdram_dq)
-    );
+    wire memory_request = model_busy ? model_req : link_req;
+    wire memory_write = model_busy ? model_wr : link_wr;
+    wire [20:0] memory_address = model_busy ? model_addr : link_addr;
+    wire [31:0] memory_data = model_busy ? model_data : link_data;
+    generate if (SDRAM_FROM_DSP) begin: independent_memory
+        // Change SDRAM commands midway between its rising sampling edges.
+        wire command_clk = ~divided_dsp_clk;
+        reg [7:0] memory_reset_pipe = 0;
+        always @(posedge command_clk)
+            memory_reset_pipe <= locked && dsp_locked ? {memory_reset_pipe[6:0],1'b1} : 0;
+        wire memory_resetn = memory_reset_pipe[7];
+        wire sdram_request, sdram_write, sdram_complete, sdram_next_read;
+        wire [20:0] sdram_address;
+        wire [31:0] sdram_data_in, sdram_data_out;
+        tang_sdram_cdc bridge (
+            .clk(clk), .resetn(resetn), .sdram_clk(divided_dsp_clk), .sdram_resetn(memory_resetn),
+            .request(memory_request), .write(memory_write), .address(memory_address),
+            .read_extra(model_busy ? model_read_extra : 5'd0),
+            .data_in(memory_data), .complete(complete), .data_out(data_out),
+            .sdram_request(sdram_request), .sdram_write(sdram_write), .sdram_next_read(sdram_next_read),
+            .sdram_address(sdram_address),
+            .sdram_data_in(sdram_data_in), .sdram_complete(sdram_complete), .sdram_data_out(sdram_data_out)
+        );
+        tang_sdram #(.CLOCK_HZ(DSP_CLOCK_HZ/3), .SEPARATE_CLOCK(1), .KEEP_ROW_OPEN(1)) memory (
+            .clk(command_clk), .memory_clk(divided_dsp_clk), .resetn(memory_resetn),
+            .request(sdram_request), .write(sdram_write), .read_burst(!sdram_write), .next_read(sdram_next_read),
+            .address(sdram_address), .data_in(sdram_data_in), .data_out(sdram_data_out), .complete(sdram_complete),
+            .sd_clk(O_sdram_clk), .sd_cke(O_sdram_cke), .sd_cs_n(O_sdram_cs_n),
+            .sd_ras_n(O_sdram_ras_n), .sd_cas_n(O_sdram_cas_n), .sd_we_n(O_sdram_wen_n),
+            .sd_addr(O_sdram_addr), .sd_bank(O_sdram_ba), .sd_mask(O_sdram_dqm), .sd_dq(IO_sdram_dq)
+        );
+    end else begin: shared_memory
+        tang_sdram #(.CLOCK_HZ(CLOCK_HZ), .CLOCK_DIVIDE(SDRAM_DIVIDER)) memory (
+            .clk(clk), .memory_clk(memory_clk), .resetn(resetn),
+            .request(memory_request), .write(memory_write), .read_burst(model_busy && model_burst), .next_read(1'b0),
+            .address(memory_address), .data_in(memory_data), .data_out(data_out), .complete(complete),
+            .sd_clk(O_sdram_clk), .sd_cke(O_sdram_cke), .sd_cs_n(O_sdram_cs_n),
+            .sd_ras_n(O_sdram_ras_n), .sd_cas_n(O_sdram_cas_n), .sd_we_n(O_sdram_wen_n),
+            .sd_addr(O_sdram_addr), .sd_bank(O_sdram_ba), .sd_mask(O_sdram_dqm), .sd_dq(IO_sdram_dq)
+        );
+    end endgenerate
 endmodule

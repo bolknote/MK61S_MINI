@@ -2,10 +2,12 @@
 // Eight-word SDR read bursts fill a one-line cache. Writes are single-word.
 module tang_sdram #(
     parameter CLOCK_HZ = 54000000,
-    parameter CLOCK_DIVIDE = 1
+    parameter CLOCK_DIVIDE = 1,
+    parameter SEPARATE_CLOCK = 0,
+    parameter KEEP_ROW_OPEN = 0
 ) (
     input wire clk, memory_clk, resetn,
-    input wire request, write, read_burst,
+    input wire request, write, read_burst, next_read,
     input wire [20:0] address,
     input wire [31:0] data_in,
     output reg [31:0] data_out,
@@ -28,7 +30,7 @@ module tang_sdram #(
     localparam FIRST_REFRESH = POWER_WAIT + 2;
     localparam SECOND_REFRESH = FIRST_REFRESH + REFRESH_DELAY;
     localparam SET_MODE = SECOND_REFRESH + REFRESH_DELAY;
-    localparam INIT = 0, IDLE = 1, ACCESS = 2, REFRESHING = 3, COMPLETE = 4, LOOKUP = 5;
+    localparam INIT = 0, IDLE = 1, ACCESS = 2, REFRESHING = 3, COMPLETE = 4, LOOKUP = 5, PRECHARGING = 6;
     reg [2:0] command, state;
     reg [14:0] startup;
     reg [10:0] refresh_due;
@@ -40,6 +42,10 @@ module tang_sdram #(
     reg [31:0] line [0:7];
     reg [17:0] line_address;
     reg line_valid;
+    reg row_open, precharge_for_refresh;
+    reg [12:0] open_row;
+    reg read_chained;
+    wire [4:0] next_column = column[7:3] + 1'b1;
     wire step_memory;
     wire [31:0] read_port = CLOCK_DIVIDE == 3 ? sd_dq : sampled_data;
 
@@ -67,9 +73,13 @@ module tang_sdram #(
     assign sd_mask = 4'b0000;
     assign sd_dq = output_enable ? drive_data : 32'bz;
 
-    // At half rate, a falling edge consumes the captured word from the
-    // preceding rising edge, when the previous SDRAM beat is still on DQ.
-    always @(posedge clk) sampled_data <= sd_dq;
+    // The independent controller changes commands on SDRAM's falling edge
+    // and consumes the word sampled on the preceding rising edge.
+    generate if (SEPARATE_CLOCK) begin: sample_sdram
+        always @(posedge memory_clk) sampled_data <= sd_dq;
+    end else begin: sample_fabric
+        always @(posedge clk) sampled_data <= sd_dq;
+    end endgenerate
 
     always @(posedge clk) begin
         // Change divided-clock commands on the falling edge. The line cache
@@ -88,6 +98,8 @@ module tang_sdram #(
             sd_bank <= 0;
             refresh_due <= REFRESH_SPACING;
             line_valid <= 0;
+            row_open <= 0;
+            read_chained <= 0;
         end else if (state == INIT) begin
             if (step_memory) begin
                 startup <= startup + 1'b1;
@@ -105,32 +117,56 @@ module tang_sdram #(
                     cycles <= 1;
                     if (refresh_due == 0) begin
                         if (step_memory) begin
-                            command <= REFRESH;
-                            refresh_due <= REFRESH_SPACING;
-                            state <= REFRESHING;
+                            if (KEEP_ROW_OPEN && row_open) begin
+                                command <= PRECHARGE;
+                                sd_addr <= 11'h400;
+                                row_open <= 0;
+                                precharge_for_refresh <= 1;
+                                state <= PRECHARGING;
+                            end else begin
+                                command <= REFRESH;
+                                refresh_due <= REFRESH_SPACING;
+                                state <= REFRESHING;
+                            end
                         end
                     end else if (request) begin
                         pending_address <= address;
                         column <= address[7:0];
                         writing <= write;
-                        streaming <= read_burst && !write && address[2:0] == 0;
+                        streaming <= !write && (SEPARATE_CLOCK || (read_burst && address[2:0] == 0));
                         drive_data <= data_in;
                         state <= LOOKUP;
                     end
                 end
                 LOOKUP: begin
-                    if (!writing && !streaming && line_valid && line_address == pending_address[20:3]) begin
+                    if (!SEPARATE_CLOCK && !writing && !streaming && line_valid &&
+                        line_address == pending_address[20:3]) begin
                         data_out <= line[column[2:0]];
                         complete <= 1;
                         state <= COMPLETE;
                     end else if (step_memory) begin
-                        command <= ACTIVATE;
-                        sd_bank <= pending_address[20:19];
-                        sd_addr <= pending_address[18:8];
-                        output_enable <= writing;
-                        if (!writing) begin line_address <= pending_address[20:3]; line_valid <= 0; end
-                        else if (line_address == pending_address[20:3]) line_valid <= 0;
-                        state <= ACCESS;
+                        if (KEEP_ROW_OPEN && row_open && open_row != pending_address[20:8]) begin
+                            command <= PRECHARGE;
+                            sd_addr <= 11'h400;
+                            row_open <= 0;
+                            precharge_for_refresh <= 0;
+                            state <= PRECHARGING;
+                        end else begin
+                            if (KEEP_ROW_OPEN && row_open) cycles <= COLUMN_DELAY;
+                            else begin
+                                command <= ACTIVATE;
+                                sd_bank <= pending_address[20:19];
+                                sd_addr <= pending_address[18:8];
+                                row_open <= 1;
+                                open_row <= pending_address[20:8];
+                            end
+                            output_enable <= writing;
+                            if (!SEPARATE_CLOCK) begin
+                                if (!writing) begin line_address <= pending_address[20:3]; line_valid <= 0; end
+                                else if (line_address == pending_address[20:3]) line_valid <= 0;
+                            end
+                            state <= ACCESS;
+                        end
                     end
                 end
                 ACCESS: if (step_memory) begin
@@ -138,10 +174,19 @@ module tang_sdram #(
                     output_enable <= writing && cycles <= COLUMN_DELAY + 4'd1;
                     if (cycles == COLUMN_DELAY) begin
                         command <= writing ? WRITE : READ;
-                        sd_addr <= {1'b1, 2'b00, column[7:3], writing ? column[2:0] : 3'b0};
+                        sd_addr <= {KEEP_ROW_OPEN ? 1'b0 : 1'b1,
+                                    2'b00, column[7:3], writing ? column[2:0] : 3'b0};
+                    end
+                    // Start the next BL8 before the last beats reach the
+                    // reader. The bridge advances its address on beat eight.
+                    if (SEPARATE_CLOCK && KEEP_ROW_OPEN && !writing && next_read &&
+                        column[7:3] != 31 && cycles == COLUMN_DELAY + 4'd8) begin
+                        command <= READ;
+                        sd_addr <= {3'b0,next_column,3'b0};
+                        read_chained <= 1;
                     end
                     if (!writing && cycles >= FIRST_READ) begin
-                        line[cycles - FIRST_READ] <= read_port;
+                        if (!SEPARATE_CLOCK) line[cycles - FIRST_READ] <= read_port;
                         // An aligned streaming caller consumes each beat as
                         // it arrives. Word reads still return once per request.
                         if (streaming) begin
@@ -150,16 +195,26 @@ module tang_sdram #(
                         end
                     end
                     if (writing ? cycles == COLUMN_DELAY + 4'd3 : cycles == FIRST_READ + 4'd7) begin
-                        if (!writing) begin
+                        if (!SEPARATE_CLOCK && !writing) begin
                             if (!streaming)
                                 data_out <= column[2:0] == 7 ? read_port : line[column[2:0]];
                             line_valid <= 1;
                         end
                         complete <= 1;
-                        state <= COMPLETE;
+                        if (SEPARATE_CLOCK && read_chained) begin
+                            read_chained <= 0;
+                            column <= {next_column,3'b0};
+                            cycles <= FIRST_READ;
+                        end else state <= COMPLETE;
                     end
                 end
                 COMPLETE: state <= IDLE;
+                PRECHARGING: if (step_memory) begin
+                    if (cycles == COLUMN_DELAY) begin
+                        cycles <= 1;
+                        state <= precharge_for_refresh ? IDLE : LOOKUP;
+                    end else cycles <= cycles + 1'b1;
+                end
                 REFRESHING: if (step_memory) begin
                     cycles <= cycles + 1'b1;
                     if (cycles == REFRESH_DELAY) state <= IDLE;

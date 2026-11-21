@@ -1,6 +1,8 @@
 // There are at most four requests per Q4 block. The sequencer drains every
 // reply before submitting the next block. Diagnostics allow one outstanding.
-module tang_dot_fifo #(parameter WIDTH = 32) (
+module tang_dot_fifo #(
+    parameter WIDTH = 32, ADDRESS_BITS = 3, STREAM_READ = 0
+) (
     input wire write_clk, write_resetn, push,
     input wire [WIDTH-1:0] write_data,
     input wire read_clk, read_resetn, pop,
@@ -8,11 +10,13 @@ module tang_dot_fifo #(parameter WIDTH = 32) (
     output reg valid,
     output reg [WIDTH-1:0] read_data
 );
-    (* ram_style = "block" *) reg [WIDTH-1:0] queue [0:7];
-    reg [3:0] written, written_gray, read_index, read_gray;
+    // The callers bound the outstanding words to the queue depth.
+    (* ram_style = "block" *) reg [WIDTH-1:0] queue [0:(1<<ADDRESS_BITS)-1];
+    reg [ADDRESS_BITS:0] written, written_gray, read_index, read_gray;
     reg read_pending;
-    (* async_reg = "true" *) reg [3:0] seen_first, seen;
-    wire [3:0] next_read = read_index + 1'b1;
+    (* async_reg = "true" *) reg [ADDRESS_BITS:0] seen_first, seen;
+    wire [ADDRESS_BITS:0] next_read = read_index + 1'b1;
+    wire advance_read = STREAM_READ ? pop && available : read_pending;
 
     // Register the Gray encoding independently of the binary increment.
     always @(posedge write_clk) begin
@@ -23,7 +27,7 @@ module tang_dot_fifo #(parameter WIDTH = 32) (
             if (push) written <= written + 1'b1;
             written_gray <= written ^ (written >> 1);
         end
-        if (write_resetn && push) queue[written[2:0]] <= write_data;
+        if (write_resetn && push) queue[written[ADDRESS_BITS-1:0]] <= write_data;
     end
 
     assign available = read_gray != seen;
@@ -39,13 +43,13 @@ module tang_dot_fifo #(parameter WIDTH = 32) (
             seen_first <= written_gray;
             seen <= seen_first;
             read_pending <= pop && available && !read_pending;
-            valid <= read_pending;
-            if (read_pending) begin
+            valid <= advance_read;
+            if (advance_read) begin
                 read_index <= next_read;
                 read_gray <= next_read ^ (next_read >> 1);
             end
         end
-        if (read_pending) read_data <= queue[read_index[2:0]];
+        if (advance_read) read_data <= queue[read_index[ADDRESS_BITS-1:0]];
     end
 endmodule
 
