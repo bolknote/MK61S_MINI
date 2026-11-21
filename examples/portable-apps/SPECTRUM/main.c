@@ -538,6 +538,13 @@ static void prefetch_wide(video_output* out) {
     out->saved.previous_frames=out->saved.frames;out->saved.frames=machine.frames;
     out->pending=0;out->prefetched=true;
 }
+
+static bool wide_prepare_first(video_output* out,uint8_t* work) {
+    // All strips of the previous frame already belong to the LCD queue.
+    // Decode the first strip of the frozen bank into the reusable workspace.
+    out->ready=spectrum_video_snapshot_strip(&machine,&out->saved,SPECTRUM_VIDEO_WIDE,0,work,&out->part);
+    return out->ready;
+}
 #endif
 static __attribute__((noinline)) void video_begin(video_output* out,unsigned mode) {
     if(mode!=out->mode) {
@@ -581,8 +588,12 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
             }
 #if SPECTRUM_HAS_PENTAGON
             if(out->prefetched) {
+                // A lost LCD reference needs a full capture on the next turn.
                 out->prefetched=false;
-                if(status==1) {out->selected=true;return true;}
+                out->selected=status==1;
+                out->repainted=!out->selected;
+                out->ready=out->ready && out->selected;
+                return true;
             }
 #endif
         }
@@ -612,17 +623,18 @@ static __attribute__((noinline)) bool video_present(video_output* out,uint8_t* w
 #endif
             } else {
                 if(!spectrum_video_snapshot_strip(&machine,&out->saved,out->mode,out->next,work,&out->part)) return false;
-                if(SPECTRUM_HAS_PENTAGON && !out->part.height) goto next_strip;
 #if SPECTRUM_HAS_PENTAGON
                 if(clipped) spectrum_pentagon_clip(out->mode,d,work,&out->part);
 #endif
             }
 #if SPECTRUM_HAS_PENTAGON
-            if(split) spectrum_pentagon_wide_window(&out->part,gap,out->gap_right,work+WIDE_PACKED_BYTES);
+            if(out->part.height && split)
+                spectrum_pentagon_wide_window(&out->part,gap,out->gap_right,work+WIDE_PACKED_BYTES);
 #endif
             if(out->clear) {out->part.format&=~MK61_COLOR_PRESERVE_OUTSIDE;out->part.background=out->background;}
             out->ready=true;
         }
+        if(SPECTRUM_HAS_PENTAGON && !out->part.height) goto next_strip;
         if(pages) {
             // PRESENT can consume a failed DMA write. Check the hidden page
             // before submitting another strip that relies on its contents.
@@ -663,7 +675,7 @@ next_strip:
             out->clear=out->repainted=true;out->next=0;
             if(SPECTRUM_HAS_PENTAGON) out->valid[0]=0;
 #if SPECTRUM_HAS_PENTAGON
-            out->prefetched=out->selected=false;
+            out->prefetched=out->ready=out->selected=false;
             return true;
 #else
             return timex_capture(out,work);
@@ -1575,13 +1587,19 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
             uint32_t* guard=&video->guard_us;
             uint32_t margin=2000;
 #if SPECTRUM_HAS_PENTAGON
+            bool preparing=false;
             if(spectrum_is_pentagon(&machine)) {
                 const bool wide=video->mode==SPECTRUM_VIDEO_WIDE;
-                if(!mode && !video->selected && wide) guard=&video->capture_guard_us;
+                // Decode only with a full preparation window. Otherwise
+                // poll the fence or submit a prepared strip on the short guard.
+                preparing=video->prefetched && video->selected && !video->ready &&
+                    (int32_t)(target-now)>(int32_t)video->guard_us;
+                if(preparing) margin=1000;
+                else if(!mode && !video->selected && wide && !video->prefetched) guard=&video->capture_guard_us;
                 // Ending a Wide frame checks the last DMA and publishes the
                 // origin. It needs the same short window as a prepared strip.
-                else if(mode?mode==video->mode:video->selected &&
-                    (video->packed || video->ready || video->next==SPECTRUM_WIDE_STRIPS)) {
+                else if(mode?mode==video->mode:video->prefetched || (video->selected &&
+                    (video->packed || video->ready || video->next==SPECTRUM_WIDE_STRIPS))) {
                     guard=&video->ready_guard_us;
                     if(wide) margin=500;
                 }
@@ -1595,8 +1613,10 @@ static bool pace_frame(uint8_t blocked[32],uint32_t* keyboard_deadline,uint32_t*
                 else {
 #if SPECTRUM_HAS_PENTAGON
                     pacing_video_io=spectrum_is_pentagon(&machine);
-#endif
+                    const bool ok=preparing?wide_prepare_first(video,work):video_present(video,work);
+#else
                     const bool ok=video_present(video,work);
+#endif
 #if SPECTRUM_HAS_PENTAGON
                     pacing_video_io=false;
 #endif

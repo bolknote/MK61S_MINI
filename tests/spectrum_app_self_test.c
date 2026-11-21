@@ -657,15 +657,17 @@ static void extended_frames(void) {
     assert(!diff.active && video_psram_ops==reused && video_calls==dirty_calls+1);
     puts("Wide snapshots reuse clean banks and refresh the written region of a hidden bank PASS");
 
-    for(unsigned fault=0;fault<2;++fault) {
+    for(unsigned trial=0;trial<4;++trial) {
+        const bool empty=trial==1,end_fault=trial==2,begin_fault=trial==3;
         video_output overlap=diff;
+        video_scroll=true;
         state.cpu.port_out(&state.cpu,0x7ffd,0x18);
         video_begin(&overlap,SPECTRUM_VIDEO_WIDE);
         assert(video_present(&overlap,canvas) && overlap.saved.previous==RASTER_BASE);
         // The resident has accepted all parts and still owns the final DMA.
         overlap.next=SPECTRUM_WIDE_STRIPS;
         state.cpu.port_out(&state.cpu,0x7ffd,0x10);
-        ++state.frames;overlap.pending=SPECTRUM_VIDEO_WIDE;
+        state.frames+=empty?1:16;overlap.pending=SPECTRUM_VIDEO_WIDE;
         video_end_busy=true;
         const unsigned io=video_psram_ops;
         pentagon.strips[0][0].bottom=1;
@@ -675,19 +677,33 @@ static void extended_frames(void) {
         assert(video_present(&overlap,canvas) && overlap.prefetched && !overlap.pending);
         assert(overlap.saved.address==RASTER_BASE && overlap.saved.previous==WIDE_REFERENCE &&
                overlap.saved.frames==state.frames && overlap.saved.previous_frames==displayed_phase && video_psram_ops==io);
+        assert(wide_prepare_first(&overlap,canvas) && overlap.ready);
+        assert((overlap.part.height==0)==empty);
+        const unsigned prepared_io=video_psram_ops,calls=video_calls;
         // A later guest page flip must leave the latched snapshot intact.
         state.cpu.port_out(&state.cpu,0x7ffd,0x18);
-        video_end_busy=false;video_fail_once=fault;
+        video_end_busy=false;video_fail_once=end_fault;
         assert(video_present(&overlap,canvas) && !overlap.next && !overlap.selected);
-        if(fault) {
-            assert(!overlap.prefetched && !overlap.valid[0] && overlap.clear);
+        if(end_fault) {
+            assert(!overlap.prefetched && !overlap.ready && !overlap.valid[0] && overlap.clear);
+            assert(video_present(&overlap,canvas) && overlap.saved.address==WIDE_REFERENCE && !overlap.saved.previous);
+        } else if(begin_fault) {
+            video_scroll=false;
+            assert(video_present(&overlap,canvas) && !overlap.prefetched && !overlap.ready &&
+                   !overlap.selected && overlap.repainted && overlap.clear);
             assert(video_present(&overlap,canvas) && overlap.saved.address==WIDE_REFERENCE && !overlap.saved.previous);
         } else {
             assert(overlap.prefetched && video_present(&overlap,canvas) && !overlap.prefetched);
-            assert(overlap.selected && overlap.saved.address==RASTER_BASE && video_psram_ops==io);
+            assert(overlap.selected && overlap.ready && overlap.saved.address==RASTER_BASE && video_psram_ops==prepared_io);
+            if(!empty) {
+                video_busy_once=true;
+                assert(video_present(&overlap,canvas) && overlap.ready && video_calls==calls);
+            }
+            assert(video_present(&overlap,canvas) && overlap.next==1 && !overlap.ready);
+            assert(video_psram_ops==prepared_io && video_calls==calls+(empty?0:1));
         }
     }
-    puts("Wide early alternate bank: dirty guard, frozen phase, page flips and late DMA failure recovery PASS");
+    puts("Wide prepared first strip: page flips, busy submit, unchanged strip and LCD fault recovery PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     {
