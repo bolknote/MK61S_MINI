@@ -12,10 +12,11 @@ bool request_i2c(bool read,const u8* bytes,unsigned length);
 bool take_i2c(int& result,u8* bytes=nullptr);
 int blocking_i2c(bool read,u8* bytes,unsigned length);
 bool frame_pending();
+bool frame_slot_available();
 bool input_ready();
-bool submit_frame(void* context,void (*transfer)(void*));
+bool submit_frame(void* context,void (*transfer)(void*),bool allow_queue=false);
 // Presentation only: invoke(), keyboard/UART IRQs and compute jobs stay live.
-// Suspension drains the last accepted frame before closing the LCD queue.
+// Suspension drains both slots before closing the LCD queue.
 void suspend_frames(bool suspended);
 bool frames_suspended();
 // Core 1 calls this between LCD scanlines; keyboard and UART do not wait

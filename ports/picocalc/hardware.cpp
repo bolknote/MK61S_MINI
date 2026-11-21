@@ -311,8 +311,8 @@ void Panel::completed_input(u64 now) {
     frame_input_at_=0;
 }
 bool Panel::color_history(ColorHistory& out) const {
-    // The worker publishes its completed transfer before clearing the
-    // pending flag. The reporting core owns submission of the next one.
+    // The worker publishes each completed transfer before releasing its slot.
+    // The reporting core owns submission of the next one.
     if(io_worker::frame_pending()) return false;
     out=color_history_;
     return true;
@@ -384,14 +384,33 @@ void Panel::end_color_pages() {
     }
     if(!pages_display_on_) command(0x29);
     pages_active_=pages_configured_=pages_selected_=false;
-    pages_written_=0;color_active_=false;valid_=false;color_frame_={};
+    pages_written_=0;color_active_=false;valid_=false;color_frames_[color_slot_]={};
+}
+bool Panel::queue_color(const mk61_service_color_frame& frame) {
+    const auto& previous=color_frames_[color_slot_];
+    // A fixed-origin strip transaction can submit a complete new window.
+    // Dirty comparisons, page flips and border clears still wait for idle.
+    if(!color_scroll_.open || scroll_.region!=lcd::Region{0,Screen::HEIGHT} || scroll_.offset ||
+       frame.format!=(MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE) || frame.pixel_bytes>COLOR_SLOT_BYTES ||
+       (previous.format&~MK61_COLOR_PRESERVE_OUTSIDE)!=MK61_COLOR_INDEX4 || previous.pixel_bytes>COLOR_SLOT_BYTES ||
+       lcd::same_color_view(previous,frame) || failed_.load(std::memory_order_acquire) ||
+       !io_worker::frame_slot_available()) return false;
+
+    // Each queued job owns its pixels and palette until core 1 releases it.
+    const unsigned slot=color_slot_^1u;
+    lcd::copy_color(color_frames_[slot],frame,previous_bytes()+slot*COLOR_SLOT_BYTES);
+    const auto slot0=[](void* context) {((Panel*)context)->transfer_queued_color(0);};
+    const auto slot1=[](void* context) {((Panel*)context)->transfer_queued_color(1);};
+    if(!io_worker::submit_frame(this,slot?+slot1:+slot0,true)) return false;
+    color_slot_=slot;++queued_strips_;
+    return true;
 }
 u32 Panel::color(u32 operation,const void* payload) {
     if(operation==MK61_COLOR_SCROLL_BEGIN) {
         if(pages_active_ || color_inverted_) return 0;
         if(!payload || !lcd::ColorScroll::accepts(*(const mk61_service_color_scroll*)payload)) return 0;
         if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
-        if(take_failure()) color_scroll_.fault();
+        if(take_failure()) {color_scroll_.fault();color_frames_[color_slot_]={};}
         const unsigned result=color_scroll_.begin(scroll_,*(const mk61_service_color_scroll*)payload);
         if(result) {color_active_=true;valid_=false;}
         return result;
@@ -399,7 +418,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(operation==MK61_COLOR_SCROLL_END) {
         if(payload) return 0;
         if(io_worker::frames_suspended() || io_worker::frame_pending()) return 2;
-        if(take_failure()) color_scroll_.fault();
+        if(take_failure()) {color_scroll_.fault();color_frames_[color_slot_]={};}
         if(!color_scroll_.ready()) return 0;
         if(!io_worker::submit_frame(this,[](void* context) {((Panel*)context)->transfer_color_scroll();})) return 2;
         color_scroll_.committed();return 1;
@@ -423,7 +442,7 @@ u32 Panel::color(u32 operation,const void* payload) {
         command(0x28);
         pages_top_=r.top;pages_height_=r.height;pages_active_=true;pages_configured_=pages_selected_=false;
         pages_display_on_=false;pages_scan_changed_at_=(u32)time_us_64();
-        pages_written_=0;color_active_=true;valid_=false;color_frame_={};
+        pages_written_=0;color_active_=true;valid_=false;color_frames_[color_slot_]={};
         return 1;
     }
     if(operation==MK61_COLOR_PAGE_SELECT || operation==MK61_COLOR_PAGE_SHOW) {
@@ -468,7 +487,7 @@ u32 Panel::color(u32 operation,const void* payload) {
             // An aborted transaction has not published its target origin.
             if(color_scroll_.open) scroll_=scroll_configured_?
                 lcd::Scroll{configured_region_,configured_start_-configured_region_.top}:lcd::Scroll{};
-            color_scroll_.reset();color_active_=false;valid_=false;color_frame_={};
+            color_scroll_.reset();color_active_=false;valid_=false;color_frames_[color_slot_]={};
         }
         if(color_spi_request_) (void)color_clock(0);
         else apply_clock();
@@ -480,7 +499,7 @@ u32 Panel::color(u32 operation,const void* payload) {
     if(pages_active_ && (!pages_selected_ || frame->format!=(MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE) ||
        frame->y<pages_top_ || frame->y+frame->height>pages_top_+pages_height_)) return 0;
     if(io_worker::frames_suspended()) return 2;
-    if(io_worker::frame_pending()) return 2;
+    if(io_worker::frame_pending()) return queue_color(*frame)?1:2;
     if(pages_active_ && !pages_configured_) {
         if(!color_pages_settled()) return 2;
         prepare_color_pages();
@@ -496,17 +515,21 @@ u32 Panel::color(u32 operation,const void* payload) {
         // Both snapshots use the same palette representation for dirty checks.
         frame=&page_frame;
     }
+    const auto& previous=color_frames_[color_slot_];
     const bool geometry=!color_active_ || failed || (pages_active_ && pages_snapshot_!=pages_write_) ||
-        !lcd::same_color_view(color_frame_,*frame);
+        !lcd::same_color_view(previous,*frame);
     const bool force=geometry || ((frame->format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_TILE8 && palette_dirty_);
-    color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || color_frame_.background!=frame->background);
-    lcd::plan_color(update_,color_frame_,*frame,force);
+    color_clear_=!(frame->format&MK61_COLOR_PRESERVE_OUTSIDE) && (geometry || previous.background!=frame->background);
+    lcd::plan_color(update_,previous,*frame,force);
     if(!update_.count && !color_clear_) return 1;
-    lcd::copy_color(color_frame_,*frame,previous_bytes());
+    color_slot_=0;
+    lcd::copy_color(color_frames_[0],*frame,previous_bytes());
     if(pages_active_) pages_snapshot_=pages_transfer_=pages_write_;
     palette_dirty_=false;
     color_active_=true;valid_=false;
-    if(!io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer_color(); })) {
+    if(!io_worker::submit_frame(this,[](void* context) {
+        auto* panel=(Panel*)context;panel->transfer_color(panel->color_frames_[0]);
+    })) {
         failed_.store(true,std::memory_order_release);return 2;
     }
     if(pages_active_) pages_written_|=1u<<pages_write_;
@@ -560,18 +583,18 @@ void Panel::abort_dma() {
     dma_channel_abort((unsigned)dma_tx_);dma_channel_abort((unsigned)dma_rx_);
     dma_irq_ready_=false;
 }
-bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
+bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_color_frame* frame) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
     configure_dma();stream_.reset(rect);
     // Small dirty windows keep the scalar path and its existing service cadence.
-    const bool indexed_pairs=color && lcd::Index4Pairs::supports(color_frame_.format) &&
+    const bool indexed_pairs=frame && lcd::Index4Pairs::supports(frame->format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
-    // The worker owns the snapshot until this window drains. Its unused tail
-    // can hold a third strip without growing the foreground SRAM allocation.
+    // Both packed slots leave room for a third RGB565 DMA buffer at the tail.
+    static_assert(2*COLOR_SLOT_BYTES+sizeof(scanlines)<=sizeof(previous_));
     constexpr unsigned strip_pixels=sizeof(scanlines)/sizeof(*scanlines);
     const unsigned depth=indexed_pairs && stream_.count>2 &&
-        color_frame_.pixel_bytes+color_frame_.tile_bytes<=sizeof(previous_)-sizeof(scanlines)?3:2;
+        size_t(frame->pixels-previous_bytes())+frame->pixel_bytes+frame->tile_bytes<=sizeof(previous_)-sizeof(scanlines)?3:2;
     u16* const buffers[]={scanlines,chained_scanlines,previous_+Screen::BYTES/sizeof(u16)-strip_pixels};
     unsigned slot=0;
     const auto service=[] { io_worker::service(); };
@@ -579,9 +602,9 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,bool color) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         const auto next=lcd::Stream::prepare(rect,index,buffers[slot],
             [&](unsigned row,u16* out) {
-                if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,service);
-                else if(color) {
-                    lcd::color_scanline(color_frame_,rect,row,out,color_palette_,service);
+                if(indexed_pairs) index4_pairs_.line(*frame,rect,row,out,service);
+                else if(frame) {
+                    lcd::color_scanline(*frame,rect,row,out,color_palette_,service);
                     // Unlike the paired path, a short scalar row may finish
                     // without reaching a transport service point.
                     service();
@@ -764,30 +787,32 @@ void Panel::transfer() {
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 
-bool Panel::transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses,u32& windows) {
+bool Panel::transfer_color_rect(const mk61_service_color_frame& frame,const lcd::Rect& rect,bool background,
+                                u32& strips,u32& pauses,u32& windows) {
     if(pages_active_) {
         if(background || rect.y<pages_top_ || rect.y+rect.height>pages_top_+pages_height_) return false;
         const unsigned row=rect.y+color_page_offset(pages_transfer_);
         const unsigned start=row<GRAM_ROWS?row:row-GRAM_ROWS;
         const unsigned rows_before_wrap=GRAM_ROWS-start;
         ++windows;
-        if(rect.height<=rows_before_wrap) return transfer_color_window(rect,start,false,strips,pauses);
+        if(rect.height<=rows_before_wrap) return transfer_color_window(frame,rect,start,false,strips,pauses);
         const lcd::Rect head{rect.x,rect.y,rect.width,(u16)rows_before_wrap};
-        if(!transfer_color_window(head,start,false,strips,pauses)) return false;
+        if(!transfer_color_window(frame,head,start,false,strips,pauses)) return false;
         const lcd::Rect tail{rect.x,(u16)(rect.y+rows_before_wrap),rect.width,(u16)(rect.height-rows_before_wrap)};
         ++windows;
-        return transfer_color_window(tail,0,false,strips,pauses);
+        return transfer_color_window(frame,tail,0,false,strips,pauses);
     }
     for(unsigned first=0;first<rect.height;) {
         const unsigned count=scroll_.run(rect.y+first,rect.height-first);
         const lcd::Rect piece{rect.x,(u16)(rect.y+first),rect.width,(u16)count};
         ++windows;
-        if(!transfer_color_window(piece,scroll_.map(piece.y),background,strips,pauses)) return false;
+        if(!transfer_color_window(frame,piece,scroll_.map(piece.y),background,strips,pauses)) return false;
         first+=count;
     }
     return true;
 }
-bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool background,u32& strips,u32& pauses) {
+bool Panel::transfer_color_window(const mk61_service_color_frame& frame,const lcd::Rect& rect,unsigned physical_y,
+                                  bool background,u32& strips,u32& pauses) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_CONTROL);
     const unsigned right=rect.x+rect.width-1,bottom=physical_y+rect.height-1;
     const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
@@ -797,24 +822,24 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
     const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
     busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
     spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
-    const bool indexed_pairs=lcd::Index4Pairs::supports(color_frame_.format) &&
+    const bool indexed_pairs=lcd::Index4Pairs::supports(frame.format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
     const auto prepare=[&](unsigned row,u16* out,void (*progress)()=nullptr) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
-        if(background) for(unsigned x=0;x<rect.width;++x) out[x]=color_frame_.background;
-        else if(indexed_pairs) index4_pairs_.line(color_frame_,rect,row,out,progress);
-        else lcd::color_scanline(color_frame_,rect,row,out,color_palette_,progress);
+        if(background) for(unsigned x=0;x<rect.width;++x) out[x]=frame.background;
+        else if(indexed_pairs) index4_pairs_.line(frame,rect,row,out,progress);
+        else lcd::color_scanline(frame,rect,row,out,color_palette_,progress);
     };
     bool ok=true;
     const unsigned pixels=rect.width*rect.height;
     if(MK61_PICOCALC_LCD_COLOR_CHAIN && background) {
-        ok=transfer_fill(color_frame_.background,rect.width,rect.height);
+        ok=transfer_fill(frame.background,rect.width,rect.height);
         strips+=dma()?1:rect.height;
-    } else if(!background && dma() && (color_frame_.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_RGB565 &&
-              rect.x==color_frame_.x && rect.width==color_frame_.width) {
+    } else if(!background && dma() && (frame.format&~MK61_COLOR_PRESERVE_OUTSIDE)==MK61_COLOR_RGB565 &&
+              rect.x==frame.x && rect.width==frame.width) {
         // The panel owns an aligned copy of the little-endian RGB565 words.
         // A whole-width window can go directly to the pixel DMA channel.
-        start_scanline(previous_+(rect.y-color_frame_.y)*rect.width,pixels);
+        start_scanline(reinterpret_cast<const u16*>(frame.pixels)+(rect.y-frame.y)*rect.width,pixels);
         ok=finish_scanline(true);
         ++strips;
     } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && dma() && pixels<=sizeof(scanlines)/sizeof(*scanlines)) {
@@ -827,7 +852,7 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
         ok=finish_scanline(true);
         ++strips;
     } else if(MK61_PICOCALC_LCD_COLOR_CHAIN && chained_dma()) {
-        ok=transfer_chain(rect,pauses,true);strips+=stream_.count;
+        ok=transfer_chain(rect,pauses,&frame);strips+=stream_.count;
     } else {
         prepare(0,scanlines);start_scanline(scanlines,rect.width);
         for(unsigned row=1;row<=rect.height;++row) {
@@ -842,27 +867,37 @@ bool Panel::transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool
     spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     return ok;
 }
-void Panel::transfer_color() {
+void Panel::transfer_queued_color(unsigned slot) {
+    // A failed write invalidates the transaction. Drop its waiting strip so
+    // SCROLL_END can report failure and the caller can repaint in order.
+    if(failed_.load(std::memory_order_acquire)) return;
+    const auto& frame=color_frames_[slot];
+    color_clear_=false;
+    update_.rectangles[0]={frame.x,frame.y,frame.width,frame.height};
+    update_.count=1;update_.bytes=frame.width*frame.height*2;
+    transfer_color(frame);
+}
+
+void Panel::transfer_color(const mk61_service_color_frame& frame) {
     const u64 start=time_us_64();
     // Use the palette from the queued snapshot, including the compensation
     // for hardware pages. The lookup is shared by all INDEX4 rectangles.
-    if(lcd::Index4Pairs::supports(color_frame_.format)) index4_pairs_.refresh(color_frame_.palette);
+    if(lcd::Index4Pairs::supports(frame.format)) index4_pairs_.refresh(frame.palette);
     // Source coordinates stay logical even when GRAM wraps. Legacy color APPs
     // can also preserve pixels left by a scrolled surface; END's next full
     // monochrome flush restores its own origin without losing fixed pixels.
     bool ok=true;unsigned border_bytes=0;u32 strips=0,pauses=0,windows=0;
     if(color_clear_) {
-        const auto& f=color_frame_;
         const lcd::Rect borders[]={
-            {0,0,Screen::WIDTH,f.y},
-            {0,(u16)(f.y+f.height),Screen::WIDTH,(u16)(Screen::HEIGHT-f.y-f.height)},
-            {0,f.y,f.x,f.height},
-            {(u16)(f.x+f.width),f.y,(u16)(Screen::WIDTH-f.x-f.width),f.height}};
+            {0,0,Screen::WIDTH,frame.y},
+            {0,(u16)(frame.y+frame.height),Screen::WIDTH,(u16)(Screen::HEIGHT-frame.y-frame.height)},
+            {0,frame.y,frame.x,frame.height},
+            {(u16)(frame.x+frame.width),frame.y,(u16)(Screen::WIDTH-frame.x-frame.width),frame.height}};
         for(const auto& r:borders) if(r.width && r.height && ok) {
-            ok=transfer_color_rect(r,true,strips,pauses,windows);border_bytes+=r.width*r.height*2;
+            ok=transfer_color_rect(frame,r,true,strips,pauses,windows);border_bytes+=r.width*r.height*2;
         }
     }
-    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(update_.rectangles[i],false,strips,pauses,windows);
+    for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(frame,update_.rectangles[i],false,strips,pauses,windows);
     if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
     io_worker::FrameDeadlineScope publish_trace(WorkerDeadlineTrace::LCD_PUBLISH);
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
@@ -870,11 +905,10 @@ void Panel::transfer_color() {
     last_rectangles_.store(windows,std::memory_order_relaxed);
     last_strips_.store(strips,std::memory_order_relaxed);last_pauses_.store(pauses,std::memory_order_relaxed);
     { io_worker::FrameDeadlineScope crc_trace(WorkerDeadlineTrace::LCD_CRC);
-    const u32 crc=dma_support::crc32(previous_bytes(),color_frame_.pixel_bytes+color_frame_.tile_bytes,[] {io_worker::service();});
+    const u32 crc=dma_support::crc32(frame.pixels,frame.pixel_bytes+frame.tile_bytes,[] {io_worker::service();});
     frame_crc_.store(crc,std::memory_order_relaxed);
-    // Full TILE1 OSD updates leave completed guest strips available after
-    // pause. Pentagon wide strips use TILE1 with PRESERVE_OUTSIDE.
-    if(color_frame_.format!=MK61_COLOR_TILE1) {
+    // Full TILE1 OSD updates leave completed guest strips available after pause.
+    if(frame.format!=MK61_COLOR_TILE1) {
         color_history_.crc[color_history_.frames%ColorHistory::CAPACITY]=crc;
         ++color_history_.frames;
     }

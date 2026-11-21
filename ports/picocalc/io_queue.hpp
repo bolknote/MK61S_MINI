@@ -16,10 +16,18 @@ public:
         if(next==read_.load(std::memory_order_acquire)) return false;
         data_[at]=value;write_.store(next,std::memory_order_release);return true;
     }
-    bool pop(T& value) {
+    // The consumer owns the front entry until the callback returns.
+    template<class Apply> bool consume(Apply apply) {
         const unsigned at=read_.load(std::memory_order_relaxed);
         if(at==write_.load(std::memory_order_acquire)) return false;
-        value=data_[at];read_.store((at+1)%Capacity,std::memory_order_release);return true;
+        apply(static_cast<const T&>(data_[at]));
+        read_.store((at+1)%Capacity,std::memory_order_release);return true;
+    }
+    bool pop(T& value) {
+        return consume([&](const T& item) {value=item;});
+    }
+    bool full() const {
+        return (write_.load(std::memory_order_relaxed)+1)%Capacity==read_.load(std::memory_order_acquire);
     }
     bool empty() const { return read_.load(std::memory_order_acquire)==write_.load(std::memory_order_acquire); }
 };

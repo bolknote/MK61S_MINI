@@ -10,8 +10,10 @@
 #include <atomic>
 #include <cstring>
 #include <cstdio>
+#include <functional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 // Drawing is outside this test: supply already-rendered LCD rows while using
@@ -54,6 +56,9 @@ struct Controller {
     unsigned partial_first=0,partial_last=479;
     void* context=nullptr;
     void (*transfer)(void*)=nullptr;
+    void* next_context=nullptr;
+    void (*next_transfer)(void*)=nullptr;
+    std::function<void()> on_finish;
     unsigned word(const u8* data) { return ((unsigned)data[0]<<8)|data[1]; }
     void command(u8 op,const u8* data,unsigned count) {
         commands.push_back({op,count?std::vector<u8>(data,data+count):std::vector<u8>{}});
@@ -114,7 +119,8 @@ struct Controller {
     }
     void run() {
         require(pending && transfer,"queued actual Panel transfer");
-        traced_frame_transfer(transfer,context);pending=false;
+        traced_frame_transfer(transfer,context);
+        context=next_context;transfer=std::exchange(next_transfer,nullptr);pending=transfer!=nullptr;
     }
 } controller;
 constexpr unsigned DC=0,CS=1;
@@ -143,13 +149,17 @@ Scope::~Scope() { (void)point_;(void)start_;(void)generation_; }
 }
 namespace io_worker {
 bool frame_pending() { return controller.pending; }
+bool frame_slot_available() { return !controller.next_transfer; }
 bool frames_suspended() { return false; }
-bool submit_frame(void* context,void (*transfer)(void*)) {
-    require(!controller.pending,"single in-flight frame");
+bool submit_frame(void* context,void (*transfer)(void*),bool allow_queue=false) {
+    if(controller.pending) {
+        if(!allow_queue || !frame_slot_available()) return false;
+        controller.next_context=context;controller.next_transfer=transfer;return true;
+    }
     controller.context=context;controller.transfer=transfer;controller.pending=true;return true;
 }
 void service() {}
-void drain() { if(controller.pending) controller.run(); }
+void drain() { while(controller.pending) controller.run(); }
 }
 namespace dma_support {
 u32 crc32(const u8* bytes,unsigned size,void (*progress)()) {
@@ -160,14 +170,15 @@ u32 crc32(const u8* bytes,unsigned size,void (*progress)()) {
 }
 void Panel::start_scanline(const u16* pixels,unsigned count) { controller.pixels(pixels,count); }
 bool Panel::finish_scanline(bool) {
+    if(controller.on_finish) std::exchange(controller.on_finish,{})();
     if(controller.fail_completion) { controller.fail_completion=false;return false; }
     return true;
 }
-bool Panel::transfer_chain(const lcd::Rect& rect,u32&,bool color) {
+bool Panel::transfer_chain(const lcd::Rect& rect,u32&,const mk61_service_color_frame* frame) {
     stream_.reset(rect);
     for(unsigned i=0;i<stream_.count;++i) {
         const auto block=lcd::Stream::prepare(rect,i,scanlines,[&](unsigned row,u16* out) {
-            if(color) lcd::color_scanline(color_frame_,rect,row,out,color_palette_);
+            if(frame) lcd::color_scanline(*frame,rect,row,out,color_palette_);
             else lcd::shell_scanline(previous_bytes(),rect,row,previous_theme_,out);
         });
         controller.pixels(scanlines,block.count);
@@ -405,6 +416,62 @@ void color_session(bool chain) {
     mono.region={};require(panel.flush(mono),"mono restoration accepted");controller.run();
     require(controller.visible(mono),"complete mono snapshot restored after color");
     std::printf("Panel color session chain=%u: copy/busy, scrolling, palette/border, dirty retry, drain and mono restoration PASS\n",chain);
+}
+void color_queue_session(bool chain) {
+    controller=Controller{};Panel panel;Panel::ColorHistory history;
+    if(chain) {panel.dma_tx_=0;panel.dma_rx_=1;panel.dma_control_=2;}
+    mk61_service_color_scroll scroll{0,320,0,0};
+    std::array<u8,320*32/2> pixels{};
+    mk61_service_color_frame frame{};
+    frame.width=320;frame.height=32;frame.format=MK61_COLOR_INDEX4|MK61_COLOR_PRESERVE_OUTSIDE;
+    frame.pixels=pixels.data();frame.pixel_bytes=pixels.size();
+    const auto submit=[&](u16 y,u8 packed,u16 left,u16 right) {
+        frame.y=y;pixels.fill(packed);
+        frame.palette[packed>>4]=left;frame.palette[packed&15]=right;
+        return panel.color(MK61_COLOR_PRESENT,&frame);
+    };
+    const auto verify=[&](unsigned y,u16 left,u16 right) {
+        for(unsigned row=y;row<y+32;++row) for(unsigned x=0;x<320;++x)
+            require(controller.visible_row(row)[x]==(x&1?right:left),"queued strip owns its pixels and palette");
+    };
+    const auto crc=[&](u8 packed) {
+        u32 result=0;for(unsigned i=0;i<pixels.size();++i) result=result*33U+packed;return result;
+    };
+
+    require(panel.color(MK61_COLOR_SCROLL_BEGIN,&scroll)==3,"start fixed-origin strip transaction");
+    require(submit(8,0x12,0x1234,0x5678)==1,"start first strip");
+    controller.on_finish=[&] {
+        require(panel.color(MK61_COLOR_PRESENT,&frame)==2,"same view still uses ordinary dirty planning");
+        require(submit(40,0x34,0x2345,0x6789)==1,"submit next strip during current DMA");
+        require(submit(72,0x56,0x3456,0x789a)==2,"third strip rejected while both slots are owned");
+    };
+    controller.run();
+    require(controller.pending && panel.frames()==1,"first completion retains the queued job");
+    require(!panel.color_history(history) && panel.color(MK61_COLOR_SCROLL_END)==2,"history and commit wait for the queued job");
+    require(submit(72,0x56,0x3456,0x789a)==1,"reuse the released slot with the second still pending");
+    frame.palette[5]=0;pixels.fill(0);
+    require(panel.color(MK61_COLOR_END)==1 && !controller.pending,"END drains both strips before releasing the display");
+    verify(8,0x1234,0x5678);verify(40,0x2345,0x6789);verify(72,0x3456,0x789a);
+    require(panel.color_history(history) && history.frames==3 && history.crc[0]==crc(0x12) &&
+            history.crc[1]==crc(0x34) && history.crc[2]==crc(0x56) && panel.queued_strips()==2,
+            "FIFO completion and checksum include each slot's own data");
+
+    require(panel.color(MK61_COLOR_SCROLL_BEGIN,&scroll)==3,"start another transaction for failure recovery");
+    require(submit(104,0x12,0xaaaa,0xbbbb)==1 && submit(136,0x34,0xcccc,0xdddd)==1,"fill both slots before fault");
+    controller.fail_completion=true;controller.run();
+    const auto windows=controller.count(0x2b);
+    require(panel.color(MK61_COLOR_SCROLL_END)==2,"failed first DMA still leaves a job to retire");
+    controller.run();
+    require(panel.errors()==1 && panel.frames()==3 && controller.count(0x2b)==windows,
+            "waiting strip is dropped without pixel writes after a DMA error");
+    require(panel.color(MK61_COLOR_SCROLL_END)==0,"failed transaction requires a repaint");
+    require(panel.color(MK61_COLOR_PRESENT,&frame)==1 && controller.pending,"same view as the dropped strip repaints");
+    controller.run();verify(136,0xcccc,0xdddd);
+    require(submit(104,0x12,0xaaaa,0xbbbb)==1,"repaint the failed strip");
+    controller.run();verify(104,0xaaaa,0xbbbb);
+    require(panel.color(MK61_COLOR_SCROLL_END)==1,"repainted transaction commits");
+    controller.run();
+    std::printf("Panel fixed INDEX4 queue chain=%u: two owned slots, pixels, CRC, drain and failed-DMA retry PASS\n",chain);
 }
 void color_clock_session() {
     controller=Controller{};Panel panel;Screen mono;
@@ -700,6 +767,7 @@ int main() {
         try { shell_theme_session(chain); }
         catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel shell palette FAIL: %s\n",error.what()); }
         try { color_session(chain); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel color FAIL: %s\n",error.what()); }
+        try { color_queue_session(chain); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel queue FAIL: %s\n",error.what()); }
     }
     try { color_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel clock FAIL: %s\n",error.what()); }
     try { external_clock_session(); } catch(const std::exception& error) { ++failed;std::fprintf(stderr,"Panel power clock FAIL: %s\n",error.what()); }

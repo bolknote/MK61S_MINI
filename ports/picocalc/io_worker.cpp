@@ -34,7 +34,7 @@ struct I2cJob {
     std::atomic<unsigned> stage{IDLE};
     bool read=false;unsigned length=0;u8 bytes[2]{};int result=0;
 } i2c;
-std::atomic<bool> ready{false},frame{false};
+std::atomic<bool> ready{false};
 std::atomic<bool> display_suspended{false};
 std::atomic<u32> display_frames{0},display_refused{0};
 std::atomic<bool> uart_active{false};
@@ -138,8 +138,8 @@ std::atomic<u32> uart_sleep_holds{0};
 std::atomic<int> uart_dma_channel{-1};
 u8 uart_buffer[64]{};
 unsigned uart_inflight=0;
-void* frame_context=nullptr;
-void (*frame_transfer)(void*)=nullptr;
+struct FrameJob {void* context;void (*transfer)(void*);};
+IoQueue<FrameJob,3> frames;
 IoQueue<char,1024> uart_queue;
 #if LIB_PICO_STDIO_UART
 auto uart_clocks() {
@@ -247,10 +247,10 @@ void uart_flush() {
 // USB. Its implicit printf flush must not wait for a separate UART stream.
 // drain() still calls uart_flush directly at clock/sleep/reset boundaries.
 void uart_stdio_flush() { if(console::routing.uart_output_enabled()) uart_flush(); }
-bool queue_function(void* context,void (*function)(void*)) {
-    if(!ready.load(std::memory_order_acquire) || frame.load(std::memory_order_acquire)) return false;
-    frame_context=context;frame_transfer=function;
-    frame.store(true,std::memory_order_release);__sev();return true;
+bool queue_function(void* context,void (*function)(void*),bool allow_queue=false) {
+    if(!ready.load(std::memory_order_acquire) || (!allow_queue && !frames.empty())) return false;
+    if(!frames.push({context,function})) return false;
+    __sev();return true;
 }
 void timed_wait(unsigned us) {
     if(get_core_num()!=1 || i2c_alarm<0) {
@@ -276,11 +276,10 @@ void worker() {
     ready.store(true,std::memory_order_release);__sev();
     for(;;) {
         service();
-        if(frame.load(std::memory_order_acquire)) {
+        if(frames.consume([](const FrameJob& job) {
             DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::FRAME,DeadlineClock{});
-            frame_transfer(frame_context);
-            frame.store(false,std::memory_order_release);__sev();
-        }
+            job.transfer(job.context);
+        })) __sev();
         if(compute.queued()) {
             DeadlineScope trace(deadline_trace,WorkerDeadlineTrace::COMPUTE,DeadlineClock{});
             const u64 started=time_us_64();
@@ -293,7 +292,7 @@ void worker() {
             __sev();
             service();
         }
-        if(!frame.load(std::memory_order_acquire) &&
+        if(frames.empty() &&
            !compute.queued() &&
            (uart_queue.empty() || uart_active.load(std::memory_order_acquire)) &&
            i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
@@ -304,7 +303,7 @@ void worker() {
                 timed_wait(1000);
             else __wfe();
             idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
-        } else if(!frame.load(std::memory_order_acquire) && !compute.queued() &&
+        } else if(frames.empty() && !compute.queued() &&
                   uart_dma_channel.load(std::memory_order_relaxed)<0 &&
                   i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
             // If DMA allocation failed, the UART FIFO still drains in
@@ -347,11 +346,12 @@ int blocking_i2c(bool read,u8* bytes,unsigned length) {
     while(!take_i2c(result,read?bytes:nullptr)) __wfe();
     return result;
 }
-bool frame_pending() { return frame.load(std::memory_order_acquire); }
+bool frame_pending() { return !frames.empty(); }
+bool frame_slot_available() { return ready.load(std::memory_order_acquire) && !frames_suspended() && !frames.full(); }
 bool input_ready() { return i2c.stage.load(std::memory_order_acquire)==DONE; }
-bool submit_frame(void* context,void (*transfer)(void*)) {
+bool submit_frame(void* context,void (*transfer)(void*),bool allow_queue) {
     if(frames_suspended()) { display_refused.fetch_add(1,std::memory_order_relaxed);return false; }
-    if(!queue_function(context,transfer)) return false;
+    if(!queue_function(context,transfer,allow_queue)) return false;
     display_frames.fetch_add(1,std::memory_order_relaxed);return true;
 }
 void suspend_frames(bool suspended) {

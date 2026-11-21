@@ -302,9 +302,10 @@ void report(unsigned math_failures) {
     std::printf("LCD_BKL=%d KBD_BKL=%d\n", keyboard.lcd_backlight(), keyboard.key_backlight());
     std::printf("LCD=ST7365P RGB565 SPI_HZ=%lu FRAMES=%lu\n",
                 (unsigned long)panel.spi_hz(), (unsigned long)panel.frames());
-    std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu LCD_CHAIN=%u LCD_STRIPS=%lu LCD_CHAIN_PAUSES=%lu\n",
+    std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu LCD_CHAIN=%u LCD_STRIPS=%lu LCD_CHAIN_PAUSES=%lu LCD_QUEUED=%lu\n",
         panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
-        (unsigned long)panel.last_us(),(unsigned long)panel.full_frames(),panel.chained_dma(),(unsigned long)panel.strips(),(unsigned long)panel.chain_pauses());
+        (unsigned long)panel.last_us(),(unsigned long)panel.full_frames(),panel.chained_dma(),(unsigned long)panel.strips(),
+        (unsigned long)panel.chain_pauses(),(unsigned long)panel.queued_strips());
     std::printf("LCD_EXTERNAL=%u LCD_CLOCK_FALLBACKS=%lu UI_PARTIAL=%lu LCD_RESPONSE_COUNT=%lu LCD_RESPONSE_US=%lu LCD_RESPONSE_MAX_US=%lu\n",
         panel.external_power(),(unsigned long)panel.clock_fallbacks(),(unsigned long)screen.partial_renders(),
         (unsigned long)panel.responses(),(unsigned long)panel.response_us(),(unsigned long)panel.response_max_us());

@@ -93,11 +93,13 @@ public:
     bool chained_dma() const { return dma() && dma_control_>=0; }
     u32 strips() const { return last_strips_.load(std::memory_order_relaxed); }
     u32 chain_pauses() const { return last_pauses_.load(std::memory_order_relaxed); }
+    u32 queued_strips() const { return queued_strips_; }
     u32 scrolls() const { return scrolls_.load(std::memory_order_relaxed); }
     u32 scrolled_rows() const { return scrolled_rows_.load(std::memory_order_relaxed); }
     unsigned scroll_offset() const { return scroll_.offset; }
 private:
     static constexpr unsigned GRAM_ROWS=480;
+    static constexpr unsigned COLOR_SLOT_BYTES=Screen::WIDTH*32/2;
     alignas(4) u16 previous_[Screen::BYTES/sizeof(u16)] = {};
     u8* previous_bytes() { return reinterpret_cast<u8*>(previous_); }
     lcd::ShellTheme previous_theme_{};
@@ -119,7 +121,9 @@ private:
     u8 pages_write_=0,pages_transfer_=0,pages_snapshot_=0,pages_written_=0,pages_origin_=0,pages_first_=0;
     u16 pages_top_=0,pages_height_=0;
     u32 pages_scan_changed_at_=0;
-    mk61_service_color_frame color_frame_{};
+    mk61_service_color_frame color_frames_[2]{};
+    u8 color_slot_=0;
+    u32 queued_strips_=0;
     lcd::Index4Pairs index4_pairs_;
     u16 color_palette_[64]{};
     bool palette_dirty_=false;
@@ -146,16 +150,20 @@ private:
     void end_color_pages();
     void completed_input(u64 now);
     lcd::Stream stream_;
-    bool transfer_chain(const lcd::Rect& rect,u32& pauses,bool color=false);
+    bool transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_color_frame* frame=nullptr);
     bool transfer_fill(u16 color,unsigned width,unsigned height);
     void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline(bool service_io=false);
     void transfer();
-    void transfer_color();
+    bool queue_color(const mk61_service_color_frame& frame);
+    void transfer_queued_color(unsigned slot);
+    void transfer_color(const mk61_service_color_frame& frame);
     void transfer_color_scroll();
-    bool transfer_color_rect(const lcd::Rect& rect,bool background,u32& strips,u32& pauses,u32& windows);
-    bool transfer_color_window(const lcd::Rect& rect,unsigned physical_y,bool background,u32& strips,u32& pauses);
+    bool transfer_color_rect(const mk61_service_color_frame& frame,const lcd::Rect& rect,bool background,
+                             u32& strips,u32& pauses,u32& windows);
+    bool transfer_color_window(const mk61_service_color_frame& frame,const lcd::Rect& rect,unsigned physical_y,
+                               bool background,u32& strips,u32& pauses);
 };
 
 } // namespace picocalc

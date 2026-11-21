@@ -250,6 +250,16 @@ void picocalc_io_test() {
     assert(small.pop(value) && value==1 && small.push(4));
     for(uint32_t i=2;i<=4;++i) assert(small.pop(value) && value==i);
     assert(small.empty() && !small.pop(value));
+    // Publishing a successor during the callback must not release the head
+    // or lose the successor when the consumer finishes it.
+    picocalc::IoQueue<uint32_t,3> frames;
+    assert(frames.push(1));
+    assert(frames.consume([&](const uint32_t& head) {
+        assert(head==1 && !frames.empty() && !frames.full());
+        assert(frames.push(2) && frames.full() && !frames.push(3) && head==1);
+    }));
+    assert(!frames.empty() && !frames.full() && frames.push(3));
+    assert(frames.pop(value) && value==2 && frames.pop(value) && value==3 && frames.empty());
     // Concurrent pressure wraps indices many times and checks every byte of
     // the ordered stream. Full queues must apply backpressure without loss.
     picocalc::IoQueue<uint32_t,127> queue;
