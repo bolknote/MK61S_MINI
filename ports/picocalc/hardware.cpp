@@ -596,10 +596,8 @@ bool Panel::prefill_queued_color(const mk61_service_color_frame& current,u16* pi
     // corresponds to the current strip and the next strip has the same palette.
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
     const lcd::Rect rect{next->x,next->y,next->width,next->height};
-    for(unsigned row=0;row<lcd::STRIP_ROWS;++row) {
+    for(unsigned row=0;row<lcd::STRIP_ROWS;++row)
         index4_pairs_.line(*next,rect,row,pixels+row*Screen::WIDTH);
-        io_worker::service();
-    }
     prefilled_frame_=next;prefilled_buffer_=buffer;
     return true;
 }
@@ -619,6 +617,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
     constexpr unsigned strip_pixels=sizeof(scanlines)/sizeof(*scanlines);
     const unsigned depth=indexed_pairs && stream_.count>2 &&
         size_t(frame->pixels-previous_bytes())+frame->pixel_bytes+frame->tile_bytes<=sizeof(previous_)-sizeof(scanlines)?3:2;
+    const bool keep_ahead=full_indexed_strip && depth==3;
     u16* const buffers[]={scanlines,chained_scanlines,previous_+Screen::BYTES/sizeof(u16)-strip_pixels};
     const bool whole_strip=full_indexed_strip && depth==3 && update_.count==1 && !color_clear_ &&
         rect.y==frame->y && rect.height==frame->height;
@@ -631,10 +630,8 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         const auto next=lcd::Stream::prepare(rect,index,buffers[slot],
             [&](unsigned row,u16* out) {
                 if(full_indexed_strip) {
-                    // One complete 320-pixel lookup row uses just 160 pairs.
-                    // Service the transport after the row and inside DMA waits.
                     index4_pairs_.line(*frame,rect,row,out);
-                    service();
+                    if(!keep_ahead) service();
                 } else if(indexed_pairs) index4_pairs_.line(*frame,rect,row,out,service);
                 else if(frame) {
                     lcd::color_scanline(*frame,rect,row,out,color_palette_,service);
@@ -650,14 +647,17 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         stream_.segments[index].count=next.count;__dmb();
         stream_.segments[index].source=next.source;__dmb();
     };
-    // Three buffers leave room to expand following rows while the first
-    // descriptor transmits. Start those full-width windows with one block.
-    const unsigned prefill=full_indexed_strip && depth==3?1:2;
-    unsigned prepared=stream_.count<prefill?stream_.count:prefill;
+    // Keep two blocks ready at kickoff. In a wide strip, publish each new
+    // block before servicing I/O. An M3 transport step can take longer than
+    // a block on the wire. Once all free buffers are filled, the normal
+    // DMA wait services audio and I2C while the prepared blocks transmit.
+    unsigned prepared=0;
     if(use_prefill) {
         stream_.segments[0]={lcd::STRIP_ROWS*rect.width,(uintptr_t)buffers[prefilled_buffer_]};
         slot=(prefilled_buffer_+1)%3;
-    } else for(unsigned i=0;i<prepared;++i) descriptor(i);
+        prepared=1;
+    }
+    while(prepared<2 && prepared<stream_.count) descriptor(prepared++);
     auto control=dma_channel_get_default_config((unsigned)dma_control_);
     channel_config_set_transfer_data_size(&control,DMA_SIZE_32);
     channel_config_set_read_increment(&control,true);
@@ -698,9 +698,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
             if(time_us_64()>=limit) { abort_dma();return false; }
             io_worker::wait_for_progress();
         }
-        // Convert future pixels while the chain shifts the prepared strips;
-        // I2C/UART likewise overlap the transfer. A late producer pauses safely.
-        service();
+        if(!keep_ahead) service();
     }
     bool can_prefill=whole_strip;
     while(dma_channel_is_busy((unsigned)dma_rx_) || dma_channel_is_busy((unsigned)dma_tx_) ||
