@@ -138,7 +138,7 @@ std::atomic<u32> uart_sleep_holds{0};
 std::atomic<int> uart_dma_channel{-1};
 u8 uart_buffer[64]{};
 unsigned uart_inflight=0;
-struct FrameJob {void* context;void (*transfer)(void*);};
+struct FrameJob {void* context;FrameTransfer transfer;};
 IoQueue<FrameJob,3> frames;
 IoQueue<char,1024> uart_queue;
 #if LIB_PICO_STDIO_UART
@@ -349,10 +349,14 @@ int blocking_i2c(bool read,u8* bytes,unsigned length) {
 bool frame_pending() { return !frames.empty(); }
 bool frame_slot_available() { return ready.load(std::memory_order_acquire) && !frames_suspended() && !frames.full(); }
 bool input_ready() { return i2c.stage.load(std::memory_order_acquire)==DONE; }
-bool submit_frame(void* context,void (*transfer)(void*),bool allow_queue) {
+bool submit_frame(void* context,FrameTransfer transfer,bool allow_queue) {
     if(frames_suspended()) { display_refused.fetch_add(1,std::memory_order_relaxed);return false; }
     if(!queue_function(context,transfer,allow_queue)) return false;
     display_frames.fetch_add(1,std::memory_order_relaxed);return true;
+}
+FrameTransfer following_frame(const void* context) {
+    const auto* job=frames.following();
+    return job && job->context==context?job->transfer:nullptr;
 }
 void suspend_frames(bool suspended) {
     if(suspended) drain();

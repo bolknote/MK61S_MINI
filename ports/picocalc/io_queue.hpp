@@ -26,6 +26,14 @@ public:
     bool pop(T& value) {
         return consume([&](const T& item) {value=item;});
     }
+    // Consumer only, during consume(). Neither entry can be overwritten
+    // while the front entry is still owned by the callback.
+    const T* following() const {
+        const unsigned at=read_.load(std::memory_order_relaxed);
+        const unsigned end=write_.load(std::memory_order_acquire);
+        const unsigned next=(at+1)%Capacity;
+        return at==end || next==end?nullptr:&data_[next];
+    }
     bool full() const {
         return (write_.load(std::memory_order_relaxed)+1)%Capacity==read_.load(std::memory_order_acquire);
     }

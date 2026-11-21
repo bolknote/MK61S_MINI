@@ -403,9 +403,7 @@ bool Panel::queue_color(const mk61_service_color_frame& frame) {
     // Each queued job owns its pixels and palette until core 1 releases it.
     const unsigned slot=color_slot_^1u;
     lcd::copy_color(color_frames_[slot],frame,previous_bytes()+slot*COLOR_SLOT_BYTES);
-    const auto slot0=[](void* context) {((Panel*)context)->transfer_queued_color(0);};
-    const auto slot1=[](void* context) {((Panel*)context)->transfer_queued_color(1);};
-    if(!io_worker::submit_frame(this,slot?+slot1:+slot0,true)) return false;
+    if(!io_worker::submit_frame(this,slot?transfer_color_slot<1>:transfer_color_slot<0>,true)) return false;
     color_slot_=slot;++queued_strips_;
     return true;
 }
@@ -587,6 +585,24 @@ void Panel::abort_dma() {
     dma_channel_abort((unsigned)dma_tx_);dma_channel_abort((unsigned)dma_rx_);
     dma_irq_ready_=false;
 }
+bool Panel::prefill_queued_color(const mk61_service_color_frame& current,u16* pixels,unsigned buffer) {
+    const auto job=io_worker::following_frame(this);
+    const mk61_service_color_frame* const next=job==transfer_color_slot<0>?&color_frames_[0]:
+        job==transfer_color_slot<1>?&color_frames_[1]:nullptr;
+    if(!next || next->width!=Screen::WIDTH || next->height<=2*lcd::STRIP_ROWS ||
+       next->y!=current.y+current.height || std::memcmp(next->palette,current.palette,sizeof(current.palette))) return false;
+
+    // Both snapshots remain owned by the queue. The palette lookup still
+    // corresponds to the current strip and the next strip has the same palette.
+    io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
+    const lcd::Rect rect{next->x,next->y,next->width,next->height};
+    for(unsigned row=0;row<lcd::STRIP_ROWS;++row) {
+        index4_pairs_.line(*next,rect,row,pixels+row*Screen::WIDTH);
+        io_worker::service();
+    }
+    prefilled_frame_=next;prefilled_buffer_=buffer;
+    return true;
+}
 bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_color_frame* frame) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
@@ -604,6 +620,10 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
     const unsigned depth=indexed_pairs && stream_.count>2 &&
         size_t(frame->pixels-previous_bytes())+frame->pixel_bytes+frame->tile_bytes<=sizeof(previous_)-sizeof(scanlines)?3:2;
     u16* const buffers[]={scanlines,chained_scanlines,previous_+Screen::BYTES/sizeof(u16)-strip_pixels};
+    const bool whole_strip=full_indexed_strip && depth==3 && update_.count==1 && !color_clear_ &&
+        rect.y==frame->y && rect.height==frame->height;
+    const bool use_prefill=whole_strip && prefilled_frame_==frame;
+    prefilled_frame_=nullptr;
     unsigned slot=0;
     const auto service=[] { io_worker::service(); };
     const auto descriptor=[&](unsigned index) {
@@ -634,7 +654,10 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
     // descriptor transmits. Start those full-width windows with one block.
     const unsigned prefill=full_indexed_strip && depth==3?1:2;
     unsigned prepared=stream_.count<prefill?stream_.count:prefill;
-    for(unsigned i=0;i<prepared;++i) descriptor(i);
+    if(use_prefill) {
+        stream_.segments[0]={lcd::STRIP_ROWS*rect.width,(uintptr_t)buffers[prefilled_buffer_]};
+        slot=(prefilled_buffer_+1)%3;
+    } else for(unsigned i=0;i<prepared;++i) descriptor(i);
     auto control=dma_channel_get_default_config((unsigned)dma_control_);
     channel_config_set_transfer_data_size(&control,DMA_SIZE_32);
     channel_config_set_read_increment(&control,true);
@@ -679,10 +702,18 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         // I2C/UART likewise overlap the transfer. A late producer pauses safely.
         service();
     }
+    bool can_prefill=whole_strip;
     while(dma_channel_is_busy((unsigned)dma_rx_) || dma_channel_is_busy((unsigned)dma_tx_) ||
           dma_channel_is_busy((unsigned)dma_control_) || loaded()!=stream_.count+1) {
         resume();
         if(time_us_64()>=limit) { abort_dma();return false; }
+        // The same ring rule as above applies to the next buffer: once DMA
+        // has moved on, it cannot reference this buffer again in this window.
+        if(can_prefill && loaded()+depth-2>=prepared && dma_channel_is_busy((unsigned)dma_tx_) &&
+           prefill_queued_color(*frame,buffers[slot],slot)) {
+            can_prefill=false;
+            continue;
+        }
         io_worker::wait_for_progress();
     }
     while(spi_is_busy(spi1)) tight_loop_contents();
@@ -906,7 +937,7 @@ bool Panel::transfer_color_window(const mk61_service_color_frame& frame,const lc
 void Panel::transfer_queued_color(unsigned slot) {
     // A failed write invalidates the transaction. Drop its waiting strip so
     // SCROLL_END can report failure and the caller can repaint in order.
-    if(failed_.load(std::memory_order_acquire)) return;
+    if(failed_.load(std::memory_order_acquire)) {prefilled_frame_=nullptr;return;}
     const auto& frame=color_frames_[slot];
     color_clear_=false;
     update_.rectangles[0]={frame.x,frame.y,frame.width,frame.height};
@@ -934,7 +965,7 @@ void Panel::transfer_color(const mk61_service_color_frame& frame) {
         }
     }
     for(unsigned i=0;i<update_.count && ok;++i) ok=transfer_color_rect(frame,update_.rectangles[i],false,strips,pauses,windows);
-    if(!ok) { errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
+    if(!ok) { prefilled_frame_=nullptr;errors_.fetch_add(1);failed_.store(true,std::memory_order_release);return; }
     io_worker::FrameDeadlineScope publish_trace(WorkerDeadlineTrace::LCD_PUBLISH);
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_bytes_.store(update_.bytes+border_bytes,std::memory_order_relaxed);

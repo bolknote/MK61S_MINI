@@ -153,6 +153,9 @@ private:
     void end_color_pages();
     void completed_input(u64 now);
     lcd::Stream stream_;
+    const mk61_service_color_frame* prefilled_frame_=nullptr;
+    unsigned prefilled_buffer_=0;
+    bool prefill_queued_color(const mk61_service_color_frame& current,u16* pixels,unsigned buffer);
     bool transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_color_frame* frame=nullptr);
     bool transfer_fill(u16 color,unsigned width,unsigned height);
     void abort_dma();
@@ -160,6 +163,9 @@ private:
     bool finish_scanline(bool service_io=false);
     void transfer();
     bool queue_color(const mk61_service_color_frame& frame);
+    template<unsigned Slot> static void transfer_color_slot(void* context) {
+        static_cast<Panel*>(context)->transfer_queued_color(Slot);
+    }
     void transfer_queued_color(unsigned slot);
     void transfer_color(const mk61_service_color_frame& frame);
     void transfer_color_scroll();
