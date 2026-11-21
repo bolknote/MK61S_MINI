@@ -630,7 +630,10 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         stream_.segments[index].count=next.count;__dmb();
         stream_.segments[index].source=next.source;__dmb();
     };
-    unsigned prepared=stream_.count<2?stream_.count:2;
+    // Three buffers leave room to expand following rows while the first
+    // descriptor transmits. Start those full-width windows with one block.
+    const unsigned prefill=full_indexed_strip && depth==3?1:2;
+    unsigned prepared=stream_.count<prefill?stream_.count:prefill;
     for(unsigned i=0;i<prepared;++i) descriptor(i);
     auto control=dma_channel_get_default_config((unsigned)dma_control_);
     channel_config_set_transfer_data_size(&control,DMA_SIZE_32);

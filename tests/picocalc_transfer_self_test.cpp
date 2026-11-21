@@ -214,14 +214,14 @@ int main(){sd_test();events();pixels();qpi_completion();qpi_read_commands();slee
  std::array<uint8_t,BYTES> frame{};
  for(unsigned i=0;i<BYTES;++i)frame[i]=(uint8_t)(i*73+i/11);
  for(unsigned width:{1U,7U,8U,24U,319U,320U})for(unsigned height:{1U,2U,3U,4U,5U,319U,320U})
-  for(unsigned depth:{2U,3U}) for(unsigned delay=1;delay<=7;++delay) {
+  for(unsigned depth:{2U,3U}) for(unsigned prefill:{1U,2U}) for(unsigned delay=1;delay<=7;++delay) {
    Rect rect{0,0,(uint16_t)width,(uint16_t)height};Stream stream;stream.reset(rect);
    std::array<std::array<uint16_t,STRIP_ROWS*WIDTH+2>,3> buffers;
    for(auto& buffer:buffers) buffer.fill(0xA77A);
    auto prepare=[&](unsigned i){
     stream.segments[i]=Stream::prepare(frame.data(),rect,i,buffers[i%depth].data()+1);
    };
-   unsigned prepared=stream.count<2?stream.count:2;
+   unsigned prepared=stream.count<prefill?stream.count:prefill;
    for(unsigned i=0;i<prepared;++i)prepare(i);
    unsigned loaded=0,transferred=0,tick=0;bool stopped=false;
    Segment active{};
