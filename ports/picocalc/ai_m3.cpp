@@ -40,6 +40,7 @@ struct Context {
   unsigned columns = 0, capacity = 0;
   uint32_t magic = AI_M3_MAGIC;
   bool owned = false, failed = false, running = false, start_pending = false;
+  bool draft = false, inline_input = false;
   bool start_result = false, async_result = false;
   uint8_t rx[512]{};
   volatile uint32_t rx_head = 0, rx_tail = 0, rx_errors = 0;
@@ -86,16 +87,17 @@ bool fail(Context &c, int error) {
   if (!c.stats.error) c.stats.error = error;
   c.failed = true; return false;
 }
-bool rpc(Context &c, uint8_t command, const void *data, unsigned n, unsigned expected) {
+bool rpc(Context &c, uint8_t command, const void *data, unsigned n, unsigned expected,
+         uint32_t timeout = 500000) {
   unsigned used = sizeof(c.reply);
   // The keyboard resident also services bounded foreground board I/O. Waiting
   // here is timed as transport; a pause must not become a lost remote job.
-  int result = stm3_client_request(&c.client, command, data, n, c.reply, &used, 500000);
+  int result = stm3_client_request(&c.client, command, data, n, c.reply, &used, timeout);
   // Identical cached request, including START: a lost reply must not repeat
   // module execution. A late partial frame may require one more replay.
   for(unsigned retries=0;result<0 && retries<2;++retries) {
     used=sizeof(c.reply);
-    result=stm3_client_replay(&c.client,c.reply,&used,500000);
+    result=stm3_client_replay(&c.client,c.reply,&used,timeout);
   }
   if (result || used != expected) return fail(c, result ? result : -10);
   return true;
@@ -162,7 +164,11 @@ bool load(Context &c, const char *path) {
       stm3_get32(h + 8) != STM3_IMAGE_CAPACITY || stm3_get32(h + 12) != STM3_IO_CAPACITY ||
       stm3_get32(h + 16) != 0 || stm3_get32(h + 28) != 2250000 ||
       (stm3_get32(h + 32) & 3U) != 3U) return fail(c, -14);
-  c.start_result=(stm3_get32(h+32)&S3_TRANSPORT_START_RESULT)!=0;
+  const auto flags = stm3_get32(h+32);
+  c.start_result = (flags & S3_TRANSPORT_START_RESULT) != 0;
+  const bool result_v2 = (flags & S3_TRANSPORT_RESULT_V2) != 0;
+  c.inline_input = result_v2 && (flags & S3_TRANSPORT_START_RESULT_INPUT);
+  if (c.draft && !(c.start_result && result_v2)) return fail(c, -14);
   stm3_put32(c.packet, entry.size);
   c.owned = true; // EMPTY + exclusive UART claim, including lost LOAD_BEGIN ACK.
   if (!rpc(c, S3_LOAD_BEGIN, c.packet, 4, 0)) return false;
@@ -208,8 +214,8 @@ void drain(Context &c) {
   c.running = false; c.batch = nullptr;
 }
 }
-bool open(const char *path) {
-  if (context) return !context->failed;
+static bool open_module(const char *path, bool draft) {
+  if (context) return !context->failed && context->draft == draft;
   last = {};
   if (m3_audio::transport_active()) { last.error = -16; return false; }
   if (irq_is_enabled(UART1_IRQ) || irq_get_exclusive_handler(UART1_IRQ)) {
@@ -217,6 +223,7 @@ bool open(const char *path) {
   }
   auto *c = new(std::nothrow) Context;
   if (!c) { last.error = -17; return false; }
+  c->draft = draft;
   const auto started = time_us_32();
   c->stats.context_bytes = sizeof(Context);
   bool ready = false;
@@ -242,6 +249,8 @@ bool open(const char *path) {
   c->stats.setup_us = time_us_32() - started; c->stats.active = true;
   return true;
 }
+bool open(const char *path) { return open_module(path, false); }
+bool open_draft(const char *path) { return open_module(path, true); }
 void close() {
   auto *c = context; if (!c) return;
   drain(*c); snapshot(*c); last.active = false;
@@ -257,9 +266,48 @@ void close() {
   });
   context = nullptr; delete c;
 }
+void close_draft() {
+  if (context && context->draft) close();
+}
+bool predict(const std::uint16_t *tail, unsigned count, unsigned generated,
+             std::uint16_t &token, std::uint8_t &confidence) {
+  auto *c = context;
+  if (!c || !c->draft || c->failed || !tail || !count || count > draft_history_limit)
+    return false;
+  constexpr unsigned args_bytes = 16, result_bytes = 8;
+  std::uint8_t packet[args_bytes + S3_START_RESULT_INPUT_LIMIT];
+  auto *input = packet + args_bytes;
+  input[0] = 'K'; input[1] = 'D';
+  input[2] = std::uint8_t(count);
+  input[3] = std::uint8_t(std::min(count, generated));
+  for (unsigned i = 0; i < count; ++i) {
+    input[4 + 2 * i] = std::uint8_t(tail[i]);
+    input[5 + 2 * i] = std::uint8_t(tail[i] >> 8);
+  }
+  const unsigned bytes = 4 + 2 * count;
+  if (!c->inline_input) {
+    stm3_put32(input - 4, 0);
+    if (!rpc(*c, S3_WRITE, input - 4, 4 + bytes, 0, 20000)) return false;
+  }
+  stm3_put32(packet, c->module);
+  stm3_put32(packet + 4, bytes);
+  stm3_put32(packet + 8, 25);
+  stm3_put32(packet + 12, result_bytes);
+  c->start_pending = true;
+  const auto opcode = c->inline_input ? S3_START_RESULT_INPUT : S3_START_RESULT;
+  if (!rpc(*c, opcode, packet, args_bytes + (c->inline_input ? bytes : 0), 8 + result_bytes, 50000))
+    return false;
+  c->start_pending = false;
+  c->job = stm3_get32(c->reply);
+  if (!c->job || c->reply[8] != 'K' || c->reply[9] != 'D') return fail(*c, -11);
+  token = std::uint16_t(c->reply[10] | std::uint16_t(c->reply[11]) << 8);
+  confidence = c->reply[12];
+  ++c->stats.jobs;
+  return true;
+}
 unsigned prepare(const mk61ai::LinearBatch *b) {
   auto *c = context;
-  if (!c || c->failed || c->running || !b || b->bits != 4 || !b->columns ||
+  if (!c || c->draft || c->failed || c->running || !b || b->bits != 4 || !b->columns ||
       b->columns % 32 || b->columns > AI_M3_MAX_COLUMNS) return 0;
   const bool integer = b->arithmetic == mk61ai::Arithmetic::INT8 && b->grid == 0;
   const bool fp32 = b->arithmetic == mk61ai::Arithmetic::LUT_FLOAT32 && b->grid == 256;

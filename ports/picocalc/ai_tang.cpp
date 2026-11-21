@@ -1,6 +1,7 @@
 #include "ai_tang.hpp"
 
 #if defined(PICO_ON_DEVICE)
+#include "ai_m3.hpp"
 #include "ai_tang.pio.h"
 #include "crc32.hpp"
 #include "hardware/clocks.h"
@@ -10,6 +11,7 @@
 #include "hardware/structs/iobank0.h"
 #include "hardware/structs/pads_bank0.h"
 #include "pico/time.h"
+#include "io_worker.hpp"
 #include "storage.hpp"
 #include <algorithm>
 #include <new>
@@ -22,14 +24,18 @@ using namespace mk61ai;
 namespace {
 constexpr unsigned GPIO = 28, CONTEXT = 1024, MAX_LANES = 6, MAX_ALLOWED = 24;
 constexpr std::uint32_t ALLOWED_ADDRESS = 0x7fffc0, MAX_IMAGE_BYTES = 0x220000;
+constexpr std::uint32_t SECOND_ALLOWED = 0x7ff000;
+constexpr std::uint32_t DRAFT_FEATURE = 1u << 8;
 constexpr std::uint32_t PACKAGE_MAGIC = 0x314b544d; // "MTK1" in little endian
 constexpr std::uint32_t PREFIX_ADDRESS = 0x7fe000, PREFIX_MAGIC = 0x31504b54;
 constexpr unsigned KV_BYTES_PER_POSITION = 512, MAX_LAYERS = 10;
 constexpr unsigned PREFIX_HEADER_BYTES = 16 + 4 * MAX_LAYERS;
 static_assert(MAX_IMAGE_BYTES + MAX_LAYERS * CONTEXT * KV_BYTES_PER_POSITION < PREFIX_ADDRESS);
-static_assert(PREFIX_ADDRESS + PREFIX_HEADER_BYTES + CONTEXT * 2 < ALLOWED_ADDRESS);
+static_assert(PREFIX_ADDRESS + PREFIX_HEADER_BYTES + CONTEXT * 2 < SECOND_ALLOWED);
 constexpr char image_path[] = "/AI/MODEL.TNG";
-enum Command : std::uint8_t { PUT = 1, GET = 2, CRC = 3, FORWARD = 6, PREFILL = 8, SEEK = 9, FEATURES = 10 };
+enum Command : std::uint8_t {
+  PUT = 1, GET = 2, CRC = 3, FORWARD = 6, PREFILL = 8, SEEK = 9, FEATURES = 10, VERIFY = 11
+};
 
 std::uint32_t word(const std::uint8_t *p) {
   return std::uint32_t(p[0]) | std::uint32_t(p[1]) << 8 |
@@ -83,8 +89,9 @@ public:
     tx_ = rx_ = dma_ = tx_offset_ = rx_offset_ = -1;
   }
 
+  template<unsigned Capacity>
   bool call(Command command, unsigned address, const std::uint8_t *data, unsigned bytes,
-            unsigned words, std::uint32_t (&result)[3], unsigned timeout, Pump &pump) {
+            unsigned words, std::uint32_t (&result)[Capacity], unsigned timeout, Pump &pump) {
     std::uint8_t header[10]{0xa5, 0x5a, command, ++sequence_,
                             std::uint8_t(bytes), std::uint8_t(bytes >> 8)};
     write_word(header + 6, address);
@@ -123,7 +130,7 @@ public:
         reply[1] != 0xa5 || reply[2] != (command | 0x80) || reply[3] != sequence_ ||
         reply[5] || word(reply + 6) || reply[10] ||
         word(reply + needed - 4) != mk61_crc32::calculate(reply + 2, needed - 6)) return false;
-    for (unsigned i = 0; i < 3; ++i) result[i] = word(reply + 11 + i * 4);
+    for (unsigned i = 0; i < std::min(Capacity, words); ++i) result[i] = word(reply + 11 + i * 4);
     return true;
   }
 
@@ -190,11 +197,17 @@ private:
 
 struct Backend::State {
   explicit State(Model &model) : local(model) {}
+  ~State() { if (draft_open) ai_m3::close_draft(); }
   Model &local;
   Wire wire;
   std::uint16_t history[CONTEXT];
   std::uint32_t image_crc = 0;
   unsigned position = 0, remote_position = 0, lanes = 0;
+  bool can_verify = false, draft_open = false, draft_unavailable = false;
+  std::uint32_t single_us = 0, pair_us = 0;
+  static constexpr unsigned spec_tokens = sizeof(SpecProtocol::OUTPUT_TOKENS) / sizeof(std::uint16_t);
+  char pieces[spec_tokens][16]{};
+  bool pieces_ready = false;
 
   bool seek(unsigned n) {
     if (n > position) return false;
@@ -220,6 +233,9 @@ struct Backend::State {
         result[0] != PACKAGE_MAGIC || result[1] < 1 || result[1] > MAX_LANES ||
         result[2] != MAX_ALLOWED) return ModelStatus::IO;
     lanes = result[1];
+    if (wire.call(FEATURES, 1, nullptr, 0, 3, result, 25000, pump))
+      can_verify = result[0] == PACKAGE_MAGIC && result[1] == lanes &&
+                   result[2] == (DRAFT_FEATURE | MAX_ALLOWED) && lanes >= 2;
     auto verify = [&]() {
       std::uint8_t length[4]; write_word(length, size);
       return wire.call(CRC, 0, length, 4, 3, result, 4000000, pump) && result[0] == image_crc;
@@ -241,6 +257,136 @@ struct Backend::State {
       return ModelStatus::IO;
     remote_position = result[0];
     return pump.cancelled ? ModelStatus::CANCELLED : ModelStatus::OK;
+  }
+
+  struct Mask {
+    std::uint16_t token[MAX_ALLOWED]{};
+    unsigned count = 0;
+    bool contains(std::uint16_t id) const {
+      return std::binary_search(token, token + count, id);
+    }
+  };
+  void fill_mask(const SpecProtocol &spec, Mask &mask) const {
+    for (unsigned i = 0; i < spec_tokens; ++i) {
+      const auto id = SpecProtocol::OUTPUT_TOKENS[i];
+      if (mask.count < MAX_ALLOWED && spec.allows(id, pieces[i])) mask.token[mask.count++] = id;
+    }
+  }
+  bool send_mask(unsigned address, const Mask &mask, Pump &pump) {
+    const auto bytes = (mask.count + 1) / 2 * 4;
+    std::uint8_t data[MAX_ALLOWED * 2]{};
+    for (unsigned i = 0; i < mask.count; ++i) {
+      data[2 * i] = std::uint8_t(mask.token[i]);
+      data[2 * i + 1] = std::uint8_t(mask.token[i] >> 8);
+    }
+    std::uint32_t reply[3];
+    return wire.call(PUT, address, data, bytes, 3, reply, 25000, pump) && reply[0] == bytes;
+  }
+  void release_draft() {
+    if (draft_open) ai_m3::close_draft();
+    draft_open = draft_unavailable = false;
+  }
+  ModelStatus verify(const SpecProtocol &spec, std::uint16_t token, unsigned generated,
+                     VerifiedTokens &out, Pump &pump) {
+    if (!can_verify || !wire.ready() || draft_unavailable || !single_us ||
+        position > CONTEXT - 2 || !spec.action() || spec.ended())
+      return ModelStatus::OK;
+    if (!pump.poll()) return ModelStatus::CANCELLED;
+    if (!pieces_ready) {
+      for (unsigned i = 0; i < spec_tokens; ++i) {
+        unsigned bytes;
+        if (local.decode(SpecProtocol::OUTPUT_TOKENS[i], pieces[i], sizeof(pieces[i]), bytes) != ModelStatus::OK) {
+          draft_unavailable = true;
+          return ModelStatus::OK;
+        }
+      }
+      pieces_ready = true;
+    }
+    if (!draft_open) {
+      draft_open = ai_m3::open_draft();
+      if (!draft_open) {
+        draft_unavailable = true;
+        return ModelStatus::OK;
+      }
+    }
+
+    const auto draft_started = time_us_32();
+    Mask first, second;
+    struct Prepare { const State &backend; const SpecProtocol &spec; Mask &mask; } job{*this, spec, first};
+    const auto prepare = [](void *raw) {
+      auto &job = *static_cast<Prepare *>(raw);
+      job.backend.fill_mask(job.spec, job.mask);
+    };
+    const bool queued = io_worker::submit_compute(&job, prepare);
+    const unsigned from = position + 1 > ai_m3::draft_history_limit ?
+                              position + 1 - ai_m3::draft_history_limit : 0;
+    history[position] = token;
+    std::uint16_t guess{};
+    std::uint8_t confidence{};
+    const bool predicted = ai_m3::predict(history + from, position + 1 - from, generated, guess, confidence);
+    if (queued) io_worker::join_compute();
+    else prepare(&job);
+    if (!pump.poll()) return ModelStatus::CANCELLED;
+    if (!predicted) {
+      release_draft();
+      draft_unavailable = true;
+      return ModelStatus::OK;
+    }
+    if (!confidence || guess == SpecProtocol::END || !first.contains(guess))
+      return ModelStatus::OK;
+    const auto *which = std::lower_bound(SpecProtocol::OUTPUT_TOKENS,
+                                       SpecProtocol::OUTPUT_TOKENS + spec_tokens, guess);
+    SpecProtocol hypothetical = spec;
+    if (!hypothetical.accept(guess, pieces[which - SpecProtocol::OUTPUT_TOKENS]))
+      return ModelStatus::OK;
+    fill_mask(hypothetical, second);
+    if (!second.count) return ModelStatus::OK;
+
+    std::uint32_t reply[5];
+    const auto failed = [&] {
+      wire.close();
+      release_draft();
+      return pump.cancelled ? ModelStatus::CANCELLED : ModelStatus::OK;
+    };
+    if (remote_position != position) {
+      if (!wire.call(SEEK, position, nullptr, 0, 3, reply, 25000, pump) || reply[0] != position)
+        return failed();
+      remote_position = position;
+    }
+    if (!send_mask(ALLOWED_ADDRESS, first, pump) || !send_mask(SECOND_ALLOWED, second, pump))
+      return failed();
+    if (pump.cancelled) return ModelStatus::CANCELLED;
+    std::uint8_t data[12];
+    write_word(data, token | (std::uint32_t(guess) << 16));
+    write_word(data + 4, confidence);
+    const auto single = std::clamp<std::uint32_t>(single_us / 8, 1, 65535);
+    const auto prepare_us = time_us_32() - draft_started;
+    const auto estimate_us = pair_us ? pair_us : single_us * 3 / 2;
+    const auto pair = std::clamp<std::uint32_t>((estimate_us + prepare_us) / 8, 1, 65535);
+    write_word(data + 8, single | (pair << 16));
+    const auto before = time_us_32();
+    if (!wire.call(VERIFY, first.count | second.count << 5, data, sizeof(data), 5, reply, 2000000, pump))
+      return failed();
+    const auto elapsed = time_us_32() - before;
+    const auto advanced = (reply[0] >> 16) - position;
+    const auto scheduled = reply[4] >> 16;
+    const auto predicted_first = std::uint16_t(reply[4]);
+    const auto predicted_last = std::uint16_t(reply[0]);
+    if (scheduled > 1 || !first.contains(predicted_first) ||
+        (advanced == 1 ? predicted_last != predicted_first || reply[1] != reply[3] ||
+                             (scheduled && predicted_first == guess)
+                       : advanced != 2 || !scheduled || predicted_first != guess || !second.contains(predicted_last)))
+      return failed();
+    remote_position = position + advanced;
+    if (pump.cancelled) return ModelStatus::CANCELLED;
+    if (advanced == 2) pair_us = pair_us ? (pair_us * 3 + elapsed) / 4 : elapsed;
+    if (!scheduled) single_us = (single_us * 3 + elapsed) / 4;
+    const std::uint16_t tokens[2]{token, guess};
+    publish(tokens, advanced);
+    out.token[0] = predicted_first;
+    out.token[1] = predicted_last;
+    out.count = advanced;
+    return ModelStatus::OK;
   }
 
   ModelStatus prefix(const std::uint16_t *tokens, unsigned count, bool save, Pump &pump) {
@@ -369,23 +515,22 @@ struct Backend::State {
       }
       if (!wire.call(PREFILL, 0, ids, count * 2, count + 2, result, 10000000, pump)) return false;
     } else {
-      unsigned mask_count = 0;
+      Mask mask;
       if (output && allowed) {
-        std::uint8_t ids[MAX_ALLOWED * 2]{};
         for (const auto id : SpecProtocol::OUTPUT_TOKENS) if (allowed(policy, id)) {
-          if (mask_count == MAX_ALLOWED) return false;
-          ids[mask_count * 2] = std::uint8_t(id);
-          ids[mask_count * 2 + 1] = std::uint8_t(id >> 8);
-          ++mask_count;
+          if (mask.count == MAX_ALLOWED) return false;
+          mask.token[mask.count++] = id;
         }
-        if (!mask_count) return false;
-        const unsigned bytes = (mask_count + 1) / 2 * 4;
-        if (!wire.call(PUT, ALLOWED_ADDRESS, ids, bytes, 3, result, 25000, pump) || result[0] != bytes)
-          return false;
+        if (!mask.count || !send_mask(ALLOWED_ADDRESS, mask, pump)) return false;
         if (pump.cancelled) return true;
       }
-      const auto address = tokens[0] | (unsigned(output) << 16) | (mask_count << 17);
+      const auto address = tokens[0] | (unsigned(output) << 16) | (mask.count << 17);
+      const auto before = time_us_32();
       if (!wire.call(FORWARD, address, nullptr, 0, 3, result, 2000000, pump)) return false;
+      if (output) {
+        const auto elapsed = time_us_32() - before;
+        single_us = single_us ? (single_us * 3 + elapsed) / 4 : elapsed;
+      }
     }
     if (result[0] >> 16 != position + count) return false;
     best = std::uint16_t(result[0]);
@@ -401,6 +546,11 @@ struct Backend::State {};
 Backend::Backend(Model &local) : local_(local) {}
 Backend::~Backend() = default;
 void Backend::close() { state_.reset(); }
+void Backend::release_draft() {
+#if defined(PICO_ON_DEVICE)
+  if (state_) state_->release_draft();
+#endif
+}
 ModelStatus Backend::prefix(const std::uint16_t *tokens, unsigned count, bool save,
                             bool (*service)(void *), void *context) {
 #if defined(PICO_ON_DEVICE)
@@ -457,6 +607,13 @@ Inference Backend::inference() {
     std::uint16_t unused;
     return static_cast<State *>(p)->step(ids, n, false, unused, service, raw, mode, nullptr, nullptr);
   };
+  if (s->can_verify) {
+    result.verify_spec = [](void *p, const SpecProtocol &spec, std::uint16_t token, unsigned generated,
+                             VerifiedTokens &out, bool (*service)(void *), void *context) {
+      Pump pump{service, context};
+      return static_cast<State *>(p)->verify(spec, token, generated, out, pump);
+    };
+  }
   return result;
 #else
   return local_inference(local_);

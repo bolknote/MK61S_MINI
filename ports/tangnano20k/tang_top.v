@@ -67,6 +67,9 @@ module tang_top #(
     wire [PREFILL_LANES*32-1:0] model_checksums;
     wire [20:0] model_addr;
     wire [7:0] model_status;
+    wire model_verify_pair;
+    wire [4:0] model_allowed_second;
+    wire [15:0] model_first_prediction;
     wire [PREFILL_LANES*16-1:0] model_tokens;
     wire [2:0] model_count;
     wire [4:0] model_allowed;
@@ -90,17 +93,18 @@ module tang_top #(
         .dot_ready(diagnostic_ready), .dot_result(diagnostic_result),
         .model_start(model_start), .model_reset(model_reset),
         .model_tokens(model_tokens), .model_count(model_count), .model_output(model_output),
-        .model_allowed(model_allowed), .model_seek(model_seek),
+        .model_allowed(model_allowed), .model_allowed_second(model_allowed_second),
+        .model_verify_pair(model_verify_pair), .model_first_prediction(model_first_prediction), .model_seek(model_seek),
         .model_done(model_done), .model_status(model_status), .model_result(model_result),
         .model_checksum(model_checksum), .model_checksums(model_checksums), .model_cycles(model_cycles)
     );
 `ifdef TANG_MODEL
     tang_model #(.PREFILL_LANES(PREFILL_LANES)) model (
         .clk(clk), .resetn(resetn), .start(model_start), .rewind(model_reset),
-        .tokens(model_tokens), .token_count(model_count), .output_logits(model_output), .busy(model_busy), .done(model_done),
-        .allowed_count(model_allowed), .seek_position(model_seek),
+        .tokens(model_tokens), .token_count(model_count), .output_logits(model_output), .verify_pair(model_verify_pair), .busy(model_busy), .done(model_done),
+        .allowed_count(model_allowed), .allowed_second(model_allowed_second), .seek_position(model_seek),
         .status(model_status), .outcome(model_result), .checksum(model_checksum), .cycles(model_cycles),
-        .position_checksums(model_checksums),
+        .position_checksums(model_checksums), .first_prediction(model_first_prediction),
         .memory_request(model_req), .memory_write(model_wr), .memory_burst(model_burst),
         .memory_address(model_addr), .memory_data(model_data),
         .memory_complete(complete && model_busy), .memory_result(data_out),
@@ -113,6 +117,7 @@ module tang_top #(
     assign model_busy = 0;
     assign model_done = 1;
     assign model_status = 3;
+    assign model_first_prediction = 0;
     assign model_result = 0;
     assign model_checksum = 0;
     assign model_checksums = 0;

@@ -6,8 +6,8 @@ module tang_model #(
     input wire clk, resetn, start, rewind,
     input wire [PREFILL_LANES*16-1:0] tokens,
     input wire [2:0] token_count,
-    input wire output_logits,
-    input wire [4:0] allowed_count,
+    input wire output_logits, verify_pair,
+    input wire [4:0] allowed_count, allowed_second,
     input wire [10:0] seek_position,
     output wire busy,
     output reg done,
@@ -15,6 +15,7 @@ module tang_model #(
     output wire [31:0] outcome,
     output wire [31:0] checksum,
     output wire [PREFILL_LANES*32-1:0] position_checksums,
+    output reg [15:0] first_prediction,
     output reg [31:0] cycles,
     output wire memory_request, memory_write,
     output wire memory_burst,
@@ -55,7 +56,7 @@ module tang_model #(
         CHECK_TOKEN_RANGE=113, ALLOWED_READ=114, ALLOWED_TOKEN=115,
         ALLOWED_OFFSET=116, ALLOWED_ROW=117,
         ATT_TILE_BEGIN=120, ATT_TILE_READ=121, ATT_TILE_COPY=122, ATT_TILE_START=123, ATT_TILE_WAIT=124,
-        ATT_OUT_READ=125, ATT_OUT_WRITE=126, ATT_OUT_NEXT=127;
+        ATT_OUT_READ=125, ATT_OUT_WRITE=126, ATT_OUT_NEXT=127, VERIFY_RESULT=128;
     localparam [2:0] FADD=0, FSUB=1, FMUL=2, FDIV=3, FSQRT=4, I2F=5, FEXP=6;
     localparam [31:0] ONE=32'h3f800000, NEG_MAX=32'hff7fffff;
     // Last 64 bytes of SDRAM, beyond all supported model and KV allocations.
@@ -63,7 +64,7 @@ module tang_model #(
     localparam LANE_BITS = PREFILL_LANES <= 2 ? 1 : $clog2(PREFILL_LANES);
     localparam VECTOR_ADDR_BITS = $clog2(PREFILL_LANES*1536);
 
-    localparam STATE_COUNT = ATT_OUT_NEXT + 1;
+    localparam STATE_COUNT = VERIFY_RESULT + 1;
     // Decode the continuation when a sub-operation starts. A returning SDRAM
     // word or FP result can then select its next state without a binary decoder.
     reg [STATE_COUNT-1:0] state, continuation;
@@ -87,7 +88,9 @@ module tang_model #(
     reg [11:0] final_element, final_quant_offset;
     reg [6:0] final_group;
     reg last_element, last_group, last_quant_group, last_row, last_row_group;
-    reg want_logits;
+    reg want_logits, check_draft, second_head;
+    reg [4:0] second_allowed;
+    wire [LANE_BITS-1:0] head_lane = check_draft ? LANE_BITS'(second_head) : last_lane;
     reg [4:0] allowed_rows, allowed_index;
     reg masked_head;
     reg [20:0] row_offset;
@@ -180,7 +183,7 @@ module tang_model #(
     end endgenerate
     tang_matrix_scale #(.LANES(PREFILL_LANES)) scale (
         .clk(clk), .resetn(resetn), .start(state[MATRIX_SCALE_START]),
-        .first_lane(lane), .last_lane(last_lane), .integer_sums(packed_integer_sums), .weight_scale(ext_word),
+        .first_lane(lane), .last_lane(opcode == 9 ? head_lane : last_lane), .integer_sums(packed_integer_sums), .weight_scale(ext_word),
         .activation_lane(scale_activation_lane), .previous_lane(scale_previous_lane),
         .activation_scale(act_scale[{scale_activation_lane,group_number[3:0]}]),
         .previous_sum(group_number == 0 ? 32'b0 : matrix_accumulator[scale_previous_lane]),
@@ -334,6 +337,10 @@ module tang_model #(
                     else if (start) begin
                         input_tokens <= tokens; batch_count <= token_count; want_logits <= output_logits;
                         allowed_rows <= allowed_count;
+                        second_allowed <= allowed_second;
+                        check_draft <= verify_pair;
+                        second_head <= 0;
+                        first_prediction <= 0;
                         last_lane <= token_count-1'b1; lane <= 0;
                         field <= 0; cycles <= 0; best_token <= 0;
                         for (k=0; k<PREFILL_LANES; k=k+1) lane_checksums[k] <= 2166136261;
@@ -411,7 +418,8 @@ module tang_model #(
                     accumulator <= 0; cursor <= address; max_value <= 0;
                     position <= lane_position;
                     if (descriptor[0][8] && !want_logits) state <= state_bit(ADVANCE_INSTRUCTION);
-                    else if (descriptor[0][8] && lane != last_lane) lane <= last_lane;
+                    else if (descriptor[0][8] && !check_draft && lane != last_lane) lane <= last_lane;
+                    else if (opcode == 9 && lane != head_lane) lane <= head_lane;
                     else case (opcode)
                         1: begin embedding_offset <= embedding_offsets[lane]; state <= state_bit(EMBED_ADDRESS); end
                         2: state <= state_bit(NORM_READ);
@@ -495,18 +503,18 @@ module tang_model #(
                     else if (!last_quant_group) begin
                         group_offset <= group_offset+12'd32; group_number <= group_number+1'b1;
                         i <= 0; max_value <= 0; state <= state_bit(QUANT_MAX_READ);
-                    end else if (lane != last_lane) begin
+                    end else if (opcode != 9 && lane != last_lane) begin
                         lane <= lane+1'b1; i <= 0; group_number <= 0; group_offset <= 0;
                         max_value <= 0; state <= state_bit(QUANT_MAX_READ);
                     end else begin
-                        lane <= opcode == 9 ? last_lane : 0;
+                        lane <= opcode == 9 ? head_lane : 0;
                         group_number <= 0;
                         max_value <= NEG_MAX;
                         allowed_index <= 0;
                         state <= masked_head ? state_bit(ALLOWED_READ) : state_bit(MATRIX_WORD);
                     end
                 end
-                state[ALLOWED_READ]: read_ext(ALLOWED_ADDRESS+{17'b0,allowed_index[4:1]},ALLOWED_TOKEN);
+                state[ALLOWED_READ]: read_ext((second_head ? 21'h1ffc00 : ALLOWED_ADDRESS)+{17'b0,allowed_index[4:1]},ALLOWED_TOKEN);
                 state[ALLOWED_TOKEN]: begin
                     if (allowed_token >= configuration[1][15:0]) finish(5);
                     else begin row <= allowed_token; state <= state_bit(ALLOWED_OFFSET); end
@@ -546,18 +554,36 @@ module tang_model #(
                     end
                 end
                 state[MATRIX_NEXT_LANE]: begin
-                    if (lane == last_lane) begin
-                        lane <= opcode == 9 ? last_lane : 0;
+                    if (opcode == 9 || lane == last_lane) begin
+                        lane <= opcode == 9 ? head_lane : 0;
                         cursor <= cursor+21'd5;
                         if (last_group) state <= state_bit(MATRIX_NEXT_ROW);
                         else begin group_number <= group_number+1'b1; state <= state_bit(MATRIX_WORD); end
                     end else begin lane <= lane+1'b1; state <= state_bit(MATRIX_ADVANCE); end
                 end
-                state[MATRIX_NEXT_ROW]: if (masked_head) begin
-                        if (allowed_index+5'd1 == allowed_rows) state <= state_bit(ADVANCE_INSTRUCTION);
-                        else begin allowed_index <= allowed_index+1'b1; state <= state_bit(ALLOWED_READ); end
-                    end else if (last_row) state <= state_bit(ADVANCE_INSTRUCTION);
-                    else begin row <= row+1'b1; group_number <= 0; state <= state_bit(MATRIX_WORD); end
+                state[MATRIX_NEXT_ROW]: if (masked_head ? allowed_index+5'd1 == allowed_rows : last_row)
+                        state <= state_bit(check_draft && !second_head && opcode == 9 ?
+                                           VERIFY_RESULT : ADVANCE_INSTRUCTION);
+                    else if (masked_head) begin
+                        allowed_index <= allowed_index+1'b1;
+                        state <= state_bit(ALLOWED_READ);
+                    end else begin row <= row+1'b1; group_number <= 0; state <= state_bit(MATRIX_WORD); end
+
+                state[VERIFY_RESULT]: begin
+                    first_prediction <= best_token;
+                    if (best_token == input_tokens[31:16]) begin
+                        second_head <= 1;
+                        allowed_rows <= second_allowed;
+                        best_token <= 0;
+                        lane <= 1;
+                        state <= state_bit(EXECUTE);
+                    end else begin
+                        // KV rows past the committed cursor are unreachable.
+                        last_lane <= 0;
+                        batch_count <= 1;
+                        state <= state_bit(ADVANCE_INSTRUCTION);
+                    end
+                end
 
                 state[ROPE_READ]: read_pair(source+group_offset+i,source+group_offset+i+12'd16,ROPE_SAVE);
                 state[ROPE_SAVE]: begin

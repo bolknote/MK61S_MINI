@@ -310,6 +310,7 @@ struct UI {
     leave_fast_clock();message(M8("Не удалось включить270 МГц."));return false;
   }
   void leave_fast_clock() {
+    tang.release_draft();
     if(!fast_clock.changed) return;
     profile_stage("clock-restore");
     if(!ai_clock::restore(fast_clock)) message(M8("Ошибка возврата частоты."));

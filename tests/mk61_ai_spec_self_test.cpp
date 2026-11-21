@@ -235,8 +235,9 @@ int main(int argc,char **argv) {
       cold_session.id=1;
       assert(set_task(cold_session,task.c_str(),false));
       struct Batched : Observed {
-        unsigned headers = 0;
-      } batched{{&model,{}}};
+        Arithmetic arithmetic;
+        unsigned headers = 0, proposals = 0, pairs = 0;
+      } batched{{&model,{}}, arithmetic};
       auto inference = batched.inference();
       inference.batch_capacity = [](void *) { return 3U; };
       inference.batch_step = [](void *p, const std::uint16_t *tokens, unsigned count,
@@ -256,6 +257,42 @@ int main(int argc,char **argv) {
           ++self.headers;
         return ModelStatus::OK;
       };
+      inference.verify_spec = [](void *p, const SpecProtocol &spec, std::uint16_t input, unsigned,
+                                 VerifiedTokens &verified, bool (*service)(void *), void *context) {
+        auto &self = *static_cast<Batched *>(static_cast<Observed *>(p));
+        if (!spec.action() || self.proposals++ % 3 == 0) return ModelStatus::OK;
+        auto &model = *self.model;
+        const auto start = model.position();
+        SpecProtocol next = spec;
+        struct Policy { Model &model; const SpecProtocol &spec; } policy{model, next};
+        auto allowed = [](void *raw, std::uint16_t token) {
+          auto &policy = *static_cast<Policy *>(raw);
+          char piece[32];
+          unsigned size;
+          return SpecProtocol::output_token(token) &&
+              policy.model.decode(token, piece, sizeof(piece), size) == ModelStatus::OK &&
+              policy.spec.allows(token, piece);
+        };
+        while (verified.count < 2 && !next.ended()) {
+          std::uint16_t token;
+          const auto status = model.forward(input, true, token, service, context,
+                                            self.arithmetic, nullptr, allowed, &policy);
+          if (status != ModelStatus::OK) {
+            model.rewind(start);
+            verified.count = 0;
+            return status;
+          }
+          char piece[32];
+          unsigned size;
+          assert(model.decode(token, piece, sizeof(piece), size) == ModelStatus::OK);
+          assert(next.accept(token, piece));
+          verified.token[verified.count++] = token;
+          input = token;
+        }
+        self.pairs += verified.count == 2;
+        self.tokens.insert(self.tokens.end(), verified.token, verified.token + verified.count);
+        return ModelStatus::OK;
+      };
       Agent restarted(cold_session,cold_disk.store(),inference);
       restarted.spec_protocol(true);
       restarted.default_angle(angle);
@@ -266,7 +303,8 @@ int main(int argc,char **argv) {
       assert(!restarted.active());
       assert(snapshot.restored==1 && snapshot.saved==1);
       assert(restarted.reused_prefix()==count && restarted.metrics().prefill_tokens==493-count);
-      assert(batched.headers == 1 && batched.tokens==expected && model.position()==golden_position);
+      assert(batched.headers == 1 && batched.pairs && batched.tokens==expected &&
+             model.position()==golden_position);
       assert(restarted.metrics().output_token_hash==agent.metrics().output_token_hash);
       const auto stride = model.cache_bytes()/model.config().layers;
       const auto live = golden_position * (stride/model.config().context);

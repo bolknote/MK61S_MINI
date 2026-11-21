@@ -773,6 +773,33 @@ AI_DIRECT_CODE bool Agent::tick_prefix(bool (*service)(void *), void *context) {
     request_pause();
   return true;
 }
+void Agent::accept_spec_token() {
+  char piece[32]; unsigned n = 0;
+  if (generated_ >= generation_limit_ ||
+      model_.decode(next_,piece,sizeof(piece),n) != ModelStatus::OK ||
+      !spec_.accept(next_,piece)) {
+    fail("Модель не завершила корректную спецификацию программы."); return;
+  }
+  metrics_.output_token_hash = (metrics_.output_token_hash ^ next_) * 16777619U;
+  if (spec_.ended()) {
+    Program compiled;
+    if (!append_event(store_,s_,"MODEL_SPEC",s_.reply) || !spec_.compile(compiled)) {
+      fail("Спецификация модели не помещается в программу МК-61."); return;
+    }
+    unsigned used=unsigned(std::snprintf(s_.reply,sizeof(s_.reply),"<write>"));
+    for(unsigned i=0;i<compiled.size;++i)
+      used+=unsigned(std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"%s%02X",i?" ":"",compiled.bytes[i]));
+    std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"</write><run/>");
+    process_reply(); return;
+  }
+  ++generated_; ++metrics_.output_tokens;
+  if (next_ == SpecProtocol::WRITE && generated_ == 1) {
+    header_at_=0; phase_=Phase::HEADER; return;
+  }
+  const unsigned used=unsigned(std::strlen(s_.reply));
+  if(n>=sizeof(s_.reply)-used){fail("Слишком длинная спецификация модели.");return;}
+  std::memcpy(s_.reply+used,piece,n+1); phase_=Phase::ADVANCE; return;
+}
 void Agent::tick(bool (*service)(void *), void *context) {
   if (!active())
     return;
@@ -910,6 +937,26 @@ void Agent::tick(bool (*service)(void *), void *context) {
     return;
   }
   if (phase_ == Phase::ADVANCE) {
+    if (spec_enabled_ && model_.verify_spec && generated_ + 1 < generation_limit_) {
+      VerifiedTokens verified;
+      const auto before = micros_ ? micros_(clock_context_) : 0;
+      const auto status = model_.verify_spec(model_.context, spec_, next_, generated_,
+                                             verified, callback, &pump);
+      const auto elapsed = micros_ ? micros_(clock_context_) - before : 0;
+      if (!finish_forward(status, elapsed, verified.count)) return;
+      if (verified.count) {
+        next_ = verified.token[0];
+        phase_ = Phase::DECODE;
+        if (verified.count == 2) {
+          accept_spec_token();
+          if (phase_ == Phase::ADVANCE) {
+            next_ = verified.token[1];
+            phase_ = Phase::DECODE;
+          }
+        }
+        return;
+      }
+    }
     if (forwarded(next_, true))
       phase_ = Phase::DECODE;
     return;
@@ -935,31 +982,8 @@ void Agent::tick(bool (*service)(void *), void *context) {
   }
   if (phase_ == Phase::DECODE) {
     if (spec_enabled_) {
-      char piece[32]; unsigned n = 0;
-      if (generated_ >= generation_limit_ ||
-          model_.decode(next_,piece,sizeof(piece),n) != ModelStatus::OK ||
-          !spec_.accept(next_,piece)) {
-        fail("Модель не завершила корректную спецификацию программы."); return;
-      }
-      metrics_.output_token_hash = (metrics_.output_token_hash ^ next_) * 16777619U;
-      if (spec_.ended()) {
-        Program compiled;
-        if (!append_event(store_,s_,"MODEL_SPEC",s_.reply) || !spec_.compile(compiled)) {
-          fail("Спецификация модели не помещается в программу МК-61."); return;
-        }
-        unsigned used=unsigned(std::snprintf(s_.reply,sizeof(s_.reply),"<write>"));
-        for(unsigned i=0;i<compiled.size;++i)
-          used+=unsigned(std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"%s%02X",i?" ":"",compiled.bytes[i]));
-        std::snprintf(s_.reply+used,sizeof(s_.reply)-used,"</write><run/>");
-        process_reply(); return;
-      }
-      ++generated_; ++metrics_.output_tokens;
-      if (next_ == SpecProtocol::WRITE && generated_ == 1) {
-        header_at_=0; phase_=Phase::HEADER; return;
-      }
-      const unsigned used=unsigned(std::strlen(s_.reply));
-      if(n>=sizeof(s_.reply)-used){fail("Слишком длинная спецификация модели.");return;}
-      std::memcpy(s_.reply+used,piece,n+1); phase_=Phase::ADVANCE; return;
+      accept_spec_token();
+      return;
     }
     if (next_ == model_.config().eos) {
       if (grammar_.complete())

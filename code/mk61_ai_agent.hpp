@@ -12,6 +12,10 @@ struct Executor {
                 bool (*)(void *), void *, Trace *, unsigned *) = nullptr;
 };
 Executor local_executor();
+struct VerifiedTokens {
+  std::uint16_t token[2]{};
+  unsigned count = 0;
+};
 // Local inference is the default. The interface also permits deterministic
 // protocol tests and a later on-device coprocessor without changing the FSM.
 struct Inference {
@@ -35,6 +39,10 @@ struct Inference {
   unsigned (*batch_capacity)(void *) = nullptr;
   ModelStatus (*batch_step)(void *, const std::uint16_t *, unsigned, Arithmetic,
                             bool (*)(void *), void *) = nullptr;
+  // The optional SPEC backend commits only the inputs it verified. Zero
+  // tokens with OK leaves the cursor unchanged and requests a scalar step.
+  ModelStatus (*verify_spec)(void *, const SpecProtocol &, std::uint16_t, unsigned,
+                             VerifiedTokens &, bool (*)(void *), void *) = nullptr;
   const ModelConfig &config() const { return configuration(context); }
   unsigned position() const { return cursor(context); }
   void reset() { seek(context, 0); }
@@ -177,6 +185,7 @@ private:
   void record_repair(const Example &example, const Result &result);
   bool begin_turn();
   bool tick_prefix(bool (*service)(void *), void *context);
+  void accept_spec_token();
   void process_reply();
   void finish_tests();
   void fail(const char *message);

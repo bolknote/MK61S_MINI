@@ -5,6 +5,7 @@ import argparse
 from decimal import Decimal, localcontext
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 HERE = Path(__file__).resolve().parent
@@ -22,7 +23,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
             print("\n".join((output / log).read_text().splitlines()[-35:]))
             completed.check_returncode()
 
-    rtl = [HERE / file for file in ("uart.v", "link.v", "sdram.v", "q4_dot.v", "tang_top.v")]
+    rtl = [HERE / file for file in ("uart.v", "link.v", "schedule.v", "sdram.v", "q4_dot.v", "tang_top.v")]
     if dsp_clock:
         rtl += [HERE / "dot_cdc.v"]
     flags = ""
@@ -42,6 +43,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
             context.prec = 90
             table = [round(Decimal(2) ** (Decimal(i) / 64) * (1 << 55)) for i in range(64)]
         (output / "exp2.hex").write_text("".join(f"{word:015x}\n" for word in table))
+    shutil.copyfile(HERE / "schedule.hex", output / "schedule.hex")
     sources = " ".join(f'"{part}"' for part in rtl)
     divider = sdram_divider or (2 if half_sdram_clock else 1)
     run("yosys", ["-Q", "-T", "-p", f'read_verilog -sv {flags} {sources}; chparam -set CLOCK_HZ {clock*1000000} '
@@ -52,7 +54,7 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
         "GW2AR-LV18QN88C8/I7", "--vopt", "family=GW2A-18C", "--vopt", f"cst={HERE / 'tang.cst'}",
         "--freq", str(clock), "--report", "timing.json"]
     if seed is None and prefill_lanes == 6:
-        seed = 3 if clock == 102 and divider == 3 else 2
+        seed = 3 if clock == 90 or (clock == 102 and divider == 3) else 2
     if seed is not None:
         routing += ["--seed", str(seed)]
     if dsp_clock:

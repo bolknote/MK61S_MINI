@@ -23,11 +23,12 @@ module tang_link_control #(
     output reg model_start, model_reset,
     output wire [PREFILL_LANES*16-1:0] model_tokens,
     output wire [2:0] model_count,
-    output wire model_output,
-    output wire [4:0] model_allowed,
+    output wire model_output, model_verify_pair,
+    output wire [4:0] model_allowed, model_allowed_second,
     output wire [10:0] model_seek,
     input wire model_done,
     input wire [7:0] model_status,
+    input wire [15:0] model_first_prediction,
     input wire [31:0] model_result, model_checksum, model_cycles,
     input wire [PREFILL_LANES*32-1:0] model_checksums
 );
@@ -35,9 +36,9 @@ module tang_link_control #(
         COMMAND = 5, LOAD_WORD = 6, WRITE_WORD = 7, READ_WORD = 8, CHECK_RANGE = 9,
         START_DOT = 10, WAIT_DOT = 11, TURN = 12, SEND = 13, START_MODEL = 14,
         WAIT_MODEL = 15, RESET_MODEL = 16, CHECK_RANGE_HIGH = 17, CHECK_RANGE_DONE = 18,
-        DISPATCH = 19, PREPARE_REPLY = 20, PREPARE_BYTE = 21, WAIT_SEEK = 22;
+        DISPATCH = 19, PREPARE_REPLY = 20, PREPARE_BYTE = 21, WAIT_SEEK = 22, SCHEDULE_START = 23, SCHEDULE_WAIT = 24;
     localparam [7:0] OK = 0, BAD_CRC = 1, BAD_RANGE = 2, BAD_COMMAND = 3;
-    localparam [7:0] FORWARD = 6, RESET = 7, PREFILL = 8, SEEK_CONTEXT = 9, FEATURES = 10;
+    localparam [7:0] FORWARD = 6, RESET = 7, PREFILL = 8, SEEK_CONTEXT = 9, FEATURES = 10, VERIFY = 11;
     reg [4:0] state;
     reg selected_pico;
     reg [3:0] header_index;
@@ -59,6 +60,8 @@ module tang_link_control #(
     reg byte_in_crc, last_reply_byte;
     reg [31:0] result0, result1, result2;
     reg [23:0] write_end, range_end;
+    reg draft_shape, selected_pair;
+    wire schedule_done, schedule_pair;
     reg write_shape, read_shape, range_shape, dot_shape, empty_payload, forward_shape, prefill_shape, seek_shape;
     localparam NO_BYTE_LIMIT = CLOCK_HZ / 10;
     reg [23:0] no_byte_ticks;
@@ -85,15 +88,22 @@ module tang_link_control #(
     assign dot_activations = {payload_first[2], payload_first[1]};
     assign memory_request = state == WRITE_WORD || state == READ_WORD || state == CHECK_RANGE;
     assign memory_write = state == WRITE_WORD;
-    assign model_tokens = command_code == PREFILL ? {payload_first[2],payload_first[1],payload_first[0]} :
+    wire draft_command = command_code == VERIFY;
+    tang_schedule scheduler (.clk(clk), .resetn(resetn), .start(state == SCHEDULE_START),
+        .single_cost(payload_first[2][15:0]), .pair_cost(payload_first[2][31:16]),
+        .confidence(payload_first[1][7:0]), .done(schedule_done), .pair(schedule_pair));
+    assign model_verify_pair = selected_pair && draft_command;
+    assign model_tokens = (command_code == PREFILL || draft_command) ? {payload_first[2],payload_first[1],payload_first[0]} :
                                                    {{(PREFILL_LANES*16-16){1'b0}},address[15:0]};
-    assign model_count = command_code == PREFILL ? length[3:1] : 3'd1;
-    assign model_output = command_code == PREFILL ? address[0] : address[16];
-    assign model_allowed = command_code == FORWARD ? address[21:17] : 5'd0;
+    assign model_count = command_code == PREFILL ? length[3:1] : model_verify_pair ? 3'd2 : 3'd1;
+    assign model_output = draft_command || (command_code == PREFILL ? address[0] : address[16]);
+    assign model_allowed = draft_command ? address[4:0] : command_code == FORWARD ? address[21:17] : 5'd0;
+    assign model_allowed_second = draft_command ? address[9:5] : 5'd0;
+    wire [31:0] draft_metadata = {15'b0,selected_pair,model_verify_pair ? model_first_prediction : result0[15:0]};
     assign model_seek = command_code == SEEK_CONTEXT ? address[10:0] : 11'd0;
     wire [31:0] crc_out = ~transmit_crc;
     wire [5:0] reply_size = command_code == PREFILL && status == OK ?
-                            6'd9 + {1'b0,model_count,2'b0} : 6'd13;
+                            6'd9 + {1'b0,model_count,2'b0} : draft_command && status == OK ? 6'd21 : 6'd13;
     wire [5:0] crc_offset = outgoing_index - crc_index;
     wire [5:0] batch_offset = outgoing_index - 6'd23;
 
@@ -135,6 +145,7 @@ module tang_link_control #(
             19,20,21,22: reply_byte = result2[8*(outgoing_index-19) +: 8];
             default: begin
                 if (outgoing_index >= crc_index) reply_byte = crc_out[8*crc_offset[1:0] +: 8];
+                else if (draft_command && outgoing_index >= 27) reply_byte = draft_metadata[8*batch_offset[1:0] +: 8];
                 else if (outgoing_index >= 23) reply_byte = model_checksums[8*batch_offset[4:0] +: 8];
                 else reply_byte = 0;
             end
@@ -212,6 +223,10 @@ module tang_link_control #(
                     prefill_shape <= length >= 2 && length <= PREFILL_LANES*2 &&
                                      !length[0] && address[31:1] == 0;
                     seek_shape <= !length && address <= 1024;
+                    draft_shape <= length == 12 && address[31:10] == 0 && address[4:0] <= 24 &&
+                                   address[9:5] <= 24 && payload_first[1][31:8] == 0 &&
+                                   payload_first[2][15:0] != 0 && payload_first[2][31:16] != 0;
+                    selected_pair <= 0;
                     state <= DISPATCH;
                 end
                 DISPATCH: begin
@@ -229,6 +244,8 @@ module tang_link_control #(
                         FORWARD: if (forward_shape) state <= START_MODEL; else respond(BAD_RANGE);
                         RESET: if (empty_payload) state <= RESET_MODEL; else respond(BAD_RANGE);
                         PREFILL: if (prefill_shape) state <= START_MODEL; else respond(BAD_RANGE);
+                        VERIFY: if (draft_shape && MODEL_ENABLED && PREFILL_LANES >= 2)
+                            state <= SCHEDULE_START; else respond(BAD_RANGE);
                         SEEK_CONTEXT: if (seek_shape) state <= RESET_MODEL; else respond(BAD_RANGE);
                         FEATURES: if (empty_payload && MODEL_ENABLED) respond(OK); else respond(BAD_COMMAND);
                         default: respond(BAD_COMMAND);
@@ -261,6 +278,8 @@ module tang_link_control #(
                 CHECK_RANGE_DONE: respond(OK);
                 START_DOT: state <= WAIT_DOT;
                 WAIT_DOT: if (dot_ready) respond(OK);
+                SCHEDULE_START: state <= SCHEDULE_WAIT;
+                SCHEDULE_WAIT: if (schedule_done) begin selected_pair <= schedule_pair; state <= START_MODEL; end
                 START_MODEL: begin model_start <= 1; state <= WAIT_MODEL; end
                 WAIT_MODEL: if (model_done) respond(model_status);
                 RESET_MODEL: begin model_reset <= 1; state <= WAIT_SEEK; end
@@ -275,9 +294,9 @@ module tang_link_control #(
                         3: result0 <= ~memory_crc;
                         4: result0 <= {{17{dot_result[14]}},dot_result};
                         5: begin result0 <= BUILD_ID; result1 <= CLOCK_HZ; result2 <= 8388608; end
-                        FEATURES: begin result0 <= 32'h314b544d; result1 <= PREFILL_LANES; result2 <= 24; end
+                        FEATURES: begin result0 <= 32'h314b544d; result1 <= PREFILL_LANES; result2 <= address == 1 && PREFILL_LANES >= 2 ? 32'h118 : 24; end
                         SEEK_CONTEXT: result0 <= {16'b0,model_result[31:16]};
-                        FORWARD, PREFILL: begin
+                        FORWARD, PREFILL, VERIFY: begin
                             result0 <= model_result; result1 <= model_checksum; result2 <= model_cycles;
                         end
                     endcase

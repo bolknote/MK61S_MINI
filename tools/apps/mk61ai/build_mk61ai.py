@@ -50,6 +50,8 @@ def main():
     shutil.copy2(build / "benchmark/AIBENCH.APP", app_dir / "AIBENCH.APP")
     m3 = build_m3_linear(build / "m3-linear", toolchain)
     shutil.copy2(m3["package"], model_dir / "M3LINE.S3M")
+    m3_draft = build_m3_linear(build / "m3-draft", toolchain, draft=True)
+    shutil.copy2(m3_draft["package"], model_dir / "M3DRAFT.S3M")
     export(args.weights.resolve(), args.hf.resolve() / "tokenizer.json", model_dir / "MODEL.MKA", "lut")
     prompt_path = model_dir / "PROMPT.TXT"
     if args.prompt:
@@ -86,6 +88,7 @@ def main():
         "benchmark": json.loads((build / "benchmark/AIBENCH.json").read_text()),
         "arithmetic": "LUT FP32", "kv": "FP32 in PSRAM",
         "optional_m3": m3,
+        "optional_m3_draft": m3_draft,
         "hardware_verified": False,
         "files": {},
     }

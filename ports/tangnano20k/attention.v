@@ -39,7 +39,7 @@ module tang_attention (
     localparam IDLE=0, KEY_WAIT=1, KEY_DOT=2, KEY_DRAIN=3, SCORE_SCALE=4, SCORE_DRAIN=5,
                SOFT_READ=6, SOFT_SUB=7, SOFT_EXP=8, SOFT_ADD=9, SOFT_ADVANCE=10,
                PROB_READ=11, PROB_DIVIDE=12, PROB_STORE=13, SCALAR_WAIT=14,
-               VALUE_WAIT=15, VALUE_PROB_READ=16, VALUE_PROB_SAVE=17, VALUE_DOT=18, VALUE_DRAIN=19;
+               VALUE_WAIT=15, VALUE_PROB_READ=16, VALUE_PROB_SAVE=17, VALUE_DOT=18, VALUE_DRAIN=19, PASS_START=20;
     localparam FADD=0, FSUB=1, FDIV=3, FEXP=6;
     localparam [31:0] INV_SQRT_32=32'h3e3504f3, NEG_MAX=32'hff7fffff;
 
@@ -57,8 +57,9 @@ module tang_attention (
     reg [31:0] probabilities [0:3];
     reg [31:0] denominator;
     wire [1:0] final_stream = pair ? 2'd3 : 2'd1;
-    wire [9:0] last_position = first_position + {9'b0,pair};
-    wire [9:0] stream_end = first_position + {9'b0,stream[1]};
+    reg [9:0] second_position;
+    wire [9:0] last_position = pair ? second_position : first_position;
+    wire [9:0] stream_end = stream[1] ? second_position : first_position;
     wire [9:0] tile_position = tile_start | {7'b0,key};
     wire final_tile = tile_start[9:3] == last_position[9:3];
     wire position_valid = tile_position <= stream_end;
@@ -264,7 +265,11 @@ module tang_attention (
                 end
             end
             case (state)
-            IDLE: if (start) begin_pass(0);
+            IDLE: if (start) begin
+                second_position <= first_position + 10'd1;
+                state <= PASS_START;
+            end
+            PASS_START: begin_pass(0);
             KEY_WAIT, VALUE_WAIT: if (tile_ready) begin
                 key <= 0;
                 coordinate <= 0;
