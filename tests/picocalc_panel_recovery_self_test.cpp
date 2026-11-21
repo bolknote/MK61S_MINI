@@ -51,6 +51,8 @@ struct Controller {
     std::vector<Command> commands;
     lcd::Region region{0,lcd::HEIGHT};
     unsigned origin=0,x0=0,x1=319,y0=0,y1=319,cursor=0;
+    unsigned spi_mode=0,mode3_windows=0;
+    bool cs_high=true;
     bool pending=false,fail_completion=false,inverted=false,gram_480=false,partial=false,display_on=true;
     bool ignore_scroll_while_blank=false;
     unsigned partial_first=0,partial_last=479;
@@ -61,6 +63,7 @@ struct Controller {
     std::function<void()> on_finish;
     unsigned word(const u8* data) { return ((unsigned)data[0]<<8)|data[1]; }
     void command(u8 op,const u8* data,unsigned count) {
+        require(spi_mode==0,"LCD commands use SPI mode 0");
         commands.push_back({op,count?std::vector<u8>(data,data+count):std::vector<u8>{}});
         if(op==0x33) {
             require(count==6,"VSCRDEF length");
@@ -74,6 +77,8 @@ struct Controller {
             require(count==4,"CASET length");x0=word(data);x1=word(data+2);
         } else if(op==0x2B) {
             require(count==4,"PASET length");y0=word(data);y1=word(data+2);
+        } else if(op==0x2C) {
+            require(count==0,"RAMWR length");cursor=0;
         } else if(op==0x30) {
             require(count==4,"PTLAR length");partial_first=word(data);partial_last=word(data+2);
             require(partial_first<=partial_last && partial_last<480,"partial area bounds");
@@ -86,6 +91,7 @@ struct Controller {
         } else require(false,"unexpected controller command");
     }
     void pixels(const u16* source,unsigned count) {
+        if(!cursor && spi_mode==3) ++mode3_windows;
         const unsigned width=x1-x0+1;
         require(x0<=x1 && x1<lcd::WIDTH && y0<=y1 && y1<480,"bounded LCD window");
         require(cursor+count<=width*(y1-y0+1),"bounded pixel payload");
@@ -124,7 +130,7 @@ struct Controller {
     }
 } controller;
 constexpr unsigned DC=0,CS=1;
-constexpr int SPI_CPOL_0=0,SPI_CPHA_0=0,SPI_MSB_FIRST=0;
+constexpr int SPI_CPOL_0=0,SPI_CPHA_0=0,SPI_CPOL_1=1,SPI_CPHA_1=1,SPI_MSB_FIRST=0;
 int spi1=1;
 u32 hardware_spi_hz=12000000,clock_changes=0;
 u32 spi_set_baudrate(int,u32 requested) {
@@ -136,10 +142,15 @@ u16 scanlines[lcd::STRIP_ROWS*lcd::WIDTH]{};
 u64 clock_now=0;
 u64 time_us_64() { return ++clock_now; }
 void busy_wait_us(unsigned) {}
-void gpio_put(unsigned,bool) {}
-void spi_set_format(int,unsigned,int,int,int) {}
+void gpio_put(unsigned pin,bool high) { if(pin==CS) controller.cs_high=high; }
+void spi_set_format(int,unsigned,int polarity,int phase,int) {
+    const unsigned mode=2u*polarity+phase;
+    require(mode==controller.spi_mode || controller.cs_high,"SPI mode changes only with CS high");
+    controller.spi_mode=mode;
+}
 int spi_write_blocking(int,const u8* bytes,unsigned count) {
-    require(count==1 && bytes[0]==0x2C,"RAMWR command");controller.cursor=0;return 1;
+    require(count==1 && bytes[0]==0x2C && controller.spi_mode==0,"RAMWR command in SPI mode 0");
+    controller.cursor=0;return 1;
 }
 void command(u8 op,const u8* data=nullptr,unsigned size=0) { controller.command(op,data,size); }
 }
@@ -452,6 +463,8 @@ void color_queue_session(bool chain) {
     frame.palette[5]=0;pixels.fill(0);
     require(panel.color(MK61_COLOR_END)==1 && !controller.pending,"END drains both strips before releasing the display");
     verify(8,0x1234,0x5678);verify(40,0x2345,0x6789);verify(72,0x3456,0x789a);
+    require(controller.mode3_windows==(chain?3U:0U) && controller.spi_mode==0,
+            "each chained fixed-origin strip uses mode 3 for its pixels and restores mode 0");
     require(panel.color_history(history) && history.frames==3 && history.crc[0]==crc(0x12) &&
             history.crc[1]==crc(0x34) && history.crc[2]==crc(0x56) && panel.queued_strips()==2,
             "FIFO completion and checksum include each slot's own data");
@@ -464,6 +477,7 @@ void color_queue_session(bool chain) {
     controller.run();
     require(panel.errors()==1 && panel.frames()==3 && controller.count(0x2b)==windows,
             "waiting strip is dropped without pixel writes after a DMA error");
+    require(controller.spi_mode==0 && controller.cs_high,"failed DMA also restores command mode and releases CS");
     require(panel.color(MK61_COLOR_SCROLL_END)==0,"failed transaction requires a repaint");
     require(panel.color(MK61_COLOR_PRESENT,&frame)==1 && controller.pending,"same view as the dropped strip repaints");
     controller.run();verify(136,0xcccc,0xdddd);

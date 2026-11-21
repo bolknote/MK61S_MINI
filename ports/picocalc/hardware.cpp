@@ -844,10 +844,20 @@ bool Panel::transfer_color_window(const mk61_service_color_frame& frame,const lc
     const u8 columns[]={(u8)(rect.x>>8),(u8)rect.x,(u8)(right>>8),(u8)right};
     const u8 rows[]={(u8)(physical_y>>8),(u8)physical_y,(u8)(bottom>>8),(u8)bottom};
     command(0x2A,columns,sizeof(columns));command(0x2B,rows,sizeof(rows));
-    gpio_put(DC,0);gpio_put(CS,0);busy_wait_us(1);
-    const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
-    busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
-    spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+    const bool mode3=MK61_PICOCALC_LCD_COLOR_CHAIN && chained_dma() && !background &&
+        rect.width==Screen::WIDTH && lcd::Index4Pairs::supports(frame.format) &&
+        frame.pixel_bytes<=COLOR_SLOT_BYTES && color_scroll_.open && !scroll_.offset;
+    if(mode3) {
+        // RAMWR uses mode 0. Change the idle level of SCK with CS high.
+        command(0x2C);
+        spi_set_format(spi1,16,SPI_CPOL_1,SPI_CPHA_1,SPI_MSB_FIRST);
+        gpio_put(DC,1);gpio_put(CS,0);busy_wait_us(1);
+    } else {
+        gpio_put(DC,0);gpio_put(CS,0);busy_wait_us(1);
+        const u8 ram_write=0x2C;spi_write_blocking(spi1,&ram_write,1);
+        busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
+        spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+    }
     const bool indexed_pairs=lcd::Index4Pairs::supports(frame.format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
     const auto prepare=[&](unsigned row,u16* out,void (*progress)()=nullptr) {
