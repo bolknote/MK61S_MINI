@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export existing MKQ4/MKQB weights and the exact Flourish BPE to native MKA.
+"""Export MKQ4/MKQB weights and their matching BPE tokenizer to native MKA.
 
 No training code is imported or modified. Integers are little endian, tensor
 records are 32 bytes, and payload CRC32 covers metadata and all model bytes.
