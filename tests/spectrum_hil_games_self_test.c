@@ -10,6 +10,7 @@ static uint32_t test_clock;
 
 static uint8_t test_ram[49152],test_rom[16384],canvas[12800],palette_state[65];
 static spectrum test_machine;
+static spectrum_app_state test_app;
 static char output[32768],path_buffer[256];
 static unsigned used;
 static bool display_available,read_fails;
@@ -75,7 +76,7 @@ static void framebuffer_test(const char* destination) {
     FILE* file=fopen(destination,"wb");assert(file);assert(fwrite(output,1,used,file)==used);assert(!fclose(file));
 }
 int main(int argc,char** argv) {
-    assert(argc==2);services=&fake;active_machine=&test_machine;
+    assert(argc==2);services=&fake;active_machine=&test_machine;active_app=&test_app;
     clock_test(1000000,0);clock_test(UINT32_MAX-200000,UINT32_MAX-40000UL);
     palette_test();framebuffer_test(argv[1]);
     puts("Actual game probe: steady timing/wrap, palette restoration/errors, no disk mounts and exact full-frame wire bytes PASS");

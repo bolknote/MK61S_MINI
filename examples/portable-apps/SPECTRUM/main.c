@@ -22,7 +22,14 @@ static inline uint32_t pacing_clock_us(void) {
 }
 static spectrum* active_machine;
 #define machine (*active_machine)
-static uint8_t keys[32],previous_keys[32];
+typedef struct {
+    spectrum_memory banks;
+    uint8_t current_keys[32],last_keys[32];
+} spectrum_app_state;
+static spectrum_app_state* active_app;
+#define app_keys (active_app->current_keys)
+#define previous_keys (active_app->last_keys)
+#define bank_memory (active_app->banks)
 static char *directory,*snapshot_path;
 static uint32_t opened_file;
 static bool started;
@@ -83,7 +90,6 @@ static uint32_t color(uint32_t operation,mk61_service_color_frame* frame);
 static bool pacing_video_io;
 #endif
 static bool banked_buffers;
-static spectrum_memory bank_memory;
 static uint32_t external;
 #if !defined(SPECTRUM_HIL_SNAPSHOT_ONLY)
 static uint32_t external_tail;
@@ -461,11 +467,14 @@ static bool timex_capture(video_output* out,uint8_t* work) {
 #if SPECTRUM_HAS_PENTAGON
 static bool pentagon_capture(video_output* out,uint8_t* work) {
     spectrum_pentagon_changes* changes=machine.pentagon_video;
-    const unsigned page=out->page,mask=1u<<page,mode=out->mode;
-    const unsigned strips=mode==SPECTRUM_VIDEO_WIDE?SPECTRUM_WIDE_STRIPS:3;
+    const unsigned mode=out->mode;
+    const bool wide=mode==SPECTRUM_VIDEO_WIDE;
+    const unsigned page=wide?(bank_memory.paging>>3)&1:out->page,mask=1u<<page;
+    const uint32_t shown=out->saved.address,address=wide && page?WIDE_REFERENCE:RASTER_BASE;
+    const unsigned strips=wide?SPECTRUM_WIDE_STRIPS:3;
     const bool tracked=changes && changes->mode==mode;
     out->clipped=tracked && (out->pages || out->transaction) && !out->clear &&
-        out->valid[page] && !(changes->repaint&mask);
+        out->valid[out->page] && !(changes->repaint&mask) && (!wide || shown==address);
     out->packed=false;
     out->gap_right=false;
     if(out->clipped) {
@@ -481,17 +490,12 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         // Larger ones use the batched native snapshot and keep their clipping.
         out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?WIDE_PACKED_ROWS:16u);
     }
-    const uint32_t shown=out->saved.address;
     out->saved.previous=0;
-    if(mode==SPECTRUM_VIDEO_WIDE) {
-        if(out->transaction && out->valid[0] && !out->clear && !out->clipped) {
-            out->saved.previous=shown;
-            out->saved.previous_frames=out->saved.frames;
-        }
-        // Keep the last displayed native snapshot while preparing the next.
-        // Sparse updates are latched directly into the displayed snapshot.
-        if(!out->packed) out->saved.address=shown==RASTER_BASE?WIDE_REFERENCE:RASTER_BASE;
-    } else out->saved.address=RASTER_BASE;
+    if(wide && shown!=address && out->transaction && out->valid[0] && !out->clear) {
+        out->saved.previous=shown;
+        out->saved.previous_frames=out->saved.frames;
+    }
+    out->saved.address=address;
     out->saved.io=external && !out->packed?&bank_memory.io:NULL;
     if(!spectrum_video_capture(&machine,mode,work,&out->saved)) return false;
     if(out->packed) {
@@ -654,23 +658,23 @@ static __attribute__((noinline)) void status_event(const char* text) {
     services->call(MK61_SERVICE_DEBUG_WRITE,strlen(text),0,0,(void*)text);
 }
 static int scan_keys(void) {
-    if(!services->call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,sizeof(keys),0,keys)) return -1;
+    if(!services->call(MK61_SERVICE_KEYBOARD,MK61_SERVICE_KEY_BITMAP,sizeof(app_keys),0,app_keys)) return -1;
     int first=-1;
-    for(unsigned i=0;i<sizeof(keys);++i) {
-        unsigned pressed=keys[i]&~previous_keys[i];
+    for(unsigned i=0;i<sizeof(app_keys);++i) {
+        unsigned pressed=app_keys[i]&~previous_keys[i];
         if(!i) pressed&=~1u;
         if(!pressed) continue;
         unsigned bit=0;while(!(pressed&1)) { pressed>>=1;++bit; }
         first=(int)(i*8+bit);break;
     }
-    memcpy(previous_keys,keys,sizeof(keys));return first;
+    memcpy(previous_keys,app_keys,sizeof(app_keys));return first;
 }
 static int wait_key(void) { for(;;) { int c=scan_keys();if(c>=0) return c;mk61_api->delay_ms(1); } }
 static bool escape(int c) { return c==0x1B || c==0xB1; }
 static bool enter(int c) { return c==10 || c==13; }
 static void guest_keyboard(uint8_t blocked[32]) {
     uint8_t guest[32];
-    for(unsigned i=0;i<32;++i) { blocked[i]&=keys[i];guest[i]=keys[i]&~blocked[i]; }
+    for(unsigned i=0;i<32;++i) { blocked[i]&=app_keys[i];guest[i]=app_keys[i]&~blocked[i]; }
     spectrum_keyboard(&machine,guest);
 }
 static int poll_guest(uint8_t blocked[32],uint32_t* deadline,uint32_t now) {
@@ -1600,7 +1604,7 @@ static __attribute__((noinline)) void prime_audio(bool beam) {
 /* Keep display/audio locals out of the menu and SD paths. The timing
  * probe uses this same frame even when LTO strips the unused menus. */
 static __attribute__((noinline)) void emulate_session(void) {
-    uint8_t blocked[32];memcpy(blocked,keys,sizeof(blocked));
+    uint8_t blocked[32];memcpy(blocked,app_keys,sizeof(blocked));
     uint32_t keyboard_deadline=services->call(MK61_SERVICE_MICROS,0,0,0,NULL);guest_keyboard(blocked);
     if(!mk61_api->graphics_begin()) return;
     mk61_service_framebuffer scratch={0};
@@ -2118,7 +2122,8 @@ done:
 static int run_app(uint32_t file_id,unsigned initial_model) {
     /* The complete machine lives until audio and display have stopped. Keep
      * it in the resident 32K stack instead of splitting the APP/guest heap. */
-    spectrum state={0};uint8_t tails[2][SPECTRUM_CACHE_PAGE_BYTES],pages[4096];active_machine=&state;
+    spectrum state={0};spectrum_app_state app_state={0};active_app=&app_state;
+    uint8_t tails[2][SPECTRUM_CACHE_PAGE_BYTES],pages[4096];active_machine=&state;
     page_runs[2]=pages;
     for(unsigned i=0;i<2;++i)bank_tails[i]=tails[i];
     const int result=app_run(file_id,initial_model);active_machine=NULL;return result;

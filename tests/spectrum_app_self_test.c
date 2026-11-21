@@ -409,6 +409,7 @@ static void guest_store(spectrum* s,uint16_t address,uint8_t value) {
 static void extended_frames(void) {
     static uint8_t fixed[32768],slots[16384],rom[16384];
     spectrum state;active_machine=&state;services=&common;
+    spectrum_app_state app_state={0};active_app=&app_state;
     const spectrum_memory_io io={NULL,external_read,external_write,external_clear};
     uint8_t* tails[]={fixed+15360,fixed+31744};
     uint8_t* runs[]={slots,slots+8192,slots+10240,slots+14336};
@@ -560,6 +561,7 @@ static void extended_frames(void) {
         assert(pace_frame(blocked,&keyboard_deadline,&deadline,NULL,&restarting,canvas,&error) && !error);
         assert(!restarting.active && (i?video_calls<=prior+strips:video_calls==prior+strips));
         if(i) {
+            guest_store(&state,0x6000,(uint8_t)~bank_memory.cache[8192]);
             state.cpu.port_out(&state.cpu,0x7ffd,state.memory->paging^8);
             restarting.pending=mode;
             video_capture_delay_us=8000;
@@ -619,6 +621,29 @@ static void extended_frames(void) {
     for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
     assert(!diff.active && diff.valid[0] && video_calls==before+2);
     puts("Wide FLASH: two disjoint windows, retry while busy and combined PSRAM reference PASS");
+
+    // Write to the hidden fixed bank, then flip. The prepared bank needs
+    // one 64-line refresh, while LCD traffic still covers one pixel group.
+    assert(pentagon.bank==7 && !pentagon.repaint);
+    guest_store(&state,0x6002,value);
+    assert(pentagon.strips[0][2].bottom==1 && !pentagon.strips[1][2].bottom);
+    state.cpu.port_out(&state.cpu,0x7ffd,0x10);
+    video_begin(&diff,SPECTRUM_VIDEO_WIDE);
+    const unsigned refresh=video_psram_ops,dirty_calls=video_calls;
+    assert(video_present(&diff,canvas) && video_psram_ops==refresh+1);
+    for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
+    assert(!diff.active && !pentagon.strips[0][2].bottom && video_calls==dirty_calls+1);
+    assert(last_strip.x==60 && last_strip.y==72 && last_strip.width==20 && last_strip.height==1);
+
+    // A round trip through the other bank before the next LCD capture
+    // cannot turn the same clean screen into a full redraw.
+    state.cpu.port_out(&state.cpu,0x7ffd,0x18);
+    state.cpu.port_out(&state.cpu,0x7ffd,0x10);
+    video_begin(&diff,SPECTRUM_VIDEO_WIDE);
+    const unsigned reused=video_psram_ops;
+    for(unsigned budget=24;diff.active && budget;--budget) assert(video_present(&diff,canvas));
+    assert(!diff.active && video_psram_ops==reused && video_calls==dirty_calls+1);
+    puts("Wide snapshots reuse clean banks and refresh the written region of a hidden bank PASS");
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     {
@@ -675,7 +700,7 @@ static void extended_frames(void) {
         assert(raster_present(canvas,&raster) && raster.next==5 && !raster.ready);
         puts("Raster skips identical packed strips and repaints after a failed LCD commit: PASS");
     }
-    video_test=false;external=0;active_machine=NULL;free(psram);psram=NULL;
+    video_test=false;external=0;active_machine=NULL;active_app=NULL;free(psram);psram=NULL;
     puts("Actual LCD strip renderer: watched HiColor/16C/Wide writes, per-page damage, FLASH, bank flip and fault recovery PASS");
 }
 

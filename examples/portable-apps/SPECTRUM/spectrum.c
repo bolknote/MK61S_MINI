@@ -22,10 +22,12 @@ static void pentagon_watch_map(spectrum* s,spectrum_pentagon_changes* changes) {
     if(mode!=changes->mode) {changes->mode=mode;changes->repaint=3;}
     if(!mode) return;
     const unsigned bank=(s->memory->paging&8)?7:5;
-    if(bank!=changes->bank) {changes->bank=bank;changes->repaint=3;}
+    if(mode==SPECTRUM_VIDEO_16C && bank!=changes->bank) changes->repaint=3;
+    changes->bank=bank;
     changes->upper=spectrum_memory_upper_bank(s->memory);
-    if(bank==5) changes->windows|=2;
-    if(changes->upper==bank || changes->upper==bank-1) changes->windows|=8;
+    if(bank==5 || mode==SPECTRUM_VIDEO_WIDE) changes->windows|=2;
+    if((changes->upper|1u)==bank || (mode==SPECTRUM_VIDEO_WIDE && (changes->upper&~3u)==4))
+        changes->windows|=8;
     for(unsigned window=1;window<4;window+=2) if(changes->windows&(1u<<window)) {
         if(mode==SPECTRUM_VIDEO_16C) watch_write_window(&s->cpu,window);
         else {
@@ -63,7 +65,9 @@ static void pentagon_dirty(spectrum_pentagon_changes* changes,unsigned bank,unsi
         else if(at>=0x1300 && at<0x13c0) {y=256+((at-0x1300)/32)*8;rows=8;}
         else return;
         strip=y/SPECTRUM_WIDE_STRIP_ROWS;y%=SPECTRUM_WIDE_STRIP_ROWS;
-        x/=3; // The scaler emits a group of 20 LCD pixels per three cells.
+        // The scaler emits a group of 20 LCD pixels per three cells.
+        spectrum_video_include_cell(&changes->strips[(bank>>1)&1][strip],x/3,y,rows);
+        return;
     }
     for(unsigned page=0;page<2;++page)
         spectrum_video_include_cell(&changes->strips[page][strip],x,y,rows);

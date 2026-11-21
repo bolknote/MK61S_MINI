@@ -46,7 +46,8 @@
 enum { SPECTRUM_VIDEO_16C=1, SPECTRUM_VIDEO_HICOLOR=2, SPECTRUM_VIDEO_HIRES=6, SPECTRUM_VIDEO_WIDE=64 };
 enum { SPECTRUM_WIDE_WIDTH=320, SPECTRUM_WIDE_HEIGHT=304,
        SPECTRUM_WIDE_STRIP_ROWS=32,
-       SPECTRUM_WIDE_STRIPS=(SPECTRUM_WIDE_HEIGHT+SPECTRUM_WIDE_STRIP_ROWS-1)/SPECTRUM_WIDE_STRIP_ROWS };
+       SPECTRUM_WIDE_STRIPS=(SPECTRUM_WIDE_HEIGHT+SPECTRUM_WIDE_STRIP_ROWS-1)/SPECTRUM_WIDE_STRIP_ROWS,
+       SPECTRUM_WIDE_CAPTURE_ROWS=64 };
 enum { SPECTRUM_BEAM_ROWS=16, SPECTRUM_BEAM_FRAME_BYTES=SPECTRUM_HAS_PENTAGON?
        SPECTRUM_WIDE_WIDTH*SPECTRUM_WIDE_HEIGHT/2:4*32*192 };
 static inline unsigned spectrum_beam_width(unsigned mode) { return mode==SPECTRUM_VIDEO_16C?256:320; }
@@ -61,6 +62,7 @@ typedef struct {
     bool repaint;
 } spectrum_hicolor_changes;
 typedef struct {
+    // The 16C LCD pages share one guest screen. Wide has a snapshot per bank pair.
     spectrum_video_damage strips[2][SPECTRUM_WIDE_STRIPS];
     uint8_t mode,bank,upper,windows,repaint;
 } spectrum_pentagon_changes;
