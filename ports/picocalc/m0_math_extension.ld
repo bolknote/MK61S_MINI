@@ -258,5 +258,13 @@ SECTIONS {
     } > FLASH
     ASSERT(ADDR(.ai_prefill_extension) + SIZEOF(.ai_prefill_extension) <= 0x101c0000,
            "Paired AI prefill exceeds its flash slot")
+    /* Optional FPGA transport and the harness strings are cold during local
+     * inference. Give them space beyond the fixed math and inference slots. */
+    .ai_link_extension 0x101c0000 : {
+        *(.ai_link_extension)
+        *ai_tang.cpp.o(.text* .rodata*)
+        *ai_harness.cpp.o(.rodata*)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
 }
 INSERT AFTER .flash_end;

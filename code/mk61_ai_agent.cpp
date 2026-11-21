@@ -839,6 +839,7 @@ void Agent::tick(bool (*service)(void *), void *context) {
       auto &agent = *static_cast<Agent *>(raw);
       if (agent.spec_enabled_) {
         if (!agent.spec_.action()) return id == SpecProtocol::WRITE;
+        if (!SpecProtocol::output_token(id)) return false;
         char piece[32]; unsigned n = 0;
         return agent.model_.decode(id,piece,sizeof(piece),n)==ModelStatus::OK &&
                agent.spec_.allows(id,piece);
@@ -869,6 +870,19 @@ void Agent::tick(bool (*service)(void *), void *context) {
   if (phase_ == Phase::PREFILL) {
     if ((restore_prefix_ || save_prefix_) && tick_prefix(callback, &pump))
       return;
+    if (model_.batch_capacity && model_.batch_step) {
+      const unsigned end = save_prefix_ && prefilled_ < system_tokens_
+                               ? system_tokens_ : prompt_count_ - 1;
+      const unsigned count = std::min(end - prefilled_, model_.batch_capacity(model_.context));
+      if (count > 1) {
+        const auto before = micros_ ? micros_(clock_context_) : 0;
+        const auto status = model_.batch_step(model_.context, tokens_ + prefilled_, count,
+                                              arithmetic_, callback, &pump);
+        if (finish_forward(status, micros_ ? micros_(clock_context_) - before : 0, count))
+          prefilled_ += count;
+        return;
+      }
+    }
     // Preserve the exact snapshot boundary and keep the classifier call
     // for the last input token. Lack of optional SRAM is a scalar fallback.
     if (model_.pair_workspace && model_.pair_step && prefilled_ + 2 < prompt_count_ &&

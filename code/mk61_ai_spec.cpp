@@ -1,7 +1,9 @@
 #include "mk61_ai_spec.hpp"
+#include <algorithm>
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <iterator>
 
 namespace mk61ai {
 namespace {
@@ -220,6 +222,9 @@ bool SpecProtocol::prompt(const char *task, unsigned angle, char *out,
          task);
   return used < cap;
 }
+bool SpecProtocol::output_token(std::uint16_t id) {
+  return std::binary_search(std::begin(OUTPUT_TOKENS), std::end(OUTPUT_TOKENS), id);
+}
 bool SpecProtocol::allows(std::uint16_t token, const char *piece) const {
   // This grammar constrains wire syntax only, exactly as the research decoder.
   // It does not constrain the generated tree to a known answer.
@@ -229,9 +234,7 @@ bool SpecProtocol::allows(std::uint16_t token, const char *piece) const {
     return false;
   if (token == END)
     return digits_ == 2 && size_ >= 2;
-  if (!((token >= 18 && token <= 27) || (token >= 35 && token <= 40) ||
-        token == 223 || token == 973 || token == 1007 || token == 1218 ||
-        token == 1277 || token == 1503 || token == 1568))
+  if (token == WRITE || !output_token(token))
     return false;
   if (!piece || !*piece)
     return false;

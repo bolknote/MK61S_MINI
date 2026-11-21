@@ -32,6 +32,9 @@ struct Inference {
   std::size_t (*pair_workspace)(void *, Arithmetic) = nullptr;
   ModelStatus (*pair_step)(void *, const std::uint16_t (&)[2], void *, std::size_t,
                            Arithmetic, bool (*)(void *), void *) = nullptr;
+  unsigned (*batch_capacity)(void *) = nullptr;
+  ModelStatus (*batch_step)(void *, const std::uint16_t *, unsigned, Arithmetic,
+                            bool (*)(void *), void *) = nullptr;
   const ModelConfig &config() const { return configuration(context); }
   unsigned position() const { return cursor(context); }
   void reset() { seek(context, 0); }
@@ -84,6 +87,13 @@ public:
   void request_pause() { pause_ = true; }
   void reset();
   bool active() const { return phase_ != Phase::IDLE; }
+  unsigned position() const { return model_.position(); }
+  void use_inference(Inference inference) {
+    reset();
+    cached_count_ = 0;
+    model_ = inference;
+    model_.reset();
+  }
   Phase phase() const { return phase_; }
   unsigned prompt_size() const { return prompt_count_; }
   unsigned generated() const { return generated_; }

@@ -7,6 +7,8 @@ module tang_model #(
     input wire [PREFILL_LANES*16-1:0] tokens,
     input wire [2:0] token_count,
     input wire output_logits,
+    input wire [4:0] allowed_count,
+    input wire [10:0] seek_position,
     output wire busy,
     output reg done,
     output reg [7:0] status,
@@ -51,11 +53,14 @@ module tang_model #(
         READ_RAM_RESULT=100, READ_PAIR_RESULT=101, ATT_PREFETCH=102, VALUE_PREFETCH=103,
         EMBED_ADDRESS=104, KV_ADDRESS=105, CHECK_LAYOUT=106, BEST_COMPARE=107, BEST_COMMIT=108,
         QUANT_MAX_COMMIT=109, ADVANCE_POSITION=110, ADVANCE_INSTRUCTION=111, FINISH=112,
-        CHECK_TOKEN_RANGE=113;
+        CHECK_TOKEN_RANGE=113, ALLOWED_READ=114, ALLOWED_TOKEN=115,
+        ALLOWED_OFFSET=116, ALLOWED_ROW=117;
     localparam [2:0] FADD=0, FSUB=1, FMUL=2, FDIV=3, FSQRT=4, I2F=5, FEXP=6;
     localparam [31:0] ONE=32'h3f800000, NEG_MAX=32'hff7fffff;
     localparam [31:0] INV_SQRT_32=32'h3e3504f3;
     localparam [11:0] SCORES=1536;
+    // Last 64 bytes of SDRAM, beyond all supported model and KV allocations.
+    localparam [20:0] ALLOWED_ADDRESS=21'h1ffff0;
     localparam LANE_BITS = PREFILL_LANES <= 2 ? 1 : $clog2(PREFILL_LANES);
     localparam VECTOR_ADDR_BITS = $clog2(PREFILL_LANES*1536);
 
@@ -74,6 +79,9 @@ module tang_model #(
     reg [LANE_BITS-1:0] lane, last_lane;
     reg [15:0] best_token, row, final_row;
     reg want_logits;
+    reg [4:0] allowed_rows, allowed_index;
+    reg masked_head;
+    reg [20:0] row_offset;
     reg [11:0] i, group_offset;
     reg [5:0] group_number;
     reg [2:0] head;
@@ -105,6 +113,7 @@ module tang_model #(
     wire [15:0] rows = descriptor[3][31:16];
     wire [10:0] lane_position = next_position + {{(11-LANE_BITS){1'b0}},lane};
     wire [15:0] input_token = input_tokens[lane*16 +: 16];
+    wire [15:0] allowed_token = allowed_index[0] ? ext_word[31:16] : ext_word[15:0];
     wire [20:0] rotary_cos = address + {5'b0,position,i[3:0],1'b0};
     wire [20:0] attention_key = address + {3'b0,time_index,1'b0,head[1],5'b0};
     wire [20:0] attention_value = address + {3'b0,time_index,1'b1,head[1],5'b0};
@@ -268,9 +277,12 @@ module tang_model #(
                 prefetch_ready <= 1;
             end
             case (state)
-                IDLE: if (rewind) next_position <= 0;
+                IDLE: if (rewind) begin
+                        if (seek_position <= next_position) next_position <= seek_position;
+                    end
                     else if (start) begin
                         input_tokens <= tokens; batch_count <= token_count; want_logits <= output_logits;
+                        allowed_rows <= allowed_count;
                         last_lane <= token_count-1'b1; lane <= 0;
                         field <= 0; cycles <= 0; best_token <= 0;
                         for (k=0; k<PREFILL_LANES; k=k+1) lane_checksums[k] <= 2166136261;
@@ -337,6 +349,7 @@ module tang_model #(
                 EXECUTE: begin
                     i <= 0; group_offset <= 0; group_number <= 0; row <= 0; head <= 0;
                     final_row <= rows-1'b1;
+                    masked_head <= opcode == 9 && allowed_rows != 0;
                     time_index <= 0; accumulator <= 0; cursor <= address; max_value <= 0;
                     position <= lane_position;
                     if (descriptor[0][8] && !want_logits) state <= ADVANCE_INSTRUCTION;
@@ -430,9 +443,18 @@ module tang_model #(
                     end else begin
                         lane <= opcode == 9 ? last_lane : 0;
                         group_number <= 0;
-                        max_value <= NEG_MAX; state <= MATRIX_WORD;
+                        max_value <= NEG_MAX;
+                        allowed_index <= 0;
+                        state <= masked_head ? ALLOWED_READ : MATRIX_WORD;
                     end
                 end
+                ALLOWED_READ: read_ext(ALLOWED_ADDRESS+{17'b0,allowed_index[4:1]},ALLOWED_TOKEN);
+                ALLOWED_TOKEN: begin
+                    if (allowed_token >= configuration[1][15:0]) finish(5);
+                    else begin row <= allowed_token; state <= ALLOWED_OFFSET; end
+                end
+                ALLOWED_OFFSET: begin row_offset <= row*21'd20; state <= ALLOWED_ROW; end
+                ALLOWED_ROW: begin cursor <= address+row_offset; group_number <= 0; state <= MATRIX_WORD; end
                 MATRIX_WORD: begin
                     memory_address <= cursor;
                     matrix_words <= 0;
@@ -476,7 +498,10 @@ module tang_model #(
                         else begin group_number <= group_number+1'b1; state <= MATRIX_WORD; end
                     end else begin lane <= lane+1'b1; state <= MATRIX_CONVERT; end
                 end
-                MATRIX_NEXT_ROW: if (row == final_row) state <= ADVANCE_INSTRUCTION;
+                MATRIX_NEXT_ROW: if (masked_head) begin
+                        if (allowed_index+5'd1 == allowed_rows) state <= ADVANCE_INSTRUCTION;
+                        else begin allowed_index <= allowed_index+1'b1; state <= ALLOWED_READ; end
+                    end else if (row == final_row) state <= ADVANCE_INSTRUCTION;
                     else begin row <= row+1'b1; group_number <= 0; state <= MATRIX_WORD; end
 
                 ROPE_READ: read_pair(source+group_offset+i,source+group_offset+i+12'd16,ROPE_SAVE);

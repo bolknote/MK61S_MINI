@@ -24,7 +24,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/tests/picocalc_self_test.cpp" "$root/tests/picocalc_ai_self_test.cpp" "$root/tests/picocalc_ai_chat_self_test.cpp" "$root/tests/picocalc_ai_color_scroll_self_test.cpp" "$root/ports/picocalc/calculator.cpp" \
     "$root/ports/picocalc/screen.cpp" "$root/ports/picocalc/math_probe.cpp" "$root/ports/picocalc/markdown.cpp" "$root/ports/picocalc/terminal.cpp" "$root/ports/picocalc/fonts.cpp" "$root/ports/picocalc/native_display.cpp" "$root/ports/picocalc/canvas.cpp" \
     "$root/ports/picocalc/input.cpp" "$root/ports/picocalc/clock.cpp" "$root/ports/picocalc/diagnostics.cpp" "$root/ports/picocalc/firmware.cpp" "$root/code/crash_dump_format.cpp" \
-    "$root/ports/picocalc/chip8_runtime.cpp" "$root/ports/picocalc/native_app.cpp" "$root/ports/picocalc/ai_harness.cpp" "$root/ports/picocalc/ai_chat.cpp" "$root/ports/picocalc/ai_clock.cpp" \
+    "$root/ports/picocalc/chip8_runtime.cpp" "$root/ports/picocalc/native_app.cpp" "$root/ports/picocalc/ai_harness.cpp" "$root/ports/picocalc/ai_chat.cpp" "$root/ports/picocalc/ai_clock.cpp" "$root/ports/picocalc/ai_tang.cpp" \
     "$root/code/mk61_ai_model.cpp" "$root/code/mk61_ai_linear.cpp" "$root/code/mk61_ai_tokenizer.cpp" "$build_dir/mk61_ai_kernels.o" \
     "$root/code/mk61_ai_harness.cpp" "$root/code/mk61_ai_tools.cpp" "$root/code/mk61_ai_agent.cpp" "$root/code/mk61_ai_grammar.cpp" "$root/code/mk61_ai_spec.cpp" "$root/code/mk61_ai_direct.cpp" \
     "$root/ports/picocalc/usb_screen.cpp" "$root/code/chip8.cpp" \

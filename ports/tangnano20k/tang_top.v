@@ -64,7 +64,14 @@ module tang_top #(
     wire [7:0] model_status;
     wire [PREFILL_LANES*16-1:0] model_tokens;
     wire [2:0] model_count;
-    tang_link_control #(.CLOCK_HZ(CLOCK_HZ), .PREFILL_LANES(PREFILL_LANES)) transport (
+    wire [4:0] model_allowed;
+    wire [10:0] model_seek;
+`ifdef TANG_MODEL
+    localparam MODEL_ENABLED = 1;
+`else
+    localparam MODEL_ENABLED = 0;
+`endif
+    tang_link_control #(.CLOCK_HZ(CLOCK_HZ), .MODEL_ENABLED(MODEL_ENABLED), .PREFILL_LANES(PREFILL_LANES)) transport (
         .clk(clk), .resetn(resetn), .host_input(host_byte), .pico_input(pico_byte),
         .host_available(host_ready), .pico_available(pico_ready), .host_tx_busy(host_busy), .pico_tx_busy(pico_busy),
         .host_pop(host_pop), .pico_pop(pico_pop), .host_push(host_push), .pico_push(pico_push),
@@ -74,6 +81,7 @@ module tang_top #(
         .dot_ready(dot_ready[0] && !model_busy), .dot_result(dot_results[14:0]),
         .model_start(model_start), .model_reset(model_reset),
         .model_tokens(model_tokens), .model_count(model_count), .model_output(model_output),
+        .model_allowed(model_allowed), .model_seek(model_seek),
         .model_done(model_done), .model_status(model_status), .model_result(model_result),
         .model_checksum(model_checksum), .model_checksums(model_checksums), .model_cycles(model_cycles)
     );
@@ -81,6 +89,7 @@ module tang_top #(
     tang_model #(.PREFILL_LANES(PREFILL_LANES)) model (
         .clk(clk), .resetn(resetn), .start(model_start), .rewind(model_reset),
         .tokens(model_tokens), .token_count(model_count), .output_logits(model_output), .busy(model_busy), .done(model_done),
+        .allowed_count(model_allowed), .seek_position(model_seek),
         .status(model_status), .outcome(model_result), .checksum(model_checksum), .cycles(model_cycles),
         .position_checksums(model_checksums),
         .memory_request(model_req), .memory_write(model_wr), .memory_address(model_addr), .memory_data(model_data),

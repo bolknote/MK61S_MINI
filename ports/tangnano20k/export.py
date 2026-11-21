@@ -103,11 +103,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("model", type=Path)
     parser.add_argument("image", type=Path)
+    parser.add_argument("--picocalc", action="store_true", help="Wrap the image as /AI/MODEL.TNG for MK61AI")
     args = parser.parse_args()
-    image, metadata = pack(args.model.read_bytes())
+    source = args.model.read_bytes()
+    image, metadata = pack(source)
     args.image.parent.mkdir(parents=True, exist_ok=True)
+    if args.picocalc:
+        header_crc, = struct.unpack_from("<I", source, 124)
+        image.extend(struct.pack("<4sIII", b"MKT1", header_crc, len(source), zlib.crc32(image)))
     args.image.write_bytes(image)
-    args.image.with_suffix(".json").write_text(json.dumps(metadata, indent=2)+"\n")
+    if not args.picocalc:
+        args.image.with_suffix(".json").write_text(json.dumps(metadata, indent=2)+"\n")
     print(json.dumps(metadata, indent=2))
 
 

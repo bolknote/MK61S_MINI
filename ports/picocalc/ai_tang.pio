@@ -1,0 +1,24 @@
+.program tang_tx
+.side_set 1 opt
+.wrap_target
+    pull block side 1 [7]
+    set x, 7 side 0 [7]
+tx_bit:
+    out pins, 1 [6]
+    jmp x-- tx_bit
+.wrap
+
+.program tang_rx
+.wrap_target
+start:
+    wait 0 pin 0
+    set x, 7 [10]
+rx_bit:
+    in pins, 1
+    jmp x-- rx_bit [6]
+    jmp pin good
+    wait 1 pin 0
+    jmp start
+good:
+    push block
+.wrap

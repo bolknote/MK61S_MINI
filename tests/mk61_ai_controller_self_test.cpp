@@ -52,6 +52,7 @@ struct Script {
   Model &tokenizer;
   std::vector<std::vector<std::uint16_t>> replies;
   unsigned position = 0, turn = 0, at = 0;
+  unsigned max_batch = 0;
   bool begun = false;
   Script(Model &model, std::initializer_list<std::string> messages)
       : tokenizer(model) {
@@ -154,7 +155,18 @@ int main(int argc, char **argv) {
     assert(build_prompt(s, prompt, sizeof(prompt)) &&
            !std::strstr(prompt, "60611050") && !std::strstr(prompt, "R0=-4"));
     Script script(model, {"<plan>Сложить</plan><write>60611050</write><run/>"});
-    Agent agent(s, disk.store(), script.engine());
+    auto backend = script.engine();
+    backend.batch_capacity = [](void *) { return 6U; };
+    backend.batch_step = [](void *p, const std::uint16_t *, unsigned count,
+                            Arithmetic, bool (*service)(void *), void *raw) {
+      auto &state = *static_cast<Script *>(p);
+      if (service && !service(raw)) return ModelStatus::CANCELLED;
+      assert(count >= 2 && count <= 6);
+      state.position += count;
+      if (count > state.max_batch) state.max_batch = count;
+      return ModelStatus::OK;
+    };
+    Agent agent(s, disk.store(), backend);
     Pump pump;
     assert(agent.start());
     pump.cancel = true;
@@ -162,6 +174,8 @@ int main(int argc, char **argv) {
     assert(agent.paused() && script.position == 0);
     pump.cancel = false;
     assert(agent.start());
+    agent.tick(Pump::service, &pump);
+    assert(script.max_batch == 6 && script.position == 6 && agent.metrics().prefill_tokens == 6);
     bool interrupted = false;
     for (unsigned i = 0; agent.active() && i < 3000; ++i) {
       if (!interrupted && agent.phase() == Agent::Phase::ADVANCE) {

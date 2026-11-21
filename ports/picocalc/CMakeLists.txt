@@ -109,7 +109,7 @@ target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/crash_dump_forma
 target_sources(mk61s-picocalc-pico-h PRIVATE cosmic_clock.cpp)
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_vreg pico_flash)
 target_sources(mk61s-picocalc-pico-h PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/ai_harness.cpp" "${CMAKE_CURRENT_LIST_DIR}/ai_clock.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/ai_harness.cpp" "${CMAKE_CURRENT_LIST_DIR}/ai_clock.cpp" ai_tang.cpp
     "${MK61_ROOT}/code/mk61_ai_model.cpp" "${MK61_ROOT}/code/mk61_ai_linear.cpp" "${MK61_ROOT}/code/mk61_ai_tokenizer.cpp"
     "${MK61_ROOT}/code/mk61_ai_kernels.c" "${MK61_ROOT}/code/mk61_ai_harness.cpp"
     "${MK61_ROOT}/code/mk61_ai_tools.cpp" "${MK61_ROOT}/code/mk61_ai_agent.cpp"
@@ -185,6 +185,7 @@ target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
 pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_spi.pio")
+pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/ai_tang.pio")
 if(MK61_PICOCALC_AI_PSRAM_LATE_READ)
     pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_qpi_late.pio")
 else()

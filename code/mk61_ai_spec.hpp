@@ -27,6 +27,10 @@ public:
   const char *constant(unsigned i) const { return i < count_ ? pool_[i] : ""; }
   static constexpr std::uint16_t WRITE = 8192, END = 30;
   static constexpr std::uint16_t HEADER[4] = {89, 84, 7804, 32};
+  static constexpr std::uint16_t OUTPUT_TOKENS[] = {
+      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, END, 35, 36, 37, 38, 39, 40,
+      223, 973, 1007, 1218, 1277, 1503, 1568, WRITE};
+  static bool output_token(std::uint16_t id);
 
 private:
   char pool_[64][24]{};

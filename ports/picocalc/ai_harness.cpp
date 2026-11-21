@@ -3,6 +3,7 @@
 #include "ai_clock.hpp"
 #include "ai_psram_read_clock.hpp"
 #include "ai_m3.hpp"
+#include "ai_tang.hpp"
 #include "ai_presentation.hpp"
 #include "mk61_ai_perf.hpp"
 #include "mk61_ai_attention.hpp"
@@ -43,8 +44,10 @@ extern char __end__, __HeapLimit, __StackBottom, __StackTop;
 
 #if defined(PICO_ON_DEVICE)
 #define AI_COLD_CODE __attribute__((section(".ai_diagnostic_extension"),noinline))
+#define AI_LINK_CODE __attribute__((section(".ai_link_extension"),noinline))
 #else
 #define AI_COLD_CODE
+#define AI_LINK_CODE
 #endif
 #ifndef MK61_PICOCALC_BUILD_ID
 #define MK61_PICOCALC_BUILD_ID 0U
@@ -200,7 +203,7 @@ bool parse_code(const char *source, u8 out[PROGRAM_SIZE], unsigned &count) {
   return count != 0;
 }
 struct UI {
-  explicit UI(const Host &h) : host(h), store(disk(h.diagnostic_directory)), agent(s, store, model) {
+  explicit UI(const Host &h) : host(h), store(disk(h.diagnostic_directory)), tang(model), agent(s, store, model) {
     auto memory_plan=model.execution();memory_plan.tile_rows=28;memory_plan.lut8=true;
     model.execution(memory_plan);
     agent.clock(
@@ -212,6 +215,7 @@ struct UI {
   Store store;
   Session s;
   Model model;
+  ai_tang::Backend tang;
   Agent agent;
   shared_memory::Buffer package, cache;
   std::unique_ptr<std::uint32_t[]> parameter_cache;
@@ -244,6 +248,8 @@ struct UI {
   std::uint32_t compute_poll_stamp = 0;
   bool dual_core = true, filter_head = false, double_buffer = true;
   bool m3_core = false;
+  bool tang_requested = false, tang_attempted = false, tang_selected = false, spec_model = false;
+  u32 package_crc = 0, package_bytes = 0;
   bool cache_prefix = !host.diagnostic_directory, prefix_io_active = false;
   std::uint32_t prefix_read_us = 0, prefix_write_us = 0, prefix_loaded = 0;
   char m3_module_path[128] = "/AI/M3LINE.S3M";
@@ -591,7 +597,13 @@ struct UI {
       e.pair_prefill = true;
     }
     model.execution(e);
-    agent.prefix_io(cache_prefix && !e.remote_submit ? prefix_io : nullptr, this);
+    agent.prefix_io(cache_prefix && !e.remote_submit && !tang_selected ? prefix_io : nullptr, this);
+  }
+  void detach_tang() {
+    if (tang_selected) agent.use_inference(local_inference(model));
+    tang.close();
+    tang_selected = false;
+    tang_attempted = false;
   }
   static ModelStatus prefix_io(void *, const std::uint16_t *, unsigned,
                                unsigned, Arithmetic, bool, bool (*)(void *), void *);
@@ -889,6 +901,7 @@ AI_COLD_CODE bool UI::ensure_model() {
   profile_stage("model-open");
   ModelStatus status = ModelStatus::MEMORY;
   auto open_package=[&]() {
+    if (!package.read(124, &package_crc, 4)) { status = ModelStatus::IO; return false; }
     status=model.open({this,info.size,package_read,package_write,
                        package_read_begin,package_read_finish});
     if(status==ModelStatus::OK) {
@@ -959,6 +972,7 @@ AI_COLD_CODE bool UI::ensure_model() {
   }
   u32 crc = 0;
   package.read(124, &crc, 4);
+  package_bytes = info.size;
   std::snprintf(model_tag, sizeof(model_tag), "MKA-%08lX-%lu",
                 (unsigned long)crc, (unsigned long)info.size);
   std::snprintf(s.model, sizeof(s.model), "%s", model_tag);
@@ -982,7 +996,7 @@ AI_COLD_CODE bool UI::ensure_model() {
   std::snprintf(protocol_path,sizeof(protocol_path),"/AI/MODEL.PRO");
   if(benchmarking && host.diagnostic_directory && model_path==diagnostic_model)
     std::snprintf(protocol_path,sizeof(protocol_path),"%s/MODEL.PRO",host.diagnostic_directory);
-  const bool spec_model=files::exists(protocol_path);
+  spec_model=files::exists(protocol_path);
   if(spec_model && (!files::read(protocol_path,reinterpret_cast<u8*>(protocol),sizeof(protocol)-1,protocol_size) ||
       std::strcmp(protocol,"MK61SPEC1\n") || model.config().vocab!=8224 || model.config().context!=1024)) {
     model_ready=false; message(M8("Не совпадает формат модели MODEL.PRO.")); return false;
@@ -1041,7 +1055,7 @@ AI_COLD_CODE void UI::start() {
   }
   start_model();
 }
-AI_COLD_CODE void UI::start_model() {
+AI_LINK_CODE void UI::start_model() {
   if (!ensure_model()) {
     time_request(false);
     sync_chat(true);
@@ -1050,6 +1064,22 @@ AI_COLD_CODE void UI::start_model() {
   cancel = false;
   started = host.api->millis_ms();
   if(!enter_fast_clock()) { time_request(false);return; }
+  if (tang_requested && !tang_attempted && spec_model && arithmetic == Arithmetic::INT8 && !benchmarking) {
+    loading = true;
+    const auto status = tang.open(package_crc, package_bytes, service, this);
+    loading = false;
+    if (cancel || status == ModelStatus::CANCELLED) {
+      leave_fast_clock();
+      time_request(false);
+      message(M8("Загрузка Tang приостановлена"));
+      return;
+    }
+    tang_attempted = true;
+    if (status == ModelStatus::OK) {
+      tang_selected = true;
+      agent.use_inference(tang.inference());
+    } else message(M8("Tang недоступен. Расчёт на Pico."));
+  }
   configure_execution();
   profile_stage("execution-configured");
   agent.arithmetic(arithmetic);
@@ -1077,7 +1107,7 @@ unsigned UI::menu_count() const {
   case Screen::INTENT:
     return 3;
   case Screen::SETTINGS:
-    return 7;
+    return 8;
   case Screen::APPLY:
     return 2;
   default:
@@ -1161,6 +1191,10 @@ void UI::menu_label(unsigned i, char out[96]) {
       std::snprintf(out, 96, "%s", m3_core ? M8("Ядра: 2 Pico + STM32") : M8("Ядра: 2 Pico"));
       break;
     case 6:
+      std::snprintf(out, 96, "%s", !tang_requested ? M8("Tang Nano: выкл.") :
+                    tang.online() ? M8("Tang Nano: подключён") : M8("Tang Nano: авто"));
+      break;
+    case 7:
       std::snprintf(out, 96, "%s", M8("Назад"));
       break;
     }
@@ -1369,7 +1403,7 @@ void UI::body() {
     if (loading)
       line(M8("Прочитано %lu КБ"), (unsigned long)(model_loaded / 1024));
     else if (agent.phase() == Agent::Phase::PREFILL)
-      line(M8("Контекст: %u/%u токенов"), model.position(),
+      line(M8("Контекст: %u/%u токенов"), agent.position(),
            agent.prompt_size());
     else if (agent.phase() == Agent::Phase::TESTS)
       line(M8("Пример %u/%u"), agent.test_index() + 1,
@@ -2064,6 +2098,7 @@ void UI::key(unsigned wire) {
       } else if (selected == 1) {
         arithmetic = Arithmetic((unsigned(arithmetic) + 1) % 4);
         if (arithmetic != Arithmetic::LUT_FLOAT32) { m3_core = false; ai_m3::close(); }
+        if (arithmetic != Arithmetic::INT8) detach_tang();
         agent.reset();
         dirty = true;
       } else if (selected == 4) {
@@ -2073,7 +2108,7 @@ void UI::key(unsigned wire) {
         dirty = true;
       } else if (selected == 5) {
         m3_core = !m3_core;
-        if (m3_core) arithmetic = Arithmetic::LUT_FLOAT32;
+        if (m3_core) { arithmetic = Arithmetic::LUT_FLOAT32; tang_requested = false; detach_tang(); }
         configure_execution();
         if (m3_core && !ai_m3::statistics().active) {
           m3_core = false;
@@ -2081,6 +2116,11 @@ void UI::key(unsigned wire) {
         }
         agent.reset(); dirty = true;
       } else if (selected == 6) {
+        tang_requested = !tang_requested;
+        if (tang_requested) { m3_core = false; ai_m3::close(); }
+        else detach_tang();
+        dirty = true;
+      } else if (selected == 7) {
         screen = Screen::SESSION;
         dirty = true;
       }
@@ -2251,25 +2291,25 @@ void UI::key(unsigned wire) {
 }
 void UI::tick() {
   if (agent.active()) {
-    const unsigned before_position=model.position();
-    const auto before_pairs=agent.metrics().prefill_pairs;
+    const auto before_tokens=agent.metrics().prefill_tokens+agent.metrics().decode_tokens;
+    const bool was_tang=tang.online();
     agent.tick(service, this);
-    const auto after_position=model.position();
-    const unsigned stepped=after_position==before_position+1?1U:
-        after_position==before_position+2 &&
-        agent.metrics().prefill_pairs!=before_pairs?2U:0U;
+    if (was_tang && !tang.online()) message(M8("Связь с Tang прервана. Расчёт на Pico."));
+    const unsigned stepped=agent.metrics().prefill_tokens+agent.metrics().decode_tokens-before_tokens;
     if(stepped) {
-      const auto &m=model.compute_metrics();
-      profile_attention_us+=m.attention_us;profile_attention_io_us+=m.attention_io_us;
-      profile_attention_jobs+=m.attention_worker_jobs;
-      profile_read_us+=m.read_us;profile_matmul_us+=m.matmul_us;profile_wait_us+=m.wait_us;
+      if (!tang.online()) {
+        const auto &m=model.compute_metrics();
+        profile_attention_us+=m.attention_us;profile_attention_io_us+=m.attention_io_us;
+        profile_attention_jobs+=m.attention_worker_jobs;
+        profile_read_us+=m.read_us;profile_matmul_us+=m.matmul_us;profile_wait_us+=m.wait_us;
+      }
       const auto previous_steps=profile_steps;
       profile_steps+=stepped;
       if(profile_steps/32!=previous_steps/32 || !agent.active()) {
         char progress[200];const auto &a=agent.metrics();
         const int n=std::snprintf(progress,sizeof(progress),
           "AI_CHAT_PROGRESS position=%u prompt=%u prefill_us=%llu decode_us=%llu attention_us=%llu io_us=%llu\r\n",
-          model.position(),agent.prompt_size(),
+          agent.position(),agent.prompt_size(),
           (unsigned long long)(a.prefill_us-metric_baseline.prefill_us),
           (unsigned long long)(a.decode_us-metric_baseline.decode_us),
           (unsigned long long)profile_attention_us,(unsigned long long)profile_attention_io_us);
