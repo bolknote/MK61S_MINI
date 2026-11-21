@@ -176,6 +176,10 @@ module tang_model #(
     wire scale_done, scale_mul, scale_add;
     wire [31:0] scale_mul_a, scale_mul_b, scale_add_a, scale_add_b, matrix_value;
     wire [LANE_BITS-1:0] scale_activation_lane, scale_previous_lane;
+    // Read ahead at the lane transition. The registered result is ready
+    // when MATRIX_ADVANCE starts, including on a single-lane classifier.
+    wire [LANE_BITS-1:0] scale_result_lane =
+        state[MATRIX_NEXT_LANE] && opcode != 9 && lane != last_lane ? lane + 1'b1 : lane;
     wire [PREFILL_LANES*17-1:0] packed_integer_sums;
     genvar dot_lane;
     generate for (dot_lane=0;dot_lane<PREFILL_LANES;dot_lane=dot_lane+1) begin: pack_sums
@@ -187,7 +191,7 @@ module tang_model #(
         .activation_lane(scale_activation_lane), .previous_lane(scale_previous_lane),
         .activation_scale(act_scale[{scale_activation_lane,group_number[3:0]}]),
         .previous_sum(group_number == 0 ? 32'b0 : matrix_accumulator[scale_previous_lane]),
-        .result_lane(lane), .result(matrix_value), .done(scale_done),
+        .result_lane(scale_result_lane), .result(matrix_value), .done(scale_done),
         .mul_start(scale_mul), .mul_a(scale_mul_a), .mul_b(scale_mul_b),
         .mul_complete(mul_complete), .mul_value(mul_value),
         .add_start(scale_add), .add_a(scale_add_a), .add_b(scale_add_b),
@@ -509,7 +513,7 @@ module tang_model #(
                     end else begin
                         lane <= opcode == 9 ? head_lane : 0;
                         group_number <= 0;
-                        max_value <= NEG_MAX;
+                        if (opcode == 9) maximum_key <= ordered(NEG_MAX);
                         allowed_index <= 0;
                         state <= masked_head ? state_bit(ALLOWED_READ) : state_bit(MATRIX_WORD);
                     end
@@ -548,7 +552,6 @@ module tang_model #(
                     else begin
                         if (opcode == 9) begin
                             candidate_key <= ordered(matrix_value);
-                            maximum_key <= ordered(max_value);
                             state <= state_bit(BEST_COMPARE);
                         end else put_ram(destination+row[11:0],matrix_value,MATRIX_NEXT_LANE);
                     end
@@ -615,7 +618,7 @@ module tang_model #(
                     state <= state_bit(BEST_COMMIT);
                 end
                 state[BEST_COMMIT]: begin
-                    if (candidate_is_larger) begin max_value <= matrix_value; best_token <= row; end
+                    if (candidate_is_larger) begin maximum_key <= candidate_key; best_token <= row; end
                     state <= state_bit(MATRIX_NEXT_LANE);
                 end
 

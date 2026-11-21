@@ -54,7 +54,8 @@ def build(tools, output, clock, phase, hardfloat=None, half_sdram_clock=False, p
         "GW2AR-LV18QN88C8/I7", "--vopt", "family=GW2A-18C", "--vopt", f"cst={HERE / 'tang.cst'}",
         "--freq", str(clock), "--report", "timing.json"]
     if seed is None and prefill_lanes == 6:
-        seed = 3 if clock == 90 or (clock == 102 and divider == 3) else 2
+        seed = 3 if (clock == 90 or (clock == 102 and divider == 3) or
+                     (clock, divider, dsp_clock) == (102, 2, 162)) else 2
     if seed is not None:
         routing += ["--seed", str(seed)]
     if dsp_clock:
@@ -82,7 +83,7 @@ def main():
     memory_clock.add_argument("--sdram-divider", type=int, choices=(1, 2, 3))
     parser.add_argument("--prefill-lanes", type=int, choices=(1, 2, 4, 6), default=4)
     parser.add_argument("--seed", type=int, help="Override the placement seed")
-    parser.add_argument("--dsp-clock", type=int, choices=(189, 198, 216, 243, 252, 270))
+    parser.add_argument("--dsp-clock", type=int, choices=(162, 189, 198, 216, 243, 252, 270))
     parser.add_argument("--hardfloat", type=Path, help="Berkeley HardFloat Release 1 root to include the transformer sequencer")
     args = parser.parse_args()
     build(args.tools.resolve(), args.output.resolve(), args.clock, args.phase,

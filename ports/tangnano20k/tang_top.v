@@ -141,7 +141,7 @@ module tang_top #(
         localparam INPUT_DIVIDE = DSP_CLOCK_HZ == 252000000 || DSP_CLOCK_HZ == 198000000 ? 2 : 0;
         localparam FEEDBACK = DSP_CLOCK_HZ == 252000000 ? 27 : DSP_CLOCK_HZ == 270000000 ? 9 :
                               DSP_CLOCK_HZ == 216000000 ? 7 : DSP_CLOCK_HZ == 243000000 ? 8 :
-                              DSP_CLOCK_HZ == 198000000 ? 21 : 6;
+                              DSP_CLOCK_HZ == 198000000 ? 21 : DSP_CLOCK_HZ == 162000000 ? 5 : 6;
         wire fast_clk;
         rPLL #(.FCLKIN("27"), .IDIV_SEL(INPUT_DIVIDE), .FBDIV_SEL(FEEDBACK), .ODIV_SEL(4), .DEVICE("GW2A-18C")) fast_pll (
             .CLKIN(clock27), .CLKOUT(fast_clk), .CLKOUTP(), .LOCK(dsp_locked), .RESET(1'b0),

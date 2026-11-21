@@ -80,13 +80,19 @@ module tang_dot_cdc #(
 
     wire [38:0] command;
     wire have_command, command_valid;
+    reg [38:0] staged_command;
+    reg command_pending;
     reg active, testing;
     reg [LANE_BITS-1:0] issue_lane;
     reg [5:0] vector_address;
     reg [31:0] active_weights, fetched_weights;
     reg fetch_valid, fetch_last, fetch_test;
     wire issue_last = active && (testing || issue_lane == LAST_LANE);
-    wire pop = have_command && !command_valid && (!active || issue_last);
+    wire issue_penultimate = active && !testing && LANES > 1 && issue_lane == LAST_LANE-1'b1;
+    // Fetch the next command a lane early, allowing a register after the
+    // FIFO's BRAM output without delaying the next weight word.
+    wire pop = have_command && !command_valid && !command_pending &&
+               (!active || issue_last || issue_penultimate);
     tang_dot_fifo #(.WIDTH(39)) commands (
         .write_clk(clk), .write_resetn(resetn), .push(test || request),
         .write_data({test,weights,read_address}), .read_clk(fast_clk),
@@ -94,13 +100,15 @@ module tang_dot_cdc #(
         .valid(command_valid), .read_data(command)
     );
     always @(posedge fast_clk) begin
+        staged_command <= command;
+        command_pending <= fast_resetn && command_valid;
         if (!fast_resetn) active <= 0;
-        else if (command_valid) begin
+        else if (command_pending) begin
             active <= 1;
-            testing <= command[38];
-            active_weights <= command[37:6];
-            issue_lane <= command[38] ? TEST_ADDRESS[LANE_BITS+5:6] : 0;
-            vector_address <= command[38] ? TEST_ADDRESS[5:0] : command[5:0];
+            testing <= staged_command[38];
+            active_weights <= staged_command[37:6];
+            issue_lane <= staged_command[38] ? TEST_ADDRESS[LANE_BITS+5:6] : 0;
+            vector_address <= staged_command[38] ? TEST_ADDRESS[5:0] : staged_command[5:0];
         end else if (active) begin
             if (issue_last) active <= 0;
             else issue_lane <= issue_lane + 1'b1;
@@ -135,9 +143,16 @@ module tang_dot_cdc #(
     wire [LANES*15-1:0] collected_sums = LANES == 1 ? sum : {sum,earlier_sums};
 
     wire result_valid, result_test;
+    reg result_pending;
+    reg [LANES*15:0] result_packet;
+    // End the DSP pipeline before the FIFO's address and write enable.
+    always @(posedge fast_clk) begin
+        result_pending <= fast_resetn && sum_valid && last_pipe[6];
+        result_packet <= {test_pipe[6],collected_sums};
+    end
     tang_dot_fifo #(.WIDTH(LANES*15+1)) results (
-        .write_clk(fast_clk), .write_resetn(fast_resetn), .push(sum_valid && last_pipe[6]),
-        .write_data({test_pipe[6],collected_sums}), .read_clk(clk), .read_resetn(resetn),
+        .write_clk(fast_clk), .write_resetn(fast_resetn), .push(result_pending),
+        .write_data(result_packet), .read_clk(clk), .read_resetn(resetn),
         .pop(1'b1), .available(), .valid(result_valid), .read_data({result_test,sums})
     );
     assign ready = result_valid && !result_test;

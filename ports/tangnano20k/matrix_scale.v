@@ -12,7 +12,7 @@ module tang_matrix_scale #(
     output wire [LANE_BITS-1:0] activation_lane, previous_lane,
     input wire [31:0] activation_scale, previous_sum,
     input wire [LANE_BITS-1:0] result_lane,
-    output wire [31:0] result,
+    output reg [31:0] result,
     output reg done,
     output wire mul_start,
     output wire [31:0] mul_a, mul_b,
@@ -48,10 +48,10 @@ module tang_matrix_scale #(
     assign mul_a = activation_valid ? scaled_weight : weight_operand;
     assign mul_b = activation_valid ? activation_operand : weight_scale;
     reg [31:0] sums [0:LANES-1];
-    assign result = sums[result_lane];
 
     integer i;
     always @(posedge clk) begin
+        result <= sums[result_lane];
         absolute_valid <= resetn && issuing;
         shift_valid <= resetn && absolute_valid;
         weight_valid <= resetn && shift_valid;

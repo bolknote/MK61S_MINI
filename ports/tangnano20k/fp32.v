@@ -20,7 +20,7 @@ module tang_fp32 (
     localparam ADD=0, SUB=1, MUL=2, DIV=3, SQRT=4, INTEGER=5, EXP=6;
     localparam IDLE=0, CONVERT=1, CALCULATE=2, WAIT_DIV=3, ROUND_PACK=4, RETURN=5, WAIT_EXP=6,
         ROUND_PREPARE=7, WAIT_ADD=8, INTEGER_SCAN=9, INTEGER_PACK=10, ROUND_SHIFT=11, ROUND_SUBNORMAL=12,
-        CONVERT_SUBNORMAL=13;
+        CONVERT_SUBNORMAL=13, START_EXP=14;
     reg [3:0] step;
     reg [2:0] op;
     reg [31:0] raw_a, raw_b;
@@ -82,8 +82,9 @@ module tang_fp32 (
         .clk(clk), .resetn(resetn), .start(step == CALCULATE && (op == DIV || op == SQRT)),
         .sqrt(op == SQRT), .a(rec_a), .b(rec_b), .complete(div_complete), .raw(raw_div)
     );
-    tang_exp32 exponential(clk, resetn, start && step == IDLE && operation == EXP,
-                           a, exp_complete, exp_value);
+    // Use the captured scalar operand before the exponential's range test.
+    // Attention scores can arrive from BRAM through the shared operand mux.
+    tang_exp32 exponential(clk, resetn, step == START_EXP, raw_a, exp_complete, exp_value);
 
     wire scalar_decoded = step == CONVERT_SUBNORMAL ||
                           (step == CONVERT && !subnormal_a && !subnormal_b);
@@ -104,7 +105,7 @@ module tang_fp32 (
                 if (operation == INTEGER) begin
                     int_magnitude <= a[16] ? -a[16:0] : a[16:0];
                     step <= INTEGER_SCAN;
-                end else step <= operation == EXP ? WAIT_EXP : operation <= SUB ? WAIT_ADD : CONVERT;
+                end else step <= operation == EXP ? START_EXP : operation <= SUB ? WAIT_ADD : CONVERT;
             end
             INTEGER_SCAN: begin int_shift <= leading; step <= INTEGER_PACK; end
             INTEGER_PACK: begin
@@ -162,6 +163,7 @@ module tang_fp32 (
                 result <= {unrounded[37],rounded_bits + {30'b0,round_up}};
                 step <= RETURN;
             end
+            START_EXP: step <= WAIT_EXP;
             WAIT_EXP: if (exp_complete) begin result <= exp_value; step <= RETURN; end
             WAIT_ADD: if (add_complete) begin result <= add_value; step <= RETURN; end
             RETURN: step <= IDLE;
