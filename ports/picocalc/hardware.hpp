@@ -59,6 +59,7 @@ public:
         static constexpr unsigned CAPACITY=16;
         u32 frames=0,crc[CAPACITY]={};
     };
+    struct ColorChainTiming {u32 bytes,setup_us,dma_us,pauses;};
     void init();
     bool flush(const Screen& screen);
     u32 color(u32 operation,const void* payload=nullptr);
@@ -94,6 +95,7 @@ public:
     u32 strips() const { return last_strips_.load(std::memory_order_relaxed); }
     u32 chain_pauses() const { return last_pauses_.load(std::memory_order_relaxed); }
     u32 queued_strips() const { return queued_strips_; }
+    ColorChainTiming color_chain_timing() const;
     u32 scrolls() const { return scrolls_.load(std::memory_order_relaxed); }
     u32 scrolled_rows() const { return scrolled_rows_.load(std::memory_order_relaxed); }
     unsigned scroll_offset() const { return scroll_.offset; }
@@ -137,6 +139,7 @@ private:
     u16 discard_=0;
     int dma_tx_=-1,dma_rx_=-1,dma_control_=-1;
     std::atomic<u32> last_strips_{0},last_pauses_{0};
+    std::atomic<u32> color_chain_bytes_{0},color_chain_setup_us_{0},color_chain_dma_us_{0},color_chain_pauses_{0};
     void configure_dma(bool chain=true);
     u32 color_clock(u32 hz);
     void apply_clock();

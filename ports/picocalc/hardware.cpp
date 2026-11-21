@@ -317,6 +317,10 @@ bool Panel::color_history(ColorHistory& out) const {
     out=color_history_;
     return true;
 }
+Panel::ColorChainTiming Panel::color_chain_timing() const {
+    return {color_chain_bytes_.load(std::memory_order_relaxed),color_chain_setup_us_.load(std::memory_order_relaxed),
+            color_chain_dma_us_.load(std::memory_order_relaxed),color_chain_pauses_.load(std::memory_order_relaxed)};
+}
 u32 Panel::color_palette(const u16* colors) {
     if(!colors) return 0;
     if(io_worker::frame_pending()) return 2;
@@ -586,10 +590,14 @@ void Panel::abort_dma() {
 bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_color_frame* frame) {
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_WAIT);
     static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
-    configure_dma();stream_.reset(rect);
     // Small dirty windows keep the scalar path and its existing service cadence.
     const bool indexed_pairs=frame && lcd::Index4Pairs::supports(frame->format) &&
         (pages_active_ || rect.width>=lcd::Index4Pairs::pixels_per_step);
+    const bool full_indexed_strip=indexed_pairs && rect.width==Screen::WIDTH &&
+        frame->pixel_bytes<=COLOR_SLOT_BYTES && color_scroll_.open && !scroll_.offset;
+    const u32 setup_started=full_indexed_strip?time_us_32():0;
+    const u32 initial_pauses=pauses;
+    configure_dma();stream_.reset(rect);
     // Both packed slots leave room for a third RGB565 DMA buffer at the tail.
     static_assert(2*COLOR_SLOT_BYTES+sizeof(scanlines)<=sizeof(previous_));
     constexpr unsigned strip_pixels=sizeof(scanlines)/sizeof(*scanlines);
@@ -602,7 +610,12 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
     io_worker::FrameDeadlineScope frame_trace(WorkerDeadlineTrace::LCD_PREPARE);
         const auto next=lcd::Stream::prepare(rect,index,buffers[slot],
             [&](unsigned row,u16* out) {
-                if(indexed_pairs) index4_pairs_.line(*frame,rect,row,out,service);
+                if(full_indexed_strip) {
+                    // One complete 320-pixel lookup row uses just 160 pairs.
+                    // Service the transport after the row and inside DMA waits.
+                    index4_pairs_.line(*frame,rect,row,out);
+                    service();
+                } else if(indexed_pairs) index4_pairs_.line(*frame,rect,row,out,service);
                 else if(frame) {
                     lcd::color_scanline(*frame,rect,row,out,color_palette_,service);
                     // Unlike the paired path, a short scalar row may finish
@@ -631,6 +644,7 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         &dma_hw->ch[dma_tx_].al3_transfer_count,stream_.segments,2,false);
     const unsigned total=rect.width*rect.height;
     dma_channel_set_trans_count((unsigned)dma_rx_,total,false);__dmb();
+    const u32 dma_started=full_indexed_strip?time_us_32():0;
     dma_start_channel_mask((1U<<dma_rx_) | (1U<<dma_control_));
     const u64 limit=time_us_64()+1000000;
     const auto loaded=[&] {
@@ -669,6 +683,15 @@ bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,const mk61_service_
         io_worker::wait_for_progress();
     }
     while(spi_is_busy(spi1)) tight_loop_contents();
+    if(full_indexed_strip) {
+        const u32 dma_us=time_us_32()-dma_started;
+        // Only core 1 writes these totals. Core 0 samples them for status.
+        const auto add=[](std::atomic<u32>& sum,u32 value) {
+            sum.store(sum.load(std::memory_order_relaxed)+value,std::memory_order_relaxed);
+        };
+        add(color_chain_bytes_,total*2);add(color_chain_setup_us_,dma_started-setup_started);
+        add(color_chain_dma_us_,dma_us);add(color_chain_pauses_,pauses-initial_pauses);
+    }
     return true;
 }
 bool Panel::finish_scanline(bool service_io) {

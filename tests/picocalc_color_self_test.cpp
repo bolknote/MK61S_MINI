@@ -53,6 +53,14 @@ static void indexed_pairs() {
             for (unsigned i=0;i<16;++i) frame.palette[i]=uint16_t(i*4083+37+phase*137);
             lookup.refresh(frame.palette);
             lookup.refresh(frame.palette);
+            if(width==320) {
+                const Rect full{frame.x,frame.y,frame.width,frame.height};
+                alignas(4) uint16_t line[320];
+                for(unsigned row=0;row<full.height;++row) {
+                    lookup.line(frame,full,row,line);
+                    for(unsigned x=0;x<full.width;++x) assert(line[x]==color_pixel(frame,x,row));
+                }
+            }
             for (unsigned x : {0u,1u,63u,64u,127u})
                 for (unsigned count : {1u,2u,63u,64u,65u,191u,319u}) {
                     if (x+count>width) continue;

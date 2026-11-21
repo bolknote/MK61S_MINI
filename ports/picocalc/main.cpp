@@ -306,6 +306,9 @@ void report(unsigned math_failures) {
         panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
         (unsigned long)panel.last_us(),(unsigned long)panel.full_frames(),panel.chained_dma(),(unsigned long)panel.strips(),
         (unsigned long)panel.chain_pauses(),(unsigned long)panel.queued_strips());
+    const auto chain=panel.color_chain_timing();
+    std::printf("LCD_CHAIN_BYTES=%lu LCD_CHAIN_SETUP_US=%lu LCD_CHAIN_DMA_US=%lu LCD_CHAIN_STALLS=%lu\n",
+        (unsigned long)chain.bytes,(unsigned long)chain.setup_us,(unsigned long)chain.dma_us,(unsigned long)chain.pauses);
     std::printf("LCD_EXTERNAL=%u LCD_CLOCK_FALLBACKS=%lu UI_PARTIAL=%lu LCD_RESPONSE_COUNT=%lu LCD_RESPONSE_US=%lu LCD_RESPONSE_MAX_US=%lu\n",
         panel.external_power(),(unsigned long)panel.clock_fallbacks(),(unsigned long)screen.partial_renders(),
         (unsigned long)panel.responses(),(unsigned long)panel.response_us(),(unsigned long)panel.response_max_us());
