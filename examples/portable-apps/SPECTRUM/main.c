@@ -81,6 +81,7 @@ typedef struct {
     bool active,ready,clear,pages,selected,transaction,repainted,packed;
 #if SPECTRUM_HAS_PENTAGON
     uint32_t ready_guard_us,capture_guard_us;
+    uint8_t alternate_age; // 2 for this guest frame, 1 for the previous one, 0 when expired.
     bool clipped,gap_right,prefetched;
     spectrum_wide_gap gaps[SPECTRUM_WIDE_STRIPS];
 #endif
@@ -495,7 +496,7 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
         // Larger ones use the batched native snapshot and keep their clipping.
         out->packed=rows<=(mode==SPECTRUM_VIDEO_WIDE?WIDE_PACKED_ROWS:16u);
     }
-    out->saved.previous=0;
+    out->alternate_age=0;out->saved.previous=0;
     if(wide && shown!=address && out->transaction && out->valid[0] && !out->clear) {
         out->saved.previous=shown;
         out->saved.previous_frames=out->saved.frames;
@@ -524,7 +525,8 @@ static bool pentagon_capture(video_output* out,uint8_t* work) {
 
 static void prefetch_wide(video_output* out) {
     if(out->prefetched || out->pending!=SPECTRUM_VIDEO_WIDE || !out->saved.previous) return;
-    const unsigned page=(bank_memory.paging>>3)&1;
+    const bool retained=out->alternate_age==1;
+    const unsigned page=((bank_memory.paging>>3)&1)^retained;
     const uint32_t address=page?WIDE_REFERENCE:RASTER_BASE;
     const spectrum_pentagon_changes* changes=machine.pentagon_video;
     if(address!=out->saved.previous || !changes || changes->mode!=SPECTRUM_VIDEO_WIDE ||
@@ -532,11 +534,11 @@ static void prefetch_wide(video_output* out) {
     for(unsigned strip=0;strip<SPECTRUM_WIDE_STRIPS;++strip)
         if(changes->strips[page][strip].bottom) return;
 
-    // The resident owns the remaining strips. Latch the intact alternate
-    // snapshot now, while this guest frame still selects it.
+    // The resident owns the remaining strips. Latch the clean alternate
+    // with the FLASH phase of the completed guest frame that selected it.
     out->saved.previous=out->saved.address;out->saved.address=address;
-    out->saved.previous_frames=out->saved.frames;out->saved.frames=machine.frames;
-    out->pending=0;out->prefetched=true;
+    out->saved.previous_frames=out->saved.frames;out->saved.frames=machine.frames-retained;
+    out->alternate_age=0;out->pending=0;out->prefetched=true;
 }
 
 static bool wide_prepare_first(video_output* out,uint8_t* work) {
@@ -563,6 +565,9 @@ static __attribute__((noinline)) void video_begin(video_output* out,unsigned mod
 #endif
     }
     if(!mode) return;
+#if SPECTRUM_HAS_PENTAGON
+    out->alternate_age=0;
+#endif
     out->next=0;out->ready=out->selected=out->repainted=false;out->active=true;
 }
 
@@ -1867,6 +1872,14 @@ static __attribute__((noinline)) void emulate_session(void) {
 #if SPECTRUM_HAS_FAST_VIDEO
             if(!SPECTRUM_HAS_PENTAGON && video.active) goto paced;
             video.pending=spectrum_video_mode(&machine);
+#if SPECTRUM_HAS_PENTAGON
+            // A switch back to the displayed bank leaves one opportunity
+            // to present the alternate that completed while the LCD was busy.
+            if(video.pending==SPECTRUM_VIDEO_WIDE &&
+               video.saved.previous==(bank_memory.paging&8?WIDE_REFERENCE:RASTER_BASE))
+                video.alternate_age=2;
+            else video.alternate_age>>=1;
+#endif
             if(video.active || video.pending) goto paced;
             if(SPECTRUM_HAS_PENTAGON && video.pages) video_begin(&video,0);
             video.mode=0;

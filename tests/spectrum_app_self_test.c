@@ -704,6 +704,25 @@ static void extended_frames(void) {
         }
     }
     puts("Wide prepared first strip: page flips, busy submit, unchanged strip and LCD fault recovery PASS");
+    {
+        video_output overlap=diff;video_scroll=true;
+        state.cpu.port_out(&state.cpu,0x7ffd,0x18);
+        video_begin(&overlap,SPECTRUM_VIDEO_WIDE);
+        assert(video_present(&overlap,canvas) && overlap.saved.previous==RASTER_BASE);
+        const uint32_t shown=overlap.saved.address;
+        overlap.next=SPECTRUM_WIDE_STRIPS;overlap.pending=SPECTRUM_VIDEO_WIDE;
+        state.frames=16;video_end_busy=true;
+        assert(video_present(&overlap,canvas) && !overlap.prefetched);
+        overlap.alternate_age=1;
+        pentagon.strips[0][0].bottom=1;
+        assert(video_present(&overlap,canvas) && !overlap.prefetched);
+        pentagon.strips[0][0].bottom=0;
+        assert(video_present(&overlap,canvas) && overlap.prefetched && !overlap.alternate_age);
+        assert(overlap.saved.address==RASTER_BASE && overlap.saved.previous==shown && overlap.saved.frames==15);
+        assert(wide_prepare_first(&overlap,canvas) && overlap.ready);
+        video_end_busy=false;
+        puts("Wide retains an alternate from the prior guest frame with its own FLASH phase PASS");
+    }
 #endif
     if(SPECTRUM_HAS_PENTAGON) spectrum_pentagon_watch(&state,NULL);
     {
@@ -945,6 +964,9 @@ static void preferences_scenario(const char* filename) {
 }
 int main(int argc,char** argv) {
     assert(argc==2);asset_dir=argv[1];
+#if !SPECTRUM_APP_PROFILE
+    if(!strcmp(argv[1],"--video-only")) {extended_frames();return 0;}
+#endif
     char settings_path[1024];path(settings_path,preferences_name());
     preferences_phase=getenv("SPECTRUM_PREFERENCES_PHASE");
     if(preferences_phase) { preferences_scenario(settings_path);return 0; }

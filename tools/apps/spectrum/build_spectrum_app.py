@@ -134,8 +134,9 @@ def main():
             command += ["--handled-magic", "T8", "--define", "Z80_TIMEX_IO"]
         if profile in (1,3,7):
             command += ["--define", "Z80_NO_WAIT_STATES"]
-        if profile>=2:
-            # Keeping parameters intact produces a smaller Thumb-1 image.
+        if profile>=2 and profile!=3:
+            # Keep parameters intact where this saves space. ZXVIDEO needs
+            # IPA-SRA to stay within the Thumb-1 loader limit.
             command.append("--no-ipa-sra")
         subprocess.run(command, check=True)
     copy_assets(args.output_dir)
