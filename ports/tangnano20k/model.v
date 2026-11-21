@@ -45,7 +45,7 @@ module tang_model #(
         ATT_Q=64, ATT_K=65, ATT_PRODUCT=66, ATT_ACCUMULATE=67, ATT_NEXT=68, ATT_SCORE=69, ATT_SCORE_NEXT=70,
         SOFTMAX_READ=71, SOFTMAX_SUB=72, SOFTMAX_EXP=73, SOFTMAX_STORE=74,
         SOFTMAX_ACCUMULATE=75, SOFTMAX_NEXT=76,
-        VALUE_SCORE=77, VALUE_WEIGHT=78, VALUE_START=79, VALUE_HEAD=80, VALUE_MEMORY=81,
+        VALUE_SCORE=77, VALUE_WEIGHT=78, VALUE_START=79, VALUE_RESULT_READ=80, VALUE_MEMORY=81,
         VALUE_PRODUCT=82, VALUE_SUM=83, VALUE_STORE=84, VALUE_NEXT=85,
         ADD_READ=86, ADD_RESULT=87, ADD_WRITE=88, ADD_NEXT=89,
         SILU_READ=90, SILU_EXP=91, SILU_ADD=92, SILU_DIVIDE=93, SILU_PRODUCT=94, SILU_STORE=95,
@@ -54,7 +54,7 @@ module tang_model #(
         EMBED_ADDRESS=104, KV_ADDRESS=105, CHECK_LAYOUT=106, BEST_COMPARE=107, BEST_COMMIT=108,
         QUANT_MAX_COMMIT=109, ADVANCE_POSITION=110, ADVANCE_INSTRUCTION=111, FINISH=112,
         CHECK_TOKEN_RANGE=113, ALLOWED_READ=114, ALLOWED_TOKEN=115,
-        ALLOWED_OFFSET=116, ALLOWED_ROW=117;
+        ALLOWED_OFFSET=116, ALLOWED_ROW=117, VALUE_RESULT_NEXT=118, VALUE_RESULT_WAIT=119;
     localparam [2:0] FADD=0, FSUB=1, FMUL=2, FDIV=3, FSQRT=4, I2F=5, FEXP=6;
     localparam [31:0] ONE=32'h3f800000, NEG_MAX=32'hff7fffff;
     localparam [31:0] INV_SQRT_32=32'h3e3504f3;
@@ -150,7 +150,31 @@ module tang_model #(
     reg [2:0] fp_operation;
     wire fp_complete;
     wire [31:0] fp_value;
-    tang_fp32 fp(clk, resetn, state == FP_START, fp_operation, fp_a, fp_b, fp_complete, fp_value);
+    // K·Q accumulates in order. V accumulates the same way in a small
+    // independent RAM, so neither stage waits for the add before multiplying
+    // the next pair. The final V vector is copied to scratch once per head.
+    (* ram_style="block" *) reg [31:0] value_accumulators [0:31];
+    reg [31:0] value_read, value_word;
+    reg add_pending, add_is_value;
+    reg [4:0] add_index;
+    wire attention_add_complete;
+    wire [31:0] attention_sum;
+    wire add_ready = !add_pending || attention_add_complete;
+    wire value_add = state == VALUE_SUM;
+    wire attention_add = add_ready && (state == ATT_ACCUMULATE || value_add);
+    wire [31:0] attention_base = value_add ? (time_index == 0 ? 32'b0 : value_word) :
+                                 (add_pending ? attention_sum : accumulator);
+    always @(posedge clk) begin
+        if (state == VALUE_PRODUCT || state == VALUE_RESULT_READ)
+            value_read <= value_accumulators[i[4:0]];
+        value_word <= value_read;
+        if (add_pending && add_is_value && attention_add_complete)
+            value_accumulators[add_index] <= attention_sum;
+    end
+    tang_fp32 fp(.clk(clk), .resetn(resetn), .start(state == FP_START),
+                 .operation(fp_operation), .a(fp_a), .b(fp_b), .complete(fp_complete), .result(fp_value),
+                 .add_start(attention_add), .add_a(attention_base), .add_b(fp_value),
+                 .add_complete(attention_add_complete), .add_value(attention_sum));
 
     assign busy = state != IDLE;
     assign outcome = {5'b0,next_position,best_token};
@@ -257,8 +281,18 @@ module tang_model #(
             prefetch_pending <= 0;
             prefetch_ready <= 0;
             hash_valid <= 0;
+            add_pending <= 0;
         end else begin
             if (busy) cycles <= cycles + 1'b1;
+            if (add_pending && attention_add_complete) begin
+                add_pending <= 0;
+                if (!add_is_value) accumulator <= attention_sum;
+            end
+            if (attention_add) begin
+                add_pending <= 1;
+                add_is_value <= value_add;
+                add_index <= i[4:0];
+            end
             // Update each checksum while the sequencer writes the row and
             // starts the next one. The DSP sees only registered operands.
             hash_valid <= {hash_valid[0],hash_start};
@@ -543,9 +577,11 @@ module tang_model #(
                     if (i != 31) ram_address <= next_query;
                     calculate(FMUL,vector_word,ext_word,ATT_ACCUMULATE);
                 end
-                ATT_ACCUMULATE: calculate(FADD,accumulator,fp_value,ATT_NEXT);
-                ATT_NEXT: if (i == 31) calculate(FMUL,fp_value,INV_SQRT_32,ATT_SCORE);
-                    else begin i <= i+1'b1; accumulator <= fp_value; state <= ATT_PREFETCH; end
+                ATT_ACCUMULATE: if (add_ready) begin
+                    if (i == 31) state <= ATT_NEXT;
+                    else begin i <= i+1'b1; state <= ATT_PREFETCH; end
+                end
+                ATT_NEXT: if (attention_add_complete) calculate(FMUL,attention_sum,INV_SQRT_32,ATT_SCORE);
                 ATT_SCORE: begin
                     candidate_key <= ordered(fp_value);
                     maximum_key <= ordered(max_value);
@@ -580,17 +616,24 @@ module tang_model #(
                 end
                 VALUE_SCORE: read_ram(SCORES+{1'b0,time_index},VALUE_WEIGHT);
                 VALUE_WEIGHT: calculate(FDIV,score_word,accumulator,VALUE_START);
-                VALUE_START: begin factor <= fp_value; i <= 0; state <= VALUE_HEAD; end
-                VALUE_HEAD: read_ram(output_coordinate,i == 0 ? VALUE_MEMORY : VALUE_PREFETCH);
+                VALUE_START: begin factor <= fp_value; i <= 0; state <= VALUE_MEMORY; end
                 VALUE_MEMORY: read_ext(attention_value,VALUE_PRODUCT);
                 VALUE_PRODUCT: begin
                     prefetch_next_attention_word();
                     calculate(FMUL,factor,ext_word,VALUE_SUM);
                 end
-                VALUE_SUM: calculate(FADD,time_index == 0 ? 32'b0 : vector_word,fp_value,VALUE_STORE);
-                VALUE_STORE: put_ram(output_coordinate,fp_value,VALUE_NEXT);
-                VALUE_NEXT: if (i != 31) begin i <= i+1'b1; state <= VALUE_HEAD; end
-                    else if (time_index != position) begin time_index <= time_index+1'b1; state <= VALUE_SCORE; end
+                VALUE_SUM: if (add_ready) begin
+                    if (i == 31) state <= VALUE_NEXT;
+                    else begin i <= i+1'b1; state <= VALUE_PREFETCH; end
+                end
+                VALUE_NEXT: if (add_ready) begin
+                    if (time_index != position) begin time_index <= time_index+1'b1; state <= VALUE_SCORE; end
+                    else begin i <= 0; state <= VALUE_RESULT_READ; end
+                end
+                VALUE_RESULT_READ: state <= VALUE_RESULT_WAIT;
+                VALUE_RESULT_WAIT: state <= VALUE_STORE;
+                VALUE_STORE: put_ram(output_coordinate,value_word,VALUE_RESULT_NEXT);
+                VALUE_RESULT_NEXT: if (i != 31) begin i <= i+1'b1; state <= VALUE_RESULT_READ; end
                     else if (head == 3) state <= ADVANCE_POSITION;
                     else begin head <= head+1'b1; time_index <= 0; i <= 0; accumulator <= 0;
                                max_value <= NEG_MAX; state <= ATT_Q; end

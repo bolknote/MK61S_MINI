@@ -5,7 +5,13 @@ module tang_fp32 (
     input wire [2:0] operation,
     input wire [31:0] a, b,
     output wire complete,
-    output reg [31:0] result
+    output reg [31:0] result,
+    // The attention sequencer can use the adder while the scalar unit
+    // multiplies the next pair. It drains these additions before using ADD.
+    input wire add_start,
+    input wire [31:0] add_a, add_b,
+    output wire add_complete,
+    output wire [31:0] add_value
 );
     localparam ADD=0, SUB=1, MUL=2, DIV=3, SQRT=4, INTEGER=5, EXP=6;
     localparam IDLE=0, CONVERT=1, CALCULATE=2, WAIT_DIV=3, ROUND_PACK=4, RETURN=5, WAIT_EXP=6,
@@ -22,8 +28,8 @@ module tang_fp32 (
     wire [41:0] raw_mul;
     wire [40:0] raw_div;
     reg [41:0] unrounded;
-    wire [31:0] exp_value, add_value;
-    wire exp_complete, add_complete, div_complete;
+    wire [31:0] exp_value;
+    wire exp_complete, div_complete;
     // The raw significand has two integer bits and a guard and sticky bit.
     // Normalize before rounding; the common normal case needs no barrel shift.
     wire normalize = unrounded[26];
@@ -67,8 +73,9 @@ module tang_fp32 (
             recode = {value[31],exponent,fraction};
         end
     endfunction
-    tang_fp_add adder(clk, resetn, start && step == IDLE && (operation == ADD || operation == SUB),
-                      operation == SUB, a, b, add_complete, add_value);
+    wire scalar_add = start && step == IDLE && (operation == ADD || operation == SUB);
+    tang_fp_add adder(clk, resetn, add_start || scalar_add, scalar_add && operation == SUB,
+                      add_start ? add_a : a, add_start ? add_b : b, add_complete, add_value);
     mulRecFNToRaw #(8,24) multiplier(1'b1, rec_a, rec_b,
         raw_mul[41], raw_mul[40], raw_mul[39], raw_mul[38], raw_mul[37], raw_mul[36:27], raw_mul[26:0]);
     tang_fp_divsqrt divider(
