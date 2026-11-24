@@ -1,7 +1,39 @@
 {
   "date": "2026-11-24",
   "target": "Classic binary64 System API result, all bits",
-  "physical_timing": "pending; both boards disconnected",
+  "physical_timing": {
+    "pico": {
+      "uid": "E6657CD423721C35",
+      "usb_location": "0x01130000",
+      "resident_build": "305C81A5",
+      "resident_crc32": "250488DD",
+      "clock_hz": 125000000,
+      "storage": "SRAM for both kernels",
+      "counter": "SysTick core-clock ticks",
+      "raw_sha256": "b5b432a79d11f500e33f1d2ca33893f0a239391fc6306fcc95259440dedb11a8",
+      "matching_results": 24,
+      "faster_than_portable_rows": 24,
+      "mean_us": 10.182973958333333,
+      "portable_mean_us": 57.83633333333333,
+      "speedup_vs_portable": 5.679709441464536,
+      "sample_max_us": 55.272
+    },
+    "classic": {
+      "uid": "AEB505B6E0067623",
+      "usb_serial": "2068336B4731",
+      "build": "CDB065DC",
+      "crc32": "CDB065DC",
+      "clock_hz": 96000000,
+      "storage": "resident System API in Flash",
+      "counter": "DWT CYCCNT",
+      "raw_sha256": "184dc281a7b7e38ccc6ccc2b07bcb37afcea4449fd762cbeb8dee9d4df85da41",
+      "matching_results": 24,
+      "mean_us": 42.337544759114586
+    },
+    "pico_faster_than_classic_rows": 24,
+    "pico_speedup_vs_classic": 4.157679763529912,
+    "passed": true
+  },
   "pico_candidate": {
     "build": "10744247",
     "crc32": "9B3F0159"
@@ -75,7 +107,13 @@
       "pico_service_insns": 1373,
       "classic_service_insns": 5555,
       "pico_ram_insns": 1347,
-      "portable_ram_insns": 9809
+      "portable_ram_insns": 9809,
+      "pico_batch_ticks": 243218,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1668498,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1086307,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3fe6666666666666",
@@ -84,7 +122,13 @@
       "pico_service_insns": 1424,
       "classic_service_insns": 5844,
       "pico_ram_insns": 1398,
-      "portable_ram_insns": 10032
+      "portable_ram_insns": 10032,
+      "pico_batch_ticks": 251282,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1697426,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1130113,
+      "classic_control_ticks": 3842
     },
     {
       "x": "4024000000000000",
@@ -93,7 +137,13 @@
       "pico_service_insns": 1494,
       "classic_service_insns": 5599,
       "pico_ram_insns": 1468,
-      "portable_ram_insns": 9747
+      "portable_ram_insns": 9747,
+      "pico_batch_ticks": 265234,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1669266,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1088595,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff004189374bc6a",
@@ -102,7 +152,13 @@
       "pico_service_insns": 1440,
       "classic_service_insns": 5145,
       "pico_ram_insns": 1414,
-      "portable_ram_insns": 9722
+      "portable_ram_insns": 9722,
+      "pico_batch_ticks": 256274,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1675282,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1027919,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -111,7 +167,13 @@
       "pico_service_insns": 269,
       "classic_service_insns": 160,
       "pico_ram_insns": 253,
-      "portable_ram_insns": 346
+      "portable_ram_insns": 346,
+      "pico_batch_ticks": 43538,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 61202,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 37063,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -120,7 +182,13 @@
       "pico_service_insns": 235,
       "classic_service_insns": 158,
       "pico_ram_insns": 219,
-      "portable_ram_insns": 342
+      "portable_ram_insns": 342,
+      "pico_batch_ticks": 38674,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 61074,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 37196,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -129,7 +197,13 @@
       "pico_service_insns": 130,
       "classic_service_insns": 103,
       "pico_ram_insns": 114,
-      "portable_ram_insns": 208
+      "portable_ram_insns": 208,
+      "pico_batch_ticks": 20754,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 39698,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 27201,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -138,7 +212,13 @@
       "pico_service_insns": 177,
       "classic_service_insns": 317,
       "pico_ram_insns": 161,
-      "portable_ram_insns": 223
+      "portable_ram_insns": 223,
+      "pico_batch_ticks": 27538,
+      "pico_control_ticks": 2711,
+      "portable_batch_ticks": 41234,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 63577,
+      "classic_control_ticks": 3842
     },
     {
       "x": "4000000000000000",
@@ -147,7 +227,13 @@
       "pico_service_insns": 175,
       "classic_service_insns": 291,
       "pico_ram_insns": 159,
-      "portable_ram_insns": 2277
+      "portable_ram_insns": 2277,
+      "pico_batch_ticks": 26386,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 411410,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 60403,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -156,7 +242,13 @@
       "pico_service_insns": 1436,
       "classic_service_insns": 5173,
       "pico_ram_insns": 1410,
-      "portable_ram_insns": 9645
+      "portable_ram_insns": 9645,
+      "pico_batch_ticks": 256530,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1661714,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1030760,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3fe0000000000000",
@@ -165,7 +257,13 @@
       "pico_service_insns": 854,
       "classic_service_insns": 2970,
       "pico_ram_insns": 838,
-      "portable_ram_insns": 8096
+      "portable_ram_insns": 8096,
+      "pico_batch_ticks": 160146,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1604498,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 717464,
+      "classic_control_ticks": 3842
     },
     {
       "x": "bff3333333333333",
@@ -174,7 +272,13 @@
       "pico_service_insns": 1452,
       "classic_service_insns": 5405,
       "pico_ram_insns": 1426,
-      "portable_ram_insns": 10015
+      "portable_ram_insns": 10015,
+      "pico_batch_ticks": 259346,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1721362,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1074010,
+      "classic_control_ticks": 3842
     },
     {
       "x": "c000000000000000",
@@ -183,7 +287,13 @@
       "pico_service_insns": 46,
       "classic_service_insns": 149,
       "pico_ram_insns": 30,
-      "portable_ram_insns": 222
+      "portable_ram_insns": 222,
+      "pico_batch_ticks": 7442,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 50066,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 40068,
+      "classic_control_ticks": 3842
     },
     {
       "x": "0000000000000000",
@@ -192,7 +302,13 @@
       "pico_service_insns": 53,
       "classic_service_insns": 123,
       "pico_ram_insns": 37,
-      "portable_ram_insns": 183
+      "portable_ram_insns": 183,
+      "pico_batch_ticks": 8978,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 42386,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 34683,
+      "classic_control_ticks": 3842
     },
     {
       "x": "8000000000000000",
@@ -201,7 +317,13 @@
       "pico_service_insns": 101,
       "classic_service_insns": 111,
       "pico_ram_insns": 85,
-      "portable_ram_insns": 224
+      "portable_ram_insns": 224,
+      "pico_batch_ticks": 21906,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 51730,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 31690,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff0000000000000",
@@ -210,7 +332,13 @@
       "pico_service_insns": 30,
       "classic_service_insns": 27,
       "pico_ram_insns": 14,
-      "portable_ram_insns": 47
+      "portable_ram_insns": 47,
+      "pico_batch_ticks": 5138,
+      "pico_control_ticks": 2711,
+      "portable_batch_ticks": 13074,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 13595,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -219,7 +347,13 @@
       "pico_service_insns": 23,
       "classic_service_insns": 20,
       "pico_ram_insns": 7,
-      "portable_ram_insns": 33
+      "portable_ram_insns": 33,
+      "pico_batch_ticks": 3730,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 10258,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 12699,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3ff3333333333333",
@@ -228,7 +362,13 @@
       "pico_service_insns": 28,
       "classic_service_insns": 44,
       "pico_ram_insns": 12,
-      "portable_ram_insns": 74
+      "portable_ram_insns": 74,
+      "pico_batch_ticks": 4626,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 18578,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 16820,
+      "classic_control_ticks": 3842
     },
     {
       "x": "4000000000000000",
@@ -237,7 +377,13 @@
       "pico_service_insns": 788,
       "classic_service_insns": 2959,
       "pico_ram_insns": 772,
-      "portable_ram_insns": 8087
+      "portable_ram_insns": 8087,
+      "pico_batch_ticks": 150290,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1603474,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 716504,
+      "classic_control_ticks": 3842
     },
     {
       "x": "6974e718d7d7625a",
@@ -246,7 +392,13 @@
       "pico_service_insns": 138,
       "classic_service_insns": 5720,
       "pico_ram_insns": 122,
-      "portable_ram_insns": 9789
+      "portable_ram_insns": 9789,
+      "pico_batch_ticks": 28818,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1657106,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 1115787,
+      "classic_control_ticks": 3842
     },
     {
       "x": "3fefffffffffffff",
@@ -255,7 +407,13 @@
       "pico_service_insns": 4818,
       "classic_service_insns": 4218,
       "pico_ram_insns": 4797,
-      "portable_ram_insns": 8275
+      "portable_ram_insns": 8275,
+      "pico_batch_ticks": 887058,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1480466,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 872803,
+      "classic_control_ticks": 3842
     },
     {
       "x": "4000000000000000",
@@ -264,7 +422,13 @@
       "pico_service_insns": 1544,
       "classic_service_insns": 3562,
       "pico_ram_insns": 1508,
-      "portable_ram_insns": 8667
+      "portable_ram_insns": 8667,
+      "pico_batch_ticks": 274194,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1689362,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 801370,
+      "classic_control_ticks": 3842
     },
     {
       "x": "4000000000000000",
@@ -273,7 +437,13 @@
       "pico_service_insns": 1511,
       "classic_service_insns": 3213,
       "pico_ram_insns": 1490,
-      "portable_ram_insns": 8509
+      "portable_ram_insns": 8509,
+      "pico_batch_ticks": 270098,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1656850,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 746388,
+      "classic_control_ticks": 3842
     },
     {
       "x": "0000000000000001",
@@ -282,7 +452,15 @@
       "pico_service_insns": 2478,
       "classic_service_insns": 3533,
       "pico_ram_insns": 2437,
-      "portable_ram_insns": 8662
+      "portable_ram_insns": 8662,
+      "pico_batch_ticks": 464018,
+      "pico_control_ticks": 2706,
+      "portable_batch_ticks": 1688082,
+      "portable_control_ticks": 2706,
+      "classic_batch_ticks": 795043,
+      "classic_control_ticks": 3842
     }
-  ]
+  ],
+  "samples": 128,
+  "rounds": 7
 }

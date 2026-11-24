@@ -27,8 +27,18 @@ def checked_file(receipt, key):
 
 
 def usb_nodes():
-    roots = plistlib.loads(subprocess.check_output(
-        ['/usr/sbin/ioreg','-a','-r','-c','IOUSBHostDevice','-l','-w','0'],timeout=3))
+    # A USB mode change can remove a child while ioreg walks the tree.
+    # Discard the entire partial snapshot and take a fresh one.
+    for attempt in range(5):
+        try:
+            roots = plistlib.loads(subprocess.check_output(
+                ['/usr/sbin/ioreg','-a','-r','-c','IOUSBHostDevice','-l','-w','0'],
+                stderr=subprocess.PIPE,timeout=3))
+            break
+        except (subprocess.CalledProcessError,plistlib.InvalidFileException):
+            if attempt == 4:
+                raise
+            time.sleep(.1)
     def walk(node):
         yield node
         for child in node.get('IORegistryEntryChildren',[]):
@@ -82,6 +92,7 @@ def run_pico(args, receipt):
         pico.readiness(term.status(),args.build,args.crc)
         term.commands()
         pico.identity(term)
+        print(f'PicoCalc {uid} location={location:#x} build={args.build} crc={args.crc}',flush=True)
         term.send(b'\x1e!')
     # picotool's --ser selects the flash ID. BOOTSEL's USB serial is shared.
     until = time.monotonic()+8
@@ -96,6 +107,7 @@ def run_pico(args, receipt):
     ids = re.findall(rb'(?mi)^ *flash id:[ \t]+0x([a-f0-9]+)[ \t]*$',picotool('info','-a'))
     if [v.decode().upper() for v in ids] != [uid]:
         raise ValueError('BOOTSEL flash ID mismatch')
+    print(f'BOOTSEL flash ID {uid} at {location:#x}',flush=True)
     try:
         picotool('load','-v','-x',str(elf))
         with closing(connect('EEEEEEEEEEEEEEEE',0x2e8a,0x000a,location,5)) as ram:
@@ -111,7 +123,17 @@ def run_pico(args, receipt):
         else:
             picotool('reboot')
         with closing(connect(*board,location,15)) as term:
-            pico.readiness(term.status(),args.build,args.crc)
+            # CDC enumerates before the resident finishes its boot checks.
+            until = time.monotonic()+8
+            while True:
+                try:
+                    pico.readiness(term.status(),args.build,args.crc)
+                    break
+                except ValueError:
+                    if time.monotonic() >= until:
+                        raise
+                    time.sleep(.15)
+            print(f'Resident ready {args.build}/{args.crc}, SERVICE=CLOSED',flush=True)
 
 
 def run_classic(args, receipt):

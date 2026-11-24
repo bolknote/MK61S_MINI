@@ -7,9 +7,6 @@ import struct
 import zlib
 
 from check_stm32_vectors import ElfImage
-from compact_math_arm_self_test import MathMachine
-from m0_pow_classic_self_test import PICO_MATH, POW
-from native_eabi_m0_arm_self_test import Machine
 
 
 def sha(path):
@@ -27,7 +24,10 @@ def probe_pairs(elf):
 
 
 def prepare(args):
+    from compact_math_arm_self_test import MathMachine
     from hil_packbits_firmware import firmware_info
+    from m0_pow_classic_self_test import PICO_MATH, POW
+    from native_eabi_m0_arm_self_test import Machine
     from tools.apps.packer.mk61_module_pack import bcj_transform, validate_relocations, zx0_decode
     classic = MathMachine(args.classic)
     if not classic.compact:
