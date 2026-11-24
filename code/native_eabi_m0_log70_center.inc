@@ -2,7 +2,7 @@
 // Exact Q70 residual delta*2^29/den for an exact dyadic center.
 // Three20-bit quotient limbs keep every hardware numerator below2^32.
 MK61_SOFT_PCS U mk61_m0_log_ratio70(U delta,uint32_t den);
-__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_extension"))) MK61_SOFT_PCS U mk61_m0_log_ratio70_slow(U delta,uint32_t den) {
+__attribute__((optimize("Os"),noinline,cold,section(".m0_pow_extension.log"))) MK61_SOFT_PCS U mk61_m0_log_ratio70_slow(U delta,uint32_t den) {
   uint32_t a=uint32_t(delta>>11);
   const uint32_t q0=mk61_m0_math_udiv32(a,den);
   uint32_t r=a-q0*den;

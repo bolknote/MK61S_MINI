@@ -378,7 +378,7 @@ __attribute__((optimize("Os"),noinline,section(MK61_M0_POW_HOT_SECTION))) static
 
 // Checked binary64 pow first tier. Every accepted cell contains its full interval.
 struct PowFastLog {U low;uint32_t high,error;bool negative;unsigned scale;};
-__attribute__((optimize("Os"),noinline,section(".m0_pow_extension"))) static PowFastLog pow_fast_log(U b) {
+__attribute__((optimize("Os"),noinline,section(".m0_pow_extension.log"))) static PowFastLog pow_fast_log(U b) {
   if(b>=UINT64_C(0x3FEFFF8000000000) && b<=UINT64_C(0x3FF0004000000000)) {
     const bool negative=b<UINT64_C(0x3FF0000000000000);
     const U s=(b&D::Fraction)|D::Hidden;
@@ -519,6 +519,39 @@ pow_exp_argument:
 }
 
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+__attribute__((optimize("Os")))
+static double pow_classic_exp(Product argument,bool negative_argument,unsigned input_error,int scale) {
+  // Include the binade before the single rounding, also at underflow.
+  // A negative sentinel requests the Classic polynomial on ambiguous cells.
+#define MK61_POW_EXP_SCALE scale
+#define MK61_POW_EXP_FAILURE() (-1.0)
+#include "native_eabi_m0_pow_exp_round.inc"
+#undef MK61_POW_EXP_FAILURE
+#undef MK61_POW_EXP_SCALE
+}
+
+MK61_SOFT_PCS double mk61_m0_pow_exp_q62(int64_t input,int scale) {
+  const U magnitude=input<0?U(0)-U(input):U(input);
+  return pow_classic_exp({0,magnitude<<2},input<0,28,scale);
+}
+
+__attribute__((optimize("Os")))
+MK61_SOFT_PCS double mk61_m0_pow_classic_checked(double x,double y) {
+  const U xb=bits(x),yb=bits(y),ym=yb&D::Magnitude;
+  const PowFastLog log=pow_fast_log(xb);
+  // The near-one representation carries a variable binary scale.
+  if (log.scale!=70) return -1.0;
+  const int ey=int(ym>>52)-1023;
+  const unsigned shift=unsigned(58-ey);
+  const Product argument=pow_general_argument(log.low,log.high,(ym&D::Fraction)|D::Hidden,shift);
+  unsigned error;
+  if (!pow_argument_error(log.error,shift,error)) return -1.0;
+  // One unit for the partial integer product. The Classic log and y-product
+  // add <3*|y| Q64 units. Its split exp and fixed polynomial add <20.
+  const unsigned log_error=ey<0?3U:6U<<unsigned(ey);
+  return pow_classic_exp(argument,log.negative^bool(yb&D::Sign),error+1+log_error+20,0);
+}
+
 __attribute__((optimize("Os"),noinline,cold,section(".m0_pow_refine_extension")))
 static double pow_large_subnormal_refine(U yb) {
   const U result=mk61_m0_pow_large_subnormal(yb);

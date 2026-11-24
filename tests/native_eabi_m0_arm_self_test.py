@@ -380,9 +380,13 @@ def pow_nearpower_r64_vectors(m):
     fixture=json.loads((ROOT/'tests/fixtures/m0_pow_nearpower_r64.json').read_text())
     assert fixture['schema']==1 and len(fixture['cases'])==28
     before=m.calls
+    classic='mk61_m0_pow_classic_general' in m.elf.symbols
     for row in fixture['cases']:
-        m.floating('_ZN12compact_math3powEdd',int(row['x'],16),int(row['y'],16),
-                   int(row['expected'],16))
+        a,b=int(row['x'],16),int(row['y'],16)
+        expected=row.get('classic',row['expected']) if classic else row['expected']
+        m.floating('_ZN12compact_math3powEdd',a,b,int(expected,16))
+        if classic and 'mk61_m0_pow_fast' in m.elf.symbols:
+            m.floating('mk61_m0_pow_fast',a,b,int(row['expected'],16))
     return m.calls-before
 
 def build(toolchain,out,rp2040=False):
@@ -394,7 +398,11 @@ def build(toolchain,out,rp2040=False):
     for source in ('code/native_eabi_m0.cpp','code/native_eabi_m0_cr.cpp','code/native_eabi_m0.S','code/native_eabi_m0_rp2040.S','code/compact_math.cpp','tests/fixtures/m0_cr_memory.c'):
         p=ROOT/source;target=out/(p.name+'.o');objects.append(target)
         subprocess.run([str(toolchain/('arm-none-eabi-g++' if p.suffix=='.cpp' else 'arm-none-eabi-gcc')),*flags,
-            *(['-std=c++17','-fno-exceptions','-fno-rtti','-Wall','-Wextra','-Werror'] if p.suffix=='.cpp' else []),'-c',str(p),'-o',str(target)],check=True)
+            *(['-std=c++17','-fno-exceptions','-fno-rtti','-Wall','-Wextra','-Werror'] if p.suffix=='.cpp' else []),
+            # GCC 14 warns about two unused members of the 10-word bounds
+            # specialization even though both definitions are in the header.
+            *(['-Wno-error=unused-function'] if p.name=='native_eabi_m0_cr.cpp' and rp2040 else []),
+            '-c',str(p),'-o',str(target)],check=True)
     elf=out/'runtime.elf'
     subprocess.run([str(toolchain/'arm-none-eabi-g++'),*flags,'-nostdlib','-Wl,-Ttext=0x08000000',
         '-Wl,-e,__aeabi_dadd','-Wl,-Map='+str(out/'runtime.map'),*[str(p) for p in objects],'-o',str(elf)],check=True)

@@ -1,0 +1,288 @@
+{
+  "date": "2026-11-24",
+  "target": "Classic binary64 System API result, all bits",
+  "physical_timing": "pending; both boards disconnected",
+  "pico_candidate": {
+    "build": "10744247",
+    "crc32": "9B3F0159"
+  },
+  "sha256": {
+    "ram": "7ecdddbadcfac695d4720aa734378294144b20d0f0b0572773dccb3846a7c94b",
+    "pico": "501d8087ff729c358f99dee2fc6c9c08cb0046454ebc1ae5b35de937031b819a",
+    "classic": "a33caf8f00d28748490918679948aeb31b547abe0621e44e85d7fed54a519602",
+    "app": "da00b7dce802b8fa443c3bfb49736d2164946a54e7f0f3b7e202c4ac301769ac",
+    "bootrom": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe"
+  },
+  "classic_bin": {
+    "bytes": 407100,
+    "footer": 405396,
+    "build": "CDB065DC",
+    "sha256": "0335e35f982fe30cb397bb5a303ce8680f1bc9ab290203c202ec51b2798580e1"
+  },
+  "pico_ram_entry": 536870913,
+  "pico_ram_loads": [
+    {
+      "start": 536870912,
+      "bytes": 79612,
+      "memory": 85040,
+      "flags": 7
+    },
+    {
+      "start": 537137152,
+      "bytes": 616,
+      "memory": 2688,
+      "flags": 5
+    }
+  ],
+  "matrix_sha256": "d1d837ee47fe823d63e46bbc78072b8cae655da019493d8626ffb383b7003de6",
+  "differential_cases": {
+    "special": 576,
+    "fixture": 440,
+    "near-power": 28,
+    "decimal": 2440,
+    "dispatch-edge": 495,
+    "rounding-edge": 432,
+    "raw": 32768,
+    "ordinary": 32768,
+    "near-one": 32768,
+    "endpoints": 32768
+  },
+  "mismatches": 0,
+  "arm_regression_calls": {
+    "resident": 1932,
+    "standalone_rp2040": 288383,
+    "generic_armv6m": 1901
+  },
+  "instruction_totals": {
+    "pico_service_insns vs classic_service_insns": {
+      "candidate": 22017,
+      "reference": 60399,
+      "fewer_instructions": 18,
+      "cases": 24
+    },
+    "pico_ram_insns vs portable_ram_insns": {
+      "candidate": 21518,
+      "reference": 123234,
+      "fewer_instructions": 24,
+      "cases": 24
+    }
+  },
+  "rows": [
+    {
+      "x": "3ff4cccccccccccd",
+      "y": "3fe6666666666666",
+      "bits": "3ff339c22907cfa9",
+      "pico_service_insns": 1373,
+      "classic_service_insns": 5555,
+      "pico_ram_insns": 1347,
+      "portable_ram_insns": 9809
+    },
+    {
+      "x": "3fe6666666666666",
+      "y": "3ff4cccccccccccd",
+      "bits": "3fe4207e29c0d5e5",
+      "pico_service_insns": 1424,
+      "classic_service_insns": 5844,
+      "pico_ram_insns": 1398,
+      "portable_ram_insns": 10032
+    },
+    {
+      "x": "4024000000000000",
+      "y": "3ff2000000000000",
+      "bits": "402aaba136292195",
+      "pico_service_insns": 1494,
+      "classic_service_insns": 5599,
+      "pico_ram_insns": 1468,
+      "portable_ram_insns": 9747
+    },
+    {
+      "x": "3ff004189374bc6a",
+      "y": "4034000000000000",
+      "bits": "3ff052b3f32d8462",
+      "pico_service_insns": 1440,
+      "classic_service_insns": 5145,
+      "pico_ram_insns": 1414,
+      "portable_ram_insns": 9722
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "4008000000000000",
+      "bits": "3ffba5e353f7ced9",
+      "pico_service_insns": 269,
+      "classic_service_insns": 160,
+      "pico_ram_insns": 253,
+      "portable_ram_insns": 346
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "4010000000000000",
+      "bits": "400096bb98c7e282",
+      "pico_service_insns": 235,
+      "classic_service_insns": 158,
+      "pico_ram_insns": 219,
+      "portable_ram_insns": 342
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "4000000000000000",
+      "bits": "3ff70a3d70a3d70a",
+      "pico_service_insns": 130,
+      "classic_service_insns": 103,
+      "pico_ram_insns": 114,
+      "portable_ram_insns": 208
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "bff0000000000000",
+      "bits": "3feaaaaaaaaaaaab",
+      "pico_service_insns": 177,
+      "classic_service_insns": 317,
+      "pico_ram_insns": 161,
+      "portable_ram_insns": 223
+    },
+    {
+      "x": "4000000000000000",
+      "y": "3fe0000000000000",
+      "bits": "3ff6a09e667f3bcd",
+      "pico_service_insns": 175,
+      "classic_service_insns": 291,
+      "pico_ram_insns": 159,
+      "portable_ram_insns": 2277
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "bfe0000000000000",
+      "bits": "3fed363d1848dcbf",
+      "pico_service_insns": 1436,
+      "classic_service_insns": 5173,
+      "pico_ram_insns": 1410,
+      "portable_ram_insns": 9645
+    },
+    {
+      "x": "3fe0000000000000",
+      "y": "c008000000000000",
+      "bits": "4020000000000000",
+      "pico_service_insns": 854,
+      "classic_service_insns": 2970,
+      "pico_ram_insns": 838,
+      "portable_ram_insns": 8096
+    },
+    {
+      "x": "bff3333333333333",
+      "y": "4014000000000000",
+      "bits": "c003e81450efdc9b",
+      "pico_service_insns": 1452,
+      "classic_service_insns": 5405,
+      "pico_ram_insns": 1426,
+      "portable_ram_insns": 10015
+    },
+    {
+      "x": "c000000000000000",
+      "y": "3fe0000000000000",
+      "bits": "7ff8000000000000",
+      "pico_service_insns": 46,
+      "classic_service_insns": 149,
+      "pico_ram_insns": 30,
+      "portable_ram_insns": 222
+    },
+    {
+      "x": "0000000000000000",
+      "y": "bff8000000000000",
+      "bits": "7ff0000000000000",
+      "pico_service_insns": 53,
+      "classic_service_insns": 123,
+      "pico_ram_insns": 37,
+      "portable_ram_insns": 183
+    },
+    {
+      "x": "8000000000000000",
+      "y": "4008000000000000",
+      "bits": "8000000000000000",
+      "pico_service_insns": 101,
+      "classic_service_insns": 111,
+      "pico_ram_insns": 85,
+      "portable_ram_insns": 224
+    },
+    {
+      "x": "3ff0000000000000",
+      "y": "4010cccccccccccd",
+      "bits": "3ff0000000000000",
+      "pico_service_insns": 30,
+      "classic_service_insns": 27,
+      "pico_ram_insns": 14,
+      "portable_ram_insns": 47
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "8000000000000000",
+      "bits": "3ff0000000000000",
+      "pico_service_insns": 23,
+      "classic_service_insns": 20,
+      "pico_ram_insns": 7,
+      "portable_ram_insns": 33
+    },
+    {
+      "x": "3ff3333333333333",
+      "y": "3ff0000000000000",
+      "bits": "3ff3333333333333",
+      "pico_service_insns": 28,
+      "classic_service_insns": 44,
+      "pico_ram_insns": 12,
+      "portable_ram_insns": 74
+    },
+    {
+      "x": "4000000000000000",
+      "y": "4050000000000000",
+      "bits": "43f0000000000000",
+      "pico_service_insns": 788,
+      "classic_service_insns": 2959,
+      "pico_ram_insns": 772,
+      "portable_ram_insns": 8087
+    },
+    {
+      "x": "6974e718d7d7625a",
+      "y": "3bc79ca10c924223",
+      "bits": "3ff0000000000000",
+      "pico_service_insns": 138,
+      "classic_service_insns": 5720,
+      "pico_ram_insns": 122,
+      "portable_ram_insns": 9789
+    },
+    {
+      "x": "3fefffffffffffff",
+      "y": "4330000000000000",
+      "bits": "3fe368b2fc6f960a",
+      "pico_service_insns": 4818,
+      "classic_service_insns": 4218,
+      "pico_ram_insns": 4797,
+      "portable_ram_insns": 8275
+    },
+    {
+      "x": "4000000000000000",
+      "y": "c090ca0000000000",
+      "bits": "0000000000000001",
+      "pico_service_insns": 1544,
+      "classic_service_insns": 3562,
+      "pico_ram_insns": 1508,
+      "portable_ram_insns": 8667
+    },
+    {
+      "x": "4000000000000000",
+      "y": "408ffe0000000000",
+      "bits": "7feae89f995ad3ad",
+      "pico_service_insns": 1511,
+      "classic_service_insns": 3213,
+      "pico_ram_insns": 1490,
+      "portable_ram_insns": 8509
+    },
+    {
+      "x": "0000000000000001",
+      "y": "3fd0000000000000",
+      "bits": "2f26a09e667f3bcd",
+      "pico_service_insns": 2478,
+      "classic_service_insns": 3533,
+      "pico_ram_insns": 2437,
+      "portable_ram_insns": 8662
+    }
+  ]
+}

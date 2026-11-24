@@ -1113,6 +1113,16 @@ mk61_m0_pow_fast:
  bx r12
 #endif
 .Lpow_square:
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ ldr r2,=mk61_m0_pow_square
+ bx r2
+ .pushsection .text.mk61_m0_pow_square,"ax",%progbits
+ .align 2
+ .global mk61_m0_pow_square
+ .type mk61_m0_pow_square,%function
+ .thumb_func
+mk61_m0_pow_square:
+#endif
  lsls r2,r1,#1
  lsrs r2,#21
  ldr r3,=484
@@ -1149,6 +1159,9 @@ mk61_m0_pow_fast:
  movs r0,#0
  ldr r1,=0x7ff00000
  bx lr
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ .popsection
+#endif
 .Lpow_square_root:
  cmp r1,#0
  bmi .Lpow_restore_low
@@ -1172,6 +1185,7 @@ mk61_m0_pow_fast:
  ldr r3,=0xbfe00000
  b .Lpow_restore_low
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ .pushsection .text.mk61_m0_pow_square,"ax",%progbits
 .Lpow_square_normal:
  // Here 512<=E<=1534: every rounded square is finite and normal.
  // Squaring needs XL^2, XH^2 and twice XL*XH, rather than four
@@ -1266,6 +1280,9 @@ mk61_m0_pow_fast:
 1:
  adds r1,r3
  pop {r4-r7,pc}
+ .ltorg
+ .size mk61_m0_pow_square,.-mk61_m0_pow_square
+ .popsection
 #endif
 .ltorg
 end mk61_m0_pow_fast
@@ -1275,8 +1292,132 @@ end mk61_m0_pow_fast
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__))
 .global _ZN12compact_math4sqrtEd
 .thumb_set _ZN12compact_math4sqrtEd,mk61_m0_sqrt
-.global _ZN12compact_math3powEdd
-.thumb_set _ZN12compact_math3powEdd,mk61_m0_pow_fast
+
+// Classic's special exponents stay out of the general logarithm's frame.
+// y=3 and y=4 perform the same two separately rounded products as Classic.
+function _ZN12compact_math3powEdd
+ cmp r2,#0
+ bne .Lclassic_pow_general
+ lsls r2,r3,#1
+ beq .Lclassic_pow_one
+ ldr r2,=0x3ff00000
+ cmp r3,r2
+ beq .Lclassic_pow_identity
+ ldr r2,=0x40000000
+ cmp r3,r2
+ beq .Lclassic_pow_square
+ ldr r2,=0x40080000
+ cmp r3,r2
+ beq .Lclassic_pow_cube
+ ldr r2,=0x40100000
+ cmp r3,r2
+ beq .Lclassic_pow_fourth
+ ldr r2,=0x3fe00000
+ cmp r3,r2
+ bne .Lclassic_pow_check_inverse
+ cmp r1,#0
+ bmi .Lclassic_pow_negative_sqrt
+ ldr r2,=mk61_m0_sqrt
+ bx r2
+.Lclassic_pow_negative_sqrt:
+ lsls r2,r1,#1
+ ldr r3,=0xffe00000
+ cmp r2,r3
+ bhs .Lclassic_pow_sqrt_nonfinite
+ orrs r2,r0
+ beq .Lclassic_pow_positive_zero
+ movs r0,#0
+ ldr r1,=0x7ff80000
+ bx lr
+.Lclassic_pow_sqrt_nonfinite:
+ // -infinity gives +infinity; a NaN retains its payload and sign.
+ bhi .Lclassic_pow_quiet
+ cmp r0,#0
+ bne .Lclassic_pow_quiet
+ b .Lclassic_pow_positive_inf
+.Lclassic_pow_check_inverse:
+ ldr r2,=0xbff00000
+ cmp r3,r2
+ bne .Lclassic_pow_restore
+ ldr r2,=mk61_m0_pow_reciprocal
+ bx r2
+.Lclassic_pow_restore:
+ movs r2,#0
+.Lclassic_pow_general:
+ cmp r0,#0
+ bne .Lclassic_pow_call
+ cmp r1,#0
+ beq .Lclassic_pow_zero_base
+ push {r4}
+ ldr r4,=0x3ff00000
+ cmp r1,r4
+ pop {r4}
+ beq .Lclassic_pow_one
+.Lclassic_pow_call:
+ push {r4,lr}
+ bl mk61_m0_pow_classic_general
+ pop {r4,pc}
+.Lclassic_pow_zero_base:
+ // The zero-exponent case returned above. Only a NaN exponent also
+ // needs its payload here. All finite nonzero exponents use their sign.
+ lsls r0,r3,#1
+ ldr r1,=0xffe00000
+ cmp r0,r1
+ bhi .Lclassic_pow_nan_y
+ blo .Lclassic_pow_nonzero_y
+ cmp r2,#0
+ bne .Lclassic_pow_nan_y
+.Lclassic_pow_nonzero_y:
+ cmp r3,#0
+ bmi .Lclassic_pow_positive_inf
+.Lclassic_pow_positive_zero:
+ movs r0,#0
+ movs r1,#0
+ bx lr
+.Lclassic_pow_positive_inf:
+ movs r0,#0
+ ldr r1,=0x7ff00000
+ bx lr
+.Lclassic_pow_nan_y:
+ mov r0,r2
+ mov r1,r3
+ b .Lclassic_pow_quiet
+.Lclassic_pow_one:
+ movs r0,#0
+ ldr r1,=0x3ff00000
+ bx lr
+.Lclassic_pow_identity:
+ lsls r2,r1,#1
+ ldr r3,=0xffe00000
+ cmp r2,r3
+ blo .Lclassic_pow_return
+ bhi .Lclassic_pow_quiet
+ cmp r0,#0
+ beq .Lclassic_pow_return
+.Lclassic_pow_quiet:
+ ldr r2,=0x00080000
+ orrs r1,r2
+.Lclassic_pow_return:
+ bx lr
+.Lclassic_pow_square:
+ ldr r2,=mk61_m0_pow_square
+ bx r2
+.Lclassic_pow_cube:
+ push {r4,r5,r6,lr}
+ mov r4,r0
+ mov r5,r1
+ bl mk61_m0_pow_square
+ mov r2,r4
+ mov r3,r5
+ bl __aeabi_dmul
+ pop {r4,r5,r6,pc}
+.Lclassic_pow_fourth:
+ push {r4,lr}
+ bl mk61_m0_pow_square
+ bl mk61_m0_pow_square
+ pop {r4,pc}
+.ltorg
+end _ZN12compact_math3powEdd
 #endif
 
 #include "native_eabi_m0_pow_argument.inc"

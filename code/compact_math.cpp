@@ -30,11 +30,12 @@
 static_assert(DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024,
               "compact math requires IEEE binary64");
 
-// RP2040 public entry points alias their native kernels below. The legacy
-// implementations remain available to the other targets.
+// The RP2040 public entries use the native soft-float ABI.
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__))
+#define MK61_COMPACT_RP2040 1
 #define MK61_M0_UNUSED_FALLBACK __attribute__((unused))
 #else
+#define MK61_COMPACT_RP2040 0
 #define MK61_M0_UNUSED_FALLBACK
 #endif
 
@@ -769,6 +770,16 @@ void logarithm_pair(double ax, double& t1, double& t2) {
             else {k=0;n+=1;ix -= 0x00100000;}
             SET_HIGH_WORD(ax,ix);
 
+#if MK61_COMPACT_RP2040
+            // At an exact reduction center every term containing ss vanishes.
+            // Keep the Classic addition and truncation of the exponent offset.
+            if(lo_word(ax)==0 && ix==(k ? 0x3ff80000 : 0x3ff00000)) {
+                t=double(n);
+                t1=set_low((dp_l[k]+dp_h[k])+t,0);
+                t2=dp_l[k]-((t1-t)-dp_h[k]);
+                return;
+            }
+#endif
         /* compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
             u = ax-bp[k];		/* bp[0]=1.0, bp[1]=1.5 */
             v = one/(ax+bp[k]);
@@ -831,6 +842,21 @@ double exponential_pair(double p_h, double p_l) {
             if(j<0) n = -n;
             p_h -= t;
         }
+#if MK61_COMPACT_RP2040
+        // The Q62 shortcut encloses the split evaluation below, including
+        // its two conversions to fixed point and every Horner rounding.
+        if (hi_word(absolute(p_h))<0x3fe40000U &&
+            hi_word(absolute(p_l))<0x3f500000U) {
+            const int64_t r=fixed_kernel::fixed_argument(p_h)+fixed_kernel::fixed_argument(p_l);
+            constexpr uint64_t ln2_q62=UINT64_C(0x2c5c85fdf473de6b);
+            const int64_t q=int64_t(mk61_m0_mul_q62(uint64_t(r<0?-r:r),ln2_q62));
+            if (q<=(INT64_C(3)<<59)) {
+                if (!q && unsigned(n+1022)<=2045U) return value(uint64_t(n+1023)<<52);
+                const double result=mk61_m0_pow_exp_q62(r<0?-q:q,n);
+                if (!(bits(result)>>63)) return result;
+            }
+        }
+#endif
         t = p_l+p_h;
         SET_LOW_WORD(t,0);
         u = t*lg2_h;
@@ -860,8 +886,15 @@ MK61_M0_UNUSED_FALLBACK double evaluate(double x, double y)
 
     /* y!=zero: result is NaN if either arg is NaN */
         if(ix > 0x7ff00000 || ((ix==0x7ff00000)&&(lx!=0)) ||
-           iy > 0x7ff00000 || ((iy==0x7ff00000)&&(ly!=0)))
+           iy > 0x7ff00000 || ((iy==0x7ff00000)&&(ly!=0))) {
+#if MK61_COMPACT_RP2040
+                // Classic's binary64 add quiets the first operand with an
+                // all-ones exponent, including infinity paired with a NaN.
+                return value(bits(ix>=0x7ff00000 ? x : y)|UINT64_C(0x0008000000000000));
+#else
                 return (x+0.0)+(y+0.0);
+#endif
+        }
 
     /* determine if y is an odd int when x < 0
      * yisint = 0	... y is not an integer
@@ -944,6 +977,22 @@ MK61_M0_UNUSED_FALLBACK double evaluate(double x, double y)
       const bool grows = (ax > 1.0) == (y > 0.0);
       return s * (grows ? infinity() : 0.0);
     }
+#if MK61_COMPACT_RP2040
+    // |log2(ax)| < 1075. Here the Classic reduced exponential rounds to 1
+    // even after both fixed-point conversions. Negative bases have already
+    // been classified, so a surviving nonzero tiny exponent has s = +1.
+    if (iy < 0x3be00000) return one; // |y| < 2^-65
+    if (!lx && !(ix&0xfffff) && ix>=0x100000 && !ly) {
+      // log2(ax) is this integer. The high-word y times it fits in 32
+      // significant bits, so Classic's low product vanishes.
+      const double result=exponential_pair(y*double((ix>>20)-1023),0.0);
+      return s<0 ? -result : result;
+    }
+    if (ix>=0x3fb00000 && ix<0x40300000 && iy>=0x3f300000 && iy<0x40400000) {
+      const double checked=mk61_m0_pow_classic_checked(ax,y);
+      if (!(bits(checked)>>63)) return s<0 ? -checked : checked;
+    }
+#endif
     logarithm_pair(ax,t1,t2);
     y1 = y;
     SET_LOW_WORD(y1,0);
@@ -992,7 +1041,11 @@ double acos(double x) {
 }
 #endif
 
-#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
+#if MK61_COMPACT_RP2040
+extern "C" MK61_SOFT_PCS double mk61_m0_pow_classic_general(double x,double y) {
+  return power::evaluate(x,y);
+}
+#else
 double pow(double x, double y) {
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
   return mk61_m0_pow_fast(x,y);

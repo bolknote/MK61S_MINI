@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "classic_elf_sha256": "a33caf8f00d28748490918679948aeb31b547abe0621e44e85d7fed54a519602",
   "source_matrix_sha256": "88cdcea994bc1ad72c9adf46c06a6385304030b9c672edee423e2b021bf3e30a",
   "source": "R64 frozen 28-pair matrix; the source contains all three qualified SIO states",
   "scope": "Existing regression inputs only; this proposal has not executed ARM or measured its speed.",
@@ -32,6 +33,7 @@
       "x": "3FFFFFFFFFFFFFFF",
       "y": "C031000000000000",
       "expected": "3EE0000000000009",
+      "classic": "3EE0000000000008",
       "reasons": [
         "retained directed slow control"
       ]
@@ -192,6 +194,7 @@
       "x": "BFFFFFFFFFFFFFFF",
       "y": "C031000000000000",
       "expected": "BEE0000000000009",
+      "classic": "BEE0000000000008",
       "reasons": [
         "measured corrected speed deficit"
       ]

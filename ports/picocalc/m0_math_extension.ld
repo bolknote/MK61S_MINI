@@ -73,14 +73,14 @@ SECTIONS {
     ASSERT(ADDR(.m0_pow_log_table) + SIZEOF(.m0_pow_log_table) <= 0x10160000,
            "Pow logarithm table overlaps pow hot code")
     .m0_pow_extension 0x10160000 : {
-        *(.m0_pow_extension)
+        *(.m0_pow_extension .m0_pow_extension.log)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
     } > FLASH
     /* A two-way16KiB XIP cache has an8KiB index period. Pack the
      * pow helpers and inverse-root seeds into one aligned index span,
      * avoiding conflicts between different parts of the same hot code. */
     .m0_pow_dispatch_extension ALIGN(ADDR(.m0_pow_extension) + SIZEOF(.m0_pow_extension), 16) : {
-        *(.m0_pow_dispatch_extension)
+        *(.m0_pow_dispatch_extension .m0_pow_dispatch_extension.reciprocal)
         *(.m0_pow_extension_data)
         *(.m0_pow_argument_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));

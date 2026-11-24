@@ -35,6 +35,9 @@
   const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
   const unsigned index=unsigned(k)&511U;
   k=(k-int(index))/512;
+#ifdef MK61_POW_EXP_SCALE
+  k+=MK61_POW_EXP_SCALE;
+#endif
   U q=exp_table[index];
   const bool below=(delta>>63)!=0;
   const U d=below?U(0)-delta:delta;

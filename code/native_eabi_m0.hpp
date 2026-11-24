@@ -46,6 +46,10 @@ MK61_SOFT_PCS double mk61_m0_cr_log10(double);
 MK61_SOFT_PCS double mk61_m0_cr_exp(double);
 MK61_SOFT_PCS double mk61_m0_cr_pow(double,double);
 MK61_SOFT_PCS double mk61_m0_pow_fast(double,double);
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+MK61_SOFT_PCS double mk61_m0_pow_exp_q62(int64_t,int);
+MK61_SOFT_PCS double mk61_m0_pow_classic_checked(double,double);
+#endif
 MK61_SOFT_PCS double mk61_m0_exp(double);
 #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
 MK61_SOFT_PCS float mk61_m0_exp_ai(float);

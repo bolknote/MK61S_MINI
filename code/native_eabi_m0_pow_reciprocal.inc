@@ -1,7 +1,7 @@
 // Project-owned pow(x,-1) entry. The numerator is exactly one, so the
 // common normal-result bound reduces to1<=E(x)<=2044. Reuse the unchanged
 // RNE division kernels after this proof; retain their pending-SIO policy.
-.section .m0_pow_dispatch_extension,"ax",%progbits
+.section .m0_pow_dispatch_extension.reciprocal,"ax",%progbits
 .align 2
 regular_func mk61_m0_pow_reciprocal
  push {r4-r7,lr}
